@@ -225,8 +225,16 @@ physics-layer note's equations match the NumPy reference implementation used in 
   fixed number of damped Gauss-Newton iterations from a given initial state; no data-dependent
   control flow.
 - **FR-007**: With trivial inputs (changepoint weights 0, uniform bearing weights, the classical
-  grid start, the solver's iteration count) its state MUST equal the ported batch least squares to
-  float32 precision on every fixture row, and its covariance MUST equal σ²(JᵀJ)⁻¹.
+  grid start) it MUST equal the ported batch least squares started from the same grid at the same
+  row on every scored fixture row: the plausibility flags agree; the layer's cost is never above
+  the solver's by more than 1e-9 relative where the solver converged; where the costs agree and
+  both are plausible, the state agrees to 1e-4 relative on determined rows (range sd < half the
+  range) and to 1e-2 of the row's own standard deviation on every row; and its covariance MUST
+  equal σ²(JᵀJ)⁻¹. *Amended in P0 panel round 1* (the SRD criterion, "equals batch LS", is
+  unchanged): the earlier wording, float32 on every row against the warm-started per-timestep
+  rows with "the solver's iteration count", cannot hold for any two correct solvers on
+  undetermined rows, which stop at different points of equal cost along a flat direction, and the
+  machine check had tested 1e-4 on a sample of 59 rows. The owner may overrule.
 - **FR-008**: With truth segmentation (knots at span starts and ends, kinds from the spans) it
   MUST reproduce the oracle-ceiling ratios of `docs/research/05` within their intervals on a
   10^5 MAN validation split.
@@ -287,9 +295,12 @@ physics-layer note's equations match the NumPy reference implementation used in 
 ### Measurable Outcomes
 
 - **SC-001**: Batch least squares, EKF and IMM rows equal gitma's prediction files on the seed-777
-  fixtures under the conformance rule, with the count of one-ulp residuals reported.
+  fixtures under the conformance rule, with the count of one-ulp residuals reported. At scale
+  (added in P0 panel round 1, when gitma's `tma-track` output on the P0 split is supplied) the
+  IMM's flags are identical and at most 0.1% of rows differ by more than 1e-4.
 - **SC-002**: The physics layer with trivial inputs equals the ported solver on every fixture row
-  to float32; its NumPy reference agrees to 1e-6; gradient checks pass to 1e-4.
+  as FR-007 defines it; its NumPy reference agrees to 1e-6; gradient checks pass to 1e-4; every
+  gradient is finite, including on masked rows.
 - **SC-003**: Oracle-ceiling ratios on the 10^5 split fall inside the research note's intervals
   for all four range checks (with and without the speed prior, all and settled rows).
 - **SC-004**: Exported graph outputs agree across Python and browser runtimes to 1e-5 on the

@@ -169,7 +169,7 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     than 1e-9 relative (it did not stop short), and where the costs agree the states must agree
     to 1e-4; rows where the layer reaches a lower cost than the solver are counted and reported.
     """
-    from tma2.references.classical import solve_batch
+    from tma2.references.classical import plausible, solve_batch
 
     torch.set_default_dtype(torch.float64)
     items = []
@@ -186,7 +186,16 @@ def check_physics_equals_ls(exp: Experiment) -> None:
                     th = sol.theta
                     tk = float(bd.t[k])
                     rng = math.hypot(th[0] + th[2] * tk - bd.ox[k], th[1] + th[3] * tk - bd.oy[k])
-                    refs.append((rng, math.hypot(th[2], th[3]), sol.cost, sol.converged, bd.sigma))
+                    refs.append(
+                        (
+                            rng,
+                            math.hypot(th[2], th[3]),
+                            sol.cost,
+                            sol.converged,
+                            bd.sigma,
+                            plausible(bd, sol, k),
+                        )
+                    )
                     items.append((bd, k, inp))
     layer = PhysicsLayer()
     short = 0  # layer cost above the solver's: it stopped short
@@ -196,18 +205,24 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     worst_sd = 0.0
     determined = 0
     unconverged = 0
+    flag_mismatch = 0
+    implausible = 0  # both flag the solution implausible (gitma scores it as not converged)
     for a in range(0, len(items), 500):
         out = run_layer(layer, items[a : a + 500], R_MAX)
-        for j, (rng, spd, cost, conv, sigma) in enumerate(refs[a : a + 500]):
+        for j, (rng, spd, cost, conv, sigma, ok_ls) in enumerate(refs[a : a + 500]):
             if not conv:
                 unconverged += 1
                 continue
+            if bool(out.plausible[j]) != ok_ls:
+                flag_mismatch += 1
+            elif not ok_ls:
+                implausible += 1
             dc = (float(out.cost[j]) * sigma * sigma - cost) / max(cost, 1e-300)
             if dc > COST_TOL:
                 short += 1
             elif dc < -COST_TOL:
                 lower += 1
-            else:
+            elif ok_ls and bool(out.plausible[j]):
                 same += 1
                 rel = max(
                     abs(float(out.range[j]) - rng) / rng,
@@ -235,7 +250,9 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     exp.metrics["physics-equals-least-squares"] = {
         "rows": len(items),
         "solver_converged_rows": len(items) - unconverged,
-        "same_minimum_rows": same,
+        "plausibility_flag_mismatches": flag_mismatch,
+        "both_implausible_rows": implausible,
+        "same_minimum_plausible_rows": same,
         "layer_cost_higher_rows": short,
         "layer_cost_lower_rows": lower,
         "determined_rows": determined,
@@ -244,13 +261,20 @@ def check_physics_equals_ls(exp: Experiment) -> None:
         "iterations": layer.iterations,
         "trials": layer.trials,
     }
-    ok = short == 0 and worst <= STATE_TOL and worst_sd <= SD_TOL and determined > 0
+    ok = (
+        short == 0
+        and flag_mismatch == 0
+        and worst <= STATE_TOL
+        and worst_sd <= SD_TOL
+        and determined > 0
+    )
     exp.checks.append(
         Check(
             "physics-equals-least-squares",
             "pass" if ok else "fail",
-            f"{len(items)} rows ({len(items) - unconverged} with the solver converged): "
-            f"{same} at the same minimum: worst {worst:.1e} relative on the {determined} "
+            f"{len(items)} rows ({len(items) - unconverged} with the solver converged; "
+            f"plausibility flags differ on {flag_mismatch}, both implausible on {implausible}): "
+            f"{same} plausible at the same minimum: worst {worst:.1e} relative on the {determined} "
             f"determined rows, {worst_sd:.1e} standard deviations on all; layer cost higher on "
             f"{short}, lower on {lower}",
             value=worst,
