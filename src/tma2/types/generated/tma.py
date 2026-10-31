@@ -86,7 +86,7 @@ linkml_meta = LinkMLMeta({'default_prefix': 'tma',
                              'prefix_reference': 'https://w3id.org/linkml/'},
                   'tma': {'prefix_prefix': 'tma',
                           'prefix_reference': 'https://github.com/debrief/gitma/schema/tma/'}},
-     'source_file': '/home/user/gitma2/schema/tma.yaml',
+     'source_file': 'schema/tma.yaml',
      'title': 'TMA via ML data types'} )
 
 class RecordKind(str, Enum):

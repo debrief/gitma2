@@ -38,6 +38,9 @@ def schema_version() -> str:
 def generate(into: Path) -> None:
     into.mkdir(parents=True, exist_ok=True)
     pyd = run(["gen-pydantic", str(SCHEMA)])
+    # The generator records the schema's absolute path; make it repository-relative so the
+    # committed output is the same on every machine (CI's staleness check).
+    pyd = pyd.replace(str(SCHEMA), "schema/tma.yaml").replace(str(ROOT) + "/", "")
     (into / "tma.py").write_text(HEADER + pyd)
     js = run(["gen-json-schema", str(SCHEMA)])
     (into / "tma.schema.json").write_text(js if js.endswith("\n") else js + "\n")
