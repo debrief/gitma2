@@ -14,6 +14,7 @@ from tests.conftest import fixture_dir
 from tma2.data.f32pack import iter_pack_raw
 from tma2.physics import reference as ref
 from tma2.physics.layer import PhysicsInputs, PhysicsLayer
+from tma2.physics.reference import ITERATIONS
 from tma2.physics.segmentation import LayerInputs, oracle_inputs, trivial_inputs
 from tma2.references.classical import BearingData, bearing_data_from_arrays, classical_predict
 
@@ -213,7 +214,7 @@ def test_oracle_segmentation_helps_after_manoeuvres(phase4_items: Any) -> None:
     assert float(np.median([o for _, o in pairs])) <= float(np.median([t for t, _ in pairs])) + 1e-9
 
 
-@pytest.mark.parametrize(("iterations", "knots"), [(8, 4), (40, 8)])
+@pytest.mark.parametrize(("iterations", "knots"), [(8, 4), (ITERATIONS, 8)])
 def test_model_gradients_are_finite(iterations: int, knots: int) -> None:
     """A full backward pass through encoder and physics layer (export toy model, padded golden
     batch with invalid and beyond-k rows) leaves every parameter gradient finite and non-zero."""

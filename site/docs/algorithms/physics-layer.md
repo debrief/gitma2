@@ -33,9 +33,13 @@ inert when c = 0):
     proportion to the skip weight k_m. A course change modelled as a start knot and an end knot
     (the chord of the turn) puts s = 1 and k = 1 on the end knot, tying the speed after the
     manoeuvre to the speed before it.
-- Solve: K fixed Gauss-Newton iterations with Levenberg damping (JᵀJ)ᵢᵢ(1 + λ), one trial step
-  per iteration, accepted where the cost does not increase; λ ← max(λ/10, 10⁻¹²) on accept,
-  min(10λ, 10¹²) on reject (gitma's constants; λ₀ = 10⁻³). The linear system is Jacobi-scaled and
+- Solve: K = 100 fixed Gauss-Newton iterations with Levenberg damping (JᵀJ)ᵢᵢ(1 + λ). Each
+  iteration may try T damping values λ, 10λ, …, 10^(T−1)λ side by side and take the first that
+  does not increase the cost (gitma's inner retry; T = 1 by default); λ ← max(λ_used/10, 10⁻¹²)
+  on accept, min(10^T λ, 10¹²) when no trial is accepted (gitma's constants; λ₀ = 10⁻³). P0
+  panel round 1 measured the settings on every fixture row against the solver from the same
+  start: 40 × 1 stopped short on 159 rows, 40 × 4 on 8, 100 × 1 and 60 × 2 on none, and 100 × 1
+  was the fastest. The linear system is Jacobi-scaled and
   solved by Gauss-Jordan elimination without pivoting (static operations only). Start: the
   classical grid start for (p₀, u₀), increments zero.
 - Output: state (p_k, u_k), covariance G (JᵀJ)⁻¹ Gᵀ with G = ∂(p_k, u_k)/∂θ (residuals are
@@ -45,8 +49,11 @@ inert when c = 0):
 ## Properties (tested)
 
 - **Trivial inputs reproduce batch least squares.** With c ≡ 0, uniform weights and the grid
-  start, the state equals gitma's Levenberg–Marquardt solution to better than 10⁻⁴ relative on
-  determined rows (10⁻⁷ typical); the cost agrees to 10⁻⁹.
+  start, on every scored row of the fixtures the layer's cost never exceeds the ported solver's
+  (from the same start) by more than 10⁻⁹ relative; where the costs agree the state agrees to
+  10⁻⁴ relative on determined rows and to a small fraction of a standard deviation on
+  undetermined ones, which move only along their flat direction. Where the solver stops without
+  converging the layer often reaches a lower cost.
 - **Oracle ceiling.** With knots at the true manoeuvre starts and ends it reproduces the ratios
   of `docs/research/05` against the frozen IMM. It is a reference, not a strict ceiling: the
   chord of a long turn misfits the in-turn bearings, and the masked-turn diagnostic (in-turn

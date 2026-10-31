@@ -36,9 +36,11 @@ import numpy as np
 TAU_RIDGE_MPS = 3.0
 TAU_SPEED_MPS = 1.0
 LAMBDA0 = 1e-3
-# Damping values tried per iteration (λ, 10λ, …) and the fixed iteration count.
-TRIALS = 4
-ITERATIONS = 40
+# Damping values tried per iteration (λ, 10λ, …) and the fixed iteration count. P0 panel round 1
+# measured them on every fixture row against the cold-start solver: 40 × 1 stopped short on 159
+# rows, 40 × 4 on 8, 60 × 2 and 100 × 1 on none; 100 × 1 was the fastest (202 s against 261 s).
+TRIALS = 1
+ITERATIONS = 100
 LAMBDA_MIN = 1e-12
 LAMBDA_MAX = 1e12
 MAX_SPEED_MPS = 25.0

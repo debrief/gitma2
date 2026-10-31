@@ -157,7 +157,8 @@ def check_references(exp: Experiment) -> None:
 
 
 COST_TOL = 1e-9  # relative: equal cost means the same minimum
-STATE_TOL = 1e-4  # relative range and speed, on rows at the same minimum
+STATE_TOL = 1e-4  # relative range and speed, on determined rows at the same minimum
+SD_TOL = 1e-2  # in the row's own standard deviations, on every row at the same minimum
 
 
 def check_physics_equals_ls(exp: Experiment) -> None:
@@ -192,6 +193,8 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     lower = 0  # layer cost below the solver's: the solver stopped short or another minimum
     same = 0
     worst = 0.0
+    worst_sd = 0.0
+    determined = 0
     unconverged = 0
     for a in range(0, len(items), 500):
         out = run_layer(layer, items[a : a + 500], R_MAX)
@@ -206,29 +209,50 @@ def check_physics_equals_ls(exp: Experiment) -> None:
                 lower += 1
             else:
                 same += 1
-                worst = max(
-                    worst,
+                rel = max(
                     abs(float(out.range[j]) - rng) / rng,
                     abs(float(out.speed[j]) - spd) / max(spd, 1.0),
                 )
+                # In units of the row's own standard deviations (layer covariance): at equal
+                # cost an undetermined row may move along its flat direction, never across it.
+                cov = out.cov[j].numpy()
+                st = out.state[j].numpy()
+                bd, k, _ = items[a + j]
+                dx, dy = st[0] - bd.ox[k], st[1] - bd.oy[k]
+                rr = math.hypot(dx, dy)
+                gr = np.array([dx, dy]) / rr
+                sd_r = math.sqrt(max(float(gr @ cov[:2, :2] @ gr), 1e-300))
+                u = st[2:]
+                gs = u / max(float(np.linalg.norm(u)), 1e-12)
+                sd_s = math.sqrt(max(float(gs @ cov[2:, 2:] @ gs), 1e-300))
+                in_sd = max(
+                    abs(float(out.range[j]) - rng) / sd_r, abs(float(out.speed[j]) - spd) / sd_s
+                )
+                worst_sd = max(worst_sd, in_sd)
+                if sd_r < 0.5 * rr:
+                    determined += 1
+                    worst = max(worst, rel)
     exp.metrics["physics-equals-least-squares"] = {
         "rows": len(items),
         "solver_converged_rows": len(items) - unconverged,
         "same_minimum_rows": same,
         "layer_cost_higher_rows": short,
         "layer_cost_lower_rows": lower,
-        "worst_state_difference_same_minimum": worst,
+        "determined_rows": determined,
+        "worst_relative_difference_determined": worst,
+        "worst_difference_in_sd_same_minimum": worst_sd,
         "iterations": layer.iterations,
         "trials": layer.trials,
     }
-    ok = short == 0 and worst <= STATE_TOL and same > 0
+    ok = short == 0 and worst <= STATE_TOL and worst_sd <= SD_TOL and determined > 0
     exp.checks.append(
         Check(
             "physics-equals-least-squares",
             "pass" if ok else "fail",
             f"{len(items)} rows ({len(items) - unconverged} with the solver converged): "
-            f"{same} at the same minimum, worst state difference {worst:.1e}; layer cost higher "
-            f"on {short}, lower on {lower}",
+            f"{same} at the same minimum: worst {worst:.1e} relative on the {determined} "
+            f"determined rows, {worst_sd:.1e} standard deviations on all; layer cost higher on "
+            f"{short}, lower on {lower}",
             value=worst,
             threshold=STATE_TOL,
         )
