@@ -157,6 +157,11 @@ def test_gradients_on_selected_knots(phase4_items: Any) -> None:
 
     cp, sw, lw, th0 = (v.clone().requires_grad_(True) for v in (cp0, sw0, lw0, base.theta0))
     loss(cp, sw, lw, th0).backward()  # type: ignore[no-untyped-call]
+    # Every entry, including invalid rows, rows beyond k and unselected candidates, is finite
+    # (P0 panel: a sqrt of a masked zero once gave NaN on those rows and poisoned the model).
+    for leaf in (cp, sw, lw, th0):
+        assert leaf.grad is not None and bool(torch.isfinite(leaf.grad).all())
+    assert lw.grad is not None and float(lw.grad[0, k + 1 :].abs().max()) == 0.0
     probes = [
         ("cp", cp, cp0, (0, r1)),
         ("cp", cp, cp0, (0, r2)),
@@ -177,7 +182,7 @@ def test_gradients_on_selected_knots(phase4_items: Any) -> None:
             fd = (loss(**{**args, name: plus}) - loss(**{**args, name: minus})) / (2 * eps)
         assert leaf.grad is not None
         an = leaf.grad[pos]
-        assert abs(float(an - fd)) <= 1e-3 * max(1.0, abs(float(fd))), (
+        assert abs(float(an - fd)) <= 1e-4 * max(1.0, abs(float(fd))), (
             name,
             pos,
             float(an),
@@ -206,3 +211,58 @@ def test_oracle_segmentation_helps_after_manoeuvres(phase4_items: Any) -> None:
     pairs = [(v[False], v[True]) for v in rows.values() if False in v and True in v]
     assert pairs, "no post-manoeuvre rows in the sample"
     assert float(np.median([o for _, o in pairs])) <= float(np.median([t for t, _ in pairs])) + 1e-9
+
+
+@pytest.mark.parametrize(("iterations", "knots"), [(8, 4), (40, 8)])
+def test_model_gradients_are_finite(iterations: int, knots: int) -> None:
+    """A full backward pass through encoder and physics layer (export toy model, padded golden
+    batch with invalid and beyond-k rows) leaves every parameter gradient finite and non-zero."""
+    from tma2.export.onnx_export import golden_batch
+    from tma2.export.toy_model import ToyModel
+
+    torch.manual_seed(0)
+    g = golden_batch(fixture_dir("phase4-seed777") / "test.f32pack", n=4)
+    x = {
+        k: torch.from_numpy(v).to(torch.float64) if v.dtype != np.int64 else torch.from_numpy(v)
+        for k, v in g.items()
+    }
+    model = ToyModel(iterations=iterations, knots=knots).to(torch.float64)
+    state, _cov, _cost, _ = model(
+        x["bearing"], x["valid"], x["own"], x["t"], x["sigma"], x["k"], x["theta0"]
+    )
+    (state[:, :2].abs().sum() / 1e4 + state[:, 2:].abs().sum()).backward()
+    grads = [p.grad for p in model.parameters()]
+    assert all(gr is not None and bool(torch.isfinite(gr).all()) for gr in grads)
+    assert any(gr is not None and float(gr.abs().max()) > 0 for gr in grads)
+
+
+def test_covariance_equals_sigma2_inverse_information(phase4_items: Any) -> None:
+    """FR-007: with trivial inputs the layer's covariance equals σ²(JᵀJ)⁻¹ mapped to the state at
+    row k, computed here independently from the constant-velocity bearing Jacobian at the
+    layer's own solution."""
+    items = [(d, k, i) for d, k, i, _, oracle, _ in phase4_items if not oracle]
+    with torch.no_grad():
+        out = PhysicsLayer()(_inputs(items))
+    checked = 0
+    for b, (d, k, _) in enumerate(items):
+        x0, y0, vx, vy = (float(v) for v in out.theta[b, :4])
+        jtj = np.zeros((4, 4))
+        for i in range(k + 1):
+            if not d.valid[i]:
+                continue
+            dx = x0 + vx * d.t[i] - d.ox[i]
+            dy = y0 + vy * d.t[i] - d.oy[i]
+            r2 = dx * dx + dy * dy
+            g = np.array([dy / r2, -dx / r2, d.t[i] * dy / r2, -d.t[i] * dx / r2])
+            jtj += np.outer(g, g)
+        tk = d.t[k]
+        gmap = np.array([[1, 0, tk, 0], [0, 1, 0, tk], [0, 0, 1, 0], [0, 0, 0, 1]], dtype=float)
+        expected = d.sigma**2 * gmap @ np.linalg.inv(jtj) @ gmap.T
+        got = out.cov[b].numpy()
+        rng = math.hypot(x0 + vx * tk - d.ox[k], y0 + vy * tk - d.oy[k])
+        if not bool(out.plausible[b]) or math.sqrt(expected[0, 0] + expected[1, 1]) > 0.5 * rng:
+            continue
+        checked += 1
+        scale = np.sqrt(np.outer(np.diag(expected), np.diag(expected)))
+        assert np.abs(got - expected).max() <= 1e-6 * scale.max(), (b, got, expected)
+    assert checked >= 5

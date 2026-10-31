@@ -9,6 +9,7 @@ double. The browser and Java legs read the same files (``conformance/onnx/``).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -142,7 +143,16 @@ def export(
         scale = np.maximum(np.abs(b_np), 1.0)
         diffs[name] = float(np.max(np.abs(a - b_np) / scale))
     (out_dir / "python_leg.json").write_text(
-        json.dumps({"max_rel_diff": diffs, "tol": TOL, "dtype": dtype}, indent=2)
+        json.dumps(
+            {
+                "max_rel_diff": diffs,
+                "tol": TOL,
+                "dtype": dtype,
+                "onnx_sha256": hashlib.sha256(onnx_path.read_bytes()).hexdigest(),
+                "runtime": f"onnxruntime {ort.__version__} (Python)",
+            },
+            indent=2,
+        )
     )
     return diffs
 

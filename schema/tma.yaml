@@ -24,6 +24,7 @@ enums:
       header: { description: Dataset or prediction file header (first line). }
       scenario: { description: One Scenario. }
       prediction: { description: One Prediction. }
+      crb: { description: One CrbRecord (gitma2). }
   Split:
     description: Dataset split. Train/validation/test are 80/10/10 by scenario index.
     permissible_values:
@@ -56,6 +57,20 @@ enums:
         description: A rate-limited course change at constant speed (an arc).
       speed:
         description: A constant-acceleration speed change on a constant course.
+  CrbModel:
+    description: Which model the Cramér–Rao bound assumes (gitma2, references/crb.py).
+    permissible_values:
+      full_window:
+        description: Constant velocity over all bearings up to the row; right for a held-course target.
+      known_manoeuvres:
+        description: >-
+          The generator's manoeuvre model with each manoeuvre's start time, duration and kind known
+          and its size unknown, all bearings up to the row: the bound for an estimator that knows
+          when and how the target manoeuvred (the oracle's regime).
+      per_leg:
+        description: >-
+          Constant velocity over the current leg's bearings only. A diagnostic: it ignores earlier
+          legs, so an estimator that knows the manoeuvre times can legitimately beat it.
   PredictionMode:
     permissible_values:
       final: { description: One row at the last timestep of the window. }
@@ -546,6 +561,27 @@ classes:
       mode: { range: PredictionMode, required: true }
       dataset_digest: { range: string, required: true, description: SHA-256 of the truth file. }
 
+  CrbHeader:
+    description: First record of a tma2-crb file (gitma2).
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      model: { range: CrbModel, required: true }
+      dataset_digest: { range: string, required: true, description: SHA-256 of the truth file. }
+
+  CrbRecord:
+    description: >-
+      Cramér–Rao bounds at the truth for one scenario's scored rows (zig_index + 1 … end); where the
+      information is singular the bounds are 0 and singular is true (gitma2).
+    attributes:
+      record: { range: RecordKind, required: true }
+      scenario_index: { range: integer, required: true }
+      first_row: { range: integer, required: true, description: Row index of the first entry. }
+      sd_range_rel: { range: float, multivalued: true, description: Bound on range error ÷ range. }
+      sd_course_deg: { range: float, multivalued: true, description: Bound on course error (degrees). }
+      sd_speed_kt: { range: float, multivalued: true, description: Bound on speed error (knots). }
+      singular: { range: boolean, multivalued: true, description: True where no bound exists. }
+
   MetricsRecord:
     description: Metric values for one estimator on one slice at one evaluation point.
     attributes:
@@ -613,6 +649,29 @@ classes:
         range: string
         description: SHA-256 of the dataset file (absent in manifests written before schema 0.4.0).
 
+  ArtefactRef:
+    description: A file an experiment read or wrote besides its datasets (gitma2, schema 0.17.0).
+    attributes:
+      path: { range: string, required: true }
+      digest: { range: string, required: true, description: SHA-256 of the file. }
+      role:
+        range: string
+        description: What the file is, e.g. "prediction cache", "export conformance results".
+
+  PackageVersion:
+    attributes:
+      name: { range: string, required: true }
+      version: { range: string, required: true }
+
+  RunEnvironment:
+    description: Software and hardware an experiment ran on (gitma2, schema 0.17.0).
+    attributes:
+      packages: { range: PackageVersion, multivalued: true, inlined_as_list: true }
+      lockfile_digest: { range: string, description: SHA-256 of uv.lock. }
+      cpu_model: { range: string }
+      cpu_count: { range: integer }
+      torch_threads: { range: integer }
+
   EstimatorRef:
     attributes:
       name: { range: string, required: true }
@@ -642,6 +701,8 @@ classes:
       estimators: { range: EstimatorRef, multivalued: true, inlined_as_list: true, required: true }
       normalisation: { range: NormalisationConstants, inlined: true }
       command_lines: { range: string, multivalued: true, required: true }
+      environment: { range: RunEnvironment, inlined: true }
+      artefacts: { range: ArtefactRef, multivalued: true, inlined_as_list: true }
 
   GateCheck:
     attributes:
@@ -650,6 +711,9 @@ classes:
       detail: { range: string, required: true }
       value: { range: float, description: "Statistic tested (e.g. median range error)." }
       threshold: { range: float, description: Limit the statistic is tested against. }
+      threshold_low:
+        range: float
+        description: Lower limit, for a check that passes inside an interval (gitma2).
       ci_low: { range: float, description: Lower bound of the bootstrap interval. }
       ci_high: { range: float, description: Upper bound of the bootstrap interval. }
       ci_level: { range: float, description: "Interval coverage, e.g. 0.95." }

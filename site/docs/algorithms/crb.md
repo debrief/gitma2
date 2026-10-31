@@ -24,15 +24,25 @@ By the delta method, var(f(θ)) ≥ ∇fᵀ I⁻¹ ∇f for range r = ‖p(t_k) 
 and speed s = ‖v‖. gitma2 reports the standard deviations in the metric units: relative range
 (σ_r / r), course in degrees, speed in knots. Before the zig (one leg) and in degenerate
 geometry I is singular (condition number above 10¹²): the bound is undefined and the row is
-counted in `crb_singular_rate`, never as 0 or ∞.
+counted in `crb_singular_rate`, never as 0 or ∞. Singularity is judged on the Jacobi-scaled
+matrix, so position in metres and velocity in m/s do not inflate the condition number.
 
-## Two anchors
+## Three models (`tma2-crb --model`)
 
-- **Full window**: all bearings up to k, anchored at window start: the right bound when the
-  target holds course throughout (Gate 1's data).
-- **Per leg** (`--per-leg`): only bearings since the last completed manoeuvre, anchored there:
-  the bound for an estimator that knows the manoeuvre times (the oracle's regime) on manoeuvring
-  data. During a manoeuvre the leg has no information yet.
+- **Full window** (`full_window`, the default): constant velocity over all bearings up to k: the
+  right bound when the target holds course throughout (Gate 1's data).
+- **Known manoeuvres** (`known_manoeuvres`): the generator's own manoeuvre kinematics (an arc at
+  constant speed for a course change, constant acceleration for a speed change), with each
+  manoeuvre's start time, duration and kind known and its size unknown, and all bearings up to k.
+  The bound for an estimator that knows when and how the target manoeuvred (the oracle's
+  regime): position continuity carries the earlier legs across the manoeuvre. It is defined inside
+  manoeuvres too; the Jacobian of the positions is taken by central differences, and the model
+  reproduces the stored truth to millimetres. Letting the positions inside a manoeuvre be free
+  instead would decouple the legs, which is no better than the per-leg bound.
+- **Per leg** (`per_leg`, a diagnostic): constant velocity over the current leg's bearings only.
+  It ignores the earlier legs, so an estimator that knows the manoeuvre times can legitimately
+  beat it; on manoeuvring data it is singular on most post-manoeuvre rows (no ownship manoeuvre on
+  the new leg). Panel round 1 of P0 found the earlier text calling it the oracle's bound wrong.
 
 ## Efficiency
 
@@ -51,7 +61,7 @@ Caveats:
   relative to the value (σ_r / r or σ_c large: young legs, weak geometry); read efficiency on
   those slices with care. Course errors wrap at 180°.
 - On manoeuvring data the full-window bound assumes a model the target does not follow; use the
-  per-leg bound there.
+  known-manoeuvres bound there.
 
 A learned estimator whose efficiency is *flat* across range and bearing-rate
 bands while classical's tracks the geometry has hit an approximation floor rather than an

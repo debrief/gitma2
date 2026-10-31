@@ -4,7 +4,9 @@ reference, and records the result (or a deferral with its reason) in results.jso
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -14,6 +16,12 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 TOL = 1e-5
+
+
+ORT_JAVA_VERSION = re.search(
+    r"<artifactId>onnxruntime</artifactId>\s*<version>([^<]+)</version>",
+    (HERE / "java" / "pom.xml").read_text(),
+).group(1)  # type: ignore[union-attr]
 
 
 def main() -> int:
@@ -58,7 +66,15 @@ def main() -> int:
         exp = np.fromfile(export_dir / f"out_{name}.bin", dtype=spec["dtype"]).astype(np.float64)
         got = np.array(out[name], dtype=np.float64)
         diffs[name] = float(np.max(np.abs(got - exp) / np.maximum(np.abs(exp), 1.0)))
-    record({"deferred": False, "max_rel_diff": diffs, "tol": TOL})
+    record(
+        {
+            "deferred": False,
+            "max_rel_diff": diffs,
+            "tol": TOL,
+            "onnx_sha256": hashlib.sha256((export_dir / "toy.onnx").read_bytes()).hexdigest(),
+            "runtime": "onnxruntime Java " + ORT_JAVA_VERSION,
+        }
+    )
     print(json.dumps({"java": diffs}))
     bad = {k: v for k, v in diffs.items() if v > TOL}
     if bad:

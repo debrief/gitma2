@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import platform
 import subprocess
 from dataclasses import dataclass, field
@@ -17,6 +18,39 @@ from tma2.types import SCHEMA_VERSION
 
 from .generated_types import ExperimentManifest, GateVerdict
 
+ROOT = Path(__file__).resolve().parents[3]
+PACKAGES = ("numpy", "numba", "torch", "onnx", "onnxruntime", "pydantic", "onnxscript")
+
+
+def run_environment() -> dict[str, Any]:
+    """Package versions, the uv.lock digest, CPU model and thread counts."""
+    from importlib import metadata
+
+    pkgs = []
+    for name in PACKAGES:
+        try:
+            pkgs.append({"name": name, "version": metadata.version(name)})
+        except metadata.PackageNotFoundError:
+            continue
+    env: dict[str, Any] = {"packages": pkgs, "cpu_count": os.cpu_count() or 0}
+    lock = ROOT / "uv.lock"
+    if lock.exists():
+        env["lockfile_digest"] = file_digest(lock)
+    try:
+        for line in Path("/proc/cpuinfo").read_text().splitlines():
+            if line.startswith("model name"):
+                env["cpu_model"] = line.split(":", 1)[1].strip()
+                break
+    except OSError:
+        env["cpu_model"] = platform.processor() or "unknown"
+    try:
+        import torch
+
+        env["torch_threads"] = torch.get_num_threads()
+    except ImportError:
+        pass
+    return env
+
 
 @dataclass
 class Check:
@@ -25,13 +59,14 @@ class Check:
     detail: str
     value: float | None = None
     threshold: float | None = None
+    threshold_low: float | None = None
     ci_low: float | None = None
     ci_high: float | None = None
     ci_level: float | None = None
 
     def as_record(self) -> dict[str, Any]:
         rec: dict[str, Any] = {"name": self.name, "result": self.result, "detail": self.detail}
-        for key in ("value", "threshold", "ci_low", "ci_high", "ci_level"):
+        for key in ("value", "threshold", "threshold_low", "ci_low", "ci_high", "ci_level"):
             v = getattr(self, key)
             if v is not None:
                 rec[key] = float(v)
@@ -47,6 +82,13 @@ class Experiment:
     command_lines: list[str] = field(default_factory=list)
     checks: list[Check] = field(default_factory=list)
     metrics: dict[str, Any] = field(default_factory=dict)
+    artefacts: list[dict[str, str]] = field(default_factory=list)
+
+    def add_artefact(self, path: str | Path, role: str) -> str:
+        """Record a file the experiment read or wrote (prediction caches, conformance results)."""
+        digest = file_digest(path)
+        self.artefacts.append({"path": str(path), "digest": digest, "role": role})
+        return digest
 
     def add_dataset(self, path: str | Path, header: Any) -> None:
         self.datasets.append({"path": str(path), "header": header, "digest": file_digest(path)})
@@ -63,7 +105,7 @@ class Experiment:
                 check=True,
                 capture_output=True,
                 text=True,
-                cwd=self.folder.parent,
+                cwd=ROOT,
             ).stdout.strip()
             dirty = (
                 subprocess.run(
@@ -71,7 +113,7 @@ class Experiment:
                     check=True,
                     capture_output=True,
                     text=True,
-                    cwd=self.folder.parent,
+                    cwd=ROOT,
                 ).stdout.strip()
                 != ""
             )
@@ -104,6 +146,8 @@ class Experiment:
             "datasets": self.datasets,
             "estimators": self.estimators,
             "command_lines": self.command_lines,
+            "environment": run_environment(),
+            "artefacts": self.artefacts,
         }
         try:
             import torch
@@ -127,11 +171,11 @@ class Experiment:
             f = AtomicFile(self.folder / name)
             f.write((json.dumps(obj, indent=2, sort_keys=True) + "\n").encode("utf-8"))
             f.commit()
-        lines = ["name,result,value,threshold,ci_low,ci_high,detail"]
+        lines = ["name,result,value,threshold,threshold_low,ci_low,ci_high,detail"]
         for c in self.checks:
             cells = [c.name, c.result] + [
                 "" if v is None else repr(float(v))
-                for v in (c.value, c.threshold, c.ci_low, c.ci_high)
+                for v in (c.value, c.threshold, c.threshold_low, c.ci_low, c.ci_high)
             ]
             detail = '"' + c.detail.replace('"', '""') + '"'
             lines.append(",".join(cells + [detail]))

@@ -14,7 +14,7 @@ from tma2.data.io import AtomicFile
 from tma2.eval.errors import Truth
 from tma2.eval.metrics import CURVE_COLUMNS, METRIC_COLUMNS, PredictionSet, evaluate, to_csv
 from tma2.eval.predictions import check_bound, iter_predictions_raw
-from tma2.types import RecordError
+from tma2.types import RecordError, parse_record
 
 from .estimators import open_split
 
@@ -28,12 +28,14 @@ def load_prediction_set(path: str, truth: str) -> PredictionSet:
 
 
 def load_crb(path: str) -> dict[int, dict[str, Any]]:
+    from tma2.types.generated.tma import CrbHeader, CrbRecord
+
     out: dict[int, dict[str, Any]] = {}
     with open(path, encoding="utf-8") as f:
-        f.readline()
-        for line in f:
-            rec = json.loads(line)
-            out[int(rec["scenario_index"])] = rec
+        parse_record(CrbHeader, json.loads(f.readline()), path, 1)
+        for n, line in enumerate(f, start=2):
+            rec = parse_record(CrbRecord, json.loads(line), path, n)
+            out[rec.scenario_index] = rec.model_dump()
     return out
 
 
@@ -45,9 +47,9 @@ def crb_lookup_from(crb: dict[int, dict[str, Any]]) -> Any:
         j = row - int(rec["first_row"])
         if j < 0 or j >= len(rec["sd_range_rel"]):
             return None
-        a, b, c = rec["sd_range_rel"][j], rec["sd_course_deg"][j], rec["sd_speed_kt"][j]
-        if a is None or b is None or c is None:
+        if rec["singular"][j]:
             return (float("nan"), float("nan"), float("nan"), True)
+        a, b, c = rec["sd_range_rel"][j], rec["sd_course_deg"][j], rec["sd_speed_kt"][j]
         return (float(a), float(b), float(c), False)
 
     return lookup

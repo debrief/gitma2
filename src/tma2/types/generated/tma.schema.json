@@ -1,5 +1,31 @@
 {
     "$defs": {
+        "ArtefactRef": {
+            "additionalProperties": false,
+            "description": "A file an experiment read or wrote besides its datasets (gitma2, schema 0.17.0).",
+            "properties": {
+                "digest": {
+                    "description": "SHA-256 of the file.",
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "role": {
+                    "description": "What the file is, e.g. \"prediction cache\", \"export conformance results\".",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "path",
+                "digest"
+            ],
+            "title": "ArtefactRef",
+            "type": "object"
+        },
         "ChangeDecision": {
             "additionalProperties": false,
             "description": "The single change of the iteration's change round, fixed from validation evidence and committed before phase B trains (spec 003 R5).",
@@ -149,6 +175,106 @@
                 "val_loss"
             ],
             "title": "Continuation",
+            "type": "object"
+        },
+        "CrbHeader": {
+            "additionalProperties": false,
+            "description": "First record of a tma2-crb file (gitma2).",
+            "properties": {
+                "dataset_digest": {
+                    "description": "SHA-256 of the truth file.",
+                    "type": "string"
+                },
+                "model": {
+                    "$ref": "#/$defs/CrbModel"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "model",
+                "dataset_digest"
+            ],
+            "title": "CrbHeader",
+            "type": "object"
+        },
+        "CrbModel": {
+            "description": "Which model the Cram\u00e9r\u2013Rao bound assumes (gitma2, references/crb.py).",
+            "enum": [
+                "full_window",
+                "known_manoeuvres",
+                "per_leg"
+            ],
+            "title": "CrbModel",
+            "type": "string"
+        },
+        "CrbRecord": {
+            "additionalProperties": false,
+            "description": "Cram\u00e9r\u2013Rao bounds at the truth for one scenario's scored rows (zig_index + 1 \u2026 end); where the information is singular the bounds are 0 and singular is true (gitma2).",
+            "properties": {
+                "first_row": {
+                    "description": "Row index of the first entry.",
+                    "type": "integer"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "scenario_index": {
+                    "type": "integer"
+                },
+                "sd_course_deg": {
+                    "description": "Bound on course error (degrees).",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "sd_range_rel": {
+                    "description": "Bound on range error \u00f7 range.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "sd_speed_kt": {
+                    "description": "Bound on speed error (knots).",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "singular": {
+                    "description": "True where no bound exists.",
+                    "items": {
+                        "type": "boolean"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "record",
+                "scenario_index",
+                "first_row"
+            ],
+            "title": "CrbRecord",
             "type": "object"
         },
         "CurvePoint": {
@@ -370,6 +496,15 @@
             "additionalProperties": false,
             "description": "Everything needed to reproduce an experiment run.",
             "properties": {
+                "artefacts": {
+                    "items": {
+                        "$ref": "#/$defs/ArtefactRef"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "command_lines": {
                     "items": {
                         "type": "string"
@@ -385,6 +520,16 @@
                         "$ref": "#/$defs/DatasetRef"
                     },
                     "type": "array"
+                },
+                "environment": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/RunEnvironment"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "estimators": {
                     "items": {
@@ -558,6 +703,13 @@
                 },
                 "threshold": {
                     "description": "Limit the statistic is tested against.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "threshold_low": {
+                    "description": "Lower limit, for a check that passes inside an interval (gitma2).",
                     "type": [
                         "number",
                         "null"
@@ -1142,6 +1294,24 @@
             "title": "OutputParameterisation",
             "type": "string"
         },
+        "PackageVersion": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "version"
+            ],
+            "title": "PackageVersion",
+            "type": "object"
+        },
         "PairedComparison": {
             "additionalProperties": false,
             "description": "A model and a reference estimator compared on rows both answered (converged and finite), with each estimator's coverage reported separately (spec 003 R9).",
@@ -1623,10 +1793,53 @@
             "enum": [
                 "header",
                 "scenario",
-                "prediction"
+                "prediction",
+                "crb"
             ],
             "title": "RecordKind",
             "type": "string"
+        },
+        "RunEnvironment": {
+            "additionalProperties": false,
+            "description": "Software and hardware an experiment ran on (gitma2, schema 0.17.0).",
+            "properties": {
+                "cpu_count": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "cpu_model": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "lockfile_digest": {
+                    "description": "SHA-256 of uv.lock.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "packages": {
+                    "items": {
+                        "$ref": "#/$defs/PackageVersion"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "torch_threads": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            },
+            "title": "RunEnvironment",
+            "type": "object"
         },
         "Scenario": {
             "additionalProperties": false,

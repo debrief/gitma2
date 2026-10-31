@@ -48,10 +48,16 @@ inert when c = 0):
   start, the state equals gitma's Levenberg–Marquardt solution to better than 10⁻⁴ relative on
   determined rows (10⁻⁷ typical); the cost agrees to 10⁻⁹.
 - **Oracle ceiling.** With knots at the true manoeuvre starts and ends it reproduces the ratios
-  of `docs/research/05` against the frozen IMM.
+  of `docs/research/05` against the frozen IMM. It is a reference, not a strict ceiling: the
+  chord of a long turn misfits the in-turn bearings, and the masked-turn diagnostic (in-turn
+  bearings at zero weight) is better (P0 panel round 1).
 - **Differentiable** in the selected knots' changepoint and speed weights, the bearing
   log-weights and the initial state (central differences agree with autograd). A candidate that
-  TopK does not select has zero gradient, as in any sparse selection.
+  TopK does not select has zero gradient, as in any sparse selection, and a saturated weight (0 or
+  1) has none either, so knot placement needs its own supervised loss. Every gradient is finite:
+  square roots of masked zeros are taken branch-safe (an earlier version gave NaN on invalid and
+  beyond-k rows, which poisoned a whole model's gradients; P0 panel round 1). With 40 or more
+  iterations the unrolled gradient equals the implicit one at the optimum.
 - **Exact under masking**: rows beyond k and invalid rows contribute nothing; batched and single
   results agree to the last bits that BLAS reduction order allows (≈10⁻⁷ relative after 40
   damped iterations).

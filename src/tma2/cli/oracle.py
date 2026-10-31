@@ -18,6 +18,7 @@ import torch
 from tma2.eval.predictions import PredictionWriter
 from tma2.eval.rows import G5_GATE_MIN
 from tma2.physics.layer import PhysicsInputs, PhysicsLayer
+from tma2.physics.reference import ITERATIONS
 from tma2.physics.segmentation import LayerInputs, oracle_inputs, trivial_inputs
 from tma2.references.classical import BearingData, bearing_data_from_arrays
 from tma2.sim.geometry import f32, f32_angle
@@ -114,12 +115,17 @@ def predict_split(
     knots: int,
     batch: int = 256,
     trivial: bool = False,
+    mask_turns: bool = False,
 ) -> dict[str, Any]:
     torch.set_default_dtype(torch.float64)
     header, blocks = open_split(truth)
     r_max = int(np.floor(header.parameter_ranges.window_s.max / header.parameter_ranges.dt_s))
     layer = PhysicsLayer(iterations=iterations, knots=knots)
-    name = "classical-physics" if trivial else ORACLE + ("-sp" if speed_prior else "")
+    name = (
+        "classical-physics"
+        if trivial
+        else ORACLE + ("-sp" if speed_prior else "") + ("-masked" if mask_turns else "")
+    )
     writer = PredictionWriter(out, name, "per_timestep", truth)
     t0 = time.perf_counter()
     n_scen = 0
@@ -167,7 +173,15 @@ def predict_split(
                     trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, k)
                     if trivial
                     else oracle_inputs(
-                        d.t, d.ox, d.oy, d.z, d.valid, k, meta.get("manoeuvres"), speed_prior
+                        d.t,
+                        d.ox,
+                        d.oy,
+                        d.z,
+                        d.valid,
+                        k,
+                        meta.get("manoeuvres"),
+                        speed_prior,
+                        mask_turns,
                     )
                 )
                 if inp is None:
@@ -196,7 +210,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--trivial", action="store_true", help="no knots: the physics layer as batch least squares"
     )
-    ap.add_argument("--iterations", type=int, default=40)
+    ap.add_argument(
+        "--mask-turns",
+        action="store_true",
+        help="diagnostic: zero weight on bearings inside each manoeuvre span",
+    )
+    ap.add_argument("--iterations", type=int, default=ITERATIONS)
     ap.add_argument("--knots", type=int, default=8)
     a = ap.parse_args(argv)
     try:
@@ -210,6 +229,7 @@ def main(argv: list[str] | None = None) -> int:
                     a.iterations,
                     a.knots,
                     trivial=a.trivial,
+                    mask_turns=a.mask_turns,
                 )
             )
         )

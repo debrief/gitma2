@@ -14,10 +14,12 @@ Model (per scenario, rows i ≤ k, times t_i, ownship o_i, bearings z_i with val
 - Residuals: bearing r_i = √w_i · wrap(z_i − atan2(dx_i, dy_i)) / σ with w_i = v_i · exp(logw_i);
   ridge prior on each increment r_m^ridge = √c_m · d_m / τ_r (per component); speed-continuity
   prior r_m^speed = √(c_m s_m) · (‖u_after,m‖ − ‖u_before,m‖) / τ_s.
-- Solve: K fixed Gauss-Newton iterations with Levenberg damping (JᵀJ)ᵢᵢ(1 + λ), one trial step per
-  iteration, accepted where the cost does not increase; λ ← max(λ/10, 1e-12) on accept, min(10λ,
-  1e12) on reject (gitma's constants). Start: θ0 = (grid start, increments 0).
-- Output: state at row k, s_k = (p_k, u_k), its covariance σ²·G (JᵀJ)⁻¹ Gᵀ with G = ∂s_k/∂θ, the
+- Solve: K fixed Gauss-Newton iterations with Levenberg damping (JᵀJ)ᵢᵢ(1 + λ). Each iteration
+  tries T damping values λ, 10λ, …, 10^(T−1)λ and takes the first step that does not increase the
+  cost, as gitma's inner retry loop does; λ ← max(λ_used/10, 1e-12) on accept, min(10^T λ, 1e12)
+  when no trial is accepted (gitma's constants). Start: θ0 = (grid start, increments 0).
+- Output: state at row k, s_k = (p_k, u_k), its covariance G (JᵀJ)⁻¹ Gᵀ with G = ∂s_k/∂θ (the
+  residuals are σ-normalised, so no σ² factor), the
   final cost and gitma's plausibility flag.
 
 This file is plain NumPy and loops; ``layer.py`` is the batched tensor version with identical
@@ -34,6 +36,9 @@ import numpy as np
 TAU_RIDGE_MPS = 3.0
 TAU_SPEED_MPS = 1.0
 LAMBDA0 = 1e-3
+# Damping values tried per iteration (λ, 10λ, …) and the fixed iteration count.
+TRIALS = 4
+ITERATIONS = 40
 LAMBDA_MIN = 1e-12
 LAMBDA_MAX = 1e12
 MAX_SPEED_MPS = 25.0
@@ -203,11 +208,12 @@ def solve(
     speed_weight: np.ndarray,
     log_weight: np.ndarray,
     theta0: np.ndarray,
-    iterations: int = 40,
+    iterations: int = ITERATIONS,
     knots_m: int = 8,
     tau_r: float = TAU_RIDGE_MPS,
     tau_s: float = TAU_SPEED_MPS,
     speed_skip: np.ndarray | None = None,
+    trials: int = TRIALS,
 ) -> PhysicsResult:
     """The physics layer for one scenario at row k (see the module docstring)."""
     sigma = max(float(sigma), MIN_SIGMA_RAD)
@@ -242,18 +248,23 @@ def solve(
         )
         jtj = jac.T @ jac
         jtr = -(jac.T @ r)
-        damped = jtj + np.diag(np.diag(jtj) * lam)
         # Inert parameters (knot weight 0) have an empty row: regularise so the solve is defined.
-        damped += np.diag((np.diag(jtj) == 0).astype(np.float64))
-        step = spd_solve(damped, jtr)
-        cand = theta + step
-        cand_cost = cost_of(cand)
-        accept = cand_cost <= cost and math.isfinite(cand_cost)
-        if accept:
-            theta, cost = cand, cand_cost
-            lam = max(lam / 10.0, LAMBDA_MIN)
-        else:
-            lam = min(lam * 10.0, LAMBDA_MAX)
+        inert = np.diag((np.diag(jtj) == 0).astype(np.float64))
+        # gitma's inner retry, truncated at `trials`: try λ, 10λ, 100λ, … and take the first
+        # step that does not increase the cost (the layer evaluates them side by side).
+        accepted = False
+        for j in range(trials):
+            lam_j = min(lam * 10.0**j, LAMBDA_MAX)
+            step = spd_solve(jtj + np.diag(np.diag(jtj) * lam_j) + inert, jtr)
+            cand = theta + step
+            cand_cost = cost_of(cand)
+            if cand_cost <= cost and math.isfinite(cand_cost):
+                theta, cost = cand, cand_cost
+                lam = max(lam_j / 10.0, LAMBDA_MIN)
+                accepted = True
+                break
+        if not accepted:
+            lam = min(lam * 10.0**trials, LAMBDA_MAX)
     # State at row k and its covariance.
     tk = float(tt[k])
     pk, _ = _positions(theta, np.array([tk]), t_knots, c)

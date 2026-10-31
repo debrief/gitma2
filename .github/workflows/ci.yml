@@ -107,6 +107,7 @@ jobs:
 
   p0:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'p0')
+    needs: onnx-conformance
     runs-on: ubuntu-latest
     timeout-minutes: 300
     steps:
@@ -115,18 +116,24 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync
-      - name: Oracle dataset (seed 301, phase-4 ranges), cached by digest
+      - name: Browser and Java legs from the conformance job (checked against a fresh export's digest)
+        uses: actions/download-artifact@v4
+        with:
+          name: onnx-conformance
+          path: conformance/onnx
+      - name: Oracle dataset (seed 301, phase-4 ranges), cached by the generator's inputs and code
         uses: actions/cache@v4
         with:
           path: data/p0
-          key: p0-data-seed301-${{ hashFiles('tests/fixtures/gitma/phase4-seed777/ranges.json', 'src/tma2/sim/**') }}
+          key: p0-data-seed301-${{ hashFiles('tests/fixtures/gitma/phase4-seed777/ranges.json', 'tests/fixtures/gitma/phase4-seed777/heldout-ranges.json', 'src/tma2/sim/**', 'src/tma2/data/**', 'schema/tma.yaml') }}
       - run: |
           test -f data/p0/validation.f32pack || uv run tma2-generate --seed 301 --count 100000 --out data/p0 \
             --ranges tests/fixtures/gitma/phase4-seed777/ranges.json \
-            --heldout-ranges tests/fixtures/gitma/phase4-seed777/heldout-ranges.json --format f32pack --allow-dirty
-      - name: Gate P0
-        run: uv run tma2-p0 --experiment experiments/ci-p0 --oracle-data data/p0 || [ $? -eq 3 ]
-      - uses: actions/upload-artifact@v4
+            --heldout-ranges tests/fixtures/gitma/phase4-seed777/heldout-ranges.json --format f32pack
+      - name: Gate P0 (exit 3, gate not passed, fails the job)
+        run: uv run tma2-p0 --experiment experiments/ci-p0 --oracle-data data/p0 --work data/p0-work
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: p0-experiment
           path: experiments/ci-p0

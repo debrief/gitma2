@@ -25,7 +25,7 @@ from tma2.references.crb import crb_rows
 from tma2.references.ekf import ekf_name, ekf_predict
 from tma2.references.imm import ImmParams, imm_name, imm_predict
 from tma2.references.naive import NAIVE, fit_naive, naive_predict
-from tma2.types import DatasetHeader
+from tma2.types import DatasetHeader, dump_record
 
 Block = tuple[int, dict[str, Any], np.ndarray, np.ndarray, np.ndarray]
 
@@ -210,23 +210,34 @@ def naive_main(argv: list[str] | None = None) -> int:
 
 def crb_main(argv: list[str] | None = None) -> int:
     """Per-row Cramér–Rao bounds for every scored row (zig_index + 1 … end) of each scenario."""
+    from tma2.types import SCHEMA_VERSION
+    from tma2.types.generated.tma import CrbHeader, CrbModel, CrbRecord, RecordKind
+
     ap = argparse.ArgumentParser(prog="tma2-crb", description="Cramér–Rao bounds at the truth.")
     ap.add_argument("--in", dest="inp", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--per-leg", action="store_true", help="anchor at the last completed manoeuvre")
+    ap.add_argument(
+        "--model",
+        choices=("full_window", "known_manoeuvres", "per_leg"),
+        default="full_window",
+        help="full_window (held course), known_manoeuvres (times and kinds known: the oracle's "
+        "regime), per_leg (diagnostic)",
+    )
+    ap.add_argument("--per-leg", action="store_true", help="alias for --model per_leg")
     a = ap.parse_args(argv)
+    model = "per_leg" if a.per_leg else a.model
     _, blocks = open_split(a.inp)
     from tma2.data.canonical import canonical_json
     from tma2.data.io import AtomicFile
 
     out = AtomicFile(a.out)
-    header = {
-        "record": "header",
-        "kind": "crb",
-        "per_leg": a.per_leg,
-        "dataset_digest": file_digest(a.inp),
-    }
-    out.write((canonical_json(header) + "\n").encode())
+    header = CrbHeader(
+        record=RecordKind.header,
+        schema_version=SCHEMA_VERSION,
+        model=CrbModel(model),
+        dataset_digest=file_digest(a.inp),
+    )
+    out.write((canonical_json(dump_record(header)) + "\n").encode())
     n = 0
     try:
         for _, meta, own, tgt, obs in blocks:
@@ -239,21 +250,23 @@ def crb_main(argv: list[str] | None = None) -> int:
                 int(meta["zig_index"]),
                 meta.get("manoeuvres"),
                 rows,
-                a.per_leg,
+                model,
+                meta["parameters"].get("target_manoeuvres"),
             )
-            rec = {
-                "record": "crb",
-                "scenario_index": int(meta["index"]),
-                "first_row": rows[0] if rows else int(meta["samples"]),
-                "sd_range_rel": [None if b.singular else b.sd_range_rel for b in bounds],
-                "sd_course_deg": [None if b.singular else b.sd_course_deg for b in bounds],
-                "sd_speed_kt": [None if b.singular else b.sd_speed_kt for b in bounds],
-            }
-            out.write((canonical_json(rec) + "\n").encode())
+            rec = CrbRecord(
+                record=RecordKind.crb,
+                scenario_index=int(meta["index"]),
+                first_row=rows[0] if rows else int(meta["samples"]),
+                sd_range_rel=[0.0 if b.singular else b.sd_range_rel for b in bounds],
+                sd_course_deg=[0.0 if b.singular else b.sd_course_deg for b in bounds],
+                sd_speed_kt=[0.0 if b.singular else b.sd_speed_kt for b in bounds],
+                singular=[b.singular for b in bounds],
+            )
+            out.write((canonical_json(dump_record(rec)) + "\n").encode())
             n += 1
         out.commit()
     except BaseException:
         out.abort()
         raise
-    print(json.dumps({"out": a.out, "scenarios": n, "per_leg": a.per_leg}))
+    print(json.dumps({"out": a.out, "scenarios": n, "model": model}))
     return 0

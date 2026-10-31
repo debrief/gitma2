@@ -62,10 +62,10 @@ uv run python scripts/data_dictionary.py  # site/docs/data-dictionary.md
 uv run tma2-generate --seed <uint64> --count <n> --out <dir> [--ranges f --heldout-ranges f] [--noise-free] [--allow-dirty] [--format both|ndjson|f32pack]
 uv run tma2-solve --in <split> --out <pred.ndjson> [--per-timestep]
 uv run tma2-track --in <split> --out <pred.ndjson> --filter imm --sigma-cv 0.01 --sigma-ct 0.03 --sigma-omega 0.01 --switch 0.001 --p0-scale 4 --r-scale 8
-uv run tma2-crb --in <split> --out <crb.ndjson> [--per-leg]
+uv run tma2-crb --in <split> --out <crb.ndjson> [--model full_window|known_manoeuvres|per_leg]
 uv run tma2-eval --truth <split> --predictions <pred>... [--crb <crb.ndjson>] [--points 300,600] --out <dir>
-uv run tma2-oracle --truth <split> --out <pred.ndjson> [--speed-prior] [--trivial]
-uv run tma2-p0 --experiment experiments/<id> [--oracle-data <dir with validation.f32pack>]   # exit 3: gate not passed
+uv run tma2-oracle --truth <split> --out <pred.ndjson> [--speed-prior] [--trivial] [--mask-turns]
+uv run tma2-p0 --experiment experiments/<id> [--oracle-data <dir with validation.f32pack>] [--gitma-imm <gitma tma-track output>]   # exit 3: gate not passed
 uv run python -m tma2.export.onnx_export --out conformance/onnx/export
 (cd conformance/onnx && npm ci && node wasm_leg.mjs --dir export/f64) ; uv run python conformance/onnx/java_leg.py conformance/onnx/export/f64
 (cd site && npm ci && npm run build)      # site; prebuild regenerates the data dictionary
@@ -132,5 +132,18 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   between runtimes (~1e-3 disagreement). The f32 export is reported, never the conformance artefact.
 - Knot predecessors for the speed-continuity prior are counted among active knots only; an inert
   candidate between a turn's start and end knots must not become the end knot's predecessor.
+- Physics layer gradients: never `sqrt` a quantity that can be exactly 0 and carries a gradient
+  (masked rows, inert knots); use `safe_sqrt`. A single NaN there poisons every parameter of a
+  model on the first backward pass (P0 panel round 1). Tests assert finite gradients everywhere.
+- The layer tries several damping values per iteration (gitma's inner retry, side by side); with
+  one trial per iteration it stops short on flat-valley rows. Compare it with *cold-start* batch
+  least squares (`solve_batch` at row k): per-timestep rows are warm-started and can sit in a
+  different minimum.
+- Before the zig the layer returns finite, "plausible" states with range sd ≫ range: training
+  and scoring must exclude or down-weight rows whose covariance says they are undetermined.
+- Prediction caches in `tma2-p0 --work` are keyed by commit and reused only from a clean tree;
+  `results.json` from the conformance legs must name the fresh export's SHA-256.
+- Cramér–Rao bounds: `full_window` for held course, `known_manoeuvres` (times and kinds known) on
+  manoeuvring data; `per_leg` is a diagnostic only. Efficiency is median(|e|/σ)/0.6745 per row.
 - Docusaurus MDX: no `{...}` in prose (it is a JS expression); `scripts/data_dictionary.py`
   escapes `<` and braces outside code spans.

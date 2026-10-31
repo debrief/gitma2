@@ -15,6 +15,7 @@ import torch
 from torch import Tensor
 
 from .reference import (
+    ITERATIONS,
     LAMBDA0,
     LAMBDA_MAX,
     LAMBDA_MIN,
@@ -23,6 +24,7 @@ from .reference import (
     MIN_SIGMA_RAD,
     TAU_RIDGE_MPS,
     TAU_SPEED_MPS,
+    TRIALS,
 )
 
 TWO_PI = 2.0 * math.pi
@@ -115,6 +117,15 @@ def _diag(v: Tensor) -> Tensor:
     return eye.unsqueeze(0) * v.unsqueeze(2)
 
 
+def safe_sqrt(x: Tensor) -> Tensor:
+    """√x for x ≥ 0 with gradient 0, not NaN, where x = 0 (the unselected branch sees a positive
+    argument, so its backward is finite)."""
+    pos = x > 0
+    return torch.where(
+        pos, torch.sqrt(torch.where(pos, x, torch.ones_like(x))), torch.zeros_like(x)
+    )
+
+
 def spd_solve(a: Tensor, b: Tensor) -> Tensor:
     """Solve A x = b for batched SPD A [B,P,P], b [B,P]: Jacobi scaling (columns of very different
     units: metres, metres per second) then Gauss–Jordan elimination without pivoting, written as
@@ -141,11 +152,12 @@ def spd_solve(a: Tensor, b: Tensor) -> Tensor:
 class PhysicsLayer(torch.nn.Module):
     def __init__(
         self,
-        iterations: int = 40,
+        iterations: int = ITERATIONS,
         knots: int = 8,
         tau_ridge_mps: float = TAU_RIDGE_MPS,
         tau_speed_mps: float = TAU_SPEED_MPS,
         lambda0: float = LAMBDA0,
+        trials: int = TRIALS,
     ) -> None:
         super().__init__()
         self.iterations = iterations
@@ -153,6 +165,7 @@ class PhysicsLayer(torch.nn.Module):
         self.tau_r = tau_ridge_mps
         self.tau_s = tau_speed_mps
         self.lambda0 = lambda0
+        self.trials = trials
 
     def _residuals(
         self,
@@ -188,7 +201,7 @@ class PhysicsLayer(torch.nn.Module):
         j_d = torch.stack([gx.unsqueeze(2) * a, gy.unsqueeze(2) * a], dim=3).reshape(b_, -1, 2 * m)
         j_b = torch.cat([torch.stack([gx, gy, gx * t, gy * t], dim=2), j_d], dim=2)
         # ridge on increments: rows 2M, columns on d only
-        wr = torch.sqrt(c) / self.tau_r  # [B,M]
+        wr = safe_sqrt(c) / self.tau_r  # [B,M]
         r_ridge = -(wr.unsqueeze(2) * d).reshape(b_, 2 * m)
         eye2m = torch.eye(2 * m, dtype=dt, device=theta.device).unsqueeze(0)
         j_ridge = torch.cat(
@@ -205,9 +218,10 @@ class PhysicsLayer(torch.nn.Module):
             u0.unsqueeze(1) + ref_order @ cd
         )  # reference velocity (skips the previous knot by speed_skip)
         u_after = u_before + cd
-        nr = torch.sqrt((u_ref * u_ref).sum(dim=2)).clamp_min(1e-12)
-        na = torch.sqrt((u_after * u_after).sum(dim=2)).clamp_min(1e-12)
-        ws = torch.sqrt(c * s) / self.tau_s  # [B,M]
+        # sqrt(max(x, 1e-24)) = max(sqrt(x), 1e-12), with a finite gradient at a zero velocity
+        nr = torch.sqrt((u_ref * u_ref).sum(dim=2).clamp_min(1e-24))
+        na = torch.sqrt((u_after * u_after).sum(dim=2).clamp_min(1e-24))
+        ws = safe_sqrt(c * s) / self.tau_s  # [B,M]
         r_speed = -(ws * (na - nr))
         gr = u_ref / nr.unsqueeze(2)
         ga = u_after / na.unsqueeze(2)
@@ -242,8 +256,9 @@ class PhysicsLayer(torch.nn.Module):
         kk = x.k.unsqueeze(1)
         mask = (idx <= kk).to(dt)
         sigma = x.sigma.clamp_min(MIN_SIGMA_RAD)
-        w = x.valid * torch.exp(x.log_weight) * mask
-        sw = torch.sqrt(w) / sigma.unsqueeze(1)
+        # √w = √(valid·mask) · exp(ℓ/2): no sqrt of a zero that carries a gradient, so masked
+        # and invalid rows get an exact zero gradient instead of 0 · ∞ = NaN.
+        sw = safe_sqrt(x.valid * mask) * torch.exp(0.5 * x.log_weight) / sigma.unsqueeze(1)
         cand = torch.where(
             (mask > 0) & (idx > 0), x.changepoint, torch.full_like(x.changepoint, -1.0)
         )
@@ -278,6 +293,23 @@ class PhysicsLayer(torch.nn.Module):
         lam = torch.full((b_,), self.lambda0, dtype=dt, device=dev)
         r, _ = self._residuals(theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order)
         cost = (r * r).sum(dim=1)
+        nt = self.trials
+        n_p = theta.shape[1]
+        ladder = torch.tensor([10.0**j for j in range(nt)], dtype=dt, device=dev)
+
+        def rep(v: Tensor) -> Tensor:
+            return v.repeat_interleave(nt, dim=0)
+
+        # Inputs repeated once for the B·T trial evaluations.
+        t_r, ox_r, oy_r, z_r, sw_r = rep(x.t), rep(ox), rep(oy), rep(x.bearing), rep(sw)
+        tk_r, c_r, s_r, order_r, ref_order_r = (
+            rep(t_knots),
+            rep(c),
+            rep(s),
+            rep(order),
+            rep(ref_order),
+        )
+
         for _ in range(self.iterations):
             r, jac = self._residuals(
                 theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order
@@ -287,18 +319,40 @@ class PhysicsLayer(torch.nn.Module):
             jtr = -(jt @ r.unsqueeze(2))[..., 0]
             diag = _diagonal(jtj)
             inert = (diag == 0).to(dt)
-            damped = jtj + _diag(diag * lam.unsqueeze(1) + inert)
-            step = spd_solve(damped, jtr)
-            cand_theta = theta + step
-            rc, _ = self._residuals(
-                cand_theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order
+            # gitma's inner retry, side by side: T damping values λ·10^j, j = 0 … T−1, solved
+            # as one batch of B·T systems; the first trial that does not increase the cost wins.
+            lam_t = (lam.unsqueeze(1) * ladder.unsqueeze(0)).clamp_max(LAMBDA_MAX)  # [B,T]
+            dvec = (diag.unsqueeze(1) * lam_t.unsqueeze(2) + inert.unsqueeze(1)).reshape(
+                b_ * nt, n_p
             )
-            cand_cost = (rc * rc).sum(dim=1)
-            accept = (cand_cost <= cost) & _finite(cand_cost)
-            theta = torch.where(accept.unsqueeze(1), cand_theta, theta)
-            cost = torch.where(accept, cand_cost, cost)
+            damped = jtj.repeat_interleave(nt, dim=0) + _diag(dvec)  # [B·T,P,P]
+            steps = spd_solve(damped, jtr.repeat_interleave(nt, dim=0)).reshape(b_, nt, n_p)
+            cand_theta = theta.unsqueeze(1) + steps  # [B,T,P]
+            rc, _ = self._residuals(
+                cand_theta.reshape(b_ * nt, n_p),
+                t_r,
+                ox_r,
+                oy_r,
+                z_r,
+                sw_r,
+                tk_r,
+                c_r,
+                s_r,
+                order_r,
+                ref_order_r,
+            )
+            cand_cost = (rc * rc).sum(dim=1).reshape(b_, nt)
+            ok = (cand_cost <= cost.unsqueeze(1)) & _finite(cand_cost)  # [B,T]
+            accept = ok.any(dim=1)
+            first = torch.argmax(ok.to(dt), dim=1, keepdim=True)  # first True (ONNX: first max)
+            pick = torch.gather(cand_theta, 1, first.unsqueeze(2).expand(b_, 1, n_p))[:, 0]
+            theta = torch.where(accept.unsqueeze(1), pick, theta)
+            cost = torch.where(accept, torch.gather(cand_cost, 1, first)[:, 0], cost)
+            lam_used = torch.gather(lam_t, 1, first)[:, 0]
             lam = torch.where(
-                accept, (lam / 10.0).clamp_min(LAMBDA_MIN), (lam * 10.0).clamp_max(LAMBDA_MAX)
+                accept,
+                (lam_used / 10.0).clamp_min(LAMBDA_MIN),
+                (lam * 10.0**nt).clamp_max(LAMBDA_MAX),
             )
         tk = torch.gather(x.t, 1, kk)  # [B,1]
         p0 = theta[:, 0:2]

@@ -105,6 +105,10 @@ class RecordKind(str, Enum):
     """
     One Prediction.
     """
+    crb = "crb"
+    """
+    One CrbRecord (gitma2).
+    """
 
 
 class Split(str, Enum):
@@ -155,6 +159,24 @@ class ManoeuvreKind(str, Enum):
     speed = "speed"
     """
     A constant-acceleration speed change on a constant course.
+    """
+
+
+class CrbModel(str, Enum):
+    """
+    Which model the Cramér–Rao bound assumes (gitma2, references/crb.py).
+    """
+    full_window = "full_window"
+    """
+    Constant velocity over all bearings up to the row; right for a held-course target.
+    """
+    known_manoeuvres = "known_manoeuvres"
+    """
+    The generator's manoeuvre model with each manoeuvre's start time, duration and kind known and its size unknown, all bearings up to the row: the bound for an estimator that knows when and how the target manoeuvred (the oracle's regime).
+    """
+    per_leg = "per_leg"
+    """
+    Constant velocity over the current leg's bearings only. A diagnostic: it ignores earlier legs, so an estimator that knows the manoeuvre times can legitimately beat it.
     """
 
 
@@ -442,7 +464,12 @@ class Scenario(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma',
          'tree_root': True})
 
-    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario', 'DatasetHeader', 'Prediction', 'PredictionHeader']} })
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord']} })
     metadata: ScenarioMetadata = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
     ownship: Track = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
     target: Track = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
@@ -455,9 +482,15 @@ class DatasetHeader(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario', 'DatasetHeader', 'Prediction', 'PredictionHeader']} })
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
+                       'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest']} })
@@ -528,8 +561,13 @@ class Prediction(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario', 'DatasetHeader', 'Prediction', 'PredictionHeader']} })
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord']} })
     estimator: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
                        'MetricsRecord',
@@ -545,9 +583,15 @@ class PredictionHeader(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario', 'DatasetHeader', 'Prediction', 'PredictionHeader']} })
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
+                       'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest']} })
@@ -557,7 +601,49 @@ class PredictionHeader(ConfiguredBaseModel):
                        'CurvePoint',
                        'PairedComparison']} })
     mode: PredictionMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader']} })
-    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader']} })
+
+
+class CrbHeader(ConfiguredBaseModel):
+    """
+    First record of a tma2-crb file (gitma2).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord']} })
+    schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'ExperimentManifest',
+                       'NaiveModel',
+                       'ModelManifest']} })
+    model: CrbModel = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CrbHeader', 'ModelDigest']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader']} })
+
+
+class CrbRecord(ConfiguredBaseModel):
+    """
+    Cramér–Rao bounds at the truth for one scenario's scored rows (zig_index + 1 … end); where the information is singular the bounds are 0 and singular is true (gitma2).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord']} })
+    first_row: int = Field(default=..., description="""Row index of the first entry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
+    sd_range_rel: Optional[list[float]] = Field(default=None, description="""Bound on range error ÷ range.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
+    sd_course_deg: Optional[list[float]] = Field(default=None, description="""Bound on course error (degrees).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
+    sd_speed_kt: Optional[list[float]] = Field(default=None, description="""Bound on speed error (knots).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
+    singular: Optional[list[bool]] = Field(default=None, description="""True where no bound exists.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
 
 
 class MetricsRecord(ConfiguredBaseModel):
@@ -598,15 +684,46 @@ class MetricsRecord(ConfiguredBaseModel):
 class DatasetRef(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    path: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetRef']} })
+    path: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetRef', 'ArtefactRef']} })
     header: DatasetHeader = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetRef']} })
-    digest: Optional[str] = Field(default=None, description="""SHA-256 of the dataset file (absent in manifests written before schema 0.4.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetRef']} })
+    digest: Optional[str] = Field(default=None, description="""SHA-256 of the dataset file (absent in manifests written before schema 0.4.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetRef', 'ArtefactRef']} })
+
+
+class ArtefactRef(ConfiguredBaseModel):
+    """
+    A file an experiment read or wrote besides its datasets (gitma2, schema 0.17.0).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    path: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetRef', 'ArtefactRef']} })
+    digest: str = Field(default=..., description="""SHA-256 of the file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetRef', 'ArtefactRef']} })
+    role: Optional[str] = Field(default=None, description="""What the file is, e.g. \"prediction cache\", \"export conformance results\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ArtefactRef']} })
+
+
+class PackageVersion(ConfiguredBaseModel):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'EstimatorRef', 'GateCheck']} })
+    version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion']} })
+
+
+class RunEnvironment(ConfiguredBaseModel):
+    """
+    Software and hardware an experiment ran on (gitma2, schema 0.17.0).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    packages: Optional[list[PackageVersion]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RunEnvironment']} })
+    lockfile_digest: Optional[str] = Field(default=None, description="""SHA-256 of uv.lock.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RunEnvironment']} })
+    cpu_model: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RunEnvironment', 'ModelManifest']} })
+    cpu_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RunEnvironment']} })
+    torch_threads: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RunEnvironment']} })
 
 
 class EstimatorRef(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EstimatorRef', 'GateCheck']} })
+    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'EstimatorRef', 'GateCheck']} })
     settings_json: str = Field(default=..., description="""Estimator settings as JSON.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EstimatorRef']} })
 
 
@@ -631,6 +748,7 @@ class ExperimentManifest(ConfiguredBaseModel):
     torch_version: Optional[str] = Field(default=None, description="""PyTorch version that ran the experiment, when a physics layer or model was used (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
+                       'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest']} })
@@ -639,16 +757,19 @@ class ExperimentManifest(ConfiguredBaseModel):
     estimators: list[EstimatorRef] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
     normalisation: Optional[NormalisationConstants] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest']} })
     command_lines: list[str] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
+    environment: Optional[RunEnvironment] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
+    artefacts: Optional[list[ArtefactRef]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
 
 
 class GateCheck(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EstimatorRef', 'GateCheck']} })
+    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'EstimatorRef', 'GateCheck']} })
     result: GateResult = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck', 'GateVerdict']} })
     detail: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
     value: Optional[float] = Field(default=None, description="""Statistic tested (e.g. median range error).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
     threshold: Optional[float] = Field(default=None, description="""Limit the statistic is tested against.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
+    threshold_low: Optional[float] = Field(default=None, description="""Lower limit, for a check that passes inside an interval (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
     ci_low: Optional[float] = Field(default=None, description="""Lower bound of the bootstrap interval.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
     ci_high: Optional[float] = Field(default=None, description="""Upper bound of the bootstrap interval.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
     ci_level: Optional[float] = Field(default=None, description="""Interval coverage, e.g. 0.95.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
@@ -688,6 +809,7 @@ class NaiveModel(ConfiguredBaseModel):
 
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
+                       'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest']} })
@@ -791,6 +913,7 @@ class ModelManifest(ConfiguredBaseModel):
     config: TrainingConfig = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
+                       'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest']} })
@@ -808,7 +931,7 @@ class ModelManifest(ConfiguredBaseModel):
     parameter_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
     tfjs_node_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
     node_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest']} })
-    cpu_model: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
+    cpu_model: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['RunEnvironment', 'ModelManifest']} })
     tf_intraop_threads: Optional[int] = Field(default=None, description="""TF_NUM_INTRAOP_THREADS in force when training ran (absent: unset, so the TensorFlow default of one per core).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
     tf_interop_threads: Optional[int] = Field(default=None, description="""TF_NUM_INTEROP_THREADS in force when training ran (absent: unset).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
     weights_digest: str = Field(default=..., description="""SHA-256 of best-epoch weights.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Continuation', 'ModelManifest']} })
@@ -883,7 +1006,7 @@ class ModelDigest(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    model: str = Field(default=..., description="""The model's manifest id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelDigest']} })
+    model: str = Field(default=..., description="""The model's manifest id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbHeader', 'ModelDigest']} })
     weights_sha256: str = Field(default=..., description="""SHA-256 (hex) of the model's weights.bin; equals its manifest weights_digest.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelDigest']} })
     manifest_sha256: str = Field(default=..., description="""SHA-256 (hex) of the model's manifest.json (schema 0.11.1).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelDigest']} })
     model_json_sha256: str = Field(default=..., description="""SHA-256 (hex) of the model's model.json, its topology (schema 0.11.1).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelDigest']} })
@@ -907,8 +1030,13 @@ FeatureLayout.model_rebuild()
 PredictionRow.model_rebuild()
 Prediction.model_rebuild()
 PredictionHeader.model_rebuild()
+CrbHeader.model_rebuild()
+CrbRecord.model_rebuild()
 MetricsRecord.model_rebuild()
 DatasetRef.model_rebuild()
+ArtefactRef.model_rebuild()
+PackageVersion.model_rebuild()
+RunEnvironment.model_rebuild()
 EstimatorRef.model_rebuild()
 ExperimentManifest.model_rebuild()
 GateCheck.model_rebuild()

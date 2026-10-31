@@ -13,9 +13,11 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Changepoint weight** — the physics layer's input c ∈ [0, 1] per row: how free the target's
   velocity is to change there. The M largest become candidate knots; 0 everywhere is one leg.
 - **Cramér–Rao bound (CRB)** — the lowest variance any unbiased estimator can reach given the
-  bearings' Fisher information; batch least squares sits at it on a straight leg.
-- **Efficiency** — an estimator's error relative to the CRB for the same scenario and time; a
-  flat efficiency across geometry slices is the signature of an approximation floor.
+  bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
+  full window, known manoeuvres, per leg (see [CRB](algorithms/crb.md)).
+- **Efficiency** — the median over a slice's rows of error ÷ that row's CRB, divided by 0.6745,
+  so an unbiased estimator at the bound scores 1; a flat efficiency across geometry slices is the
+  signature of an approximation floor.
 - **Fisher information** — the curvature of the bearings' log-likelihood in the target state; its
   inverse is the Cramér–Rao bound. See [CRB](algorithms/crb.md).
 - **G5 rows** — σ = 1° scenarios scored at zig + 5, 10, 15 and 20 min where the window reaches
@@ -34,8 +36,11 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   versus the estimate using the whole window.
 - **Manoeuvre span** — the sample interval of one target course or speed change, from the first
   sample after it starts to the first sample after it ends.
-- **Oracle ceiling** — the physics layer fed with the true manoeuvre times and kinds; an upper
-  bound for any "segment, then solve" design.
+- **Oracle ceiling** — the physics layer fed with the true manoeuvre times and kinds (knots at
+  each manoeuvre's start and end, the chord of a turn, ridge τ_r = 3 m/s): the reference for any
+  "segment, then solve" design. It is not a strict upper bound: most of its error after a turn is
+  the chord approximation, and giving the in-turn bearings zero weight (the masked-turn
+  diagnostic in P0) does better; the known-manoeuvres Cramér–Rao bound is the information limit.
 - **Ownship** — the observing platform, whose track is known exactly.
 - **Physics layer** — see [the algorithm note](algorithms/physics-layer.md); the declared, differentiable piecewise-constant-velocity batch solve that
   produces every gitma2 estimate; with trivial inputs it equals batch least squares.

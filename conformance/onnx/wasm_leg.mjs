@@ -5,6 +5,7 @@
 // Usage: node wasm_leg.mjs [--dir <export dir>] [--out results.json]
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -99,7 +100,7 @@ try {
     const ms = performance.now() - t0;
     const o = {};
     for (const [k, t] of Object.entries(out)) o[k] = Array.from(t.data);
-    return { outputs: o, ms };
+    return { outputs: o, ms, userAgent: navigator.userAgent };
   });
 } finally {
   await browser.close();
@@ -126,7 +127,16 @@ const pythonF64 = pythonLeg;
 const report = {
   ...prior,
   python: pythonF64,
-  wasm: { max_rel_diff: diffs, reference: "torch (float64)", vs_onnxruntime_python: vsOrtPython, ms: results.ms, tol: TOL },
+  wasm: {
+    max_rel_diff: diffs,
+    reference: "torch (float64)",
+    vs_onnxruntime_python: vsOrtPython,
+    ms: results.ms,
+    tol: TOL,
+    onnx_sha256: createHash("sha256").update(model).digest("hex"),
+    runtime: `onnxruntime-web ${JSON.parse(readFileSync(join(here, "node_modules", "onnxruntime-web", "package.json"), "utf8")).version}`,
+    browser: results.userAgent,
+  },
 };
 writeFileSync(outPath, JSON.stringify(report, null, 2) + "\n");
 console.log(JSON.stringify({ wasm: diffs, ms: results.ms }));
