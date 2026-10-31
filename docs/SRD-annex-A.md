@@ -138,11 +138,15 @@ Fixed here so the result cannot choose its follow-on.
 - §5 gates: Gate D row (present).
 - §7 step 3 (present).
 
-## A.8 Decisions the owner takes before the spec is written
+## A.8 Decisions with defaults (adopted unless the owner objects before the decision record)
 
-- **D1** Operating threshold and tolerance (default 0.5 and ± 60 s).
-- **D2** Whether the time-late (non-causal) variant is carried alongside the causal one (default:
-  both, each at 97.5%).
-- **D3** The held-leg false-alarm limit (default 5%; the IMM's mode-probability rate on
-  validation is reported before this is fixed).
-- **D4** The test seed (fresh; gitma's 201–212 stay reserved).
+The agent writing the detector spec adopts these defaults, records them in the decision record
+with a one-line reason each, and proceeds (`AGENTS.md`, Autonomy and owner input). The owner may
+overrule any of them on the spec's PR.
+
+- **D1** Operating threshold and tolerance: **0.5 and ± 60 s**.
+- **D2** Variants carried: **both** the causal and the time-late detector, each at 97.5%.
+- **D3** Held-leg false-alarm limit: **5%**. If the frozen IMM's own mode-probability false-alarm
+  rate on validation is below 5%, the limit becomes that rate, and the decision record says so.
+- **D4** Test seed: a **fresh seed from 301 onward** (gitma's 201–212 and the oracle
+  experiment's 777 stay reserved), its digest pinned in the plan.
