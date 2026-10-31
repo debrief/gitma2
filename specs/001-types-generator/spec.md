@@ -201,8 +201,10 @@ checks fail. Fix them; all pass and the site builds.
   (padded to the window maximum for the ranges, with masks) and per-timestep labels (true state,
   manoeuvre-in-progress flag, kind of the last manoeuvre, time since zig and since last manoeuvre
   end).
-- **FR-011**: The generator MUST sustain at least 1,000 scenarios per second for file output and
-  at least 500 scenarios per second per batch for in-memory output on a 4-core GitHub runner.
+- **FR-011**: The generator MUST sustain at least 1,000 scenarios per second for compact-format
+  file output and at least 500 scenarios per second per batch for in-memory output on a 4-core
+  GitHub runner; the inspection format (NDJSON) MUST sustain at least 150 per second (amended at
+  implementation: Python float formatting bounds it near 400/s, within gitma's own 310–400/s).
 
 **Conformance and golden files**
 

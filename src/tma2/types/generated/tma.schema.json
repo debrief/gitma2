@@ -1,0 +1,2071 @@
+{
+    "$defs": {
+        "ChangeDecision": {
+            "additionalProperties": false,
+            "description": "The single change of the iteration's change round, fixed from validation evidence and committed before phase B trains (spec 003 R5).",
+            "properties": {
+                "carried_model": {
+                    "description": "G4: the manifest id of the one carried network (Annex B \u00a7B.4); tma-g4 refuses network predictions from another model.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "carried_models": {
+                    "description": "G5 (spec 012, schema 0.16.0): the manifest ids of the carried trackers (one or both of T1 and T2, Annex C \u00a7C.5), each with its own plan in `plans`, in the same order; tma-g5 refuses tracker predictions from any other model.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "carried_set_rule": {
+                    "type": "string"
+                },
+                "change": {
+                    "description": "e.g. feature_set: derived",
+                    "type": "string"
+                },
+                "decided_at": {
+                    "type": "string"
+                },
+                "fresh_test_count": {
+                    "description": "The dataset count whose test split a re-score scores (the plan's dataset.fresh_test.count; schema 0.11.1); tma-g2 refuses a plan with another count.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "model_digests": {
+                    "description": "The frozen carried models a re-score scores, by manifest id, with the SHA-256 of each one's weights.bin, manifest.json and model.json; tma-g2 refuses a re-score whose carried set or any of those files differs.",
+                    "items": {
+                        "$ref": "#/$defs/ModelDigest"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "phase_a_experiment": {
+                    "type": "string"
+                },
+                "plan": {
+                    "description": "The plan this decision pre-registers (configs/<\u2026>/plan.json). Required from iteration 3 (spec 007): tma-g2 scores a test split only with the decision that names its plan.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "plans": {
+                    "description": "G5: the plan of each carried tracker (configs/phase4/<x>/plan.json), in the order of carried_models; they share one dataset and one fresh test seed.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "rationale": {
+                    "description": "Validation evidence cited.",
+                    "type": "string"
+                },
+                "reference_estimator": {
+                    "description": "G4 (spec 010, schema 0.13.0): the frozen reference tracker's estimator name, which encodes every tuning parameter (e.g. imm-cv0-ct0.03-w0.003-s0.0001-r4); tma-g4 refuses reference predictions with another name.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "rescore_of": {
+                    "description": "The experiment directory of the inconclusive gate this decision re-scores (SRD \u00a77: one re-score on a larger fresh-seed test set; e.g. experiments/20261024-i4-g2). When present, tma-g2 runs in re-score mode (--rescore-of): the frozen carried models are bound by model_digests instead of by training ancestry, the re-scored gate must be inconclusive and not itself a re-score, and the fresh test seed must differ from its test seed.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "stalled": {
+                    "description": "Any gated criterion failed or was inconclusive on validation.",
+                    "type": "boolean"
+                },
+                "test_seed": {
+                    "description": "Dataset seed of the test split the decision commits to (the plan's fresh_test seed, or its dataset seed); tma-g2 checks it against the plan.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "phase_a_experiment",
+                "stalled",
+                "change",
+                "rationale",
+                "carried_set_rule",
+                "decided_at",
+                "git_commit"
+            ],
+            "title": "ChangeDecision",
+            "type": "object"
+        },
+        "Continuation": {
+            "additionalProperties": false,
+            "description": "The committed model a seeded continuation started from (scripts/train-continue.mjs; spec 003 decision 14, spec 004 decision 15). Its epoch records up to best_epoch are kept in the continued run's manifest, with their val_loss as recorded under the earlier config.",
+            "properties": {
+                "best_epoch": {
+                    "type": "integer"
+                },
+                "git_commit": {
+                    "description": "The source model's training-code commit, when it recorded one.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "rescored_val_loss": {
+                    "description": "The source's best weights re-scored under the continued run's loss, written by tma-train when it resumed (spec 004 FR-002). With best_epoch and best_val_loss it makes the kept weights auditable: a run whose best_epoch is the source's must have best_val_loss equal to this value and weights_digest equal to the source's.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "val_loss": {
+                    "description": "The source's best-epoch validation loss under the source's config.",
+                    "type": "number"
+                },
+                "weights_digest": {
+                    "description": "SHA-256 of the weights the continuation resumed from (the source's best epoch).",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "weights_digest",
+                "best_epoch",
+                "val_loss"
+            ],
+            "title": "Continuation",
+            "type": "object"
+        },
+        "CurvePoint": {
+            "additionalProperties": false,
+            "description": "One point of an error-vs-time-since-zig curve (curves.csv row).",
+            "properties": {
+                "course_deg_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "estimator": {
+                    "type": "string"
+                },
+                "gross_error_rate": {
+                    "type": "number"
+                },
+                "n": {
+                    "type": "integer"
+                },
+                "non_converged_rate": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_rel_median": {
+                    "description": "Absent when not finite (more than half the rows non-converged), as in MetricsRecord.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_rel_p90": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "speed_kt_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "t_since_zig_s": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "estimator",
+                "t_since_zig_s",
+                "n",
+                "gross_error_rate"
+            ],
+            "title": "CurvePoint",
+            "type": "object"
+        },
+        "DatasetHeader": {
+            "additionalProperties": false,
+            "description": "First record of every dataset file.",
+            "properties": {
+                "created_by": {
+                    "description": "Command line that produced the file.",
+                    "type": "string"
+                },
+                "dataset_seed": {
+                    "description": "Decimal uint64 string.",
+                    "type": "string"
+                },
+                "generator_git_commit": {
+                    "description": "Commit of the checkout that ran tma-generate (absent before schema 0.8.0).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "generator_git_dirty": {
+                    "description": "True when that checkout had uncommitted changes (only allowed with --allow-dirty; absent before schema 0.8.0).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "generator_version": {
+                    "type": "string"
+                },
+                "index_end": {
+                    "description": "Last scenario index (exclusive).",
+                    "type": "integer"
+                },
+                "index_start": {
+                    "description": "First scenario index (inclusive).",
+                    "type": "integer"
+                },
+                "parameter_ranges": {
+                    "$ref": "#/$defs/ParameterRanges"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "redraw_count": {
+                    "description": "Geometries rejected for violating min_range_m.",
+                    "type": "integer"
+                },
+                "scenario_count": {
+                    "type": "integer"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "split": {
+                    "$ref": "#/$defs/Split"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "generator_version",
+                "dataset_seed",
+                "split",
+                "scenario_count",
+                "index_start",
+                "index_end",
+                "parameter_ranges",
+                "redraw_count",
+                "created_by"
+            ],
+            "title": "DatasetHeader",
+            "type": "object"
+        },
+        "DatasetRef": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "digest": {
+                    "description": "SHA-256 of the dataset file (absent in manifests written before schema 0.4.0).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "header": {
+                    "$ref": "#/$defs/DatasetHeader"
+                },
+                "path": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "path",
+                "header"
+            ],
+            "title": "DatasetRef",
+            "type": "object"
+        },
+        "EpochRecord": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "epoch": {
+                    "type": "integer"
+                },
+                "seconds": {
+                    "description": "Cumulative wall time.",
+                    "type": "number"
+                },
+                "train_loss": {
+                    "type": "number"
+                },
+                "val_loss": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "epoch",
+                "train_loss",
+                "val_loss",
+                "seconds"
+            ],
+            "title": "EpochRecord",
+            "type": "object"
+        },
+        "EstimatorRef": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "settings_json": {
+                    "description": "Estimator settings as JSON.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "settings_json"
+            ],
+            "title": "EstimatorRef",
+            "type": "object"
+        },
+        "ExperimentManifest": {
+            "additionalProperties": false,
+            "description": "Everything needed to reproduce an experiment run.",
+            "properties": {
+                "command_lines": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "created": {
+                    "description": "ISO 8601 timestamp.",
+                    "type": "string"
+                },
+                "datasets": {
+                    "items": {
+                        "$ref": "#/$defs/DatasetRef"
+                    },
+                    "type": "array"
+                },
+                "estimators": {
+                    "items": {
+                        "$ref": "#/$defs/EstimatorRef"
+                    },
+                    "type": "array"
+                },
+                "generator_version": {
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "description": "True when the working tree had uncommitted changes (absent before schema 0.4.0).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "type": "string"
+                },
+                "node_version": {
+                    "description": "Node.js version that ran the experiment (byte identity is promised per pinned Node).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "normalisation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/NormalisationConstants"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "schema_version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "created",
+                "git_commit",
+                "schema_version",
+                "generator_version",
+                "datasets",
+                "estimators",
+                "command_lines"
+            ],
+            "title": "ExperimentManifest",
+            "type": "object"
+        },
+        "FeatureLayout": {
+            "additionalProperties": false,
+            "description": "Documents the model tensors (not stored as records). inputs [N, 240, 10]: bearing_sin, bearing_cos, own_x_km, own_y_km, own_course_sin, own_course_cos, own_speed_scaled, time_scaled, valid, window_mask; the derived feature set appends bearing_rate_scaled, rate_valid, intercept_scaled [N, 240, 13]. targets [N, 240, 6]: log_range_km, course_sin, course_cos, speed_scaled, x_km, y_km. loss_mask [N, 240]: window_mask and t \u2265 zig_time. Features file format 2 also embeds the source DatasetHeader and the source dataset SHA-256.",
+            "properties": {
+                "feature_set": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FeatureSet"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Absent means raw."
+                },
+                "input_channels": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "rows": {
+                    "type": "integer"
+                },
+                "target_channels": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "rows",
+                "input_channels",
+                "target_channels"
+            ],
+            "title": "FeatureLayout",
+            "type": "object"
+        },
+        "FeatureSet": {
+            "description": "Model input channel sets (spec 003 R6).",
+            "enum": [
+                "raw",
+                "derived"
+            ],
+            "title": "FeatureSet",
+            "type": "string"
+        },
+        "FloatRange": {
+            "additionalProperties": false,
+            "description": "Closed interval [min, max].",
+            "properties": {
+                "max": {
+                    "type": "number"
+                },
+                "min": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "min",
+                "max"
+            ],
+            "title": "FloatRange",
+            "type": "object"
+        },
+        "GateCheck": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "ci_high": {
+                    "description": "Upper bound of the bootstrap interval.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "ci_level": {
+                    "description": "Interval coverage, e.g. 0.95.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "ci_low": {
+                    "description": "Lower bound of the bootstrap interval.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "detail": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/$defs/GateResult"
+                },
+                "threshold": {
+                    "description": "Limit the statistic is tested against.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "value": {
+                    "description": "Statistic tested (e.g. median range error).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "name",
+                "result",
+                "detail"
+            ],
+            "title": "GateCheck",
+            "type": "object"
+        },
+        "GateId": {
+            "description": "",
+            "enum": [
+                "G0",
+                "G1",
+                "G2",
+                "G3",
+                "G4",
+                "G5"
+            ],
+            "title": "GateId",
+            "type": "string"
+        },
+        "GateResult": {
+            "description": "",
+            "enum": [
+                "pass",
+                "fail",
+                "inconclusive"
+            ],
+            "title": "GateResult",
+            "type": "string"
+        },
+        "GateVerdict": {
+            "additionalProperties": false,
+            "description": "Machine verdict for a gate; the team review records the final decision.",
+            "properties": {
+                "checks": {
+                    "items": {
+                        "$ref": "#/$defs/GateCheck"
+                    },
+                    "type": "array"
+                },
+                "decided_by": {
+                    "type": "string"
+                },
+                "gate": {
+                    "$ref": "#/$defs/GateId"
+                },
+                "result": {
+                    "$ref": "#/$defs/GateResult"
+                }
+            },
+            "required": [
+                "gate",
+                "result",
+                "checks",
+                "decided_by"
+            ],
+            "title": "GateVerdict",
+            "type": "object"
+        },
+        "ManoeuvreKind": {
+            "description": "What a target manoeuvre changes (generator 0.5.0, SRD Annex C \u00a7C.2).",
+            "enum": [
+                "course",
+                "speed"
+            ],
+            "title": "ManoeuvreKind",
+            "type": "string"
+        },
+        "ManoeuvreSpan": {
+            "additionalProperties": false,
+            "description": "Where one target manoeuvre lies in a scenario's samples (generator 0.5.0).",
+            "properties": {
+                "end_index": {
+                    "description": "First timestep after it completes.",
+                    "type": "integer"
+                },
+                "kind": {
+                    "$ref": "#/$defs/ManoeuvreKind"
+                },
+                "start_index": {
+                    "description": "First timestep after it starts.",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "kind",
+                "start_index",
+                "end_index"
+            ],
+            "title": "ManoeuvreSpan",
+            "type": "object"
+        },
+        "MetricsRecord": {
+            "additionalProperties": false,
+            "description": "Metric values for one estimator on one slice at one evaluation point.",
+            "properties": {
+                "course_deg_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "course_deg_p90": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "estimator": {
+                    "type": "string"
+                },
+                "excluded": {
+                    "type": "integer"
+                },
+                "gross_error_rate": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "n": {
+                    "type": "integer"
+                },
+                "non_converged_rate": {
+                    "description": "Fraction of rows with no estimate (scored +\u221e; explains absent medians/P90).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "point": {
+                    "description": "\"final\" or \"zig+<n>s\".",
+                    "type": "string"
+                },
+                "position_m_mean": {
+                    "description": "Mean position error over converged rows (non-converged rows count in gross_error_rate).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "position_window_m_median": {
+                    "description": "Median over scenarios of each scenario's mean position error over its predicted rows (time-late window-mean position, SRD \u00a75; reported, not gated).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "position_window_m_p90": {
+                    "description": "90th percentile over scenarios of the same per-scenario mean.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_rel_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_rel_p90": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "slice": {
+                    "description": "\"overall\" or e.g. \"range_band=5-10km\".",
+                    "type": "string"
+                },
+                "speed_kt_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "speed_kt_p90": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "estimator",
+                "slice",
+                "point",
+                "n",
+                "excluded"
+            ],
+            "title": "MetricsRecord",
+            "type": "object"
+        },
+        "ModelDigest": {
+            "additionalProperties": false,
+            "description": "A trained model named by its manifest id and the SHA-256 of its files (schema 0.11.0; manifest and model.json digests from 0.11.1).",
+            "properties": {
+                "manifest_sha256": {
+                    "description": "SHA-256 (hex) of the model's manifest.json (schema 0.11.1).",
+                    "type": "string"
+                },
+                "model": {
+                    "description": "The model's manifest id.",
+                    "type": "string"
+                },
+                "model_json_sha256": {
+                    "description": "SHA-256 (hex) of the model's model.json, its topology (schema 0.11.1).",
+                    "type": "string"
+                },
+                "weights_sha256": {
+                    "description": "SHA-256 (hex) of the model's weights.bin; equals its manifest weights_digest.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "model",
+                "weights_sha256",
+                "manifest_sha256",
+                "model_json_sha256"
+            ],
+            "title": "ModelDigest",
+            "type": "object"
+        },
+        "ModelKind": {
+            "description": "Model families of SRD \u00a74.",
+            "enum": [
+                "instantaneous",
+                "time_late",
+                "causal_cnn",
+                "mlp",
+                "learned_gain_filter"
+            ],
+            "title": "ModelKind",
+            "type": "string"
+        },
+        "ModelManifest": {
+            "additionalProperties": false,
+            "description": "Everything needed to reproduce and identify a trained model.",
+            "properties": {
+                "best_epoch": {
+                    "type": "integer"
+                },
+                "best_val_loss": {
+                    "description": "The validation loss a later epoch must beat, under this manifest's config: the best epoch's val_loss, or, after a continuation changed the loss, the best weights re-scored under the new loss (spec 004 FR-002). Persisted so a chained job resumes against the same value. Absent before schema 0.8.2 (then the best epoch's recorded val_loss).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "complete": {
+                    "description": "False while training is in progress (checkpoint).",
+                    "type": "boolean"
+                },
+                "config": {
+                    "$ref": "#/$defs/TrainingConfig"
+                },
+                "continued_from": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Continuation"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Present when the run was seeded from a committed model (absent before schema 0.8.2)."
+                },
+                "cpu_model": {
+                    "type": "string"
+                },
+                "epochs": {
+                    "items": {
+                        "$ref": "#/$defs/EpochRecord"
+                    },
+                    "type": "array"
+                },
+                "g0_experiment": {
+                    "description": "Id of the G0 experiment whose verdict the training guard accepted.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "generator_version": {
+                    "type": "string"
+                },
+                "git_commit": {
+                    "description": "Commit of the training code, read when training started (absent before schema 0.6.0).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "git_dirty": {
+                    "description": "True when the working tree had uncommitted changes when training started (absent before schema 0.6.0).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "type": "string"
+                },
+                "node_version": {
+                    "type": "string"
+                },
+                "normalisation": {
+                    "$ref": "#/$defs/NormalisationConstants"
+                },
+                "parameter_count": {
+                    "type": "integer"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "source_dataset_header": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DatasetHeader"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Header of the dataset the train features came from (lineage; absent before schema 0.8.0)."
+                },
+                "stop_reason": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/StopReason"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "tf_interop_threads": {
+                    "description": "TF_NUM_INTEROP_THREADS in force when training ran (absent: unset).",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "tf_intraop_threads": {
+                    "description": "TF_NUM_INTRAOP_THREADS in force when training ran (absent: unset, so the TensorFlow default of one per core).",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "tfjs_node_version": {
+                    "type": "string"
+                },
+                "train_features_digest": {
+                    "type": "string"
+                },
+                "val_features_digest": {
+                    "type": "string"
+                },
+                "wall_s": {
+                    "type": "number"
+                },
+                "weights_digest": {
+                    "description": "SHA-256 of best-epoch weights.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "config",
+                "schema_version",
+                "generator_version",
+                "train_features_digest",
+                "val_features_digest",
+                "normalisation",
+                "epochs",
+                "best_epoch",
+                "complete",
+                "wall_s",
+                "parameter_count",
+                "tfjs_node_version",
+                "node_version",
+                "cpu_model",
+                "weights_digest"
+            ],
+            "title": "ModelManifest",
+            "type": "object"
+        },
+        "NaiveMeans": {
+            "additionalProperties": false,
+            "description": "Training-set means used by the naive baseline for one prediction mode.",
+            "properties": {
+                "course_cos": {
+                    "type": "number"
+                },
+                "course_sin": {
+                    "type": "number"
+                },
+                "log_range_km": {
+                    "description": "Mean of ln(range in km).",
+                    "type": "number"
+                },
+                "n": {
+                    "description": "Number of labels averaged.",
+                    "type": "integer"
+                },
+                "speed_mps": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "log_range_km",
+                "course_sin",
+                "course_cos",
+                "speed_mps",
+                "n"
+            ],
+            "title": "NaiveMeans",
+            "type": "object"
+        },
+        "NaiveModel": {
+            "additionalProperties": false,
+            "description": "Naive baseline (SRD \u00a75): predicts training-set means. final uses each scenario's last-sample label; per_timestep uses every post-zig label.",
+            "properties": {
+                "final": {
+                    "$ref": "#/$defs/NaiveMeans"
+                },
+                "per_timestep": {
+                    "$ref": "#/$defs/NaiveMeans"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "train_digest": {
+                    "description": "SHA-256 of the train file.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "schema_version",
+                "train_digest",
+                "final",
+                "per_timestep"
+            ],
+            "title": "NaiveModel",
+            "type": "object"
+        },
+        "NormalisationConstants": {
+            "additionalProperties": false,
+            "description": "Fixed scaling constants computed from the train split's input channels only.",
+            "properties": {
+                "bearing_rate_scale_rad_s": {
+                    "description": "90th percentile of |trailing least-squares bearing rate| over train inputs; required for the derived feature set.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "computed_from": {
+                    "description": "Always \"inputs_only\".",
+                    "type": "string"
+                },
+                "position_scale_km": {
+                    "type": "number"
+                },
+                "speed_scale_mps": {
+                    "type": "number"
+                },
+                "time_scale_s": {
+                    "type": "number"
+                },
+                "train_header_digest": {
+                    "description": "SHA-256 of the train header.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "position_scale_km",
+                "speed_scale_mps",
+                "time_scale_s",
+                "computed_from",
+                "train_header_digest"
+            ],
+            "title": "NormalisationConstants",
+            "type": "object"
+        },
+        "Observation": {
+            "additionalProperties": false,
+            "description": "One bearing from ownship to target. Stone Soup analogue Detection. When valid is false (dropout) bearing_rad is 0 and must be ignored.",
+            "properties": {
+                "bearing_rad": {
+                    "type": "number"
+                },
+                "timestamp_s": {
+                    "type": "number"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "timestamp_s",
+                "bearing_rad",
+                "valid"
+            ],
+            "title": "Observation",
+            "type": "object"
+        },
+        "OutputParameterisation": {
+            "description": "How the model's four output channels encode the target's course and speed (spec 008).",
+            "enum": [
+                "course_speed",
+                "velocity",
+                "velocity_two_hypothesis",
+                "velocity_gaussian"
+            ],
+            "title": "OutputParameterisation",
+            "type": "string"
+        },
+        "PairedComparison": {
+            "additionalProperties": false,
+            "description": "A model and a reference estimator compared on rows both answered (converged and finite), with each estimator's coverage reported separately (spec 003 R9).",
+            "properties": {
+                "course_deg_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "course_deg_median_ref": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "coverage_estimator": {
+                    "description": "Answered / scored.",
+                    "type": "number"
+                },
+                "coverage_reference": {
+                    "description": "Answered / scored.",
+                    "type": "number"
+                },
+                "estimator": {
+                    "type": "string"
+                },
+                "gross_error_rate": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "gross_error_rate_ref": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "n_common": {
+                    "type": "integer"
+                },
+                "point": {
+                    "type": "string"
+                },
+                "range_rel_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_rel_median_ref": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_rel_p90": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_rel_p90_ref": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "slice": {
+                    "type": "string"
+                },
+                "speed_kt_median": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "speed_kt_median_ref": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "estimator",
+                "reference",
+                "slice",
+                "point",
+                "n_common",
+                "coverage_estimator",
+                "coverage_reference"
+            ],
+            "title": "PairedComparison",
+            "type": "object"
+        },
+        "ParameterRanges": {
+            "additionalProperties": false,
+            "description": "Ranges from which ScenarioParameters are drawn. Initial ownship course, target bearing and target course are always uniform on [0, 2\u03c0); zig sign is uniform \u00b1.",
+            "properties": {
+                "dropout_fraction": {
+                    "$ref": "#/$defs/FloatRange"
+                },
+                "dt_s": {
+                    "type": "number"
+                },
+                "los_offset_rad": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FloatRange"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Angle off the line of sight, on the other bow, after an across_los turn; required when zig_rule is across_los."
+                },
+                "min_range_m": {
+                    "description": "Geometries closer than this at any sample are redrawn.",
+                    "type": "number"
+                },
+                "noise_sigma_rad_values": {
+                    "description": "\u03c3 drawn uniformly from this set.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "ownship_speed_mps": {
+                    "$ref": "#/$defs/FloatRange"
+                },
+                "ownship_turn_rate_rad_s": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FloatRange"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Turn rate drawn uniformly per scenario; absent means an instantaneous zig."
+                },
+                "range_distribution": {
+                    "$ref": "#/$defs/RangeDistribution"
+                },
+                "target_course_change_count_weights": {
+                    "description": "Generator 0.5.0 (SRD Annex C \u00a7C.2): probabilities of 0, 1, 2, \u2026 target course changes (summing to 1). Present: every scenario draws its manoeuvres this way, with target_manoeuvre_angle_abs_rad, target_turn_rate_rad_s, target_manoeuvre_after_zig_s and target_manoeuvre_margin_s, and target_manoeuvre_fraction must be absent.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "target_manoeuvre_after_zig_s": {
+                    "description": "Earliest start of the target's turn, after the first sample on leg 2.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_manoeuvre_angle_abs_rad": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FloatRange"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Absolute target course change; the sign is uniform \u00b1."
+                },
+                "target_manoeuvre_fraction": {
+                    "description": "Probability a scenario's target makes one course change (generator 0.4.0, SRD Annex B \u00a7B.2); absent means the target always holds course, as generators 0.1.0\u20130.3.0. When present, every scenario draws the manoeuvre parameters (so the PRNG is consumed alike) and the window must fit a turn whether or not one is made.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_manoeuvre_margin_s": {
+                    "description": "Least time from the end of the target's turn to the end of the window, so the gate point (manoeuvre + 5 min) is reached.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_manoeuvre_spacing_s": {
+                    "description": "Least time from the end of one target manoeuvre to the start of the next.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_range0_m": {
+                    "$ref": "#/$defs/FloatRange"
+                },
+                "target_speed_change_abs_mps": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FloatRange"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Absolute speed change; its sign is uniform \u00b1, flipped if the new speed would leave target_speed_mps (redrawn if both signs would)."
+                },
+                "target_speed_change_fraction": {
+                    "description": "Probability of one target speed change (generator 0.5.0).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_speed_change_rate_mps2": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FloatRange"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Magnitude of the target's acceleration during a speed change."
+                },
+                "target_speed_mps": {
+                    "$ref": "#/$defs/FloatRange"
+                },
+                "target_turn_rate_rad_s": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FloatRange"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Target turn rate, drawn uniformly per scenario."
+                },
+                "window_s": {
+                    "$ref": "#/$defs/FloatRange"
+                },
+                "zig2_delay_s": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FloatRange"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Delay from the start of leg 2 to the second turn; absent means one zig. The second zig follows zig_rule (and uses the same turn rate as the first)."
+                },
+                "zig_angle_abs_rad": {
+                    "$ref": "#/$defs/FloatRange"
+                },
+                "zig_fraction": {
+                    "$ref": "#/$defs/FloatRange"
+                },
+                "zig_rule": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ZigRule"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "How each zig is chosen; absent means random (generators 0.1.0\u20130.2.0). Under across_los zig_angle_abs_rad is still drawn but not used."
+                }
+            },
+            "required": [
+                "window_s",
+                "dt_s",
+                "ownship_speed_mps",
+                "zig_angle_abs_rad",
+                "zig_fraction",
+                "target_range0_m",
+                "range_distribution",
+                "target_speed_mps",
+                "noise_sigma_rad_values",
+                "dropout_fraction",
+                "min_range_m"
+            ],
+            "title": "ParameterRanges",
+            "type": "object"
+        },
+        "PlatformState": {
+            "additionalProperties": false,
+            "description": "One platform state. Stone Soup analogue GroundTruthState.",
+            "properties": {
+                "course_rad": {
+                    "type": "number"
+                },
+                "speed_mps": {
+                    "type": "number"
+                },
+                "timestamp_s": {
+                    "type": "number"
+                },
+                "x_m": {
+                    "type": "number"
+                },
+                "y_m": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "timestamp_s",
+                "x_m",
+                "y_m",
+                "course_rad",
+                "speed_mps"
+            ],
+            "title": "PlatformState",
+            "type": "object"
+        },
+        "Prediction": {
+            "additionalProperties": false,
+            "description": "One estimator's output for one scenario.",
+            "properties": {
+                "estimator": {
+                    "type": "string"
+                },
+                "mode": {
+                    "$ref": "#/$defs/PredictionMode"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/$defs/PredictionRow"
+                    },
+                    "type": "array"
+                },
+                "scenario_index": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "record",
+                "scenario_index",
+                "estimator",
+                "mode",
+                "rows"
+            ],
+            "title": "Prediction",
+            "type": "object"
+        },
+        "PredictionHeader": {
+            "additionalProperties": false,
+            "description": "First record of every prediction file.",
+            "properties": {
+                "dataset_digest": {
+                    "description": "SHA-256 of the truth file.",
+                    "type": "string"
+                },
+                "estimator": {
+                    "type": "string"
+                },
+                "mode": {
+                    "$ref": "#/$defs/PredictionMode"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "estimator",
+                "mode",
+                "dataset_digest"
+            ],
+            "title": "PredictionHeader",
+            "type": "object"
+        },
+        "PredictionMode": {
+            "description": "",
+            "enum": [
+                "final",
+                "per_timestep"
+            ],
+            "title": "PredictionMode",
+            "type": "string"
+        },
+        "PredictionRow": {
+            "additionalProperties": false,
+            "description": "An estimator's target estimate at one timestep.",
+            "properties": {
+                "converged": {
+                    "type": "boolean"
+                },
+                "course_rad": {
+                    "type": "number"
+                },
+                "iterations": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "log_range_sd": {
+                    "description": "Standard deviation of the estimator's log range (natural log; about the relative range error), from a velocity_gaussian network (spec 012). Absent for other estimators.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "p_manoeuvre": {
+                    "description": "The estimator's probability that the target's turn has started by this timestep (velocity_two_hypothesis networks only; spec 011). Absent for other estimators.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "range_m": {
+                    "type": "number"
+                },
+                "speed_mps": {
+                    "type": "number"
+                },
+                "timestamp_s": {
+                    "type": "number"
+                },
+                "vx_sd_mps": {
+                    "description": "Standard deviation of the estimated east velocity (velocity_gaussian only).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "vy_sd_mps": {
+                    "description": "Standard deviation of the estimated north velocity (velocity_gaussian only).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "x_m": {
+                    "type": "number"
+                },
+                "y_m": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "timestamp_s",
+                "range_m",
+                "course_rad",
+                "speed_mps",
+                "x_m",
+                "y_m",
+                "converged"
+            ],
+            "title": "PredictionRow",
+            "type": "object"
+        },
+        "RangeDistribution": {
+            "description": "",
+            "enum": [
+                "uniform",
+                "log_uniform"
+            ],
+            "title": "RangeDistribution",
+            "type": "string"
+        },
+        "RecordKind": {
+            "description": "Discriminator for records in NDJSON files.",
+            "enum": [
+                "header",
+                "scenario",
+                "prediction"
+            ],
+            "title": "RecordKind",
+            "type": "string"
+        },
+        "Scenario": {
+            "additionalProperties": false,
+            "description": "One ownship-vs-target run over a window.",
+            "properties": {
+                "metadata": {
+                    "$ref": "#/$defs/ScenarioMetadata"
+                },
+                "observations": {
+                    "items": {
+                        "$ref": "#/$defs/Observation"
+                    },
+                    "type": "array"
+                },
+                "ownship": {
+                    "$ref": "#/$defs/Track"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "target": {
+                    "$ref": "#/$defs/Track"
+                }
+            },
+            "required": [
+                "record",
+                "metadata",
+                "ownship",
+                "target",
+                "observations"
+            ],
+            "title": "Scenario",
+            "type": "object"
+        },
+        "ScenarioMetadata": {
+            "additionalProperties": false,
+            "description": "Seed, parameter draws and derived slicing keys for one scenario.",
+            "properties": {
+                "index": {
+                    "description": "Scenario index within the dataset.",
+                    "type": "integer"
+                },
+                "manoeuvre_index": {
+                    "description": "First timestep after the target's turn completes (generator 0.4.0; absent when the target holds course). Gate G4 counts time from here, as earlier gates count from zig_index. Under generator 0.5.0, after the last manoeuvre completes.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "manoeuvre_start_index": {
+                    "description": "First timestep after the target's turn starts (generator 0.4.0; absent when the target holds course). Under generator 0.5.0, after the first manoeuvre starts.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "manoeuvres": {
+                    "description": "Generator 0.5.0: each target manoeuvre's sample span, in time order (present, possibly empty, only under 0.5.0).",
+                    "items": {
+                        "$ref": "#/$defs/ManoeuvreSpan"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "mean_range_m": {
+                    "type": "number"
+                },
+                "min_range_m": {
+                    "type": "number"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/ScenarioParameters"
+                },
+                "samples": {
+                    "description": "Number of timesteps (60\u2013240).",
+                    "type": "integer"
+                },
+                "seed": {
+                    "description": "Scenario seed as a decimal uint64 string.",
+                    "type": "string"
+                },
+                "turn2_start_index": {
+                    "description": "First timestep after the second turn starts (absent with one zig or no turn rate).",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "turn_start_index": {
+                    "description": "First timestep after the turn starts (absent for an instantaneous zig).",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "zig2_index": {
+                    "description": "First timestep on leg 3, after the second turn completes (absent with one zig). Gate times still count from zig_index.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "zig_index": {
+                    "description": "First timestep on leg 2 (with a rate-limited turn, the first after it completes).",
+                    "type": "integer"
+                },
+                "zig_time_s": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "seed",
+                "index",
+                "parameters",
+                "samples",
+                "zig_index",
+                "zig_time_s",
+                "mean_range_m",
+                "min_range_m"
+            ],
+            "title": "ScenarioMetadata",
+            "type": "object"
+        },
+        "ScenarioParameters": {
+            "additionalProperties": false,
+            "description": "The random draws that define one scenario.",
+            "properties": {
+                "dropout_fraction": {
+                    "description": "Probability each bearing is missing.",
+                    "type": "number"
+                },
+                "dt_s": {
+                    "description": "Bearing interval.",
+                    "type": "number"
+                },
+                "noise_sigma_rad": {
+                    "description": "Bearing noise \u03c3; 0 = noise-free.",
+                    "type": "number"
+                },
+                "ownship_course0_rad": {
+                    "description": "Ownship course on leg 1.",
+                    "type": "number"
+                },
+                "ownship_speed_mps": {
+                    "type": "number"
+                },
+                "ownship_turn_rate_rad_s": {
+                    "description": "Ownship turn rate at the zig (rate-limited turn, spec 003 US6). Absent or 0: the course changes instantaneously, as in generator 0.1.0.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_bearing0_rad": {
+                    "description": "True bearing at window start.",
+                    "type": "number"
+                },
+                "target_course_rad": {
+                    "type": "number"
+                },
+                "target_manoeuvre_angle_rad": {
+                    "description": "Signed target course change; positive is clockwise.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_manoeuvre_time_s": {
+                    "description": "Target course change (generator 0.4.0, SRD Annex B \u00a7B.2): time the target's turn starts, a whole number of samples. Absent: the target holds course.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "target_manoeuvres": {
+                    "description": "Target manoeuvres in time order (generator 0.5.0, SRD Annex C \u00a7C.2), none overlapping. Present (possibly empty) only under generator 0.5.0 ranges; then the single-turn fields above are absent.",
+                    "items": {
+                        "$ref": "#/$defs/TargetManoeuvre"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "target_range0_m": {
+                    "description": "Range at window start.",
+                    "type": "number"
+                },
+                "target_speed_mps": {
+                    "type": "number"
+                },
+                "target_turn_rate_rad_s": {
+                    "description": "Target turn rate through its course change.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "window_s": {
+                    "description": "Window length; multiple of dt_s.",
+                    "type": "number"
+                },
+                "zig2_angle_rad": {
+                    "description": "Signed course change at the second zig; positive is clockwise.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "zig2_delay_s": {
+                    "description": "Second zig (generator 0.3.0, spec 007): time from the first sample on leg 2 to the start of the second turn. Absent: one zig, two legs.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "zig_angle_rad": {
+                    "description": "Signed course change at the zig; positive is clockwise.",
+                    "type": "number"
+                },
+                "zig_fraction": {
+                    "description": "Zig time as a fraction of the window.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "window_s",
+                "dt_s",
+                "ownship_speed_mps",
+                "ownship_course0_rad",
+                "zig_angle_rad",
+                "zig_fraction",
+                "target_range0_m",
+                "target_bearing0_rad",
+                "target_speed_mps",
+                "target_course_rad",
+                "noise_sigma_rad",
+                "dropout_fraction"
+            ],
+            "title": "ScenarioParameters",
+            "type": "object"
+        },
+        "Split": {
+            "description": "Dataset split. Train/validation/test are 80/10/10 by scenario index.",
+            "enum": [
+                "train",
+                "validation",
+                "test",
+                "heldout"
+            ],
+            "title": "Split",
+            "type": "string"
+        },
+        "StopReason": {
+            "description": "",
+            "enum": [
+                "max_epochs",
+                "early_stopping",
+                "wall_clock",
+                "diverged"
+            ],
+            "title": "StopReason",
+            "type": "string"
+        },
+        "TargetManoeuvre": {
+            "additionalProperties": false,
+            "description": "One target manoeuvre (generator 0.5.0). A course change is an arc at constant speed; a speed change is constant acceleration on a constant course.",
+            "properties": {
+                "change": {
+                    "description": "Signed change: course in rad (positive clockwise) or speed in m/s (positive faster).",
+                    "type": "number"
+                },
+                "kind": {
+                    "$ref": "#/$defs/ManoeuvreKind"
+                },
+                "rate": {
+                    "description": "Magnitude of the rate of change, rad/s (course) or m/s\u00b2 (speed).",
+                    "type": "number"
+                },
+                "start_time_s": {
+                    "description": "Time the manoeuvre starts, a whole number of samples.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "kind",
+                "start_time_s",
+                "change",
+                "rate"
+            ],
+            "title": "TargetManoeuvre",
+            "type": "object"
+        },
+        "Track": {
+            "additionalProperties": false,
+            "description": "Time-ordered states of one platform. Stone Soup analogue GroundTruthPath.",
+            "properties": {
+                "id": {
+                    "$ref": "#/$defs/TrackId"
+                },
+                "states": {
+                    "items": {
+                        "$ref": "#/$defs/PlatformState"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "id",
+                "states"
+            ],
+            "title": "Track",
+            "type": "object"
+        },
+        "TrackId": {
+            "description": "",
+            "enum": [
+                "ownship",
+                "target"
+            ],
+            "title": "TrackId",
+            "type": "string"
+        },
+        "TrainingConfig": {
+            "additionalProperties": false,
+            "description": "Hyperparameters and seeds for one training run (SRD \u00a74; constitution III).",
+            "properties": {
+                "batch_size": {
+                    "type": "integer"
+                },
+                "bucket_batches": {
+                    "description": "Batches per length-bucketing group (default 16).",
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "feature_set": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/FeatureSet"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Input channel set; absent means raw. Must match the features files."
+                },
+                "id": {
+                    "description": "Estimator name used in predictions.",
+                    "type": "string"
+                },
+                "kernel_size": {
+                    "description": "Causal CNN kernel size.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "layers": {
+                    "description": "Stacked layers: causal CNN conv layers (no dilation; default 3), or recurrent layers for instantaneous and time_late (default 1; each returns sequences; spec 003 R20).",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "learning_rate": {
+                    "type": "number"
+                },
+                "length_bucketing": {
+                    "description": "Length bucketing (research R15; default false). Each group of bucket_batches batches of the epoch's seeded permutation is sorted by valid length, cut into batches whose rows are trimmed to the longest window, and the batch order is shuffled with a seed derived from train_seed and the epoch. The model takes a variable time dimension. Not for mlp.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "loss_weight_course": {
+                    "type": "number"
+                },
+                "loss_weight_manoeuvre": {
+                    "description": "Weight of the turn-probability cross-entropy term (velocity_two_hypothesis only; spec 011). Absent means 1.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "loss_weight_range": {
+                    "type": "number"
+                },
+                "loss_weight_speed": {
+                    "type": "number"
+                },
+                "max_epochs": {
+                    "type": "integer"
+                },
+                "max_wall_s": {
+                    "description": "Wall-clock cap in seconds.",
+                    "type": "number"
+                },
+                "model_kind": {
+                    "$ref": "#/$defs/ModelKind"
+                },
+                "output_parameterisation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/OutputParameterisation"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Output encoding; absent means course_speed. With velocity, loss_weight_speed weights each velocity component and loss_weight_course is unused (spec 008)."
+                },
+                "patience": {
+                    "description": "Epochs without validation improvement before stopping.",
+                    "type": "integer"
+                },
+                "shuffle_labels": {
+                    "description": "Permute targets across scenarios (leakage check).",
+                    "type": "boolean"
+                },
+                "tfjs_threads": {
+                    "description": "TensorFlow intra-op and inter-op thread count, set by tma-train through TF_NUM_INTRAOP_THREADS and TF_NUM_INTEROP_THREADS before tfjs-node loads. Absent: the TensorFlow default (one per core) or whatever the environment sets.",
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "train_limit": {
+                    "description": "Use only the first N training scenarios (tests and smoke runs).",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "train_seed": {
+                    "description": "Decimal uint64; derives initializer seeds and batch order.",
+                    "type": "string"
+                },
+                "units": {
+                    "description": "LSTM units (per direction), conv filters or dense width.",
+                    "type": "integer"
+                },
+                "velocity_scale_mps": {
+                    "description": "Velocity scale in m/s for the velocity parameterisation (required with it): the top of the generator's target speed range, a constant of the problem, never a truth statistic.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "model_kind",
+                "units",
+                "learning_rate",
+                "batch_size",
+                "max_epochs",
+                "patience",
+                "max_wall_s",
+                "loss_weight_range",
+                "loss_weight_course",
+                "loss_weight_speed",
+                "train_seed",
+                "shuffle_labels"
+            ],
+            "title": "TrainingConfig",
+            "type": "object"
+        },
+        "ZigRule": {
+            "description": "How each zig's direction and size are chosen (generator 0.3.0, spec 007).",
+            "enum": [
+                "random",
+                "across_los"
+            ],
+            "title": "ZigRule",
+            "type": "string"
+        }
+    },
+    "$id": "https://github.com/debrief/gitma/schema/tma",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "additionalProperties": false,
+    "description": "One ownship-vs-target run over a window.",
+    "metamodel_version": "1.12.0",
+    "properties": {
+        "metadata": {
+            "$ref": "#/$defs/ScenarioMetadata"
+        },
+        "observations": {
+            "items": {
+                "$ref": "#/$defs/Observation"
+            },
+            "type": "array"
+        },
+        "ownship": {
+            "$ref": "#/$defs/Track"
+        },
+        "record": {
+            "$ref": "#/$defs/RecordKind"
+        },
+        "target": {
+            "$ref": "#/$defs/Track"
+        }
+    },
+    "required": [
+        "record",
+        "metadata",
+        "ownship",
+        "target",
+        "observations"
+    ],
+    "title": "tma",
+    "type": "object",
+    "version": "0.16.0"
+}
+

@@ -99,6 +99,9 @@ floats. Two risks are larger than a stored-value flip:
    impossible; the conformance test reports them as a scenario-level mismatch, which fails.
 2. **Angle wrap at 2π**: `f32Angle` returns 0 when the float32 value reaches 2π; copied exactly.
 
+**Outcome (2026-10-31)**: no decision-boundary case and no one-ulp residual in 598,887 compared
+floats across the three fixtures; all 17 fixture files are byte-identical.
+
 **Decision**: compute in float64 with the same operation order as gitma; use `math`/`numpy`
 scalar functions inside numba (which lower to the platform libm or LLVM intrinsics); accept the
 constitution's 1-ulp float32 residual and report it; treat any scenario-level divergence as a

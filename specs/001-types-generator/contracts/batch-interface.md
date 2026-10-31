@@ -3,11 +3,16 @@
 ```python
 from tma2.features.batch import Batch, generate_batch, rows_for
 
-R = rows_for(ranges)                      # floor(window_s.max / dt_s)
+R = rows_for(ranges)  # floor(window_s.max / dt_s)
 batch: Batch = generate_batch(
-    seed=777, batch_index=3, batch_size=256, ranges=ranges,
-    start=0, end=80_000,                  # index range this stream covers (a split)
-    noise_free=False, workers=None,       # None: numba's thread count
+    seed=777,
+    batch_index=3,
+    batch_size=256,
+    ranges=ranges,
+    start=0,
+    end=80_000,  # index range this stream covers (a split)
+    noise_free=False,
+    workers=None,  # None: numba's thread count
 )
 ```
 

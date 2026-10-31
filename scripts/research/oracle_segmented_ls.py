@@ -17,12 +17,12 @@ velocity to the previous one, so a leg that is only a few samples old does not b
 
 Pure numpy/scipy; no gitma code is imported. Run with `python3 -I`.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import math
-import sys
 from dataclasses import dataclass
 
 import numpy as np
@@ -67,7 +67,15 @@ def load_scenarios(path: str) -> list[Scenario]:
             own = rec["ownship"]["states"]
             tgt = rec["target"]["states"]
             obs = rec["observations"]
-            tv = np.array([(s["speed_mps"] * math.sin(s["course_rad"]), s["speed_mps"] * math.cos(s["course_rad"])) for s in tgt])
+            tv = np.array(
+                [
+                    (
+                        s["speed_mps"] * math.sin(s["course_rad"]),
+                        s["speed_mps"] * math.cos(s["course_rad"]),
+                    )
+                    for s in tgt
+                ]
+            )
             out.append(
                 Scenario(
                     index=md["index"],
@@ -82,7 +90,10 @@ def load_scenarios(path: str) -> list[Scenario]:
                     valid=np.array([o["valid"] for o in obs], dtype=bool),
                     sigma=float(md["parameters"]["noise_sigma_rad"]),
                     zig_index=int(md["zig_index"]),
-                    spans=[(int(m["start_index"]), int(m["end_index"]), m["kind"]) for m in md.get("manoeuvres", [])],
+                    spans=[
+                        (int(m["start_index"]), int(m["end_index"]), m["kind"])
+                        for m in md.get("manoeuvres", [])
+                    ],
                 )
             )
     return out
@@ -111,7 +122,14 @@ def segment_matrix(t: np.ndarray, knots: list[float]) -> np.ndarray:
     return np.stack(cols, axis=1)
 
 
-def solve_segments(sc: Scenario, k: int, knots_idx: list[int], prior_sd_mps: float, speed_prior_sd_mps: float, course_spans: list[tuple[int, int]]) -> tuple[np.ndarray, list[float]] | None:
+def solve_segments(
+    sc: Scenario,
+    k: int,
+    knots_idx: list[int],
+    prior_sd_mps: float,
+    speed_prior_sd_mps: float,
+    course_spans: list[tuple[int, int]],
+) -> tuple[np.ndarray, list[float]] | None:
     sel = np.arange(k + 1)[sc.valid[: k + 1]]
     if sel.size < 6:
         return None
@@ -127,7 +145,9 @@ def solve_segments(sc: Scenario, k: int, knots_idx: list[int], prior_sd_mps: flo
         for s_idx, e_idx in course_spans:
             if s_idx <= k and 0 < s_idx:
                 ts, te = float(sc.t[s_idx]), float(sc.t[min(e_idx, k)])
-                a = int(np.searchsorted(np.array(knots), ts, side="left"))  # segment ending at the span start
+                a = int(
+                    np.searchsorted(np.array(knots), ts, side="left")
+                )  # segment ending at the span start
                 b = int(np.searchsorted(np.array(knots), te, side="right")) if te > ts else a + 1
                 if 0 <= a < S and 0 <= b < S and a != b:
                     speed_pairs.append((a, b))
@@ -144,7 +164,9 @@ def solve_segments(sc: Scenario, k: int, knots_idx: list[int], prior_sd_mps: flo
         r = wrap(z - np.arctan2(dx, dy)) / sigma
         v = p[2:].reshape(S, 2)
         prior = (v[1:] - v[:-1]).ravel() / prior_sd_mps if S > 1 else np.zeros(0)
-        sp = np.array([(np.hypot(*v[b]) - np.hypot(*v[a])) / speed_prior_sd_mps for a, b in speed_pairs])
+        sp = np.array(
+            [(np.hypot(*v[b]) - np.hypot(*v[a])) / speed_prior_sd_mps for a, b in speed_pairs]
+        )
         return np.concatenate([r, prior, sp])
 
     def jac(p: np.ndarray) -> np.ndarray:
@@ -171,13 +193,18 @@ def solve_segments(sc: Scenario, k: int, knots_idx: list[int], prior_sd_mps: flo
     for r0 in GRID_RANGES_M:
         for c in GRID_COURSES:
             for s in GRID_SPEEDS:
-                p = np.array([ox[0] + r0 * math.sin(b0), oy[0] + r0 * math.cos(b0)] + [s * math.sin(c), s * math.cos(c)] * S)
+                p = np.array(
+                    [ox[0] + r0 * math.sin(b0), oy[0] + r0 * math.cos(b0)]
+                    + [s * math.sin(c), s * math.cos(c)] * S
+                )
                 cost = float(np.sum(residuals(p) ** 2))
                 if cost < best_cost:
                     best, best_cost = p, cost
     assert best is not None
     try:
-        res = least_squares(residuals, best, jac=(jac if not speed_pairs else "2-point"), method="lm", max_nfev=400)
+        res = least_squares(
+            residuals, best, jac=(jac if not speed_pairs else "2-point"), method="lm", max_nfev=400
+        )
     except Exception:
         return None
     p = res.x
@@ -191,14 +218,20 @@ def solve_segments(sc: Scenario, k: int, knots_idx: list[int], prior_sd_mps: flo
     return np.array([est_x, est_y, v[seg, 0], v[seg, 1]]), knots
 
 
-def errors(sc: Scenario, k: int, x: float, y: float, vx: float, vy: float) -> tuple[float, float, float]:
+def errors(
+    sc: Scenario, k: int, x: float, y: float, vx: float, vy: float
+) -> tuple[float, float, float]:
     r_true = math.hypot(sc.tx[k] - sc.ox[k], sc.ty[k] - sc.oy[k])
     r_est = math.hypot(x - sc.ox[k], y - sc.oy[k])
     c_true = math.atan2(sc.tvx[k], sc.tvy[k])
     c_est = math.atan2(vx, vy)
     s_true = math.hypot(sc.tvx[k], sc.tvy[k])
     s_est = math.hypot(vx, vy)
-    return abs(r_est - r_true) / r_true, abs(wrap(np.array([c_est - c_true]))[0]) * 180 / math.pi, abs(s_est - s_true) / 0.514444
+    return (
+        abs(r_est - r_true) / r_true,
+        abs(wrap(np.array([c_est - c_true]))[0]) * 180 / math.pi,
+        abs(s_est - s_true) / 0.514444,
+    )
 
 
 def settled(sc: Scenario, k: int) -> bool:
@@ -217,8 +250,18 @@ def main() -> None:
     ap.add_argument("--truth", required=True)
     ap.add_argument("--imm", required=True)
     ap.add_argument("--lsq", required=True)
-    ap.add_argument("--prior-sd", type=float, default=3.0, help="ridge sd (m/s) tying a new segment's velocity to the last")
-    ap.add_argument("--speed-prior-sd", type=float, default=0.0, help="if > 0, sd (m/s) of a prior that speed is unchanged across a course-only manoeuvre")
+    ap.add_argument(
+        "--prior-sd",
+        type=float,
+        default=3.0,
+        help="ridge sd (m/s) tying a new segment's velocity to the last",
+    )
+    ap.add_argument(
+        "--speed-prior-sd",
+        type=float,
+        default=0.0,
+        help="if > 0, sd (m/s) of a prior that speed is unchanged across a course-only manoeuvre",
+    )
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--out", default="")
     args = ap.parse_args()
@@ -239,9 +282,21 @@ def main() -> None:
             if k >= sc.t.size:
                 continue
             tk = float(sc.t[k])
-            row: dict = {"scenario": sc.index, "offset_s": off, "settled": bool(settled(sc, k)), "n_spans_started": sum(1 for s, _, _ in sc.spans if s <= k)}
+            row: dict = {
+                "scenario": sc.index,
+                "offset_s": off,
+                "settled": bool(settled(sc, k)),
+                "n_spans_started": sum(1 for s, _, _ in sc.spans if s <= k),
+            }
             knots = [i for s, e, _ in sc.spans if s <= k for i in (s, e)]
-            o = solve_segments(sc, k, knots, args.prior_sd, args.speed_prior_sd, [(s_, e_) for s_, e_, kind in sc.spans if kind == "course"])
+            o = solve_segments(
+                sc,
+                k,
+                knots,
+                args.prior_sd,
+                args.speed_prior_sd,
+                [(s_, e_) for s_, e_, kind in sc.spans if kind == "course"],
+            )
             if o is None:
                 row["oracle"] = None
             else:
@@ -259,22 +314,31 @@ def main() -> None:
 
     def summarise(subset: list[dict], label: str) -> None:
         print(f"\n{label}: n = {len(subset)}")
-        print(f"{'estimator':10s} {'range med':>10s} {'range p90':>10s} {'course med':>11s} {'speed med':>10s} {'gross':>7s} {'no est':>7s}")
+        print(
+            f"{'estimator':10s} {'range med':>10s} {'range p90':>10s} {'course med':>11s} {'speed med':>10s} {'gross':>7s} {'no est':>7s}"
+        )
         for name in ("oracle", "lsq", "imm"):
             vals = np.array([r[name] for r in subset if r[name] is not None])
             missing = sum(1 for r in subset if r[name] is None)
             if vals.size == 0:
                 continue
             gross = (np.sum(vals[:, 0] > 0.5) + missing) / len(subset)
-            print(f"{name:10s} {np.median(vals[:,0])*100:9.2f}% {np.percentile(vals[:,0],90)*100:9.1f}% {np.median(vals[:,1]):10.2f}° {np.median(vals[:,2]):8.2f}kt {gross*100:6.2f}% {missing:7d}")
+            print(
+                f"{name:10s} {np.median(vals[:, 0]) * 100:9.2f}% {np.percentile(vals[:, 0], 90) * 100:9.1f}% {np.median(vals[:, 1]):10.2f}° {np.median(vals[:, 2]):8.2f}kt {gross * 100:6.2f}% {missing:7d}"
+            )
 
     summarise(rows, "All G5 rows (σ = 1°)")
     summarise([r for r in rows if r["settled"]], "Settled rows")
-    summarise([r for r in rows if not r["settled"]], "Unsettled rows (manoeuvre in progress or ended < 5 min ago)")
+    summarise(
+        [r for r in rows if not r["settled"]],
+        "Unsettled rows (manoeuvre in progress or ended < 5 min ago)",
+    )
     for off in GATE_OFFSETS_S:
         summarise([r for r in rows if r["offset_s"] == off], f"zig + {off // 60} min")
     summarise([r for r in rows if r["n_spans_started"] == 0], "Rows before any manoeuvre")
-    summarise([r for r in rows if r["n_spans_started"] > 0], "Rows after at least one manoeuvre started")
+    summarise(
+        [r for r in rows if r["n_spans_started"] > 0], "Rows after at least one manoeuvre started"
+    )
 
     # Paired bootstrap of median-range ratios, clustered by scenario.
     rng = np.random.default_rng(20261011)
@@ -282,10 +346,14 @@ def main() -> None:
     for r in rows:
         by_sc.setdefault(r["scenario"], []).append(r)
     keys = list(by_sc)
+
     def ratio(sample_rows: list[dict], a: str, b: str, which: int) -> float:
-        pairs = [(r[a][which], r[b][which]) for r in sample_rows if r[a] is not None and r[b] is not None]
+        pairs = [
+            (r[a][which], r[b][which]) for r in sample_rows if r[a] is not None and r[b] is not None
+        ]
         arr = np.array(pairs)
         return float(np.median(arr[:, 0]) / np.median(arr[:, 1]))
+
     print("\nPaired, scenario-clustered bootstrap (2000 resamples), median ratios oracle / imm:")
     for label, pred in (("all rows", lambda r: True), ("settled", lambda r: r["settled"])):
         for which, qty in ((0, "range"), (1, "course"), (2, "speed")):

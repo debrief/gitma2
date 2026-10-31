@@ -1,0 +1,68 @@
+[project]
+name = "tma2"
+version = "0.1.0"
+description = "TMA via ML, second attempt: simulated bearings-only data, references and learned estimators"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy>=2.0,<3",
+  "numba>=0.61",
+  "pydantic>=2.7,<3",
+]
+
+[project.scripts]
+tma2-generate = "tma2.cli.generate:main"
+
+[dependency-groups]
+dev = [
+  "linkml==1.12.0",
+  "pytest>=8",
+  "ruff>=0.6",
+  "mypy>=1.11",
+  "types-PyYAML",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tma2"]
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["src/tma2/types/generated", "site"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "N", "W"]
+ignore = ["N803", "N806"]  # kernel code mirrors gitma's names (P, R, TI arrays)
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/research/*" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tma2", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "typings"
+files = ["src", "scripts", "tests"]
+exclude = ["src/tma2/types/generated/", "scripts/research/"]
+
+[[tool.mypy.overrides]]
+module = ["tma2.types.generated.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["linkml.*", "linkml_runtime.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
