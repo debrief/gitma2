@@ -173,6 +173,15 @@ and tied the model family to tfjs's operator support.
 - Owner decisions that change the plan (compute, stack, first target, schema, process) are
   recorded in `docs/research/04-proposal.md` §6 or a later decision record before work follows
   from them.
+- **The owner is not a blocker** (amended 1.1.0, 2026-10-31). Agents proceed from the documents:
+  stated defaults are adopted and recorded; undocumented choices are made, stated in the PR and
+  left to review; gate verdicts come from the panel; a follow-on the SRD leaves to the owner is
+  proposed with a recommended default and adopted if unopposed by the next spec. Only the
+  owner-only list in `AGENTS.md` (spending or new accounts, SRD §1 scope, classification, gate
+  criteria after a result, deleting committed records, publishing elsewhere) waits for the owner.
+  An agent may merge its own PR when CI is green and a review agent or the panel has approved;
+  SRD, annex and constitution amendments are merged by the owner, or by the agent after two
+  working days without objection.
 - Runtime guidance for agents lives in `AGENTS.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-31 | **Last Amended**: 2026-10-31
+**Version**: 1.1.0 | **Ratified**: 2026-10-31 | **Last Amended**: 2026-10-31

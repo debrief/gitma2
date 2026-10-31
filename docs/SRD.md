@@ -109,7 +109,7 @@ configuration; the carried weights chosen by a rule named in the decision record
 | **P0 pipeline** | Generator reproduces gitma's files; Python batch LS, EKF and IMM reproduce gitma's prediction files on the same data to float32; the physics layer with trivial inputs equals batch LS and recovers noise-free truth; the oracle ceiling on a 10^5 MAN validation split is within the interval measured in `docs/research/05` | Fix before any training |
 | **Gate 1 CV** | On a fresh CV test seed, σ = 1°, at zig + 5 min (range, course) and zig + 10 min (speed): model median within 1.1 × batch least squares on every metric with intervals wholly below, gross-error rate at or below batch LS's, and efficiency ≥ 0.8 on the settled slices | One pre-registered iteration, then stop and publish: the physics layer is not learnable end to end as built |
 | **Gate D detector** | [Annex A](SRD-annex-A.md) §A.5 | Annex A §A.6 |
-| **Gate 2 MAN** | On a fresh MAN test seed, σ = 1°, G5 rows (zig + 5/10/15/20 min): median range and course over all rows wholly below the re-tuned IMM's; on settled rows range, course and speed within 1.1 × batch least squares; and at least half of the gap in median range between plain batch LS and the oracle ceiling recovered (interval wholly above 0.5) | Owner decides the follow-on when the result is known; recorded before further work |
+| **Gate 2 MAN** | On a fresh MAN test seed, σ = 1°, G5 rows (zig + 5/10/15/20 min): median range and course over all rows wholly below the re-tuned IMM's; on settled rows range, course and speed within 1.1 × batch least squares; and at least half of the gap in median range between plain batch LS and the oracle ceiling recovered (interval wholly above 0.5) | The write-up proposes the follow-on with a recommended default; adopted if the owner has not objected by the next spec (`AGENTS.md`, Autonomy) |
 
 ## 6. Architecture and tooling
 
@@ -130,8 +130,12 @@ configuration; the carried weights chosen by a rule named in the decision record
    physics layer without end-to-end training first (Gate D).
 4. **Gate 2** on MAN: the detector and physics layer fine-tuned end to end against the re-tuned
    IMM, batch LS and the oracle ceiling; the Gate D detector as the carried-forward control.
-5. Afterwards (owner's choice, pre-registered): uncertainty calibration, realistic bearing error,
-   the browser viewer on the exported artefact.
+5. Afterwards, pre-registered, in this default order unless the owner reorders: uncertainty
+   calibration, realistic bearing error, the browser viewer on the exported artefact.
+
+Agents run this plan without waiting on the owner except for the owner-only items in
+`AGENTS.md` (Autonomy and owner input). Defaults stated in this SRD and its annexes are adopted
+and recorded, not asked.
 
 ## 8. Risks
 
@@ -152,6 +156,9 @@ configuration; the carried weights chosen by a rule named in the decision record
 - **2026-10-31 (owner):** the steady-leg detector is its own SRD annex and spec inside gitma2,
   gated on detection metrics and on the downstream estimate, designed for later end-to-end
   fine-tuning (Annex A).
+- **2026-10-31 (owner):** the owner is not to be a blocker. Agents proceed from the documents;
+  stated defaults are adopted and recorded; only the owner-only list in `AGENTS.md` waits for the
+  owner (constitution 1.1.0).
 
 ## Annexes
 
