@@ -10,7 +10,7 @@ tuned IMM wherever it does not? It starts from [debrief/Gitma](https://github.co
 
 - Principles: `.specify/memory/constitution.md` (v1.0.0). Plans MUST pass its checks.
 - Research and the owner's decisions: `docs/research/` (notes 01–05; decisions in 04 §6).
-- Requirements: `docs/SRD.md` (to be written; until then the proposal in `docs/research/04-proposal.md` stands in).
+- Requirements: `docs/SRD.md` (draft) and `docs/SRD-annex-A.md` (steady-leg detector, Gate D). Read them before planning any feature; where this file and the SRD disagree, the SRD wins.
 
 ## Spec-driven workflow (GitHub Spec Kit)
 
