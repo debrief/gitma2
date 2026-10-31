@@ -1,0 +1,39 @@
+{
+  "java": {
+    "deferred": false,
+    "max_rel_diff": {
+      "state": 5.67323965583455e-14,
+      "cov": 2.023443812986469e-12,
+      "cost": 3.233757518288666e-15,
+      "plausible": 0.0
+    },
+    "tol": 1e-05
+  },
+  "python": {
+    "max_rel_diff": {
+      "state": 5.67323965583455e-14,
+      "cov": 2.023443812986469e-12,
+      "cost": 3.233757518288666e-15,
+      "plausible": 0
+    },
+    "tol": 1e-05,
+    "dtype": "float64"
+  },
+  "wasm": {
+    "max_rel_diff": {
+      "state": 2.786659791809143e-14,
+      "cov": 4.086737155148615e-12,
+      "cost": 3.689751119171439e-15,
+      "plausible": 0
+    },
+    "reference": "torch (float64)",
+    "vs_onnxruntime_python": {
+      "state": 8.459899447643693e-14,
+      "cov": 4.111391793371164e-12,
+      "cost": 2.9129614098721908e-15,
+      "plausible": 0
+    },
+    "ms": 143,
+    "tol": 1e-05
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "checks": [
+    {
+      "detail": "8 files byte-identical to gitma's",
+      "name": "generator-iter1-seed1",
+      "result": "pass",
+      "threshold": 8.0,
+      "value": 8.0
+    },
+    {
+      "detail": "8 files byte-identical to gitma's",
+      "name": "generator-iter4-seed777",
+      "result": "pass",
+      "threshold": 8.0,
+      "value": 8.0
+    },
+    {
+      "detail": "8 files byte-identical to gitma's",
+      "name": "generator-phase4-seed777",
+      "result": "pass",
+      "threshold": 8.0,
+      "value": 8.0
+    },
+    {
+      "detail": "flags identical; worst relative difference 2.4e-07",
+      "name": "reference-iter4-seed777-lsq",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 2.384185791015625e-07
+    },
+    {
+      "detail": "flags identical; worst relative difference 0.0e+00",
+      "name": "reference-iter4-seed777-ekf",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 0.0
+    },
+    {
+      "detail": "flags identical; worst relative difference 1.1e-07",
+      "name": "reference-iter4-seed777-imm",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 1.0817560968855377e-07
+    },
+    {
+      "detail": "flags identical; worst relative difference 1.6e-05",
+      "name": "reference-phase4-seed777-lsq",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 1.6159766055930308e-05
+    },
+    {
+      "detail": "flags identical; worst relative difference 7.3e-08",
+      "name": "reference-phase4-seed777-ekf",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 7.319483601648524e-08
+    },
+    {
+      "detail": "flags identical; worst relative difference 3.9e-06",
+      "name": "reference-phase4-seed777-imm",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 3.933906555175781e-06
+    },
+    {
+      "detail": "59 determined rows; worst relative difference 1.2e-05",
+      "name": "physics-equals-least-squares",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 1.1662534708416167e-05
+    },
+    {
+      "detail": "worst relative range error 2.42e-06 over 160 scenarios",
+      "name": "noise-free-recovery",
+      "result": "pass",
+      "threshold": 0.001,
+      "value": 2.419900549130429e-06
+    },
+    {
+      "ci_high": 0.5545840210572366,
+      "ci_level": 0.975,
+      "ci_low": 0.5099909797818444,
+      "detail": "median ratio 0.532 [0.510, 0.555] vs note [0.486, 0.574]",
+      "name": "oracle-sp-all-range",
+      "result": "pass",
+      "threshold": 0.574,
+      "value": 0.5318105166456331
+    },
+    {
+      "ci_high": 0.5319321150464609,
+      "ci_level": 0.975,
+      "ci_low": 0.47384239407557593,
+      "detail": "median ratio 0.500 [0.474, 0.532] vs note [0.45, 0.557]",
+      "name": "oracle-sp-settled-range",
+      "result": "pass",
+      "threshold": 0.557,
+      "value": 0.5003689256263603
+    },
+    {
+      "ci_high": 0.6620877975875172,
+      "ci_level": 0.975,
+      "ci_low": 0.6128890630728723,
+      "detail": "median ratio 0.638 [0.613, 0.662] vs note [0.595, 0.687]",
+      "name": "oracle-nosp-all-range",
+      "result": "pass",
+      "threshold": 0.687,
+      "value": 0.6380750309540038
+    },
+    {
+      "ci_high": 0.611273393801209,
+      "ci_level": 0.975,
+      "ci_low": 0.5459097757479775,
+      "detail": "median ratio 0.575 [0.546, 0.611] vs note [0.508, 0.628]",
+      "name": "oracle-nosp-settled-range",
+      "result": "pass",
+      "threshold": 0.628,
+      "value": 0.5750770752455255
+    },
+    {
+      "detail": "max relative difference 2.0e-12 (double)",
+      "name": "export-python",
+      "result": "pass",
+      "threshold": 1e-05,
+      "value": 2.023443812986469e-12
+    },
+    {
+      "detail": "max relative difference 4.1e-12 (double)",
+      "name": "export-wasm",
+      "result": "pass",
+      "threshold": 1e-05,
+      "value": 4.086737155148615e-12
+    },
+    {
+      "detail": "max relative difference 2.0e-12",
+      "name": "export-java",
+      "result": "pass",
+      "threshold": 1e-05,
+      "value": 2.023443812986469e-12
+    }
+  ],
+  "decided_by": "machine",
+  "gate": "P0",
+  "result": "pass"
+}
