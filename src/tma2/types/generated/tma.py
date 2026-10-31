@@ -589,9 +589,9 @@ class MetricsRecord(ConfiguredBaseModel):
     crb_range_rel_median: Optional[float] = Field(default=None, description="""Median over the slice's rows of the Cramér–Rao bound on relative range error (gitma2, schema 0.17.0; absent when no row has a regular bound).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
     crb_course_deg_median: Optional[float] = Field(default=None, description="""Median Cramér–Rao bound on course error (degrees).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
     crb_speed_kt_median: Optional[float] = Field(default=None, description="""Median Cramér–Rao bound on speed error (knots).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
-    efficiency_range: Optional[float] = Field(default=None, description="""Median range error ÷ median range bound over rows with a regular bound (gitma2). A flat value across geometry slices marks an approximation floor rather than missing information.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
-    efficiency_course: Optional[float] = Field(default=None, description="""Median course error ÷ median course bound.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
-    efficiency_speed: Optional[float] = Field(default=None, description="""Median speed error ÷ median speed bound.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    efficiency_range: Optional[float] = Field(default=None, description="""Median over rows with a regular bound of (range error ÷ that row's range bound), divided by 0.6745 so that an unbiased estimator at the bound scores 1 (gitma2). A flat value across geometry slices marks an approximation floor rather than missing information.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    efficiency_course: Optional[float] = Field(default=None, description="""As efficiency_range, for course error ÷ the row's course bound.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
+    efficiency_speed: Optional[float] = Field(default=None, description="""As efficiency_range, for speed error ÷ the row's speed bound.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
     crb_singular_rate: Optional[float] = Field(default=None, description="""Fraction of the slice's rows where the Fisher information is singular (no bound).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
 
 
@@ -715,8 +715,8 @@ class CurvePoint(ConfiguredBaseModel):
     speed_kt_median: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint', 'PairedComparison']} })
     gross_error_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint', 'PairedComparison']} })
     non_converged_rate: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
-    efficiency_range: Optional[float] = Field(default=None, description="""Median range error ÷ median range bound at this time (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
-    efficiency_speed: Optional[float] = Field(default=None, description="""Median speed error ÷ median speed bound at this time (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    efficiency_range: Optional[float] = Field(default=None, description="""Range efficiency at this time, defined as in MetricsRecord (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    efficiency_speed: Optional[float] = Field(default=None, description="""Speed efficiency at this time, defined as in MetricsRecord (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
 
 
 class TrainingConfig(ConfiguredBaseModel):

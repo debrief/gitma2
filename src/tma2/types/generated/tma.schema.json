@@ -162,14 +162,14 @@
                     ]
                 },
                 "efficiency_range": {
-                    "description": "Median range error \u00f7 median range bound at this time (gitma2).",
+                    "description": "Range efficiency at this time, defined as in MetricsRecord (gitma2).",
                     "type": [
                         "number",
                         "null"
                     ]
                 },
                 "efficiency_speed": {
-                    "description": "Median speed error \u00f7 median speed bound at this time (gitma2).",
+                    "description": "Speed efficiency at this time, defined as in MetricsRecord (gitma2).",
                     "type": [
                         "number",
                         "null"
@@ -710,21 +710,21 @@
                     ]
                 },
                 "efficiency_course": {
-                    "description": "Median course error \u00f7 median course bound.",
+                    "description": "As efficiency_range, for course error \u00f7 the row's course bound.",
                     "type": [
                         "number",
                         "null"
                     ]
                 },
                 "efficiency_range": {
-                    "description": "Median range error \u00f7 median range bound over rows with a regular bound (gitma2). A flat value across geometry slices marks an approximation floor rather than missing information.",
+                    "description": "Median over rows with a regular bound of (range error \u00f7 that row's range bound), divided by 0.6745 so that an unbiased estimator at the bound scores 1 (gitma2). A flat value across geometry slices marks an approximation floor rather than missing information.",
                     "type": [
                         "number",
                         "null"
                     ]
                 },
                 "efficiency_speed": {
-                    "description": "Median speed error \u00f7 median speed bound.",
+                    "description": "As efficiency_range, for speed error \u00f7 the row's speed bound.",
                     "type": [
                         "number",
                         "null"

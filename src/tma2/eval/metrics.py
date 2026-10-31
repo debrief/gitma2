@@ -65,6 +65,23 @@ class Bucket:
     window_means: list[float] = field(default_factory=list)
 
 
+# Median of |N(0, 1)|: Φ⁻¹(0.75).
+GAUSS_MEDIAN_ABS = 0.6744897501960817
+_NO_BOUND = (math.nan, math.nan, math.nan, True)
+
+
+def efficiency(pairs: list[tuple[float, float]]) -> float:
+    """median_i(|e_i| / σ_i) / 0.6745 over rows with a regular, positive bound.
+
+    Each error is normalised by its own row's bound before the median, so a slice that mixes
+    rows with very different bounds (σ = 1° and 2°, near and far) is not biased the way
+    median|e| / median σ is. An unbiased estimator at the bound with Gaussian errors scores 1;
+    non-converged rows (error +∞) count as above any finite value, as in the error medians.
+    """
+    z = [e / s for e, s in pairs if s > 0 and math.isfinite(s)]
+    return math.nan if not z else median(ascending(z)) / GAUSS_MEDIAN_ABS
+
+
 def window_mean_position(errors: list[RowError]) -> float:
     ok = [e.position_m for e in errors if e.converged and math.isfinite(e.position_m)]
     return math.inf if not ok else mean(ok)
@@ -114,13 +131,10 @@ def _record(label: str, slc: str, point: str, b: Bucket) -> dict[str, Any]:
             rec["crb_range_rel_median"] = cr
             rec["crb_course_deg_median"] = cc
             rec["crb_speed_kt_median"] = cs
-            # Efficiency: median error over the rows with a regular bound ÷ median bound; a
-            # Gaussian error's median absolute value is 0.674 σ, so 0.674 marks an efficient,
-            # unbiased estimator; we report the raw ratio and the note explains the constant.
             rows = [(e, c) for e, c in zip(b.errors, b.crb, strict=True) if not c[3]]
-            rec["efficiency_range"] = median(ascending([e.range_rel for e, _ in rows])) / cr
-            rec["efficiency_course"] = median(ascending([e.course_deg for e, _ in rows])) / cc
-            rec["efficiency_speed"] = median(ascending([e.speed_kt for e, _ in rows])) / cs
+            rec["efficiency_range"] = efficiency([(e.range_rel, c[0]) for e, c in rows])
+            rec["efficiency_course"] = efficiency([(e.course_deg, c[1]) for e, c in rows])
+            rec["efficiency_speed"] = efficiency([(e.speed_kt, c[2]) for e, c in rows])
     return _finite_only(rec)
 
 
@@ -167,8 +181,12 @@ def evaluate(
             if not p["rows"]:
                 raise ValueError(f"{st.label}: empty prediction for {s.index}")
             errs = [row_error(s, r) for r in p["rows"]]
+            # With a lookup, a row it cannot bound counts as singular, so a bucket's errors and
+            # bounds stay aligned row for row.
             crbs = [
-                crb_lookup(s, s.row_index(float(r["timestamp_s"]))) if crb_lookup else None
+                (crb_lookup(s, s.row_index(float(r["timestamp_s"]))) or _NO_BOUND)
+                if crb_lookup
+                else None
                 for r in p["rows"]
             ]
             final_err = errs[-1]
@@ -229,10 +247,8 @@ def evaluate(
             }
             regular = [(e, c) for e, c in rows if c is not None and not c[3]]
             if regular:
-                cr = median(ascending([c[0] for _, c in regular]))
-                cs = median(ascending([c[2] for _, c in regular]))
-                rec["efficiency_range"] = median(ascending([e.range_rel for e, _ in regular])) / cr
-                rec["efficiency_speed"] = median(ascending([e.speed_kt for e, _ in regular])) / cs
+                rec["efficiency_range"] = efficiency([(e.range_rel, c[0]) for e, c in regular])
+                rec["efficiency_speed"] = efficiency([(e.speed_kt, c[2]) for e, c in regular])
             curves_out.append(_finite_only(rec))
     return Evaluation(metrics=metrics, curves=curves_out)
 

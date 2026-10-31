@@ -5,6 +5,7 @@ Checks (SRD §5, P0):
 2. reference reproduction: classical, EKF and IMM rows match gitma's prediction fixtures;
 3. physics layer with trivial inputs equals batch least squares (converged, determined rows);
 4. noise-free recovery: final-mode least squares within 0.1% range on 200 noise-free scenarios;
+4a. efficiency: batch least squares' speed efficiency on held-course σ = 1° rows in [0.8, 1.3];
 5. oracle ceiling (needs ``--oracle-data``): median range ratios to the frozen IMM on the G5 rows
    inside the research note's intervals, with and without the speed prior;
 6. export conformance (reads ``conformance/onnx/results.json`` when present): Python and WASM
@@ -213,7 +214,9 @@ def check_noise_free(exp: Experiment) -> None:
             )
         )
         worst = 0.0
+        scenarios = 0
         for _, meta, own, tgt, obs in iter_pack_raw(Path(tmp) / "train.f32pack"):
+            scenarios += 1
             bd = bearing_data_from_arrays(meta, own, obs)
             row = classical_predict(bd, "final")["rows"][-1]
             i = int(meta["samples"]) - 1
@@ -226,9 +229,85 @@ def check_noise_free(exp: Experiment) -> None:
         Check(
             "noise-free-recovery",
             "pass" if worst < 1e-3 else "fail",
-            f"worst relative range error {worst:.2e} over 160 scenarios",
+            f"worst relative range error {worst:.2e} over {scenarios} scenarios",
             value=worst,
             threshold=1e-3,
+        )
+    )
+
+
+EFFICIENCY_BAND = (0.8, 1.3)
+
+
+def check_efficiency(exp: Experiment) -> None:
+    """Spec 002 SC-005: batch least squares is at the bound on held-course rows.
+
+    2,000 constant-velocity scenarios (gitma iteration-4 ranges, seed 43; no target manoeuvre,
+    so every row is on a held leg), the 1,600-scenario train split, σ = 1° only, rows at
+    zig + 300 s and zig + 600 s pooled, full-window bound at truth. Gated on speed (the spec's
+    criterion); range and course are reported in the metrics.
+    """
+    from tma2.eval.errors import row_error
+    from tma2.eval.metrics import efficiency
+    from tma2.references.crb import crb_rows
+
+    d = FIXTURES / "iter4-seed777"
+    ranges = json.loads((d / "ranges.json").read_text())
+    heldout = json.loads((d / "heldout-ranges.json").read_text())
+    pairs: dict[str, list[tuple[float, float]]] = {"range": [], "course": [], "speed": []}
+    scenarios = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        generate_dataset(
+            GenerateOptions(
+                seed=np.uint64(43),
+                count=2000,
+                out_dir=Path(tmp),
+                ranges=ranges,
+                heldout_ranges=heldout,
+                format="f32pack",
+                created_by="p0",
+                generator_git_commit="p0",
+                generator_git_dirty=True,
+            )
+        )
+        for _, meta, own, tgt, obs in iter_pack_raw(Path(tmp) / "train.f32pack"):
+            sigma = float(meta["parameters"]["noise_sigma_rad"])
+            if abs(sigma - math.radians(1.0)) > 1e-6:
+                continue
+            scenarios += 1
+            bd = bearing_data_from_arrays(meta, own, obs)
+            rows = classical_predict(bd, "per_timestep")["rows"]
+            truth = Truth.from_block(meta, own, tgt)
+            zig = int(meta["zig_index"])
+            for sec in (300, 600):
+                k = zig + sec // int(meta["parameters"]["dt_s"])
+                if k >= int(meta["samples"]):
+                    continue
+                row = next((r for r in rows if abs(r["timestamp_s"] - own[k, 0]) < 1e-6), None)
+                if row is None:
+                    continue
+                bound = crb_rows(own, tgt, obs, sigma, zig, None, [k], False)[0]
+                if bound.singular:
+                    continue
+                e = row_error(truth, row)
+                pairs["range"].append((e.range_rel, bound.sd_range_rel))
+                pairs["course"].append((e.course_deg, bound.sd_course_deg))
+                pairs["speed"].append((e.speed_kt, bound.sd_speed_kt))
+    eff = {k: efficiency(v) for k, v in pairs.items()}
+    exp.metrics["least-squares-efficiency"] = {
+        **{f"efficiency_{k}": v for k, v in eff.items()},
+        "rows": len(pairs["speed"]),
+        "scenarios": scenarios,
+    }
+    lo, hi = EFFICIENCY_BAND
+    exp.checks.append(
+        Check(
+            "least-squares-efficiency-speed",
+            "pass" if lo <= eff["speed"] <= hi else "fail",
+            f"speed efficiency {eff['speed']:.3f} over {len(pairs['speed'])} held-course rows "
+            f"(range {eff['range']:.3f}, course {eff['course']:.3f}); band [{lo}, {hi}]",
+            value=eff["speed"],
+            threshold=hi,
         )
     )
 
@@ -346,6 +425,7 @@ def main(argv: list[str] | None = None) -> int:
     check_references(exp)
     check_physics_equals_ls(exp)
     check_noise_free(exp)
+    check_efficiency(exp)
     if a.oracle_data:
         check_oracle(exp, Path(a.oracle_data), Path(a.work))
     else:

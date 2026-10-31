@@ -26,6 +26,12 @@ def _nan_to_inf(a: np.ndarray) -> np.ndarray:
     return b
 
 
+def _js_div(a: float, b: float) -> float:
+    """a / b with JavaScript (IEEE) semantics: x / 0 is ±∞, 0 / 0 is NaN, never an exception."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return float(np.float64(a) / np.float64(b))
+
+
 def _quantile_unsorted(buf: np.ndarray, q: float) -> float:
     """Nearest-rank quantile of an unsorted array (gitma selects; sorting gives the same value)."""
     n = buf.shape[0]
@@ -127,11 +133,11 @@ def bootstrap_clustered_quantile_ratio(
     for r in range(resamples):
         picks = [groups[uniform_int(rng, g)] for _ in range(g)]
         idx = np.concatenate(picks)
-        ratios[r] = _quantile_unsorted(x[idx], q) / _quantile_unsorted(y[idx], q)
+        ratios[r] = _js_div(_quantile_unsorted(x[idx], q), _quantile_unsorted(y[idx], q))
     s = ascending(ratios)
     tail = (1 - level) / 2
     return RatioInterval(
-        ratio=percentile(ascending(x), q) / percentile(ascending(y), q),
+        ratio=_js_div(percentile(ascending(x), q), percentile(ascending(y), q)),
         lo=percentile(s, tail),
         hi=percentile(s, 1 - tail),
         n=n,

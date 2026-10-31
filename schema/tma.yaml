@@ -592,10 +592,15 @@ classes:
       efficiency_range:
         range: float
         description: >-
-          Median range error ÷ median range bound over rows with a regular bound (gitma2). A flat
-          value across geometry slices marks an approximation floor rather than missing information.
-      efficiency_course: { range: float, description: Median course error ÷ median course bound. }
-      efficiency_speed: { range: float, description: Median speed error ÷ median speed bound. }
+          Median over rows with a regular bound of (range error ÷ that row's range bound), divided
+          by 0.6745 so that an unbiased estimator at the bound scores 1 (gitma2). A flat value
+          across geometry slices marks an approximation floor rather than missing information.
+      efficiency_course:
+        range: float
+        description: As efficiency_range, for course error ÷ the row's course bound.
+      efficiency_speed:
+        range: float
+        description: As efficiency_range, for speed error ÷ the row's speed bound.
       crb_singular_rate:
         range: float
         description: Fraction of the slice's rows where the Fisher information is singular (no bound).
@@ -692,10 +697,10 @@ classes:
       non_converged_rate: { range: float }
       efficiency_range:
         range: float
-        description: Median range error ÷ median range bound at this time (gitma2).
+        description: Range efficiency at this time, defined as in MetricsRecord (gitma2).
       efficiency_speed:
         range: float
-        description: Median speed error ÷ median speed bound at this time (gitma2).
+        description: Speed efficiency at this time, defined as in MetricsRecord (gitma2).
   TrainingConfig:
     description: "Hyperparameters and seeds for one training run (SRD §4; constitution III)."
     attributes:
