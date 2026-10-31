@@ -188,7 +188,8 @@ def kernel_arrays(buf: KernelBuffers) -> tuple[np.ndarray, np.ndarray, np.ndarra
     """own [S,5], tgt [S,5], obs [S,3] float64 arrays (gitma's pack column order) from buffers."""
     n = int(buf.TI[sc.TI_SAMPLES])
     dt = float(buf.P[sc.P_DT])
-    t = np.array([f32(i * dt) for i in range(n)])
+    # i * dt is exact in double for gitma's integer dt, so one float32 cast equals f32(i * dt).
+    t = (np.arange(n, dtype=np.float64) * dt).astype(np.float32).astype(np.float64)
     own = np.column_stack([t, buf.own[:n, 0], buf.own[:n, 1], buf.own[:n, 2], buf.own[:n, 3]])
     tgt = np.column_stack([t, buf.tgt[:n, 0], buf.tgt[:n, 1], buf.tgt[:n, 2], buf.tgt[:n, 3]])
     obs = np.column_stack([t, buf.bearing[:n], buf.valid[:n].astype(np.float64)])
@@ -197,7 +198,7 @@ def kernel_arrays(buf: KernelBuffers) -> tuple[np.ndarray, np.ndarray, np.ndarra
 
 def run_kernel(dataset_seed: np.uint64, index: int, R: np.ndarray, buf: KernelBuffers) -> int:
     """Run the kernel for one index into ``buf``; returns the redraw count."""
-    return int(
+    redraws = int(
         sc.generate_into(
             dataset_seed,
             index,
@@ -214,6 +215,9 @@ def run_kernel(dataset_seed: np.uint64, index: int, R: np.ndarray, buf: KernelBu
             buf.stats,
         )
     )
+    if redraws < 0:
+        raise ValueError(f"scenario {index}: no valid geometry after {sc.MAX_REDRAWS} redraws")
+    return redraws
 
 
 def generate_record(

@@ -15,6 +15,7 @@ import numpy as np
 from .geometry import deg_to_rad, kt_to_mps
 
 LIST_MAX = 8
+MAX_COUNT_WEIGHTS = 4  # kernel table holds 3 course changes + 1 speed change (scenario.MAX_TM)
 
 # Layout of the flat ranges array (float64). Keep in step with ``flatten_ranges``.
 R_WINDOW_MIN = 0
@@ -139,8 +140,11 @@ def validate_ranges(r: dict[str, Any]) -> None:
             raise RangesError(
                 "target_manoeuvre_fraction and target_course_change_count_weights are exclusive"
             )
-        if len(weights) > LIST_MAX:
-            raise RangesError(f"at most {LIST_MAX} count weights are supported")
+        if len(weights) > MAX_COUNT_WEIGHTS:
+            raise RangesError(
+                f"at most {MAX_COUNT_WEIGHTS} count weights (0 to {MAX_COUNT_WEIGHTS - 1} course "
+                "changes) are supported by the kernel's fixed manoeuvre table"
+            )
     if len(r["noise_sigma_rad_values"]) > LIST_MAX:
         raise RangesError(f"at most {LIST_MAX} noise sigma values are supported")
 

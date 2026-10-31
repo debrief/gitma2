@@ -809,4 +809,4 @@ def generate_into(
         stats[1] = f32(mean_r)
         stats[2] = f32(min_r)
         return redraws
-    raise ValueError("no valid geometry after the maximum number of redraws")
+    return -1

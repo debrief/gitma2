@@ -65,3 +65,15 @@ def test_bad_files_are_rejected(tmp_path: Path) -> None:
     truncated.write_text(lines[0] + "\n")
     with pytest.raises(RecordError, match="declares"):
         list(read_ndjson(truncated).scenarios())
+
+
+def test_readers_do_not_leak_file_handles() -> None:
+    import gc
+    import warnings
+
+    d = fixture_dir("iter4-seed777")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", ResourceWarning)
+        read_ndjson(d / "test.ndjson")
+        read_pack(d / "test.f32pack")
+        gc.collect()

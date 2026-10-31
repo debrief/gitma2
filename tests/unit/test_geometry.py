@@ -51,3 +51,10 @@ def test_arc_position_closes_a_full_circle() -> None:
     x, y, c = g.arc_position(1.0, 2.0, 0.3, 5.0, 0.01, g.TWO_PI / 0.01)
     assert (x, y) == (pytest_approx(1.0), pytest_approx(2.0))
     assert c == pytest_approx(0.3)
+
+
+def test_js_round_edge_cases_match_ecmascript() -> None:
+    assert g.js_round(0.49999999999999994) == 0
+    assert g.js_round(-0.5) == 0
+    assert g.js_round(-1.5) == -1
+    assert g.js_round(1e15 + 0.5) == 1e15 + 1

@@ -109,3 +109,26 @@ def test_two_cli_runs_are_byte_identical(tmp_path: Path) -> None:
         )
         outs.append((d / "digests.json").read_text())
     assert outs[0] == outs[1]
+
+
+def test_impossible_geometry_raises_cleanly() -> None:
+    import pytest
+
+    from tma2.sim.generate import generate_scenario
+
+    ranges, _ = fixture_ranges("iter4-seed777")
+    bad = {**ranges, "min_range_m": 1e9}
+    with pytest.raises(ValueError, match="no valid geometry"):
+        generate_scenario(1, 0, bad)
+    with pytest.raises(ValueError, match="no valid geometry"):
+        generate_batch(1, 0, 4, bad)
+
+
+def test_too_many_count_weights_are_refused() -> None:
+    import pytest
+
+    from tma2.sim.ranges import RangesError, validate_ranges
+
+    ranges, _ = fixture_ranges("phase4-seed777")
+    with pytest.raises(RangesError, match="at most 4 count weights"):
+        validate_ranges({**ranges, "target_course_change_count_weights": [0.2, 0.2, 0.2, 0.2, 0.2]})

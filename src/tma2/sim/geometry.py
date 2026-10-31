@@ -52,8 +52,11 @@ def bearing_of(dx: float, dy: float) -> float:
 
 @njit(cache=True)
 def js_round(x: float) -> int:
-    """JavaScript ``Math.round``: round half towards +∞ (Python's ``round`` is half-to-even)."""
-    return int(math.floor(x + 0.5))
+    """JavaScript ``Math.round``: the nearest integer, ties towards +∞ (Python's ``round`` is
+    half-to-even). Computed from the fractional part, not ``floor(x + 0.5)``, which is wrong for
+    0.49999999999999994 (``x + 0.5`` rounds up to 1 in double)."""
+    f = math.floor(x)
+    return int(f) + (1 if x - f >= 0.5 else 0)
 
 
 @njit(cache=True)

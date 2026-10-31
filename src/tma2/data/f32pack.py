@@ -15,14 +15,7 @@ from typing import Any
 
 import numpy as np
 
-from tma2.types import (
-    DatasetHeader,
-    RecordError,
-    Scenario,
-    ScenarioMetadata,
-    dump_record,
-    parse_record,
-)
+from tma2.types import DatasetHeader, RecordError, Scenario, dump_record, parse_record
 
 from .canonical import canonical_json
 from .io import AtomicFile
@@ -120,29 +113,34 @@ class PackWriter:
         self.file.abort()
 
 
-def _read_header(path: str, data: bytes) -> tuple[DatasetHeader, int, np.ndarray]:
-    if len(data) < 16 or data[:8] != MAGIC:
-        raise RecordError(path, "header", "not a .f32pack file (bad magic)")
-    version, h = struct.unpack_from("<II", data, 8)
-    if version != PACK_FORMAT_VERSION:
-        raise RecordError(path, "header", f"unsupported pack format version {version}")
-    if len(data) < 16 + h + 4:
-        raise RecordError(path, "header", "truncated header")
-    try:
-        raw = json.loads(data[16 : 16 + h].decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as e:
-        raise RecordError(path, "header", "corrupted header JSON") from e
-    header = parse_record(DatasetHeader, raw, path, "header")
-    check_versions(path, header.schema_version, header.generator_version)
-    (n,) = struct.unpack_from("<I", data, 16 + h)
-    if n != header.scenario_count:
-        raise RecordError(path, "header", "scenario count does not match header")
-    table_pos = 16 + h + 4
-    if len(data) < table_pos + 8 * (n + 1):
+def _read_header(path: str) -> tuple[DatasetHeader, int, np.ndarray]:
+    """Header, count and offset table, reading only the file's prefix (not the blocks)."""
+    size = Path(path).stat().st_size
+    with open(path, "rb") as fh:
+        fixed = fh.read(16)
+        if len(fixed) < 16 or fixed[:8] != MAGIC:
+            raise RecordError(path, "header", "not a .f32pack file (bad magic)")
+        version, h = struct.unpack_from("<II", fixed, 8)
+        if version != PACK_FORMAT_VERSION:
+            raise RecordError(path, "header", f"unsupported pack format version {version}")
+        header_buf = fh.read(h + 4)
+        if len(header_buf) < h + 4:
+            raise RecordError(path, "header", "truncated header")
+        try:
+            raw = json.loads(header_buf[:h].decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as e:
+            raise RecordError(path, "header", "corrupted header JSON") from e
+        header = parse_record(DatasetHeader, raw, path, "header")
+        check_versions(path, header.schema_version, header.generator_version)
+        (n,) = struct.unpack_from("<I", header_buf, h)
+        if n != header.scenario_count:
+            raise RecordError(path, "header", "scenario count does not match header")
+        table = fh.read(8 * (n + 1))
+    if len(table) < 8 * (n + 1):
         raise RecordError(path, "header", "truncated offsets")
-    offsets = np.frombuffer(data, dtype="<u8", count=n + 1, offset=table_pos)
-    if int(offsets[n]) != len(data):
-        raise RecordError(path, "end", f"file is {len(data)} bytes, expected {int(offsets[n])}")
+    offsets = np.frombuffer(table, dtype="<u8", count=n + 1)
+    if int(offsets[n]) != size:
+        raise RecordError(path, "end", f"file is {size} bytes, expected {int(offsets[n])}")
     return header, n, offsets
 
 
@@ -160,11 +158,12 @@ def decode_block_raw(
         meta = json.loads(buf[4 : 4 + m].decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         raise RecordError(path, where, "corrupted metadata JSON") from e
-    metadata = parse_record(ScenarioMetadata, meta, path, where)
+    if not isinstance(meta, dict) or not isinstance(meta.get("samples"), int):
+        raise RecordError(path, where, "metadata has no integer samples")
     (n,) = struct.unpack_from("<I", buf, 4 + m)
     start = 8 + m
     count = n * (2 * STATE_FIELDS + OBS_FIELDS)
-    if n != metadata.samples or start + 4 * count != len(buf):
+    if n != meta["samples"] or start + 4 * count != len(buf):
         raise RecordError(path, where, "block length does not match sample count")
     floats = np.frombuffer(buf, dtype="<f4", count=count, offset=start)
     own = floats[: n * STATE_FIELDS].reshape(n, STATE_FIELDS)
@@ -202,31 +201,39 @@ def block_to_scenario(
     }
 
 
-def read_pack_raw(
-    path: str | Path,
-) -> tuple[DatasetHeader, Iterator[tuple[int, dict[str, Any], np.ndarray, np.ndarray, np.ndarray]]]:
-    """Header and an iterator of (index, metadata dict, own, tgt, obs) per block."""
-    file = str(path)
-    data = Path(path).read_bytes()
-    header, n, offsets = _read_header(file, data)
+RawBlock = tuple[int, dict[str, Any], np.ndarray, np.ndarray, np.ndarray]
 
-    def blocks() -> Iterator[tuple[int, dict[str, Any], np.ndarray, np.ndarray, np.ndarray]]:
+
+def read_pack_header(path: str | Path) -> DatasetHeader:
+    """The validated header, reading only the file's prefix."""
+    return _read_header(str(path))[0]
+
+
+def iter_pack_raw(path: str | Path) -> Iterator[RawBlock]:
+    """(index, metadata dict, own, tgt, obs) per block, read one block at a time (streaming)."""
+    file = str(path)
+    _, n, offsets = _read_header(file)
+    with open(file, "rb") as fh:
         for i in range(n):
             a, b = int(offsets[i]), int(offsets[i + 1])
-            meta, own, tgt, obs = decode_block_raw(file, i, data[a:b])
+            fh.seek(a)
+            buf = fh.read(b - a)
+            meta, own, tgt, obs = decode_block_raw(file, i, buf)
             yield i, meta, own, tgt, obs
 
-    return header, blocks()
+
+def read_pack_raw(path: str | Path) -> tuple[DatasetHeader, Iterator[RawBlock]]:
+    """Header and a streaming iterator of raw blocks."""
+    return read_pack_header(path), iter_pack_raw(path)
 
 
 def read_pack(path: str | Path) -> Dataset:
     """Validated header and a scenario iterator factory (gitma ``readPack``)."""
-    header, _ = read_pack_raw(path)
+    header = read_pack_header(path)
     file = str(path)
 
     def scenarios() -> Iterator[Scenario]:
-        _, blocks = read_pack_raw(path)
-        for i, meta, own, tgt, obs in blocks:
+        for i, meta, own, tgt, obs in iter_pack_raw(path):
             yield parse_record(
                 Scenario, block_to_scenario(meta, own, tgt, obs), file, f"scenario {i}"
             )

@@ -63,46 +63,51 @@ def _parse_json(file: str, line: int, text: str) -> Any:
         raise RecordError(file, line, "malformed JSON (truncated or corrupted file?)") from e
 
 
-def read_ndjson_raw(path: str | Path) -> tuple[DatasetHeader, Iterator[tuple[int, dict[str, Any]]]]:
-    """Header plus an iterator of (line number, raw scenario dict), validated as JSON only."""
+def read_ndjson_header(path: str | Path) -> DatasetHeader:
+    """The validated header (line 1); opens and closes the file."""
     file = str(path)
-    fh = open(file, encoding="utf-8")  # noqa: SIM115 - closed by the iterator
-    first = fh.readline()
+    with open(file, encoding="utf-8") as fh:
+        first = fh.readline()
     if first == "":
-        fh.close()
         raise RecordError(file, 1, "empty file")
     header = parse_record(DatasetHeader, _parse_json(file, 1, first.rstrip("\n")), file, 1)
     check_versions(file, header.schema_version, header.generator_version)
+    return header
 
-    def rows() -> Iterator[tuple[int, dict[str, Any]]]:
-        count = 0
-        try:
-            for line_no, text in enumerate(fh, start=2):
-                text = text.rstrip("\n")
-                if text == "":
-                    raise RecordError(file, line_no, "blank line")
-                yield line_no, _parse_json(file, line_no, text)
-                count += 1
-        finally:
-            fh.close()
-        if count != header.scenario_count:
-            raise RecordError(
-                file,
-                "end",
-                f"header declares {header.scenario_count} scenarios, file has {count}",
-            )
 
-    return header, rows()
+def iter_ndjson_raw(
+    path: str | Path, header: DatasetHeader
+) -> Iterator[tuple[int, dict[str, Any]]]:
+    """(line number, raw scenario dict) for every scenario line; the file is closed on exit."""
+    file = str(path)
+    count = 0
+    with open(file, encoding="utf-8") as fh:
+        fh.readline()
+        for line_no, text in enumerate(fh, start=2):
+            text = text.rstrip("\n")
+            if text == "":
+                raise RecordError(file, line_no, "blank line")
+            yield line_no, _parse_json(file, line_no, text)
+            count += 1
+    if count != header.scenario_count:
+        raise RecordError(
+            file, "end", f"header declares {header.scenario_count} scenarios, file has {count}"
+        )
+
+
+def read_ndjson_raw(path: str | Path) -> tuple[DatasetHeader, Iterator[tuple[int, dict[str, Any]]]]:
+    """Header plus an iterator of (line number, raw scenario dict), validated as JSON only."""
+    header = read_ndjson_header(path)
+    return header, iter_ndjson_raw(path, header)
 
 
 def read_ndjson(path: str | Path) -> Dataset:
     """Validated header and a scenario iterator factory (gitma ``readNdjson``)."""
-    header, _ = read_ndjson_raw(path)
+    header = read_ndjson_header(path)
     file = str(path)
 
     def scenarios() -> Iterator[Scenario]:
-        _, rows = read_ndjson_raw(path)
-        for line_no, raw in rows:
+        for line_no, raw in iter_ndjson_raw(path, header):
             yield parse_record(Scenario, raw, file, line_no)
 
     return Dataset(header=header, scenarios=scenarios)

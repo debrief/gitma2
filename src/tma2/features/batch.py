@@ -217,4 +217,9 @@ def generate_indices(
     finally:
         if workers is not None:
             set_num_threads(previous)
+    bad = np.flatnonzero(b.redraws < 0)
+    if bad.size:
+        raise ValueError(
+            f"scenario {int(b.index[bad[0]])}: no valid geometry after {sc.MAX_REDRAWS} redraws"
+        )
     return b
