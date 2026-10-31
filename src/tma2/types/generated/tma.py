@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.16.0"
+version = "0.17.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -170,6 +170,10 @@ class PredictionMode(str, Enum):
 
 
 class GateId(str, Enum):
+    P0 = "P0"
+    """
+    gitma2 pipeline gate (SRD §5): generator and references reproduce gitma, the physics layer equals batch least squares, the oracle ceiling is reproduced.
+    """
     G0 = "G0"
     """
     Pipeline verified.
@@ -582,6 +586,13 @@ class MetricsRecord(ConfiguredBaseModel):
     position_m_mean: Optional[float] = Field(default=None, description="""Mean position error over converged rows (non-converged rows count in gross_error_rate).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
     position_window_m_median: Optional[float] = Field(default=None, description="""Median over scenarios of each scenario's mean position error over its predicted rows (time-late window-mean position, SRD §5; reported, not gated).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord'], 'unit': {'ucum_code': 'm'}} })
     position_window_m_p90: Optional[float] = Field(default=None, description="""90th percentile over scenarios of the same per-scenario mean.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord'], 'unit': {'ucum_code': 'm'}} })
+    crb_range_rel_median: Optional[float] = Field(default=None, description="""Median over the slice's rows of the Cramér–Rao bound on relative range error (gitma2, schema 0.17.0; absent when no row has a regular bound).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
+    crb_course_deg_median: Optional[float] = Field(default=None, description="""Median Cramér–Rao bound on course error (degrees).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
+    crb_speed_kt_median: Optional[float] = Field(default=None, description="""Median Cramér–Rao bound on speed error (knots).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
+    efficiency_range: Optional[float] = Field(default=None, description="""Median range error ÷ median range bound over rows with a regular bound (gitma2). A flat value across geometry slices marks an approximation floor rather than missing information.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    efficiency_course: Optional[float] = Field(default=None, description="""Median course error ÷ median course bound.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
+    efficiency_speed: Optional[float] = Field(default=None, description="""Median speed error ÷ median speed bound.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    crb_singular_rate: Optional[float] = Field(default=None, description="""Fraction of the slice's rows where the Fisher information is singular (no bound).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord']} })
 
 
 class DatasetRef(ConfiguredBaseModel):
@@ -616,6 +627,8 @@ class ExperimentManifest(ConfiguredBaseModel):
                        'ChangeDecision']} })
     git_dirty: Optional[bool] = Field(default=None, description="""True when the working tree had uncommitted changes (absent before schema 0.4.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest']} })
     node_version: Optional[str] = Field(default=None, description="""Node.js version that ran the experiment (byte identity is promised per pinned Node).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest']} })
+    python_version: Optional[str] = Field(default=None, description="""Python version that ran the experiment (gitma2, schema 0.17.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
+    torch_version: Optional[str] = Field(default=None, description="""PyTorch version that ran the experiment, when a physics layer or model was used (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'ExperimentManifest',
@@ -702,6 +715,8 @@ class CurvePoint(ConfiguredBaseModel):
     speed_kt_median: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint', 'PairedComparison']} })
     gross_error_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint', 'PairedComparison']} })
     non_converged_rate: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    efficiency_range: Optional[float] = Field(default=None, description="""Median range error ÷ median range bound at this time (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
+    efficiency_speed: Optional[float] = Field(default=None, description="""Median speed error ÷ median speed bound at this time (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MetricsRecord', 'CurvePoint']} })
 
 
 class TrainingConfig(ConfiguredBaseModel):

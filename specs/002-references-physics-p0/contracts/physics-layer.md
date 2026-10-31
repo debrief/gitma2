@@ -3,9 +3,15 @@
 ```python
 from tma2.physics.layer import PhysicsLayer, PhysicsInputs, PhysicsOutputs
 
-layer = PhysicsLayer(iterations=30, ridge_tau_mps=3.0, speed_tau_mps=1.0,
-                     lambda0=1e-3, lambda_min=1e-12, lambda_max=1e12)
-out: PhysicsOutputs = layer(inputs)   # all tensors float64 on CPU; float32 allowed for export tests
+layer = PhysicsLayer(
+    iterations=30,
+    ridge_tau_mps=3.0,
+    speed_tau_mps=1.0,
+    lambda0=1e-3,
+    lambda_min=1e-12,
+    lambda_max=1e12,
+)
+out: PhysicsOutputs = layer(inputs)  # all tensors float64 on CPU; float32 allowed for export tests
 ```
 
 ## Inputs (batch B, rows R)

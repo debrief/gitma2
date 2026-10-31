@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -73,3 +74,59 @@ jobs:
       - name: Site build
         working-directory: site
         run: npm ci && npm run build
+
+  onnx-conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: uv sync
+      - name: Export the toy model (double and float32) and run the Python runtime leg
+        run: uv run python -m tma2.export.onnx_export --out conformance/onnx/export
+      - name: Browser (WASM) leg under Playwright
+        working-directory: conformance/onnx
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          node wasm_leg.mjs --dir export/f64 --out results.json
+      - name: Java leg (deferred with a reason if the runtime cannot be fetched)
+        run: uv run python conformance/onnx/java_leg.py conformance/onnx/export/f64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onnx-conformance
+          path: conformance/onnx/results.json
+
+  p0:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'p0')
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Oracle dataset (seed 301, phase-4 ranges), cached by digest
+        uses: actions/cache@v4
+        with:
+          path: data/p0
+          key: p0-data-seed301-${{ hashFiles('tests/fixtures/gitma/phase4-seed777/ranges.json', 'src/tma2/sim/**') }}
+      - run: |
+          test -f data/p0/validation.f32pack || uv run tma2-generate --seed 301 --count 100000 --out data/p0 \
+            --ranges tests/fixtures/gitma/phase4-seed777/ranges.json \
+            --heldout-ranges tests/fixtures/gitma/phase4-seed777/heldout-ranges.json --format f32pack --allow-dirty
+      - name: Gate P0
+        run: uv run tma2-p0 --experiment experiments/ci-p0 --oracle-data data/p0 || [ $? -eq 3 ]
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-experiment
+          path: experiments/ci-p0

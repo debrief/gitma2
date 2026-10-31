@@ -129,6 +129,7 @@ def test_regenerated_files_have_gitma_digests(name: str, tmp_path: Path) -> None
             created_by=hdr["created_by"],
             generator_git_commit=hdr["generator_git_commit"],
             generator_git_dirty=hdr["generator_git_dirty"],
+            schema_version=hdr["schema_version"],
         )
     )
     expected = json.loads((fixture_dir(name) / "digests.json").read_text())

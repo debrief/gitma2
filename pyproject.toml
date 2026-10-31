@@ -9,10 +9,20 @@ dependencies = [
   "numpy>=2.0,<3",
   "numba>=0.61",
   "pydantic>=2.7,<3",
+  "torch>=2.15.0",
+  "onnx>=1.23.2",
+  "onnxruntime>=1.31.1",
 ]
 
 [project.scripts]
 tma2-generate = "tma2.cli.generate:main"
+tma2-solve = "tma2.cli.estimators:solve_main"
+tma2-track = "tma2.cli.estimators:track_main"
+tma2-naive = "tma2.cli.estimators:naive_main"
+tma2-crb = "tma2.cli.estimators:crb_main"
+tma2-eval = "tma2.cli.evaluate:main"
+tma2-oracle = "tma2.cli.oracle:main"
+tma2-p0 = "tma2.cli.p0:main"
 
 [dependency-groups]
 dev = [
@@ -27,11 +37,18 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/tma2"]
 
 [tool.uv]
 package = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
 
 [tool.ruff]
 line-length = 100

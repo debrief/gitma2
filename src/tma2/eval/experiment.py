@@ -1,0 +1,144 @@
+"""Experiment folders: manifest, checks and verdict (gitma's ``experiment.ts`` layout)."""
+
+from __future__ import annotations
+
+import datetime as dt
+import json
+import platform
+import subprocess
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from tma2.data.canonical import canonical_json
+from tma2.data.io import AtomicFile, file_digest
+from tma2.sim.version import GENERATOR_VERSION
+from tma2.types import SCHEMA_VERSION
+
+from .generated_types import ExperimentManifest, GateVerdict
+
+
+@dataclass
+class Check:
+    name: str
+    result: str  # pass | fail | inconclusive | skipped
+    detail: str
+    value: float | None = None
+    threshold: float | None = None
+    ci_low: float | None = None
+    ci_high: float | None = None
+    ci_level: float | None = None
+
+    def as_record(self) -> dict[str, Any]:
+        rec: dict[str, Any] = {"name": self.name, "result": self.result, "detail": self.detail}
+        for key in ("value", "threshold", "ci_low", "ci_high", "ci_level"):
+            v = getattr(self, key)
+            if v is not None:
+                rec[key] = float(v)
+        return rec
+
+
+@dataclass
+class Experiment:
+    id: str
+    folder: Path
+    datasets: list[dict[str, Any]] = field(default_factory=list)
+    estimators: list[dict[str, str]] = field(default_factory=list)
+    command_lines: list[str] = field(default_factory=list)
+    checks: list[Check] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
+
+    def add_dataset(self, path: str | Path, header: Any) -> None:
+        self.datasets.append({"path": str(path), "header": header, "digest": file_digest(path)})
+
+    def add_estimator(self, name: str, settings: dict[str, Any]) -> None:
+        self.estimators.append(
+            {"name": name, "settings_json": json.dumps(settings, sort_keys=True)}
+        )
+
+    def git(self) -> tuple[str, bool]:
+        try:
+            commit = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+                cwd=self.folder.parent,
+            ).stdout.strip()
+            dirty = (
+                subprocess.run(
+                    ["git", "status", "--porcelain"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=self.folder.parent,
+                ).stdout.strip()
+                != ""
+            )
+            return commit, dirty
+        except (OSError, subprocess.CalledProcessError):
+            return "unknown", True
+
+    def verdict_result(self) -> str:
+        gated = [c for c in self.checks if c.result != "skipped"]
+        if any(c.result == "fail" for c in gated):
+            return "fail"
+        if any(c.result == "inconclusive" for c in gated):
+            return "inconclusive"
+        return "pass"
+
+    def write(self, gate: str, decided_by: str = "machine") -> dict[str, Any]:
+        self.folder.mkdir(parents=True, exist_ok=True)
+        commit, dirty = self.git()
+        manifest = {
+            "id": self.id,
+            "created": dt.datetime.now(dt.UTC)
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z"),
+            "git_commit": commit,
+            "git_dirty": dirty,
+            "python_version": platform.python_version(),
+            "schema_version": SCHEMA_VERSION,
+            "generator_version": GENERATOR_VERSION,
+            "datasets": self.datasets,
+            "estimators": self.estimators,
+            "command_lines": self.command_lines,
+        }
+        try:
+            import torch
+
+            manifest["torch_version"] = torch.__version__
+        except ImportError:
+            pass
+        ExperimentManifest.model_validate(manifest)
+        verdict = {
+            "gate": gate,
+            "result": self.verdict_result(),
+            "checks": [c.as_record() for c in self.checks],
+            "decided_by": decided_by,
+        }
+        GateVerdict.model_validate(verdict)
+        for name, obj in (
+            ("manifest.json", manifest),
+            ("verdict.json", verdict),
+            ("metrics.json", self.metrics),
+        ):
+            f = AtomicFile(self.folder / name)
+            f.write((json.dumps(obj, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+            f.commit()
+        lines = ["name,result,value,threshold,ci_low,ci_high,detail"]
+        for c in self.checks:
+            cells = [c.name, c.result] + [
+                "" if v is None else repr(float(v))
+                for v in (c.value, c.threshold, c.ci_low, c.ci_high)
+            ]
+            detail = '"' + c.detail.replace('"', '""') + '"'
+            lines.append(",".join(cells + [detail]))
+        f = AtomicFile(self.folder / "checks.csv")
+        f.write(("\n".join(lines) + "\n").encode("utf-8"))
+        f.commit()
+        return verdict
+
+
+__all__ = ["Check", "Experiment", "canonical_json"]

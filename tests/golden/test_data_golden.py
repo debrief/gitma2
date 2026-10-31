@@ -33,6 +33,7 @@ def test_seed1_count10_matches_gitma_golden(tmp_path: Path) -> None:
             created_by="tma-generate --seed 1 --count 10",
             generator_git_commit=TEST_PROVENANCE[0],
             generator_git_dirty=TEST_PROVENANCE[1],
+            schema_version="0.16.0",  # gitma's digests were made at schema 0.16.0
         )
     )
     digests = {f: file_digest(tmp_path / f) for f in FILES}

@@ -55,6 +55,8 @@ class GenerateOptions:
     created_by: str
     generator_git_commit: str
     generator_git_dirty: bool
+    schema_version: str = SCHEMA_VERSION
+    """Header schema version; tests regenerating gitma fixtures pass the fixture's (0.16.0)."""
 
 
 @dataclass
@@ -80,7 +82,7 @@ def generate_dataset(opts: GenerateOptions) -> list[SplitSummary]:
         header = DatasetHeader.model_validate(
             {
                 "record": "header",
-                "schema_version": SCHEMA_VERSION,
+                "schema_version": opts.schema_version,
                 "generator_version": GENERATOR_VERSION,
                 "dataset_seed": str(int(opts.seed)),
                 "split": plan.split,

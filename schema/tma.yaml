@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.16.0
+version: 0.17.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -62,6 +62,10 @@ enums:
       per_timestep: { description: One row per post-zig timestep using bearings up to that time. }
   GateId:
     permissible_values:
+      P0:
+        description: >-
+          gitma2 pipeline gate (SRD §5): generator and references reproduce gitma, the physics
+          layer equals batch least squares, the oracle ceiling is reproduced.
       G0: { description: Pipeline verified. }
       G1: {}
       G2: {}
@@ -574,6 +578,27 @@ classes:
         range: float
         unit: { ucum_code: m }
         description: 90th percentile over scenarios of the same per-scenario mean.
+      crb_range_rel_median:
+        range: float
+        description: >-
+          Median over the slice's rows of the Cramér–Rao bound on relative range error (gitma2,
+          schema 0.17.0; absent when no row has a regular bound).
+      crb_course_deg_median:
+        range: float
+        description: Median Cramér–Rao bound on course error (degrees).
+      crb_speed_kt_median:
+        range: float
+        description: Median Cramér–Rao bound on speed error (knots).
+      efficiency_range:
+        range: float
+        description: >-
+          Median range error ÷ median range bound over rows with a regular bound (gitma2). A flat
+          value across geometry slices marks an approximation floor rather than missing information.
+      efficiency_course: { range: float, description: Median course error ÷ median course bound. }
+      efficiency_speed: { range: float, description: Median speed error ÷ median speed bound. }
+      crb_singular_rate:
+        range: float
+        description: Fraction of the slice's rows where the Fisher information is singular (no bound).
 
   DatasetRef:
     attributes:
@@ -600,6 +625,12 @@ classes:
       node_version:
         range: string
         description: Node.js version that ran the experiment (byte identity is promised per pinned Node).
+      python_version:
+        range: string
+        description: Python version that ran the experiment (gitma2, schema 0.17.0).
+      torch_version:
+        range: string
+        description: PyTorch version that ran the experiment, when a physics layer or model was used (gitma2).
       schema_version: { range: string, required: true }
       generator_version: { range: string, required: true }
       datasets: { range: DatasetRef, multivalued: true, inlined_as_list: true, required: true }
@@ -659,7 +690,12 @@ classes:
       speed_kt_median: { range: float }
       gross_error_rate: { range: float, required: true }
       non_converged_rate: { range: float }
-
+      efficiency_range:
+        range: float
+        description: Median range error ÷ median range bound at this time (gitma2).
+      efficiency_speed:
+        range: float
+        description: Median speed error ÷ median speed bound at this time (gitma2).
   TrainingConfig:
     description: "Hyperparameters and seeds for one training run (SRD §4; constitution III)."
     attributes:

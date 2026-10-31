@@ -161,6 +161,20 @@
                         "null"
                     ]
                 },
+                "efficiency_range": {
+                    "description": "Median range error \u00f7 median range bound at this time (gitma2).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "efficiency_speed": {
+                    "description": "Median speed error \u00f7 median speed bound at this time (gitma2).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
                 "estimator": {
                     "type": "string"
                 },
@@ -411,8 +425,22 @@
                         }
                     ]
                 },
+                "python_version": {
+                    "description": "Python version that ran the experiment (gitma2, schema 0.17.0).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "schema_version": {
                     "type": "string"
+                },
+                "torch_version": {
+                    "description": "PyTorch version that ran the experiment, when a physics layer or model was used (gitma2).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -554,6 +582,7 @@
         "GateId": {
             "description": "",
             "enum": [
+                "P0",
                 "G0",
                 "G1",
                 "G2",
@@ -647,6 +676,55 @@
                     ]
                 },
                 "course_deg_p90": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "crb_course_deg_median": {
+                    "description": "Median Cram\u00e9r\u2013Rao bound on course error (degrees).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "crb_range_rel_median": {
+                    "description": "Median over the slice's rows of the Cram\u00e9r\u2013Rao bound on relative range error (gitma2, schema 0.17.0; absent when no row has a regular bound).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "crb_singular_rate": {
+                    "description": "Fraction of the slice's rows where the Fisher information is singular (no bound).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "crb_speed_kt_median": {
+                    "description": "Median Cram\u00e9r\u2013Rao bound on speed error (knots).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "efficiency_course": {
+                    "description": "Median course error \u00f7 median course bound.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "efficiency_range": {
+                    "description": "Median range error \u00f7 median range bound over rows with a regular bound (gitma2). A flat value across geometry slices marks an approximation floor rather than missing information.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "efficiency_speed": {
+                    "description": "Median speed error \u00f7 median speed bound.",
                     "type": [
                         "number",
                         "null"
@@ -2066,6 +2144,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.16.0"
+    "version": "0.17.0"
 }
 
