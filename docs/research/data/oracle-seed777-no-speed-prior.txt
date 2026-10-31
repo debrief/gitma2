@@ -1,0 +1,62 @@
+
+All G5 rows (σ = 1°): n = 4083
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          6.11%      24.9%      13.88°     1.70kt   2.35%       0
+lsq            10.97%      67.2%      42.75°     1.72kt  20.96%     226
+imm             9.56%      39.5%      23.54°     1.90kt   6.27%      10
+
+Settled rows: n = 1750
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          4.33%      20.8%       2.40°     0.80kt   2.17%       0
+lsq             6.30%      62.9%       2.81°     0.90kt  18.06%      84
+imm             7.78%      36.0%       8.06°     1.33kt   5.09%       0
+
+Unsettled rows (manoeuvre in progress or ended < 5 min ago): n = 2333
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          7.62%      27.6%      30.65°     2.54kt   2.49%       0
+lsq            15.59%      70.6%      64.17°     2.49kt  23.15%     142
+imm            11.07%      41.7%      43.51°     2.36kt   7.16%      10
+
+zig + 5 min: n = 1216
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          4.11%      14.9%       7.98°     1.12kt   0.25%       0
+lsq             5.19%      26.4%      10.38°     0.81kt   4.44%      12
+imm             5.80%      21.0%      15.58°     1.18kt   1.97%       4
+
+zig + 10 min: n = 1182
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          6.06%      23.0%      15.64°     1.74kt   1.35%       0
+lsq            10.11%      57.0%      44.22°     1.67kt  17.85%      62
+imm             9.64%      34.4%      25.03°     1.88kt   4.31%       3
+
+zig + 15 min: n = 1014
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          8.08%      31.4%      18.54°     2.04kt   3.65%       0
+lsq            21.13%      81.3%      54.61°     2.78kt  31.16%      80
+imm            13.57%      49.0%      30.95°     2.31kt   9.76%       2
+
+zig + 20 min: n = 671
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          8.92%      37.2%      16.46°     2.06kt   5.96%       0
+lsq            29.61%     103.5%      63.50°     3.18kt  40.98%      72
+imm            18.13%      53.9%      25.76°     2.81kt  12.22%       1
+
+Rows before any manoeuvre: n = 951
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          2.57%       9.7%       0.73°     0.33kt   0.00%       0
+lsq             2.57%       9.7%       0.73°     0.33kt   0.00%       0
+imm             4.06%      17.7%       4.34°     0.75kt   1.68%       0
+
+Rows after at least one manoeuvre started: n = 3132
+estimator   range med  range p90  course med  speed med   gross  no est
+oracle          7.80%      28.7%      24.63°     2.39kt   3.07%       0
+lsq            18.30%      79.7%      62.66°     2.73kt  27.33%     226
+imm            12.18%      43.2%      36.85°     2.41kt   7.66%      10
+
+Paired, scenario-clustered bootstrap (2000 resamples), median ratios oracle / imm:
+  all rows  range   0.639  97.5% CI [0.595, 0.687]
+  all rows  course  0.590  97.5% CI [0.534, 0.649]
+  all rows  speed   0.890  97.5% CI [0.825, 0.969]
+  settled   range   0.556  97.5% CI [0.508, 0.628]
+  settled   course  0.298  97.5% CI [0.252, 0.345]
+  settled   speed   0.603  97.5% CI [0.526, 0.701]

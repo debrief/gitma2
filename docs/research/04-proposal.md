@@ -16,8 +16,9 @@ manoeuvred, how much to trust each bearing, and where to start**, and lets a dif
 piecewise-constant-velocity batch solve produce the estimate and its covariance. Trained end to
 end on GPU with data generated on the fly, exported to ONNX. The oracle experiment on gitma's
 own phase-4 data gives the ceiling: with perfect segmentation and nothing else learned, a
-piecewise batch solve beats the frozen IMM by about 30% on median range over all G5 rows and
-halves its error on settled rows. The project's question becomes whether a learned segmenter can
+piecewise batch solve has 0.64 × the frozen IMM's median range error over all G5 rows and
+0.56 × on settled rows; told also that speed carries through a turn, 0.53 × and 0.50 ×, with
+speed at 0.40 × the IMM's. The project's question becomes whether a learned segmenter can
 get close to that oracle, which is a detection task networks are good at, instead of whether a
 regressor can reach a precision floor it has never reached.
 
@@ -84,8 +85,9 @@ Why this answers gitma's failure modes directly:
   `across_los`), batched on the fly from a 64-bit seed. gitma's committed scenario files and
   golden tests are the conformance oracle for the frame conventions; the LinkML schema is reused
   for every file that is exchanged (evaluation splits, predictions, manifests).
-- Train on effectively unlimited data (10^7 scenarios per training run is a few GPU-hours);
-  validation and test splits are fixed files with digests, as before.
+- Train on fresh data every epoch (the generator is not the bottleneck even on CPU runners;
+  the budget decides how many scenarios a run sees); validation and test splits are fixed files
+  with digests, as before.
 - Start simple on purpose: phase-4 ranges, σ ∈ {1°, 2°}, dropouts, as gitma. Add correlated
   bearing error and slow bias once the gate is passed (gitma Annex C's deferred realism item).
 
@@ -150,31 +152,29 @@ filter layer.
 
 ## 5. Plan of work
 
-1. **Foundations (one PR each):** vectorised generator with conformance to gitma's golden
-   scenarios; batch LS, EKF, IMM, CRB in Python, checked against gitma's outputs on the same
-   files; the oracle-segmented solver as a reference CLI; ONNX conformance harness with a toy
-   model across Python, WASM and Java.
-2. **G0 equivalent:** the Python solver recovers noise-free truth; the IMM reproduces gitma's
-   frozen reference numbers on a gitma file; the oracle ceiling is reproduced on a 10^5 validation
-   split.
-3. **Control first:** gitma's T2 re-trained at scale with the CRB loss, on GPU. One day of work,
-   answers the compute question.
-4. **The model:** encoder + heads + solver; pre-registered decision record; three training seeds;
-   validation rule; fresh test seed; panel; write-up.
-5. **Then:** uncertainty calibration, correlated bearing error, in-browser viewer via ORT-web.
+Superseded by §6.1 after the owner's decisions.
 
-## 6. Decisions for the owner
+## 6. Decisions taken by the owner (31 October 2026)
 
-Each is a choice that changes the work. Suggested answers are first.
+| Decision | Choice | Consequence for the plan |
+| --- | --- | --- |
+| Training compute | **Free 4-core CPU runners, PyTorch** (not the GitHub T4 runner, not Modal) | Models stay small (encoder d = 64–128, K ≤ 6 solver iterations); 10^5–10^6 scenarios per run, not 10^7; chained ≤ 6 h jobs with per-epoch checkpoints as gitma; the "re-train T2 at scale" control is run at the same budget, so it answers "does the CRB loss help" rather than "was gitma undertrained". On-the-fly generation still removes the feature-file path, since a vectorised generator is not the bottleneck even on CPU. |
+| Stack | **Python throughout: PyTorch model, NumPy/numba generator and references** | One toolchain; the solver layer is batched tensor ops in PyTorch; ONNX via the TorchScript exporter path with a conformance test in CI. |
+| First target | **Constant-velocity problem first, then manoeuvres** | Gate 1 is gitma's G2/G3 problem (generator 0.3.0-style three legs, constant-velocity target): the model must be within 1.1 × batch least squares on every metric and below its gross-error rate, which proves the solver layer reaches the bound and the learned weighting adds robustness. Gate 2 is Gate A/B of §2.4 on the phase-4 problem. |
+| Schema | **Keep LinkML, generate Pydantic** | `schema/tma.yaml` is carried over and extended; gitma's files remain readable; `uv` + linkml as a dev dependency. |
+| Process | **Keep all of it: site, pre-registration, panel** | Docusaurus site with blog, glossary, data dictionary and algorithm notes; decision records with forecasts before training; fresh seeds; agent review panel for each gate. |
 
-1. **Training compute.** (a) GitHub T4 runner under a Team plan; (b) Actions job driving Modal;
-   (c) stay on free 4-core CPU runners with PyTorch (3–7 × faster than tfjs-node, still slow).
-2. **Language.** (a) Python throughout (PyTorch model, JAX or numba generator), ONNX artefact;
-   (b) Python training with a C++ generator; (c) JAX throughout.
-3. **First target.** (a) Gate A and B as above on phase-4 (0.5.0) data; (b) first reproduce
-   gitma's G2 problem (constant-velocity target) to show the solver layer reaches the CRB, then
-   move to manoeuvres; (c) go straight to realistic bearing error.
-4. **Keep gitma's LinkML schema as the source of file types?** (a) yes, generating Pydantic
-   instead of zod; (b) replace with Pydantic models and JSON Schema directly.
-5. **Site and process.** (a) keep the Docusaurus site, blog, panel and pre-registration as they
-   are; (b) keep pre-registration and the panel but drop the site until there is a result.
+### 6.1 Plan of work, revised for these decisions
+
+1. **Foundations:** LinkML → Pydantic; vectorised generator (0.3.0 and 0.5.0 semantics) proven
+   against gitma's committed scenario files; batch LS, EKF, IMM and CRB in NumPy, checked against
+   gitma's outputs on the same files; the oracle-segmented solver as a reference CLI; ONNX
+   conformance harness (ORT Python, ORT-web WASM, ORT Java) on a toy model; CPU training
+   throughput measured before the first decision record.
+2. **G0 equivalent** on the Python pipeline.
+3. **Gate 1 (constant velocity):** encoder + weighting/initialisation heads + solver, no
+   segmentation; pre-registered; three seeds; compared with batch LS, naive and a regression
+   control with the CRB loss at the same CPU budget.
+4. **Gate 2 (manoeuvres):** add the segmentation and speed-continuity heads; Gate A/B against the
+   re-tuned IMM, batch LS and the oracle ceiling.
+5. **Then:** uncertainty calibration, realistic bearing error, in-browser viewer via ORT-web.

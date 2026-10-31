@@ -239,7 +239,7 @@ def main() -> None:
             if k >= sc.t.size:
                 continue
             tk = float(sc.t[k])
-            row: dict = {"scenario": sc.index, "offset_s": off, "settled": settled(sc, k), "n_spans_started": sum(1 for s, _, _ in sc.spans if s <= k)}
+            row: dict = {"scenario": sc.index, "offset_s": off, "settled": bool(settled(sc, k)), "n_spans_started": sum(1 for s, _, _ in sc.spans if s <= k)}
             knots = [i for s, e, _ in sc.spans if s <= k for i in (s, e)]
             o = solve_segments(sc, k, knots, args.prior_sd, args.speed_prior_sd, [(s_, e_) for s_, e_, kind in sc.spans if kind == "course"])
             if o is None:
