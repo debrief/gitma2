@@ -84,3 +84,12 @@ equality, export conformance.
 
 - [ ] T022 `site/docs/algorithms/gate1-model.md`; glossary; the Gate 1 write-up with the numbers;
   README, AGENTS and welcome status
+
+## Follow-ups found during training (not changed for g1-a: the plan was pinned)
+
+- Early stopping has no minimum improvement: `g1-physics-s2` kept "improving" by about 1e-6 per
+  epoch (best epoch 6 of 10) while s1 and s3 stopped at epoch 5. Add a relative `min_delta`
+  (e.g. 1e-4) to `PhysicsModelConfig` for the next plan; it cost about 2 h of runner time here.
+- Seeds s1 and s3 reached identical best validation losses (3.271793) at epoch 1: on
+  constant-velocity data the heads barely move from their zero initialisation, so the seed
+  spread on Gate 1 says little about initialisation noise. Expected; Gate 2 is where it matters.
