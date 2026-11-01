@@ -51,7 +51,7 @@ equality, export conformance.
 
 ## Phase 5: Data and references (US3)
 
-- [ ] T014 Validation split (seed 302) and its digest; `tma2-tune` with research R6's grids;
+- [x] T014 Validation split (seed 302) and its digest; `tma2-tune` with research R6's grids;
   `experiments/<date>-g1-tune/` committed with the frozen EKF and IMM
 
 ## Phase 6: Export (US5)

@@ -1,0 +1,126 @@
+{
+  "artefacts": [],
+  "command_lines": [
+    "tma2-tune --validation /home/user/gitma2/data/g1-val/validation.f32pack --experiment experiments/20261101-g1-tune --workers 4"
+  ],
+  "created": "2026-11-01T14:34:22Z",
+  "datasets": [
+    {
+      "digest": "c781bbf2dafc0e9cc28a4497e8b2a9b1911d11f2119c6c1249004ee35ffc8c3b",
+      "header": {
+        "created_by": "tma2-generate --seed 302 --count 100000 --ranges sha256:bdf46080f66c24c867245c482121a2f1b82d3f13e59ef8c0cabccde08d1172be --heldout-ranges sha256:7d9e444c99d8ac6f759d0226c1724a7ea19cb34237465730f4d1aed51de1aca1",
+        "dataset_seed": "302",
+        "generator_git_commit": "cb3c6c1e00ab023275efb3f27ca2eaad391396d8",
+        "generator_git_dirty": false,
+        "generator_version": "0.5.0",
+        "index_end": 90000,
+        "index_start": 80000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.1,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.017453292519943295,
+            0.03490658503988659
+          ],
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "range_distribution": "log_uniform",
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "window_s": {
+            "max": 2400.0,
+            "min": 600.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 2115,
+        "scenario_count": 10000,
+        "schema_version": "0.18.0",
+        "split": "validation"
+      },
+      "path": "/home/user/gitma2/data/g1-val/validation.f32pack"
+    }
+  ],
+  "environment": {
+    "cpu_count": 4,
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "lockfile_digest": "e4c602b906c86ce1a532f3a6f97c87bfa6355adcfbc643b262d1366a7a463dbf",
+    "packages": [
+      {
+        "name": "numpy",
+        "version": "2.5.4"
+      },
+      {
+        "name": "numba",
+        "version": "0.68.1"
+      },
+      {
+        "name": "torch",
+        "version": "2.15.0+cpu"
+      },
+      {
+        "name": "onnx",
+        "version": "1.23.2"
+      },
+      {
+        "name": "onnxruntime",
+        "version": "1.31.1"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.2"
+      }
+    ],
+    "torch_threads": 4
+  },
+  "estimators": [
+    {
+      "name": "imm-cv0.001-ct0.03-w0.01-s0.00001-p4-r8",
+      "settings_json": "{\"median_range_rel_zig300\": 0.03940499609237833, \"name\": \"imm-cv0.001-ct0.03-w0.01-s0.00001-p4-r8\", \"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_ct\": 0.03, \"sigma_cv\": 0.001, \"sigma_omega\": 0.01, \"switch_per_s\": 1e-05}"
+    },
+    {
+      "name": "ekf-sa0.001-p4-r8",
+      "settings_json": "{\"median_range_rel_zig300\": 0.039230212266827616, \"name\": \"ekf-sa0.001-p4-r8\", \"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_a\": 0.001}"
+    }
+  ],
+  "generator_version": "0.5.0",
+  "git_commit": "43de1748ef7dca94613c25bb24a3940fe4a5d374",
+  "git_dirty": false,
+  "id": "20261101-g1-tune",
+  "python_version": "3.12.13",
+  "schema_version": "0.18.0",
+  "torch_version": "2.15.0+cpu"
+}

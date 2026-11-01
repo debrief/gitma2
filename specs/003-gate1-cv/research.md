@@ -136,7 +136,14 @@ weight, so its rates were not searched); EKF σ_a ∈ {0.0001, …, 0.1} (7 valu
 2, 8, 16, 32}, p0 scale 4. The grid was widened twice before freezing, because the first runs put
 the best settings on an edge (lowest process noise, largest R scale, lowest switch rate); the
 rule adopted is that a frozen setting on an edge must sit on a plateau. Record:
-`experiments/20261101-g1-tune/`.
+`experiments/20261101-g1-tune/` (clean tree, commit 43de174; 135 settings, 2,000 scenarios).
+
+**Frozen**: EKF `ekf-sa0.001-p4-r8`, 3.92% median range error (interior on both axes); IMM
+`imm-cv0.001-ct0.03-w0.01-s0.00001-p4-r8`, 3.94%. The IMM's switch rate sits on the grid's lower
+edge, on a plateau (switch 1e-4 and 1e-5 differ by 0.03%): as the switch rate goes to zero the
+IMM becomes its constant-velocity filter alone, so a lower value can only approach the
+single-model filter. On constant-velocity data the two references are the same filter in effect;
+both are reported, and Gate 1 is judged against batch least squares.
 
 ## R7. Training on GitHub Actions
 
