@@ -110,8 +110,11 @@ Five read-only reviewers in parallel; the machine verdict was pass on 18 of 18 c
 - Covariance: an independent σ²(JᵀJ)⁻¹ test added; reference docstring σ² wording fixed.
 - Float32 conclusion: stated as conditioning (JᵀJ squares the condition number); f32 numbers
   now recorded in `metrics.json` (`export`).
-- Export now at the production configuration (100 iterations, 8 knots) including the speed-skip
-  path; the oracle's exact inputs are not exported (the toy encoder supplies them).
+- Export at the production knots (8) and damping trials with the speed-skip path, but 8 unrolled
+  iterations, not the production 100: unrolled, 100 gave a 45 MB graph onnxruntime could not
+  load in 12 minutes; the row-by-row Gauss–Jordan was replaced by a whole-matrix form (37k → 11k
+  nodes). A deployable model needs an ONNX `Loop` (spec 003). The oracle's exact inputs are not
+  exported (the toy encoder supplies them). *(Corrected in round 2: the round-1 text said 100.)*
 - Pre-zig rows are "plausible" with sd ≫ range: recorded in AGENTS.md for spec 003 (training
   must exclude or down-weight undetermined rows). Implicit-function backward: proposed for spec
   003.
@@ -148,8 +151,8 @@ Machine verdict **fail**, 21 of 22 checks pass:
 | IMM at scale | 1,214,916 rows, 0 flag mismatches, 475 rows (0.04%) beyond 1e-4, G5 median ratio 1.000000 |
 | Export, Python / WASM / Java | 7.2e-12 / 1.1e-11 / 7.2e-12 in double, one export digest |
 
-**Diagnosis of the failure.** Two rows exceed the limit, both in speed, both on scenario 1 of the
-phase-4 train fixture (rows 225, 226). Their range is determined (sd 0.31–0.33 of range), so the
+**Diagnosis of the failure.** One row exceeds the limit (row 225, 1.29e-4; row 226 is 7.2e-5,
+corrected in round 2), in speed, on scenario 1 of the phase-4 train fixture. Their range is determined (sd 0.31–0.33 of range), so the
 rule applies the relative test, but their speed is not: its standard deviation is 5.8–9.4 times
 the speed. Polishing each with 3,000 iterations, from gitma's own solution and from the grid,
 lands where the layer already is; gitma's solver had stopped short (its stop is a relative cost
@@ -167,3 +170,89 @@ option first): apply the 1e-4 relative test to each quantity only where that qua
 determined (its sd below half its value), keeping the standard-deviation test on all rows; or
 compare against a polished optimum instead of gitma's stopping point; or keep the rule and
 record P0 as failed on this check.
+
+## Round 2 (2026-11-01): record r2 at 8e5dfe1, diff 5adb8bf..06733db
+
+| Reviewer | Verdict |
+| --- | --- |
+| TMA geometry | approve-with-findings |
+| Estimation and numerics | approve-with-findings (2 majors) |
+| Evaluation statistics | approve-with-findings (2 majors) |
+| Reproducibility | approve-with-findings (2 majors; every re-run value bit for bit) |
+| Red team | approve-with-findings (2 majors) |
+
+No reviewer rejects. Every verdict assumes the owner accepts the recommended option for the
+physics-vs-least-squares rule. All five confirmed the r2 diagnosis independently (two with
+their own optimisers: speed 6.871542 / 6.871534 at row 225 against the layer's 6.871561 and
+gitma's 6.870677; one Gauss–Newton step from gitma's point still moves speed by 1.9e-3). The red
+team showed the recommended rule is not tuned to pass: with speed counted as determined at
+sd/speed below anything from 0.05 to 5, the worst speed difference is 6.4e-6 to 2.1e-5, a 5–15×
+margin, and the cost test rules out a layer that stopped short. The numerics reviewer showed the
+miss is predictable: relative error ≈ (sd/value)·√Δχ², with √Δχ² ≈ 2e-5.
+
+### Majors and responses (fixed at 8116827 and 463f8f8)
+
+1. **Covariance non-finite on "plausible" rows, silently skipped** (numerics). Where both solvers
+   collapse onto ownship (range 1e-7–4e-6 m) unpivoted elimination gave NaN. *Fixed*: a relative
+   ridge of 1e-12 on the covariance's information (scaled condition near 1e12), in the layer and
+   the reference; a `cov_ok` output (finite, positive diagonal, range > 1 m); the check counts
+   degenerate and non-finite rows and fails on any non-finite one; a gradient test with losses on
+   the state, cost and log covariance with random learned inputs on pre-zig, at-zig, mid and last
+   rows including the collapse rows. The reviewer's probes now give 0 non-finite covariances.
+2. **Training throughput not measured** (numerics). *Fixed* (reported, not gated):
+   single-threaded forward + backward at 100 iterations is 0.18 s and 72 MB per row; 256 rows
+   would take about 45 s and 18 GB against the planned 1 s. **Consequence for spec 003**: the
+   backward pass must not unroll 100 iterations: an implicit-function backward at the optimum
+   (one solve) or a truncated backward, with threads pinned; spec 003's first decision record
+   should state which and measure it.
+3. **A gate could pass with checks missing** (statistics, reproducibility, red team). *Fixed*:
+   `--oracle-data`, `--gitma-data` and `--gitma-imm` are required; the CI job builds gitma's
+   reference itself (`scripts/gitma_reference.sh`, gitma checked out at d0aec60).
+4. **SRD Gate 1's efficiency criterion points the wrong way** (statistics: "efficiency ≥ 0.8"
+   with error/CRB passes every inefficient model). *Answered*: an SRD amendment, the owner's;
+   proposed in the PR for spec 003's pre-registration: efficiency (error/CRB, 1 at the bound)
+   ≤ 1.25 on settled slices.
+5. **Dirty runs could write the clean commit's cache** (reproducibility, red team). *Fixed*: a
+   dirty tree writes to a fresh `<commit>-dirty-*` directory no run reuses.
+6. **gitma's IMM file not bound to the data, no provenance** (reproducibility, red team). *Fixed*:
+   the check verifies gitma's file names gitma's dataset (`check_bound`) and that the dataset's
+   10,000 scenarios equal ours block for block (headers differ only in the generating code);
+   gitma's commit and commands are in `scripts/gitma_reference.sh` and the record; the header is
+   copied into the record.
+7. **Owner approval of the round-1 amendment** (red team). *Accepted*: both the round-1 spec
+   amendment and the r2 rule go to the owner in one question; no P0 pass is recorded until the
+   owner answers.
+
+### Minors (done unless stated)
+
+- `spd_solve` docstring: agreement is about eps × cond, not "≈1e-17".
+- `_hypot` branch-safe; a learned log-weight must be bounded (documented).
+- Unconverged solver rows: the layer's flag and cost are now reported.
+- Manifest records the oracle's actual iterations and trials; artefact and dataset paths are
+  relative; the conformance results are copied into the record.
+- Noise-free check pinned to double (explicit dtype in the layer inputs) with a test.
+- `known_manoeuvres` refuses data with manoeuvres but no plan; kinematics tested against the
+  stored truth of every phase-4 fixture scenario (worst under 1 cm); the Monte-Carlo docstring
+  no longer claims a test that did not exist.
+- Frame tests pin ownship's course convention and use the median residual over all bearings.
+- Fixtures: slice cases just beyond gitma's snap windows (230 cases); a gitma bootstrap case
+  with a zero-median denominator.
+- Oracle and IMM efficiency against the known-manoeuvres bound reported in P0 (geometry
+  measured 1.13 range, 1.15 course, 1.16 speed for the chord oracle with the speed prior).
+- Efficiency check: scenario-clustered 95% interval [0.89, 1.04] and excluded rows (275 beyond
+  the window, none singular) recorded.
+- IMM at scale: rows either side lacks count as mismatches; p99 and p99.9 reported; the 0.1%
+  limit is labelled post hoc.
+- Naive model validated against `NaiveModel`. Not done: the experiment `metrics.json` is a
+  diagnostic dictionary, as in gitma; typing it is proposed for spec 003's record format.
+- Gate 2 proposal revised (geometry, statistics): pre-register the chord oracle with the speed
+  prior now (better on range, the gated metric; masking is mixed: course 0.461 against 0.438,
+  speed 0.380 against 0.393), and report its efficiency against the known-manoeuvres bound.
+- For spec 003: a knot at `start_index − 1` (geometry); a `Loop` export with 1e-5 conformance as
+  an entry criterion (numerics); the jitter null for the at-scale check (statistics).
+
+### Open: the owner's decision
+
+Asked of the owner on 2026-11-01 (one question, recommended option first): accept the round-1
+spec amendment and apply the relative test per quantity only where that quantity is determined
+(sd below half its value), keeping the standard-deviation test on all rows; then run r3.
