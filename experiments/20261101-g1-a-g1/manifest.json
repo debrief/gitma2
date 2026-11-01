@@ -1,0 +1,176 @@
+{
+  "artefacts": [
+    {
+      "digest": "81e4a2a0de7a2d6deaaf048d9d6e98e53769efb20efaf6ef4726f80f0b0875b2",
+      "path": "experiments/20261101-g1-decision/decision.json",
+      "role": "decision"
+    },
+    {
+      "digest": "1d993dccb5f63ee080022ed15c578392f8acccc1542d16a12b569bc7451c583b",
+      "path": "configs/gate1/plan.json",
+      "role": "plan"
+    },
+    {
+      "digest": "ba16c463661c7d3c1b9d01949fc10a72c4901709b0bfbdc78e5820b13a26f8a0",
+      "path": "experiments/20261101-g1-a-models/models/g1-physics-s2/meta.json",
+      "role": "carried model checkpoint meta"
+    },
+    {
+      "digest": "02c1645d66bcfcff03f71f4e8457555de9d63d79c87939221e3c2d699be22878",
+      "path": "/home/runner/work/_temp/p/test-model.ndjson",
+      "role": "predictions: model"
+    },
+    {
+      "digest": "48b73e58a46702c7ba54ce5e3d33d138ae54d80a79436405e2bccfba98edd046",
+      "path": "/home/runner/work/_temp/p/test-lsq.ndjson",
+      "role": "predictions: least_squares"
+    },
+    {
+      "digest": "40cf9882bdac123b76c207185fc6818b8be7eb9a9649d738ed7ab55b453b3b7d",
+      "path": "/home/runner/work/_temp/p/test-naive.ndjson",
+      "role": "predictions: naive"
+    },
+    {
+      "digest": "ad0d7355d5aafb6d80a3d8e787027427cc7858e510c23459aa3965d7cd4507ec",
+      "path": "/home/runner/work/_temp/p/test-ekf.ndjson",
+      "role": "predictions: ekf"
+    },
+    {
+      "digest": "d2778a7d7636660c18a06bd898887232c5445f77ede54c2c19d5bd5e41e21f79",
+      "path": "/home/runner/work/_temp/p/test-imm.ndjson",
+      "role": "predictions: imm"
+    },
+    {
+      "digest": "d538397826097607f522381075e4171b52b1b3d6bf09e31e4502cae752fa7711",
+      "path": "/home/runner/work/_temp/p/test-oracle.ndjson",
+      "role": "predictions: oracle"
+    }
+  ],
+  "command_lines": [
+    "tma2-g1 --decision experiments/20261101-g1-decision/decision.json --plan configs/gate1/plan.json --carried g1-physics-s2 --model-meta experiments/20261101-g1-a-models/models/g1-physics-s2/meta.json --test /home/runner/work/gitma2/gitma2/../test-data/test.f32pack --model /home/runner/work/_temp/p/test-model.ndjson --least-squares /home/runner/work/_temp/p/test-lsq.ndjson --naive /home/runner/work/_temp/p/test-naive.ndjson --ekf /home/runner/work/_temp/p/test-ekf.ndjson --imm /home/runner/work/_temp/p/test-imm.ndjson --oracle /home/runner/work/_temp/p/test-oracle.ndjson --experiment experiments/20261101-g1-a-g1"
+  ],
+  "created": "2026-11-01T23:17:03Z",
+  "datasets": [
+    {
+      "digest": "8d9346feb9e930f42847f083041bba08cf71fa906da27beb4ae19711eebc3b52",
+      "header": {
+        "created_by": "tma2-generate --seed 303 --count 100000 --ranges sha256:bdf46080f66c24c867245c482121a2f1b82d3f13e59ef8c0cabccde08d1172be --heldout-ranges sha256:7d9e444c99d8ac6f759d0226c1724a7ea19cb34237465730f4d1aed51de1aca1",
+        "dataset_seed": "303",
+        "generator_git_commit": "ef2f340b2ba211584b8d9bb5fa2f444caeb905c6",
+        "generator_git_dirty": false,
+        "generator_version": "0.5.0",
+        "index_end": 100000,
+        "index_start": 90000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.1,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.017453292519943295,
+            0.03490658503988659
+          ],
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "range_distribution": "log_uniform",
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "window_s": {
+            "max": 2400.0,
+            "min": 600.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 2132,
+        "scenario_count": 10000,
+        "schema_version": "0.19.0",
+        "split": "test"
+      },
+      "path": "/home/runner/work/gitma2/test-data/test.f32pack"
+    }
+  ],
+  "environment": {
+    "cpu_count": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "lockfile_digest": "e4c602b906c86ce1a532f3a6f97c87bfa6355adcfbc643b262d1366a7a463dbf",
+    "packages": [
+      {
+        "name": "numpy",
+        "version": "2.5.4"
+      },
+      {
+        "name": "numba",
+        "version": "0.68.1"
+      },
+      {
+        "name": "torch",
+        "version": "2.15.0+cpu"
+      },
+      {
+        "name": "onnx",
+        "version": "1.23.2"
+      },
+      {
+        "name": "onnxruntime",
+        "version": "1.31.1"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.2"
+      }
+    ],
+    "torch_threads": 2
+  },
+  "estimators": [
+    {
+      "name": "g1-physics-s2",
+      "settings_json": "{\"plan_digest\": \"1d993dccb5f63ee080022ed15c578392f8acccc1542d16a12b569bc7451c583b\", \"role\": \"carried\"}"
+    },
+    {
+      "name": "imm",
+      "settings_json": "{\"median_range_rel_zig300\": 0.03940499609237833, \"name\": \"imm-cv0.001-ct0.03-w0.01-s0.00001-p4-r8\", \"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_ct\": 0.03, \"sigma_cv\": 0.001, \"sigma_omega\": 0.01, \"switch_per_s\": 1e-05}"
+    },
+    {
+      "name": "ekf",
+      "settings_json": "{\"median_range_rel_zig300\": 0.039230212266827616, \"name\": \"ekf-sa0.001-p4-r8\", \"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_a\": 0.001}"
+    }
+  ],
+  "generator_version": "0.5.0",
+  "git_commit": "ef2f340b2ba211584b8d9bb5fa2f444caeb905c6",
+  "git_dirty": false,
+  "id": "20261101-g1-a-g1",
+  "python_version": "3.12.3",
+  "schema_version": "0.19.0",
+  "torch_version": "2.15.0+cpu"
+}
