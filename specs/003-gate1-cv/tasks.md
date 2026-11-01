@@ -24,7 +24,7 @@ equality, export conformance.
 
 ## Phase 2: Types (all stories)
 
-- [ ] T005 Schema 0.18.0: `PhysicsHead`, `PhysicsModelConfig`, `TrainingPlan`, `JobRecord`,
+- [x] T005 Schema 0.18.0: `PhysicsHead`, `PhysicsModelConfig`, `TrainingPlan`, `JobRecord`,
   `CheckpointMeta`, `PhysicsModelManifest`, `Gate1Decision`, `GateId.G1`; regenerate; data
   dictionary
 

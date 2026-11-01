@@ -139,6 +139,81 @@
             "title": "ChangeDecision",
             "type": "object"
         },
+        "CheckpointMeta": {
+            "additionalProperties": false,
+            "description": "The state beside a checkpoint's weights (spec 003 FR-015).",
+            "properties": {
+                "best_epoch": {
+                    "type": "integer"
+                },
+                "best_val_loss": {
+                    "type": "number"
+                },
+                "complete": {
+                    "type": "boolean"
+                },
+                "epoch": {
+                    "description": "Last completed epoch (0 = none).",
+                    "type": "integer"
+                },
+                "epoch_seconds": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "jobs": {
+                    "items": {
+                        "$ref": "#/$defs/JobRecord"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "train_losses": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "val_losses": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "model_id",
+                "plan_id",
+                "plan_digest",
+                "epoch",
+                "best_epoch",
+                "best_val_loss",
+                "complete"
+            ],
+            "title": "CheckpointMeta",
+            "type": "object"
+        },
         "Continuation": {
             "additionalProperties": false,
             "description": "The committed model a seeded continuation started from (scripts/train-continue.mjs; spec 003 decision 14, spec 004 decision 15). Its epoch records up to best_epoch are kept in the continued run's manifest, with their val_loss as recorded under the earlier config.",
@@ -667,6 +742,91 @@
             "title": "FloatRange",
             "type": "object"
         },
+        "Gate1Decision": {
+            "additionalProperties": false,
+            "description": "The Gate 1 decision record (spec 003 FR-016, FR-021), committed before training: what is trained, how the carried weights are chosen, what is scored on test, and what follows.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "carried_models": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "carried_rule": {
+                    "type": "string"
+                },
+                "control_models": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "criterion": {
+                    "type": "string"
+                },
+                "ekf": {
+                    "description": "Frozen EKF settings (JSON).",
+                    "type": "string"
+                },
+                "forecast": {
+                    "type": "string"
+                },
+                "gate_rows": {
+                    "type": "string"
+                },
+                "if_failed": {
+                    "type": "string"
+                },
+                "imm": {
+                    "description": "Frozen IMM settings (JSON).",
+                    "type": "string"
+                },
+                "plan_digest": {
+                    "description": "SHA-256 of the plan file.",
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "test_count": {
+                    "description": "Scenarios generated (the test split is 10%).",
+                    "type": "integer"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "validation_rule": {
+                    "description": "When validation stops the phase before test.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "carried_models",
+                "control_models",
+                "carried_rule",
+                "test_seed",
+                "test_count",
+                "gate_rows",
+                "criterion",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "imm",
+                "ekf",
+                "forecast",
+                "if_failed",
+                "validation_rule"
+            ],
+            "title": "Gate1Decision",
+            "type": "object"
+        },
         "GateCheck": {
             "additionalProperties": false,
             "description": "",
@@ -782,6 +942,48 @@
                 "decided_by"
             ],
             "title": "GateVerdict",
+            "type": "object"
+        },
+        "JobRecord": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "cpu_model": {
+                    "type": "string"
+                },
+                "finished": {
+                    "type": "string"
+                },
+                "first_epoch": {
+                    "type": "integer"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "last_epoch": {
+                    "type": "integer"
+                },
+                "seconds": {
+                    "type": "number"
+                },
+                "started": {
+                    "type": "string"
+                },
+                "threads": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "started",
+                "finished",
+                "seconds",
+                "first_epoch",
+                "last_epoch",
+                "cpu_model",
+                "threads",
+                "git_commit"
+            ],
+            "title": "JobRecord",
             "type": "object"
         },
         "ManoeuvreKind": {
@@ -1604,6 +1806,185 @@
             "title": "ParameterRanges",
             "type": "object"
         },
+        "PhysicsHead": {
+            "description": "How a gitma2 model produces its estimate (spec 003).",
+            "enum": [
+                "physics",
+                "direct"
+            ],
+            "title": "PhysicsHead",
+            "type": "string"
+        },
+        "PhysicsModelConfig": {
+            "additionalProperties": false,
+            "description": "One gitma2 model's hyperparameters (spec 003 FR-010): encoder, heads, physics layer, loss, data sampling and optimiser; carried in its manifest.",
+            "properties": {
+                "batch_scenarios": {
+                    "type": "integer"
+                },
+                "causal": {
+                    "description": "Causal encoder and physics layer up to the row (instantaneous); false is the time-late control.",
+                    "type": "boolean"
+                },
+                "epochs": {
+                    "type": "integer"
+                },
+                "feedforward": {
+                    "type": "integer"
+                },
+                "head": {
+                    "$ref": "#/$defs/PhysicsHead"
+                },
+                "heads": {
+                    "description": "Attention heads.",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "Estimator name in predictions.",
+                    "type": "string"
+                },
+                "iterations": {
+                    "description": "Physics-layer iterations K.",
+                    "type": "integer"
+                },
+                "layers": {
+                    "type": "integer"
+                },
+                "learning_rate": {
+                    "type": "number"
+                },
+                "loss_cap": {
+                    "description": "Cap on a row's normalised squared error.",
+                    "type": "number"
+                },
+                "loss_init_weight": {
+                    "description": "Weight of the auxiliary initial-state loss.",
+                    "type": "number"
+                },
+                "loss_nll_weight": {
+                    "type": "number"
+                },
+                "nll_beta": {
+                    "type": "number"
+                },
+                "noise_draws": {
+                    "type": "integer"
+                },
+                "patience": {
+                    "type": "integer"
+                },
+                "rows_per_scenario": {
+                    "type": "integer"
+                },
+                "scale_bound": {
+                    "description": "Bound on the covariance log-scale.",
+                    "type": "number"
+                },
+                "seed": {
+                    "description": "Initialisation and row-sampling seed.",
+                    "type": "integer"
+                },
+                "shuffle_labels": {
+                    "description": "Control (c).",
+                    "type": "boolean"
+                },
+                "threads": {
+                    "type": "integer"
+                },
+                "weight_bound": {
+                    "description": "Bound on per-bearing log-weights.",
+                    "type": "number"
+                },
+                "weight_decay": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "head",
+                "causal",
+                "width",
+                "layers",
+                "heads",
+                "feedforward",
+                "weight_bound",
+                "scale_bound",
+                "iterations",
+                "loss_init_weight",
+                "loss_nll_weight",
+                "nll_beta",
+                "loss_cap",
+                "rows_per_scenario",
+                "noise_draws",
+                "batch_scenarios",
+                "learning_rate",
+                "weight_decay",
+                "epochs",
+                "patience",
+                "seed",
+                "shuffle_labels",
+                "threads"
+            ],
+            "title": "PhysicsModelConfig",
+            "type": "object"
+        },
+        "PhysicsModelManifest": {
+            "additionalProperties": false,
+            "description": "The exported artefact's manifest (spec 003 FR-022).",
+            "properties": {
+                "best_epoch": {
+                    "type": "integer"
+                },
+                "config": {
+                    "$ref": "#/$defs/PhysicsModelConfig"
+                },
+                "generator_version": {
+                    "type": "string"
+                },
+                "onnx_digest": {
+                    "description": "SHA-256 of the exported graph.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "training_commit": {
+                    "type": "string"
+                },
+                "weights_digest": {
+                    "description": "SHA-256 of the safetensors file.",
+                    "type": "string"
+                },
+                "window_rows": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "config",
+                "schema_version",
+                "generator_version",
+                "plan_id",
+                "plan_digest",
+                "training_commit",
+                "best_epoch",
+                "weights_digest",
+                "window_rows"
+            ],
+            "title": "PhysicsModelManifest",
+            "type": "object"
+        },
         "PlatformState": {
             "additionalProperties": false,
             "description": "One platform state. Stone Soup analogue GroundTruthState.",
@@ -2313,6 +2694,54 @@
             "title": "TrainingConfig",
             "type": "object"
         },
+        "TrainingPlan": {
+            "additionalProperties": false,
+            "description": "A plan branch's content (spec 003): the data, the models and the decision it implements.",
+            "properties": {
+                "decision": {
+                    "description": "Path of the decision record it implements.",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "models": {
+                    "items": {
+                        "$ref": "#/$defs/PhysicsModelConfig"
+                    },
+                    "type": "array"
+                },
+                "ranges": {
+                    "$ref": "#/$defs/ParameterRanges"
+                },
+                "scenarios_per_epoch": {
+                    "type": "integer"
+                },
+                "train_seed": {
+                    "description": "Generator seed of the on-the-fly training stream.",
+                    "type": "integer"
+                },
+                "validation": {
+                    "$ref": "#/$defs/DatasetRef"
+                },
+                "validation_scenarios": {
+                    "description": "Validation scenarios scored each epoch.",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "ranges",
+                "train_seed",
+                "scenarios_per_epoch",
+                "validation",
+                "validation_scenarios",
+                "models",
+                "decision"
+            ],
+            "title": "TrainingPlan",
+            "type": "object"
+        },
         "ZigRule": {
             "description": "How each zig's direction and size are chosen (generator 0.3.0, spec 007).",
             "enum": [
@@ -2357,6 +2786,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.17.0"
+    "version": "0.18.0"
 }
 
