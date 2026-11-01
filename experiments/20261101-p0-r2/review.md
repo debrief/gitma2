@@ -259,3 +259,15 @@ recommended option**: the round-1 spec amendment is accepted, and the relative t
 range and speed separately, each only where that quantity is determined (sd below half its
 value), with the standard-deviation test on every row. Run r2's fail stays in its record
 unchanged; run r3 (`experiments/20261101-p0-r3/`) is judged under the amended rule.
+
+## Runs r3 and r4 (2026-11-01), under the owner's rule
+
+- **r3** (`experiments/20261101-p0-r3/`, commit dd69fc8): machine verdict **pass**, 22 of 22.
+  Physics equals least squares: flags differ on 0, cost higher on 0, worst 1.8e-5 relative where
+  determined (20,925 range rows, 19,949 speed rows), 4.0e-4 standard deviations on all, 15
+  degenerate covariances (on ownship), 0 non-finite. Its manifest says `git_dirty: true`
+  wrongly: tma2-p0 had written two files into the experiment folder before recording git
+  state. The predictions were cached under the clean commit. Fixed at 758ba06 (git state taken
+  at the start; the experiment's own folder ignored).
+- **r4** (`experiments/20261101-p0-r4/`, commit 758ba06): the record of decision; its checks
+  must equal r3's.
