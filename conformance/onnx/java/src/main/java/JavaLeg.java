@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Java leg of the export conformance check: loads the exported model and the golden batch (raw
  * little-endian files written by tma2.export.onnx_export), runs it, and prints the outputs as JSON
- * on stdout for the Python comparison. Usage: JavaLeg <export dir>.
+ * on stdout for the Python comparison. Usage: JavaLeg <export dir> [model file, default toy.onnx].
  */
 public final class JavaLeg {
   public static void main(String[] args) throws Exception {
@@ -22,7 +22,7 @@ public final class JavaLeg {
     String shapesJson = Files.readString(dir.resolve("shapes.json"));
     Map<String, long[]> shapes = parseShapes(shapesJson);
     OrtEnvironment env = OrtEnvironment.getEnvironment();
-    try (OrtSession session = env.createSession(dir.resolve("toy.onnx").toString(), new OrtSession.SessionOptions())) {
+    try (OrtSession session = env.createSession(dir.resolve(args.length > 1 ? args[1] : "toy.onnx").toString(), new OrtSession.SessionOptions())) {
       Map<String, OnnxTensor> feeds = new LinkedHashMap<>();
       for (Map.Entry<String, long[]> e : shapes.entrySet()) {
         String name = e.getKey();

@@ -1,0 +1,289 @@
+{
+  "decision": "experiments/20261101-g1-decision/decision.json",
+  "id": "g1-a",
+  "models": [
+    {
+      "batch_scenarios": 64,
+      "causal": true,
+      "epochs": 20,
+      "feedforward": 128,
+      "head": "physics",
+      "heads": 4,
+      "id": "g1-physics-s1",
+      "iterations": 100,
+      "layers": 2,
+      "learning_rate": 0.001,
+      "loss_cap": 100.0,
+      "loss_init_weight": 0.1,
+      "loss_nll_weight": 1.0,
+      "nll_beta": 0.5,
+      "noise_draws": 2,
+      "patience": 4,
+      "rows_per_scenario": 3,
+      "scale_bound": 2.0,
+      "seed": 1,
+      "shuffle_labels": false,
+      "threads": 4,
+      "train_iterations": 50,
+      "weight_bound": 2.0,
+      "weight_decay": 0.0,
+      "width": 64
+    },
+    {
+      "batch_scenarios": 64,
+      "causal": true,
+      "epochs": 20,
+      "feedforward": 128,
+      "head": "physics",
+      "heads": 4,
+      "id": "g1-physics-s2",
+      "iterations": 100,
+      "layers": 2,
+      "learning_rate": 0.001,
+      "loss_cap": 100.0,
+      "loss_init_weight": 0.1,
+      "loss_nll_weight": 1.0,
+      "nll_beta": 0.5,
+      "noise_draws": 2,
+      "patience": 4,
+      "rows_per_scenario": 3,
+      "scale_bound": 2.0,
+      "seed": 2,
+      "shuffle_labels": false,
+      "threads": 4,
+      "train_iterations": 50,
+      "weight_bound": 2.0,
+      "weight_decay": 0.0,
+      "width": 64
+    },
+    {
+      "batch_scenarios": 64,
+      "causal": true,
+      "epochs": 20,
+      "feedforward": 128,
+      "head": "physics",
+      "heads": 4,
+      "id": "g1-physics-s3",
+      "iterations": 100,
+      "layers": 2,
+      "learning_rate": 0.001,
+      "loss_cap": 100.0,
+      "loss_init_weight": 0.1,
+      "loss_nll_weight": 1.0,
+      "nll_beta": 0.5,
+      "noise_draws": 2,
+      "patience": 4,
+      "rows_per_scenario": 3,
+      "scale_bound": 2.0,
+      "seed": 3,
+      "shuffle_labels": false,
+      "threads": 4,
+      "train_iterations": 50,
+      "weight_bound": 2.0,
+      "weight_decay": 0.0,
+      "width": 64
+    },
+    {
+      "batch_scenarios": 64,
+      "causal": true,
+      "epochs": 20,
+      "feedforward": 128,
+      "head": "direct",
+      "heads": 4,
+      "id": "g1-direct",
+      "iterations": 100,
+      "layers": 2,
+      "learning_rate": 0.001,
+      "loss_cap": 100.0,
+      "loss_init_weight": 0.1,
+      "loss_nll_weight": 1.0,
+      "nll_beta": 0.5,
+      "noise_draws": 2,
+      "patience": 4,
+      "rows_per_scenario": 3,
+      "scale_bound": 2.0,
+      "seed": 1,
+      "shuffle_labels": false,
+      "threads": 4,
+      "train_iterations": 50,
+      "weight_bound": 2.0,
+      "weight_decay": 0.0,
+      "width": 64
+    },
+    {
+      "batch_scenarios": 64,
+      "causal": true,
+      "epochs": 20,
+      "feedforward": 128,
+      "head": "physics",
+      "heads": 4,
+      "id": "g1-shuffled",
+      "iterations": 100,
+      "layers": 2,
+      "learning_rate": 0.001,
+      "loss_cap": 100.0,
+      "loss_init_weight": 0.1,
+      "loss_nll_weight": 1.0,
+      "nll_beta": 0.5,
+      "noise_draws": 2,
+      "patience": 4,
+      "rows_per_scenario": 3,
+      "scale_bound": 2.0,
+      "seed": 1,
+      "shuffle_labels": true,
+      "threads": 4,
+      "train_iterations": 50,
+      "weight_bound": 2.0,
+      "weight_decay": 0.0,
+      "width": 64
+    },
+    {
+      "batch_scenarios": 64,
+      "causal": false,
+      "epochs": 20,
+      "feedforward": 128,
+      "head": "physics",
+      "heads": 4,
+      "id": "g1-timelate",
+      "iterations": 100,
+      "layers": 2,
+      "learning_rate": 0.001,
+      "loss_cap": 100.0,
+      "loss_init_weight": 0.1,
+      "loss_nll_weight": 1.0,
+      "nll_beta": 0.5,
+      "noise_draws": 2,
+      "patience": 4,
+      "rows_per_scenario": 3,
+      "scale_bound": 2.0,
+      "seed": 1,
+      "shuffle_labels": false,
+      "threads": 4,
+      "train_iterations": 50,
+      "weight_bound": 2.0,
+      "weight_decay": 0.0,
+      "width": 64
+    }
+  ],
+  "ranges": {
+    "dropout_fraction": {
+      "max": 0.1,
+      "min": 0.0
+    },
+    "dt_s": 10.0,
+    "los_offset_rad": {
+      "max": 1.5707963267948966,
+      "min": 0.5235987755982988
+    },
+    "min_range_m": 100.0,
+    "noise_sigma_rad_values": [
+      0.017453292519943295,
+      0.03490658503988659
+    ],
+    "ownship_speed_mps": {
+      "max": 7.716666666666667,
+      "min": 2.5722222222222224
+    },
+    "ownship_turn_rate_rad_s": {
+      "max": 0.05235987755982989,
+      "min": 0.008726646259971648
+    },
+    "range_distribution": "log_uniform",
+    "target_range0_m": {
+      "max": 20000.0,
+      "min": 2000.0
+    },
+    "target_speed_mps": {
+      "max": 10.28888888888889,
+      "min": 1.5433333333333334
+    },
+    "window_s": {
+      "max": 2400.0,
+      "min": 600.0
+    },
+    "zig2_delay_s": {
+      "max": 300.0,
+      "min": 180.0
+    },
+    "zig_angle_abs_rad": {
+      "max": 1.5707963267948966,
+      "min": 0.5235987755982988
+    },
+    "zig_fraction": {
+      "max": 0.6,
+      "min": 0.4
+    },
+    "zig_rule": "across_los"
+  },
+  "scenarios_per_epoch": 50000,
+  "train_seed": 310,
+  "validation": {
+    "digest": "c781bbf2dafc0e9cc28a4497e8b2a9b1911d11f2119c6c1249004ee35ffc8c3b",
+    "header": {
+      "created_by": "tma2-generate --seed 302 --count 100000 --ranges sha256:bdf46080f66c24c867245c482121a2f1b82d3f13e59ef8c0cabccde08d1172be --heldout-ranges sha256:7d9e444c99d8ac6f759d0226c1724a7ea19cb34237465730f4d1aed51de1aca1",
+      "dataset_seed": "302",
+      "generator_git_commit": "cb3c6c1e00ab023275efb3f27ca2eaad391396d8",
+      "generator_git_dirty": false,
+      "generator_version": "0.5.0",
+      "index_end": 90000,
+      "index_start": 80000,
+      "parameter_ranges": {
+        "dropout_fraction": {
+          "max": 0.1,
+          "min": 0.0
+        },
+        "dt_s": 10.0,
+        "los_offset_rad": {
+          "max": 1.5707963267948966,
+          "min": 0.5235987755982988
+        },
+        "min_range_m": 100.0,
+        "noise_sigma_rad_values": [
+          0.017453292519943295,
+          0.03490658503988659
+        ],
+        "ownship_speed_mps": {
+          "max": 7.716666666666667,
+          "min": 2.5722222222222224
+        },
+        "ownship_turn_rate_rad_s": {
+          "max": 0.05235987755982989,
+          "min": 0.008726646259971648
+        },
+        "range_distribution": "log_uniform",
+        "target_range0_m": {
+          "max": 20000.0,
+          "min": 2000.0
+        },
+        "target_speed_mps": {
+          "max": 10.28888888888889,
+          "min": 1.5433333333333334
+        },
+        "window_s": {
+          "max": 2400.0,
+          "min": 600.0
+        },
+        "zig2_delay_s": {
+          "max": 300.0,
+          "min": 180.0
+        },
+        "zig_angle_abs_rad": {
+          "max": 1.5707963267948966,
+          "min": 0.5235987755982988
+        },
+        "zig_fraction": {
+          "max": 0.6,
+          "min": 0.4
+        },
+        "zig_rule": "across_los"
+      },
+      "record": "header",
+      "redraw_count": 2115,
+      "scenario_count": 10000,
+      "schema_version": "0.18.0",
+      "split": "validation"
+    },
+    "path": "data/g1-val/validation.f32pack"
+  },
+  "validation_scenarios": 2000
+}

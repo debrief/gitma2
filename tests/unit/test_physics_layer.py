@@ -305,3 +305,74 @@ def test_gradients_finite_with_covariance_and_cost_losses() -> None:
     for leaf in (cp, sw, lw, th0):
         assert leaf.grad is not None and bool(torch.isfinite(leaf.grad).all())
     assert bool(torch.isfinite(out.cov).all())
+
+
+def test_cov_ok_rejects_tracks_through_ownship() -> None:
+    """Spec 003 FR-001 (P0 panel round 3): where the solution passes within 1 m of ownship at a
+    valid sample up to k, the covariance is set by the ridge, not the data; cov_ok is false even
+    when the range at k is large. Phase-4 train scenario 50 collapses at k = 175; at k = 176–177
+    the same track is 60–121 m away; scenario 15's 48 km solution at k = 210 passes through
+    ownship at sample 200."""
+    from tma2.cli.oracle import run_layer
+
+    blocks = list(iter_pack_raw(fixture_dir("phase4-seed777") / "train.f32pack"))
+    cases = {
+        50: {170: True, 175: False, 176: False, 177: False, 190: True},
+        15: {160: True, 210: False},
+    }
+    for n, expect in cases.items():
+        _, meta, own, _tgt, obs = blocks[n]
+        d = bearing_data_from_arrays(meta, own, obs)
+        items = []
+        for k in expect:
+            inp = trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, k)
+            assert inp is not None
+            items.append((d, k, inp))
+        out = run_layer(PhysicsLayer(), items, R_MAX)
+        got = {k: bool(out.cov_ok[j]) for j, k in enumerate(expect)}
+        assert got == expect, (n, got)
+
+
+def test_scripted_iteration_equals_eager(phase4_items: Any, monkeypatch: Any) -> None:
+    """The export path (TorchScript ``iterate``, spec 003 R2) is the eager solve bit for bit."""
+    import tma2.physics.layer as layer_mod
+
+    layer = PhysicsLayer(iterations=20, knots=8)
+    x = _inputs([(d, k, i) for d, k, i, _, _, _ in phase4_items])
+    with torch.no_grad():
+        eager = layer(x)
+        monkeypatch.setattr(torch.jit, "is_tracing", lambda: True)
+        scripted = layer(x)
+    assert layer_mod._SCRIPTED, "the scripted path was not taken"
+    assert torch.equal(eager.state, scripted.state)
+    assert torch.equal(eager.cost, scripted.cost)
+
+
+def test_iteration_literals_are_the_damping_limits() -> None:
+    import inspect
+
+    import tma2.physics.layer as layer_mod
+
+    src = inspect.getsource(layer_mod.iterate)
+    assert "clamp_max(1e12)" in src and "clamp_min(1e-12)" in src
+    assert ref.LAMBDA_MAX == 1e12 and ref.LAMBDA_MIN == 1e-12
+
+
+def test_tensor_grid_start_equals_classical() -> None:
+    import json
+
+    from tma2.features.batch import generate_batch
+    from tma2.models.rows import row_batch, scenario_tensors
+    from tma2.physics.segmentation import grid_start_tensor
+
+    ranges = json.loads((fixture_dir("iter4-seed777") / "ranges.json").read_text())
+    b = generate_batch(77, 0, 32, ranges)
+    tens = scenario_tensors(b, 1, 2)
+    rows = row_batch(b, tens, np.random.default_rng(0), 4)
+    src = torch.from_numpy(rows.source)
+    t, ox, oy, z, v = (
+        torch.from_numpy(a)[src] for a in (tens.t, tens.ox, tens.oy, tens.bearing, tens.valid)
+    )
+    g = grid_start_tensor(t, ox, oy, z, v, torch.from_numpy(rows.k)).numpy()
+    rel = np.abs(g - rows.theta_grid) / np.maximum(np.abs(rows.theta_grid), 1.0)
+    assert rel.max() <= 1e-12, rel.max()

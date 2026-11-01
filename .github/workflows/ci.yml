@@ -100,10 +100,18 @@ jobs:
           node wasm_leg.mjs --dir export/f64 --out results.json
       - name: Java leg (deferred with a reason if the runtime cannot be fetched)
         run: uv run python conformance/onnx/java_leg.py conformance/onnx/export/f64
+      - name: Gate 1 model export (seeded weights, K = 100, one ONNX Loop) and its three legs
+        run: |
+          uv run python -m tma2.models.export --out conformance/onnx/gate1
+          (cd conformance/onnx && node wasm_leg.mjs --dir gate1 --out gate1/results.json)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/gate1 conformance/onnx/gate1/results.json
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
-          path: conformance/onnx/results.json
+          path: |
+            conformance/onnx/results.json
+            conformance/onnx/gate1/results.json
+            conformance/onnx/gate1/python_leg.json
 
   p0:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'p0')

@@ -3,10 +3,12 @@ oracle (truth manoeuvre spans). A learned segmenter (Annex A) will produce the s
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+import torch
 
 from tma2.references import lsq
 
@@ -79,3 +81,63 @@ def oracle_inputs(
             sw[b] = 1.0
             sk[b] = 1.0
     return LayerInputs(cp, sw, lw, base.theta0, sk)
+
+
+GRID_SPEEDS = (2.0, 5.0, 9.0)
+
+
+def grid_start_tensor(
+    t: torch.Tensor,
+    ox: torch.Tensor,
+    oy: torch.Tensor,
+    z: torch.Tensor,
+    valid: torch.Tensor,
+    k: torch.Tensor,
+) -> torch.Tensor:
+    """gitma's coarse grid start (``lsq.grid_start``) in tensor operations, for the exported graph
+    (spec 003): 12 log-spaced ranges 1–40 km along the first valid bearing up to row k, × 8
+    courses × 3 speeds; the candidate with the lowest cost over valid samples ≤ k (the first one
+    on ties, as the scalar loop's strict comparison). [B, R] inputs, k [B] → [B, 4]."""
+    from tma2.physics.layer import atan2_export, cos_export, wrap_pi
+
+    b, r = t.shape
+    dt = t.dtype
+    idx = torch.arange(r, device=t.device).unsqueeze(0)
+    use = (valid > 0) & (idx <= k.unsqueeze(1))
+    i0 = (
+        torch.where(use, idx, torch.full_like(idx, r))
+        .min(dim=1, keepdim=True)
+        .values.clamp_max(r - 1)
+    )
+    t0 = torch.gather(t, 1, i0)
+    ox0 = torch.gather(ox, 1, i0)
+    oy0 = torch.gather(oy, 1, i0)
+    b0 = torch.gather(z, 1, i0)
+    ri = torch.arange(12, dtype=dt, device=t.device)
+    rng = 1000.0 * torch.pow(torch.full_like(ri, 40.0), ri / 11.0)  # [12]
+    course = torch.arange(8, dtype=dt, device=t.device) * (2.0 * math.pi / 8.0)
+    speed = torch.tensor(GRID_SPEEDS, dtype=dt, device=t.device)
+    # candidate order as the scalar loop: range-major, then course, then speed
+    rr = rng.view(12, 1, 1).expand(12, 8, 3).reshape(-1)
+    cc = course.view(1, 8, 1).expand(12, 8, 3).reshape(-1)
+    ss = speed.view(1, 1, 3).expand(12, 8, 3).reshape(-1)
+    px = ox0 + rr.unsqueeze(0) * torch.sin(b0)  # [B, 288]
+    py = oy0 + rr.unsqueeze(0) * cos_export(b0)
+    vx = (ss * torch.sin(cc)).unsqueeze(0).expand(b, -1)
+    vy = (ss * cos_export(cc)).unsqueeze(0).expand(b, -1)
+    x0 = px - vx * t0
+    y0 = py - vy * t0
+    dx = x0.unsqueeze(2) + vx.unsqueeze(2) * t.unsqueeze(1) - ox.unsqueeze(1)  # [B, 288, R]
+    dy = y0.unsqueeze(2) + vy.unsqueeze(2) * t.unsqueeze(1) - oy.unsqueeze(1)
+    res = wrap_pi(z.unsqueeze(1) - atan2_export(dx, dy))
+    cost = (res * res * use.unsqueeze(1).to(dt)).sum(dim=2)  # [B, 288]
+    best = torch.argmin(cost, dim=1, keepdim=True)
+    return torch.stack(
+        [
+            torch.gather(x0, 1, best)[:, 0],
+            torch.gather(y0, 1, best)[:, 0],
+            torch.gather(vx, 1, best)[:, 0],
+            torch.gather(vy, 1, best)[:, 0],
+        ],
+        dim=1,
+    )

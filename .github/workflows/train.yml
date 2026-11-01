@@ -1,0 +1,215 @@
+name: Train a plan
+
+# Spec 003 T017 (research R7; ported from gitma's train.yml). Pushing `train/<plan id>` trains every
+# model of the plan under configs/ whose id is <plan id> (or a manual run names the plan file).
+#
+# - Each model trains in up to four chained jobs (train-model.yml); each stops cleanly before an
+#   epoch would overrun its budget and checkpoints after every epoch to
+#   `checkpoints/<branch>/<model>` (weights, best weights, optimiser state, CheckpointMeta with
+#   one JobRecord per job: duration, epochs, CPU model, threads, commit), so the next job resumes.
+# - Every job regenerates the plan's validation split at its generating commit and checks the
+#   digest the plan pins (constitution II). The training stream is generated on the fly.
+# - When the chain ends, every model must be complete; each is scored on validation
+#   (tma2-predict, per-timestep rows) and the models, logs and predictions are pushed to
+#   `results/<plan id>-<run id>` (cut from origin/main). Nothing is merged automatically, and the
+#   test split is never generated here.
+# - A plan id containing "smoke" gets a 60 s budget, so its first job stops after one epoch and
+#   the chain's resume is exercised.
+
+on:
+  push:
+    branches: ["train/**"]
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: "Plan file (e.g. configs/gate1/plan.json)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: train-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DATA: ${{ github.workspace }}/../plan-data
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.plan.outputs.plan }}
+      id: ${{ steps.plan.outputs.id }}
+      models: ${{ steps.plan.outputs.models }}
+      max_wall_s: ${{ steps.plan.outputs.max_wall_s }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - id: plan
+        env:
+          REF: ${{ inputs.plan || github.ref_name }}
+        run: |
+          uv run tma2-plan resolve --ref "$REF" | tee -a "$GITHUB_OUTPUT"
+          case "$REF" in
+            *smoke*) echo "max_wall_s=60" >> "$GITHUB_OUTPUT" ;;
+            *) echo "max_wall_s=19800" >> "$GITHUB_OUTPUT" ;; # 330 min, under the 345-min step cap
+          esac
+
+  train-1:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    uses: ./.github/workflows/train-model.yml
+    with:
+      plan: ${{ needs.plan.outputs.plan }}
+      model: ${{ matrix.model }}
+      attempt: 1
+      max_wall_s: ${{ fromJSON(needs.plan.outputs.max_wall_s) }}
+
+  train-2:
+    needs: [plan, train-1]
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    uses: ./.github/workflows/train-model.yml
+    with:
+      plan: ${{ needs.plan.outputs.plan }}
+      model: ${{ matrix.model }}
+      attempt: 2
+      max_wall_s: ${{ fromJSON(needs.plan.outputs.max_wall_s) }}
+
+  train-3:
+    needs: [plan, train-2]
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    uses: ./.github/workflows/train-model.yml
+    with:
+      plan: ${{ needs.plan.outputs.plan }}
+      model: ${{ matrix.model }}
+      attempt: 3
+      max_wall_s: ${{ fromJSON(needs.plan.outputs.max_wall_s) }}
+
+  train-4:
+    needs: [plan, train-3]
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    uses: ./.github/workflows/train-model.yml
+    with:
+      plan: ${{ needs.plan.outputs.plan }}
+      model: ${{ matrix.model }}
+      attempt: 4
+      max_wall_s: ${{ fromJSON(needs.plan.outputs.max_wall_s) }}
+
+  predict:
+    needs: [plan, train-4]
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Restore the model (must be complete)
+        run: |
+          CK="$RUNNER_TEMP/ck/${{ matrix.model }}"
+          echo "CK=$CK" >> "$GITHUB_ENV"
+          scripts/train-checkpoint.sh restore "$CK" "checkpoints/${GITHUB_REF_NAME}/${{ matrix.model }}"
+          uv run tma2-plan complete --checkpoint "$CK" || {
+            echo "::error::${{ matrix.model }} did not complete in four jobs (re-dispatch to resume)"
+            exit 1
+          }
+      - name: Validation split (regenerated, digest checked)
+        run: uv run tma2-plan data --plan "${{ needs.plan.outputs.plan }}" --out "$DATA"
+      - name: Predict on validation (every post-zig row)
+        env:
+          LIMIT: ${{ contains(needs.plan.outputs.id, 'smoke') && '--limit 50' || '' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/out/${{ matrix.model }}"
+          cp "$CK"/meta.json "$CK"/best.safetensors "$RUNNER_TEMP/out/${{ matrix.model }}/"
+          SECONDS=0
+          uv run tma2-predict --plan "${{ needs.plan.outputs.plan }}" \
+            --model "${{ matrix.model }}" --checkpoint "$CK" \
+            --truth "$DATA/validation.f32pack" $LIMIT \
+            --out "$RUNNER_TEMP/out/${{ matrix.model }}/validation.ndjson"
+          echo "prediction took $SECONDS s" | tee "$RUNNER_TEMP/out/${{ matrix.model }}/predict-seconds.txt"
+          gzip -n "$RUNNER_TEMP/out/${{ matrix.model }}/validation.ndjson"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: model-${{ matrix.model }}
+          path: ${{ runner.temp }}/out
+          retention-days: 30
+
+  results:
+    needs: [plan, predict]
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: model-*
+          path: ${{ runner.temp }}/models
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: log-*
+          path: ${{ runner.temp }}/logs
+      - name: Push the results branch (models, job records, logs; predictions stay artefacts)
+        env:
+          ID: ${{ needs.plan.outputs.id }}
+          PLAN: ${{ needs.plan.outputs.plan }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          EXP="experiments/$(date -u +%Y%m%d)-$ID-models"
+          mkdir -p "$EXP/logs"
+          cp "$PLAN" "$EXP/plan.json"
+          for d in "$RUNNER_TEMP"/models/*/; do
+            m=$(basename "$d")
+            mkdir -p "$EXP/models/$m"
+            cp "$d"meta.json "$d"best.safetensors "$d"predict-seconds.txt "$EXP/models/$m/"
+            sha256sum "$d"validation.ndjson.gz | cut -d' ' -f1 > "$EXP/models/$m/validation.ndjson.gz.sha256"
+          done
+          find "$RUNNER_TEMP/logs" -name train.log | while read -r f; do
+            cp "$f" "$EXP/logs/$(basename "$(dirname "$f")").log"
+          done
+          printf '{"plan": "%s", "run_id": "%s", "commit": "%s", "artifacts": "model-<id> of this run"}\n' \
+            "$PLAN" "${{ github.run_id }}" "${{ github.sha }}" > "$EXP/run.json"
+          B="results/$ID-${{ github.run_id }}"
+          git checkout -b "$B" origin/main
+          git add -f "$EXP"
+          git commit -qm "experiments: $ID run ${{ github.run_id }} (CI, ${{ github.sha }})"
+          git push origin "$B"
+          echo "pushed $B ($EXP)"
+      - name: Delete this run's checkpoint branches (the results branch holds the models)
+        if: ${{ needs.predict.result == 'success' }}
+        run: |
+          for b in $(git ls-remote --heads origin "checkpoints/${GITHUB_REF_NAME}/*" | awk '{print $2}' | sed 's#^refs/heads/##'); do
+            git push origin --delete "$b" && echo "deleted $b"
+          done

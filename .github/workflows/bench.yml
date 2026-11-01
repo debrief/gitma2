@@ -1,0 +1,30 @@
+name: Runner training throughput
+
+# Spec 003 T012: two epochs of the carried configuration (configs/gate1-bench/plan.json) on a
+# GitHub-hosted runner; the second epoch runs with compiled kernels. The log lines give total,
+# training and validation seconds per epoch; the extrapolation to 10^5 scenarios is in research R4.
+
+on:
+  push:
+    branches: ["bench/**"]
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run tma2-plan data --plan configs/gate1-bench/plan.json --out "$RUNNER_TEMP/data"
+      - name: Two epochs
+        run: |
+          lscpu | grep "Model name"
+          uv run tma2-train --plan configs/gate1-bench/plan.json --model bench-physics \
+            --checkpoint "$RUNNER_TEMP/ck" --data "$RUNNER_TEMP/data" | tee "$RUNNER_TEMP/bench.log"
+          cat "$RUNNER_TEMP/ck/meta.json"

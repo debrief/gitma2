@@ -1,0 +1,86 @@
+name: Train one model (called by train.yml)
+
+# One training job for one model of a plan (spec 003 T017; research R7). train.yml calls this up
+# to four times per model in a chain: each call restores the model's checkpoint branch, trains
+# until its wall-clock budget would be exceeded by the next epoch, and pushes a checkpoint after
+# every epoch, so the next call resumes where this one stopped. A call whose model is already
+# complete does nothing. Every call regenerates the plan's validation split and checks its digest.
+
+on:
+  workflow_call:
+    inputs:
+      plan:
+        type: string
+        required: true
+      model:
+        type: string
+        required: true
+      attempt:
+        type: number
+        required: true
+      max_wall_s:
+        type: number
+        required: true
+
+env:
+  DATA: ${{ github.workspace }}/../plan-data
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the validation split is regenerated at the commit its header names
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Restore checkpoint (resume an earlier job of the chain, or a cancelled run)
+        id: restore
+        run: |
+          CK="$RUNNER_TEMP/ck/${{ inputs.model }}"
+          BR="checkpoints/${GITHUB_REF_NAME}/${{ inputs.model }}"
+          echo "CK=$CK" >> "$GITHUB_ENV"
+          echo "BR=$BR" >> "$GITHUB_ENV"
+          scripts/train-checkpoint.sh restore "$CK" "$BR"
+          if uv run tma2-plan complete --checkpoint "$CK"; then
+            echo "done=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "done=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Validation split (regenerated, digest checked against the plan)
+        if: steps.restore.outputs.done != 'true'
+        run: uv run tma2-plan data --plan "${{ inputs.plan }}" --out "$DATA"
+      - name: Numba warm-up
+        if: steps.restore.outputs.done != 'true'
+        run: uv run python scripts/numba_warmup.py
+      - name: Train ${{ inputs.model }} (job ${{ inputs.attempt }} of up to 4)
+        if: steps.restore.outputs.done != 'true'
+        timeout-minutes: 345
+        shell: bash
+        run: |
+          lscpu | grep "Model name"
+          scripts/train-checkpoint.sh watch "$CK" "$BR" &
+          WATCH=$!
+          trap 'kill $WATCH 2>/dev/null || true' EXIT
+          set +e
+          uv run tma2-train --plan "${{ inputs.plan }}" --model "${{ inputs.model }}" \
+            --checkpoint "$CK" --data "$DATA" --max-wall-s "${{ inputs.max_wall_s }}" \
+            2>&1 | tee "$RUNNER_TEMP/train.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          kill $WATCH
+          scripts/train-checkpoint.sh sync "$CK" "$BR"
+          exit "$status"
+      - name: Final checkpoint sync (after a timeout or failure)
+        if: always() && steps.restore.outputs.done != 'true'
+        run: scripts/train-checkpoint.sh sync "$CK" "$BR" || true
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.restore.outputs.done != 'true'
+        with:
+          name: log-${{ inputs.model }}-${{ inputs.attempt }}
+          path: ${{ runner.temp }}/train.log
+          retention-days: 30
+          if-no-files-found: ignore

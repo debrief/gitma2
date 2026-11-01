@@ -12,6 +12,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   internally.
 - **Changepoint weight** — the physics layer's input c ∈ [0, 1] per row: how free the target's
   velocity is to change there. The M largest become candidate knots; 0 everywhere is one leg.
+- **Control (model)** — a variant trained only to test the pipeline, never carried: direct regression head, shuffled labels (must score at naive level), time-late (must score at least as well as the causal model).
 - **Cramér–Rao bound (CRB)** — the lowest variance any unbiased estimator can reach given the
   bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
   full window, known manoeuvres, per leg (see [CRB](algorithms/crb.md)).
@@ -26,12 +27,14 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   review panel on a fresh test seed.
 - **Generator version** — the algorithm that turns (seed, index, ranges) into a scenario;
   gitma2 implements gitma's 0.5.0 and reproduces its files byte for byte.
+- **Grid start** — gitma's coarse initialisation for batch least squares: the lowest-cost candidate of 12 ranges × 8 courses × 3 speeds along the first valid bearing; the Gate 1 model corrects it before the solve.
 - **Held leg** — rows where the target's constant-velocity model holds: before any manoeuvre, or
   more than five minutes after the last one ended.
 - **Held-out split** — scenarios drawn from parameter ranges outside training (longer initial
   ranges), to measure extrapolation.
 - **IMM** — interacting multiple-model tracker (constant velocity plus coordinated turn), tuned
   on validation and frozen; the reference for manoeuvring targets.
+- **Implicit gradient** — the derivative of a converged solve's solution with respect to its inputs, from the optimality condition instead of unrolling the iterations; the Gate 1 model takes one exact-Hessian Newton step from the detached optimum to get it ([Gate 1 model](algorithms/gate1-model.md)).
 - **Instantaneous / time-late** — the causal estimate at each timestep, using bearings up to now,
   versus the estimate using the whole window.
 - **Manoeuvre span** — the sample interval of one target course or speed change, from the first

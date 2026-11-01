@@ -19,8 +19,8 @@ Spec Kit is installed (`.specify/`, skills in `.claude/skills/speckit-*`). Featu
 `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement`. Specs live under
 `specs/<NNN-feature>/` and cite the SRD section(s) they implement. Done: 001 (types and
 generator), 002 (references, physics layer, ONNX harness, P0; **P0 passed**, panel round 3,
-`experiments/20261101-p0-r4/`). Next: 003 (Gate 1, constant velocity); its entry conditions
-are listed at the end of `specs/002-references-physics-p0/tasks.md`.
+`experiments/20261101-p0-r4/`). In progress: 003 (Gate 1, constant velocity; PR 7): model, training,
+export (one ONNX Loop), `tma2-tune`, the training workflow (push `train/<plan id>`).
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -43,7 +43,8 @@ src/tma2/
   physics/                 reference.py (NumPy, documentation of record), layer.py (torch, exportable), segmentation
   eval/                    errors, slices, stats, metrics (+ efficiency), bootstrap, rows (settled, G5), predictions, experiment
   export/                  toy model and ONNX export (f64 conformance artefact, f32 reported)
-  cli/                     tma2-generate, -solve, -track, -naive, -crb, -eval, -oracle, -p0
+  models/                  Gate 1: rows, model (encoder, heads, physics layer), loss, train, predict, export
+  cli/                     tma2-generate, -solve, -track, -naive, -crb, -eval, -oracle, -p0, -train, -predict, -tune, -plan
 conformance/onnx/          browser (WASM, Playwright) and Java legs of the export check
 scripts/                   gen_types.py, data_dictionary.py, make_fixtures.sh, research/
 tests/                     unit, golden, conformance (gitma fixtures), perf; fixtures/gitma/<name>/
@@ -150,5 +151,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   `results.json` from the conformance legs must name the fresh export's SHA-256.
 - Cramér–Rao bounds: `full_window` for held course, `known_manoeuvres` (times and kinds known) on
   manoeuvring data; `per_leg` is a diagnostic only. Efficiency is median(|e|/σ)/0.6745 per row.
+- Model export (spec 003): the physics iterations are one ONNX `Loop` because the eager layer calls
+  a TorchScript-scripted `iterate` while tracing. Inside the loop body, ONNX shape inference fails
+  on zero-size tensors (no knots) and on lost ranks, so the CV path has no knot tensors and shapes
+  are explicit. Write attention out (PyTorch's encoder layer casts masks to double, which the
+  exporter refuses); no GELU (onnxruntime has no double `Erf`). Set the default dtype to the
+  model's for `torch.onnx.export`: the scripted loop's scalar constants follow it.
+- Experiments from a worktree: do not symlink `data` into it (`data/` in .gitignore matches
+  directories, not a symlink, so the tree records as dirty); pass absolute data paths.
 - Docusaurus MDX: no `{...}` in prose (it is a JS expression); `scripts/data_dictionary.py`
   escapes `<` and braces outside code spans.

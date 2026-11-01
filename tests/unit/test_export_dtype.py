@@ -23,3 +23,10 @@ def test_export_is_independent_of_default_dtype(tmp_path: Path) -> None:
         torch.set_default_dtype(before)
     digest = [hashlib.sha256((tmp_path / d / "toy.onnx").read_bytes()).hexdigest() for d in "ab"]
     assert digest[0] == digest[1]
+
+
+def test_double_export_loads_and_matches(tmp_path: Path) -> None:
+    """The conformance artefact (double) loads in onnxruntime and matches torch (CI failure on
+    the scripted Loop's scalar constants, spec 003)."""
+    diffs = export(tmp_path / "f64", fixture_dir("phase4-seed777") / "test.f32pack")
+    assert all(v <= 1e-5 for v in diffs.values()), diffs

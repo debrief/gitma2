@@ -12,6 +12,7 @@ dependencies = [
   "torch>=2.15.0",
   "onnx>=1.23.2",
   "onnxruntime>=1.31.1",
+  "safetensors>=0.4",
 ]
 
 [project.scripts]
@@ -23,6 +24,11 @@ tma2-crb = "tma2.cli.estimators:crb_main"
 tma2-eval = "tma2.cli.evaluate:main"
 tma2-oracle = "tma2.cli.oracle:main"
 tma2-p0 = "tma2.cli.p0:main"
+tma2-train = "tma2.cli.train:main"
+tma2-predict = "tma2.cli.predict:main"
+tma2-tune = "tma2.cli.tune:main"
+tma2-plan = "tma2.cli.plan_tool:main"
+tma2-g1 = "tma2.cli.g1:main"
 
 [dependency-groups]
 dev = [

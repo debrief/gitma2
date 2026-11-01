@@ -52,6 +52,7 @@ from .oracle import predict_split, run_layer
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "tests" / "fixtures" / "gitma"
 R_MAX = 360  # rows in the longest window (60 min at 10 s)
+GITMA_COMMIT = "d0aec60a05b8664a586af87bf58232d0d1767c4a"
 FROZEN_IMM = ImmParams(0.01, 0.03, 0.01, 0.001, 4.0, 8.0)
 # docs/research/05: 97.5% intervals of the oracle / IMM median range ratio
 # (seed 777, 2,400 scenarios)
@@ -163,7 +164,29 @@ STATE_TOL = 1e-4  # relative, per quantity where it is determined, at the same m
 SD_TOL = 1e-2  # in the row's own standard deviations, on every row at the same minimum
 
 
-def check_physics_equals_ls(exp: Experiment) -> None:
+def _sd_units(out: Any, j: int, item: Any, rng: float, spd: float) -> float:
+    """|Δrange| / sd_range and |Δspeed| / sd_speed from the layer's covariance at row j."""
+    bd, k, _ = item
+    cov = out.cov[j].numpy()
+    st = out.state[j].numpy()
+    dx, dy = st[0] - bd.ox[k], st[1] - bd.oy[k]
+    rr = math.hypot(dx, dy)
+    gr = np.array([dx, dy]) / rr
+    u = st[2:]
+    gs = u / max(float(np.linalg.norm(u)), 1e-12)
+    sd_r = math.sqrt(max(float(gr @ cov[:2, :2] @ gr), 1e-300))
+    sd_s = math.sqrt(max(float(gs @ cov[2:, 2:] @ gs), 1e-300))
+    return max(abs(float(out.range[j]) - rng) / sd_r, abs(float(out.speed[j]) - spd) / sd_s)
+
+
+LOWER_SD_TOL = 1.0  # rows where the layer's cost is lower: its state within 1 sd of the solver's
+
+
+def check_physics_equals_ls(
+    exp: Experiment,
+    layer: PhysicsLayer | None = None,
+    sources: tuple[tuple[str, str], ...] | None = None,
+) -> None:
     """FR-007 / SC-002 on every scored row of every split of both fixtures: the physics layer
     with trivial inputs against the ported batch least squares from the same grid start at that
     row (``solve_batch``; the per-timestep rows are warm-started, so they can sit in another
@@ -179,30 +202,34 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     torch.set_default_dtype(torch.float64)
     items = []
     refs = []
-    for name in ("phase4-seed777", "iter4-seed777"):
-        for split in ("train", "validation", "test", "heldout"):
-            for _, meta, own, _tgt, obs in iter_pack_raw(FIXTURES / name / f"{split}.f32pack"):
-                bd = bearing_data_from_arrays(meta, own, obs)
-                for k in range(bd.zig_index + 1, bd.n):
-                    inp = trivial_inputs(bd.t, bd.ox, bd.oy, bd.z, bd.valid, k)
-                    sol = solve_batch(bd, k + 1)
-                    if inp is None or sol is None:
-                        continue
-                    th = sol.theta
-                    tk = float(bd.t[k])
-                    rng = math.hypot(th[0] + th[2] * tk - bd.ox[k], th[1] + th[3] * tk - bd.oy[k])
-                    refs.append(
-                        (
-                            rng,
-                            math.hypot(th[2], th[3]),
-                            sol.cost,
-                            sol.converged,
-                            bd.sigma,
-                            plausible(bd, sol, k),
-                        )
+    every = tuple(
+        (n, sp)
+        for n in ("phase4-seed777", "iter4-seed777")
+        for sp in ("train", "validation", "test", "heldout")
+    )
+    for name, split in sources or every:
+        for _, meta, own, _tgt, obs in iter_pack_raw(FIXTURES / name / f"{split}.f32pack"):
+            bd = bearing_data_from_arrays(meta, own, obs)
+            for k in range(bd.zig_index + 1, bd.n):
+                inp = trivial_inputs(bd.t, bd.ox, bd.oy, bd.z, bd.valid, k)
+                sol = solve_batch(bd, k + 1)
+                if inp is None or sol is None:
+                    continue
+                th = sol.theta
+                tk = float(bd.t[k])
+                rng = math.hypot(th[0] + th[2] * tk - bd.ox[k], th[1] + th[3] * tk - bd.oy[k])
+                refs.append(
+                    (
+                        rng,
+                        math.hypot(th[2], th[3]),
+                        sol.cost,
+                        sol.converged,
+                        bd.sigma,
+                        plausible(bd, sol, k),
                     )
-                    items.append((bd, k, inp))
-    layer = PhysicsLayer()
+                )
+                items.append((bd, k, inp))
+    layer = layer or PhysicsLayer()
     short = 0  # layer cost above the solver's: it stopped short
     lower = 0  # layer cost below the solver's: the solver stopped short or another minimum
     same = 0
@@ -213,6 +240,7 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     moved_out = 0
     unconverged = 0
     flag_mismatch = 0
+    worst_lower = 0.0
     cov_bad = 0
     nonfinite_sd = 0
     unconv_plausible = 0
@@ -233,10 +261,15 @@ def check_physics_equals_ls(exp: Experiment) -> None:
             elif not ok_ls:
                 implausible += 1
             dc = (float(out.cost[j]) * sigma * sigma - cost) / max(cost, 1e-300)
+            if not bool(torch.isfinite(out.cov[j]).all()):
+                nonfinite_sd += 1  # never degenerate: a non-finite covariance fails the check
+                continue
             if dc > COST_TOL:
                 short += 1
             elif dc < -COST_TOL:
                 lower += 1
+                if ok_ls and bool(out.plausible[j]) and bool(out.cov_ok[j]):
+                    worst_lower = max(worst_lower, _sd_units(out, j, items[a + j], rng, spd))
             elif ok_ls and bool(out.plausible[j]):
                 same += 1
                 rel_r = abs(float(out.range[j]) - rng) / rng
@@ -287,6 +320,7 @@ def check_physics_equals_ls(exp: Experiment) -> None:
         "range_determined_speed_undetermined_rows": moved_out,
         "covariance_degenerate_rows": cov_bad,
         "nonfinite_sd_rows": nonfinite_sd,
+        "worst_sd_on_lower_cost_rows": worst_lower,
         "solver_unconverged_layer_plausible": unconv_plausible,
         "solver_unconverged_layer_cost_lower": unconv_lower,
         "worst_relative_difference_determined": worst,
@@ -298,6 +332,7 @@ def check_physics_equals_ls(exp: Experiment) -> None:
         short == 0
         and flag_mismatch == 0
         and nonfinite_sd == 0
+        and worst_lower <= LOWER_SD_TOL
         and worst <= STATE_TOL
         and worst_sd <= SD_TOL
         and determined > 0
@@ -650,9 +685,21 @@ def check_imm_at_scale(
     truth = data_dir / "validation.f32pack"
     gitma_pack = gitma_data / "validation.f32pack"
     # Bind gitma's file to its own dataset, and that dataset's scenarios to ours.
-    check_bound(gitma_imm, gitma_pack)
+    from tma2.references.imm import imm_name
+
+    header = check_bound(gitma_imm, gitma_pack)
     same, n_scen = same_scenarios(gitma_pack, truth)
     gh = read_pack_header(gitma_pack)
+    # Provenance asserted, not just labelled (P0 panel round 3): gitma's file is the frozen IMM,
+    # and gitma's dataset came from the gitma commit P0 names.
+    problems = []
+    if header.estimator != imm_name(FROZEN_IMM):
+        problems.append(f"gitma file's estimator is {header.estimator}")
+    if gh.generator_git_commit != GITMA_COMMIT:
+        problems.append(f"gitma dataset's generator commit is {gh.generator_git_commit}")
+    if problems:
+        exp.checks.append(Check("reference-imm-at-scale", "fail", "; ".join(problems)))
+        return
     exp.add_artefact(gitma_pack, f"gitma dataset (generator commit {gh.generator_git_commit})")
     exp.add_artefact(gitma_imm, "gitma tma-track IMM predictions (scripts/gitma_reference.sh)")
     exp.folder.mkdir(parents=True, exist_ok=True)
@@ -826,6 +873,15 @@ def main(argv: list[str] | None = None) -> int:
     folder = Path(a.experiment)
     exp = Experiment(id=folder.name, folder=folder)
     exp.command_lines.append("tma2-p0 " + " ".join(sys.argv[1:]))
+    # How the inputs were made (P0 panel round 3): the dataset header names its own command and
+    # commit; the conformance legs are the CI job's.
+    hdr = read_pack_header(Path(a.oracle_data) / "validation.f32pack")
+    exp.command_lines.append(f"dataset: {hdr.created_by} (commit {hdr.generator_git_commit})")
+    exp.command_lines.append(
+        "conformance: python -m tma2.export.onnx_export --out conformance/onnx/export; "
+        "(cd conformance/onnx && node wasm_leg.mjs --dir export/f64 --out results.json); "
+        "python conformance/onnx/java_leg.py conformance/onnx/export/f64"
+    )
     exp.add_estimator("classical", {"max_iterations": 50, "grid_every": 6})
     exp.add_estimator("imm-cv0.01-ct0.03-w0.01-s0.001-p4-r8", FROZEN_IMM.__dict__)
     exp.add_estimator(

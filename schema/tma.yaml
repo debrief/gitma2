@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.17.0
+version: 0.19.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -82,7 +82,10 @@ enums:
           gitma2 pipeline gate (SRD §5): generator and references reproduce gitma, the physics
           layer equals batch least squares, the oracle ceiling is reproduced.
       G0: { description: Pipeline verified. }
-      G1: {}
+      G1:
+        description: >-
+          gitma Gate 1; in gitma2 (spec 003) the constant-velocity gate of SRD §5: within 1.1 ×
+          batch least squares on every metric, gross errors no worse, efficiency ≤ 1.25 settled.
       G2: {}
       G3: {}
       G4: { description: "Better than the tuned tracker after a target turn (SRD Annex B §B.4)." }
@@ -90,6 +93,15 @@ enums:
         {
           description: "An end-to-end tracker better than the re-tuned reference overall, at most 10% worse when settled (SRD Annex C §C.5).",
         }
+  PhysicsHead:
+    description: How a gitma2 model produces its estimate (spec 003).
+    permissible_values:
+      physics:
+        description: Heads feed the declared physics layer, which computes the estimate.
+      direct:
+        description: >-
+          Control (a): the same encoder regresses the state directly; never carried
+          (constitution III).
   ModelKind:
     description: Model families of SRD §4.
     permissible_values:
@@ -716,7 +728,10 @@ classes:
         description: Lower limit, for a check that passes inside an interval (gitma2).
       ci_low: { range: float, description: Lower bound of the bootstrap interval. }
       ci_high: { range: float, description: Upper bound of the bootstrap interval. }
-      ci_level: { range: float, description: "Interval coverage, e.g. 0.95." }
+      ci_level:
+        range: float
+        description: >-
+          Interval coverage, e.g. 0.95.
 
   GateVerdict:
     description: Machine verdict for a gate; the team review records the final decision.
@@ -1019,6 +1034,118 @@ classes:
       speed_kt_median_ref: { range: float }
       gross_error_rate: { range: float }
       gross_error_rate_ref: { range: float }
+
+  PhysicsModelConfig:
+    description: >-
+      One gitma2 model's hyperparameters (spec 003 FR-010): encoder, heads, physics layer, loss,
+      data sampling and optimiser; carried in its manifest.
+    attributes:
+      id: { range: string, required: true, description: Estimator name in predictions. }
+      head: { range: PhysicsHead, required: true }
+      causal:
+        range: boolean
+        required: true
+        description: Causal encoder and physics layer up to the row (instantaneous); false is the time-late control.
+      width: { range: integer, required: true }
+      layers: { range: integer, required: true }
+      heads: { range: integer, required: true, description: Attention heads. }
+      feedforward: { range: integer, required: true }
+      weight_bound: { range: float, required: true, description: Bound on per-bearing log-weights. }
+      scale_bound: { range: float, required: true, description: Bound on the covariance log-scale. }
+      iterations: { range: integer, required: true, description: Physics-layer iterations K. }
+      train_iterations:
+        range: integer
+        description: >-
+          Iterations of the tape-free solve during training, before the implicit Newton step (schema
+          0.19.0; absent = iterations). Prediction, validation and the export use iterations.
+      loss_init_weight: { range: float, required: true, description: Weight of the auxiliary initial-state loss. }
+      loss_nll_weight: { range: float, required: true }
+      nll_beta: { range: float, required: true }
+      loss_cap: { range: float, required: true, description: Cap on a row's normalised squared error. }
+      rows_per_scenario: { range: integer, required: true }
+      noise_draws: { range: integer, required: true }
+      batch_scenarios: { range: integer, required: true }
+      learning_rate: { range: float, required: true }
+      weight_decay: { range: float, required: true }
+      epochs: { range: integer, required: true }
+      patience: { range: integer, required: true }
+      seed: { range: integer, required: true, description: Initialisation and row-sampling seed. }
+      shuffle_labels: { range: boolean, required: true, description: Control (c). }
+      threads: { range: integer, required: true }
+
+  TrainingPlan:
+    description: "A plan branch's content (spec 003): the data, the models and the decision it implements."
+    attributes:
+      id: { range: string, required: true }
+      ranges: { range: ParameterRanges, required: true, inlined: true }
+      train_seed: { range: integer, required: true, description: Generator seed of the on-the-fly training stream. }
+      scenarios_per_epoch: { range: integer, required: true }
+      validation: { range: DatasetRef, required: true, inlined: true }
+      validation_scenarios: { range: integer, required: true, description: Validation scenarios scored each epoch. }
+      models: { range: PhysicsModelConfig, multivalued: true, inlined_as_list: true, required: true }
+      decision: { range: string, required: true, description: Path of the decision record it implements. }
+
+  JobRecord:
+    attributes:
+      started: { range: string, required: true }
+      finished: { range: string, required: true }
+      seconds: { range: float, required: true }
+      first_epoch: { range: integer, required: true }
+      last_epoch: { range: integer, required: true }
+      cpu_model: { range: string, required: true }
+      threads: { range: integer, required: true }
+      git_commit: { range: string, required: true }
+
+  CheckpointMeta:
+    description: The state beside a checkpoint's weights (spec 003 FR-015).
+    attributes:
+      model_id: { range: string, required: true }
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      epoch: { range: integer, required: true, description: Last completed epoch (0 = none). }
+      best_epoch: { range: integer, required: true }
+      best_val_loss: { range: float, required: true }
+      val_losses: { range: float, multivalued: true }
+      train_losses: { range: float, multivalued: true }
+      epoch_seconds: { range: float, multivalued: true }
+      complete: { range: boolean, required: true }
+      jobs: { range: JobRecord, multivalued: true, inlined_as_list: true }
+
+  PhysicsModelManifest:
+    description: The exported artefact's manifest (spec 003 FR-022).
+    attributes:
+      config: { range: PhysicsModelConfig, required: true, inlined: true }
+      schema_version: { range: string, required: true }
+      generator_version: { range: string, required: true }
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      training_commit: { range: string, required: true }
+      best_epoch: { range: integer, required: true }
+      weights_digest: { range: string, required: true, description: SHA-256 of the safetensors file. }
+      onnx_digest: { range: string, description: SHA-256 of the exported graph. }
+      window_rows: { range: integer, required: true }
+
+  Gate1Decision:
+    description: >-
+      The Gate 1 decision record (spec 003 FR-016, FR-021), committed before training: what is
+      trained, how the carried weights are chosen, what is scored on test, and what follows.
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true, description: SHA-256 of the plan file. }
+      carried_models: { range: string, multivalued: true, required: true }
+      control_models: { range: string, multivalued: true, required: true }
+      carried_rule: { range: string, required: true }
+      test_seed: { range: integer, required: true }
+      test_count: { range: integer, required: true, description: Scenarios generated (the test split is 10%). }
+      gate_rows: { range: string, required: true }
+      criterion: { range: string, required: true }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      imm: { range: string, required: true, description: Frozen IMM settings (JSON). }
+      ekf: { range: string, required: true, description: Frozen EKF settings (JSON). }
+      forecast: { range: string, required: true }
+      if_failed: { range: string, required: true }
+      validation_rule: { range: string, required: true, description: When validation stops the phase before test. }
 
   ChangeDecision:
     description: >-
