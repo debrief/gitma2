@@ -108,7 +108,19 @@ class Experiment:
             {"name": name, "settings_json": json.dumps(settings, sort_keys=True)}
         )
 
+    def __post_init__(self) -> None:
+        # The tree's state when the run starts; files the run writes into its own experiment
+        # folder do not make it dirty (P0 run r3 recorded dirty only because of those).
+        self._start = self._git_now()
+
     def git(self) -> tuple[str, bool]:
+        """(commit, dirty): dirty if the tree was dirty at the start or anything outside this
+        experiment's folder changed since."""
+        commit, dirty = self._git_now()
+        start_commit, start_dirty = self._start
+        return start_commit, start_dirty or dirty or commit != start_commit
+
+    def _git_now(self) -> tuple[str, bool]:
         try:
             commit = subprocess.run(
                 ["git", "rev-parse", "HEAD"],
@@ -119,7 +131,7 @@ class Experiment:
             ).stdout.strip()
             dirty = (
                 subprocess.run(
-                    ["git", "status", "--porcelain"],
+                    ["git", "status", "--porcelain", "--", ".", *self._exclude()],
                     check=True,
                     capture_output=True,
                     text=True,
@@ -130,6 +142,13 @@ class Experiment:
             return commit, dirty
         except (OSError, subprocess.CalledProcessError):
             return "unknown", True
+
+    def _exclude(self) -> list[str]:
+        try:
+            rel = Path(self.folder).resolve().relative_to(ROOT)
+        except ValueError:
+            return []
+        return [f":(exclude){rel}"]
 
     def verdict_result(self) -> str:
         gated = [c for c in self.checks if c.result != "skipped"]
