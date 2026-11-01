@@ -256,7 +256,8 @@ physics-layer note's equations match the NumPy reference implementation used in 
 - **FR-013**: The system MUST compute gitma's metrics record (median and P90 of relative range
   error, course error in degrees, speed error in knots; gross-error rate = range error > 50% or
   no estimate) overall and sliced by range band, zig angle, σ, time since zig and time since the
-  last manoeuvre end, and MUST add efficiency per slice (median error / median CRB).
+  last manoeuvre end, and MUST add efficiency per slice (median over rows of error / that row's
+  CRB, divided by 0.6745; amended in P0 panel round 1).
 - **FR-014**: The system MUST implement the scenario-clustered paired bootstrap (2,000 resamples,
   seed 20261011, configurable level) and gitma's settled-row and G5-row definitions.
 - **FR-015**: `tma2-eval` MUST score any prediction file against truth and write metrics as CSV

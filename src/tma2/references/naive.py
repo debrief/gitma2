@@ -54,12 +54,17 @@ def fit_naive(blocks: Any, train_digest: str) -> dict[str, Any]:
             per.add(o, t, i)
     if fin.n == 0:
         raise ValueError("cannot fit naive baseline on an empty training set")
-    return {
+    model = {
         "schema_version": SCHEMA_VERSION,
         "train_digest": train_digest,
         "final": fin.means(),
         "per_timestep": per.means(),
     }
+    # Persisted, so validated against its LinkML type (P0 panel round 2).
+    from tma2.types.generated.tma import NaiveModel
+
+    NaiveModel.model_validate(model)
+    return model
 
 
 def _last_bearing(obs: np.ndarray, i: int) -> float:

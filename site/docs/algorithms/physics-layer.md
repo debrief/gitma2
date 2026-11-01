@@ -49,11 +49,13 @@ inert when c = 0):
 ## Properties (tested)
 
 - **Trivial inputs reproduce batch least squares.** With c ≡ 0, uniform weights and the grid
-  start, on every scored row of the fixtures the layer's cost never exceeds the ported solver's
-  (from the same start) by more than 10⁻⁹ relative; where the costs agree the state agrees to
-  10⁻⁴ relative on determined rows and to a small fraction of a standard deviation on
-  undetermined ones, which move only along their flat direction. Where the solver stops without
-  converging the layer often reaches a lower cost.
+  start, on every scored row of the fixtures the plausibility flags agree with the ported solver
+  from the same start, and the layer's cost never exceeds the solver's by more than 10⁻⁹
+  relative. Where the costs agree the states agree to 3.3 × 10⁻⁴ standard deviations; in relative
+  terms to about 10⁻⁵ where a quantity is determined, while on a row whose speed is undetermined
+  (sd several times the speed) the solver's own stopping point is 1.3 × 10⁻⁴ from the optimum the
+  layer reaches (P0 run r2). Where the solver stops without converging, the layer's flag and cost
+  are reported.
 - **Oracle ceiling.** With knots at the true manoeuvre starts and ends it reproduces the ratios
   of `docs/research/05` against the frozen IMM. It is a reference, not a strict ceiling: the
   chord of a long turn misfits the in-turn bearings, and the masked-turn diagnostic (in-turn
@@ -68,7 +70,8 @@ inert when c = 0):
 - **Exact under masking**: rows beyond k and invalid rows contribute nothing; batched and single
   results agree to the last bits that BLAS reduction order allows (≈10⁻⁷ relative after 40
   damped iterations).
-- **Exportable**: the graph holds only standard operators (TopK, Gather, Where, MatMul,
+- **Exportable** (the conformance export unrolls 8 iterations; the production 100 need an ONNX
+  `Loop`, spec 003): the graph holds only standard operators (TopK, Gather, Where, MatMul,
   elementwise maths, Atan on a float32 seed refined by Newton steps in double); the Python,
   browser (WASM) and Java runtimes agree with PyTorch to 10⁻⁵ in double on the golden batch.
 

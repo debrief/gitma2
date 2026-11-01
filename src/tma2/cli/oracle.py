@@ -47,26 +47,26 @@ def _pad(a: np.ndarray, r: int, fill: float = 0.0) -> np.ndarray:
     return out
 
 
-def run_layer(
-    layer: PhysicsLayer, items: list[tuple[BearingData, int, LayerInputs]], r_max: int
-) -> Any:
-    """Batched forward for (data, row, inputs) items; returns PhysicsOutputs."""
-    x = PhysicsInputs(
-        bearing=torch.tensor(np.stack([_pad(d.z, r_max) for d, _, _ in items])),
-        valid=torch.tensor(
-            np.stack([_pad(d.valid.astype(np.float64), r_max) for d, _, _ in items])
-        ),
-        own=torch.tensor(
-            np.stack([np.stack([_pad(d.ox, r_max), _pad(d.oy, r_max)], 1) for d, _, _ in items])
-        ),
-        t=torch.tensor(np.stack([_pad(d.t, r_max) for d, _, _ in items])),
-        sigma=torch.tensor([d.sigma for d, _, _ in items]),
-        k=torch.tensor([k for _, k, _ in items]),
-        changepoint=torch.tensor(np.stack([_pad(i.changepoint, r_max) for _, _, i in items])),
-        speed_weight=torch.tensor(np.stack([_pad(i.speed_weight, r_max) for _, _, i in items])),
-        log_weight=torch.tensor(np.stack([_pad(i.log_weight, r_max) for _, _, i in items])),
-        theta0=torch.tensor(np.stack([i.theta0 for _, _, i in items])),
-        speed_skip=torch.tensor(
+def inputs_for(items: list[tuple[BearingData, int, LayerInputs]], r_max: int) -> PhysicsInputs:
+    """Padded batch inputs for (data, row, inputs) items, in double whatever the default dtype
+    (results must not depend on what ran before; P0 panel round 2)."""
+    f64 = torch.float64
+
+    def t(a: Any) -> torch.Tensor:
+        return torch.tensor(np.asarray(a, dtype=np.float64), dtype=f64)
+
+    return PhysicsInputs(
+        bearing=t(np.stack([_pad(d.z, r_max) for d, _, _ in items])),
+        valid=t(np.stack([_pad(d.valid.astype(np.float64), r_max) for d, _, _ in items])),
+        own=t(np.stack([np.stack([_pad(d.ox, r_max), _pad(d.oy, r_max)], 1) for d, _, _ in items])),
+        t=t(np.stack([_pad(d.t, r_max) for d, _, _ in items])),
+        sigma=t([d.sigma for d, _, _ in items]),
+        k=torch.tensor([k for _, k, _ in items], dtype=torch.int64),
+        changepoint=t(np.stack([_pad(i.changepoint, r_max) for _, _, i in items])),
+        speed_weight=t(np.stack([_pad(i.speed_weight, r_max) for _, _, i in items])),
+        log_weight=t(np.stack([_pad(i.log_weight, r_max) for _, _, i in items])),
+        theta0=t(np.stack([i.theta0 for _, _, i in items])),
+        speed_skip=t(
             np.stack(
                 [
                     _pad(i.speed_skip if i.speed_skip is not None else np.zeros(1), r_max)
@@ -75,6 +75,13 @@ def run_layer(
             )
         ),
     )
+
+
+def run_layer(
+    layer: PhysicsLayer, items: list[tuple[BearingData, int, LayerInputs]], r_max: int
+) -> Any:
+    """Batched forward for (data, row, inputs) items; returns PhysicsOutputs."""
+    x = inputs_for(items, r_max)
     with torch.no_grad():
         return layer(x)
 

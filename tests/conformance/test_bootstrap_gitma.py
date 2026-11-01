@@ -84,3 +84,12 @@ def test_zero_median_does_not_raise() -> None:
     zeros = np.zeros(20)
     r = bootstrap_clustered_quantile_ratio(np.ones(20), zeros, np.arange(20), 0.5, 0.95, 50)
     assert math.isinf(r.ratio) and math.isinf(r.lo)
+
+
+def test_zero_median_denominator_equals_gitma() -> None:
+    """A denominator whose median is 0 in some resamples: ratios are ∞ there, as in gitma."""
+    z = _arr(CASES["inputs"]["zeroish"])
+    r = bootstrap_clustered_quantile_ratio(A, z, CL, 0.5, 0.95, 200)
+    g = CASES["zero_median"]
+    for k in ("ratio", "lo", "hi"):
+        _same(getattr(r, k), g[k])

@@ -66,7 +66,9 @@ TURN = {
 
 def _turning_target() -> Any:
     """The zig geometry with a target that turns 60° at 2°/s from t = 1200 s, built with the
-    bound's own kinematics (checked against the generator's truth in the conformance tests)."""
+    bound's own kinematics; `test_manoeuvre_model_reproduces_generator_truth` checks those
+    kinematics against the generator's stored truth, so this Monte Carlo is not circular in the
+    part that matters (the information, not the trajectory)."""
     t, ox, oy, _tx, _ty, _v = _geometry()
     c0 = math.radians(245.0)
     theta, mans = manoeuvre_model([TURN], 8000.0, 6000.0, 4 * math.sin(c0), 4 * math.cos(c0))
@@ -147,3 +149,48 @@ def test_known_manoeuvres_tighter_than_per_leg() -> None:
         assert not a.singular
         assert b.singular or a.sd_range_rel <= b.sd_range_rel * (1 + 1e-9)
     assert pl[0].singular  # inside the turn the per-leg bound has nothing
+
+
+def test_manoeuvre_model_reproduces_generator_truth() -> None:
+    """The bound's kinematics against the stored truth of every phase-4 fixture scenario (P0
+    panel round 2): positions to 1 cm (float32 storage), speeds to 1e-5 m/s."""
+    from tests.conftest import fixture_dir
+    from tma2.data.f32pack import iter_pack_raw
+
+    worst_p = worst_v = 0.0
+    n_man = 0
+    for split in ("train", "validation", "test", "heldout"):
+        for _, meta, _own, tgt, _obs in iter_pack_raw(
+            fixture_dir("phase4-seed777") / f"{split}.f32pack"
+        ):
+            plan = meta["parameters"].get("target_manoeuvres") or []
+            n_man += len(plan)
+            c, v = float(tgt[0, 3]), float(tgt[0, 4])
+            theta, mans = manoeuvre_model(
+                plan, float(tgt[0, 1]), float(tgt[0, 2]), v * math.sin(c), v * math.cos(c)
+            )
+            for i in range(tgt.shape[0]):
+                x, y, ux, uy = _pos_vel(theta, float(tgt[i, 0]), mans)
+                worst_p = max(worst_p, math.hypot(x - float(tgt[i, 1]), y - float(tgt[i, 2])))
+                worst_v = max(worst_v, abs(math.hypot(ux, uy) - float(tgt[i, 4])))
+    assert n_man > 50
+    assert worst_p < 0.01, worst_p
+    assert worst_v < 1e-5, worst_v
+
+
+def test_known_manoeuvres_refuses_data_without_a_plan() -> None:
+    import pytest
+
+    t, ox, oy, tx, ty, v = _geometry()
+    own, tgt, obs = _arrays(t, ox, oy, tx, ty, np.full_like(t, v[0]), np.full_like(t, v[1]))
+    with pytest.raises(ValueError):
+        crb_rows(
+            own,
+            tgt,
+            obs,
+            0.0175,
+            90,
+            [{"start_index": 100, "end_index": 103}],
+            [150],
+            "known_manoeuvres",
+        )

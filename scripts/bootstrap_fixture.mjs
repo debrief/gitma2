@@ -27,6 +27,8 @@ for (let i = 0; i < n; i++) {
   ga[i] = a[i] > 4 ? 1 : 0;
   gb[i] = c[i] > 4 ? 1 : 0;
 }
+const zeroish = new Float64Array(n);
+for (let i = 0; i < n; i++) zeroish[i] = i % 2 === 0 ? 0.5 : 0;
 const plain = (r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, enc(v)]));
 const cases = {
   inputs: {
@@ -35,11 +37,14 @@ const cases = {
     cluster: Array.from(cluster),
     gross_a: Array.from(ga),
     gross_b: Array.from(gb),
+    zeroish: Array.from(zeroish),
   },
   median: plain(b.bootstrapMedian(a, 500)),
   median_ratio: plain(b.bootstrapMedianRatio(a, c, 500)),
   clustered_q50: plain(b.bootstrapClusteredQuantileRatio(a, c, cluster, 0.5, 0.975, 500)),
   clustered_q90: plain(b.bootstrapClusteredQuantileRatio(a, c, cluster, 0.9, 0.95, 500)),
   clustered_rate_difference: plain(b.bootstrapClusteredRateDifference(ga, gb, cluster, 0.975, 500)),
+  // A denominator whose median is 0 in most resamples: JavaScript division gives ∞ or NaN.
+  zero_median: plain(b.bootstrapClusteredQuantileRatio(a, zeroish, cluster, 0.5, 0.95, 200)),
 };
 process.stdout.write(JSON.stringify(cases, null, 1) + "\n");

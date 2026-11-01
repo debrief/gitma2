@@ -9,7 +9,8 @@ if (!gitma) throw new Error("usage: slices_fixture.mjs <gitma checkout>");
 const { sliceKeys } = await import(pathToFileURL(path.join(gitma, "packages/eval/dist/slices.js")).href);
 const f32 = Math.fround;
 const deg = (d) => (d * Math.PI) / 180;
-const near = (x) => [x - 1e-4, x, x + 1e-4, f32(x), x - 0.0005, x + 0.0005];
+// At, just inside and just beyond gitma's 0.001 snap windows.
+const near = (x) => [x - 1e-4, x, x + 1e-4, f32(x), x - 0.0005, x + 0.0005, x - 0.002, x + 0.002];
 const metas = [];
 const base = { mean_range_m: 7000, parameters: { noise_sigma_rad: deg(1), zig_angle_rad: deg(60), dropout_fraction: 0.02 } };
 const push = (over, pover) =>

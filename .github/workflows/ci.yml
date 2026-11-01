@@ -130,8 +130,28 @@ jobs:
           test -f data/p0/validation.f32pack || uv run tma2-generate --seed 301 --count 100000 --out data/p0 \
             --ranges tests/fixtures/gitma/phase4-seed777/ranges.json \
             --heldout-ranges tests/fixtures/gitma/phase4-seed777/heldout-ranges.json --format f32pack
+      - name: gitma at the commit P0 names (for the at-scale IMM check)
+        uses: actions/checkout@v4
+        with:
+          repository: debrief/Gitma
+          ref: d0aec60a05b8664a586af87bf58232d0d1767c4a
+          path: gitma
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: gitma/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: gitma/.nvmrc
+      - name: gitma's seed-301 dataset and IMM predictions, cached by gitma commit
+        uses: actions/cache@v4
+        with:
+          path: data/gitma-ref
+          key: p0-gitma-ref-d0aec60
+      - run: test -f data/gitma-ref/validation-imm.ndjson || scripts/gitma_reference.sh gitma data/gitma-ref
       - name: Gate P0 (exit 3, gate not passed, fails the job)
-        run: uv run tma2-p0 --experiment experiments/ci-p0 --oracle-data data/p0 --work data/p0-work
+        run: |
+          uv run tma2-p0 --experiment experiments/ci-p0 --oracle-data data/p0 --work data/p0-work \
+            --gitma-data data/gitma-ref --gitma-imm data/gitma-ref/validation-imm.ndjson
       - if: always()
         uses: actions/upload-artifact@v4
         with:

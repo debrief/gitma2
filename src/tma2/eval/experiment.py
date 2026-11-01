@@ -87,11 +87,21 @@ class Experiment:
     def add_artefact(self, path: str | Path, role: str) -> str:
         """Record a file the experiment read or wrote (prediction caches, conformance results)."""
         digest = file_digest(path)
-        self.artefacts.append({"path": str(path), "digest": digest, "role": role})
+        shown = Path(path).resolve()
+        try:
+            shown = shown.relative_to(ROOT)
+        except ValueError:
+            pass
+        self.artefacts.append({"path": str(shown), "digest": digest, "role": role})
         return digest
 
     def add_dataset(self, path: str | Path, header: Any) -> None:
-        self.datasets.append({"path": str(path), "header": header, "digest": file_digest(path)})
+        shown = Path(path).resolve()
+        try:
+            shown = shown.relative_to(ROOT)
+        except ValueError:
+            pass
+        self.datasets.append({"path": str(shown), "header": header, "digest": file_digest(path)})
 
     def add_estimator(self, name: str, settings: dict[str, Any]) -> None:
         self.estimators.append(

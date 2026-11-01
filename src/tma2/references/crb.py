@@ -295,6 +295,10 @@ def crb_rows(
     if model not in ("full_window", "known_manoeuvres", "per_leg"):
         raise ValueError(f"unknown CRB model {model}")
     if model == "known_manoeuvres":
+        if spans and not target_manoeuvres:
+            # Data with manoeuvres but no drawn plan (generator 0.4.0's single turn): the bound
+            # would silently be the constant-velocity one (P0 panel round 2).
+            raise ValueError("known_manoeuvres needs the scenario's target_manoeuvres plan")
         tvx = speed * np.sin(course)
         tvy = speed * np.cos(course)
         return crb_known_manoeuvres(

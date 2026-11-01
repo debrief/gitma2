@@ -17,7 +17,9 @@ Exit 3 when any gated check fails; ``skipped`` checks are reported but not gated
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import hashlib
+import itertools
 import json
 import math
 import sys
@@ -33,10 +35,10 @@ from tma2.data.f32pack import iter_pack_raw, read_pack_header
 from tma2.data.io import file_digest
 from tma2.eval.errors import Truth
 from tma2.eval.experiment import Check, Experiment
-from tma2.eval.oracle_check import load_rows, oracle_ratios
+from tma2.eval.oracle_check import g5_efficiency, load_rows, oracle_ratios
 from tma2.eval.predictions import check_bound
 from tma2.physics.layer import PhysicsLayer
-from tma2.physics.reference import ITERATIONS
+from tma2.physics.reference import ITERATIONS, TRIALS
 from tma2.physics.segmentation import trivial_inputs
 from tma2.references.classical import bearing_data_from_arrays, classical_predict
 from tma2.references.ekf import ekf_predict
@@ -384,6 +386,8 @@ def check_efficiency(exp: Experiment) -> None:
     heldout = json.loads((d / "heldout-ranges.json").read_text())
     pairs: dict[str, list[tuple[float, float]]] = {"range": [], "course": [], "speed": []}
     scenarios = 0
+    clusters: list[int] = []
+    excluded = {"beyond_window": 0, "no_row": 0, "singular_bound": 0}
     with tempfile.TemporaryDirectory() as tmp:
         generate_dataset(
             GenerateOptions(
@@ -410,22 +414,37 @@ def check_efficiency(exp: Experiment) -> None:
             for sec in (300, 600):
                 k = zig + sec // int(meta["parameters"]["dt_s"])
                 if k >= int(meta["samples"]):
+                    excluded["beyond_window"] += 1
                     continue
                 row = next((r for r in rows if abs(r["timestamp_s"] - own[k, 0]) < 1e-6), None)
                 if row is None:
+                    excluded["no_row"] += 1
                     continue
                 bound = crb_rows(own, tgt, obs, sigma, zig, None, [k], False)[0]
                 if bound.singular:
+                    excluded["singular_bound"] += 1
                     continue
+                clusters.append(scenarios)
                 e = row_error(truth, row)
                 pairs["range"].append((e.range_rel, bound.sd_range_rel))
                 pairs["course"].append((e.course_deg, bound.sd_course_deg))
                 pairs["speed"].append((e.speed_kt, bound.sd_speed_kt))
     eff = {k: efficiency(v) for k, v in pairs.items()}
+    # Scenario-clustered 95% interval of the speed efficiency (reported; the gate is the point
+    # estimate, as SC-005 was written): the median of z = |e|/σ as a ratio to a constant 1.
+    from tma2.eval.bootstrap import bootstrap_clustered_quantile_ratio
+    from tma2.eval.metrics import GAUSS_MEDIAN_ABS
+
+    z = np.array([e / sd for e, sd in pairs["speed"]])
+    iv = bootstrap_clustered_quantile_ratio(
+        z, np.ones_like(z), np.array(clusters, dtype=np.int64), 0.5, 0.95
+    )
     exp.metrics["least-squares-efficiency"] = {
         **{f"efficiency_{k}": v for k, v in eff.items()},
+        "speed_ci95": [iv.lo / GAUSS_MEDIAN_ABS, iv.hi / GAUSS_MEDIAN_ABS],
         "rows": len(pairs["speed"]),
         "scenarios": scenarios,
+        "excluded_rows": excluded,
     }
     lo, hi = EFFICIENCY_BAND
     exp.checks.append(
@@ -441,6 +460,58 @@ def check_efficiency(exp: Experiment) -> None:
     )
 
 
+def check_throughput(exp: Experiment) -> None:
+    """SRD §7 / plan.md: measure the physics layer's CPU cost before any decision record. Reported,
+    not gated: one thread, the production configuration (ITERATIONS × TRIALS, 8 knots), forward
+    and backward through a loss on the state for 32 fixture rows of a 360-row window, best of two;
+    the planned budget was 256 rows in under 1 s. Peak resident memory is the process's growth."""
+    import resource
+    import time
+
+    threads = torch.get_num_threads()
+    torch.set_num_threads(1)
+    try:
+        items = []
+        for _, meta, own, _tgt, obs in iter_pack_raw(FIXTURES / "phase4-seed777" / "train.f32pack"):
+            bd = bearing_data_from_arrays(meta, own, obs)
+            for k in (bd.zig_index + 10, bd.n - 1):
+                inp = trivial_inputs(bd.t, bd.ox, bd.oy, bd.z, bd.valid, k)
+                if inp is not None:
+                    items.append((bd, k, inp))
+            if len(items) >= 32:
+                break
+        items = items[:32]
+        from tma2.cli.oracle import inputs_for
+
+        x = inputs_for(items, R_MAX)
+        lw = x.log_weight.clone().requires_grad_(True)
+        layer = PhysicsLayer()
+        before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        times = []
+        for _ in range(2):
+            t0 = time.perf_counter()
+            out = layer(dataclasses.replace(x, log_weight=lw))
+            (out.state[:, 2:].abs().sum() + out.state[:, :2].abs().sum() / 1e4).backward()
+            times.append(time.perf_counter() - t0)
+        peak_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - before
+    finally:
+        torch.set_num_threads(threads)
+    per_row = min(times) / len(items)
+    exp.metrics["throughput"] = {
+        "rows": len(items),
+        "window_rows": R_MAX,
+        "iterations": ITERATIONS,
+        "trials": TRIALS,
+        "threads": 1,
+        "forward_backward_s": min(times),
+        "forward_backward_s_per_row": per_row,
+        "extrapolated_s_for_256_rows": per_row * 256,
+        "planned_s_for_256_rows": 1.0,
+        "peak_rss_growth_mb": peak_kb / 1024,
+        "peak_rss_growth_mb_per_row": peak_kb / 1024 / len(items),
+    }
+
+
 def check_oracle(exp: Experiment, data_dir: Path, out_dir: Path) -> Path:
     truth = data_dir / "validation.f32pack"
     header = read_pack_header(truth)
@@ -453,7 +524,13 @@ def check_oracle(exp: Experiment, data_dir: Path, out_dir: Path) -> Path:
     # checking that their header names this truth file and the expected estimator; every file
     # used is recorded in the manifest with its digest.
     commit, dirty = exp.git()
-    cache = out_dir / commit[:12]
+    # A dirty tree never writes the commit's cache: its predictions go to a fresh directory that
+    # no later run reuses (P0 panel round 2).
+    cache = (
+        Path(tempfile.mkdtemp(prefix=f"{commit[:12]}-dirty-", dir=out_dir))
+        if dirty
+        else out_dir / commit[:12]
+    )
     cache.mkdir(parents=True, exist_ok=True)
 
     def usable(path: Path, estimator: str) -> bool:
@@ -512,28 +589,84 @@ def check_oracle(exp: Experiment, data_dir: Path, out_dir: Path) -> Path:
                         ci_level=0.975,
                     )
                 )
+    # Reported: efficiency of each estimator against the known-manoeuvres bound.
+    exp.metrics["efficiency-known-manoeuvres"] = g5_efficiency(
+        truths,
+        list(open_split(truth)[1]),
+        {
+            "imm": str(imm_path),
+            "oracle-sp": str(cache / "oracle-sp.ndjson"),
+            "oracle-nosp": str(cache / "oracle-nosp.ndjson"),
+            "oracle-masked-sp": str(cache / "oracle-masked-sp.ndjson"),
+        },
+    )
     return imm_path
 
 
 AT_SCALE_ROW_LIMIT = 1e-3  # fraction of converged rows allowed beyond 1e-4 relative
 
 
-def check_imm_at_scale(exp: Experiment, data_dir: Path, gitma_imm: Path, ours: Path) -> None:
+def same_scenarios(a: Path, b: Path) -> tuple[bool, int]:
+    """Whether two packs hold the same scenarios (metadata and every array), ignoring headers,
+    which name the generating code: gitma's dataset and gitma2's differ only there."""
+    n = 0
+    for x, y in itertools.zip_longest(iter_pack_raw(a), iter_pack_raw(b)):
+        if x is None or y is None:
+            return False, n
+        if json.dumps(x[1], sort_keys=True) != json.dumps(y[1], sort_keys=True):
+            return False, n
+        for i in (2, 3, 4):
+            if not np.array_equal(np.asarray(x[i]), np.asarray(y[i]), equal_nan=True):
+                return False, n
+        n += 1
+    return n > 0, n
+
+
+def check_imm_at_scale(
+    exp: Experiment, data_dir: Path, gitma_data: Path, gitma_imm: Path, ours: Path
+) -> None:
     """Our IMM against gitma's own ``tma-track`` output on the 10,000-scenario split.
 
-    The 20-scenario fixtures cannot show rare knife-edge rows; here flags must be identical, at
-    most 0.1% of converged rows may differ by more than 1e-4 relative, and the G5 median range
-    error ratio must be 1 to 1e-4 (the gates compare medians). Panel round 1 traced the residual
-    rows to scenarios where a 1e-15–1e-12 bearing jitter moves our own IMM as far.
+    The 20-scenario fixtures cannot show rare knife-edge rows; here flags must be identical (rows
+    either side has and the other lacks count as mismatches), at most 0.1% of converged rows may
+    differ by more than 1e-4 relative, and the G5 median range error ratio must be 1 to 1e-4 (the
+    gates compare medians). The 0.1% limit was set post hoc, after panel round 1 measured 0.04%,
+    as a regression guard; round 1 traced the residual rows to scenarios where a 1e-15–1e-12
+    bearing jitter moves our own IMM as far.
     """
     truth = data_dir / "validation.f32pack"
-    exp.add_artefact(gitma_imm, "gitma tma-track IMM predictions (seed 301 validation)")
+    gitma_pack = gitma_data / "validation.f32pack"
+    # Bind gitma's file to its own dataset, and that dataset's scenarios to ours.
+    check_bound(gitma_imm, gitma_pack)
+    same, n_scen = same_scenarios(gitma_pack, truth)
+    gh = read_pack_header(gitma_pack)
+    exp.add_artefact(gitma_pack, f"gitma dataset (generator commit {gh.generator_git_commit})")
+    exp.add_artefact(gitma_imm, "gitma tma-track IMM predictions (scripts/gitma_reference.sh)")
+    exp.folder.mkdir(parents=True, exist_ok=True)
+    with open(gitma_imm, encoding="utf-8") as f:
+        (exp.folder / "gitma-imm-header.json").write_text(f.readline())
+    exp.command_lines.append(
+        "scripts/gitma_reference.sh <gitma checkout at d0aec60> <gitma data dir>"
+    )
+    if not same:
+        exp.checks.append(
+            Check(
+                "reference-imm-at-scale",
+                "fail",
+                f"gitma's dataset differs from ours at scenario {n_scen}",
+            )
+        )
+        return
     theirs = load_rows(str(gitma_imm))
     mine = load_rows(str(ours))
     flags = 0
     rows = 0
     beyond = 0
     worst = 0.0
+    diffs: list[float] = []
+    # Rows only we produce count as flag mismatches too.
+    for idx, by_t in mine.items():
+        flags += sum(1 for ts in by_t if float(ts) not in theirs.get(idx, {}))
     for idx, by_t in theirs.items():
         m = mine.get(idx, {})
         for ts, r in by_t.items():
@@ -549,6 +682,7 @@ def check_imm_at_scale(exp: Experiment, data_dir: Path, gitma_imm: Path, ours: P
                 for k in ("range_m", "speed_mps", "x_m", "y_m")
             )
             worst = max(worst, e)
+            diffs.append(e)
             beyond += e > 1e-4
     _, blocks = open_split(truth)
     truths = [Truth.from_block(meta, own, tgt) for _, meta, own, tgt, _ in blocks]
@@ -562,6 +696,8 @@ def check_imm_at_scale(exp: Experiment, data_dir: Path, gitma_imm: Path, ours: P
         "flag_mismatches": flags,
         "rows_beyond_1e-4": beyond,
         "worst_relative_difference": worst,
+        "p99_relative_difference": float(np.quantile(diffs, 0.99)) if diffs else math.nan,
+        "p999_relative_difference": float(np.quantile(diffs, 0.999)) if diffs else math.nan,
         "g5_median_range_ratio_gitma_over_ours": ratio.interval.ratio,
     }
     exp.checks.append(
@@ -612,7 +748,11 @@ def check_export(exp: Experiment) -> None:
             Check("export-wasm", "fail", "conformance/onnx/results.json missing (run the legs)")
         )
         return
-    exp.add_artefact(res, "export conformance results (browser and Java legs)")
+    # The legs' results become part of the record (they are produced outside tma2-p0).
+    exp.folder.mkdir(parents=True, exist_ok=True)
+    kept = exp.folder / "conformance-results.json"
+    kept.write_bytes(res.read_bytes())
+    exp.add_artefact(kept, "export conformance results (browser and Java legs), copied")
     r = json.loads(res.read_text())
     for leg in ("wasm", "java"):
         v = r.get(leg)
@@ -648,36 +788,51 @@ def check_export(exp: Experiment) -> None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-p0")
     ap.add_argument("--experiment", required=True)
+    # Every input a P0 check needs is required: a gate cannot pass with a check left out
+    # (P0 panel round 2).
     ap.add_argument(
-        "--oracle-data", help="directory with validation.f32pack (seed 301, phase-4 ranges)"
+        "--oracle-data",
+        required=True,
+        help="directory with validation.f32pack (seed 301, phase-4 ranges)",
+    )
+    ap.add_argument(
+        "--gitma-data",
+        required=True,
+        help="gitma's own seed-301 dataset (scripts/gitma_reference.sh), for the at-scale check",
+    )
+    ap.add_argument(
+        "--gitma-imm",
+        required=True,
+        help="gitma tma-track IMM predictions on gitma's validation split (gitma_reference.sh)",
     )
     ap.add_argument(
         "--work", help="where oracle/IMM predictions are cached", default="data/p0-work"
     )
-    ap.add_argument(
-        "--gitma-imm",
-        help="gitma tma-track IMM predictions on the same validation split (at-scale check)",
-    )
     a = ap.parse_args(argv)
+    torch.set_default_dtype(torch.float64)
     folder = Path(a.experiment)
     exp = Experiment(id=folder.name, folder=folder)
     exp.command_lines.append("tma2-p0 " + " ".join(sys.argv[1:]))
     exp.add_estimator("classical", {"max_iterations": 50, "grid_every": 6})
     exp.add_estimator("imm-cv0.01-ct0.03-w0.01-s0.001-p4-r8", FROZEN_IMM.__dict__)
     exp.add_estimator(
-        "oracle-physics", {"iterations": 40, "knots": 8, "tau_ridge_mps": 3.0, "tau_speed_mps": 1.0}
+        "oracle-physics",
+        {
+            "iterations": ITERATIONS,
+            "trials": TRIALS,
+            "knots": 8,
+            "tau_ridge_mps": 3.0,
+            "tau_speed_mps": 1.0,
+        },
     )
+    check_throughput(exp)  # first, so the peak-memory growth is the layer's own
     check_generator(exp)
     check_references(exp)
     check_physics_equals_ls(exp)
     check_noise_free(exp)
     check_efficiency(exp)
-    if a.oracle_data:
-        imm_path = check_oracle(exp, Path(a.oracle_data), Path(a.work))
-        if a.gitma_imm:
-            check_imm_at_scale(exp, Path(a.oracle_data), Path(a.gitma_imm), imm_path)
-    else:
-        exp.checks.append(Check("oracle-ceiling", "skipped", "no --oracle-data"))
+    imm_path = check_oracle(exp, Path(a.oracle_data), Path(a.work))
+    check_imm_at_scale(exp, Path(a.oracle_data), Path(a.gitma_data), Path(a.gitma_imm), imm_path)
     check_export(exp)
     verdict = exp.write("P0")
     for c in exp.checks:

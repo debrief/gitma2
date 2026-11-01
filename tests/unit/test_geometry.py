@@ -96,8 +96,22 @@ def test_course_90_moves_east_in_generated_truth() -> None:
             c, v = float(tgt[i, 3]), float(tgt[i, 4])
             assert math.isclose(dx, v * math.sin(c) * dt, abs_tol=0.05)
             assert math.isclose(dy, v * math.cos(c) * dt, abs_tol=0.05)
-        # The first bearing points from ownship to the target, clockwise from north.
-        true_b = g.bearing_of(float(tgt[0, 1] - own[0, 1]), float(tgt[0, 2] - own[0, 2]))
+            # Ownship too: its displacement agrees with its own course and speed.
+            dx = float(own[i + 1, 1] - own[i, 1])
+            dy = float(own[i + 1, 2] - own[i, 2])
+            c, v = float(own[i, 3]), float(own[i, 4])
+            assert math.isclose(dx, v * math.sin(c) * dt, abs_tol=0.05)
+            assert math.isclose(dy, v * math.cos(c) * dt, abs_tol=0.05)
+        # Bearings point from ownship to the target, clockwise from north: the median wrapped
+        # residual over all valid bearings is near 0 and their spread near σ.
         sigma = float(meta["parameters"]["noise_sigma_rad"])
-        if obs[0, 2] != 0:
-            assert abs(g.wrap_pi(float(obs[0, 1]) - true_b)) < 5 * sigma
+        res = [
+            g.wrap_pi(
+                float(obs[i, 1])
+                - g.bearing_of(float(tgt[i, 1] - own[i, 1]), float(tgt[i, 2] - own[i, 2]))
+            )
+            for i in range(obs.shape[0])
+            if obs[i, 2] != 0
+        ]
+        assert abs(float(np.median(res))) < sigma
+        assert 0.5 * sigma < float(np.std(res)) < 2 * sigma
