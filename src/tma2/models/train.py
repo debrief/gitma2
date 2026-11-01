@@ -267,7 +267,9 @@ def train(
     while not meta.complete and meta.epoch < max_epochs:
         e = meta.epoch + 1
         last = (meta.epoch_seconds or [0.0])[-1]
-        if time.time() - t_start + last > max_wall_s:
+        # Every job runs at least one epoch, so a chain always progresses (an epoch longer than
+        # the budget otherwise stops every later job before it starts; smoke run, spec 003).
+        if e > first_epoch and time.time() - t_start + last > max_wall_s:
             log(f"wall-clock cap: stopping before epoch {e}")
             break
         t0 = time.time()

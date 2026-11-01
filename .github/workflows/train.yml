@@ -207,3 +207,9 @@ jobs:
           git commit -qm "experiments: $ID run ${{ github.run_id }} (CI, ${{ github.sha }})"
           git push origin "$B"
           echo "pushed $B ($EXP)"
+      - name: Delete this run's checkpoint branches (the results branch holds the models)
+        if: ${{ needs.predict.result == 'success' }}
+        run: |
+          for b in $(git ls-remote --heads origin "checkpoints/${GITHUB_REF_NAME}/*" | awk '{print $2}' | sed 's#^refs/heads/##'); do
+            git push origin --delete "$b" && echo "deleted $b"
+          done

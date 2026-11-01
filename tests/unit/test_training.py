@@ -82,3 +82,15 @@ def test_predictions_score_with_the_evaluation_tools(tmp_path: Path) -> None:
         assert len(p["rows"]) == s - z - 1
         n += 1
     assert n == len(zig)
+
+
+def test_every_job_trains_at_least_one_epoch(tmp_path: Path) -> None:
+    """A wall-clock budget shorter than an epoch still advances one epoch per job (the smoke
+    run's chain stalled when the cap was checked before the job's first epoch)."""
+    plan = _plan(tmp_path)
+    data = fixture_dir("iter4-seed777")
+    ck = tmp_path / "ck"
+    m1 = train(plan, "t1", ck, data, max_wall_s=0.0, log=lambda _: None)
+    assert m1.epoch == 1 and not m1.complete
+    m2 = train(plan, "t1", ck, data, max_wall_s=0.0, log=lambda _: None)
+    assert m2.epoch == 2
