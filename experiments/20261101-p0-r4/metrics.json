@@ -1,0 +1,281 @@
+{
+  "efficiency-known-manoeuvres": {
+    "imm-all": {
+      "course_deg": 3.318648542765311,
+      "range_rel": 2.2082967677560514,
+      "rows": 16638.0,
+      "speed_kt": 2.9498766621211527
+    },
+    "imm-settled": {
+      "course_deg": 4.951061589519192,
+      "range_rel": 2.206169463416979,
+      "rows": 7376.0,
+      "speed_kt": 2.9838009451217293
+    },
+    "oracle-masked-sp-all": {
+      "course_deg": 1.3181804819728191,
+      "range_rel": 1.259291880705965,
+      "rows": 16638.0,
+      "speed_kt": 1.3151757254708674
+    },
+    "oracle-masked-sp-settled": {
+      "course_deg": 1.2557822148094016,
+      "range_rel": 1.2057560653781167,
+      "rows": 7376.0,
+      "speed_kt": 1.2619540119673047
+    },
+    "oracle-nosp-all": {
+      "course_deg": 1.5072992526711324,
+      "range_rel": 1.4005040979698282,
+      "rows": 16638.0,
+      "speed_kt": 2.137584797614187
+    },
+    "oracle-nosp-settled": {
+      "course_deg": 1.3956292147047118,
+      "range_rel": 1.3127982376566143,
+      "rows": 7376.0,
+      "speed_kt": 1.4865772799364008
+    },
+    "oracle-sp-all": {
+      "course_deg": 1.2768877336027342,
+      "range_rel": 1.2296845539892092,
+      "rows": 16638.0,
+      "speed_kt": 1.3256469757935387
+    },
+    "oracle-sp-settled": {
+      "course_deg": 1.2369089408415381,
+      "range_rel": 1.196249668696238,
+      "rows": 7376.0,
+      "speed_kt": 1.2613924709799225
+    }
+  },
+  "export": {
+    "java_runtime": "onnxruntime Java 1.31.1",
+    "onnx_sha256": "285741147b5a5822e1dca7c3ef5fb46865c1e05b3119cc1f446c4b2b91107e84",
+    "ops": [
+      "Abs",
+      "Add",
+      "And",
+      "ArgMax",
+      "Atan",
+      "Cast",
+      "Clip",
+      "Concat",
+      "Constant",
+      "ConstantOfShape",
+      "Div",
+      "Equal",
+      "Exp",
+      "Expand",
+      "EyeLike",
+      "Flatten",
+      "Gather",
+      "GatherElements",
+      "Greater",
+      "GreaterOrEqual",
+      "Less",
+      "LessOrEqual",
+      "MatMul",
+      "Mul",
+      "Neg",
+      "Not",
+      "Or",
+      "Range",
+      "Reciprocal",
+      "ReduceSum",
+      "Relu",
+      "Reshape",
+      "Shape",
+      "Sigmoid",
+      "Sin",
+      "Slice",
+      "Sqrt",
+      "Sub",
+      "Tanh",
+      "Tile",
+      "TopK",
+      "Transpose",
+      "Unsqueeze",
+      "Where"
+    ],
+    "python_f32_max_rel_diff_reported_only": {
+      "cost": 1.0604692306515062e-06,
+      "cov": 0.009604193270206451,
+      "plausible": 0.0,
+      "state": 0.0004642605781555176
+    },
+    "python_f64_max_rel_diff": {
+      "cost": 2.3886518724866654e-15,
+      "cov": 1.0921396046338022e-11,
+      "plausible": 0.0,
+      "state": 1.2800871473928055e-13
+    },
+    "wasm_runtime": "onnxruntime-web 1.31.1"
+  },
+  "least-squares-efficiency": {
+    "efficiency_course": 0.9880306829214425,
+    "efficiency_range": 1.0066634550196707,
+    "efficiency_speed": 0.9491605460103033,
+    "excluded_rows": {
+      "beyond_window": 275,
+      "no_row": 0,
+      "singular_bound": 0
+    },
+    "rows": 1313,
+    "scenarios": 794,
+    "speed_ci95": [
+      0.8888018874559688,
+      1.0411392894579767
+    ]
+  },
+  "oracle-masked-sp-all-course": {
+    "hi": 0.48022931461458407,
+    "lo": 0.4413176057932498,
+    "ratio": 0.46103382236930235,
+    "rows": 16650
+  },
+  "oracle-masked-sp-all-range": {
+    "hi": 0.5609469759497419,
+    "lo": 0.5191774710927642,
+    "ratio": 0.5386980443992098,
+    "rows": 16650
+  },
+  "oracle-masked-sp-all-speed": {
+    "hi": 0.39761073911612804,
+    "lo": 0.36492279201503314,
+    "ratio": 0.3803558024171608,
+    "rows": 16650
+  },
+  "oracle-masked-sp-settled-course": {
+    "hi": 0.2781066303777667,
+    "lo": 0.23847197362223269,
+    "ratio": 0.2561301271233392,
+    "rows": 7376
+  },
+  "oracle-masked-sp-settled-range": {
+    "hi": 0.5377138302688714,
+    "lo": 0.47819754677926224,
+    "ratio": 0.5041913129996136,
+    "rows": 7376
+  },
+  "oracle-masked-sp-settled-speed": {
+    "hi": 0.41089259592407845,
+    "lo": 0.3641714835282179,
+    "ratio": 0.3875771985873269,
+    "rows": 7376
+  },
+  "oracle-nosp-all-course": {
+    "hi": 0.6210661833348532,
+    "lo": 0.5687016843306772,
+    "ratio": 0.5953325552088037,
+    "rows": 16650
+  },
+  "oracle-nosp-all-range": {
+    "hi": 0.6620877975875172,
+    "lo": 0.6131640449346872,
+    "ratio": 0.6380750309540038,
+    "rows": 16650
+  },
+  "oracle-nosp-all-speed": {
+    "hi": 0.9311216141407572,
+    "lo": 0.8530340535396727,
+    "ratio": 0.8885982671586247,
+    "rows": 16650
+  },
+  "oracle-nosp-settled-course": {
+    "hi": 0.30849357146658757,
+    "lo": 0.2645832629734283,
+    "ratio": 0.2869419497569023,
+    "rows": 7376
+  },
+  "oracle-nosp-settled-range": {
+    "hi": 0.611273393801209,
+    "lo": 0.5459097757479775,
+    "ratio": 0.5750770752455255,
+    "rows": 7376
+  },
+  "oracle-nosp-settled-speed": {
+    "hi": 0.5676983894051116,
+    "lo": 0.49185526186275774,
+    "ratio": 0.5305356008637053,
+    "rows": 7376
+  },
+  "oracle-sp-all-course": {
+    "hi": 0.45927108120538307,
+    "lo": 0.4192380925950766,
+    "ratio": 0.43837104880602135,
+    "rows": 16650
+  },
+  "oracle-sp-all-range": {
+    "hi": 0.5541729480935295,
+    "lo": 0.509746164845785,
+    "ratio": 0.5314360225436361,
+    "rows": 16650
+  },
+  "oracle-sp-all-speed": {
+    "hi": 0.40975016244610896,
+    "lo": 0.37675760306014755,
+    "ratio": 0.3925552956315558,
+    "rows": 16650
+  },
+  "oracle-sp-settled-course": {
+    "hi": 0.2709513771190494,
+    "lo": 0.23491690948329108,
+    "ratio": 0.25032385064620105,
+    "rows": 7376
+  },
+  "oracle-sp-settled-range": {
+    "hi": 0.5319321150464609,
+    "lo": 0.47426534376238716,
+    "ratio": 0.50038596988073,
+    "rows": 7376
+  },
+  "oracle-sp-settled-speed": {
+    "hi": 0.41408282929623746,
+    "lo": 0.36548333425470025,
+    "ratio": 0.3892068553876939,
+    "rows": 7376
+  },
+  "physics-equals-least-squares": {
+    "both_implausible_rows": 726,
+    "covariance_degenerate_rows": 15,
+    "determined_rows": 20925,
+    "iterations": 100,
+    "layer_cost_higher_rows": 0,
+    "layer_cost_lower_rows": 0,
+    "nonfinite_sd_rows": 0,
+    "plausibility_flag_mismatches": 0,
+    "range_determined_speed_undetermined_rows": 1069,
+    "rows": 22531,
+    "same_minimum_plausible_rows": 21438,
+    "solver_converged_rows": 22164,
+    "solver_unconverged_layer_cost_lower": 113,
+    "solver_unconverged_layer_plausible": 221,
+    "speed_determined_rows": 19949,
+    "trials": 1,
+    "worst_difference_in_sd_same_minimum": 0.0003956935658041183,
+    "worst_relative_difference_determined": 1.8212984896772483e-05
+  },
+  "reference-imm-at-scale": {
+    "flag_mismatches": 0,
+    "g5_median_range_ratio_gitma_over_ours": 1.0,
+    "p999_relative_difference": 1.928238920806319e-05,
+    "p99_relative_difference": 2.980232238769531e-07,
+    "rows": 1214916,
+    "rows_beyond_1e-4": 475,
+    "worst_relative_difference": 58.214288419100924
+  },
+  "throughput": {
+    "extrapolated_s_for_256_rows": 41.475478047999786,
+    "forward_backward_s": 5.184434755999973,
+    "forward_backward_s_per_row": 0.16201358612499916,
+    "iterations": 100,
+    "peak_rss_growth_mb": 2297.7421875,
+    "peak_rss_growth_mb_per_row": 71.804443359375,
+    "planned_s_for_256_rows": 1.0,
+    "rows": 32,
+    "threads": 1,
+    "trials": 1,
+    "window_rows": 360
+  }
+}

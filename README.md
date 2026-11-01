@@ -21,7 +21,7 @@ differentiable piecewise-constant-velocity batch solve do the numerics.
 | Step | State |
 | --- | --- |
 | Spec 001, types and generator | implemented: the Python generator reproduces gitma's files byte for byte (3 fixtures, 220 scenarios, zero one-ulp residuals) |
-| Spec 002, references, physics layer, P0 | implemented: gitma's references and evaluation reproduced; physics layer equals batch least squares and reproduces the oracle ceiling; exported graph agrees across Python, browser and Java runtimes within the 1e-5 gate in double (observed about 1e-12); P0 under agent-panel review (`experiments/`) |
+| Spec 002, references, physics layer, P0 | implemented: gitma's references and evaluation reproduced; physics layer equals batch least squares and reproduces the oracle ceiling; exported graph agrees across Python, browser and Java runtimes within the 1e-5 gate in double (observed about 1e-11); **P0 passed** (agent panel round 3, `experiments/20261101-p0-r4/`) |
 
 ## Quick start
 

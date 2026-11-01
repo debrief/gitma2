@@ -293,9 +293,10 @@ def test_gradients_finite_with_covariance_and_cost_losses() -> None:
     sw = torch.rand(b, r, requires_grad=True)
     lw = (0.5 * torch.randn(b, r)).requires_grad_(True)
     th0 = x.theta0.clone().requires_grad_(True)
-    out = PhysicsLayer(iterations=20)(
+    out = PhysicsLayer()(  # the production iteration count: at 20 a ridge of 0 also passes
         PhysicsInputs(x.bearing, x.valid, x.own, x.t, x.sigma, x.k, cp, sw, lw, th0)
     )
+    assert not bool(out.cov_ok.all())  # the collapse rows are there and flagged
     ok = out.cov_ok
     diag = torch.stack([out.cov[:, i, i] for i in range(4)], dim=1)
     log_var = torch.log(torch.where(ok.unsqueeze(1), diag, torch.ones_like(diag)))

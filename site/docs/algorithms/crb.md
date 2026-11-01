@@ -37,7 +37,7 @@ matrix, so position in metres and velocity in m/s do not inflate the condition n
   The bound for an estimator that knows when and how the target manoeuvred (the oracle's
   regime): position continuity carries the earlier legs across the manoeuvre. It is defined inside
   manoeuvres too; the Jacobian of the positions is taken by central differences, and the model
-  reproduces the stored truth to millimetres. Letting the positions inside a manoeuvre be free
+  reproduces the stored truth to under 1 cm (float32 storage). Letting the positions inside a manoeuvre be free
   instead would decouple the legs, which is no better than the per-leg bound.
 - **Per leg** (`per_leg`, a diagnostic): constant velocity over the current leg's bearings only.
   It ignores the earlier legs, so an estimator that knows the manoeuvre times can legitimately

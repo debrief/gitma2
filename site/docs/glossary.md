@@ -38,9 +38,10 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   sample after it starts to the first sample after it ends.
 - **Oracle ceiling** — the physics layer fed with the true manoeuvre times and kinds (knots at
   each manoeuvre's start and end, the chord of a turn, ridge τ_r = 3 m/s): the reference for any
-  "segment, then solve" design. It is not a strict upper bound: most of its error after a turn is
-  the chord approximation, and giving the in-turn bearings zero weight (the masked-turn
-  diagnostic in P0) does better; the known-manoeuvres Cramér–Rao bound is the information limit.
+  "segment, then solve" design. It is not a strict upper bound: on noise-free data most of its
+  error after a turn is the chord approximation; with noise, giving the in-turn bearings zero
+  weight does not help, and at σ = 1° it is 1.2–1.3 × the known-manoeuvres Cramér–Rao bound, the
+  information limit.
 - **Ownship** — the observing platform, whose track is known exactly.
 - **Physics layer** — see [the algorithm note](algorithms/physics-layer.md); the declared, differentiable piecewise-constant-velocity batch solve that
   produces every gitma2 estimate; with trivial inputs it equals batch least squares.

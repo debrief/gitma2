@@ -229,8 +229,11 @@ physics-layer note's equations match the NumPy reference implementation used in 
   row on every scored fixture row: the plausibility flags agree; the layer's cost is never above
   the solver's by more than 1e-9 relative where the solver converged; where the costs agree and
   both are plausible, range and speed each agree to 1e-4 relative where that quantity is
-  determined (its sd below half its value) and to 1e-2 of the row's own standard deviation on
-  every row; and its covariance MUST equal σ²(JᵀJ)⁻¹. *Amended in P0 panel round 1* (the SRD criterion, "equals batch LS", is
+  determined (its sd below half its value; for speed, half of max(speed, 1 m/s), the floor the
+  relative test's denominator also uses) and to 1e-2 of the row's own standard deviation on
+  every row; and its covariance MUST equal σ²(JᵀJ + ridge)⁻¹ mapped to the state, with a
+  relative ridge of 1e-12 on the diagonal (panel round 2). Flags and states are compared where
+  the solver converged; on its unconverged rows the layer's flag and cost are reported. *Amended in P0 panel round 1* (the SRD criterion, "equals batch LS", is
   unchanged): the earlier wording, float32 on every row against the warm-started per-timestep
   rows with "the solver's iteration count", cannot hold for any two correct solvers on
   undetermined rows, which stop at different points of equal cost along a flat direction, and the
@@ -260,7 +263,7 @@ physics-layer note's equations match the NumPy reference implementation used in 
   error, course error in degrees, speed error in knots; gross-error rate = range error > 50% or
   no estimate) overall and sliced by range band, zig angle, σ, time since zig and time since the
   last manoeuvre end, and MUST add efficiency per slice (median over rows of error / that row's
-  CRB, divided by 0.6745; amended in P0 panel round 1).
+  CRB, divided by 0.6745; amended in P0 panel round 2).
 - **FR-014**: The system MUST implement the scenario-clustered paired bootstrap (2,000 resamples,
   seed 20261011, configurable level) and gitma's settled-row and G5-row definitions.
 - **FR-015**: `tma2-eval` MUST score any prediction file against truth and write metrics as CSV
@@ -301,7 +304,8 @@ physics-layer note's equations match the NumPy reference implementation used in 
 - **SC-001**: Batch least squares, EKF and IMM rows equal gitma's prediction files on the seed-777
   fixtures under the conformance rule, with the count of one-ulp residuals reported. At scale
   (added in P0 panel round 1, when gitma's `tma-track` output on the P0 split is supplied) the
-  IMM's flags are identical and at most 0.1% of rows differ by more than 1e-4.
+  IMM's flags are identical and at most 0.1% of rows differ by more than 1e-4 (a regression
+  guard set post hoc, after round 1 measured 0.04%).
 - **SC-002**: The physics layer with trivial inputs equals the ported solver on every fixture row
   as FR-007 defines it; its NumPy reference agrees to 1e-6; gradient checks pass to 1e-4; every
   gradient is finite, including on masked rows.

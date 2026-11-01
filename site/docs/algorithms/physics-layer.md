@@ -51,15 +51,17 @@ inert when c = 0):
 - **Trivial inputs reproduce batch least squares.** With c ≡ 0, uniform weights and the grid
   start, on every scored row of the fixtures the plausibility flags agree with the ported solver
   from the same start, and the layer's cost never exceeds the solver's by more than 10⁻⁹
-  relative. Where the costs agree the states agree to 3.3 × 10⁻⁴ standard deviations; in relative
-  terms to about 10⁻⁵ where a quantity is determined, while on a row whose speed is undetermined
-  (sd several times the speed) the solver's own stopping point is 1.3 × 10⁻⁴ from the optimum the
-  layer reaches (P0 run r2). Where the solver stops without converging, the layer's flag and cost
-  are reported.
+  relative. Where the costs agree the states agree to 4.0 × 10⁻⁴ standard deviations and to
+  1.8 × 10⁻⁵ relative where each quantity is determined (P0 run r4). On a row whose speed is
+  undetermined (sd several times the speed) the solver's own stopping point was 1.3 × 10⁻⁴ from
+  the optimum the layer reaches (run r2). Where the solver stops without converging, the layer's
+  flag and cost are reported.
 - **Oracle ceiling.** With knots at the true manoeuvre starts and ends it reproduces the ratios
   of `docs/research/05` against the frozen IMM. It is a reference, not a strict ceiling: the
-  chord of a long turn misfits the in-turn bearings, and the masked-turn diagnostic (in-turn
-  bearings at zero weight) is better (P0 panel round 1).
+  chord of a long turn misfits the in-turn bearings. On noise-free data the masked-turn
+  diagnostic (in-turn bearings at zero weight) is better; with noise it is not (range ratio
+  0.539 against 0.531, P0 run r4), and at σ = 1° the chord oracle is 1.2–1.3 × the
+  known-manoeuvres Cramér–Rao bound.
 - **Differentiable** in the selected knots' changepoint and speed weights, the bearing
   log-weights and the initial state (central differences agree with autograd). A candidate that
   TopK does not select has zero gradient, as in any sparse selection, and a saturated weight (0 or

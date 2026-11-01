@@ -74,8 +74,8 @@ gradient checks, runtime conformance.
   (when `--oracle-data`), export conformance result file; exit 3 on failure
 - [x] T018 CI: `p0` job on `workflow_dispatch` and PR label `p0`: generate seed 301 (cached by
   digest), run IMM/LS/oracle, `tma2-p0`, upload the experiment folder as an artifact
-- [ ] T019 Run P0, commit `experiments/<date>-p0/`, run the agent panel (5 reviewers, rounds),
-  commit `review.md`, set `decided_by`
+- [x] T019 Run P0, commit `experiments/<date>-p0/`, run the agent panel (5 reviewers, rounds),
+  commit `review.md`, set `decided_by` (P0 passed, panel round 3, `experiments/20261101-p0-r4/`)
 
 ## Phase 7: Site and docs (US6)
 
@@ -85,4 +85,30 @@ gradient checks, runtime conformance.
 
 ## Phase 8: Polish
 
-- [ ] T022 Quickstart run end to end; PR description with decisions and numbers
+- [x] T022 Quickstart run end to end; PR description with decisions and numbers
+
+## Carried to spec 003 (P0 panel rounds 2–3)
+
+Entry conditions, to be met or pre-registered before spec 003's first decision record:
+
+- `cov_ok` also fails when the trajectory passes within 1 m of ownship at any valid sample up to
+  k, or a scaled pivot is within a multiple of the ridge; tested at the production iterations.
+- The backward pass does not unroll 100 iterations (implicit-function or truncated backward,
+  threads pinned); throughput measured against the batch budget (P0: 0.16 s and 72 MB per row
+  unrolled).
+- A deployable export: the iteration as an ONNX `Loop`, conformance 1e-5 in all three runtimes.
+- Training and scoring exclude or down-weight undetermined rows (pre-zig, `cov_ok` false).
+- Gate 2's oracle pre-registered: the chord oracle with the speed prior, reported with its
+  efficiency against the known-manoeuvres bound.
+- SRD Gate 1 efficiency criterion corrected (owner): error/CRB ≤ 1.25 on settled slices.
+
+P0 tooling, before the next P0-style record:
+
+- `check_physics_equals_ls` fails on a non-finite covariance (only range ≤ 1 m counts as
+  degenerate), bounds the states of rows where the layer's cost is lower, and has a negative
+  test with a crippled layer.
+- `--experiment` must sit under `experiments/`; tests for an edit outside the folder and a commit
+  during a run.
+- The at-scale check asserts gitma's IMM header names the frozen IMM and the gitma pack's
+  generator commit.
+- The record carries the commands that made `data/p0` and ran the conformance legs.

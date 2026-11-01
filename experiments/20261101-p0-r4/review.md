@@ -1,8 +1,10 @@
 # P0 agent review panel
 
-Gate P0 (SRD §5, spec 002). Records: round 0 `experiments/20261031-p0/` (commit 5adb8bf, machine
-pass 18/18, superseded), run r2 `experiments/20261101-p0-r2/` (commit 8e5dfe1, after the round-1
-fixes). The panel follows the constitution: ≥ 5 independent read-only reviewers, blockers and
+Gate P0 (SRD §5, spec 002). **Decided: pass, panel round 3, on record r4.** Records: round 0
+`experiments/20261031-p0/` (commit 5adb8bf, machine pass 18/18, superseded), run r2
+`experiments/20261101-p0-r2/` (commit 8e5dfe1, after the round-1 fixes, machine fail 19/20), r3
+`experiments/20261101-p0-r3/` (dd69fc8, pass 20/20, manifest wrongly dirty) and r4
+`experiments/20261101-p0-r4/` (19c40c7, pass 20/20, the record of decision). The panel follows the constitution: ≥ 5 independent read-only reviewers, blockers and
 majors fixed or answered with evidence, re-invited until none rejects.
 
 ## Round 1 (2026-10-31): record `experiments/20261031-p0/` at commit 5adb8bf
@@ -138,7 +140,7 @@ Five read-only reviewers in parallel; the machine verdict was pass on 18 of 18 c
 
 ## Run r2 (2026-11-01): `experiments/20261101-p0-r2/`, commit 8e5dfe1, clean tree and clean data
 
-Machine verdict **fail**, 21 of 22 checks pass:
+Machine verdict **fail**, 19 of 20 checks pass (corrected in round 3; earlier text said 21 of 22):
 
 | Check | Result |
 | --- | --- |
@@ -253,21 +255,94 @@ miss is predictable: relative error ≈ (sd/value)·√Δχ², with √Δχ² �
 
 ### The owner's decision (2026-11-01, after run r2)
 
-Asked in one question, recommended option first, with the alternatives (a polished reference;
+Asked in this session on 2026-11-01, after the r2 record (29f4b01, 01:35) and before the rule
+change (dd69fc8, 10:00), in one question, recommended option first, with the alternatives (a polished reference;
 keep the r2 rule and record P0 as failed; revert to the original wording). **The owner chose the
-recommended option**: the round-1 spec amendment is accepted, and the relative test applies to
+recommended option**, "Per-quantity test": "Accept the round-1 amendment. Apply the 1e-4
+relative test to range and speed separately, each only where that quantity is determined (its sd
+below half its value). Keep the 1e-2 standard-deviation test on every row. Then run r3." the round-1 spec amendment is accepted, and the relative test applies to
 range and speed separately, each only where that quantity is determined (sd below half its
 value), with the standard-deviation test on every row. Run r2's fail stays in its record
 unchanged; run r3 (`experiments/20261101-p0-r3/`) is judged under the amended rule.
 
 ## Runs r3 and r4 (2026-11-01), under the owner's rule
 
-- **r3** (`experiments/20261101-p0-r3/`, commit dd69fc8): machine verdict **pass**, 22 of 22.
+- **r3** (`experiments/20261101-p0-r3/`, commit dd69fc8): machine verdict **pass**, 20 of 20.
   Physics equals least squares: flags differ on 0, cost higher on 0, worst 1.8e-5 relative where
   determined (20,925 range rows, 19,949 speed rows), 4.0e-4 standard deviations on all, 15
   degenerate covariances (on ownship), 0 non-finite. Its manifest says `git_dirty: true`
   wrongly: tma2-p0 had written two files into the experiment folder before recording git
   state. The predictions were cached under the clean commit. Fixed at 758ba06 (git state taken
   at the start; the experiment's own folder ignored).
-- **r4** (`experiments/20261101-p0-r4/`, commit 758ba06): the record of decision; its checks
-  must equal r3's.
+- **r4** (`experiments/20261101-p0-r4/`, commit 19c40c7, `git_dirty: false`): the record of
+  decision. Machine verdict **pass**, 20 of 20; every check value and every artefact digest
+  equals r3's.
+
+## Round 3 (2026-11-01): record r3 at dd69fc8, diff 06733db..19c40c7
+
+| Reviewer | Verdict |
+| --- | --- |
+| TMA geometry | approve-with-findings (minors) |
+| Estimation and numerics | approve-with-findings (1 major, stated not to change the verdict) |
+| Evaluation statistics | approve-with-findings (minors; conditional on r4 clean and equal to r3) |
+| Reproducibility | approve-with-findings (minors; every cheap check bit for bit at dd69fc8, gitma's reference rebuilt byte for byte) |
+| Red team | approve-with-findings (minors) |
+
+No reviewer rejects. The red team confirmed the per-quantity rule matches the owner's choice,
+that no tolerance moved after round 1, and that a layer which stops short cannot pass (the 1e-9
+cost test bounds the displacement to about 1e-3 sd). Numerics found every r2→r3 check value
+bit-identical except physics-vs-least-squares (rule and ridge) and the export legs (graph
+changed, still about 1e-11).
+
+### Major (numerics) and the answer
+
+**`cov_ok` accepts covariances only the ridge determines.** On phase4 train scenario 50 the
+solution passes 6.9e-8 m from ownship at k = 175; at k = 176–177 the range is 60–121 m, so
+`cov_ok` holds, but the scaled information has three eigenvalues at the ridge (1e-12) and the
+covariance is set by the ridge. These two rows give r3's worst 4.0e-4 sd (in r2 they were NaN
+and silently skipped). *Answered, with the reviewer's own option*: it does not change P0 (the
+check passes with or without those rows; dropping them lowers the worst sd), and P0 uses
+`cov_ok` only to skip the sd test. It is recorded as a **spec 003 entry condition**: before any
+training or scoring relies on `cov_ok` (row exclusion, a likelihood loss), it must also fail when
+the trajectory passes within 1 m of ownship at any valid sample up to k, or when a scaled pivot
+is within a multiple of the ridge; with a test at the production iteration count.
+
+### Minors
+
+Done after r4 (tests and documentation only, so the record of decision stays at its commit):
+
+- Check counts corrected: each run has 20 checks (r2 19 of 20, r3 20 of 20), not 22.
+- FR-007 states the speed floor (sd below half of max(speed, 1 m/s)), the ridge (σ²(JᵀJ + ridge)⁻¹),
+  and that flags are compared where the solver converged.
+- The efficiency wording in FR-013 is labelled as amended in round 2, not round 1.
+- "Post hoc" for the 0.1% at-scale limit added to SC-001.
+- Site figures updated to r3/r4 (4.0e-4 sd; the r2 1.3e-4 is labelled r2); the masked-turn
+  claim is limited to noise-free data; "to millimetres" changed to "under 1 cm".
+- The geometry round-2 efficiency figures (1.13–1.16) are labelled as covering σ = 1° and 2°;
+  at σ = 1° the chord oracle is 1.23 / 1.28 / 1.33 × the bound (range, course, speed).
+- The owner's decision: given in this session's question on 2026-11-01, between the r2 record
+  (29f4b01, 01:35) and the rule change (dd69fc8, 10:00); the option text is quoted in the
+  review.
+
+Recorded for spec 003 (code in the gate's path; changing it would leave the record behind the
+merged code):
+
+- Fail the check on a non-finite covariance instead of counting it degenerate; count only range
+  ≤ 1 m as degenerate (red team, numerics).
+- Bound the states of rows where the layer's cost is lower than the solver's (red team).
+- A negative test of `check_physics_equals_ls` with a crippled layer (red team).
+- The gradient test at the production iteration count, asserting some row has `cov_ok` false
+  (numerics; it would catch a ridge of 0).
+- Refuse an `--experiment` folder outside `experiments/`; test the dirty check on an edit
+  outside the folder and on a commit during a run (reproducibility, red team).
+- Assert gitma's IMM header names `imm_name(FROZEN_IMM)` and the gitma pack's generator commit
+  (reproducibility, red team).
+- Record the commands that made `data/p0` and ran the conformance legs (reproducibility).
+- Pre-register the Gate 2 oracle (chord, speed prior) in spec 003's decision record before any
+  Gate 2 result (geometry).
+
+## Decision
+
+No reviewer rejects and no blocker or major is open after round 3 (the one major is answered
+and carried to spec 003 as an entry condition). **P0 passes**, decided by panel round 3 on record
+r4; `verdict.json` names it.
