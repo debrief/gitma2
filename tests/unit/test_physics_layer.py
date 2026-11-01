@@ -331,3 +331,46 @@ def test_cov_ok_rejects_tracks_through_ownship() -> None:
         out = run_layer(PhysicsLayer(), items, R_MAX)
         got = {k: bool(out.cov_ok[j]) for j, k in enumerate(expect)}
         assert got == expect, (n, got)
+
+
+def test_scripted_iteration_equals_eager(phase4_items: Any, monkeypatch: Any) -> None:
+    """The export path (TorchScript ``iterate``, spec 003 R2) is the eager solve bit for bit."""
+    import tma2.physics.layer as layer_mod
+
+    layer = PhysicsLayer(iterations=20, knots=8)
+    x = _inputs([(d, k, i) for d, k, i, _, _, _ in phase4_items])
+    with torch.no_grad():
+        eager = layer(x)
+        monkeypatch.setattr(torch.jit, "is_tracing", lambda: True)
+        scripted = layer(x)
+    assert layer_mod._SCRIPTED, "the scripted path was not taken"
+    assert torch.equal(eager.state, scripted.state)
+    assert torch.equal(eager.cost, scripted.cost)
+
+
+def test_iteration_literals_are_the_damping_limits() -> None:
+    import inspect
+
+    import tma2.physics.layer as layer_mod
+
+    src = inspect.getsource(layer_mod.iterate)
+    assert "clamp_max(1e12)" in src and "clamp_min(1e-12)" in src
+    assert ref.LAMBDA_MAX == 1e12 and ref.LAMBDA_MIN == 1e-12
+
+
+def test_tensor_grid_start_equals_classical() -> None:
+    import json
+
+    from tma2.features.batch import generate_batch
+    from tma2.models.rows import row_batch, scenario_tensors
+    from tma2.physics.segmentation import grid_start_tensor
+
+    ranges = json.loads((fixture_dir("iter4-seed777") / "ranges.json").read_text())
+    b = generate_batch(77, 0, 32, ranges)
+    tens = scenario_tensors(b, 1, 2)
+    rows = row_batch(b, tens, np.random.default_rng(0), 4)
+    src = torch.from_numpy(rows.source)
+    arrs = [torch.from_numpy(a)[src] for a in (tens.t, tens.ox, tens.oy, tens.bearing, tens.valid)]
+    g = grid_start_tensor(*arrs, torch.from_numpy(rows.k)).numpy()
+    rel = np.abs(g - rows.theta_grid) / np.maximum(np.abs(rows.theta_grid), 1.0)
+    assert rel.max() <= 1e-12, rel.max()

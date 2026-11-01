@@ -11,6 +11,7 @@ from __future__ import annotations
 import contextlib
 import math
 from dataclasses import dataclass
+from typing import Any
 
 import torch
 from torch import Tensor
@@ -19,8 +20,6 @@ from .reference import (
     COV_RIDGE,
     ITERATIONS,
     LAMBDA0,
-    LAMBDA_MAX,
-    LAMBDA_MIN,
     MAX_RANGE_M,
     MAX_SPEED_MPS,
     MIN_SIGMA_RAD,
@@ -184,6 +183,183 @@ def spd_solve(a: Tensor, b: Tensor) -> Tensor:
     return y * dinv
 
 
+def residuals(
+    theta: Tensor,
+    t: Tensor,
+    ox: Tensor,
+    oy: Tensor,
+    z: Tensor,
+    sw: Tensor,
+    t_knots: Tensor,
+    c: Tensor,
+    s: Tensor,
+    order: Tensor,
+    ref_order: Tensor,
+    tau_r: float,
+    tau_s: float,
+) -> tuple[Tensor, Tensor]:
+    """Residual vector [B, R+3M] and Jacobian [B, R+3M, P]."""
+    b_ = t.shape[0]
+    m = t_knots.shape[1]
+    dt = theta.dtype
+    p0 = theta[:, 0:2]
+    u0 = theta[:, 2:4]
+    d = theta[:, 4:].reshape(b_, m, 2)
+    a = c.unsqueeze(1) * torch.relu(t.unsqueeze(2) - t_knots.unsqueeze(1))  # [B,R,M]
+    pos = p0.unsqueeze(1) + u0.unsqueeze(1) * t.unsqueeze(2) + a @ d  # [B,R,2]
+    dx = pos[..., 0] - ox
+    dy = pos[..., 1] - oy
+    rho2 = dx * dx + dy * dy
+    rho2 = torch.where(rho2 > 0, rho2, torch.ones_like(rho2))
+    r_b = sw * wrap_pi(z - atan2_export(dx, dy))
+    gx = -sw * dy / rho2
+    gy = sw * dx / rho2
+    # columns for (p0x, p0y, u0x, u0y, d1x, d1y, ...): [B,R,4+2M]
+    j_d = torch.stack([gx.unsqueeze(2) * a, gy.unsqueeze(2) * a], dim=3).reshape(
+        b_, t.shape[1], 2 * m
+    )
+    j_b = torch.cat([torch.stack([gx, gy, gx * t, gy * t], dim=2), j_d], dim=2)
+    # ridge on increments: rows 2M, columns on d only
+    wr = safe_sqrt(c) / tau_r  # [B,M]
+    r_ridge = -(wr.unsqueeze(2) * d).reshape(b_, 2 * m)
+    eye2m = torch.eye(2 * m, dtype=dt, device=theta.device).unsqueeze(0)
+    j_ridge = torch.cat(
+        [
+            torch.zeros(b_, 2 * m, 4, dtype=dt, device=theta.device),
+            -wr.repeat_interleave(2, dim=1).unsqueeze(2) * eye2m,
+        ],
+        dim=2,
+    )
+    # speed continuity across each knot
+    cd = c.unsqueeze(2) * d  # [B,M,2]
+    u_before = u0.unsqueeze(1) + order @ cd  # velocity just before knot m
+    u_ref = (
+        u0.unsqueeze(1) + ref_order @ cd
+    )  # reference velocity (skips the previous knot by speed_skip)
+    u_after = u_before + cd
+    # sqrt(max(x, 1e-24)) = max(sqrt(x), 1e-12), with a finite gradient at a zero velocity
+    nr = torch.sqrt((u_ref * u_ref).sum(dim=2).clamp_min(1e-24))
+    na = torch.sqrt((u_after * u_after).sum(dim=2).clamp_min(1e-24))
+    ws = safe_sqrt(c * s) / tau_s  # [B,M]
+    r_speed = -(ws * (na - nr))
+    gr = u_ref / nr.unsqueeze(2)
+    ga = u_after / na.unsqueeze(2)
+    # ∂r/∂u0 = ws (ga − gr);
+    # ∂r/∂d_j = ws (order_mj c_j ga − ref_order_mj c_j gr) + [j = m] ws c_m ga
+    d_u0 = (ga - gr) * ws.unsqueeze(2)  # [B,M,2]
+    contrib = (
+        (order.unsqueeze(3) * ga.unsqueeze(2) - ref_order.unsqueeze(3) * gr.unsqueeze(2))
+        * c.unsqueeze(1).unsqueeze(3)
+        * ws.unsqueeze(2).unsqueeze(3)
+    )  # [B,M,M,2]
+    eye_m = torch.eye(m, dtype=dt, device=theta.device).unsqueeze(0).unsqueeze(3)
+    own_term = eye_m * (c * ws).unsqueeze(1).unsqueeze(3) * ga.unsqueeze(2)
+    j_speed = torch.cat(
+        [
+            torch.zeros(b_, m, 2, dtype=dt, device=theta.device),
+            -d_u0,
+            -(contrib + own_term).reshape(b_, m, 2 * m),
+        ],
+        dim=2,
+    )
+    r = torch.cat([r_b, r_ridge, r_speed], dim=1)
+    jac = torch.cat([j_b, j_ridge, j_speed], dim=1)
+    return r, jac
+
+
+def iterate(
+    theta: Tensor,
+    cost: Tensor,
+    lam: Tensor,
+    ladder: Tensor,
+    t: Tensor,
+    ox: Tensor,
+    oy: Tensor,
+    z: Tensor,
+    sw: Tensor,
+    t_knots: Tensor,
+    c: Tensor,
+    s: Tensor,
+    order: Tensor,
+    ref_order: Tensor,
+    t_r: Tensor,
+    ox_r: Tensor,
+    oy_r: Tensor,
+    z_r: Tensor,
+    sw_r: Tensor,
+    tk_r: Tensor,
+    c_r: Tensor,
+    s_r: Tensor,
+    order_r: Tensor,
+    ref_order_r: Tensor,
+    iterations: int,
+    nt: int,
+    tau_r: float,
+    tau_s: float,
+) -> tuple[Tensor, Tensor]:
+    """K damped Gauss–Newton iterations (the layer's solve), a function of tensors only so it can
+    be scripted: the export turns this loop into one ONNX ``Loop`` (spec 003 research R2)."""
+    # Literals, not the module constants: TorchScript cannot close over globals. They are
+    # LAMBDA_MAX and LAMBDA_MIN (asserted in tests).
+    b_ = theta.shape[0]
+    n_p = theta.shape[1]
+    dt = theta.dtype
+    for _ in range(iterations):
+        r, jac = residuals(theta, t, ox, oy, z, sw, t_knots, c, s, order, ref_order, tau_r, tau_s)
+        jt = jac.transpose(1, 2)
+        jtj = jt @ jac
+        jtr = -(jt @ r.unsqueeze(2))[..., 0]
+        diag = _diagonal(jtj)
+        inert = (diag == 0).to(dt)
+        # gitma's inner retry, side by side: T damping values λ·10^j, j = 0 … T−1, solved
+        # as one batch of B·T systems; the first trial that does not increase the cost wins.
+        lam_t = (lam.unsqueeze(1) * ladder.unsqueeze(0)).clamp_max(1e12)  # [B,T]
+        dvec = (diag.unsqueeze(1) * lam_t.unsqueeze(2) + inert.unsqueeze(1)).reshape(b_ * nt, n_p)
+        damped = jtj.repeat_interleave(nt, dim=0) + _diag(dvec)  # [B·T,P,P]
+        steps = spd_solve(damped, jtr.repeat_interleave(nt, dim=0)).reshape(b_, nt, n_p)
+        cand_theta = theta.unsqueeze(1) + steps  # [B,T,P]
+        rc, _ = residuals(
+            cand_theta.reshape(b_ * nt, n_p),
+            t_r,
+            ox_r,
+            oy_r,
+            z_r,
+            sw_r,
+            tk_r,
+            c_r,
+            s_r,
+            order_r,
+            ref_order_r,
+            tau_r,
+            tau_s,
+        )
+        cand_cost = (rc * rc).sum(dim=1).reshape(b_, nt)
+        ok = (cand_cost <= cost.unsqueeze(1)) & _finite(cand_cost)  # [B,T]
+        accept = ok.any(dim=1)
+        first = torch.argmax(ok.to(dt), dim=1, keepdim=True)  # first True (ONNX: first max)
+        pick = torch.gather(cand_theta, 1, first.unsqueeze(2).expand(b_, 1, n_p))[:, 0]
+        theta = torch.where(accept.unsqueeze(1), pick, theta)
+        cost = torch.where(accept, torch.gather(cand_cost, 1, first)[:, 0], cost)
+        lam_used = torch.gather(lam_t, 1, first)[:, 0]
+        lam = torch.where(
+            accept,
+            (lam_used / 10.0).clamp_min(1e-12),
+            (lam * 10.0**nt).clamp_max(1e12),
+        )
+    return theta, cost
+
+
+_SCRIPTED: list[Any] = []
+
+
+def scripted_iterate() -> Any:
+    """``iterate`` compiled by TorchScript once (for export only; eager training calls the
+    Python function, which is the same code)."""
+    if not _SCRIPTED:
+        _SCRIPTED.append(torch.jit.script(iterate))
+    return _SCRIPTED[0]
+
+
 class PhysicsLayer(torch.nn.Module):
     def __init__(
         self,
@@ -222,73 +398,9 @@ class PhysicsLayer(torch.nn.Module):
         order: Tensor,
         ref_order: Tensor,
     ) -> tuple[Tensor, Tensor]:
-        """Residual vector [B, R+3M] and Jacobian [B, R+3M, P]."""
-        b_ = t.shape[0]
-        m = t_knots.shape[1]
-        dt = theta.dtype
-        p0 = theta[:, 0:2]
-        u0 = theta[:, 2:4]
-        d = theta[:, 4:].reshape(b_, m, 2)
-        a = c.unsqueeze(1) * torch.relu(t.unsqueeze(2) - t_knots.unsqueeze(1))  # [B,R,M]
-        pos = p0.unsqueeze(1) + u0.unsqueeze(1) * t.unsqueeze(2) + a @ d  # [B,R,2]
-        dx = pos[..., 0] - ox
-        dy = pos[..., 1] - oy
-        rho2 = dx * dx + dy * dy
-        rho2 = torch.where(rho2 > 0, rho2, torch.ones_like(rho2))
-        r_b = sw * wrap_pi(z - atan2_export(dx, dy))
-        gx = -sw * dy / rho2
-        gy = sw * dx / rho2
-        # columns for (p0x, p0y, u0x, u0y, d1x, d1y, ...): [B,R,4+2M]
-        j_d = torch.stack([gx.unsqueeze(2) * a, gy.unsqueeze(2) * a], dim=3).reshape(
-            b_, t.shape[1], 2 * m
+        return residuals(
+            theta, t, ox, oy, z, sw, t_knots, c, s, order, ref_order, self.tau_r, self.tau_s
         )
-        j_b = torch.cat([torch.stack([gx, gy, gx * t, gy * t], dim=2), j_d], dim=2)
-        # ridge on increments: rows 2M, columns on d only
-        wr = safe_sqrt(c) / self.tau_r  # [B,M]
-        r_ridge = -(wr.unsqueeze(2) * d).reshape(b_, 2 * m)
-        eye2m = torch.eye(2 * m, dtype=dt, device=theta.device).unsqueeze(0)
-        j_ridge = torch.cat(
-            [
-                torch.zeros(b_, 2 * m, 4, dtype=dt, device=theta.device),
-                -wr.repeat_interleave(2, dim=1).unsqueeze(2) * eye2m,
-            ],
-            dim=2,
-        )
-        # speed continuity across each knot
-        cd = c.unsqueeze(2) * d  # [B,M,2]
-        u_before = u0.unsqueeze(1) + order @ cd  # velocity just before knot m
-        u_ref = (
-            u0.unsqueeze(1) + ref_order @ cd
-        )  # reference velocity (skips the previous knot by speed_skip)
-        u_after = u_before + cd
-        # sqrt(max(x, 1e-24)) = max(sqrt(x), 1e-12), with a finite gradient at a zero velocity
-        nr = torch.sqrt((u_ref * u_ref).sum(dim=2).clamp_min(1e-24))
-        na = torch.sqrt((u_after * u_after).sum(dim=2).clamp_min(1e-24))
-        ws = safe_sqrt(c * s) / self.tau_s  # [B,M]
-        r_speed = -(ws * (na - nr))
-        gr = u_ref / nr.unsqueeze(2)
-        ga = u_after / na.unsqueeze(2)
-        # ∂r/∂u0 = ws (ga − gr);
-        # ∂r/∂d_j = ws (order_mj c_j ga − ref_order_mj c_j gr) + [j = m] ws c_m ga
-        d_u0 = (ga - gr) * ws.unsqueeze(2)  # [B,M,2]
-        contrib = (
-            (order.unsqueeze(3) * ga.unsqueeze(2) - ref_order.unsqueeze(3) * gr.unsqueeze(2))
-            * c.unsqueeze(1).unsqueeze(3)
-            * ws.unsqueeze(2).unsqueeze(3)
-        )  # [B,M,M,2]
-        eye_m = torch.eye(m, dtype=dt, device=theta.device).unsqueeze(0).unsqueeze(3)
-        own_term = eye_m * (c * ws).unsqueeze(1).unsqueeze(3) * ga.unsqueeze(2)
-        j_speed = torch.cat(
-            [
-                torch.zeros(b_, m, 2, dtype=dt, device=theta.device),
-                -d_u0,
-                -(contrib + own_term).reshape(b_, m, 2 * m),
-            ],
-            dim=2,
-        )
-        r = torch.cat([r_b, r_ridge, r_speed], dim=1)
-        jac = torch.cat([j_b, j_ridge, j_speed], dim=1)
-        return r, jac
 
     def forward(self, x: PhysicsInputs) -> PhysicsOutputs:
         b_, r_ = x.bearing.shape
@@ -452,56 +564,40 @@ class PhysicsLayer(torch.nn.Module):
         ref_order: Tensor,
         reps: tuple[Tensor, ...],
     ) -> tuple[Tensor, Tensor]:
-        b_ = theta.shape[0]
-        n_p = theta.shape[1]
-        nt = self.trials
-        dt = theta.dtype
         t_r, ox_r, oy_r, z_r, sw_r, tk_r, c_r, s_r, order_r, ref_order_r = reps
-        for _ in range(self.iterations):
-            r, jac = self._residuals(
-                theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order
-            )
-            jt = jac.transpose(1, 2)
-            jtj = jt @ jac
-            jtr = -(jt @ r.unsqueeze(2))[..., 0]
-            diag = _diagonal(jtj)
-            inert = (diag == 0).to(dt)
-            # gitma's inner retry, side by side: T damping values λ·10^j, j = 0 … T−1, solved
-            # as one batch of B·T systems; the first trial that does not increase the cost wins.
-            lam_t = (lam.unsqueeze(1) * ladder.unsqueeze(0)).clamp_max(LAMBDA_MAX)  # [B,T]
-            dvec = (diag.unsqueeze(1) * lam_t.unsqueeze(2) + inert.unsqueeze(1)).reshape(
-                b_ * nt, n_p
-            )
-            damped = jtj.repeat_interleave(nt, dim=0) + _diag(dvec)  # [B·T,P,P]
-            steps = spd_solve(damped, jtr.repeat_interleave(nt, dim=0)).reshape(b_, nt, n_p)
-            cand_theta = theta.unsqueeze(1) + steps  # [B,T,P]
-            rc, _ = self._residuals(
-                cand_theta.reshape(b_ * nt, n_p),
-                t_r,
-                ox_r,
-                oy_r,
-                z_r,
-                sw_r,
-                tk_r,
-                c_r,
-                s_r,
-                order_r,
-                ref_order_r,
-            )
-            cand_cost = (rc * rc).sum(dim=1).reshape(b_, nt)
-            ok = (cand_cost <= cost.unsqueeze(1)) & _finite(cand_cost)  # [B,T]
-            accept = ok.any(dim=1)
-            first = torch.argmax(ok.to(dt), dim=1, keepdim=True)  # first True (ONNX: first max)
-            pick = torch.gather(cand_theta, 1, first.unsqueeze(2).expand(b_, 1, n_p))[:, 0]
-            theta = torch.where(accept.unsqueeze(1), pick, theta)
-            cost = torch.where(accept, torch.gather(cand_cost, 1, first)[:, 0], cost)
-            lam_used = torch.gather(lam_t, 1, first)[:, 0]
-            lam = torch.where(
-                accept,
-                (lam_used / 10.0).clamp_min(LAMBDA_MIN),
-                (lam * 10.0**nt).clamp_max(LAMBDA_MAX),
-            )
-        return theta, cost
+        # Traced for export: the scripted function, so the iterations become an ONNX Loop.
+        fn = scripted_iterate() if torch.jit.is_tracing() else iterate  # type: ignore[attr-defined,no-untyped-call]
+        out: tuple[Tensor, Tensor] = fn(
+            theta,
+            cost,
+            lam,
+            ladder,
+            x.t,
+            ox,
+            oy,
+            x.bearing,
+            sw,
+            t_knots,
+            c,
+            s,
+            order,
+            ref_order,
+            t_r,
+            ox_r,
+            oy_r,
+            z_r,
+            sw_r,
+            tk_r,
+            c_r,
+            s_r,
+            order_r,
+            ref_order_r,
+            self.iterations,
+            self.trials,
+            self.tau_r,
+            self.tau_s,
+        )
+        return out
 
     def _outputs(
         self,

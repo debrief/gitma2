@@ -25,14 +25,18 @@ from tma2.types import dump_record
 
 GATE_S = 300.0
 SIGMA_1 = math.radians(1.0)
-# Research R6, reduced: on constant-velocity data the coordinated-turn branch rarely carries
-# weight, so its rate parameters are fixed at the phase-4 values (gitma decision 29).
+# Research R6: on constant-velocity data the coordinated-turn branch rarely carries weight, so
+# its rate parameters are fixed at the phase-4 values (gitma decision 29). The first grid put
+# every choice on an edge (lowest process noise, largest R scale), so both axes reach one step
+# past it: no frozen setting may sit on a grid edge.
+R_SCALES = (1.0, 2.0, 8.0, 16.0, 32.0)
 IMM_GRID = [
     ImmParams(cv, 0.03, 0.01, sw, 4.0, r)
-    for cv, sw, r in itertools.product((0.003, 0.01, 0.03), (0.001, 0.01), (1.0, 2.0, 8.0))
+    for cv, sw, r in itertools.product((0.0003, 0.001, 0.003, 0.01, 0.03), (0.001, 0.01), R_SCALES)
 ]
 EKF_GRID = [
-    (sa, 4.0, r) for sa, r in itertools.product((0.001, 0.003, 0.01, 0.03, 0.1), (1.0, 2.0, 8.0))
+    (sa, 4.0, r)
+    for sa, r in itertools.product((0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1), R_SCALES)
 ]
 
 
