@@ -370,7 +370,9 @@ def test_tensor_grid_start_equals_classical() -> None:
     tens = scenario_tensors(b, 1, 2)
     rows = row_batch(b, tens, np.random.default_rng(0), 4)
     src = torch.from_numpy(rows.source)
-    arrs = [torch.from_numpy(a)[src] for a in (tens.t, tens.ox, tens.oy, tens.bearing, tens.valid)]
-    g = grid_start_tensor(*arrs, torch.from_numpy(rows.k)).numpy()
+    t, ox, oy, z, v = (
+        torch.from_numpy(a)[src] for a in (tens.t, tens.ox, tens.oy, tens.bearing, tens.valid)
+    )
+    g = grid_start_tensor(t, ox, oy, z, v, torch.from_numpy(rows.k)).numpy()
     rel = np.abs(g - rows.theta_grid) / np.maximum(np.abs(rows.theta_grid), 1.0)
     assert rel.max() <= 1e-12, rel.max()
