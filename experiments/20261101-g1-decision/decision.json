@@ -1,0 +1,26 @@
+{
+  "bootstrap_level": 0.95,
+  "bootstrap_resamples": 2000,
+  "carried_models": [
+    "g1-physics-s1",
+    "g1-physics-s2",
+    "g1-physics-s3"
+  ],
+  "carried_rule": "Of the three seeds of the carried configuration, the one whose validation median relative range error at zig + 5 min on sigma = 1 deg rows is the median of the three (not the best, so the choice is not a selection on noise); ties to the lower seed.",
+  "control_models": [
+    "g1-direct",
+    "g1-shuffled",
+    "g1-timelate"
+  ],
+  "criterion": "SRD section 5, Gate 1, as amended 2026-11-01: on every metric (median relative range error, median absolute course error, median absolute speed error) the ratio model / batch least squares has its point and its whole 95% scenario-clustered paired bootstrap interval below 1.1; the model's gross-error rate (relative range error > 50% or not converged) is at or below batch least squares' (clustered difference interval upper bound <= 0); and efficiency (median |error| / bound sd / 0.6745, full-window Cramer-Rao bound) is <= 1.25 on range, course and speed on the settled slices. Pass needs every check to pass; fail if any check's interval lies wholly beyond its limit; otherwise inconclusive (one re-score on a larger fresh seed, then final).",
+  "ekf": "{\"median_range_rel_zig300\": 0.039230212266827616, \"name\": \"ekf-sa0.001-p4-r8\", \"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_a\": 0.001}",
+  "forecast": "Pass, narrowly, with the gross-error check the most likely to be inconclusive. On constant-velocity data with Gaussian noise, uniform weights are optimal and batch least squares is at the bound (validation, seed 302, sigma = 1 deg gate rows: efficiency 1.03 range, 0.99 course, 0.96 speed; median 3.66% range, 1.40 deg course, 0.31 m/s speed; gross 1.11%), so the model can at best equal it: forecast ratios 0.97-1.02 on every metric with intervals wholly below 1.1, efficiencies within 0.03 of least squares', and a gross rate of 0.6-1.0% (the learned start avoids some of the grid start's wrong minima). The validation loss of the untrained model is 3.26 per row (3.0 is at the bound), so little is left to learn and the three seeds should agree within 1%. Shuffled labels: at naive level on range. Time-late: better than causal at zig + 5 min, since it sees the rest of the window. The direct-head control: worse than least squares (about 1.5-3x on speed, as gitma's regressors).",
+  "gate_rows": "Test split of seed 303 (10% of 100,000 scenarios generated), sigma = 1 deg scenarios: the row at zig + 5 min for range and course, the row at zig + 10 min for speed; a scenario whose window ends before a row contributes no row for that metric. Settled slices for efficiency are the same rows (constant-velocity data: every post-zig row is on a held leg).",
+  "if_failed": "SRD section 5: one further pre-registered iteration (a new decision record, a fresh test seed), then stop and publish: the physics layer is not learnable end to end as built.",
+  "imm": "{\"median_range_rel_zig300\": 0.03940499609237833, \"name\": \"imm-cv0.001-ct0.03-w0.01-s0.00001-p4-r8\", \"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_ct\": 0.03, \"sigma_cv\": 0.001, \"sigma_omega\": 0.01, \"switch_per_s\": 1e-05}",
+  "plan_digest": "1d993dccb5f63ee080022ed15c578392f8acccc1542d16a12b569bc7451c583b",
+  "plan_id": "g1-a",
+  "test_count": 100000,
+  "test_seed": 303,
+  "validation_rule": "Before the test split is generated: the carried model's validation median range, course and speed errors at the gate rows must each be below 1.1 x batch least squares on the same validation rows (point estimates); the shuffled-label control's median range error must be at least 0.8 x naive's (at naive level: a leakage check); the time-late control's median range error must be at or below the causal seed-1 model's (constitution IV: it sees the whole window, so it must score at least as well). If any of these fails, the phase stops at validation, the test split stays unscored and reserved, and the result is published as a validation stop."
+}

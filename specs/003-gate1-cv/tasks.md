@@ -44,7 +44,7 @@ equality, export conformance.
 - [x] T011 `models/train.py` + `tma2-train`: epochs over on-the-fly data, validation loss, stop
   rule, checkpoints with optimiser and RNG state, resume, wall-clock cap; resume test (two runs of
   one epoch each equal one run of two)
-- [ ] T012 Throughput: one epoch on 10⁴ scenarios locally at 4 threads, extrapolated to 10⁵ and
+- [x] T012 Throughput: one epoch on 10⁴ scenarios locally at 4 threads, extrapolated to 10⁵ and
   recorded (FR-014); adjust rows per scenario only before the decision record
 - [x] T013 `models/predict.py` + `tma2-predict`: per-timestep predictions at every post-zig row in
   gitma's prediction format
@@ -63,12 +63,12 @@ equality, export conformance.
 
 ## Phase 7: Runs (US2)
 
-- [ ] T017 `.github/workflows/train.yml`: plan branches, matrix over models, chained ≤ 345-min jobs (four),
+- [x] T017 `.github/workflows/train.yml`: plan branches, matrix over models, chained ≤ 345-min jobs (four),
   checkpoint branches, results branches, job records; a short plan exercised end to end
 
 ## Phase 8: Pre-registration and training (US4)
 
-- [ ] T018 `configs/gate1/plan.json` (three seeds of the carried configuration; controls a, c, d)
+- [x] T018 `configs/gate1/plan.json` (three seeds of the carried configuration; controls a, c, d)
   and `experiments/<date>-g1-decision/decision.json` with forecast; commit before training
 - [ ] T019 Push `train/g1-a`; monitor; collect results; validation report with the carried rule
   applied, controls checked (shuffled at naive level, time-late ≥ causal)

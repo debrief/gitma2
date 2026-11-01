@@ -112,6 +112,37 @@ and the implicit step, four rows per scenario cost about 16 ms, so 10⁵ scenari
 1,600 s of solving. The encoder and the data pipeline are measured in the first task and the
 budget re-checked before the decision record.
 
+**Whole training step, measured** (T012; 64 scenarios × 2 noise draws × 3 rows = 384 rows per
+batch, 4 threads, per scenario):
+
+| Step | Local (Xeon 2.1 GHz) | Runner (AMD EPYC 7763) |
+| --- | --- | --- |
+| As first built (explicit attention, K = 100 in training) | 38.8 ms | 55 ms (92 min per 10⁵) |
+| Fused attention in eager mode | 23.0 ms | – |
+| … and a 50-iteration training solve | 16.9 ms | 30.7 ms (51 min per 10⁵) |
+
+The first build missed the hour. Two changes fixed that:
+
+- **Attention.** The written-out attention was 7× slower than PyTorch's fused kernel in double,
+  because it built a −∞ tensor the size of the scores and passed it through `where` each layer.
+  Training and prediction now use the fused kernel, which agrees to 1.4e-15. The export keeps
+  the equations as written.
+- **Iterations.** The solve converges well before 100 iterations, measured from the grid start
+  (the worst start the model can have) on 1,800 validation rows (1,708 determined) against
+  K = 200:
+  - K = 100 is identical on every row;
+  - K = 50 differs by more than 1e-6 on 5 rows, at most 3.7e-6 in range;
+  - K = 30 has 4 rows off by more than 1e-3.
+
+  Training therefore solves with 50 iterations (`train_iterations`) before the implicit Newton
+  step, which corrects the remaining error to second order. Prediction, validation and the
+  export keep K = 100, the configuration P0 validated.
+
+On the runner (bench run 41318644543), a validation pass over 1,000 scenarios costs 15.5 s, and
+the losses equal the K = 100 run's to four digits. Batch size does not help: 128 scenarios per batch cost 20.7 ms per scenario and 256 cost
+23.8 ms. In the step that remains, the 50 iterations take about 0.4 s of the 1.1 s per batch,
+row building (numba) 0.3 s, the encoder 0.1 s and the backward pass 0.2 s.
+
 ## R5. Data on the fly and re-noising
 
 **Decision**: training scenarios come from `generate_batch` (≈ 20k scenarios/s) on the training
