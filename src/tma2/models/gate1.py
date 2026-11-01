@@ -18,6 +18,7 @@ from dataclasses import dataclass
 
 import torch
 from torch import Tensor, nn
+from torch.nn import functional as F  # noqa: N812
 
 from tma2.physics.layer import PhysicsInputs, PhysicsLayer, cos_export
 from tma2.types.generated.tma import PhysicsHead, PhysicsModelConfig
@@ -73,9 +74,17 @@ class Block(nn.Module):
         def split(x: Tensor) -> Tensor:
             return x.reshape(s_, r, self.heads, d).transpose(1, 2)  # [S, H, R, d]
 
-        scores = split(q) @ split(k).transpose(2, 3) / math.sqrt(d)
-        scores = torch.where(masked.unsqueeze(1), torch.full_like(scores, -math.inf), scores)
-        att = torch.softmax(scores, dim=3) @ split(v)  # [S, H, R, d]
+        if torch.jit.is_tracing():  # type: ignore[attr-defined,no-untyped-call]
+            # The export: the equations as written (standard operators only).
+            scores = split(q) @ split(k).transpose(2, 3) / math.sqrt(d)
+            scores = torch.where(masked.unsqueeze(1), torch.full_like(scores, -math.inf), scores)
+            att = torch.softmax(scores, dim=3) @ split(v)  # [S, H, R, d]
+        else:
+            # Training and prediction: PyTorch's fused kernel, the same function to ~1e-15 in
+            # double and 7x faster (spec 003 research R4; True in its mask = may attend).
+            att = F.scaled_dot_product_attention(
+                split(q), split(k), split(v), attn_mask=~masked.unsqueeze(1)
+            )
         h = h + self.out(att.transpose(1, 2).reshape(s_, r, w))
         out: Tensor = h + self.ff2(torch.relu(self.ff1(self.norm2(h))))
         return out

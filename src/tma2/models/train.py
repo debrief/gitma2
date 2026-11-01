@@ -292,7 +292,11 @@ def train(
                 perm = torch.from_numpy(rng.permutation(x.truth.shape[0]))
                 x.truth, x.bound_cov = x.truth[perm], x.bound_cov[perm]
             model.set_implicit(True)
+            # The training solve may stop short of K (research R4): the implicit Newton step
+            # starts from it; validation and prediction use the full K.
+            model.physics.iterations = cfg.train_iterations or cfg.iterations
             out = run(model, x)
+            model.physics.iterations = cfg.iterations
             lp = gate1_loss(out, x.truth, x.bound_cov, x.okx(), x.oky(), cfg)
             opt.zero_grad()
             if lp.rows:

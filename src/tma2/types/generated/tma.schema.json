@@ -1891,6 +1891,13 @@
                 "threads": {
                     "type": "integer"
                 },
+                "train_iterations": {
+                    "description": "Iterations of the tape-free solve during training, before the implicit Newton step (schema 0.19.0; absent = iterations). Prediction, validation and the export use iterations.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
                 "weight_bound": {
                     "description": "Bound on per-bearing log-weights.",
                     "type": "number"
@@ -2786,6 +2793,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.18.0"
+    "version": "0.19.0"
 }
 

@@ -13,7 +13,7 @@ from tma2.types import SCHEMA_VERSION, Scenario, dump_record
 def test_schema_version_reads_gitma_files() -> None:
     from tma2.data.versions import compatible
 
-    assert SCHEMA_VERSION == "0.18.0"
+    assert SCHEMA_VERSION == "0.19.0"
     assert compatible("0.16.0", SCHEMA_VERSION)
 
 

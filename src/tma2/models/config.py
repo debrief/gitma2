@@ -17,6 +17,9 @@ DEFAULTS: dict[str, Any] = {
     "weight_bound": 2.0,
     "scale_bound": 2.0,
     "iterations": ITERATIONS,
+    # Research R4: from the grid start, K = 50 equals K = 200 to 4e-6 on every determined
+    # validation row (5 of 1,708 differ by more than 1e-6), and the Newton step follows.
+    "train_iterations": 50,
     "loss_init_weight": 0.1,
     "loss_nll_weight": 1.0,
     "nll_beta": 0.5,

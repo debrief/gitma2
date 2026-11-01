@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.18.0"
+version = "0.19.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -1043,6 +1043,7 @@ class PhysicsModelConfig(ConfiguredBaseModel):
     weight_bound: float = Field(default=..., description="""Bound on per-bearing log-weights.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     scale_bound: float = Field(default=..., description="""Bound on the covariance log-scale.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     iterations: int = Field(default=..., description="""Physics-layer iterations K.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow', 'PhysicsModelConfig']} })
+    train_iterations: Optional[int] = Field(default=None, description="""Iterations of the tape-free solve during training, before the implicit Newton step (schema 0.19.0; absent = iterations). Prediction, validation and the export use iterations.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     loss_init_weight: float = Field(default=..., description="""Weight of the auxiliary initial-state loss.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     loss_nll_weight: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     nll_beta: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
