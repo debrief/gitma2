@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -25,8 +26,7 @@ from typing import Any
 from tma2.data.f32pack import iter_pack_raw, read_pack_header
 from tma2.eval.errors import Truth
 from tma2.eval.experiment import Check, Experiment
-from tma2.eval.g1 import Gate1Result, gate_rows, score
-from tma2.eval.oracle_check import load_rows
+from tma2.eval.g1 import Gate1Result, gate_rows, gate_timestamps, load_gate_rows, score
 from tma2.eval.predictions import check_bound
 from tma2.models.train import load_plan
 from tma2.references.crb import crb_rows
@@ -66,7 +66,11 @@ def check_inputs(a: argparse.Namespace) -> tuple[Gate1Decision, CheckpointMeta]:
     if meta.model_id != a.carried or meta.plan_digest != plan_digest or not meta.complete:
         raise RefusedError(f"{a.model_meta}: not the complete {a.carried} of this plan")
     first = decision_commit(dec_path)
-    for job in meta.jobs or []:
+    if not meta.jobs:
+        raise RefusedError(
+            f"{a.model_meta}: no job records, so training ancestry cannot be checked"
+        )
+    for job in meta.jobs:
         try:
             _git("merge-base", "--is-ancestor", first, job.git_commit)
         except subprocess.CalledProcessError as e:
@@ -80,7 +84,9 @@ def check_inputs(a: argparse.Namespace) -> tuple[Gate1Decision, CheckpointMeta]:
             f"{a.test}: split {header.split} seed {header.dataset_seed}, not test seed "
             f"{decision.test_seed}"
         )
-    if f"--count {decision.test_count}" not in (header.created_by or ""):
+    created = shlex.split(header.created_by or "")
+    count = created[created.index("--count") + 1] if "--count" in created[:-1] else None
+    if count != str(decision.test_count):
         raise RefusedError(f"{a.test}: not generated with --count {decision.test_count}")
     for name in ("model", "least_squares", "naive", "ekf", "imm", "oracle"):
         p = getattr(a, name)
@@ -145,6 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     exp = Experiment(id=folder.name, folder=folder)
     exp.command_lines.append("tma2-g1 " + " ".join(sys.argv[1:] if argv is None else argv))
     truths, bounds, header = load_truths(a.test)
+    wanted = gate_timestamps(truths)
     exp.add_dataset(a.test, dump_record(header))
     exp.add_artefact(a.decision, "decision")
     exp.add_artefact(a.plan, "plan")
@@ -154,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
         p = getattr(a, name)
         if p:
             exp.add_artefact(p, f"predictions: {name}")
-            preds[name] = load_rows(p)
+            preds[name] = load_gate_rows(p, wanted)
     exp.add_estimator(a.carried, {"plan_digest": decision.plan_digest, "role": "carried"})
     exp.add_estimator("imm", json.loads(decision.imm))
     exp.add_estimator("ekf", json.loads(decision.ekf))

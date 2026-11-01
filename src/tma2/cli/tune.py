@@ -18,13 +18,14 @@ import numpy as np
 
 from tma2.data.f32pack import iter_pack_raw, read_pack_header
 from tma2.eval.experiment import Check, Experiment
+from tma2.eval.g1 import GATE_S as _GATE_S  # the gate's rows (one definition)
+from tma2.eval.g1 import SIGMA_1
 from tma2.references.classical import bearing_data_from_arrays
 from tma2.references.ekf import ekf_name, ekf_predict
 from tma2.references.imm import ImmParams, imm_name, imm_predict
 from tma2.types import dump_record
 
-GATE_S = 300.0
-SIGMA_1 = math.radians(1.0)
+GATE_S = _GATE_S["range_rel"]
 # Research R6: on constant-velocity data the coordinated-turn branch rarely carries weight, so
 # its rate parameters are fixed at the phase-4 values (gitma decision 29). The first grid put
 # every choice on an edge (lowest process noise, largest R scale, lowest switch rate), so every

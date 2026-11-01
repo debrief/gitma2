@@ -95,6 +95,31 @@ def gate_rows(truths: list[Truth], metric: str) -> list[GateRow]:
     return out
 
 
+def gate_timestamps(truths: list[Truth]) -> dict[int, set[float]]:
+    """Per scenario, the timestamps of its gate rows (every metric)."""
+    out: dict[int, set[float]] = {}
+    for metric in GATE_S:
+        for g in gate_rows(truths, metric):
+            out.setdefault(g.index, set()).add(g.timestamp_s)
+    return out
+
+
+def load_gate_rows(path: str, wanted: dict[int, set[float]]) -> Preds:
+    """Only the gate rows of a per-timestep prediction file (a whole test file held as dicts
+    takes about 1 GB, and the gate holds six)."""
+    from .predictions import iter_predictions_raw
+
+    out: Preds = {}
+    for _, p in iter_predictions_raw(path):
+        idx = int(p["scenario_index"])
+        keep = wanted.get(idx)
+        if keep:
+            out[idx] = {
+                float(r["timestamp_s"]): r for r in p["rows"] if float(r["timestamp_s"]) in keep
+            }
+    return out
+
+
 def errors_at(
     truths: dict[int, Truth], rows: list[GateRow], preds: Preds, metric: str
 ) -> tuple[np.ndarray, np.ndarray]:

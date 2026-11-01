@@ -24,7 +24,8 @@ from pathlib import Path
 
 from tma2.data.io import file_digest
 from tma2.models.train import load_plan
-from tma2.types import RecordError
+from tma2.types import RecordError, parse_record
+from tma2.types.generated.tma import CheckpointMeta
 
 SEARCH = ("configs", "tests/fixtures")
 
@@ -119,7 +120,9 @@ def main(argv: list[str] | None = None) -> int:
             print(regenerate(Path(a.plan), Path(a.out), root, tuple(a.keep)))
         else:
             meta = Path(a.checkpoint) / "meta.json"
-            done = meta.exists() and bool(json.loads(meta.read_text()).get("complete"))
+            done = meta.exists() and bool(
+                parse_record(CheckpointMeta, json.loads(meta.read_text()), str(meta), 1).complete
+            )
             print("complete" if done else "incomplete")
             return 0 if done else 1
     except (OSError, ValueError, RecordError, subprocess.CalledProcessError) as e:

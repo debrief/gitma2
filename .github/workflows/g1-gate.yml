@@ -45,6 +45,13 @@ jobs:
           if not r["proceed_to_test"]:
               sys.exit("the validation rule is not met: the test split stays unscored")
           EOF
+          # The report must be of these models: its train run is the models folder's run.
+          python3 - "$VAL/run.json" "$MODELS/run.json" <<'EOF'
+          import json, sys
+          rep, mod = (json.load(open(p)) for p in sys.argv[1:3])
+          if str(rep["train_run_id"]) != str(mod["run_id"]):
+              sys.exit(f"validation report of train run {rep['train_run_id']}, models of run {mod['run_id']}")
+          EOF
           CARRIED=$(python3 -c "import json; print(json.load(open('$VAL/validation.json'))['carried'])")
           test -f "$MODELS/models/$CARRIED/best.safetensors"
           echo "carried=$CARRIED" >> "$GITHUB_OUTPUT"

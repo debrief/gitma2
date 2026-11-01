@@ -25,7 +25,18 @@ def test_committed_smoke_plan_resolves() -> None:
 
 def test_complete_reads_the_checkpoint_meta(tmp_path: Path) -> None:
     assert main(["complete", "--checkpoint", str(tmp_path)]) == 1
-    (tmp_path / "meta.json").write_text(json.dumps({"complete": False}))
+    meta = {
+        "model_id": "m",
+        "plan_id": "p",
+        "plan_digest": "d",
+        "epoch": 1,
+        "best_epoch": 1,
+        "best_val_loss": 1.0,
+        "complete": False,
+    }
+    (tmp_path / "meta.json").write_text(json.dumps(meta))
     assert main(["complete", "--checkpoint", str(tmp_path)]) == 1
-    (tmp_path / "meta.json").write_text(json.dumps({"complete": True}))
+    (tmp_path / "meta.json").write_text(json.dumps({**meta, "complete": True}))
     assert main(["complete", "--checkpoint", str(tmp_path)]) == 0
+    (tmp_path / "meta.json").write_text(json.dumps({"complete": True}))  # not a CheckpointMeta
+    assert main(["complete", "--checkpoint", str(tmp_path)]) == 2

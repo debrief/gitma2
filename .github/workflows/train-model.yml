@@ -55,7 +55,7 @@ jobs:
         run: uv run tma2-plan data --plan "${{ inputs.plan }}" --out "$DATA"
       - name: Numba warm-up
         if: steps.restore.outputs.done != 'true'
-        run: uv run python -c "import tma2.models.rows, tma2.features.batch"
+        run: uv run python scripts/numba_warmup.py
       - name: Train ${{ inputs.model }} (job ${{ inputs.attempt }} of up to 4)
         if: steps.restore.outputs.done != 'true'
         timeout-minutes: 345

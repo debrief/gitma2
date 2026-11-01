@@ -63,13 +63,14 @@ def main() -> int:
     lsq = load_rows(a.lsq)
     base = {"naive": load_rows(a.naive), "ekf": load_rows(a.ekf), "imm": load_rows(a.imm)}
     per: dict[str, Any] = {}
-    for mid in [*dec.carried_models, *dec.control_models]:
+    reported: dict[str, Any] = {}
+    for n, mid in enumerate([*dec.carried_models, *dec.control_models]):
         res = score(
             truths,
             _rows(_find(Path(a.models), mid)),
             lsq,
             bounds,
-            base,
+            base if n == 0 else {},  # the baselines are the same rows for every model
             dec.bootstrap_level,
             dec.bootstrap_resamples,
         )
@@ -80,7 +81,8 @@ def main() -> int:
             },
             "median": res.reported["model"],
         }
-        reported = res.reported  # baselines are the same for every model
+        if n == 0:
+            reported = res.reported
     baselines = {k: v for k, v in reported.items() if k != "model"}
     # Carried rule: the seed whose validation median range error at zig + 5 min is the median.
     seeds = sorted(dec.carried_models, key=lambda m: (per[m]["median"]["median-range"], m))
