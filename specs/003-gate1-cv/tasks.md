@@ -71,7 +71,7 @@ equality, export conformance.
 - [x] T018 `configs/gate1/plan.json` (three seeds of the carried configuration; controls a, c, d)
   and `experiments/<date>-g1-decision/decision.json` with forecast; commit before training
 - [ ] T019 Push `train/g1-a`; monitor; collect results; validation report with the carried rule
-  applied, controls checked (shuffled at naive level, time-late ≥ causal)
+  applied, controls checked (shuffled no better than batch LS, amendment 1; time-late ≥ causal)
 
 ## Phase 9: Gate (US3)
 

@@ -80,7 +80,10 @@ can reinvent least squares.
 - Every carried configuration is trained with at least three seeds; the spread is reported and
   the carried weights are named in advance by rule (for example the median seed on validation).
 - Normalisation statistics MUST be computed from inputs only; a shuffled-label control MUST score
-  at naive level; a time-late variant MUST score at least as well as its causal counterpart.
+  no better than the design's estimate without learning (naive level for a direct regressor;
+  batch least squares, the physics layer with trivial inputs, for a physics-layer model, judged
+  by a clustered interval); a time-late variant MUST score at least as well as its causal
+  counterpart.
 - What is scored on a test split is declared, with a forecast, in a decision record committed
   before training; test seeds are fresh for every look; a validation rule stops a phase before
   the test split is touched. Exploration on validation is otherwise unrestricted and recorded.
@@ -184,4 +187,4 @@ and tied the model family to tfjs's operator support.
   working days without objection.
 - Runtime guidance for agents lives in `AGENTS.md`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-31 | **Last Amended**: 2026-10-31
+**Version**: 1.2.0 | **Ratified**: 2026-10-31 | **Last Amended**: 2026-11-01
