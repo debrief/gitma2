@@ -129,23 +129,24 @@ def safe_sqrt(x: Tensor) -> Tensor:
 def spd_solve(a: Tensor, b: Tensor) -> Tensor:
     """Solve A x = b for batched SPD A [B,P,P], b [B,P]: Jacobi scaling (columns of very different
     units: metres, metres per second) then Gauss–Jordan elimination without pivoting, written as
-    scalar row operations (static loops; the graph holds only Mul/Sub/Div/Sqrt)."""
+    one whole-matrix update per pivot (a static loop over P pivots; the graph holds only
+    Gather/Mul/Sub/Div/Where/Sqrt). Every element sees the same operations as the row-by-row form
+    in ``reference.spd_solve`` (f_i = a_ij / a_jj, then a_i − f_i a_j), so the two agree to
+    rounding (≈1e-17 on well-scaled systems); P0 panel round 1 replaced the row-by-row graph (≈3,000 nodes per solve, which
+    onnxruntime loaded very slowly) with this one."""
     p = a.shape[-1]
     eye = torch.eye(p, dtype=a.dtype, device=a.device).unsqueeze(0)
     dinv = 1.0 / torch.sqrt((a * eye).sum(dim=2).clamp_min(1e-300))  # [B,P]
     a = a * dinv.unsqueeze(2) * dinv.unsqueeze(1)
     b = b * dinv
-    rows = list(a.unbind(1))  # P tensors [B,P]
-    rhs = list(b.unbind(1))  # P tensors [B]
+    idx = torch.arange(p, device=a.device)
     for j in range(p):
-        pivot = rows[j][:, j]
-        for i in range(p):
-            if i == j:
-                continue
-            f = rows[i][:, j] / pivot
-            rows[i] = rows[i] - f.unsqueeze(1) * rows[j]
-            rhs[i] = rhs[i] - f * rhs[j]
-    y = torch.stack([rhs[j] / rows[j][:, j] for j in range(p)], dim=1)
+        row_j = a[:, j, :]  # [B,P]
+        f = a[:, :, j] / row_j[:, j : j + 1]  # [B,P]: f_i for every row i
+        keep = (idx == j).unsqueeze(0)  # the pivot row itself is not updated
+        a = torch.where(keep.unsqueeze(2), a, a - f.unsqueeze(2) * row_j.unsqueeze(1))
+        b = torch.where(keep, b, b - f * b[:, j : j + 1])
+    y = b / (a * eye).sum(dim=2)
     return y * dinv
 
 

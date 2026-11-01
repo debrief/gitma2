@@ -9,7 +9,9 @@ import torch
 from torch import Tensor, nn
 
 from tma2.physics.layer import PhysicsInputs, PhysicsLayer, cos_export
-from tma2.physics.reference import ITERATIONS, TRIALS
+from tma2.physics.reference import TRIALS
+
+EXPORT_ITERATIONS = 8
 
 
 class ToyEncoder(nn.Module):
@@ -40,11 +42,17 @@ class ToyEncoder(nn.Module):
 
 
 class ToyModel(nn.Module):
-    """Encoder + physics layer; forward takes flat tensors so it exports as one graph. The
-    defaults are the production physics configuration (iterations, knots, damping trials and the
-    speed-skip path the oracle uses), so the export check covers what gates run."""
+    """Encoder + physics layer; forward takes flat tensors so it exports as one graph.
 
-    def __init__(self, iterations: int = ITERATIONS, knots: int = 8, trials: int = TRIALS) -> None:
+    The export uses the production knot count, damping trials and the speed-skip path the oracle
+    uses, but 8 unrolled iterations: every iteration is the same block of operators, and unrolling
+    the production 100 gives a 45 MB graph that onnxruntime needed over 12 minutes (and 3.5 GB) to
+    load (P0 panel round 1). A deployable model will export the iteration as an ONNX ``Loop``
+    (spec 003)."""
+
+    def __init__(
+        self, iterations: int = EXPORT_ITERATIONS, knots: int = 8, trials: int = TRIALS
+    ) -> None:
         super().__init__()
         self.encoder = ToyEncoder()
         self.physics = PhysicsLayer(iterations=iterations, knots=knots, trials=trials)
