@@ -90,3 +90,24 @@ def test_manoeuvre_ranges_need_heldout(
     )
     assert code == 2
     assert "needs --heldout-ranges" in capsys.readouterr().err
+
+
+def test_p0_noise_free_check_ignores_default_dtype() -> None:
+    """The noise-free check gives the same value whatever default dtype an earlier check left
+    (P0 panel round 2: 2.383024e-6 alone against 2.383046e-6 after the physics check)."""
+    import torch
+
+    from tma2.cli import p0
+    from tma2.eval.experiment import Experiment
+
+    values = []
+    for dt in (torch.float32, torch.float64):
+        before = torch.get_default_dtype()
+        torch.set_default_dtype(dt)
+        try:
+            exp = Experiment(id="x", folder=Path("/nonexistent"))
+            p0.check_noise_free(exp)
+            values.append(exp.checks[0].value)
+        finally:
+            torch.set_default_dtype(before)
+    assert values[0] == values[1]

@@ -1,0 +1,164 @@
+{
+  "checks": [
+    {
+      "detail": "8 files byte-identical to gitma's",
+      "name": "generator-iter1-seed1",
+      "result": "pass",
+      "threshold": 8.0,
+      "value": 8.0
+    },
+    {
+      "detail": "8 files byte-identical to gitma's",
+      "name": "generator-iter4-seed777",
+      "result": "pass",
+      "threshold": 8.0,
+      "value": 8.0
+    },
+    {
+      "detail": "8 files byte-identical to gitma's",
+      "name": "generator-phase4-seed777",
+      "result": "pass",
+      "threshold": 8.0,
+      "value": 8.0
+    },
+    {
+      "detail": "flags identical; worst relative difference 2.4e-07",
+      "name": "reference-iter4-seed777-lsq",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 2.384185791015625e-07
+    },
+    {
+      "detail": "flags identical; worst relative difference 0.0e+00",
+      "name": "reference-iter4-seed777-ekf",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 0.0
+    },
+    {
+      "detail": "flags identical; worst relative difference 1.1e-07",
+      "name": "reference-iter4-seed777-imm",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 1.0817560968855377e-07
+    },
+    {
+      "detail": "flags identical; worst relative difference 1.6e-05",
+      "name": "reference-phase4-seed777-lsq",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 1.6159766055930308e-05
+    },
+    {
+      "detail": "flags identical; worst relative difference 7.3e-08",
+      "name": "reference-phase4-seed777-ekf",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 7.319483601648524e-08
+    },
+    {
+      "detail": "flags identical; worst relative difference 3.9e-06",
+      "name": "reference-phase4-seed777-imm",
+      "result": "pass",
+      "threshold": 0.0001,
+      "value": 3.933906555175781e-06
+    },
+    {
+      "detail": "22531 rows (22164 with the solver converged; plausibility flags differ on 0, both implausible on 726): 21438 plausible at the same minimum: worst 1.3e-04 relative on the 20915 determined rows, 3.3e-04 standard deviations on all; layer cost higher on 0, lower on 0",
+      "name": "physics-equals-least-squares",
+      "result": "fail",
+      "threshold": 0.0001,
+      "value": 0.00012864251511125082
+    },
+    {
+      "detail": "physics layer (trivial inputs): worst relative range error 2.38e-06 over 160 of 160 scenarios; least squares 2.42e-06",
+      "name": "noise-free-recovery",
+      "result": "pass",
+      "threshold": 0.001,
+      "value": 2.383046449298114e-06
+    },
+    {
+      "detail": "speed efficiency 0.949 over 1313 held-course rows (range 1.007, course 0.988); band [0.8, 1.3]",
+      "name": "least-squares-efficiency-speed",
+      "result": "pass",
+      "threshold": 1.3,
+      "threshold_low": 0.8,
+      "value": 0.9491605460103033
+    },
+    {
+      "ci_high": 0.5541729480935295,
+      "ci_level": 0.975,
+      "ci_low": 0.509746164845785,
+      "detail": "median ratio 0.531 [0.510, 0.554] vs note [0.486, 0.574]",
+      "name": "oracle-sp-all-range",
+      "result": "pass",
+      "threshold": 0.574,
+      "threshold_low": 0.486,
+      "value": 0.5314360225436361
+    },
+    {
+      "ci_high": 0.5319321150464609,
+      "ci_level": 0.975,
+      "ci_low": 0.47426534376238716,
+      "detail": "median ratio 0.500 [0.474, 0.532] vs note [0.45, 0.557]",
+      "name": "oracle-sp-settled-range",
+      "result": "pass",
+      "threshold": 0.557,
+      "threshold_low": 0.45,
+      "value": 0.50038596988073
+    },
+    {
+      "ci_high": 0.6620877975875172,
+      "ci_level": 0.975,
+      "ci_low": 0.6131640449346872,
+      "detail": "median ratio 0.638 [0.613, 0.662] vs note [0.595, 0.687]",
+      "name": "oracle-nosp-all-range",
+      "result": "pass",
+      "threshold": 0.687,
+      "threshold_low": 0.595,
+      "value": 0.6380750309540038
+    },
+    {
+      "ci_high": 0.611273393801209,
+      "ci_level": 0.975,
+      "ci_low": 0.5459097757479775,
+      "detail": "median ratio 0.575 [0.546, 0.611] vs note [0.508, 0.628]",
+      "name": "oracle-nosp-settled-range",
+      "result": "pass",
+      "threshold": 0.628,
+      "threshold_low": 0.508,
+      "value": 0.5750770752455255
+    },
+    {
+      "detail": "1214916 rows, 0 flag mismatches, 475 rows beyond 1e-4 (3.91e-04; worst 5.8e+01); G5 median range ratio 1.000000",
+      "name": "reference-imm-at-scale",
+      "result": "pass",
+      "threshold": 0.001,
+      "value": 0.00039097353232651476
+    },
+    {
+      "detail": "max relative difference 7.2e-12 (double; float32 reported: 9.6e-03)",
+      "name": "export-python",
+      "result": "pass",
+      "threshold": 1e-05,
+      "value": 7.205402192554165e-12
+    },
+    {
+      "detail": "max relative difference 1.1e-11 (double, onnxruntime-web 1.31.1)",
+      "name": "export-wasm",
+      "result": "pass",
+      "threshold": 1e-05,
+      "value": 1.1225262411726762e-11
+    },
+    {
+      "detail": "max relative difference 7.2e-12 (double, onnxruntime Java 1.31.1)",
+      "name": "export-java",
+      "result": "pass",
+      "threshold": 1e-05,
+      "value": 7.205402192554165e-12
+    }
+  ],
+  "decided_by": "machine",
+  "gate": "P0",
+  "result": "fail"
+}

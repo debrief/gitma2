@@ -1,0 +1,46 @@
+{
+  "python": {
+    "max_rel_diff": {
+      "state": 1.2800871473928055e-13,
+      "cov": 1.0921396046338022e-11,
+      "cost": 2.3886518724866654e-15,
+      "plausible": 0
+    },
+    "tol": 1e-05,
+    "dtype": "float64",
+    "onnx_sha256": "285741147b5a5822e1dca7c3ef5fb46865c1e05b3119cc1f446c4b2b91107e84",
+    "runtime": "onnxruntime 1.31.1 (Python)"
+  },
+  "wasm": {
+    "max_rel_diff": {
+      "state": 1.1102230246251565e-13,
+      "cov": 1.4505687202105857e-11,
+      "cost": 6.291993399988403e-15,
+      "plausible": 0
+    },
+    "reference": "torch (float64)",
+    "vs_onnxruntime_python": {
+      "state": 1.6986412276764895e-14,
+      "cov": 3.606342729695824e-12,
+      "cost": 4.556271082750231e-15,
+      "plausible": 0
+    },
+    "ms": 152,
+    "tol": 1e-05,
+    "onnx_sha256": "285741147b5a5822e1dca7c3ef5fb46865c1e05b3119cc1f446c4b2b91107e84",
+    "runtime": "onnxruntime-web 1.31.1",
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36"
+  },
+  "java": {
+    "deferred": false,
+    "max_rel_diff": {
+      "state": 1.2800871473928055e-13,
+      "cov": 1.0921396046338022e-11,
+      "cost": 2.3886518724866654e-15,
+      "plausible": 0.0
+    },
+    "tol": 1e-05,
+    "onnx_sha256": "285741147b5a5822e1dca7c3ef5fb46865c1e05b3119cc1f446c4b2b91107e84",
+    "runtime": "onnxruntime Java 1.31.1"
+  }
+}

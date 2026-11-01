@@ -58,3 +58,60 @@ def test_js_round_edge_cases_match_ecmascript() -> None:
     assert g.js_round(-0.5) == 0
     assert g.js_round(-1.5) == -1
     assert g.js_round(1e15 + 0.5) == 1e15 + 1
+
+
+# Known-answer frame tests (P0 panel round 1): a frame error shared by gitma and gitma2 would
+# pass every conformance check, so the conventions are pinned here against hand-computed answers.
+
+
+def test_bearing_convention_true_clockwise_from_north() -> None:
+    assert g.bearing_of(0.0, 1.0) == 0.0  # due north
+    assert math.isclose(g.bearing_of(1.0, 0.0), math.pi / 2)  # due east
+    assert math.isclose(g.bearing_of(0.0, -1.0), math.pi)  # due south
+    assert math.isclose(g.bearing_of(-1.0, 0.0), 3 * math.pi / 2)  # due west
+
+
+def test_positive_turn_rate_turns_clockwise() -> None:
+    # Heading north at 10 m/s, turning at +0.1 rad/s: a quarter turn later the course is east
+    # (90°) and the target is north-east of the start, at (r, r) with r = v/ω = 100 m.
+    x, y, c = g.arc_position(0.0, 0.0, 0.0, 10.0, 0.1, (math.pi / 2) / 0.1)
+    assert math.isclose(c, math.pi / 2)
+    assert math.isclose(x, 100.0) and math.isclose(y, 100.0)
+    # Negative rate turns anticlockwise: course west, target north-west.
+    x, y, c = g.arc_position(0.0, 0.0, 0.0, 10.0, -0.1, (math.pi / 2) / 0.1)
+    assert math.isclose(c, 3 * math.pi / 2)
+    assert math.isclose(x, -100.0) and math.isclose(y, 100.0)
+
+
+def test_course_90_moves_east_in_generated_truth() -> None:
+    from tests.conftest import fixture_dir
+    from tma2.data.f32pack import iter_pack_raw
+
+    for _, meta, own, tgt, obs in iter_pack_raw(fixture_dir("iter4-seed777") / "test.f32pack"):
+        # Straight-leg rows: displacement agrees with course (sin, cos) and speed.
+        for i in range(3):
+            dt = float(tgt[i + 1, 0] - tgt[i, 0])
+            dx = float(tgt[i + 1, 1] - tgt[i, 1])
+            dy = float(tgt[i + 1, 2] - tgt[i, 2])
+            c, v = float(tgt[i, 3]), float(tgt[i, 4])
+            assert math.isclose(dx, v * math.sin(c) * dt, abs_tol=0.05)
+            assert math.isclose(dy, v * math.cos(c) * dt, abs_tol=0.05)
+            # Ownship too: its displacement agrees with its own course and speed.
+            dx = float(own[i + 1, 1] - own[i, 1])
+            dy = float(own[i + 1, 2] - own[i, 2])
+            c, v = float(own[i, 3]), float(own[i, 4])
+            assert math.isclose(dx, v * math.sin(c) * dt, abs_tol=0.05)
+            assert math.isclose(dy, v * math.cos(c) * dt, abs_tol=0.05)
+        # Bearings point from ownship to the target, clockwise from north: the median wrapped
+        # residual over all valid bearings is near 0 and their spread near σ.
+        sigma = float(meta["parameters"]["noise_sigma_rad"])
+        res = [
+            g.wrap_pi(
+                float(obs[i, 1])
+                - g.bearing_of(float(tgt[i, 1] - own[i, 1]), float(tgt[i, 2] - own[i, 2]))
+            )
+            for i in range(obs.shape[0])
+            if obs[i, 2] != 0
+        ]
+        assert abs(float(np.median(res))) < sigma
+        assert 0.5 * sigma < float(np.std(res)) < 2 * sigma

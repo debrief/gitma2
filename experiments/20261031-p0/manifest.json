@@ -1,0 +1,123 @@
+{
+  "command_lines": [
+    "tma2-p0 --experiment experiments/20261031-p0 --oracle-data data/p0 --work data/p0-work"
+  ],
+  "created": "2026-10-31T21:49:29Z",
+  "datasets": [
+    {
+      "digest": "7742448e558ffc4655e76d605e4ebf267b574894942363cb1a6c8aa6a50d413a",
+      "header": {
+        "created_by": "tma2-generate --seed 301 --count 100000 --ranges sha256:2147ade3b17fb9fd93d373687a7ae883e0c74670833ccc6870bb3ed0b3d1c558 --heldout-ranges sha256:41a406b1df129c6ead948764baeef8ae205f0628c0540495f0315a7e57328201",
+        "dataset_seed": "301",
+        "generator_git_commit": "26be521e54a951c718cec64847b3f3e2dcc08b63",
+        "generator_git_dirty": true,
+        "generator_version": "0.5.0",
+        "index_end": 90000,
+        "index_start": 80000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.1,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.017453292519943295,
+            0.03490658503988659
+          ],
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "range_distribution": "log_uniform",
+          "target_course_change_count_weights": [
+            0.2,
+            0.3,
+            0.3,
+            0.2
+          ],
+          "target_manoeuvre_after_zig_s": 120.0,
+          "target_manoeuvre_angle_abs_rad": {
+            "max": 2.0943951023931953,
+            "min": 0.5235987755982988
+          },
+          "target_manoeuvre_margin_s": 360.0,
+          "target_manoeuvre_spacing_s": 180.0,
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_change_abs_mps": {
+            "max": 3.086666666666667,
+            "min": 1.028888888888889
+          },
+          "target_speed_change_fraction": 0.3,
+          "target_speed_change_rate_mps2": {
+            "max": 0.1028888888888889,
+            "min": 0.025722222222222226
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "target_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "window_s": {
+            "max": 3600.0,
+            "min": 1200.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 4085,
+        "scenario_count": 10000,
+        "schema_version": "0.17.0",
+        "split": "validation"
+      },
+      "path": "data/p0/validation.f32pack"
+    }
+  ],
+  "estimators": [
+    {
+      "name": "classical",
+      "settings_json": "{\"grid_every\": 6, \"max_iterations\": 50}"
+    },
+    {
+      "name": "imm-cv0.01-ct0.03-w0.01-s0.001-p4-r8",
+      "settings_json": "{\"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_ct\": 0.03, \"sigma_cv\": 0.01, \"sigma_omega\": 0.01, \"switch_per_s\": 0.001}"
+    },
+    {
+      "name": "oracle-physics",
+      "settings_json": "{\"iterations\": 40, \"knots\": 8, \"tau_ridge_mps\": 3.0, \"tau_speed_mps\": 1.0}"
+    }
+  ],
+  "generator_version": "0.5.0",
+  "git_commit": "e80ea89f8a2b98c9d0449105064a347a2f8adc54",
+  "git_dirty": false,
+  "id": "20261031-p0",
+  "python_version": "3.12.13",
+  "schema_version": "0.17.0",
+  "torch_version": "2.15.0+cpu"
+}

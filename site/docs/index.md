@@ -21,7 +21,7 @@ piecewise-constant-velocity batch solve do the numerics.
 
 | Gate | Question | Status |
 | --- | --- | --- |
-| P0 pipeline | Does the Python generator reproduce gitma's files, and do the references reproduce gitma's predictions? | in progress: generator conformance passed (spec 001) |
+| P0 pipeline | Does the Python generator reproduce gitma's files, and do the references reproduce gitma's predictions? | **passed** (agent panel round 3, record `experiments/20261101-p0-r4/`): generator byte-identical, references and evaluation equal to gitma's, physics layer equal to batch least squares on every fixture row, oracle reproduced, export agrees across Python, browser and Java |
 | Gate 1, constant velocity | Within 1.1 × batch least squares on every metric? | not started |
 | Gate D, steady-leg detector | Beats CUSUM/GLR at matched false alarms, under 5% held-leg false alarms, and the piecewise solve it feeds beats the IMM? | not started |
 | Gate 2, manoeuvres | Below the re-tuned IMM overall, within 1.1 × least squares on settled rows, half the gap to the oracle recovered? | not started |

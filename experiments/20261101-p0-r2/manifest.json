@@ -1,0 +1,187 @@
+{
+  "artefacts": [
+    {
+      "digest": "cc009efe03bb99802fb7f06bcb2b095086ee510d804ab9f774ee1a1acb13c39f",
+      "path": "data/p0-work/8e5dfe142fd3/imm.ndjson",
+      "role": "IMM predictions (oracle denominator)"
+    },
+    {
+      "digest": "ce034278527bf872f0da216c2477966fc2bb6ddb18a8617f8b550c99a2b42b95",
+      "path": "data/p0-work/8e5dfe142fd3/oracle-sp.ndjson",
+      "role": "oracle predictions (sp)"
+    },
+    {
+      "digest": "2dcc20c96f3b12a11eb62f7617dd38f944aa4a39bbf23aed16b290dfc86edafd",
+      "path": "data/p0-work/8e5dfe142fd3/oracle-nosp.ndjson",
+      "role": "oracle predictions (nosp)"
+    },
+    {
+      "digest": "d9cd16509bf0823cdc1dbbf32a10e7f598417421ee61df73686b753ff6b80f78",
+      "path": "data/p0-work/8e5dfe142fd3/oracle-masked-sp.ndjson",
+      "role": "oracle predictions (masked-sp)"
+    },
+    {
+      "digest": "0e5a2e47a4b23f523ca22312d9d42188e8b99ae9dfb4114244237da8cf6e1b79",
+      "path": "data/p0-work/gitma-imm.ndjson",
+      "role": "gitma tma-track IMM predictions (seed 301 validation)"
+    },
+    {
+      "digest": "fa58c31f5de31b4163d7c0191cbdc4743d2feb3788fb95710889cf213d2a2c34",
+      "path": "/home/user/gitma2/conformance/onnx/results.json",
+      "role": "export conformance results (browser and Java legs)"
+    }
+  ],
+  "command_lines": [
+    "tma2-p0 --experiment experiments/20261101-p0-r2 --oracle-data data/p0 --gitma-imm data/p0-work/gitma-imm.ndjson --work data/p0-work"
+  ],
+  "created": "2026-11-01T01:34:05Z",
+  "datasets": [
+    {
+      "digest": "7dba9ab707c0b7737c9a2b4de5662b3c06592cd7fb4ab667be8c583ee2954e98",
+      "header": {
+        "created_by": "tma2-generate --seed 301 --count 100000 --ranges sha256:2147ade3b17fb9fd93d373687a7ae883e0c74670833ccc6870bb3ed0b3d1c558 --heldout-ranges sha256:41a406b1df129c6ead948764baeef8ae205f0628c0540495f0315a7e57328201",
+        "dataset_seed": "301",
+        "generator_git_commit": "9cb2b49fd7edb6d26cacd4ffd95a44ac8ac4a1b8",
+        "generator_git_dirty": false,
+        "generator_version": "0.5.0",
+        "index_end": 90000,
+        "index_start": 80000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.1,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.017453292519943295,
+            0.03490658503988659
+          ],
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "range_distribution": "log_uniform",
+          "target_course_change_count_weights": [
+            0.2,
+            0.3,
+            0.3,
+            0.2
+          ],
+          "target_manoeuvre_after_zig_s": 120.0,
+          "target_manoeuvre_angle_abs_rad": {
+            "max": 2.0943951023931953,
+            "min": 0.5235987755982988
+          },
+          "target_manoeuvre_margin_s": 360.0,
+          "target_manoeuvre_spacing_s": 180.0,
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_change_abs_mps": {
+            "max": 3.086666666666667,
+            "min": 1.028888888888889
+          },
+          "target_speed_change_fraction": 0.3,
+          "target_speed_change_rate_mps2": {
+            "max": 0.1028888888888889,
+            "min": 0.025722222222222226
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "target_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "window_s": {
+            "max": 3600.0,
+            "min": 1200.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 4085,
+        "scenario_count": 10000,
+        "schema_version": "0.17.0",
+        "split": "validation"
+      },
+      "path": "data/p0/validation.f32pack"
+    }
+  ],
+  "environment": {
+    "cpu_count": 4,
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "lockfile_digest": "3ed162a896db7f219567fe77cfa68fe8345a519256a694d6dc55b8f84eb65870",
+    "packages": [
+      {
+        "name": "numpy",
+        "version": "2.5.4"
+      },
+      {
+        "name": "numba",
+        "version": "0.68.1"
+      },
+      {
+        "name": "torch",
+        "version": "2.15.0+cpu"
+      },
+      {
+        "name": "onnx",
+        "version": "1.23.2"
+      },
+      {
+        "name": "onnxruntime",
+        "version": "1.31.1"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.2"
+      }
+    ],
+    "torch_threads": 4
+  },
+  "estimators": [
+    {
+      "name": "classical",
+      "settings_json": "{\"grid_every\": 6, \"max_iterations\": 50}"
+    },
+    {
+      "name": "imm-cv0.01-ct0.03-w0.01-s0.001-p4-r8",
+      "settings_json": "{\"p0_scale\": 4.0, \"r_scale\": 8.0, \"sigma_ct\": 0.03, \"sigma_cv\": 0.01, \"sigma_omega\": 0.01, \"switch_per_s\": 0.001}"
+    },
+    {
+      "name": "oracle-physics",
+      "settings_json": "{\"iterations\": 40, \"knots\": 8, \"tau_ridge_mps\": 3.0, \"tau_speed_mps\": 1.0}"
+    }
+  ],
+  "generator_version": "0.5.0",
+  "git_commit": "8e5dfe142fd3867d1e2c0381a7931d28178f55f6",
+  "git_dirty": false,
+  "id": "20261101-p0-r2",
+  "python_version": "3.12.13",
+  "schema_version": "0.17.0",
+  "torch_version": "2.15.0+cpu"
+}
