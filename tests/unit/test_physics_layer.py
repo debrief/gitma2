@@ -267,3 +267,40 @@ def test_covariance_equals_sigma2_inverse_information(phase4_items: Any) -> None
         scale = np.sqrt(np.outer(np.diag(expected), np.diag(expected)))
         assert np.abs(got - expected).max() <= 1e-6 * scale.max(), (b, got, expected)
     assert checked >= 5
+
+
+def test_gradients_finite_with_covariance_and_cost_losses() -> None:
+    """Random learned inputs on pre-zig, at-zig, mid-window and last rows, including a scenario
+    whose solutions collapse onto ownship (phase4 train scenario 15, k = 193, 200): losses on the
+    state, cost and log covariance diagonal have finite gradients on every input entry (P0
+    panel round 2)."""
+    torch.manual_seed(3)
+    blocks = list(iter_pack_raw(fixture_dir("phase4-seed777") / "train.f32pack"))
+    items = []
+    for n in (0, 3, 15):
+        _, meta, own, _tgt, obs = blocks[n]
+        d = bearing_data_from_arrays(meta, own, obs)
+        rows = [2, 5, d.zig_index, d.zig_index + 3, d.n // 2, d.n - 1]
+        if n == 15:
+            rows += [193, 200]
+        for k in rows:
+            inp = trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, k)
+            if inp is not None:
+                items.append((d, k, inp))
+    x = _inputs(items)
+    b, r = x.bearing.shape
+    cp = torch.rand(b, r, requires_grad=True)
+    sw = torch.rand(b, r, requires_grad=True)
+    lw = (0.5 * torch.randn(b, r)).requires_grad_(True)
+    th0 = x.theta0.clone().requires_grad_(True)
+    out = PhysicsLayer(iterations=20)(
+        PhysicsInputs(x.bearing, x.valid, x.own, x.t, x.sigma, x.k, cp, sw, lw, th0)
+    )
+    ok = out.cov_ok
+    diag = torch.stack([out.cov[:, i, i] for i in range(4)], dim=1)
+    log_var = torch.log(torch.where(ok.unsqueeze(1), diag, torch.ones_like(diag)))
+    loss = out.state[:, 2:].abs().sum() + 1e-3 * out.cost.sum() + log_var.sum()
+    loss.backward()
+    for leaf in (cp, sw, lw, th0):
+        assert leaf.grad is not None and bool(torch.isfinite(leaf.grad).all())
+    assert bool(torch.isfinite(out.cov).all())

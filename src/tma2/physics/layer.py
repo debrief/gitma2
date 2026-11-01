@@ -15,6 +15,7 @@ import torch
 from torch import Tensor
 
 from .reference import (
+    COV_RIDGE,
     ITERATIONS,
     LAMBDA0,
     LAMBDA_MAX,
@@ -40,7 +41,9 @@ class PhysicsInputs:
     k: Tensor  # [B] int64
     changepoint: Tensor  # [B, R]
     speed_weight: Tensor  # [B, R]
-    log_weight: Tensor  # [B, R]
+    # [B, R]; bound it (e.g. tanh) in a model: exp(ℓ/2) overflowing to ∞ on a masked row gives
+    # 0 · ∞ = NaN (P0 panel round 2).
+    log_weight: Tensor
     theta0: Tensor  # [B, 4]
     speed_skip: Tensor | None = None  # [B, R] in [0, 1]: reference velocity skips the previous knot
 
@@ -57,6 +60,10 @@ class PhysicsOutputs:
     theta: Tensor  # [B, P]
     knots: Tensor  # [B, M] int64
     knot_weights: Tensor  # [B, M]
+    # Covariance usable: finite, positive diagonal and the target not on ownship (range > 1 m).
+    # Rows where both solvers collapse onto ownship are "plausible" by gitma's bounds but their
+    # information is degenerate (P0 panel round 2); training and scoring should exclude them.
+    cov_ok: Tensor  # [B] bool
 
 
 def cos_export(a: Tensor) -> Tensor:
@@ -97,7 +104,7 @@ def wrap_2pi(a: Tensor) -> Tensor:
 
 
 def _hypot(x: Tensor, y: Tensor) -> Tensor:
-    return torch.sqrt(x * x + y * y)
+    return safe_sqrt(x * x + y * y)
 
 
 def _finite(x: Tensor) -> Tensor:
@@ -386,7 +393,11 @@ class PhysicsLayer(torch.nn.Module):
         _, jac = self._residuals(theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order)
         jtj = jac.transpose(1, 2) @ jac
         inert = (_diagonal(jtj) == 0).to(dt)
-        jtj = jtj + _diag(inert)
+        # A relative ridge of 1e-12 on the diagonal bounds the Jacobi-scaled condition number
+        # near 1e12, so unpivoted elimination stays finite where the information is degenerate
+        # (a solution on ownship gave NaN; P0 panel round 2); elsewhere it moves the covariance
+        # by about 1e-12 relative.
+        jtj = jtj + _diag(inert + COV_RIDGE * _diagonal(jtj))
         cov_cols = [spd_solve(jtj, g[:, i, :]) for i in range(4)]
         cov = torch.stack([(g @ col.unsqueeze(2))[..., 0] for col in cov_cols], dim=2)
         okx = torch.gather(ox, 1, kk)[:, 0]
@@ -395,4 +406,8 @@ class PhysicsLayer(torch.nn.Module):
         speed = _hypot(state[:, 2], state[:, 3])
         course = wrap_2pi(atan2_export(state[:, 2], state[:, 3]))
         plausible = _finite(state).all(dim=1) & (speed <= MAX_SPEED_MPS) & (rng <= MAX_RANGE_M)
-        return PhysicsOutputs(state, cov, rng, course, speed, cost, plausible, theta, knots, c)
+        cov_diag = _diagonal(cov)
+        cov_ok = _finite(cov.reshape(b_, 16)).all(dim=1) & (cov_diag > 0).all(dim=1) & (rng > 1.0)
+        return PhysicsOutputs(
+            state, cov, rng, course, speed, cost, plausible, theta, knots, c, cov_ok
+        )

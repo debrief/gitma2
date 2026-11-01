@@ -40,6 +40,7 @@ LAMBDA0 = 1e-3
 # measured them on every fixture row against the cold-start solver: 40 × 1 stopped short on 159
 # rows, 40 × 4 on 8, 60 × 2 and 100 × 1 on none; 100 × 1 was the fastest (202 s against 261 s).
 TRIALS = 1
+COV_RIDGE = 1e-12
 ITERATIONS = 100
 LAMBDA_MIN = 1e-12
 LAMBDA_MAX = 1e12
@@ -289,7 +290,12 @@ def solve(
     _, jac = _residuals_and_jacobian(
         theta, tt, oxx, oyy, zz, w, sigma, t_knots, c, s, tau_r, tau_s, sk
     )
-    jtj = jac.T @ jac + np.diag((np.abs(jac).sum(axis=0) == 0).astype(np.float64))
+    jtj = jac.T @ jac
+    # Inert rows regularised as in the solve; a relative ridge of COV_RIDGE bounds the scaled
+    # condition number (the layer does the same).
+    jtj = jtj + np.diag(
+        (np.abs(jac).sum(axis=0) == 0).astype(np.float64) + COV_RIDGE * np.diag(jtj)
+    )
     cov = g @ np.stack([spd_solve(jtj, g[i]) for i in range(4)], axis=1)  # σ-normalised residuals
     rng = math.hypot(state[0] - oxx[k], state[1] - oyy[k])
     speed = math.hypot(state[2], state[3])

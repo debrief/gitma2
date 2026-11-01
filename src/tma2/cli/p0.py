@@ -206,12 +206,20 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     determined = 0
     unconverged = 0
     flag_mismatch = 0
+    cov_bad = 0
+    nonfinite_sd = 0
+    unconv_plausible = 0
+    unconv_lower = 0
     implausible = 0  # both flag the solution implausible (gitma scores it as not converged)
     for a in range(0, len(items), 500):
         out = run_layer(layer, items[a : a + 500], R_MAX)
         for j, (rng, spd, cost, conv, sigma, ok_ls) in enumerate(refs[a : a + 500]):
             if not conv:
+                # Reported: the layer's flag and whether it reached a lower cost than the
+                # solver's stopping point.
                 unconverged += 1
+                unconv_plausible += bool(out.plausible[j])
+                unconv_lower += float(out.cost[j]) * sigma * sigma < cost * (1 - COST_TOL)
                 continue
             if bool(out.plausible[j]) != ok_ls:
                 flag_mismatch += 1
@@ -230,6 +238,9 @@ def check_physics_equals_ls(exp: Experiment) -> None:
                 )
                 # In units of the row's own standard deviations (layer covariance): at equal
                 # cost an undetermined row may move along its flat direction, never across it.
+                if not bool(out.cov_ok[j]):
+                    cov_bad += 1  # degenerate (on ownship): counted, the sd test cannot apply
+                    continue
                 cov = out.cov[j].numpy()
                 st = out.state[j].numpy()
                 bd, k, _ = items[a + j]
@@ -243,6 +254,9 @@ def check_physics_equals_ls(exp: Experiment) -> None:
                 in_sd = max(
                     abs(float(out.range[j]) - rng) / sd_r, abs(float(out.speed[j]) - spd) / sd_s
                 )
+                if not math.isfinite(in_sd):
+                    nonfinite_sd += 1
+                    continue
                 worst_sd = max(worst_sd, in_sd)
                 if sd_r < 0.5 * rr:
                     determined += 1
@@ -256,6 +270,10 @@ def check_physics_equals_ls(exp: Experiment) -> None:
         "layer_cost_higher_rows": short,
         "layer_cost_lower_rows": lower,
         "determined_rows": determined,
+        "covariance_degenerate_rows": cov_bad,
+        "nonfinite_sd_rows": nonfinite_sd,
+        "solver_unconverged_layer_plausible": unconv_plausible,
+        "solver_unconverged_layer_cost_lower": unconv_lower,
         "worst_relative_difference_determined": worst,
         "worst_difference_in_sd_same_minimum": worst_sd,
         "iterations": layer.iterations,
@@ -264,6 +282,7 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     ok = (
         short == 0
         and flag_mismatch == 0
+        and nonfinite_sd == 0
         and worst <= STATE_TOL
         and worst_sd <= SD_TOL
         and determined > 0
@@ -275,8 +294,10 @@ def check_physics_equals_ls(exp: Experiment) -> None:
             f"{len(items)} rows ({len(items) - unconverged} with the solver converged; "
             f"plausibility flags differ on {flag_mismatch}, both implausible on {implausible}): "
             f"{same} plausible at the same minimum: worst {worst:.1e} relative on the {determined} "
-            f"determined rows, {worst_sd:.1e} standard deviations on all; layer cost higher on "
-            f"{short}, lower on {lower}",
+            f"determined rows, {worst_sd:.1e} standard deviations on all ({cov_bad} degenerate "
+            f"covariances, {nonfinite_sd} non-finite); layer cost higher on {short}, lower on "
+            f"{lower}; on the {unconverged} unconverged solver rows the layer is lower on "
+            f"{unconv_lower}",
             value=worst,
             threshold=STATE_TOL,
         )
