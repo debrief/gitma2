@@ -1,7 +1,8 @@
 """``tma2-plan``: the training workflow's plan helper (spec 003 T017; research R7).
 
     tma2-plan resolve --ref <branch or plan path>     key=value lines for $GITHUB_OUTPUT
-    tma2-plan data --plan <plan.json> --out <dir>     regenerate the validation split, check digest
+    tma2-plan data --plan <plan.json> --out <dir> [--keep train.f32pack]
+                                                      regenerate the validation split, check digest
     tma2-plan complete --checkpoint <dir>             exit 0 if the checkpoint is complete
 
 ``data`` regenerates the plan's validation split at the commit its header names (the header
@@ -53,7 +54,7 @@ def _by_digest(digest: str, root: Path) -> Path:
     raise ValueError(f"no file under {', '.join(SEARCH)} has digest {digest}")
 
 
-def regenerate(plan_path: Path, out: Path, root: Path) -> Path:
+def regenerate(plan_path: Path, out: Path, root: Path, keep: tuple[str, ...] = ()) -> Path:
     plan, _ = load_plan(plan_path)
     header = plan.validation.header
     commit = header.generator_git_commit
@@ -86,7 +87,7 @@ def regenerate(plan_path: Path, out: Path, root: Path) -> Path:
     if plan.validation.digest and got != plan.validation.digest:
         raise ValueError(f"{out / name}: digest {got} is not the plan's {plan.validation.digest}")
     for p in out.iterdir():
-        if p.name != name:
+        if p.name != name and p.name not in keep:
             p.unlink()
     return out / name
 
@@ -99,6 +100,9 @@ def main(argv: list[str] | None = None) -> int:
     d = sub.add_parser("data")
     d.add_argument("--plan", required=True)
     d.add_argument("--out", required=True)
+    d.add_argument(
+        "--keep", action="append", default=[], help="also keep this split file (e.g. train.f32pack)"
+    )
     c = sub.add_parser("complete")
     c.add_argument("--checkpoint", required=True)
     a = ap.parse_args(argv)
@@ -112,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"digest={digest}")
             print(f"models={json.dumps([m.id for m in plan.models])}")
         elif a.cmd == "data":
-            print(regenerate(Path(a.plan), Path(a.out), root))
+            print(regenerate(Path(a.plan), Path(a.out), root, tuple(a.keep)))
         else:
             meta = Path(a.checkpoint) / "meta.json"
             done = meta.exists() and bool(json.loads(meta.read_text()).get("complete"))

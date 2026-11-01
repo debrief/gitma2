@@ -1,0 +1,135 @@
+name: Gate 1 validation report
+
+# Spec 003 T019: after a train/g1-a run, score every trained model and the baselines (batch least
+# squares, naive, the frozen EKF and IMM of the decision record) on the same validation rows,
+# apply the decision record's carried rule and validation rule, and push the report to
+# `results/<plan id>-val-<train run id>`. The model predictions are the train run's `model-*`
+# artefacts. The test split is never generated here.
+
+on:
+  push:
+    branches: ["validate/**"] # validate/<train run id>: the workflow need not be on main
+  workflow_dispatch:
+    inputs:
+      train_run_id:
+        description: "Run id of the train.yml run whose models to report"
+        required: true
+        type: string
+      decision:
+        description: "Decision record"
+        required: true
+        default: experiments/20261101-g1-decision/decision.json
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  DATA: ${{ github.workspace }}/../val-data
+  TRAIN_RUN: ${{ inputs.train_run_id || github.ref_name }}
+  DECISION: ${{ inputs.decision || 'experiments/20261101-g1-decision/decision.json' }}
+
+jobs:
+  baselines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        estimator: [lsq, naive, ekf, imm]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Validation split (and the train split for the naive fit), digest checked
+        run: |
+          PLAN=$(python3 -c "import json; print(json.load(open('$DECISION'))['plan_id'])")
+          uv run tma2-plan data --plan "configs/gate1/plan.json" --out "$DATA" --keep train.f32pack
+          echo "plan id $PLAN"
+      - name: Predict (${{ matrix.estimator }}, every post-zig row)
+        env:
+          DEC: ${{ inputs.decision || 'experiments/20261101-g1-decision/decision.json' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          OUT="$RUNNER_TEMP/out/validation-${{ matrix.estimator }}.ndjson"
+          get() { python3 -c "import json; d=json.loads(json.load(open('$DEC'))['$1']); print(d['$2'])"; }
+          case "${{ matrix.estimator }}" in
+            lsq) uv run tma2-solve --in "$DATA/validation.f32pack" --out "$OUT" --per-timestep ;;
+            naive)
+              uv run tma2-naive fit --train "$DATA/train.f32pack" --out "$RUNNER_TEMP/naive.json"
+              uv run tma2-naive predict --model "$RUNNER_TEMP/naive.json" --in "$DATA/validation.f32pack" --out "$OUT" --per-timestep ;;
+            ekf)
+              uv run tma2-track --in "$DATA/validation.f32pack" --out "$OUT" --filter ekf \
+                --sigma-a "$(get ekf sigma_a)" --p0-scale "$(get ekf p0_scale)" --r-scale "$(get ekf r_scale)" ;;
+            imm)
+              uv run tma2-track --in "$DATA/validation.f32pack" --out "$OUT" --filter imm \
+                --sigma-cv "$(get imm sigma_cv)" --sigma-ct "$(get imm sigma_ct)" \
+                --sigma-omega "$(get imm sigma_omega)" --switch "$(get imm switch_per_s)" \
+                --p0-scale "$(get imm p0_scale)" --r-scale "$(get imm r_scale)" ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baseline-${{ matrix.estimator }}
+          path: ${{ runner.temp }}/out
+          retention-days: 30
+
+  report:
+    needs: baselines
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run tma2-plan data --plan configs/gate1/plan.json --out "$DATA"
+      - id: rid
+        run: echo "id=${TRAIN_RUN#validate/}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: baseline-*
+          path: ${{ runner.temp }}/baselines
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: model-*
+          path: ${{ runner.temp }}/models
+          merge-multiple: true
+          run-id: ${{ steps.rid.outputs.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Report (exit 3 = stop at validation, a result)
+        shell: bash
+        run: |
+          ID=$(python3 -c "import json; print(json.load(open('$DECISION'))['plan_id'])")
+          EXP="experiments/$(date -u +%Y%m%d)-$ID-val"
+          echo "EXP=$EXP" >> "$GITHUB_ENV"
+          echo "ID=$ID" >> "$GITHUB_ENV"
+          B="$RUNNER_TEMP/baselines"
+          set +e
+          uv run python scripts/g1_validation.py --decision "$DECISION" \
+            --validation "$DATA/validation.f32pack" --models "$RUNNER_TEMP/models" \
+            --lsq "$B/validation-lsq.ndjson" --naive "$B/validation-naive.ndjson" \
+            --ekf "$B/validation-ekf.ndjson" --imm "$B/validation-imm.ndjson" --out "$EXP"
+          status=$?
+          set -e
+          [ "$status" -eq 0 ] || [ "$status" -eq 3 ] || exit "$status"
+          (cd "$B" && sha256sum *.ndjson) > "$EXP/baseline-digests.txt"
+          printf '{"train_run_id": "%s", "run_id": "%s", "commit": "%s"}\n' \
+            "${TRAIN_RUN#validate/}" "${{ github.run_id }}" "${{ github.sha }}" > "$EXP/run.json"
+      - name: Push the report branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/$ID-val-${TRAIN_RUN#validate/}"
+          git checkout -b "$BR" origin/main
+          git add -f "$EXP"
+          git commit -qm "experiments: $ID validation report (train run ${TRAIN_RUN#validate/}, CI ${{ github.sha }})"
+          git push origin "$BR"
