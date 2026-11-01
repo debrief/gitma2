@@ -251,8 +251,11 @@ miss is predictable: relative error ≈ (sd/value)·√Δχ², with √Δχ² �
 - For spec 003: a knot at `start_index − 1` (geometry); a `Loop` export with 1e-5 conformance as
   an entry criterion (numerics); the jitter null for the at-scale check (statistics).
 
-### Open: the owner's decision
+### The owner's decision (2026-11-01, after run r2)
 
-Asked of the owner on 2026-11-01 (one question, recommended option first): accept the round-1
-spec amendment and apply the relative test per quantity only where that quantity is determined
-(sd below half its value), keeping the standard-deviation test on all rows; then run r3.
+Asked in one question, recommended option first, with the alternatives (a polished reference;
+keep the r2 rule and record P0 as failed; revert to the original wording). **The owner chose the
+recommended option**: the round-1 spec amendment is accepted, and the relative test applies to
+range and speed separately, each only where that quantity is determined (sd below half its
+value), with the standard-deviation test on every row. Run r2's fail stays in its record
+unchanged; run r3 (`experiments/20261101-p0-r3/`) is judged under the amended rule.

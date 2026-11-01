@@ -228,13 +228,16 @@ physics-layer note's equations match the NumPy reference implementation used in 
   grid start) it MUST equal the ported batch least squares started from the same grid at the same
   row on every scored fixture row: the plausibility flags agree; the layer's cost is never above
   the solver's by more than 1e-9 relative where the solver converged; where the costs agree and
-  both are plausible, the state agrees to 1e-4 relative on determined rows (range sd < half the
-  range) and to 1e-2 of the row's own standard deviation on every row; and its covariance MUST
-  equal σ²(JᵀJ)⁻¹. *Amended in P0 panel round 1* (the SRD criterion, "equals batch LS", is
+  both are plausible, range and speed each agree to 1e-4 relative where that quantity is
+  determined (its sd below half its value) and to 1e-2 of the row's own standard deviation on
+  every row; and its covariance MUST equal σ²(JᵀJ)⁻¹. *Amended in P0 panel round 1* (the SRD criterion, "equals batch LS", is
   unchanged): the earlier wording, float32 on every row against the warm-started per-timestep
   rows with "the solver's iteration count", cannot hold for any two correct solvers on
   undetermined rows, which stop at different points of equal cost along a flat direction, and the
-  machine check had tested 1e-4 on a sample of 59 rows. The owner may overrule.
+  machine check had tested 1e-4 on a sample of 59 rows. *Owner decision, 2026-11-01, after run
+  r2* (`experiments/20261101-p0-r2/`, which failed the then rule on one row whose speed was
+  undetermined and where gitma's solver had stopped short): this amendment is accepted, with
+  determinacy judged per quantity (range and speed separately) rather than by range alone.
 - **FR-008**: With truth segmentation (knots at span starts and ends, kinds from the spans) it
   MUST reproduce the oracle-ceiling ratios of `docs/research/05` within their intervals on a
   10^5 MAN validation split.

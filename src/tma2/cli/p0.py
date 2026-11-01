@@ -159,7 +159,7 @@ def check_references(exp: Experiment) -> None:
 
 
 COST_TOL = 1e-9  # relative: equal cost means the same minimum
-STATE_TOL = 1e-4  # relative range and speed, on determined rows at the same minimum
+STATE_TOL = 1e-4  # relative, per quantity where it is determined, at the same minimum
 SD_TOL = 1e-2  # in the row's own standard deviations, on every row at the same minimum
 
 
@@ -168,8 +168,11 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     with trivial inputs against the ported batch least squares from the same grid start at that
     row (``solve_batch``; the per-timestep rows are warm-started, so they can sit in another
     minimum). Where the solver converged, the layer's cost must not exceed the solver's by more
-    than 1e-9 relative (it did not stop short), and where the costs agree the states must agree
-    to 1e-4; rows where the layer reaches a lower cost than the solver are counted and reported.
+    than 1e-9 relative (it did not stop short), and where the costs agree and both are
+    plausible, each of range and speed must agree to 1e-4 relative where that quantity is
+    determined (sd below half its value; owner decision 2026-11-01, after run r2) and both to
+    1e-2 of the row's own standard deviations everywhere; rows where the layer reaches a lower
+    cost than the solver are counted and reported.
     """
     from tma2.references.classical import plausible, solve_batch
 
@@ -206,6 +209,8 @@ def check_physics_equals_ls(exp: Experiment) -> None:
     worst = 0.0
     worst_sd = 0.0
     determined = 0
+    determined_speed = 0
+    moved_out = 0
     unconverged = 0
     flag_mismatch = 0
     cov_bad = 0
@@ -234,10 +239,8 @@ def check_physics_equals_ls(exp: Experiment) -> None:
                 lower += 1
             elif ok_ls and bool(out.plausible[j]):
                 same += 1
-                rel = max(
-                    abs(float(out.range[j]) - rng) / rng,
-                    abs(float(out.speed[j]) - spd) / max(spd, 1.0),
-                )
+                rel_r = abs(float(out.range[j]) - rng) / rng
+                rel_s = abs(float(out.speed[j]) - spd) / max(spd, 1.0)
                 # In units of the row's own standard deviations (layer covariance): at equal
                 # cost an undetermined row may move along its flat direction, never across it.
                 if not bool(out.cov_ok[j]):
@@ -260,9 +263,17 @@ def check_physics_equals_ls(exp: Experiment) -> None:
                     nonfinite_sd += 1
                     continue
                 worst_sd = max(worst_sd, in_sd)
+                # Owner decision 2026-11-01 (after run r2): the relative test applies to each
+                # quantity only where that quantity is determined (sd below half its value); on a
+                # flat direction it would measure the solver's stopping rule.
                 if sd_r < 0.5 * rr:
                     determined += 1
-                    worst = max(worst, rel)
+                    worst = max(worst, rel_r)
+                if sd_s < 0.5 * max(float(np.linalg.norm(u)), 1.0):
+                    determined_speed += 1
+                    worst = max(worst, rel_s)
+                elif sd_r < 0.5 * rr:
+                    moved_out += 1  # range determined, speed not: tested in sd units only
     exp.metrics["physics-equals-least-squares"] = {
         "rows": len(items),
         "solver_converged_rows": len(items) - unconverged,
@@ -272,6 +283,8 @@ def check_physics_equals_ls(exp: Experiment) -> None:
         "layer_cost_higher_rows": short,
         "layer_cost_lower_rows": lower,
         "determined_rows": determined,
+        "speed_determined_rows": determined_speed,
+        "range_determined_speed_undetermined_rows": moved_out,
         "covariance_degenerate_rows": cov_bad,
         "nonfinite_sd_rows": nonfinite_sd,
         "solver_unconverged_layer_plausible": unconv_plausible,
@@ -295,11 +308,11 @@ def check_physics_equals_ls(exp: Experiment) -> None:
             "pass" if ok else "fail",
             f"{len(items)} rows ({len(items) - unconverged} with the solver converged; "
             f"plausibility flags differ on {flag_mismatch}, both implausible on {implausible}): "
-            f"{same} plausible at the same minimum: worst {worst:.1e} relative on the {determined} "
-            f"determined rows, {worst_sd:.1e} standard deviations on all ({cov_bad} degenerate "
-            f"covariances, {nonfinite_sd} non-finite); layer cost higher on {short}, lower on "
-            f"{lower}; on the {unconverged} unconverged solver rows the layer is lower on "
-            f"{unconv_lower}",
+            f"{same} plausible at the same minimum: worst {worst:.1e} relative where determined "
+            f"({determined} range, {determined_speed} speed), {worst_sd:.1e} standard "
+            f"deviations on all ({cov_bad} degenerate covariances, {nonfinite_sd} non-finite); "
+            f"layer cost higher on {short}, lower on {lower}; on the {unconverged} unconverged "
+            f"solver rows the layer is lower on {unconv_lower}",
             value=worst,
             threshold=STATE_TOL,
         )
