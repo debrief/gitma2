@@ -39,6 +39,20 @@ def main() -> int:
     _, go = errors_at(by, rows, p["oracle"], "range_rel")
     better = int(((gm == 0) & (gl == 1)).sum())
     worse = int(((gm == 1) & (gl == 0)).sum())
+
+    def kinds(name: str) -> dict[str, int]:
+        """Gross rows split by cause: no converged row (missing or flagged) vs range error > 50%."""
+        nc = big = 0
+        for g in rows:
+            r = p[name].get(g.index, {}).get(g.timestamp_s)
+            if r is None or not r["converged"]:
+                nc += 1
+            else:
+                e, _ = errors_at(by, [g], {g.index: {g.timestamp_s: r}}, "range_rel")
+                big += int(e[0] > 0.5)
+        return {"not_converged": nc, "range_error_over_50pct": big}
+
+    out["gross_by_cause"] = {n: kinds(n) for n in ("model", "lsq", "oracle")}
     out["gross"] = {
         "rows": len(rows),
         "model_gross": int(gm.sum()),
