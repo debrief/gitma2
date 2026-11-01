@@ -42,6 +42,8 @@ CRITERION = (
     "interval lies wholly beyond its limit; otherwise inconclusive (one re-score on a larger "
     "fresh seed, then final)."
 )
+# As registered for g1-a. Amendment 1 (experiments/20261101-g1-decision/amendment-1.md) replaced
+# the shuffled-label check: no better than batch least squares, not "at naive level".
 VALIDATION_RULE = (
     "Before the test split is generated: the carried model's validation median range, course and "
     "speed errors at the gate rows must each be below 1.1 x batch least squares on the same "

@@ -141,6 +141,8 @@ Python, 1.5e-9 in Java, 2.4e-9 in the browser).
 
 - **(a) Direct head.** The same encoder regresses the corrections and three log-variances at row
   k, with no physics layer. It is never carried.
-- **(c) Shuffled labels.** Truths are permuted within each batch. It must score at naive level.
+- **(c) Shuffled labels.** Truths are permuted within each batch. It runs through the physics
+  layer, so it stays near least squares and cannot fall to naive level. It must score no better than
+  least squares on the same rows (constitution 1.2.0; Gate 1 decision amendment 1).
 - **(d) Time-late.** An unmasked encoder and a solve over the whole window, reporting row k. It
   must score at least as well as the causal model.

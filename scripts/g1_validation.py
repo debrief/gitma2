@@ -26,7 +26,10 @@ from tma2.eval.oracle_check import load_rows
 from tma2.types import parse_record
 from tma2.types.generated.tma import Gate1Decision
 
-SHUFFLED_NAIVE_FLOOR = 0.8
+# Amendment 1 (owner, 2026-11-01; experiments/20261101-g1-decision/amendment-1.md): the
+# shuffled-label control runs through the physics layer, so it is checked against batch least
+# squares, not naive: a leak is a range-ratio interval wholly below 1.
+SHUFFLED_LEAK_LIMIT = 1.0
 
 
 def _rows(path: Path) -> Any:
@@ -95,9 +98,8 @@ def main() -> int:
     shuffled = next((m for m in dec.control_models if "shuffled" in m), None)
     timelate = next((m for m in dec.control_models if "timelate" in m), None)
     if shuffled:
-        rule["shuffled-at-naive-level"] = (
-            per[shuffled]["median"]["median-range"]
-            >= SHUFFLED_NAIVE_FLOOR * baselines["naive"]["median-range"]
+        rule["shuffled-no-better-than-least-squares"] = (
+            per[shuffled]["checks"]["ratio-range"]["hi"] >= SHUFFLED_LEAK_LIMIT
         )
     if timelate:
         causal = dec.carried_models[0]

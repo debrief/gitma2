@@ -254,7 +254,9 @@ experiment record's numbers.
   record MUST name the rule that picks the carried weights among them using validation only.
 - **FR-017**: Three controls MUST be trained and reported on validation, never carried: (a) the
   same encoder with a direct regression head and the same loss; (c) the carried configuration on
-  shuffled labels, which MUST score at naive level; (d) the time-late variant (non-causal encoder,
+  shuffled labels, which MUST score no better than batch least squares on the same rows (amendment 1,
+  owner 2026-11-01: it runs through the physics layer, so naive level is out of reach by
+  construction); (d) the time-late variant (non-causal encoder,
   the physics layer over the whole window, state at the row), which MUST score at least as well
   as the causal model (constitution IV).
 
@@ -318,7 +320,7 @@ experiment record's numbers.
   no earlier record.
 - **SC-007**: The Gate 1 experiment record holds the model, naive, batch least squares, EKF, IMM
   and oracle on the same rows, the clustered intervals, efficiency per slice and a verdict decided
-  by the panel; the shuffled-label control scores at naive level and the time-late control at
+  by the panel; the shuffled-label control scores no better than batch least squares and the time-late control at
   least as well as the causal model, on validation.
 - **SC-008**: The exported carried model loads in each runtime in under a minute and agrees with
   PyTorch to 1e-5 in double at the production iteration count.

@@ -8,7 +8,7 @@ Guidance for AI coding agents working in this repository.
 bearing geometry, match batch least squares wherever the constant-velocity model holds and beat a
 tuned IMM wherever it does not? It starts from [debrief/Gitma](https://github.com/debrief/Gitma).
 
-- Principles: `.specify/memory/constitution.md` (v1.1.0). Plans MUST pass its checks.
+- Principles: `.specify/memory/constitution.md` (v1.2.0). Plans MUST pass its checks.
 - Research and the owner's decisions: `docs/research/` (notes 01–05; decisions in 04 §6).
 - Requirements: `docs/SRD.md` (draft) and `docs/SRD-annex-A.md` (steady-leg detector, Gate D). Read them before planning any feature; where this file and the SRD disagree, the SRD wins.
 

@@ -12,7 +12,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   internally.
 - **Changepoint weight** — the physics layer's input c ∈ [0, 1] per row: how free the target's
   velocity is to change there. The M largest become candidate knots; 0 everywhere is one leg.
-- **Control (model)** — a variant trained only to test the pipeline, never carried: direct regression head, shuffled labels (must score at naive level), time-late (must score at least as well as the causal model).
+- **Control (model)** — a variant trained only to test the pipeline, never carried: direct regression head, shuffled labels (must score no better than the design without learning: naive for a regressor, batch least squares for a physics-layer model), time-late (must score at least as well as the causal model).
 - **Cramér–Rao bound (CRB)** — the lowest variance any unbiased estimator can reach given the
   bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
   full window, known manoeuvres, per leg (see [CRB](algorithms/crb.md)).
