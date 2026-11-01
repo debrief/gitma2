@@ -93,6 +93,9 @@ def _export(out_dir: Path, fixture_pack: Path, seed: int, dtype: str) -> dict[st
     with torch.no_grad():
         ref = model(*[tensors[n] for n in ("bearing", "valid", "own", "t", "sigma", "k", "theta0")])
     onnx_path = out_dir / "toy.onnx"
+    # Scalar constants inside the scripted physics Loop take the default dtype at export: it
+    # must match the model's, or onnxruntime rejects mixed float/double products (spec 003).
+    torch.set_default_dtype(torch.float64 if dtype == "float64" else torch.float32)
     torch.onnx.export(
         model,
         tuple(tensors[n] for n in ("bearing", "valid", "own", "t", "sigma", "k", "theta0")),
