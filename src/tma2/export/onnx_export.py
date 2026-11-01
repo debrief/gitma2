@@ -67,7 +67,20 @@ def export(
     out_dir: Path, fixture_pack: Path, seed: int = 1, dtype: str = "float64"
 ) -> dict[str, float]:
     """Export in ``dtype`` (float64 by default: the iterative solve amplifies float32 kernel
-    differences between runtimes to ~1e-4, so the conformance proof is made in double)."""
+    differences between runtimes to ~1e-4, so the conformance proof is made in double).
+
+    The model is built under float32 and converted, with the default dtype pinned for the whole
+    export, so the graph does not depend on what the caller set (P0 round 2: tma2-p0's physics
+    checks had set double)."""
+    default = torch.get_default_dtype()
+    torch.set_default_dtype(torch.float32)
+    try:
+        return _export(out_dir, fixture_pack, seed, dtype)
+    finally:
+        torch.set_default_dtype(default)
+
+
+def _export(out_dir: Path, fixture_pack: Path, seed: int, dtype: str) -> dict[str, float]:
     out_dir.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(seed)
     model = ToyModel().eval()
