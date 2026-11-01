@@ -6,7 +6,8 @@
 ``gate1``: three seeds of the carried configuration and the controls (a) direct head, (c)
 shuffled labels, (d) time-late, at the research R3/R4 defaults. ``smoke``: the workflow's end-to-end
 check (research R7): two small models, two short epochs, so the chain, the resume and the
-results branch are exercised in minutes and the runner's throughput is recorded.
+results branch are exercised in minutes. ``bench``: the carried configuration for two epochs of
+4,000 scenarios (the second epoch has compiled kernels), for the runner throughput (T012).
 """
 
 from __future__ import annotations
@@ -27,6 +28,8 @@ TRAIN_SEED = 310
 
 
 def models(preset: str) -> list[Any]:
+    if preset == "bench":
+        return [model_config("bench-physics", epochs=2, patience=2)]
     if preset == "smoke":
         small = {"epochs": 2, "patience": 2, "batch_scenarios": 32}
         return [
@@ -45,20 +48,21 @@ def models(preset: str) -> list[Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--preset", choices=("gate1", "smoke"), required=True)
+    ap.add_argument("--preset", choices=("gate1", "smoke", "bench"), required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--validation", default=VALIDATION)
     ap.add_argument("--decision", default="none")
     a = ap.parse_args()
     header = read_pack_header(a.validation)
     smoke = a.preset == "smoke"
+    bench = a.preset == "bench"
     plan = TrainingPlan(
-        id="g1-smoke" if smoke else "g1-a",
+        id="g1-smoke" if smoke else "g1-bench" if bench else "g1-a",
         ranges=header.parameter_ranges,
         train_seed=TRAIN_SEED,
-        scenarios_per_epoch=1000 if smoke else 50_000,
+        scenarios_per_epoch=1000 if smoke else 4000 if bench else 50_000,
         validation=DatasetRef(path=a.validation, header=header, digest=file_digest(a.validation)),
-        validation_scenarios=200 if smoke else 2000,
+        validation_scenarios=200 if smoke else 1000 if bench else 2000,
         models=models(a.preset),
         decision=a.decision,
     )

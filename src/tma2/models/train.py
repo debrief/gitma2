@@ -298,6 +298,7 @@ def train(
                 torch.nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
                 opt.step()
             losses.append(float(lp.squared))
+        train_s = time.time() - t0
         v = validation_loss(model, val, cfg)
         secs = time.time() - t0
         meta.epoch = e
@@ -318,6 +319,8 @@ def train(
                     "train": meta.train_losses[-1],
                     "val": v,
                     "seconds": round(secs, 1),
+                    "train_seconds": round(train_s, 1),
+                    "scenarios": n_epoch,
                 }
             )
         )
