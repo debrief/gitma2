@@ -32,7 +32,9 @@ SIGMA_1 = math.radians(1.0)
 R_SCALES = (1.0, 2.0, 8.0, 16.0, 32.0)
 IMM_GRID = [
     ImmParams(cv, 0.03, 0.01, sw, 4.0, r)
-    for cv, sw, r in itertools.product((0.0003, 0.001, 0.003, 0.01, 0.03), (0.001, 0.01), R_SCALES)
+    for cv, sw, r in itertools.product(
+        (0.0003, 0.001, 0.003, 0.01, 0.03), (1e-5, 1e-4, 0.001, 0.01), R_SCALES
+    )
 ]
 EKF_GRID = [
     (sa, 4.0, r)
@@ -75,9 +77,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--experiment", required=True)
     ap.add_argument("--scenarios", type=int, default=2000, help="σ = 1° scenarios used")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--allow-dirty", action="store_true", help="exploration only: not frozen")
     a = ap.parse_args(argv)
     folder = Path(a.experiment)
     exp = Experiment(id=folder.name, folder=folder)
+    if exp.git()[1] and not a.allow_dirty:
+        # The frozen references must come from a committed tree (constitution II).
+        print(
+            "tma2-tune: the working tree is dirty; commit first (or --allow-dirty)", file=sys.stderr
+        )
+        return 2
     exp.command_lines.append("tma2-tune " + " ".join(sys.argv[1:]))
     exp.add_dataset(a.validation, dump_record(read_pack_header(a.validation)))
     jobs: list[tuple[str, Any, str, int]] = [
