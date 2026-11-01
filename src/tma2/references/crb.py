@@ -42,6 +42,8 @@ class CrbRow:
     sd_course_deg: float
     sd_speed_kt: float
     singular: bool
+    # Bound on the covariance of (x, y, vx, vy) at the row, for losses normalised per component.
+    state_cov: np.ndarray | None = None
 
 
 def _information(
@@ -138,6 +140,7 @@ def _bound(info: np.ndarray, g: np.ndarray, dx: float, dy: float, tvx: float, tv
         sd_course_deg=math.degrees(math.sqrt(var_c)),
         sd_speed_kt=math.sqrt(var_s) / (1852.0 / 3600.0),
         singular=False,
+        state_cov=cov_state,
     )
 
 

@@ -8,6 +8,7 @@ solve is an unrolled Gaussian elimination on the SPD normal matrix (ONNX has no 
 
 from __future__ import annotations
 
+import contextlib
 import math
 from dataclasses import dataclass
 
@@ -167,8 +168,14 @@ class PhysicsLayer(torch.nn.Module):
         tau_speed_mps: float = TAU_SPEED_MPS,
         lambda0: float = LAMBDA0,
         trials: int = TRIALS,
+        implicit: bool = False,
     ) -> None:
         super().__init__()
+        # implicit: iterate without a gradient tape, then one undamped Gauss–Newton step from the
+        # detached solution with gradients on. At the optimum the step is ~0, so the value is
+        # unchanged, and its derivative is the implicit-function gradient of the solution (under
+        # the Gauss–Newton Hessian); the initial state gets none (spec 003 R1).
+        self.implicit = implicit
         self.iterations = iterations
         self.knots = knots
         self.tau_r = tau_ridge_mps
@@ -207,7 +214,9 @@ class PhysicsLayer(torch.nn.Module):
         gx = -sw * dy / rho2
         gy = sw * dx / rho2
         # columns for (p0x, p0y, u0x, u0y, d1x, d1y, ...): [B,R,4+2M]
-        j_d = torch.stack([gx.unsqueeze(2) * a, gy.unsqueeze(2) * a], dim=3).reshape(b_, -1, 2 * m)
+        j_d = torch.stack([gx.unsqueeze(2) * a, gy.unsqueeze(2) * a], dim=3).reshape(
+            b_, t.shape[1], 2 * m
+        )
         j_b = torch.cat([torch.stack([gx, gy, gx * t, gy * t], dim=2), j_d], dim=2)
         # ridge on increments: rows 2M, columns on d only
         wr = safe_sqrt(c) / self.tau_r  # [B,M]
@@ -303,7 +312,6 @@ class PhysicsLayer(torch.nn.Module):
         r, _ = self._residuals(theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order)
         cost = (r * r).sum(dim=1)
         nt = self.trials
-        n_p = theta.shape[1]
         ladder = torch.tensor([10.0**j for j in range(nt)], dtype=dt, device=dev)
 
         def rep(v: Tensor) -> Tensor:
@@ -319,6 +327,111 @@ class PhysicsLayer(torch.nn.Module):
             rep(ref_order),
         )
 
+        tape = torch.no_grad() if self.implicit else contextlib.nullcontext()
+        with tape:
+            theta, cost = self._iterate(
+                theta,
+                cost,
+                lam,
+                ladder,
+                x,
+                ox,
+                oy,
+                sw,
+                t_knots,
+                c,
+                s,
+                order,
+                ref_order,
+                (t_r, ox_r, oy_r, z_r, sw_r, tk_r, c_r, s_r, order_r, ref_order_r),
+            )
+        if self.implicit:
+            theta = self._newton_step(
+                theta.detach(), x, ox, oy, sw, t_knots, c, s, order, ref_order
+            )
+        return self._outputs(theta, cost, x, ox, oy, sw, t_knots, c, s, order, ref_order, knots)
+
+    def _newton_step(
+        self,
+        theta: Tensor,
+        x: PhysicsInputs,
+        ox: Tensor,
+        oy: Tensor,
+        sw: Tensor,
+        t_knots: Tensor,
+        c: Tensor,
+        s: Tensor,
+        order: Tensor,
+        ref_order: Tensor,
+    ) -> Tensor:
+        """θ* − H⁻¹ Jᵀr at the detached solution θ*, with H = JᵀJ + Σ rᵢ ∇²rᵢ (the true Hessian of
+        half the cost) held constant. Its derivative with respect to the learned inputs is the
+        exact implicit-function gradient −H⁻¹ ∂(Jᵀr)/∂w; the Gauss–Newton Hessian alone was up to
+        25% off on flat rows (spec 003 R1). Where H is not positive definite (a saddle or a
+        flat direction) the Gauss–Newton Hessian is used for that row."""
+        dt = theta.dtype
+        n_p = theta.shape[1]
+        th = theta.detach().requires_grad_(True)
+        with torch.enable_grad():
+            r, jac = self._residuals(
+                th,
+                x.t,
+                ox,
+                oy,
+                x.bearing,
+                sw.detach(),
+                t_knots,
+                c.detach(),
+                s.detach(),
+                order,
+                ref_order,
+            )
+            rbar = r.detach()
+            g = (jac.transpose(1, 2) @ rbar.unsqueeze(2))[..., 0]  # Jᵀ r̄, θ-dependent via J
+            cols = [
+                torch.autograd.grad(g[:, p].sum(), th, retain_graph=p < n_p - 1)[0]
+                for p in range(n_p)
+            ]
+        jac_d = jac.detach()
+        gn = jac_d.transpose(1, 2) @ jac_d
+        curvature = torch.stack(cols, dim=2)  # [B,P,P]: Σ r̄ᵢ ∇²rᵢ
+        hess = gn + 0.5 * (curvature + curvature.transpose(1, 2))
+        inert = (_diagonal(gn) == 0).to(dt)
+        ridge = _diag(inert + COV_RIDGE * _diagonal(gn))
+        # Positive definite: every Jacobi-scaled pivot of the elimination positive.
+        dinv = 1.0 / torch.sqrt(_diagonal(gn + ridge).clamp_min(1e-300))
+        scaled = (hess + ridge) * dinv.unsqueeze(2) * dinv.unsqueeze(1)
+        pd = torch.linalg.eigvalsh(scaled).min(dim=1).values > 1e-9
+        h = torch.where(pd.view(-1, 1, 1), hess, gn) + ridge
+        # Gradient path: Jᵀr with r and J depending on the learned inputs, θ* constant.
+        r2, jac2 = self._residuals(
+            theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order
+        )
+        jtr = -(jac2.transpose(1, 2) @ r2.unsqueeze(2))[..., 0]
+        return theta + spd_solve(h.detach(), jtr)
+
+    def _iterate(
+        self,
+        theta: Tensor,
+        cost: Tensor,
+        lam: Tensor,
+        ladder: Tensor,
+        x: PhysicsInputs,
+        ox: Tensor,
+        oy: Tensor,
+        sw: Tensor,
+        t_knots: Tensor,
+        c: Tensor,
+        s: Tensor,
+        order: Tensor,
+        ref_order: Tensor,
+        reps: tuple[Tensor, ...],
+    ) -> tuple[Tensor, Tensor]:
+        b_ = theta.shape[0]
+        n_p = theta.shape[1]
+        nt = self.trials
+        dt = theta.dtype
+        t_r, ox_r, oy_r, z_r, sw_r, tk_r, c_r, s_r, order_r, ref_order_r = reps
         for _ in range(self.iterations):
             r, jac = self._residuals(
                 theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order
@@ -363,6 +476,28 @@ class PhysicsLayer(torch.nn.Module):
                 (lam_used / 10.0).clamp_min(LAMBDA_MIN),
                 (lam * 10.0**nt).clamp_max(LAMBDA_MAX),
             )
+        return theta, cost
+
+    def _outputs(
+        self,
+        theta: Tensor,
+        cost: Tensor,
+        x: PhysicsInputs,
+        ox: Tensor,
+        oy: Tensor,
+        sw: Tensor,
+        t_knots: Tensor,
+        c: Tensor,
+        s: Tensor,
+        order: Tensor,
+        ref_order: Tensor,
+        knots: Tensor,
+    ) -> PhysicsOutputs:
+        b_ = theta.shape[0]
+        m = self.knots
+        dt = theta.dtype
+        dev = theta.device
+        kk = x.k.unsqueeze(1)
         tk = torch.gather(x.t, 1, kk)  # [B,1]
         p0 = theta[:, 0:2]
         u0 = theta[:, 2:4]

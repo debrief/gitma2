@@ -252,9 +252,11 @@ experiment record's numbers.
   epoch with the optimiser state, and resume to the same result.
 - **FR-016**: Three training seeds MUST be run for the carried configuration, and the decision
   record MUST name the rule that picks the carried weights among them using validation only.
-- **FR-017**: Two controls MUST be trained and reported on validation: (a) the same encoder with a
-  direct regression head and the same loss, never carried; (c) the carried configuration on
-  shuffled labels.
+- **FR-017**: Three controls MUST be trained and reported on validation, never carried: (a) the
+  same encoder with a direct regression head and the same loss; (c) the carried configuration on
+  shuffled labels, which MUST score at naive level; (d) the time-late variant (non-causal encoder,
+  the physics layer over the whole window, state at the row), which MUST score at least as well
+  as the causal model (constitution IV).
 
 **Runs**
 
@@ -316,14 +318,16 @@ experiment record's numbers.
   no earlier record.
 - **SC-007**: The Gate 1 experiment record holds the model, naive, batch least squares, EKF, IMM
   and oracle on the same rows, the clustered intervals, efficiency per slice and a verdict decided
-  by the panel.
+  by the panel; the shuffled-label control scores at naive level and the time-late control at
+  least as well as the causal model, on validation.
 - **SC-008**: The exported carried model loads in each runtime in under a minute and agrees with
   PyTorch to 1e-5 in double at the production iteration count.
 
 ## Assumptions
 
 - The gated variant is the instantaneous (causal) one, because Gate 1's rows are scored at fixed
-  times since the zig; the time-late variant is reported later.
+  times since the zig; the time-late variant is trained as control (d), one seed, to satisfy
+  constitution IV's check, and is not gated.
 - The backward pass is implicit because the unrolled one costs about 0.16 s and 72 MB per row
   (P0), which would put a 256-row batch at about 41 s and 18 GB.
 - The forward pass uses 100 iterations, as P0 established from the grid start (about 6.7 ms per row
