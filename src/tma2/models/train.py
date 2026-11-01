@@ -108,32 +108,42 @@ def _inputs(
     return model_inputs(tens, rows, np.tile(batch.samples, draws))
 
 
-def validation_inputs(plan: TrainingPlan, cfg: PhysicsModelConfig, data_dir: Path) -> ModelInputs:
+VALIDATION_GROUP = 64
+
+
+def validation_inputs(
+    plan: TrainingPlan, cfg: PhysicsModelConfig, data_dir: Path
+) -> list[ModelInputs]:
+    """Fixed validation rows, in groups of scenarios so each group's encoder runs once."""
     path = data_dir / Path(plan.validation.path).name
     digest = file_digest(path)
     if plan.validation.digest and digest != plan.validation.digest:
         raise ValueError(f"{path}: digest {digest} is not the plan's {plan.validation.digest}")
     batch = batch_from_pack(path, plan.validation_scenarios)
     rng = np.random.default_rng(VALIDATION_ROW_SEED)
-    return _inputs(batch, 0, 1, rng, cfg.rows_per_scenario, False)
+    groups = []
+    for a in range(0, len(batch), VALIDATION_GROUP):
+        sub = slice_batch(batch, a, min(a + VALIDATION_GROUP, len(batch)))
+        groups.append(_inputs(sub, 0, 1, rng, cfg.rows_per_scenario, False))
+    return groups
 
 
-def validation_loss(model: Gate1Model, x: ModelInputs, cfg: PhysicsModelConfig) -> float:
+def slice_batch(b: Batch, a: int, z: int) -> Batch:
+    from dataclasses import fields, replace
+
+    return replace(b, **{f.name: getattr(b, f.name)[a:z] for f in fields(b)})
+
+
+def validation_loss(model: Gate1Model, groups: list[ModelInputs], cfg: PhysicsModelConfig) -> float:
     model.set_implicit(False)
+    total = 0.0
+    rows = 0
     with torch.no_grad():
-        parts = []
-        n = x.source.shape[0]
-        step = 512
-        total = 0.0
-        rows = 0
-        for a in range(0, n, step):
-            sel = torch.arange(a, min(a + step, n))
-            sub = _select_rows(x, sel)
-            out = run(model, sub)
-            lp = gate1_loss(out, sub.truth, sub.bound_cov, sub.okx(), sub.oky(), cfg)
+        for x in groups:
+            out = run(model, x)
+            lp = gate1_loss(out, x.truth, x.bound_cov, x.okx(), x.oky(), cfg)
             total += float(lp.squared) * lp.rows
             rows += lp.rows
-            parts.append(lp.rows)
     return total / max(rows, 1)
 
 

@@ -53,3 +53,32 @@ def test_resumed_run_equals_uninterrupted(tmp_path: Path) -> None:
     wa, wb = load_file(str(a / "weights.safetensors")), load_file(str(b / "weights.safetensors"))
     assert wa.keys() == wb.keys()
     assert all(bool((wa[k] == wb[k]).all()) for k in wa)
+
+
+def test_predictions_score_with_the_evaluation_tools(tmp_path: Path) -> None:
+    """tma2-predict output is gitma's prediction format: it binds to the truth file and every
+    scenario has a row at every post-zig timestep."""
+    from tma2.eval.predictions import check_bound, iter_predictions_raw
+    from tma2.models.predict import load_model, predict_split
+
+    plan = _plan(tmp_path)
+    data = fixture_dir("iter4-seed777")
+    ck = tmp_path / "ck"
+    train(plan, "t1", ck, data, epochs=1, log=lambda _: None)
+    model = load_model(plan, "t1", ck)
+    out = tmp_path / "pred.ndjson"
+    truth = data / "test.f32pack"
+    predict_split(model, truth, out, log=lambda _: None)
+    check_bound(out, truth)
+    from tma2.data.f32pack import iter_pack_raw
+
+    zig = {
+        int(m["index"]): (int(m["zig_index"]), int(m["samples"]))
+        for _, m, *_ in iter_pack_raw(truth)
+    }
+    n = 0
+    for _, p in iter_predictions_raw(out):
+        z, s = zig[int(p["scenario_index"])]
+        assert len(p["rows"]) == s - z - 1
+        n += 1
+    assert n == len(zig)

@@ -17,6 +17,7 @@ import math
 from dataclasses import dataclass
 
 import numpy as np
+from numba import njit, prange
 
 from tma2.features.batch import Batch
 from tma2.references import lsq
@@ -70,33 +71,100 @@ def renoise(batch: Batch, seed: int, draw: int) -> np.ndarray:
     return out
 
 
-def _information_prefix(
+@njit(parallel=True, cache=True)
+def _row_kernel(
     t: np.ndarray,
     ox: np.ndarray,
     oy: np.ndarray,
+    z: np.ndarray,
+    valid: np.ndarray,
     tx: np.ndarray,
     ty: np.ndarray,
-    valid: np.ndarray,
-    sigma: float,
-) -> np.ndarray:
-    """Fisher information of (x0, y0, vx, vy) from valid bearings 0 … k, for every k: [R, 4, 4]."""
-    dx = tx - ox
-    dy = ty - oy
-    rho2 = np.maximum(dx * dx + dy * dy, 1e-12)
-    g = np.stack([dy / rho2, -dx / rho2, t * dy / rho2, -t * dx / rho2], axis=1)
-    g = g * valid[:, None]
-    return np.asarray(np.cumsum(g[:, :, None] * g[:, None, :], axis=0) / max(sigma, 1e-4) ** 2)
-
-
-def _bound(info: np.ndarray, tk: float) -> np.ndarray | None:
-    d = np.sqrt(np.maximum(np.diag(info), 1e-300))
-    scaled = info / np.outer(d, d)
-    w, v = np.linalg.eigh(scaled)
-    if w[0] <= w[-1] / SINGULAR_COND:
-        return None
-    cov = (v / w) @ v.T / np.outer(d, d)
-    gmap = np.array([[1, 0, tk, 0], [0, 1, 0, tk], [0, 0, 1, 0], [0, 0, 0, 1.0]])
-    return np.asarray(gmap @ cov @ gmap.T)
+    sigma: np.ndarray,
+    src: np.ndarray,
+    ks: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Per row (source j, row k): the classical grid start on samples [0, k] and the full-window
+    Cramér–Rao bound on (x, y, vx, vy) at k; ok = 0 where no valid bearing or the bound is
+    singular (scaled condition above 1e12). ``ok``: 0 no valid bearing up to k, 1 grid start but
+    singular bound, 2 both. Parallel over rows; each row's arithmetic is serial."""
+    n = src.shape[0]
+    grid = np.zeros((n, 4))
+    cov = np.full((n, 4, 4), np.nan)
+    ok = np.zeros(n, dtype=np.uint8)
+    for q in prange(n):
+        j = src[q]
+        k = ks[q]
+        vu8 = valid[j].astype(np.uint8)
+        found, th = lsq.grid_start(t[j], ox[j], oy[j], z[j], vu8, k + 1)
+        if not found:
+            continue
+        grid[q] = th
+        ok[q] = 1
+        info = np.zeros((4, 4))
+        s2 = max(sigma[j], 1e-4) ** 2
+        for i in range(k + 1):
+            if valid[j, i] == 0:
+                continue
+            dx = tx[j, i] - ox[j, i]
+            dy = ty[j, i] - oy[j, i]
+            rho2 = max(dx * dx + dy * dy, 1e-12)
+            g0 = dy / rho2
+            g1 = -dx / rho2
+            g2 = t[j, i] * dy / rho2
+            g3 = -t[j, i] * dx / rho2
+            gv = (g0, g1, g2, g3)
+            for a in range(4):
+                for b in range(4):
+                    info[a, b] += gv[a] * gv[b] / s2
+        d = np.empty(4)
+        for a in range(4):
+            d[a] = math.sqrt(max(info[a, a], 1e-300))
+        m = np.empty((4, 4))
+        inv = np.zeros((4, 4))
+        for a in range(4):
+            inv[a, a] = 1.0
+            for b in range(4):
+                m[a, b] = info[a, b] / (d[a] * d[b])
+        # Gauss–Jordan on the Jacobi-scaled matrix (unit diagonal, eigenvalues ≤ 4): a pivot at
+        # or below 1/SINGULAR_COND means the bound is singular.
+        singular = False
+        for col in range(4):
+            piv = m[col, col]
+            if piv <= 1.0 / SINGULAR_COND:
+                singular = True
+                break
+            for b in range(4):
+                m[col, b] /= piv
+                inv[col, b] /= piv
+            for a in range(4):
+                if a != col:
+                    f = m[a, col]
+                    for b in range(4):
+                        m[a, b] -= f * m[col, b]
+                        inv[a, b] -= f * inv[col, b]
+        if singular:
+            continue
+        c = np.empty((4, 4))
+        for a in range(4):
+            for b in range(4):
+                c[a, b] = inv[a, b] / (d[a] * d[b])
+        tk = t[j, k]
+        # state map at k: x = x0 + vx t, y = y0 + vy t (explicit products: no BLAS in numba)
+        gm = np.zeros((4, 4))
+        for a in range(4):
+            gm[a, a] = 1.0
+        gm[0, 2] = tk
+        gm[1, 3] = tk
+        for a in range(4):
+            for b in range(4):
+                acc = 0.0
+                for u in range(4):
+                    for w in range(4):
+                        acc += gm[a, u] * c[u, w] * gm[b, w]
+                cov[q, a, b] = acc
+        ok[q] = 2
+    return grid, cov, ok
 
 
 def scenario_tensors(batch: Batch, seed: int, draws: int) -> ScenarioTensors:
@@ -141,55 +209,57 @@ def row_batch(
     rng: np.random.Generator,
     per_scenario: int = 4,
     all_rows: bool = False,
+    keep_singular: bool = False,
 ) -> RowBatch:
-    """Scored rows for every (scenario, draw); the same rows for every draw of a scenario."""
+    """Scored rows for every (scenario, draw); the same rows for every draw of a scenario.
+    ``keep_singular`` keeps rows whose bound is singular (prediction scores every row; the bound
+    is then NaN). Rows without a valid bearing up to k are always dropped."""
     rows = {s: choose_rows(batch, s, rng, per_scenario, all_rows) for s in range(len(batch))}
-    src, ks, grid, truth, cov, since = [], [], [], [], [], []
-    infos: dict[int, np.ndarray] = {}
+    src_l: list[int] = []
+    ks_l: list[int] = []
     for j in range(tensors.bearing.shape[0]):
-        s = int(tensors.scenario[j])
-        if s not in infos:
-            tx = batch.tgt[s, :, 0].astype(np.float64)
-            ty = batch.tgt[s, :, 1].astype(np.float64)
-            infos[s] = _information_prefix(
-                tensors.t[j],
-                tensors.ox[j],
-                tensors.oy[j],
-                tx,
-                ty,
-                tensors.valid[j],
-                float(tensors.sigma[j]),
-            )
-        valid_u8 = tensors.valid[j].astype(np.uint8)
-        for k in rows[s]:
-            bound = _bound(infos[s][k], float(tensors.t[j, k]))
-            if bound is None:
-                continue
-            found, th = lsq.grid_start(
-                tensors.t[j], tensors.ox[j], tensors.oy[j], tensors.bearing[j], valid_u8, k + 1
-            )
-            if not found:
-                continue
-            c = float(batch.tgt[s, k, 2])
-            v = float(batch.tgt[s, k, 3])
-            src.append(j)
-            ks.append(k)
-            grid.append(np.asarray(th, dtype=np.float64))
-            truth.append(
-                [
-                    float(batch.tgt[s, k, 0]),
-                    float(batch.tgt[s, k, 1]),
-                    v * math.sin(c),
-                    v * math.cos(c),
-                ]
-            )
-            cov.append(bound)
-            since.append(float(batch.since_zig_s[s, k]))
+        for k in rows[int(tensors.scenario[j])]:
+            src_l.append(j)
+            ks_l.append(k)
+    src = np.asarray(src_l, dtype=np.int64)
+    ks = np.asarray(ks_l, dtype=np.int64)
+    scen = tensors.scenario[src] if src.size else src
+    tx = batch.tgt[..., 0].astype(np.float64)[tensors.scenario]
+    ty = batch.tgt[..., 1].astype(np.float64)[tensors.scenario]
+    grid, cov, ok = _row_kernel(
+        tensors.t,
+        tensors.ox,
+        tensors.oy,
+        tensors.bearing,
+        tensors.valid,
+        tx,
+        ty,
+        tensors.sigma,
+        src,
+        ks,
+    )
+    keep = (ok == 2) | (keep_singular & (ok == 1))
+    src, ks, scen, grid, cov = src[keep], ks[keep], scen[keep], grid[keep], cov[keep]
+    c = batch.tgt[scen, ks, 2].astype(np.float64)
+    v = batch.tgt[scen, ks, 3].astype(np.float64)
+    truth = (
+        np.stack(
+            [
+                batch.tgt[scen, ks, 0].astype(np.float64),
+                batch.tgt[scen, ks, 1].astype(np.float64),
+                v * np.sin(c),
+                v * np.cos(c),
+            ],
+            axis=1,
+        )
+        if src.size
+        else np.zeros((0, 4))
+    )
     return RowBatch(
-        source=np.asarray(src, dtype=np.int64),
-        k=np.asarray(ks, dtype=np.int64),
-        theta_grid=np.asarray(grid, dtype=np.float64).reshape(-1, 4),
-        truth=np.asarray(truth, dtype=np.float64).reshape(-1, 4),
-        bound_cov=np.asarray(cov, dtype=np.float64).reshape(-1, 4, 4),
-        since_zig_s=np.asarray(since, dtype=np.float64),
+        source=src,
+        k=ks,
+        theta_grid=grid.reshape(-1, 4),
+        truth=truth.reshape(-1, 4),
+        bound_cov=cov.reshape(-1, 4, 4),
+        since_zig_s=batch.since_zig_s[scen, ks].astype(np.float64) if src.size else np.zeros(0),
     )

@@ -21,7 +21,7 @@ DEFAULTS: dict[str, Any] = {
     "loss_nll_weight": 1.0,
     "nll_beta": 0.5,
     "loss_cap": 100.0,
-    "rows_per_scenario": 4,
+    "rows_per_scenario": 3,  # the two gate rows and one random row (research R4)
     "noise_draws": 2,
     "batch_scenarios": 64,
     "learning_rate": 1e-3,
