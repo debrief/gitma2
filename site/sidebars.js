@@ -6,7 +6,7 @@ module.exports = {
     {
       type: "category",
       label: "Algorithms",
-      items: ["algorithms/physics-layer", "algorithms/least-squares", "algorithms/ekf-imm", "algorithms/crb"],
+      items: ["algorithms/physics-layer", "algorithms/gate1-model", "algorithms/least-squares", "algorithms/ekf-imm", "algorithms/crb"],
     },
   ],
 };
