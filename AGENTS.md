@@ -123,6 +123,10 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - The reference ports keep gitma's arithmetic order, including explicit 4×4/5×5 loop products
   instead of BLAS (`@` on small matrices changes the last bits and the iteration path) and the
   IMM's finite-difference Jacobians. Agreement with gitma is 1e-7 typical, 1e-5 worst, flags exact.
+- Export size: the Gauss–Jordan solve is one masked whole-matrix update per pivot; a row-by-row
+  form made ~3,000 nodes per solve and onnxruntime took over 10 minutes to load the graph.
+  Iterations are unrolled, so the conformance export uses 8; a deployable model needs an ONNX
+  `Loop` over the iteration (spec 003).
 - Physics layer export rules: no `torch.diagonal`/`diag_embed`/in-place slice writes (they export
   `If` or unsupported ops); no `torch.cos` or `torch.atan` in double (onnxruntime-web has no
   float64 kernels for them: use `cos_export`/`atan2_export`); no `Solve`/`Inverse` (unrolled

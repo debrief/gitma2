@@ -132,8 +132,8 @@ def spd_solve(a: Tensor, b: Tensor) -> Tensor:
     one whole-matrix update per pivot (a static loop over P pivots; the graph holds only
     Gather/Mul/Sub/Div/Where/Sqrt). Every element sees the same operations as the row-by-row form
     in ``reference.spd_solve`` (f_i = a_ij / a_jj, then a_i − f_i a_j), so the two agree to
-    rounding (≈1e-17 on well-scaled systems); P0 panel round 1 replaced the row-by-row graph (≈3,000 nodes per solve, which
-    onnxruntime loaded very slowly) with this one."""
+    rounding (≈1e-17 on well-scaled systems). P0 panel round 1 replaced the row-by-row graph
+    (≈3,000 nodes per solve, which onnxruntime loaded very slowly) with this one."""
     p = a.shape[-1]
     eye = torch.eye(p, dtype=a.dtype, device=a.device).unsqueeze(0)
     dinv = 1.0 / torch.sqrt((a * eye).sum(dim=2).clamp_min(1e-300))  # [B,P]
