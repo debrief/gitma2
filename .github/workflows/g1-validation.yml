@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        estimator: [lsq, naive, ekf, imm]
+        estimator: [lsq, naive, ekf, imm, oracle]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,6 +66,7 @@ jobs:
             ekf)
               uv run tma2-track --in "$DATA/validation.f32pack" --out "$OUT" --filter ekf \
                 --sigma-a "$(get ekf sigma_a)" --p0-scale "$(get ekf p0_scale)" --r-scale "$(get ekf r_scale)" ;;
+            oracle) uv run tma2-oracle --truth "$DATA/validation.f32pack" --out "$OUT" ;;
             imm)
               uv run tma2-track --in "$DATA/validation.f32pack" --out "$OUT" --filter imm \
                 --sigma-cv "$(get imm sigma_cv)" --sigma-ct "$(get imm sigma_ct)" \
@@ -117,7 +118,8 @@ jobs:
           uv run python scripts/g1_validation.py --decision "$DECISION" \
             --validation "$DATA/validation.f32pack" --models "$RUNNER_TEMP/models" \
             --lsq "$B/validation-lsq.ndjson" --naive "$B/validation-naive.ndjson" \
-            --ekf "$B/validation-ekf.ndjson" --imm "$B/validation-imm.ndjson" --out "$EXP"
+            --ekf "$B/validation-ekf.ndjson" --imm "$B/validation-imm.ndjson" \
+            --oracle "$B/validation-oracle.ndjson" --out "$EXP"
           status=$?
           set -e
           [ "$status" -eq 0 ] || [ "$status" -eq 3 ] || exit "$status"

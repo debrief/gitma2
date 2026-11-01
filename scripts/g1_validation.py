@@ -59,12 +59,15 @@ def main() -> int:
     ap.add_argument("--models", required=True)
     for b in ("lsq", "naive", "ekf", "imm"):
         ap.add_argument(f"--{b}", required=True)
+    ap.add_argument("--oracle", help="the physics layer with oracle inputs (constitution IV)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     dec = parse_record(Gate1Decision, json.loads(Path(a.decision).read_text()), a.decision, 1)
     truths, bounds, _ = load_truths(a.validation)
     lsq = load_rows(a.lsq)
     base = {"naive": load_rows(a.naive), "ekf": load_rows(a.ekf), "imm": load_rows(a.imm)}
+    if a.oracle:
+        base["oracle"] = load_rows(a.oracle)
     per: dict[str, Any] = {}
     reported: dict[str, Any] = {}
     for n, mid in enumerate([*dec.carried_models, *dec.control_models]):
@@ -125,7 +128,7 @@ def main() -> int:
         f"Decision record: `{a.decision}`. Validation split: seed 302, σ = 1° gate rows "
         "(zig + 5 min for range and course, zig + 10 min for speed).",
         "",
-        "| Estimator | Range (median, ratio to LS) | Course (°) | Speed (m/s) | Gross | "
+        "| Estimator | Range (median, ratio to LS) | Course (°) | Speed (kt) | Gross | "
         "Efficiency range / course / speed |",
         "| --- | --- | --- | --- | --- | --- |",
     ]
@@ -160,6 +163,10 @@ def main() -> int:
     for name, rec in baselines.items():
         lines.append(row(name, rec, None))
     lines += [
+        "",
+        "Speed in knots. Efficiency is median(|error| / bound sd) / 0.6745 against the causal "
+        "full-window Cramér–Rao bound at the row; the time-late control sees bearings after the "
+        "row, so its efficiency is not comparable (it is below the causal bound by construction).",
         "",
         f"Carried by rule (median seed by median range error): **{carried}** "
         f"(order {', '.join(seeds)}).",

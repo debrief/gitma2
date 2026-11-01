@@ -27,6 +27,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     for name in ("test", "model", "lsq", "oracle", "out"):
         ap.add_argument(f"--{name}", required=True)
+    ap.add_argument("--extract", nargs="*", default=[], help="name=path: gate rows to keep")
+    ap.add_argument("--extract-dir", help="write each --extract file's gate rows here (gzip)")
     a = ap.parse_args()
     truths, _, _ = load_truths(a.test)
     by = {t.index: t for t in truths}
@@ -80,6 +82,19 @@ def main() -> int:
             "finite_mismatch": int((np.isfinite(em) != np.isfinite(eo)).sum()),
         }
     out["model_minus_oracle"] = diffs
+    if a.extract_dir:
+        # The gate rows of every prediction file, kept in the repository: the full files are CI
+        # artefacts with a 90-day retention (reproducibility review, round 1).
+        import gzip
+
+        Path(a.extract_dir).mkdir(parents=True, exist_ok=True)
+        for item in a.extract:
+            name, path = item.split("=", 1)
+            rows_ = load_gate_rows(path, wanted)
+            with gzip.open(Path(a.extract_dir) / f"{name}-gate-rows.ndjson.gz", "wt") as f:
+                for idx in sorted(rows_):
+                    for ts in sorted(rows_[idx]):
+                        f.write(json.dumps({"scenario_index": idx, **rows_[idx][ts]}) + "\n")
     Path(a.out).write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
     print(json.dumps(out, indent=2, sort_keys=True))
     return 0

@@ -388,10 +388,11 @@ class PhysicsLayer(torch.nn.Module):
         implicit: bool = False,
     ) -> None:
         super().__init__()
-        # implicit: iterate without a gradient tape, then one undamped Gauss–Newton step from the
-        # detached solution with gradients on. At the optimum the step is ~0, so the value is
-        # unchanged, and its derivative is the implicit-function gradient of the solution (under
-        # the Gauss–Newton Hessian); the initial state gets none (spec 003 R1).
+        # implicit: iterate without a gradient tape, then one undamped Newton step (exact Hessian,
+        # Gauss–Newton where it is not positive definite) from the detached solution with
+        # gradients on. At the optimum the step is ~0, so the value is unchanged, and its
+        # derivative is the implicit-function gradient of the solution; the initial state gets
+        # none (spec 003 R1).
         self.implicit = implicit
         self.iterations = iterations
         self.knots = knots

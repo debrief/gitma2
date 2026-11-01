@@ -63,7 +63,10 @@ jobs:
             --predictions "$P/test-model.ndjson" "$P/test-lsq.ndjson" "$P/test-naive.ndjson" \
               "$P/test-ekf.ndjson" "$P/test-imm.ndjson" "$P/test-oracle.ndjson" --out "$EXP/eval"
           uv run python scripts/g1_extras.py --test "$DATA/test.f32pack" --model "$P/test-model.ndjson" \
-            --lsq "$P/test-lsq.ndjson" --oracle "$P/test-oracle.ndjson" --out "$EXP/diagnostics.json"
+            --lsq "$P/test-lsq.ndjson" --oracle "$P/test-oracle.ndjson" --out "$EXP/diagnostics.json" \
+            --extract-dir "$EXP/gate-rows" --extract model="$P/test-model.ndjson" \
+              lsq="$P/test-lsq.ndjson" naive="$P/test-naive.ndjson" ekf="$P/test-ekf.ndjson" \
+              imm="$P/test-imm.ndjson" oracle="$P/test-oracle.ndjson"
           echo "EXP=$EXP" >> "$GITHUB_ENV"
       - name: Push the report
         run: |

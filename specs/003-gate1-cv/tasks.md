@@ -87,9 +87,30 @@ equality, export conformance.
 
 ## Follow-ups found during training (not changed for g1-a: the plan was pinned)
 
-- Early stopping has no minimum improvement: `g1-physics-s2` kept "improving" by about 1e-6 per
-  epoch (best epoch 6 of 10) while s1 and s3 stopped at epoch 5. Add a relative `min_delta`
+- Early stopping has no minimum improvement: `g1-physics-s2`'s best epoch 6 (3.27128 against 3.27179,
+  1.6e-4 relative, then back up) was noise, and kept it training four extra epochs while s1 and s3
+  stopped at epoch 5. Add a relative `min_delta`
   (e.g. 1e-4) to `PhysicsModelConfig` for the next plan; it cost about 2 h of runner time here.
 - Seeds s1 and s3 reached identical best validation losses (3.271793) at epoch 1: on
   constant-velocity data the heads barely move from their zero initialisation, so the seed
   spread on Gate 1 says little about initialisation noise. Expected; Gate 2 is where it matters.
+
+## Follow-ups from the Gate 1 panel (round 1), before Gate 2
+
+- **Dead heads.** Every head of the carried model ended with 0 of 64 hidden ReLU units active on
+  validation (s1, s3 and time-late almost the same); the heads output constants and the model equals
+  the untrained physics layer to ~1e-10. On constant-velocity data that is a legitimate optimum
+  (uniform weights are optimal), but a dead ReLU never revives. Gate 2 must not start from these
+  weights; the heads need an activation that cannot die (or no hidden ReLU before the zero-init
+  layer); add a test of alive units and of the spread of head outputs across rows; and add a
+  learnability check where the heads must matter (outlier or heteroscedastic bearings, or the
+  manoeuvring data) before any Gate 2 training plan.
+- **Bind the weights by digest:** sha256 of best.safetensors in the checkpoint meta, the prediction
+  header and the gate manifest, checked by tma2-g1; no fallback to weights.safetensors in gate use.
+- **Job records:** record `git_dirty` in `JobRecord`.
+- **Gate manifests** list the decision record's amendments by digest.
+- **Export the carried weights** (ONNX, three-runtime conformance) as part of the gate evidence.
+- **One median convention** in reported efficiencies (the check's bootstrap point and the reported
+  `np.median` differ on even row counts: 0.9906 against 0.9914).
+- **Gross-error definitions:** the model's "converged" is plausibility only; least squares' also
+  needs LM convergence. Report gross rows by cause beside the check (done for Gate 1 in the report).
