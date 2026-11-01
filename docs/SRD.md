@@ -96,8 +96,10 @@ declared grids and frozen before training; the **oracle ceiling** (the physics l
 segmentation and kinds, `docs/research/05`); for Annex A, CUSUM and GLR detectors.
 
 **Metrics** as gitma §5 (median and P90 of range, course, speed; gross-error rate; sliced by range
-band, zig angle, σ, time since zig and time since last manoeuvre) plus **efficiency**: the ratio
-of each error to its Cramér–Rao bound, per slice.
+band, zig angle, σ, time since zig and time since last manoeuvre) plus **efficiency**: the median
+over a slice's rows of each error divided by that row's Cramér–Rao bound, divided by 0.6745, so
+that an unbiased estimator at the bound scores 1 and higher is worse (spec 002; P0 measured batch
+least squares at 0.95–1.01 on held-course rows).
 
 **Statistics.** Paired, scenario-clustered bootstrap; pass needs the whole interval and the point
 within the limit, fail needs the interval wholly beyond it, otherwise inconclusive with one
@@ -107,7 +109,7 @@ configuration; the carried weights chosen by a rule named in the decision record
 | Gate | Criterion | Decision if failed |
 | --- | --- | --- |
 | **P0 pipeline** | Generator reproduces gitma's files; Python batch LS, EKF and IMM reproduce gitma's prediction files on the same data to float32; the physics layer with trivial inputs equals batch LS and recovers noise-free truth; the oracle ceiling on a 10^5 MAN validation split is within the interval measured in `docs/research/05` | Fix before any training |
-| **Gate 1 CV** | On a fresh CV test seed, σ = 1°, at zig + 5 min (range, course) and zig + 10 min (speed): model median within 1.1 × batch least squares on every metric with intervals wholly below, gross-error rate at or below batch LS's, and efficiency ≥ 0.8 on the settled slices | One pre-registered iteration, then stop and publish: the physics layer is not learnable end to end as built |
+| **Gate 1 CV** | On a fresh CV test seed, σ = 1°, at zig + 5 min (range, course) and zig + 10 min (speed): model median within 1.1 × batch least squares on every metric with intervals wholly below, gross-error rate at or below batch LS's, and efficiency (error ÷ bound, 1 at the bound) ≤ 1.25 on the settled slices | One pre-registered iteration, then stop and publish: the physics layer is not learnable end to end as built |
 | **Gate D detector** | [Annex A](SRD-annex-A.md) §A.5 | Annex A §A.6 |
 | **Gate 2 MAN** | On a fresh MAN test seed, σ = 1°, G5 rows (zig + 5/10/15/20 min): median range and course over all rows wholly below the re-tuned IMM's; on settled rows range, course and speed within 1.1 × batch least squares; and at least half of the gap in median range between plain batch LS and the oracle ceiling recovered (interval wholly above 0.5) | The write-up proposes the follow-on with a recommended default; adopted if the owner has not objected by the next spec (`AGENTS.md`, Autonomy) |
 
@@ -159,6 +161,10 @@ and recorded, not asked.
 - **2026-10-31 (owner):** the owner is not to be a blocker. Agents proceed from the documents;
   stated defaults are adopted and recorded; only the owner-only list in `AGENTS.md` waits for the
   owner (constitution 1.1.0).
+- **2026-11-01 (agent, proposed; owner to merge):** Gate 1's efficiency criterion corrected. As
+  written ("efficiency ≥ 0.8") it pointed the wrong way for an error-over-bound ratio, so every
+  inefficient model passed (P0 panel round 2, statistics). Now ≤ 1.25 on the settled slices,
+  1.25 being the reciprocal of the intended 0.8; no result on Gate 1 exists.
 
 ## Annexes
 
