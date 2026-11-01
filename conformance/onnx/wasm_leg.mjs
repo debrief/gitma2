@@ -36,7 +36,8 @@ const inputs = Object.fromEntries(Object.entries(manifest.inputs).map(([n, s]) =
 // Reference: torch's outputs (out_*.bin); the Python onnxruntime outputs (ort_*.bin) beside it.
 const expected = Object.fromEntries(Object.entries(manifest.outputs).map(([n, s]) => [n, readBin("out", n, s)]));
 const ortRef = Object.fromEntries(Object.entries(manifest.outputs).map(([n, s]) => [n, readBin("ort", n, s)]));
-const model = readFileSync(join(dir, "toy.onnx"));
+const modelFile = manifest.model ?? "toy.onnx";
+const model = readFileSync(join(dir, modelFile));
 const ortDir = join(here, "node_modules", "onnxruntime-web", "dist");
 
 const server = createServer((req, res) => {
@@ -58,7 +59,7 @@ const server = createServer((req, res) => {
     res.end(readFileSync(f));
     return;
   }
-  if (url === "/toy.onnx") {
+  if (url === "/model.onnx") {
     res.setHeader("Content-Type", "application/octet-stream");
     res.end(model);
     return;
@@ -88,7 +89,7 @@ try {
     ort.env.wasm.wasmPaths = "/ort/";
     ort.env.wasm.numThreads = 1;
     const inputs = await (await fetch("/inputs.json")).json();
-    const session = await ort.InferenceSession.create("/toy.onnx", { executionProviders: ["wasm"] });
+    const session = await ort.InferenceSession.create("/model.onnx", { executionProviders: ["wasm"] });
     const feeds = {};
     for (const [name, v] of Object.entries(inputs)) {
       if (v.descr === "int64") feeds[name] = new ort.Tensor("int64", BigInt64Array.from(v.data.map(BigInt)), v.shape);

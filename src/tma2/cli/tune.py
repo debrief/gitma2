@@ -27,8 +27,8 @@ GATE_S = 300.0
 SIGMA_1 = math.radians(1.0)
 # Research R6: on constant-velocity data the coordinated-turn branch rarely carries weight, so
 # its rate parameters are fixed at the phase-4 values (gitma decision 29). The first grid put
-# every choice on an edge (lowest process noise, largest R scale), so both axes reach one step
-# past it: no frozen setting may sit on a grid edge.
+# every choice on an edge (lowest process noise, largest R scale, lowest switch rate), so every
+# axis reaches past it: a frozen setting on an edge must sit on a plateau (recorded in R6).
 R_SCALES = (1.0, 2.0, 8.0, 16.0, 32.0)
 IMM_GRID = [
     ImmParams(cv, 0.03, 0.01, sw, 4.0, r)

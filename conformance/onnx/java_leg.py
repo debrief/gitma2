@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Java leg driver: builds and runs the Maven project, compares its outputs with the torch
-reference, and records the result (or a deferral with its reason) in results.json."""
+"""Java leg driver (``java_leg.py <export dir> [results.json]``): builds and runs the Maven
+project, compares its outputs with the torch reference, and records the result (or a deferral
+with its reason) in results.json."""
 
 from __future__ import annotations
 
@@ -26,7 +27,8 @@ ORT_JAVA_VERSION = re.search(
 
 def main() -> int:
     export_dir = Path(sys.argv[1] if len(sys.argv) > 1 else HERE / "export").resolve()
-    results_path = HERE / "results.json"
+    results_path = Path(sys.argv[2]) if len(sys.argv) > 2 else HERE / "results.json"
+    model_file = json.loads((export_dir / "manifest.json").read_text()).get("model", "toy.onnx")
     prior = json.loads(results_path.read_text()) if results_path.exists() else {}
 
     def record(java: dict) -> None:
@@ -47,7 +49,7 @@ def main() -> int:
             timeout=1200,
         )
         run = subprocess.run(
-            ["mvn", "-q", "-B", "exec:java", f"-Dexec.args={export_dir}"],
+            ["mvn", "-q", "-B", "exec:java", f"-Dexec.args={export_dir} {model_file}"],
             cwd=HERE / "java",
             check=True,
             capture_output=True,
@@ -71,7 +73,7 @@ def main() -> int:
             "deferred": False,
             "max_rel_diff": diffs,
             "tol": TOL,
-            "onnx_sha256": hashlib.sha256((export_dir / "toy.onnx").read_bytes()).hexdigest(),
+            "onnx_sha256": hashlib.sha256((export_dir / model_file).read_bytes()).hexdigest(),
             "runtime": "onnxruntime Java " + ORT_JAVA_VERSION,
         }
     )

@@ -47,39 +47,63 @@ def features(
     )
 
 
+class Block(nn.Module):
+    """Pre-norm transformer layer written out in standard operators (matrix products, softmax,
+    layer norm), so the export needs no fused attention kernel and the algorithm note can state
+    it: h ← h + Wₒ·softmax(QKᵀ/√d + M)V over heads, then h ← h + W₂·relu(W₁·LN(h)), with
+    Q, K, V = LN(h)·W_q, W_k, W_v and M = −∞ on masked pairs (future rows when causal, padded
+    rows otherwise)."""
+
+    def __init__(self, width: int, heads: int, feedforward: int) -> None:
+        super().__init__()
+        self.heads = heads
+        self.norm1 = nn.LayerNorm(width)
+        self.qkv = nn.Linear(width, 3 * width)
+        self.out = nn.Linear(width, width)
+        self.norm2 = nn.LayerNorm(width)
+        self.ff1 = nn.Linear(width, feedforward)
+        self.ff2 = nn.Linear(feedforward, width)
+
+    def forward(self, h: Tensor, masked: Tensor) -> Tensor:
+        """h [S, R, W]; masked [S or 1, R, R] bool, True where query i may not see key j."""
+        s_, r, w = h.shape
+        d = w // self.heads
+        q, k, v = self.qkv(self.norm1(h)).chunk(3, dim=2)
+
+        def split(x: Tensor) -> Tensor:
+            return x.reshape(s_, r, self.heads, d).transpose(1, 2)  # [S, H, R, d]
+
+        scores = split(q) @ split(k).transpose(2, 3) / math.sqrt(d)
+        scores = torch.where(masked.unsqueeze(1), torch.full_like(scores, -math.inf), scores)
+        att = torch.softmax(scores, dim=3) @ split(v)  # [S, H, R, d]
+        h = h + self.out(att.transpose(1, 2).reshape(s_, r, w))
+        out: Tensor = h + self.ff2(torch.relu(self.ff1(self.norm2(h))))
+        return out
+
+
 class Encoder(nn.Module):
-    """Linear embedding and pre-norm transformer layers; causal mask unless ``causal`` is false.
-    The fused fast path is not used, so the graph exports with standard operators."""
+    """Linear embedding, pre-norm transformer blocks and a final layer norm; causal unless
+    ``causal`` is false (then padded rows are masked as keys)."""
 
     def __init__(self, cfg: PhysicsModelConfig) -> None:
         super().__init__()
         self.causal = cfg.causal
         self.embed = nn.Linear(FEATURES, cfg.width)
         self.layers = nn.ModuleList(
-            nn.TransformerEncoderLayer(
-                cfg.width,
-                cfg.heads,
-                cfg.feedforward,
-                dropout=0.0,
-                batch_first=True,
-                norm_first=True,
-            )
-            for _ in range(cfg.layers)
+            Block(cfg.width, cfg.heads, cfg.feedforward) for _ in range(cfg.layers)
         )
         self.norm = nn.LayerNorm(cfg.width)
 
     def forward(self, x: Tensor, pad: Tensor) -> Tensor:
         r = x.shape[1]
-        mask = (
-            torch.triu(torch.full((r, r), float("-inf"), dtype=x.dtype, device=x.device), 1)
-            if self.causal
-            else None
-        )
+        if self.causal:
+            idx = torch.arange(r, device=x.device)
+            masked = (idx.unsqueeze(0) > idx.unsqueeze(1)).unsqueeze(0)  # key j > query i
+        else:
+            masked = pad.unsqueeze(1).expand(-1, r, -1)  # padded keys
         h = self.embed(x)
         for layer in self.layers:
-            # src_key_padding_mask keeps padded rows out of attention for unmasked encoders; the
-            # causal mask already keeps future (and padded, which are later) rows out.
-            h = layer(h, src_mask=mask, src_key_padding_mask=None if self.causal else pad)
+            h = layer(h, masked)
         out: Tensor = self.norm(h)
         return out
 
@@ -108,10 +132,10 @@ class Gate1Model(nn.Module):
         self.cfg = cfg
         self.encoder = Encoder(cfg)
         w = cfg.width
-        self.weight_head = nn.Sequential(nn.Linear(w, w), nn.GELU(), _zero_linear(w, 1))
-        self.init_head = nn.Sequential(nn.Linear(w, w), nn.GELU(), _zero_linear(w, 3))
-        self.scale_head = nn.Sequential(nn.Linear(w, w), nn.GELU(), _zero_linear(w, 1))
-        self.direct_head = nn.Sequential(nn.Linear(w, w), nn.GELU(), _zero_linear(w, 6))
+        self.weight_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 1))
+        self.init_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 3))
+        self.scale_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 1))
+        self.direct_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 6))
         self.physics = PhysicsLayer(iterations=cfg.iterations, knots=0)
 
     def set_implicit(self, implicit: bool) -> None:

@@ -197,27 +197,39 @@ def residuals(
     ref_order: Tensor,
     tau_r: float,
     tau_s: float,
+    cv: bool = False,
 ) -> tuple[Tensor, Tensor]:
-    """Residual vector [B, R+3M] and Jacobian [B, R+3M, P]."""
+    """Residual vector [B, R+3M] and Jacobian [B, R+3M, P]. ``cv`` (no knots, M = 0) returns
+    the bearing rows only, without zero-size knot blocks: the ONNX export cannot infer shapes of
+    zero-size tensors inside a Loop, and a constant flag folds away at export."""
     b_ = t.shape[0]
     m = t_knots.shape[1]
     dt = theta.dtype
     p0 = theta[:, 0:2]
     u0 = theta[:, 2:4]
-    d = theta[:, 4:].reshape(b_, m, 2)
-    a = c.unsqueeze(1) * torch.relu(t.unsqueeze(2) - t_knots.unsqueeze(1))  # [B,R,M]
-    pos = p0.unsqueeze(1) + u0.unsqueeze(1) * t.unsqueeze(2) + a @ d  # [B,R,2]
-    dx = pos[..., 0] - ox
-    dy = pos[..., 1] - oy
+    if cv:
+        # the knot arguments are placeholders; a and d are unused on this path
+        d = u0.unsqueeze(1)
+        a = c.unsqueeze(1)
+        pos = p0.unsqueeze(1) + u0.unsqueeze(1) * t.unsqueeze(2)  # [B,R,2]
+    else:
+        d = theta[:, 4:].reshape(b_, m, 2)
+        a = c.unsqueeze(1) * torch.relu(t.unsqueeze(2) - t_knots.unsqueeze(1))  # [B,R,M]
+        pos = p0.unsqueeze(1) + u0.unsqueeze(1) * t.unsqueeze(2) + a @ d  # [B,R,2]
+    # Explicit indices and shapes: inside the exported Loop, ONNX shape inference otherwise
+    # loses the rank of these tensors (spec 003 R2).
+    nr_ = t.shape[1]
+    dx = (pos[:, :, 0] - ox).reshape(b_, nr_)
+    dy = (pos[:, :, 1] - oy).reshape(b_, nr_)
     rho2 = dx * dx + dy * dy
     rho2 = torch.where(rho2 > 0, rho2, torch.ones_like(rho2))
-    r_b = sw * wrap_pi(z - atan2_export(dx, dy))
+    r_b = (sw * wrap_pi(z - atan2_export(dx, dy))).reshape(b_, nr_)
     gx = -sw * dy / rho2
     gy = sw * dx / rho2
+    if cv:
+        return r_b, torch.stack([gx, gy, gx * t, gy * t], dim=2)
     # columns for (p0x, p0y, u0x, u0y, d1x, d1y, ...): [B,R,4+2M]
-    j_d = torch.stack([gx.unsqueeze(2) * a, gy.unsqueeze(2) * a], dim=3).reshape(
-        b_, t.shape[1], 2 * m
-    )
+    j_d = torch.stack([gx.unsqueeze(2) * a, gy.unsqueeze(2) * a], dim=3).reshape(b_, nr_, 2 * m)
     j_b = torch.cat([torch.stack([gx, gy, gx * t, gy * t], dim=2), j_d], dim=2)
     # ridge on increments: rows 2M, columns on d only
     wr = safe_sqrt(c) / tau_r  # [B,M]
@@ -296,6 +308,7 @@ def iterate(
     nt: int,
     tau_r: float,
     tau_s: float,
+    cv: bool = False,
 ) -> tuple[Tensor, Tensor]:
     """K damped Gauss–Newton iterations (the layer's solve), a function of tensors only so it can
     be scripted: the export turns this loop into one ONNX ``Loop`` (spec 003 research R2)."""
@@ -305,7 +318,9 @@ def iterate(
     n_p = theta.shape[1]
     dt = theta.dtype
     for _ in range(iterations):
-        r, jac = residuals(theta, t, ox, oy, z, sw, t_knots, c, s, order, ref_order, tau_r, tau_s)
+        r, jac = residuals(
+            theta, t, ox, oy, z, sw, t_knots, c, s, order, ref_order, tau_r, tau_s, cv
+        )
         jt = jac.transpose(1, 2)
         jtj = jt @ jac
         jtr = -(jt @ r.unsqueeze(2))[..., 0]
@@ -332,6 +347,7 @@ def iterate(
             ref_order_r,
             tau_r,
             tau_s,
+            cv,
         )
         cand_cost = (rc * rc).sum(dim=1).reshape(b_, nt)
         ok = (cand_cost <= cost.unsqueeze(1)) & _finite(cand_cost)  # [B,T]
@@ -399,7 +415,20 @@ class PhysicsLayer(torch.nn.Module):
         ref_order: Tensor,
     ) -> tuple[Tensor, Tensor]:
         return residuals(
-            theta, t, ox, oy, z, sw, t_knots, c, s, order, ref_order, self.tau_r, self.tau_s
+            theta,
+            t,
+            ox,
+            oy,
+            z,
+            sw,
+            t_knots,
+            c,
+            s,
+            order,
+            ref_order,
+            self.tau_r,
+            self.tau_s,
+            self.knots == 0,
         )
 
     def forward(self, x: PhysicsInputs) -> PhysicsOutputs:
@@ -414,37 +443,50 @@ class PhysicsLayer(torch.nn.Module):
         # √w = √(valid·mask) · exp(ℓ/2): no sqrt of a zero that carries a gradient, so masked
         # and invalid rows get an exact zero gradient instead of 0 · ∞ = NaN.
         sw = safe_sqrt(x.valid * mask) * torch.exp(0.5 * x.log_weight) / sigma.unsqueeze(1)
-        cand = torch.where(
-            (mask > 0) & (idx > 0), x.changepoint, torch.full_like(x.changepoint, -1.0)
-        )
-        vals, knots = torch.topk(cand, m, dim=1)
-        c = vals.clamp(0.0, 1.0)
-        s = torch.gather(x.speed_weight, 1, knots).clamp(0.0, 1.0)
-        t_knots = torch.gather(x.t, 1, knots)
-        tm = t_knots.unsqueeze(2)
-        tj = t_knots.unsqueeze(1)
-        jm = torch.arange(m, device=dev)
-        earlier_idx = (jm.unsqueeze(0) < jm.unsqueeze(1)).unsqueeze(0)
-        order = ((tj < tm) | ((tj == tm) & earlier_idx)).to(dt)  # [B,M,M]
-        # The previous knot of m: the latest knot strictly before m in the ordering; the reference
-        # velocity for the speed prior skips its increment by speed_skip[m].
-        skip = (
-            torch.gather(x.speed_skip, 1, knots).clamp(0.0, 1.0)
-            if x.speed_skip is not None
-            else torch.zeros_like(c)
-        )
-        # Predecessors are counted among active knots only (weight > 0): an inert candidate sitting
-        # between a manoeuvre's start and end knots must not become the end knot's predecessor.
-        active = (c > 0).to(dt)  # [B,M]
-        order_active = order * active.unsqueeze(1)
-        rank = order_active.sum(dim=2)  # number of active knots before m [B,M]
-        is_prev = (rank.unsqueeze(2) - 1 == rank.unsqueeze(1)).to(
-            dt
-        ) * order_active  # j is m's active predecessor
-        ref_order = order - skip.unsqueeze(2) * is_prev
         ox = x.own[..., 0]
         oy = x.own[..., 1]
-        theta = torch.cat([x.theta0.to(dt), torch.zeros(b_, 2 * m, dtype=dt, device=dev)], dim=1)
+        if m == 0:
+            # Constant velocity (Gate 1): no zero-size knot tensors anywhere (the ONNX export
+            # cannot infer their shapes); the knot arguments are placeholders the CV residuals
+            # never read.
+            ph = torch.zeros(b_, 1, dtype=dt, device=dev)
+            c = s = t_knots = ph
+            order = ref_order = ph.unsqueeze(2)
+            knots = torch.zeros(b_, 1, dtype=torch.long, device=dev)[:, :0]
+            theta = x.theta0.to(dt)
+        else:
+            cand = torch.where(
+                (mask > 0) & (idx > 0), x.changepoint, torch.full_like(x.changepoint, -1.0)
+            )
+            vals, knots = torch.topk(cand, m, dim=1)
+            c = vals.clamp(0.0, 1.0)
+            s = torch.gather(x.speed_weight, 1, knots).clamp(0.0, 1.0)
+            t_knots = torch.gather(x.t, 1, knots)
+            tm = t_knots.unsqueeze(2)
+            tj = t_knots.unsqueeze(1)
+            jm = torch.arange(m, device=dev)
+            earlier_idx = (jm.unsqueeze(0) < jm.unsqueeze(1)).unsqueeze(0)
+            order = ((tj < tm) | ((tj == tm) & earlier_idx)).to(dt)  # [B,M,M]
+            # The previous knot of m: the latest knot strictly before m in the ordering; the
+            # reference velocity for the speed prior skips its increment by speed_skip[m].
+            skip = (
+                torch.gather(x.speed_skip, 1, knots).clamp(0.0, 1.0)
+                if x.speed_skip is not None
+                else torch.zeros_like(c)
+            )
+            # Predecessors are counted among active knots only (weight > 0): an inert candidate
+            # between a manoeuvre's start and end knots must not become the end knot's
+            # predecessor.
+            active = (c > 0).to(dt)  # [B,M]
+            order_active = order * active.unsqueeze(1)
+            rank = order_active.sum(dim=2)  # number of active knots before m [B,M]
+            is_prev = (rank.unsqueeze(2) - 1 == rank.unsqueeze(1)).to(
+                dt
+            ) * order_active  # j is m's active predecessor
+            ref_order = order - skip.unsqueeze(2) * is_prev
+            theta = torch.cat(
+                [x.theta0.to(dt), torch.zeros(b_, 2 * m, dtype=dt, device=dev)], dim=1
+            )
         lam = torch.full((b_,), self.lambda0, dtype=dt, device=dev)
         r, _ = self._residuals(theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order)
         cost = (r * r).sum(dim=1)
@@ -596,8 +638,53 @@ class PhysicsLayer(torch.nn.Module):
             self.trials,
             self.tau_r,
             self.tau_s,
+            self.knots == 0,
         )
         return out
+
+    def _knot_state(
+        self,
+        theta: Tensor,
+        t: Tensor,
+        tk: Tensor,
+        c: Tensor,
+        t_knots: Tensor,
+        p0: Tensor,
+        u0: Tensor,
+        zero: Tensor,
+        one: Tensor,
+    ) -> tuple[Tensor, Tensor, Tensor]:
+        """With knots: the state at the row, G = ∂state/∂θ [B,4,P] and the track at every
+        sample [B,R,2]."""
+        b_ = theta.shape[0]
+        m = self.knots
+        dt = theta.dtype
+        tk1 = tk[:, 0]
+        d = theta[:, 4:].reshape(b_, m, 2)
+        dtm = c * torch.relu(tk - t_knots)  # [B,M]
+        act = c * (t_knots <= tk).to(dt)
+        pk = p0 + u0 * tk + (dtm.unsqueeze(2) * d).sum(dim=1)
+        uk = u0 + (act.unsqueeze(2) * d).sum(dim=1)
+        state = torch.cat([pk, uk], dim=1)
+        dpair = torch.stack([dtm, torch.zeros_like(dtm)], dim=2).reshape(b_, 2 * m)
+        dpair_y = torch.stack([torch.zeros_like(dtm), dtm], dim=2).reshape(b_, 2 * m)
+        apair = torch.stack([act, torch.zeros_like(act)], dim=2).reshape(b_, 2 * m)
+        apair_y = torch.stack([torch.zeros_like(act), act], dim=2).reshape(b_, 2 * m)
+        g = torch.stack(
+            [
+                torch.cat([torch.stack([one, zero, tk1, zero], 1), dpair], dim=1),
+                torch.cat([torch.stack([zero, one, zero, tk1], 1), dpair_y], dim=1),
+                torch.cat([torch.stack([zero, zero, one, zero], 1), apair], dim=1),
+                torch.cat([torch.stack([zero, zero, zero, one], 1), apair_y], dim=1),
+            ],
+            dim=1,
+        )
+        pos_all = (
+            p0.unsqueeze(1)
+            + u0.unsqueeze(1) * t.unsqueeze(2)
+            + ((c.unsqueeze(1) * torch.relu(t.unsqueeze(2) - t_knots.unsqueeze(1))) @ d)
+        )
+        return state, g, pos_all
 
     def _outputs(
         self,
@@ -623,31 +710,23 @@ class PhysicsLayer(torch.nn.Module):
         tk = torch.gather(x.t, 1, ks)  # [B,1]
         p0 = theta[:, 0:2]
         u0 = theta[:, 2:4]
-        d = theta[:, 4:].reshape(b_, m, 2)
-        dtm = c * torch.relu(tk - t_knots)  # [B,M]
-        act = c * (t_knots <= tk).to(dt)
-        pk = p0 + u0 * tk + (dtm.unsqueeze(2) * d).sum(dim=1)
-        uk = u0 + (act.unsqueeze(2) * d).sum(dim=1)
-        state = torch.cat([pk, uk], dim=1)
-        # G = ∂state/∂θ, rows for (x, y, vx, vy)
         zero = torch.zeros(b_, dtype=dt, device=dev)
         one = torch.ones(b_, dtype=dt, device=dev)
         tk1 = tk[:, 0]
-        dpair = torch.stack([dtm, torch.zeros_like(dtm)], dim=2).reshape(
-            b_, 2 * m
-        )  # x-row: dtm on x comps
-        dpair_y = torch.stack([torch.zeros_like(dtm), dtm], dim=2).reshape(b_, 2 * m)
-        apair = torch.stack([act, torch.zeros_like(act)], dim=2).reshape(b_, 2 * m)
-        apair_y = torch.stack([torch.zeros_like(act), act], dim=2).reshape(b_, 2 * m)
-        g = torch.stack(
-            [
-                torch.cat([torch.stack([one, zero, tk1, zero], 1), dpair], dim=1),
-                torch.cat([torch.stack([zero, one, zero, tk1], 1), dpair_y], dim=1),
-                torch.cat([torch.stack([zero, zero, one, zero], 1), apair], dim=1),
-                torch.cat([torch.stack([zero, zero, zero, one], 1), apair_y], dim=1),
-            ],
-            dim=1,
-        )  # [B,4,P]
+        if m == 0:
+            state = torch.cat([p0 + u0 * tk, u0], dim=1)
+            g = torch.stack(
+                [
+                    torch.stack([one, zero, tk1, zero], 1),
+                    torch.stack([zero, one, zero, tk1], 1),
+                    torch.stack([zero, zero, one, zero], 1),
+                    torch.stack([zero, zero, zero, one], 1),
+                ],
+                dim=1,
+            )
+            pos_all = p0.unsqueeze(1) + u0.unsqueeze(1) * x.t.unsqueeze(2)
+        else:
+            state, g, pos_all = self._knot_state(theta, x.t, tk, c, t_knots, p0, u0, zero, one)
         _, jac = self._residuals(theta, x.t, ox, oy, x.bearing, sw, t_knots, c, s, order, ref_order)
         jtj = jac.transpose(1, 2) @ jac
         inert = (_diagonal(jtj) == 0).to(dt)
@@ -670,11 +749,6 @@ class PhysicsLayer(torch.nn.Module):
         # information has a pivot within a small multiple of the ridge (the ridge, not the data,
         # sets the covariance). The pivot test covers the constant-velocity block (x0, y0, vx,
         # vy); with knots (Gate 2) it must extend to the active increments.
-        pos_all = (
-            p0.unsqueeze(1)
-            + u0.unsqueeze(1) * x.t.unsqueeze(2)
-            + ((c.unsqueeze(1) * torch.relu(x.t.unsqueeze(2) - t_knots.unsqueeze(1))) @ d)
-        )
         rho_all = _hypot(pos_all[..., 0] - ox, pos_all[..., 1] - oy)
         seen = (x.valid > 0) & (torch.arange(x.t.shape[1], device=dev).unsqueeze(0) <= kk)
         near = (torch.where(seen, rho_all, torch.full_like(rho_all, 1e30)) <= 1.0).any(dim=1)
