@@ -41,12 +41,12 @@ equality, export conformance.
 
 ## Phase 4: Training (US1, US2)
 
-- [ ] T011 `models/train.py` + `tma2-train`: epochs over on-the-fly data, validation loss, stop
+- [x] T011 `models/train.py` + `tma2-train`: epochs over on-the-fly data, validation loss, stop
   rule, checkpoints with optimiser and RNG state, resume, wall-clock cap; resume test (two runs of
   one epoch each equal one run of two)
 - [ ] T012 Throughput: one epoch on 10⁴ scenarios locally at 4 threads, extrapolated to 10⁵ and
   recorded (FR-014); adjust rows per scenario only before the decision record
-- [ ] T013 `models/predict.py` + `tma2-predict`: per-timestep predictions at every post-zig row in
+- [x] T013 `models/predict.py` + `tma2-predict`: per-timestep predictions at every post-zig row in
   gitma's prediction format
 
 ## Phase 5: Data and references (US3)
@@ -56,14 +56,14 @@ equality, export conformance.
 
 ## Phase 6: Export (US5)
 
-- [ ] T015 Physics iteration body as a scripted tensor function shared by eager and export
+- [x] T015 Physics iteration body as a scripted tensor function shared by eager and export
   paths, bit-identical to the current layer; Loop export of the full model at K = 100
-- [ ] T016 `models/export.py`: ONNX, safetensors, manifest, golden batch; Python, WASM and Java
+- [x] T016 `models/export.py`: ONNX, safetensors, manifest, golden batch; Python, WASM and Java
   legs to 1e-5; load time under a minute; CI job
 
 ## Phase 7: Runs (US2)
 
-- [ ] T017 `.github/workflows/train.yml`: plan branches, matrix over models, chained ≤ 345-min jobs,
+- [ ] T017 `.github/workflows/train.yml`: plan branches, matrix over models, chained ≤ 345-min jobs (four),
   checkpoint branches, results branches, job records; a short plan exercised end to end
 
 ## Phase 8: Pre-registration and training (US4)

@@ -45,6 +45,27 @@ Node (the same values in double). Java's onnxruntime uses the same CPU kernels.
 iteration body and loop in host code (not one graph, against constitution VI); `torch.export`
 with a while-loop operator (less mature for ONNX in 2.15).
 
+**Measured on the full model** (T015–T016, seeded weights with every head perturbed, K = 100,
+window 240 rows, 8 golden rows): one `Loop` node, 1,520 nodes, no `If`; onnxruntime loads the
+graph in 0.45 s (the unrolled form did not load in 12 minutes). Against PyTorch in double: Python
+1.5e-9, Java 1.5e-9, browser (WASM) 2.4e-9 (relative, state and covariance). What the full model
+needed beyond the prototype:
+
+- the encoder written out (explicit pre-norm attention blocks): `nn.TransformerEncoderLayer`
+  casts any mask to the model's dtype, and the ONNX attention export takes bool or float32
+  masks only; its fused inference kernel has no export either;
+- ReLU in the heads, not GELU: onnxruntime has no double `Erf`;
+- a constant-velocity path in the physics layer chosen by the static knot count: ONNX shape
+  inference fails on the zero-size knot tensors inside a Loop (and on a reshape of a
+  zero-size tensor); residual shapes are made explicit for the same reason;
+- the classical grid start inside the graph (`grid_start_tensor`, equal to the numba grid start
+  to 1e-14 relative), so the graph's inputs are the bearings and ownship track only;
+- the default dtype set to the model's during export: the scripted loop's scalar constants take
+  it, and a float constant in a double graph does not load.
+
+The scripted path equals the eager one bit for bit (test); the training-time Newton step is not
+in the graph (inference uses the converged K iterations, as `tma2-predict` does).
+
 ## R3. The model
 
 **Decision**:
@@ -103,20 +124,36 @@ sum of per-bearing information).
 ## R6. Re-tuned EKF and IMM
 
 **Decision**: tune on the CV validation split (seed 302) before training, as gitma's phase-4
-research did, and freeze: IMM over σ_cv ∈ {0.003, 0.01, 0.03}, σ_ct ∈ {0.01, 0.03, 0.1},
-ω ∈ {0.001, 0.01}, switch ∈ {0.001, 0.01}, p0 scale ∈ {4}, r scale ∈ {1, 2, 8}; EKF over
-σ_a ∈ {0.001, 0.003, 0.01, 0.03, 0.1}, p0 scale ∈ {4}, r scale ∈ {1, 2, 8}. Criterion: median range
-error at zig + 5 min on σ = 1° validation rows; ties to the smaller grid index. `tma2-tune` writes
-the grid's table and the frozen choice.
+research did, and freeze the best setting of each filter. Criterion: median relative range
+error at zig + 5 min on σ = 1° rows of the first 2,000 qualifying validation scenarios
+(non-converged rows count as +∞); ties to the earlier grid entry. `tma2-tune` writes the grid's
+table, the frozen choice and the manifest, and refuses a dirty tree.
+
+Grids as run (`src/tma2/cli/tune.py`): IMM σ_cv ∈ {0.0003, 0.001, 0.003, 0.01, 0.03} ×
+switch ∈ {1e-5, 1e-4, 0.001, 0.01} × r scale ∈ {1, 2, 8, 16, 32}, with σ_ct 0.03, ω 0.01 and
+p0 scale 4 fixed at the phase-4 values (on constant-velocity data the turn branch rarely carries
+weight, so its rates were not searched); EKF σ_a ∈ {0.0001, …, 0.1} (7 values) × r scale ∈ {1,
+2, 8, 16, 32}, p0 scale 4. The grid was widened twice before freezing, because the first runs put
+the best settings on an edge (lowest process noise, largest R scale, lowest switch rate); the
+rule adopted is that a frozen setting on an edge must sit on a plateau. Record:
+`experiments/20261101-g1-tune/`.
 
 ## R7. Training on GitHub Actions
 
-**Decision**: gitma's train workflow, ported. Pushing `train/<id>` runs every model of the plan in
-`configs/` in a matrix, each in up to three chained jobs of at most 345 minutes. A job resumes from
-the checkpoint branch `checkpoints/<plan>/<model>` (weights, optimiser and RNG state, epoch, best
-validation loss), checkpoints after every epoch, and records its duration and CPU model. When all
-models are complete an evaluation job predicts on validation and pushes `results/<plan>-<run>`.
-Nothing merges automatically.
+**Decision**: gitma's train workflow, ported (`.github/workflows/train.yml`, `train-model.yml`,
+`scripts/train-checkpoint.sh`, `tma2-plan`). Pushing `train/<id>` runs every model of the plan
+under `configs/` whose id is `<id>` in a matrix, each in up to **four** chained jobs (gitma used
+three; four leaves margin while the runners' speed is unmeasured). Each job stops before the next
+epoch would exceed 330 minutes and resumes from `checkpoints/<branch>/<model>` (weights, best
+weights, optimiser state, `CheckpointMeta` with one `JobRecord` per job: duration, epochs, CPU
+model, threads, commit), synced after every epoch. Every job regenerates the validation split
+at the commit its header names (only that commit reproduces the digest, since the header
+records it) with the ranges files its command names by digest, and checks the plan's digest;
+the training stream is generated on the fly and no test split is generated. When the chain
+ends, every model must be complete; each predicts on validation (every post-zig row, a
+30-day artefact), and the models, job records and logs go to `results/<plan>-<run>`, cut from
+`main`. Nothing merges automatically. A plan id containing `smoke` gets a 60-second budget,
+so its first job stops after one epoch and the resume is exercised (`configs/gate1-smoke/`).
 
 ## R8. Carried weights and Gate 1 rows
 
