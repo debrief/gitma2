@@ -49,6 +49,9 @@ class PhysicsInputs:
     log_weight: Tensor
     theta0: Tensor  # [B, 4]
     speed_skip: Tensor | None = None  # [B, R] in [0, 1]: reference velocity skips the previous knot
+    # [B] int64: the row whose state is reported, when it differs from k (the last row the solve
+    # uses): the time-late variant fits the whole window and reports an earlier row (spec 003).
+    k_state: Tensor | None = None
 
 
 @dataclass
@@ -519,8 +522,9 @@ class PhysicsLayer(torch.nn.Module):
         m = self.knots
         dt = theta.dtype
         dev = theta.device
-        kk = x.k.unsqueeze(1)
-        tk = torch.gather(x.t, 1, kk)  # [B,1]
+        kk = x.k.unsqueeze(1)  # the solve's last row (masking)
+        ks = (x.k_state if x.k_state is not None else x.k).unsqueeze(1)  # the reported row
+        tk = torch.gather(x.t, 1, ks)  # [B,1]
         p0 = theta[:, 0:2]
         u0 = theta[:, 2:4]
         d = theta[:, 4:].reshape(b_, m, 2)
@@ -558,8 +562,8 @@ class PhysicsLayer(torch.nn.Module):
         jtj = jtj + _diag(inert + COV_RIDGE * _diagonal(jtj))
         cov_cols = [spd_solve(jtj, g[:, i, :]) for i in range(4)]
         cov = torch.stack([(g @ col.unsqueeze(2))[..., 0] for col in cov_cols], dim=2)
-        okx = torch.gather(ox, 1, kk)[:, 0]
-        oky = torch.gather(oy, 1, kk)[:, 0]
+        okx = torch.gather(ox, 1, ks)[:, 0]
+        oky = torch.gather(oy, 1, ks)[:, 0]
         rng = _hypot(state[:, 0] - okx, state[:, 1] - oky)
         speed = _hypot(state[:, 2], state[:, 3])
         course = wrap_2pi(atan2_export(state[:, 2], state[:, 3]))

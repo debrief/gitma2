@@ -32,10 +32,10 @@ equality, export conformance.
 
 - [x] T006 Physics layer implicit mode (exact-Hessian Newton step) and zero knots (research R1)
 - [x] T007 `models/rows.py`: re-noising, scored rows, grid start, CRB state covariance (R5)
-- [ ] T008 `models/features.py`, `models/encoder.py` (causal transformer, fast path off),
+- [x] T008 `models/features.py`, `models/encoder.py` (causal transformer, fast path off),
   `models/gate1.py` (heads, physics layer, direct-head control, time-late variant)
-- [ ] T009 `models/loss.py`: CRB-normalised squared errors, β-NLL, auxiliary init loss, cap
-- [ ] T010 Tests: untrained model equals batch LS (FR-009); finite gradients on every parameter;
+- [x] T009 `models/loss.py`: CRB-normalised squared errors, β-NLL, auxiliary init loss, cap
+- [x] T010 Tests: untrained model equals batch LS (FR-009); finite gradients on every parameter;
   implicit gradient equals central differences of the converged solve (1e-3 relative on
   determined rows); determinism of a training step
 
