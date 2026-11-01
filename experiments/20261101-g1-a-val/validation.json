@@ -1,0 +1,429 @@
+{
+  "baselines": {
+    "ekf": {
+      "efficiency-course": 1.0567238420269256,
+      "efficiency-range": 1.126359941075559,
+      "efficiency-speed": 1.0758471025206908,
+      "gross": 0.01962371029739025,
+      "median-course": 1.5237332415598046,
+      "median-range": 0.04004762153791493,
+      "median-speed": 0.35382218288808864,
+      "ratio-course": {
+        "hi": 1.1354305215489422,
+        "lo": 1.051189634044532,
+        "ratio": 1.0872556162868052
+      },
+      "ratio-range": {
+        "hi": 1.1370802614061555,
+        "lo": 1.0609335503676356,
+        "ratio": 1.0934833884374378
+      },
+      "ratio-speed": {
+        "hi": 1.182726455993102,
+        "lo": 1.0706207504620444,
+        "ratio": 1.1290841888144791
+      }
+    },
+    "imm": {
+      "efficiency-course": 1.050133380666195,
+      "efficiency-range": 1.1233888144791573,
+      "efficiency-speed": 1.0731917418656536,
+      "gross": 0.02063524175601861,
+      "median-course": 1.5187198827090151,
+      "median-range": 0.04002488424870429,
+      "median-speed": 0.35798650065972015,
+      "ratio-course": {
+        "hi": 1.1367384805690135,
+        "lo": 1.0496973619094752,
+        "ratio": 1.0836783480233643
+      },
+      "ratio-range": {
+        "hi": 1.1361025650456986,
+        "lo": 1.059620230160845,
+        "ratio": 1.0928625563606464
+      },
+      "ratio-speed": {
+        "hi": 1.1937003054283803,
+        "lo": 1.0758610985162371,
+        "ratio": 1.1428596793906232
+      }
+    },
+    "least_squares": {
+      "efficiency-course": 0.9880919044414899,
+      "efficiency-range": 1.026706784399179,
+      "efficiency-speed": 0.9571486924511928,
+      "gross": 0.011126846044911997,
+      "median-course": 1.4014489497544813,
+      "median-range": 0.03662389567265585,
+      "median-speed": 0.3132398391130419,
+      "ratio-course": {
+        "hi": 1.0,
+        "lo": 1.0,
+        "ratio": 1.0
+      },
+      "ratio-range": {
+        "hi": 1.0,
+        "lo": 1.0,
+        "ratio": 1.0
+      },
+      "ratio-speed": {
+        "hi": 1.0,
+        "lo": 1.0,
+        "ratio": 1.0
+      }
+    },
+    "naive": {
+      "efficiency-course": 42.51599344287369,
+      "efficiency-range": 8.170784911491781,
+      "efficiency-speed": 8.900281475817017,
+      "gross": 0.3827635039449727,
+      "median-course": 89.7191109748614,
+      "median-range": 0.4061175365315584,
+      "median-speed": 4.266659281423745,
+      "ratio-course": {
+        "hi": 68.86765328585219,
+        "lo": 60.40694561240028,
+        "ratio": 64.01882208451418
+      },
+      "ratio-range": {
+        "hi": 11.742031190731478,
+        "lo": 10.607705852747438,
+        "ratio": 11.088867775329922
+      },
+      "ratio-speed": {
+        "hi": 14.785970630127446,
+        "lo": 12.476833311084413,
+        "ratio": 13.620767106910234
+      }
+    }
+  },
+  "carried": "g1-physics-s2",
+  "decision": "experiments/20261101-g1-decision/decision.json",
+  "models": {
+    "g1-direct": {
+      "checks": {
+        "efficiency-course": {
+          "hi": 9.584679576667988,
+          "lo": 8.607211500929852,
+          "result": "fail",
+          "value": 9.065366371586904
+        },
+        "efficiency-range": {
+          "hi": 6.155208821336328,
+          "lo": 5.646756288786623,
+          "result": "fail",
+          "value": 5.904813890977665
+        },
+        "efficiency-speed": {
+          "hi": 7.986833168897597,
+          "lo": 7.165270469190236,
+          "result": "fail",
+          "value": 7.551225813809552
+        },
+        "gross": {
+          "hi": 0.21707465102164678,
+          "lo": 0.1940117337649201,
+          "result": "fail",
+          "value": 0.2057454986850091
+        },
+        "ratio-course": {
+          "hi": 12.874376502956032,
+          "lo": 11.28613493424814,
+          "result": "fail",
+          "value": 11.96234608364667
+        },
+        "ratio-range": {
+          "hi": 7.368666945583652,
+          "lo": 6.6114756986882295,
+          "result": "fail",
+          "value": 6.936936256892849
+        },
+        "ratio-speed": {
+          "hi": 10.708671649926028,
+          "lo": 8.946100550886495,
+          "result": "fail",
+          "value": 9.81601064160346
+        }
+      },
+      "median": {
+        "gross": 0.2168723447299211,
+        "median-course": 16.76461735552626,
+        "median-range": 0.2540576297603075,
+        "median-speed": 3.074591515131182
+      }
+    },
+    "g1-physics-s1": {
+      "checks": {
+        "efficiency-course": {
+          "hi": 1.0115646255094701,
+          "lo": 0.9513170823423495,
+          "result": "pass",
+          "value": 0.9856223710256505
+        },
+        "efficiency-range": {
+          "hi": 1.0565318915345252,
+          "lo": 0.9956654892358442,
+          "result": "pass",
+          "value": 1.0262968089884217
+        },
+        "efficiency-speed": {
+          "hi": 0.9995775629690878,
+          "lo": 0.9236184378259089,
+          "result": "pass",
+          "value": 0.95573264738857
+        },
+        "gross": {
+          "hi": 0.0,
+          "lo": -0.002225369208982399,
+          "result": "pass",
+          "value": -0.0010115314586283633
+        },
+        "ratio-course": {
+          "hi": 1.0004406763423865,
+          "lo": 0.9917431192660551,
+          "result": "pass",
+          "value": 0.9974827533268837
+        },
+        "ratio-range": {
+          "hi": 1.0043568110800807,
+          "lo": 0.9974221376670283,
+          "result": "pass",
+          "value": 1.0006807189002618
+        },
+        "ratio-speed": {
+          "hi": 1.0008328001649738,
+          "lo": 0.9993878605087134,
+          "result": "pass",
+          "value": 1.0000029592890605
+        }
+      },
+      "median": {
+        "gross": 0.010115314586283633,
+        "median-course": 1.3979211570481695,
+        "median-range": 0.03664882625064145,
+        "median-speed": 0.3132593039560009
+      }
+    },
+    "g1-physics-s2": {
+      "checks": {
+        "efficiency-course": {
+          "hi": 1.0117323385972645,
+          "lo": 0.95139481901297,
+          "result": "pass",
+          "value": 0.9853644820917874
+        },
+        "efficiency-range": {
+          "hi": 1.0566068596020977,
+          "lo": 0.9954365517447448,
+          "result": "pass",
+          "value": 1.0263256180242961
+        },
+        "efficiency-speed": {
+          "hi": 0.9992971812201362,
+          "lo": 0.9230959105265907,
+          "result": "pass",
+          "value": 0.9557298191077717
+        },
+        "gross": {
+          "hi": 0.0,
+          "lo": -0.002225369208982399,
+          "result": "pass",
+          "value": -0.0010115314586283633
+        },
+        "ratio-course": {
+          "hi": 1.0,
+          "lo": 0.991801628908444,
+          "result": "pass",
+          "value": 0.9973950274021673
+        },
+        "ratio-range": {
+          "hi": 1.0044706095248912,
+          "lo": 0.9973639565966049,
+          "result": "pass",
+          "value": 1.0007209243698048
+        },
+        "ratio-speed": {
+          "hi": 1.000001430916087,
+          "lo": 1.0,
+          "result": "pass",
+          "value": 1.0
+        }
+      },
+      "median": {
+        "gross": 0.010115314586283633,
+        "median-course": 1.3977982136431095,
+        "median-range": 0.03665029873156345,
+        "median-speed": 0.3132398391130419
+      }
+    },
+    "g1-physics-s3": {
+      "checks": {
+        "efficiency-course": {
+          "hi": 1.0117323385972645,
+          "lo": 0.95139481901297,
+          "result": "pass",
+          "value": 0.9853644820917874
+        },
+        "efficiency-range": {
+          "hi": 1.0566068596020977,
+          "lo": 0.9954365517447448,
+          "result": "pass",
+          "value": 1.0263256180242961
+        },
+        "efficiency-speed": {
+          "hi": 0.9992971812201362,
+          "lo": 0.9230959105265907,
+          "result": "pass",
+          "value": 0.9557298191077717
+        },
+        "gross": {
+          "hi": 0.0,
+          "lo": -0.002225369208982399,
+          "result": "pass",
+          "value": -0.0010115314586283633
+        },
+        "ratio-course": {
+          "hi": 1.0,
+          "lo": 0.991801628908444,
+          "result": "pass",
+          "value": 0.9973950274021673
+        },
+        "ratio-range": {
+          "hi": 1.0044706095248912,
+          "lo": 0.9973639565966049,
+          "result": "pass",
+          "value": 1.0007209243698048
+        },
+        "ratio-speed": {
+          "hi": 1.000001430916087,
+          "lo": 1.0,
+          "result": "pass",
+          "value": 1.0
+        }
+      },
+      "median": {
+        "gross": 0.010115314586283633,
+        "median-course": 1.3977982136431095,
+        "median-range": 0.03665029873156345,
+        "median-speed": 0.3132398391130419
+      }
+    },
+    "g1-shuffled": {
+      "checks": {
+        "efficiency-course": {
+          "hi": 1.0142248142387624,
+          "lo": 0.9552542561416834,
+          "result": "pass",
+          "value": 0.988916069854751
+        },
+        "efficiency-range": {
+          "hi": 1.066907738695402,
+          "lo": 1.0037769581805045,
+          "result": "pass",
+          "value": 1.0333153150011796
+        },
+        "efficiency-speed": {
+          "hi": 1.0037165450617347,
+          "lo": 0.9257636666792021,
+          "result": "pass",
+          "value": 0.9639781004604449
+        },
+        "gross": {
+          "hi": 0.005664576168318835,
+          "lo": 0.0014161440420797087,
+          "result": "fail",
+          "value": 0.003439206959336435
+        },
+        "ratio-course": {
+          "hi": 1.0292156745676357,
+          "lo": 1.0050204016321307,
+          "result": "pass",
+          "value": 1.010329727635372
+        },
+        "ratio-range": {
+          "hi": 1.0227313242408864,
+          "lo": 1.0047169948548174,
+          "result": "pass",
+          "value": 1.012110459401893
+        },
+        "ratio-speed": {
+          "hi": 1.0370641880782796,
+          "lo": 1.004144887168635,
+          "result": "pass",
+          "value": 1.0195579414001579
+        }
+      },
+      "median": {
+        "gross": 0.014566053004248432,
+        "median-course": 1.4159255357003233,
+        "median-range": 0.03706742787433871,
+        "median-speed": 0.31934716531576396
+      }
+    },
+    "g1-timelate": {
+      "checks": {
+        "efficiency-course": {
+          "hi": 0.46517899924087647,
+          "lo": 0.4277879842873233,
+          "result": "pass",
+          "value": 0.44614001343419646
+        },
+        "efficiency-range": {
+          "hi": 0.5722176219790812,
+          "lo": 0.5340130463204108,
+          "result": "pass",
+          "value": 0.553424550204682
+        },
+        "efficiency-speed": {
+          "hi": 0.7558824217855532,
+          "lo": 0.698919754326762,
+          "result": "pass",
+          "value": 0.7250621311599367
+        },
+        "gross": {
+          "hi": -0.0050576572931418165,
+          "lo": -0.010924539753186325,
+          "result": "pass",
+          "value": -0.007889945377301234
+        },
+        "ratio-course": {
+          "hi": 0.5148396387238864,
+          "lo": 0.46021932580625535,
+          "result": "pass",
+          "value": 0.4836330229622607
+        },
+        "ratio-range": {
+          "hi": 0.5662484608148977,
+          "lo": 0.5159442874311827,
+          "result": "pass",
+          "value": 0.5390100102187079
+        },
+        "ratio-speed": {
+          "hi": 0.8164986242625552,
+          "lo": 0.7126535431036007,
+          "result": "pass",
+          "value": 0.7586995700152995
+        }
+      },
+      "median": {
+        "gross": 0.0032369006676107627,
+        "median-course": 0.6777869920970452,
+        "median-range": 0.01974064638076712,
+        "median-speed": 0.23780986505759713
+      }
+    }
+  },
+  "proceed_to_test": true,
+  "seed_order_by_range": [
+    "g1-physics-s1",
+    "g1-physics-s2",
+    "g1-physics-s3"
+  ],
+  "validation_rule": {
+    "carried-course-below-1.1": true,
+    "carried-range-below-1.1": true,
+    "carried-speed-below-1.1": true,
+    "shuffled-no-better-than-least-squares": true,
+    "timelate-at-least-as-good": true
+  }
+}
