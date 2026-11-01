@@ -83,6 +83,7 @@ class Experiment:
     checks: list[Check] = field(default_factory=list)
     metrics: dict[str, Any] = field(default_factory=dict)
     artefacts: list[dict[str, str]] = field(default_factory=list)
+    root: Path = ROOT  # the repository whose state the record names (a clone, in tests)
 
     def add_artefact(self, path: str | Path, role: str) -> str:
         """Record a file the experiment read or wrote (prediction caches, conformance results)."""
@@ -109,6 +110,12 @@ class Experiment:
         )
 
     def __post_init__(self) -> None:
+        # Records live under experiments/: a folder elsewhere (or the repository itself) would be
+        # excluded from the dirty check, so a run could record a clean tree it did not have.
+        folder = Path(self.folder).resolve()
+        experiments = (Path(self.root) / "experiments").resolve()
+        if folder == experiments or experiments not in folder.parents:
+            raise ValueError(f"experiment folder {self.folder} must be inside {experiments}")
         # The tree's state when the run starts; files the run writes into its own experiment
         # folder do not make it dirty (P0 run r3 recorded dirty only because of those).
         self._start = self._git_now()
@@ -127,7 +134,7 @@ class Experiment:
                 check=True,
                 capture_output=True,
                 text=True,
-                cwd=ROOT,
+                cwd=self.root,
             ).stdout.strip()
             dirty = (
                 subprocess.run(
@@ -135,7 +142,7 @@ class Experiment:
                     check=True,
                     capture_output=True,
                     text=True,
-                    cwd=ROOT,
+                    cwd=self.root,
                 ).stdout.strip()
                 != ""
             )
@@ -145,7 +152,7 @@ class Experiment:
 
     def _exclude(self) -> list[str]:
         try:
-            rel = Path(self.folder).resolve().relative_to(ROOT)
+            rel = Path(self.folder).resolve().relative_to(Path(self.root).resolve())
         except ValueError:
             return []
         return [f":(exclude){rel}"]

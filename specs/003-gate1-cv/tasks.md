@@ -11,15 +11,15 @@ equality, export conformance.
 
 ## Phase 1: Entry conditions from P0 (US6)
 
-- [ ] T001 `cov_ok` also false when the solved track passes within 1 m of ownship at any valid
+- [x] T001 `cov_ok` also false when the solved track passes within 1 m of ownship at any valid
   sample ≤ k, or a Jacobi-scaled pivot is within 1e3 × COV_RIDGE; test at K = 100 on the collapse
   rows (phase4 train scenarios 15 and 50)
-- [ ] T002 `check_physics_equals_ls`: fail on a non-finite covariance (only range ≤ 1 m is
+- [x] T002 `check_physics_equals_ls`: fail on a non-finite covariance (only range ≤ 1 m is
   degenerate); bound the states of lower-cost rows in sd units; negative test with a crippled
   layer (K = 5)
-- [ ] T003 `Experiment` refuses folders outside `experiments/`; tests for an edit outside the
+- [x] T003 `Experiment` refuses folders outside `experiments/`; tests for an edit outside the
   folder and a commit during a run (in a temporary clone)
-- [ ] T004 At-scale check asserts gitma's IMM header estimator and the gitma pack's generator
+- [x] T004 At-scale check asserts gitma's IMM header estimator and the gitma pack's generator
   commit; P0 records the data and conformance commands
 
 ## Phase 2: Types (all stories)

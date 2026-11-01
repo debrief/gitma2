@@ -305,3 +305,29 @@ def test_gradients_finite_with_covariance_and_cost_losses() -> None:
     for leaf in (cp, sw, lw, th0):
         assert leaf.grad is not None and bool(torch.isfinite(leaf.grad).all())
     assert bool(torch.isfinite(out.cov).all())
+
+
+def test_cov_ok_rejects_tracks_through_ownship() -> None:
+    """Spec 003 FR-001 (P0 panel round 3): where the solution passes within 1 m of ownship at a
+    valid sample up to k, the covariance is set by the ridge, not the data; cov_ok is false even
+    when the range at k is large. Phase-4 train scenario 50 collapses at k = 175; at k = 176–177
+    the same track is 60–121 m away; scenario 15's 48 km solution at k = 210 passes through
+    ownship at sample 200."""
+    from tma2.cli.oracle import run_layer
+
+    blocks = list(iter_pack_raw(fixture_dir("phase4-seed777") / "train.f32pack"))
+    cases = {
+        50: {170: True, 175: False, 176: False, 177: False, 190: True},
+        15: {160: True, 210: False},
+    }
+    for n, expect in cases.items():
+        _, meta, own, _tgt, obs = blocks[n]
+        d = bearing_data_from_arrays(meta, own, obs)
+        items = []
+        for k in expect:
+            inp = trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, k)
+            assert inp is not None
+            items.append((d, k, inp))
+        out = run_layer(PhysicsLayer(), items, R_MAX)
+        got = {k: bool(out.cov_ok[j]) for j, k in enumerate(expect)}
+        assert got == expect, (n, got)

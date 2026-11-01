@@ -30,6 +30,8 @@ from .reference import (
 )
 
 TWO_PI = 2.0 * math.pi
+# cov_ok: a scaled pivot at or below this multiple of the ridge means the ridge sets the covariance.
+PIVOT_FLOOR = 1e3
 
 
 @dataclass
@@ -132,6 +134,26 @@ def safe_sqrt(x: Tensor) -> Tensor:
     return torch.where(
         pos, torch.sqrt(torch.where(pos, x, torch.ones_like(x))), torch.zeros_like(x)
     )
+
+
+def min_scaled_pivot(a: Tensor) -> Tensor:
+    """The smallest pivot of unpivoted Gauss–Jordan elimination on the Jacobi-scaled matrix
+    [B,P,P] → [B]: positive for a positive definite matrix, and as small as the ratio of the
+    smallest to the largest scaled eigenvalue allows, so a covariance set by the ridge shows a
+    pivot near the ridge (spec 003 FR-001)."""
+    p = a.shape[-1]
+    eye = torch.eye(p, dtype=a.dtype, device=a.device).unsqueeze(0)
+    dinv = 1.0 / torch.sqrt((a * eye).sum(dim=2).clamp_min(1e-300))
+    a = a * dinv.unsqueeze(2) * dinv.unsqueeze(1)
+    idx = torch.arange(p, device=a.device)
+    pivots = []
+    for j in range(p):
+        row_j = a[:, j, :]
+        pivots.append(row_j[:, j])
+        f = a[:, :, j] / row_j[:, j : j + 1]
+        keep = (idx == j).unsqueeze(0)
+        a = torch.where(keep.unsqueeze(2), a, a - f.unsqueeze(2) * row_j.unsqueeze(1))
+    return torch.stack(pivots, dim=1).min(dim=1).values
 
 
 def spd_solve(a: Tensor, b: Tensor) -> Tensor:
@@ -543,7 +565,28 @@ class PhysicsLayer(torch.nn.Module):
         course = wrap_2pi(atan2_export(state[:, 2], state[:, 3]))
         plausible = _finite(state).all(dim=1) & (speed <= MAX_SPEED_MPS) & (rng <= MAX_RANGE_M)
         cov_diag = _diagonal(cov)
-        cov_ok = _finite(cov.reshape(b_, 16)).all(dim=1) & (cov_diag > 0).all(dim=1) & (rng > 1.0)
+        # Degenerate information (P0 panel round 3): the solved track passes within 1 m of
+        # ownship at a valid sample up to k (a bearing there carries no geometry), or the scaled
+        # information has a pivot within a small multiple of the ridge (the ridge, not the data,
+        # sets the covariance). The pivot test covers the constant-velocity block (x0, y0, vx,
+        # vy); with knots (Gate 2) it must extend to the active increments.
+        pos_all = (
+            p0.unsqueeze(1)
+            + u0.unsqueeze(1) * x.t.unsqueeze(2)
+            + ((c.unsqueeze(1) * torch.relu(x.t.unsqueeze(2) - t_knots.unsqueeze(1))) @ d)
+        )
+        rho_all = _hypot(pos_all[..., 0] - ox, pos_all[..., 1] - oy)
+        seen = (x.valid > 0) & (torch.arange(x.t.shape[1], device=dev).unsqueeze(0) <= kk)
+        near = (torch.where(seen, rho_all, torch.full_like(rho_all, 1e30)) <= 1.0).any(dim=1)
+        info4 = jtj[:, :4, :4]
+        pivot_ok = min_scaled_pivot(info4) > PIVOT_FLOOR * COV_RIDGE
+        cov_ok = (
+            _finite(cov.reshape(b_, 16)).all(dim=1)
+            & (cov_diag > 0).all(dim=1)
+            & (rng > 1.0)
+            & ~near
+            & pivot_ok
+        )
         return PhysicsOutputs(
             state, cov, rng, course, speed, cost, plausible, theta, knots, c, cov_ok
         )

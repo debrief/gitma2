@@ -98,14 +98,14 @@ def test_p0_noise_free_check_ignores_default_dtype() -> None:
     import torch
 
     from tma2.cli import p0
-    from tma2.eval.experiment import Experiment
+    from tma2.eval.experiment import ROOT, Experiment
 
     values = []
     for dt in (torch.float32, torch.float64):
         before = torch.get_default_dtype()
         torch.set_default_dtype(dt)
         try:
-            exp = Experiment(id="x", folder=Path("/nonexistent"))
+            exp = Experiment(id="x", folder=ROOT / "experiments" / "_test-noise-free")
             p0.check_noise_free(exp)
             values.append(exp.checks[0].value)
         finally:

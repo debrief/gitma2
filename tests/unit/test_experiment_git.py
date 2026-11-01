@@ -1,22 +1,39 @@
-"""The experiment's own files do not make the record dirty (P0 run r3 recorded git_dirty: true
-only because tma2-p0 had written into its folder before the manifest)."""
+"""The record's git state (P0 run r3; spec 003 FR-003): the experiment's own files do not make it
+dirty; an edit outside the folder, or a commit made during the run, does."""
 
 from __future__ import annotations
 
-import shutil
+import subprocess
+from pathlib import Path
 
 from tma2.eval.experiment import ROOT, Experiment
 
 
-def test_own_folder_does_not_dirty_the_record() -> None:
-    folder = ROOT / "experiments" / "_test-git-state"
-    shutil.rmtree(folder, ignore_errors=True)
-    exp = Experiment(id="t", folder=folder)
-    _, start_dirty = exp.git()
+def _clone(tmp: Path) -> Path:
+    dst = tmp / "repo"
+    subprocess.run(["git", "clone", "-q", "--depth", "1", f"file://{ROOT}", str(dst)], check=True)
+    for k, v in (("user.email", "t@example.invalid"), ("user.name", "test")):
+        subprocess.run(["git", "-C", str(dst), "config", k, v], check=True)
+    return dst
+
+
+def test_git_state_of_a_record(tmp_path: Path) -> None:
+    repo = _clone(tmp_path)
+    folder = repo / "experiments" / "_t"
+    exp = Experiment(id="t", folder=folder, root=repo)
+    start, dirty = exp.git()
+    assert not dirty
     folder.mkdir(parents=True)
-    try:
-        (folder / "artefact.json").write_text("{}")
-        _, dirty = exp.git()
-        assert dirty == start_dirty
-    finally:
-        shutil.rmtree(folder, ignore_errors=True)
+    (folder / "artefact.json").write_text("{}")
+    assert exp.git() == (start, False)  # its own files: still clean
+    readme = repo / "README.md"
+    original = readme.read_text()
+    readme.write_text(original + "edit\n")
+    assert exp.git() == (start, True)  # an edit outside the folder
+    readme.write_text(original)
+    assert exp.git() == (start, False)
+    (repo / "x.txt").write_text("x")
+    subprocess.run(["git", "-C", str(repo), "add", "x.txt"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", "during"], check=True)
+    commit, dirty = exp.git()
+    assert commit == start and dirty  # a commit during the run: dirty, the starting commit kept
