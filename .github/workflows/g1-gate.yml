@@ -1,0 +1,164 @@
+name: Gate 1 (test split)
+
+# Spec 003 T021. Push `gate/<plan id>` from a commit that holds the decision record, the trained
+# models (`experiments/*-<plan id>-models/`, copied from the results branch) and the validation
+# report (`experiments/*-<plan id>-val/validation.json`) whose validation rule is met. The job:
+#
+# 1. refuses unless the validation report says proceed and names the carried model;
+# 2. generates the decision's test seed (seed 303, 100,000 scenarios; only the test split is
+#    kept), the first time this seed is generated anywhere;
+# 3. predicts the carried model and every baseline (batch least squares, naive fitted on seed
+#    302's train split, the frozen EKF and IMM, the oracle) on the test split, in parallel;
+# 4. runs tma2-g1 (decision, plan, ancestry, seed and binding checks; then the gate) and pushes
+#    the experiment to `results/<plan id>-g1-<run id>`. Exit 3 from tma2-g1 is a result.
+
+on:
+  push:
+    branches: ["gate/**"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  DATA: ${{ github.workspace }}/../test-data
+  DECISION: experiments/20261101-g1-decision/decision.json
+  PLAN: configs/gate1/plan.json
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      carried: ${{ steps.s.outputs.carried }}
+      models: ${{ steps.s.outputs.models }}
+      val: ${{ steps.s.outputs.val }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: s
+        run: |
+          ID=${GITHUB_REF_NAME#gate/}
+          VAL=$(ls -d experiments/*-"$ID"-val | tail -1)
+          MODELS=$(ls -d experiments/*-"$ID"-models | tail -1)
+          python3 - "$VAL/validation.json" <<'EOF'
+          import json, sys
+          r = json.load(open(sys.argv[1]))
+          if not r["proceed_to_test"]:
+              sys.exit("the validation rule is not met: the test split stays unscored")
+          EOF
+          CARRIED=$(python3 -c "import json; print(json.load(open('$VAL/validation.json'))['carried'])")
+          test -f "$MODELS/models/$CARRIED/best.safetensors"
+          echo "carried=$CARRIED" >> "$GITHUB_OUTPUT"
+          echo "models=$MODELS" >> "$GITHUB_OUTPUT"
+          echo "val=$VAL" >> "$GITHUB_OUTPUT"
+          echo "carried $CARRIED from $MODELS (report $VAL)"
+
+  predict:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        estimator: [model, lsq, naive, ekf, imm, oracle]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Test split (decision's seed and count; only the test split is kept)
+        run: |
+          read SEED COUNT < <(python3 -c "import json; d=json.load(open('$DECISION')); print(d['test_seed'], d['test_count'])")
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --out "$DATA" \
+            --ranges tests/fixtures/gitma/iter4-seed777/ranges.json \
+            --heldout-ranges tests/fixtures/gitma/iter4-seed777/heldout-ranges.json --format f32pack
+          rm -f "$DATA"/train.* "$DATA"/validation.* "$DATA"/heldout.*
+          sha256sum "$DATA"/test.f32pack
+      - name: Seed 302's train split (naive fit only)
+        if: matrix.estimator == 'naive'
+        run: uv run tma2-plan data --plan "$PLAN" --out "$RUNNER_TEMP/v302" --keep train.f32pack
+      - name: Predict ${{ matrix.estimator }} on test (every post-zig row)
+        env:
+          CARRIED: ${{ needs.setup.outputs.carried }}
+          MODELS: ${{ needs.setup.outputs.models }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          OUT="$RUNNER_TEMP/out/test-${{ matrix.estimator }}.ndjson"
+          T="$DATA/test.f32pack"
+          get() { python3 -c "import json; d=json.loads(json.load(open('$DECISION'))['$1']); print(d['$2'])"; }
+          case "${{ matrix.estimator }}" in
+            model) uv run tma2-predict --plan "$PLAN" --model "$CARRIED" --checkpoint "$MODELS/models/$CARRIED" --truth "$T" --out "$OUT" ;;
+            lsq) uv run tma2-solve --in "$T" --out "$OUT" --per-timestep ;;
+            naive)
+              uv run tma2-naive fit --train "$RUNNER_TEMP/v302/train.f32pack" --out "$RUNNER_TEMP/naive.json"
+              uv run tma2-naive predict --model "$RUNNER_TEMP/naive.json" --in "$T" --out "$OUT" --per-timestep ;;
+            ekf)
+              uv run tma2-track --in "$T" --out "$OUT" --filter ekf --sigma-a "$(get ekf sigma_a)" \
+                --p0-scale "$(get ekf p0_scale)" --r-scale "$(get ekf r_scale)" ;;
+            imm)
+              uv run tma2-track --in "$T" --out "$OUT" --filter imm --sigma-cv "$(get imm sigma_cv)" \
+                --sigma-ct "$(get imm sigma_ct)" --sigma-omega "$(get imm sigma_omega)" \
+                --switch "$(get imm switch_per_s)" --p0-scale "$(get imm p0_scale)" --r-scale "$(get imm r_scale)" ;;
+            oracle) uv run tma2-oracle --truth "$T" --out "$OUT" ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-${{ matrix.estimator }}
+          path: ${{ runner.temp }}/out
+          retention-days: 90
+
+  gate:
+    needs: [setup, predict]
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tma2-g1 checks the decision record's commit is an ancestor of training
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Test split (regenerated; tma2-g1 checks every prediction file is bound to it)
+        run: |
+          read SEED COUNT < <(python3 -c "import json; d=json.load(open('$DECISION')); print(d['test_seed'], d['test_count'])")
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --out "$DATA" \
+            --ranges tests/fixtures/gitma/iter4-seed777/ranges.json \
+            --heldout-ranges tests/fixtures/gitma/iter4-seed777/heldout-ranges.json --format f32pack
+          rm -f "$DATA"/train.* "$DATA"/validation.* "$DATA"/heldout.*
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: test-*
+          path: ${{ runner.temp }}/p
+          merge-multiple: true
+      - name: tma2-g1 (exit 3 = not passed, a result)
+        shell: bash
+        env:
+          CARRIED: ${{ needs.setup.outputs.carried }}
+          MODELS: ${{ needs.setup.outputs.models }}
+        run: |
+          ID=${GITHUB_REF_NAME#gate/}
+          EXP="experiments/$(date -u +%Y%m%d)-$ID-g1"
+          echo "EXP=$EXP" >> "$GITHUB_ENV"
+          P="$RUNNER_TEMP/p"
+          set +e
+          uv run tma2-g1 --decision "$DECISION" --plan "$PLAN" --carried "$CARRIED" \
+            --model-meta "$MODELS/models/$CARRIED/meta.json" --test "$DATA/test.f32pack" \
+            --model "$P/test-model.ndjson" --least-squares "$P/test-lsq.ndjson" \
+            --naive "$P/test-naive.ndjson" --ekf "$P/test-ekf.ndjson" --imm "$P/test-imm.ndjson" \
+            --oracle "$P/test-oracle.ndjson" --experiment "$EXP"
+          status=$?
+          set -e
+          [ "$status" -eq 0 ] || [ "$status" -eq 3 ] || exit "$status"
+          sha256sum "$DATA/test.f32pack" > "$EXP/test-digest.txt"
+      - name: Push the gate record
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/${GITHUB_REF_NAME#gate/}-g1-${{ github.run_id }}"
+          git checkout -b "$BR" origin/main
+          git add -f "$EXP"
+          git commit -qm "experiments: Gate 1 ($GITHUB_REF_NAME, CI ${{ github.sha }})"
+          git push origin "$BR"
