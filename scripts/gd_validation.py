@@ -37,6 +37,7 @@ from tma2.data.f32pack import iter_pack_raw
 from tma2.data.io import file_digest
 from tma2.detect.matching import summary
 from tma2.eval.errors import Truth
+from tma2.eval.experiment import strict_json
 from tma2.eval.gd import downstream_rows, g5_rows
 from tma2.eval.rows import G5_SLICE_SIGMA_RAD
 from tma2.eval.stats import ascending, percentile
@@ -164,7 +165,8 @@ def main() -> int:
     report["validation_carried"] = metrics["reported"].get("validation_carried", [])
     report["variant_results"] = metrics["reported"].get("variant_results", {})
     (out / "validation.json").write_text(
-        json.dumps(report, indent=2, sort_keys=True, default=float) + "\n"
+        json.dumps(strict_json(report), indent=2, sort_keys=True, default=float, allow_nan=False)
+        + "\n"
     )
     (out / "validation.md").write_text(_markdown(report, out))
     print(json.dumps({"carried": report["validation_carried"], "status": status}))

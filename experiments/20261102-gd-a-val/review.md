@@ -125,3 +125,29 @@ All findings were accepted. None changes the verdict.
 - **Soft-versus-hard downstream on the gate's rows (red team [minor, not run]).** The numerics
   reviewer's 128-row figures answer the question at the level the record needs. A full run is
   left to the follow-on.
+
+# Round 2
+
+The same five reviewers re-read the record at 94bbd0f.
+
+| Reviewer | Verdict | Remaining findings |
+| --- | --- | --- |
+| TMA geometry | **approve** | [minor] time-late AUC needs its row subset (after the zig; about 0.79 over all rows, all timing); [minor] mark the ≈0.3% IMM sweep row as noisy (about 2 of 745 held rows) |
+| Estimation and numerics | **approve** | [minor] "1.6–2.0× in every bin" holds for gd-cls only (s1: 2.5×, 2.1×, 1.7×, top bin not deflated); [minor] clipping wording: the gradient ratio sets the direction, clipping only rescales; [minor] put gd-cls's constant-baseline BCE in the README |
+| Evaluation statistics | **approve-with-findings** | [minor] in-sample note missing from the README; [minor] strict-JSON test writes into the source tree |
+| Reproducibility | **approve-with-findings** | [minor] `validation.json` still writes bare NaN; [minor] the same test-location point |
+| Red team | **approve** | [minor] "no benefit" holds as scored (hard knots); the soft segmentation helps; [minor] label 35.7 / 27.7 / 32.0 as training loss on 128 rows, not the gate metric |
+
+No blocker or major finding is open. Every round-2 minor was fixed in the commit that adds this
+section:
+
+- the README wording points: row subset, noisy sweep row, gd-cls scope, clipping, constant
+  baselines, in-sample controls, "as scored (hard knots)", training-loss label;
+- `scripts/gd_validation.py` writes `validation.json` through the same strict-JSON conversion
+  (`allow_nan=False`);
+- the test writes into `tmp_path`, using `Experiment(root=…)`.
+
+**Verdict: the validation stop is approved by the panel at round 2.** No variant is carried, and
+test seed 305 stays reserved. Annex A §A.6's "fails otherwise" branch applies: publish, and Gate 2
+proceeds with the CUSUM/GLR segmenter at an operating point the next spec declares.
+`gd/verdict.json` records `decided_by` as this round.

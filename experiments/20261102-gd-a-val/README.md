@@ -48,8 +48,9 @@ Checks for the carried causal seed:
 | D-false | 0% | — | pass |
 | D-downstream-settled, range / course / speed | 0.974 / 0.982 / 0.975 × batch least squares | — | pass |
 
-The classification-only control scores inside the causal range, so the downstream loss shows no
-benefit at this budget.
+The classification-only control scores inside the causal range, so as scored (with hard knots)
+the downstream loss shows no benefit at this budget. In the soft segmentation it was trained
+on, it does help (cause 3).
 
 The time-late variant fails everything downstream: 2.8× the IMM, and 2.4× batch least squares on
 settled rows. Its solve uses the whole window and reports the state at the scored row. With
@@ -70,7 +71,8 @@ The controls were tuned to that 0% rate, so their thresholds went to their maxim
 | GLR | 0 |
 | IMM | 34 |
 
-So D-delay and D-miss compare silent with silent. These matched thresholds are Gate D comparison
+So D-delay and D-miss compare silent with silent. The control thresholds were tuned on the same validation held-leg rows they are
+scored on, so their 0% rate is in-sample by construction. These matched thresholds are Gate D comparison
 artefacts. They are not a setting for Gate 2's segmenter, whose operating point is for the next
 spec to declare. At a 5% held-leg false-alarm rate, research R6 measured the GLR detecting 57% of
 spans and CUSUM 10%.
@@ -80,7 +82,7 @@ The frozen IMM's mode probability at its natural threshold 0.5 detects 7.5% of s
 
 | Held-leg false-alarm rate | Spans detected |
 | --- | --- |
-| ≈0.3% | 18% |
+| ≈0.3% | 18% (noisy: about 2 of 745 held rows set this threshold) |
 | 1% | 29% |
 | 5% | 48% |
 
@@ -108,21 +110,26 @@ The silence has four causes.
      bearing-rate signal (0.0506 → 0.0511).
    - The classification-only control ranks a little better (AUC 0.65–0.74 after the zig). A rule
      that knows only the time since the zig scores 0.66, so that gain is the prior "no manoeuvre
-     before zig + 120 s", not bearing evidence.
-   - The time-late variant sees the whole window and is at chance or worse (AUC 0.45; 0.27
+     before zig + 120 s", not bearing evidence. Against constant base-rate predictors its BCE is 0.611
+     against 0.720 in total: now 0.066 against 0.089, boundary 0.128 against 0.200 (floor 0.041)
+     and kind 0.418 against 0.430.
+   - The time-late variant sees the whole window and is at chance or worse after the zig (AUC
+     0.45; over all rows against held rows about 0.79, all of it timing; 0.27
      against held rows after a manoeuvre).
    - So this is a learning failure, not a proof that the manoeuvres cannot be seen. The
      least-squares → oracle gap (12.1% → 5.2%) shows that they are identifiable in hindsight,
      and the top quartile of manoeuvre signal should register.
 2. **The objective's balance.** On a training batch the encoder's gradient norm is 15.2 from the
-   downstream term against 0.016 from now, 0.31 from boundary and 0.08 from kind. Clipping at 1.0
-   lets the downstream term set the shared encoder's direction about 1000:1. gd-causal-s1's
-   boundary and kind losses end above a constant predictor's.
+   downstream term against 0.016 from now, 0.31 from boundary and 0.08 from kind. The downstream
+   term therefore dominates the shared encoder's gradient about 1000:1; clipping at 1.0 only
+   scales each step by about 1/15. gd-causal-s1's boundary and kind losses end above a constant
+   predictor's.
 3. **Soft against hard segmentation.** Training optimises the soft segmentation; the gate scores
    only the knots exported at w_change ≥ 0.5 (FR-014, FR-027, as registered). On 128 rows the
-   downstream loss is:
+   downstream training loss is as below. It is the capped CRB-normalised squared error, measured
+   without an interval; it is not the gate's median range error.
 
-   | Segmentation | Downstream loss |
+   | Segmentation | Downstream training loss |
    | --- | --- |
    | untrained (≈ batch least squares) | 35.7 |
    | soft, as trained | 27.7 |
@@ -142,8 +149,9 @@ The silence has four causes.
      about 10% after the zig.
    - Rows from a span's end to end + 300 s are trained as 0, although matching credits a
      detection there.
-   - The held-leg weight of 3 deflates p_change to about half the observed frequency (1.6–2.0× in
-     every reliability bin), so p ≥ 0.5 needs a true probability of about 0.75.
+   - The held-leg weight of 3 deflates p_change. For gd-cls the observed frequency is 1.6–2.0×
+     the mean p in every reliability bin. For gd-causal-s1 the bins run 2.5×, 2.1× and 1.7×, and
+     its top bin is not deflated. So p ≥ 0.5 needs a true probability of about 0.75.
    - A 0.5 threshold on a BCE against ±60 s triangular targets needs timing certain to a few rows.
    - p_change is therefore deflated, not calibrated. The pooled ECE of about 0.02 is half the base
      rate and includes the trivially easy rows before the zig.
@@ -188,7 +196,8 @@ byte-identical. From the commit that adds this README, the script writes the rec
 the next run records the true state.
 
 `gd/verdict.json` contains a bare `Infinity` (the +∞ delay). From the same fix on, non-finite
-values are named in the detail and the files are strict JSON.
+values are named in the detail, and `verdict.json`, `metrics.json` and `validation.json` are
+strict JSON. The committed `validation.json` still has bare NaN.
 
 Diagnostics:
 

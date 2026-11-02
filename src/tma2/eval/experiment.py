@@ -83,15 +83,15 @@ class Check:
         return rec
 
 
-def _strict(obj: Any) -> Any:
+def strict_json(obj: Any) -> Any:
     """The same structure with non-finite floats as their names ("inf", "-inf", "nan"), so the
     file is strict JSON (JavaScript's JSON.parse and jq refuse bare Infinity and NaN)."""
     if isinstance(obj, float) and not math.isfinite(obj):
         return str(obj)
     if isinstance(obj, dict):
-        return {k: _strict(v) for k, v in obj.items()}
+        return {k: strict_json(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
-        return [_strict(v) for v in obj]
+        return [strict_json(v) for v in obj]
     return obj
 
 
@@ -242,7 +242,7 @@ class Experiment:
         for name, obj in (
             ("manifest.json", manifest),
             ("verdict.json", verdict),
-            ("metrics.json", _strict(self.metrics)),
+            ("metrics.json", strict_json(self.metrics)),
         ):
             f = AtomicFile(self.folder / name)
             f.write((json.dumps(obj, indent=2, sort_keys=True) + "\n").encode("utf-8"))

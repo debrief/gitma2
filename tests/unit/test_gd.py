@@ -114,11 +114,12 @@ def test_records_are_strict_json(tmp_path: Any) -> None:
     import json
     from pathlib import Path
 
-    from tma2.eval.experiment import ROOT, Check, Experiment
+    from tma2.eval.experiment import Check, Experiment
 
-    folder = Path(ROOT) / "experiments" / "ci-strict-json"
+    root = Path(str(tmp_path))
+    folder = root / "experiments" / "ci-strict-json"
     try:
-        exp = Experiment(id="ci-strict-json", folder=folder)
+        exp = Experiment(id="ci-strict-json", folder=folder, root=root)
         exp.checks.append(Check("D-delay", "fail", "n", value=math.inf, ci_low=math.inf))
         exp.metrics = {"a": math.nan, "b": [1.0, -math.inf]}
         exp.write("GD")
