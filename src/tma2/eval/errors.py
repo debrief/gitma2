@@ -12,6 +12,14 @@ from tma2.references.lsq import angle_diff
 from tma2.sim.geometry import mps_to_kt, rad_to_deg
 
 GROSS_RANGE_REL = 0.5
+PLAUSIBLE_MAX_RANGE_M = 100_000.0  # gitma's plausibility bounds (references/classical.py)
+PLAUSIBLE_MAX_SPEED_MPS = 25.0
+
+# Why a row counts as gross (spec 004 FR-008): no estimate (missing row, empty row, non-finite or
+# implausible values), or a range error above 50%. ``lm_flag`` counts rows that are usable under
+# the plausibility definition but carry ``converged = false`` (least squares' LM did not converge):
+# reported, never gross under that definition.
+CAUSES = ("missing", "implausible", "range_error_over_50pct")
 
 
 @dataclass
@@ -74,11 +82,26 @@ class Truth:
         return i
 
 
-def row_error(truth: Truth, row: dict[str, Any]) -> RowError:
-    """gitma ``rowError``: a non-converged row scores +∞ on every metric and is gross."""
+def plausible_row(row: dict[str, Any]) -> bool:
+    """The one convergence definition (spec 004 FR-008, R11): finite estimate fields, range in
+    (0, 100 km] and speed ≤ 25 m/s, for every estimator. An empty row (no solution: range 0) and a
+    physics-layer row flagged implausible both fail; least squares' LM flag is not consulted."""
+    vals = [float(row[k]) for k in ("range_m", "course_rad", "speed_mps", "x_m", "y_m")]
+    if not all(math.isfinite(v) for v in vals):
+        return False
+    rng, speed = vals[0], vals[2]
+    return 0.0 < rng <= PLAUSIBLE_MAX_RANGE_M and speed <= PLAUSIBLE_MAX_SPEED_MPS
+
+
+def row_error(truth: Truth, row: dict[str, Any], convergence: str = "flag") -> RowError:
+    """gitma ``rowError``: a non-converged row scores +∞ on every metric and is gross.
+
+    ``convergence`` = ``flag`` reads the row's ``converged`` (gitma, P0 and Gate 1 as registered);
+    ``plausible`` applies :func:`plausible_row` (spec 004 and later gates)."""
     i = truth.row_index(float(row["timestamp_s"]))
     t_since_zig = float(row["timestamp_s"]) - truth.zig_time_s
-    if not row["converged"]:
+    ok = bool(row["converged"]) if convergence == "flag" else plausible_row(row)
+    if not ok:
         return RowError(t_since_zig, math.inf, math.inf, math.inf, math.inf, True, False)
     o = truth.own[i]
     t = truth.tgt[i]
@@ -93,3 +116,28 @@ def row_error(truth: Truth, row: dict[str, Any]) -> RowError:
         gross=not (range_rel <= GROSS_RANGE_REL),
         converged=True,
     )
+
+
+def gross_cause(truth: Truth, row: dict[str, Any] | None) -> str | None:
+    """Cause of a gross row under the plausibility definition, or None when not gross."""
+    if row is None:
+        return "missing"
+    if not plausible_row(row):
+        return "implausible"
+    e = row_error(truth, row, "plausible")
+    return "range_error_over_50pct" if e.gross else None
+
+
+def gross_by_cause(truth_rows: list[tuple[Truth, dict[str, Any] | None]]) -> dict[str, int]:
+    """Counts of gross rows by cause, plus ``lm_flag`` (usable rows flagged non-converged) and
+    ``flag_gross`` (gross under the row's own ``converged`` flag, as Gate 1 registered it)."""
+    out = {c: 0 for c in CAUSES} | {"lm_flag": 0, "flag_gross": 0, "rows": len(truth_rows)}
+    for truth, row in truth_rows:
+        cause = gross_cause(truth, row)
+        if cause is not None:
+            out[cause] += 1
+        if row is not None and plausible_row(row) and not row["converged"]:
+            out["lm_flag"] += 1
+        if row is None or row_error(truth, row, "flag").gross:
+            out["flag_gross"] += 1
+    return out

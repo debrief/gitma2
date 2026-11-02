@@ -1,0 +1,125 @@
+name: Gate D validation report
+
+# Spec 004 T023: after a train/gd-a run, score every trained detector and the references (batch
+# least squares, the frozen IMM and EKF of the decision record, the oracle) on validation seed
+# 304, apply the carried rule, tune the controls to each carried variant's own held-leg
+# false-alarm rate (the amendment), apply Annex A §A.5's validation rule, and push the report to
+# `results/gd-a-val-<train run id>`. The detector outputs are the train run's `model-*`
+# artefacts. The test split is never generated here.
+
+on:
+  push:
+    branches: ["validate-gd/**"] # validate-gd/<train run id>
+  workflow_dispatch:
+    inputs:
+      train_run_id:
+        description: "Run id of the train.yml run whose detectors to report"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  DATA: ${{ github.workspace }}/../val-data
+  TRAIN_RUN: ${{ inputs.train_run_id || github.ref_name }}
+  DECISION: experiments/20261102-gd-decision/decision.json
+  PLAN: configs/gate-d/plan.json
+
+jobs:
+  baselines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        estimator: [lsq, ekf, imm, oracle]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run tma2-plan data --plan "$PLAN" --out "$DATA"
+      - name: Predict (${{ matrix.estimator }})
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          OUT="$RUNNER_TEMP/out/validation-${{ matrix.estimator }}.ndjson"
+          name() { python3 -c "import json; print(json.load(open('$DECISION'))['$1'])"; }
+          case "${{ matrix.estimator }}" in
+            lsq) uv run tma2-solve --in "$DATA/validation.f32pack" --out "$OUT" --per-timestep ;;
+            ekf)
+              read -r SA P0 R < <(uv run python -c "from tma2.cli.controls import parse_ekf_name as p; print(*p('$(name ekf)'))")
+              uv run tma2-track --in "$DATA/validation.f32pack" --out "$OUT" --filter ekf \
+                --sigma-a "$SA" --p0-scale "$P0" --r-scale "$R" ;;
+            imm)
+              read -r CV CT W S P0 R < <(uv run python -c "from tma2.detect.controls import parse_imm_name as p; q=p('$(name imm)'); print(q.sigma_cv, q.sigma_ct, q.sigma_omega, q.switch_per_s, q.p0_scale, q.r_scale)")
+              uv run tma2-track --in "$DATA/validation.f32pack" --out "$OUT" --filter imm \
+                --sigma-cv "$CV" --sigma-ct "$CT" --sigma-omega "$W" --switch "$S" \
+                --p0-scale "$P0" --r-scale "$R" ;;
+            oracle) uv run tma2-oracle --truth "$DATA/validation.f32pack" --out "$OUT" --speed-prior ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gd-baseline-${{ matrix.estimator }}
+          path: ${{ runner.temp }}/out
+          retention-days: 30
+
+  report:
+    needs: baselines
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run tma2-plan data --plan "$PLAN" --out "$DATA"
+      - id: rid
+        run: echo "id=${TRAIN_RUN#validate-gd/}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: gd-baseline-*
+          path: ${{ runner.temp }}/baselines
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: model-*
+          path: ${{ runner.temp }}/models
+          merge-multiple: true
+          run-id: ${{ steps.rid.outputs.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Report (exit 3 = stop at validation, a result)
+        shell: bash
+        run: |
+          EXP="experiments/$(date -u +%Y%m%d)-gd-a-val"
+          echo "EXP=$EXP" >> "$GITHUB_ENV"
+          B="$RUNNER_TEMP/baselines"
+          set +e
+          uv run python scripts/gd_validation.py --decision "$DECISION" --plan "$PLAN" \
+            --validation "$DATA/validation.f32pack" --models "$RUNNER_TEMP/models" \
+            --lsq "$B/validation-lsq.ndjson" --imm "$B/validation-imm.ndjson" \
+            --ekf "$B/validation-ekf.ndjson" --oracle "$B/validation-oracle.ndjson" --out "$EXP"
+          status=$?
+          set -e
+          [ "$status" -eq 0 ] || [ "$status" -eq 3 ] || exit "$status"
+          (cd "$B" && sha256sum *.ndjson) > "$EXP/baseline-digests.txt"
+          (cd "$EXP/work" && sha256sum *.ndjson *.json) > "$EXP/control-digests.txt"
+          rm -rf "$EXP/work"
+          printf '{"train_run_id": "%s", "run_id": "%s", "commit": "%s"}\n' \
+            "${{ steps.rid.outputs.id }}" "${{ github.run_id }}" "${{ github.sha }}" > "$EXP/run.json"
+      - name: Push the report branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/gd-a-val-${{ steps.rid.outputs.id }}"
+          git checkout -b "$BR"
+          git add -f "$EXP"
+          git commit -qm "experiments: gd-a validation report (train run ${{ steps.rid.outputs.id }}, CI ${{ github.sha }})"
+          git push origin "$BR"

@@ -23,7 +23,13 @@ generator), 002 (references, physics layer, ONNX harness, P0; **P0 passed**, pan
 `experiments/20261101-g1-a-g1/`), but only because the model reduces to batch least squares: the
 heads died in training, so learning is untested until Gate 2 (prerequisites in
 `specs/003-gate1-cv/tasks.md`). Workflows: `train/<plan>`, `validate/<run>`, `gate/<plan>`,
-`report/<gate run>`.
+`report/<gate run>`. 004 (steady-leg detector, Annex A): **Gate D stopped at validation**
+(panel round 2, `experiments/20261102-gd-a-val/`). The detector raised no alarm: its p_change
+reads only time since the zig. Downstream it scored 0.95× batch least squares but 1.21× the IMM,
+and the time-late variant failed. Test seed 305 is unscored and reserved. Annex A §A.6 applies:
+publish, and Gate 2 uses the CUSUM/GLR segmenter at an operating point its spec declares
+(recommended: GLR at a 5% held-leg false-alarm rate). Write-up: `site/blog/2026-11-02-gate-d.md`.
+Detector workflows: `train/gd-a`, `validate-gd/<run>`.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -162,5 +168,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   model's for `torch.onnx.export`: the scripted loop's scalar constants follow it.
 - Experiments from a worktree: do not symlink `data` into it (`data/` in .gitignore matches
   directories, not a symlink, so the tree records as dirty); pass absolute data paths.
+- Never time anything while another CPU-heavy job runs: torch's OpenMP threads oversubscribed by
+  a parallel tune ran the physics layer 50–100× slower (48 s against 0.55 s per call; spec 004).
+- Within one process, a second training run can differ from the first in the last bits
+  (allocator state; 1e-16 in layer-norm weights); separate processes are byte-identical, so
+  determinism and resume tests run each job in a fresh interpreter (`test_detector_train.py`).
+- The known-manoeuvres Cramér–Rao bound has a numba port (`crb_known_manoeuvres_fast`, 0.4 ms
+  per scenario against 8 ms) for the training loss; `Batch.tm` carries the generator's table.
 - Docusaurus MDX: no `{...}` in prose (it is a JS expression); `scripts/data_dictionary.py`
   escapes `<` and braces outside code spans.

@@ -18,6 +18,12 @@ Checks (all must pass):
 
 Anything else is inconclusive. The naive baseline, the tuned EKF and IMM and the oracle are
 scored on the same rows and reported beside the gate, never gated.
+
+Spec 004 (FR-007, FR-008): reported medians use the bootstrap's nearest-rank percentile, as the
+checks do; each estimator's report carries ``gross_by_cause`` under the one plausibility
+definition (``errors.plausible_row``), with least squares' LM flag counted separately. The checks
+keep the convergence definition Gate 1 registered (the row's flag) so its verdict re-scores
+unchanged.
 """
 
 from __future__ import annotations
@@ -32,8 +38,9 @@ from .bootstrap import (
     bootstrap_clustered_quantile_ratio,
     bootstrap_clustered_rate_difference,
 )
-from .errors import Truth, row_error
+from .errors import Truth, gross_by_cause, row_error
 from .metrics import GAUSS_MEDIAN_ABS
+from .stats import ascending, percentile
 
 GATE_S = {"range_rel": 300.0, "course_deg": 300.0, "speed_kt": 600.0}
 RATIO_LIMIT = 1.1
@@ -121,21 +128,34 @@ def load_gate_rows(path: str, wanted: dict[int, set[float]]) -> Preds:
 
 
 def errors_at(
-    truths: dict[int, Truth], rows: list[GateRow], preds: Preds, metric: str
+    truths: dict[int, Truth],
+    rows: list[GateRow],
+    preds: Preds,
+    metric: str,
+    convergence: str = "flag",
 ) -> tuple[np.ndarray, np.ndarray]:
-    """(error, gross) per row; +∞ and gross where the estimator has no converged row."""
+    """(error, gross) per row; +∞ and gross where the estimator has no converged row.
+
+    ``flag`` is Gate 1 as registered (the row's ``converged``); ``plausible`` is spec 004's one
+    definition (``errors.plausible_row``), used from Gate D on."""
     err = np.empty(len(rows))
     gross = np.zeros(len(rows), dtype=np.int64)
     for i, g in enumerate(rows):
         r = preds.get(g.index, {}).get(g.timestamp_s)
-        if r is None or not r["converged"]:
+        if r is None:
             err[i] = math.inf
             gross[i] = 1
             continue
-        e = row_error(truths[g.index], r)
+        e = row_error(truths[g.index], r, convergence)
         err[i] = getattr(e, metric)
         gross[i] = int(e.gross)
     return err, gross
+
+
+def _causes(truths: dict[int, Truth], rows: list[GateRow], preds: Preds) -> dict[str, int]:
+    return gross_by_cause(
+        [(truths[g.index], preds.get(g.index, {}).get(g.timestamp_s)) for g in rows]
+    )
 
 
 def _ratio_check(
@@ -219,15 +239,19 @@ def score(
             e, g = errors_at(by_index, rows, preds, metric)
             rec = reported.setdefault(name, {})
             iv = bootstrap_clustered_quantile_ratio(e, el, cluster, 0.5, level, resamples)
-            rec[f"median-{label}"] = float(np.median(e))
+            rec[f"median-{label}"] = percentile(ascending(e), 0.5)
             rec[f"ratio-{label}"] = {"ratio": iv.ratio, "lo": iv.lo, "hi": iv.hi}
             keep = np.isfinite(sd) & (sd > 0)
             z = np.abs(e[keep]) / sd[keep]
-            rec[f"efficiency-{label}"] = float(np.median(z) / GAUSS_MEDIAN_ABS) if z.size else None
+            rec[f"efficiency-{label}"] = (
+                percentile(ascending(z), 0.5) / GAUSS_MEDIAN_ABS if z.size else None
+            )
             if metric == "range_rel":
                 rec["gross"] = float(g.mean())
+                rec["gross_by_cause"] = _causes(by_index, rows, preds)
         rec_m = reported.setdefault("model", {})
-        rec_m[f"median-{label}"] = float(np.median(em))
+        rec_m[f"median-{label}"] = percentile(ascending(em), 0.5)
         if metric == "range_rel":
             rec_m["gross"] = float(gm.mean())
+            rec_m["gross_by_cause"] = _causes(by_index, rows, model)
     return Gate1Result(checks, reported)

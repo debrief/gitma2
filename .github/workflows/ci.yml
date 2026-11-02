@@ -55,6 +55,8 @@ jobs:
       - run: uv sync
       - name: Warm the numba cache
         run: uv run python -c "from tma2.sim.generate import warm_up; warm_up()"
+      - name: Runner CPU (last-bit numerics differ between CPU families)
+        run: lscpu | grep "Model name"
       - name: Unit, golden, conformance and performance tests
         run: uv run pytest -q
 
@@ -105,6 +107,13 @@ jobs:
           uv run python -m tma2.models.export --out conformance/onnx/gate1
           (cd conformance/onnx && node wasm_leg.mjs --dir gate1 --out gate1/results.json)
           uv run python conformance/onnx/java_leg.py conformance/onnx/gate1 conformance/onnx/gate1/results.json
+      - name: Detector export (seeded weights, causal and time-late), three legs, WASM < 1 s per window
+        run: |
+          for v in causal time_late; do
+            uv run python -m tma2.models.detector_export --out "conformance/onnx/detector-$v" --variant "$v"
+            (cd conformance/onnx && node wasm_leg.mjs --dir "detector-$v" --out "detector-$v/results.json")
+            uv run python conformance/onnx/java_leg.py "conformance/onnx/detector-$v" "conformance/onnx/detector-$v/results.json"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
@@ -112,6 +121,7 @@ jobs:
             conformance/onnx/results.json
             conformance/onnx/gate1/results.json
             conformance/onnx/gate1/python_leg.json
+            conformance/onnx/detector-*/results.json
 
   p0:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'p0')

@@ -151,12 +151,24 @@ jobs:
           mkdir -p "$RUNNER_TEMP/out/${{ matrix.model }}"
           cp "$CK"/meta.json "$CK"/best.safetensors "$RUNNER_TEMP/out/${{ matrix.model }}/"
           SECONDS=0
-          uv run tma2-predict --plan "${{ needs.plan.outputs.plan }}" \
-            --model "${{ matrix.model }}" --checkpoint "$CK" \
-            --truth "$DATA/validation.f32pack" $LIMIT \
-            --out "$RUNNER_TEMP/out/${{ matrix.model }}/validation.ndjson"
-          echo "prediction took $SECONDS s" | tee "$RUNNER_TEMP/out/${{ matrix.model }}/predict-seconds.txt"
-          gzip -n "$RUNNER_TEMP/out/${{ matrix.model }}/validation.ndjson"
+          OUT="$RUNNER_TEMP/out/${{ matrix.model }}"
+          KIND=$(uv run tma2-plan kind --plan "${{ needs.plan.outputs.plan }}" --model "${{ matrix.model }}")
+          if [ "$KIND" = detector ]; then
+            # Spec 004: per-row detector outputs, then the physics layer fed their knots at G5 rows.
+            uv run tma2-detect --plan "${{ needs.plan.outputs.plan }}" \
+              --model "${{ matrix.model }}" --checkpoint "$CK" \
+              --truth "$DATA/validation.f32pack" $LIMIT --out "$OUT/validation.detector.ndjson"
+            uv run tma2-downstream --detector "$OUT/validation.detector.ndjson" \
+              --truth "$DATA/validation.f32pack" $LIMIT --out "$OUT/validation.ndjson"
+            gzip -n "$OUT/validation.detector.ndjson"
+          else
+            uv run tma2-predict --plan "${{ needs.plan.outputs.plan }}" \
+              --model "${{ matrix.model }}" --checkpoint "$CK" \
+              --truth "$DATA/validation.f32pack" $LIMIT \
+              --out "$OUT/validation.ndjson"
+          fi
+          echo "prediction took $SECONDS s" | tee "$OUT/predict-seconds.txt"
+          gzip -n "$OUT/validation.ndjson"
       - uses: actions/upload-artifact@v4
         with:
           name: model-${{ matrix.model }}
@@ -195,6 +207,9 @@ jobs:
             mkdir -p "$EXP/models/$m"
             cp "$d"meta.json "$d"best.safetensors "$d"predict-seconds.txt "$EXP/models/$m/"
             sha256sum "$d"validation.ndjson.gz | cut -d' ' -f1 > "$EXP/models/$m/validation.ndjson.gz.sha256"
+            if [ -f "$d"validation.detector.ndjson.gz ]; then
+              sha256sum "$d"validation.detector.ndjson.gz | cut -d' ' -f1 > "$EXP/models/$m/validation.detector.ndjson.gz.sha256"
+            fi
           done
           find "$RUNNER_TEMP/logs" -name train.log | while read -r f; do
             cp "$f" "$EXP/logs/$(basename "$(dirname "$f")").log"

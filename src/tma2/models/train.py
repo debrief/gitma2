@@ -26,7 +26,7 @@ from safetensors.torch import load_file, save_file
 from tma2.data.f32pack import iter_pack_raw
 from tma2.data.io import AtomicFile, file_digest
 from tma2.eval.experiment import ROOT, run_environment
-from tma2.features.batch import Batch, generate_batch
+from tma2.features.batch import KIND_COURSE, KIND_SPEED, Batch, generate_batch
 from tma2.types import dump_record, parse_record
 from tma2.types.generated.tma import (
     CheckpointMeta,
@@ -51,10 +51,13 @@ def load_plan(path: str | Path) -> tuple[TrainingPlan, str]:
 
 
 def model_from_plan(plan: TrainingPlan, model_id: str) -> PhysicsModelConfig:
-    for m in plan.models:
+    for m in plan.models or []:
         if m.id == model_id:
             return m
     raise ValueError(f"plan {plan.id} has no model {model_id}")
+
+
+KIND_CODES = {"course": KIND_COURSE, "speed": KIND_SPEED}
 
 
 def batch_from_pack(path: Path, limit: int) -> Batch:
@@ -86,8 +89,19 @@ def batch_from_pack(path: Path, limit: int) -> Batch:
         since_zig_s=np.zeros((s, rmax), dtype=np.float32),
         since_manoeuvre_end_s=np.full((s, rmax), -1.0, dtype=np.float32),
         spans=np.full((s, 4, 3), -1, dtype=np.int32),
+        tm=np.zeros((s, 4, 4), dtype=np.float64),
+        n_tm=np.full(s, -1, dtype=np.int32),
     )
     for i, (meta, own, tgt, obs) in enumerate(blocks):
+        # Manoeuvres (generator 0.5.0): spans for the detector's labels, the generator's table
+        # for the known-manoeuvres bound. Constant-velocity data has neither.
+        for j, sp in enumerate(meta.get("manoeuvres") or []):
+            b.spans[i, j] = (KIND_CODES[sp["kind"]], sp["start_index"], sp["end_index"])
+        tms = meta["parameters"].get("target_manoeuvres")
+        if tms is not None:
+            b.n_tm[i] = len(tms)
+            for j, m in enumerate(tms):
+                b.tm[i, j] = (KIND_CODES[m["kind"]], m["start_time_s"], m["change"], m["rate"])
         n = int(meta["samples"])
         b.t[i, :n] = own[:n, 0]
         b.mask[i, :n] = True
@@ -182,7 +196,7 @@ class Checkpoint:
 
     def save(
         self,
-        model: Gate1Model,
+        model: torch.nn.Module,
         best: dict[str, torch.Tensor] | None,
         opt: torch.optim.Optimizer,
         meta: CheckpointMeta,
@@ -196,6 +210,7 @@ class Checkpoint:
         if best is not None:
             save_file(best, str(self.folder / "best.safetensors.tmp"))
             os.replace(self.folder / "best.safetensors.tmp", self.folder / "best.safetensors")
+            meta.weights_digest = file_digest(self.folder / "best.safetensors")
         torch.save(opt.state_dict(), self.folder / "optim.pt.tmp")
         os.replace(self.folder / "optim.pt.tmp", self.folder / "optim.pt")
         f = AtomicFile(self.meta_path)
@@ -204,14 +219,31 @@ class Checkpoint:
 
 
 def _git_commit() -> str:
+    return git_state()[0]
+
+
+def git_state() -> tuple[str, bool]:
+    """(commit, dirty) of the repository the code runs from (spec 004 FR-005)."""
     import subprocess
 
     try:
-        return subprocess.run(
+        commit = subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT, check=True
         ).stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain"], capture_output=True, text=True, cwd=ROOT, check=True
+        ).stdout.strip()
+        return commit, status != ""
     except (OSError, subprocess.CalledProcessError):
-        return "unknown"
+        return "unknown", True
+
+
+def improved(value: float, best: float, min_improvement: float | None) -> bool:
+    """An epoch improves only if the validation loss falls by at least ``min_improvement``
+    (relative) below the best so far (spec 004 FR-003); the first finite value always does."""
+    if not np.isfinite(best):
+        return bool(np.isfinite(value))
+    return value < best - abs(best) * (min_improvement or 0.0)
 
 
 def train(
@@ -311,7 +343,11 @@ def train(
         meta.train_losses = [*(meta.train_losses or []), float(np.mean(losses))]
         meta.val_losses = [*(meta.val_losses or []), v]
         meta.epoch_seconds = [*(meta.epoch_seconds or []), secs]
-        if v < meta.best_val_loss:
+        g0 = val[0]
+        meta.liveness = model.head_liveness(
+            g0.bearing, g0.valid, g0.ox, g0.oy, g0.t, g0.sigma, g0.n_rows
+        )
+        if improved(v, meta.best_val_loss, cfg.min_improvement):
             meta.best_val_loss, meta.best_epoch = v, e
             best = {k: t.detach().clone().contiguous() for k, t in model.state_dict().items()}
         if e - meta.best_epoch >= cfg.patience or e >= cfg.epochs:
@@ -331,6 +367,7 @@ def train(
             )
         )
     env = run_environment()
+    commit, dirty = git_state()
     job = JobRecord(
         started=started,
         finished=dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat(),
@@ -339,7 +376,8 @@ def train(
         last_epoch=meta.epoch,
         cpu_model=str(env.get("cpu_model", "unknown")),
         threads=cfg.threads,
-        git_commit=_git_commit(),
+        git_commit=commit,
+        git_dirty=dirty,
     )
     meta.jobs = [*(meta.jobs or []), job]
     ck.save(model, best, opt, meta)

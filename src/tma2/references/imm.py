@@ -288,9 +288,16 @@ def imm_initialise(
 
 
 def imm_predict(
-    d: BearingData, params: ImmParams, nis_out: list[float] | None = None
+    d: BearingData,
+    params: ImmParams,
+    nis_out: list[float] | None = None,
+    mu_ct_out: list[float] | None = None,
 ) -> dict[str, Any]:
-    """gitma ``immPredict``: one row per sample from zig_index + 1."""
+    """gitma ``immPredict``: one row per sample from zig_index + 1.
+
+    ``mu_ct_out`` (spec 004 FR-024) receives the coordinated-turn mode probability after each
+    row's update, one value per row (NaN where the filter is not running: before initialisation
+    or after an implausible estimate). Collecting it changes no estimate."""
     for name in ("sigma_cv", "sigma_ct", "sigma_omega", "switch_per_s", "p0_scale", "r_scale"):
         v = getattr(params, name)
         if not (v >= 0):
@@ -340,10 +347,14 @@ def imm_predict(
             est = imm_estimate(xcv, pcv, xct, pct, mu0, mu1)
             if _plausible5(float(d.ox[i]), float(d.oy[i]), est):
                 rows.append(_row(d, est, i, True))
+                if mu_ct_out is not None:
+                    mu_ct_out.append(float(mu1))
                 continue
             have = False
             last_try = i - EKF_REINIT_EVERY
         rows.append(_row(d, None, i, False))
+        if mu_ct_out is not None:
+            mu_ct_out.append(math.nan)
         if i - last_try >= EKF_REINIT_EVERY:
             have, t_prev, x0, p0 = imm_initialise(d, i, sigma, params.p0_scale)
             if have:

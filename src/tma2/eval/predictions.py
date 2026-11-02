@@ -20,16 +20,26 @@ from .generated_types import Prediction, PredictionHeader, parse_prediction
 
 
 class PredictionWriter:
-    def __init__(self, path: str | Path, estimator: str, mode: str, truth_path: str | Path) -> None:
+    def __init__(
+        self,
+        path: str | Path,
+        estimator: str,
+        mode: str,
+        truth_path: str | Path,
+        weights_digest: str | None = None,
+    ) -> None:
         self.path = str(path)
         self.file = AtomicFile(path)
-        header = {
+        header: dict[str, Any] = {
             "record": "header",
             "schema_version": SCHEMA_VERSION,
             "estimator": estimator,
             "mode": mode,
             "dataset_digest": file_digest(truth_path),
         }
+        if weights_digest is not None:
+            # The learned estimator's weights, bound into every prediction file (spec 004 FR-004).
+            header["weights_digest"] = weights_digest
         self.file.write((canonical_json(header) + "\n").encode("utf-8"))
         self.count = 0
 

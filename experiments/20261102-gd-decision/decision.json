@@ -1,0 +1,35 @@
+{
+  "architecture_check": "FR-035, each check against the detector's architecture: (1) D-downstream-settled is passed by construction by a detector that exports no knots (it is then batch least squares, ratio 1); it is a non-regression guard, and such a detector fails D-delay and D-miss. (2) D-false is passed by a detector that never alarms; it then fails D-miss. (3) D-downstream-all is not met by construction: batch least squares is above the IMM on G5 rows. (4) The time-late variant reads the bearings after each manoeuvre, so D-delay and D-miss favour it by construction; a pass carried by the time-late variant alone is reported as an offline (smoothing) pass beside the causal variant's own result and does not license Annex A section A.6's online uses (the viewer's hybrid switch). (5) The weak least-squares CUSUM cannot lower the bar: D-delay and D-miss compare with the better of CUSUM and GLR. (6) The shuffled-label check is not used (no physics-layer-blind check applies to a segmenter).",
+  "bootstrap_level": 0.975,
+  "bootstrap_resamples": 2000,
+  "carried_rule": "Per carried variant (causal, time-late; three seeds each), the seed whose validation D-downstream-all ratio (median relative range error over all sigma = 1 deg G5 rows, physics layer fed by the exported knots, / the frozen IMM's) is the median of the three; ties to the lower seed. The classification-only detector (gd-cls) is a declared control, reported.",
+  "carried_variants": [
+    "gd-causal-s1",
+    "gd-causal-s2",
+    "gd-causal-s3",
+    "gd-late-s1",
+    "gd-late-s2",
+    "gd-late-s3"
+  ],
+  "control_models": [
+    "gd-cls"
+  ],
+  "controls_rule": "After training, on validation seed 304: each control's threshold (CUSUM on the per-timestep least-squares innovations as Annex A section A.2 writes it, the projected windowed GLR with W = 30, the frozen IMM's mu_CT) is tuned with tma2-controls tune so that its held-leg G5 false-alarm fraction is closest to the carried variant's own at p_change >= 0.5; the CUSUM on the frozen EKF's innovations is tuned the same way and reported, not gated. The settings are recorded by digest in an amendment before the test split is generated; the amendment changes no criterion.",
+  "criterion": "SRD Annex A section A.5 on the sigma = 1 deg slice of test seed 305 with scenario-clustered paired bootstraps at 97.5% (2,000 resamples): D-delay median delay / the better of CUSUM and GLR wholly below 1; D-miss miss rate minus the better control's wholly at or below 0; D-false fraction of held-leg G5 rows flagged wholly below the D3 limit; D-downstream-all median range / IMM's wholly below 1; D-downstream-settled range, course and speed / batch least squares' each wholly below 1.1; D-kind and D-gap reported. A check passes when its point and whole interval meet the limit, fails when the interval lies wholly beyond it, else inconclusive. A variant passes when every gated check passes; Gate D passes when a carried variant passes, fails when every carried variant fails, else inconclusive (one re-score on a larger fresh seed, then final). Errors use the one plausibility convergence definition (spec 004 FR-008).",
+  "ekf": "ekf-sa0.03-p4-r8",
+  "false_alarm_limit": 0.0027559055118110236,
+  "false_alarm_limit_rule": "D3: 5%, or the frozen IMM's own held-leg G5 false-alarm fraction at mu_CT > 0.5 on validation seed 304 if lower; measured 0.002756, so the limit is 0.002756.",
+  "follow_on": "SRD Annex A section A.6, fixed in advance: pass - the detector is frozen and becomes Gate 2's segmentation input, warm start and carried-forward control, and the viewer's hybrid switch uses p_change; fail on D-false only - one pre-registered iteration changing the held-leg weighting or the downstream loss weight, nothing else, then Gate 2 with the CUSUM/GLR segmenter; fail otherwise - publish, Gate 2 proceeds with the CUSUM/GLR segmenter.",
+  "forecast": "Downstream checks are the likeliest to pass: with truth knots the physics layer reaches 0.44 x batch least squares' median range error on G5 rows (R4), so a detector that recovers most boundaries within 60 s should beat the IMM (9.7% on validation) and match least squares on settled rows. D-delay and D-miss against the projected GLR (57% of spans detected at a 5% false-alarm rate on validation) are plausible passes for the causal variant. D-false is the likeliest failure: its D3 limit is the IMM's own 0.28%, and the interval's upper bound must sit below it on about 7,600 held-leg rows, which needs a point near 0.15%. Forecast: Gate D passes for at least one variant with probability about 0.3; the most likely outcome is a fail on D-false only, which leads to Annex A A.6's one pre-registered iteration.",
+  "held_leg_weight": 3.0,
+  "imm": "imm-cv0.0003-ct0.03-w0.003-s0.001-p4-r16",
+  "knot_threshold": 0.5,
+  "plan_digest": "305d3216659997ea1722f20f6211d6d5bce600ba746c193f9a4c2ac8e0a64b9a",
+  "plan_id": "gd-a",
+  "test_count": 100000,
+  "test_seed": 305,
+  "threshold": 0.5,
+  "tolerance_s": 60.0,
+  "validation_rule": "Annex A section A.5: a variant is carried to test only if, on validation seed 304, every gated check's point meets its limit and no interval lies wholly beyond it (tma2-gd --split validation). If no variant is carried, the test split is not generated or scored and the result is published as a validation stop. FR-015: the time-late variant's D-downstream-all is reported against the causal one's.",
+  "validation_seed": 304
+}
