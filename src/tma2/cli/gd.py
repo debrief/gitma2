@@ -69,6 +69,27 @@ def _variant(spec: str) -> tuple[str, Path, Path, Path]:
     return vid, Path(parts[0]), Path(parts[1]), Path(parts[2])
 
 
+def _control(spec: str) -> tuple[str, str, str]:
+    """``[<variant>:]<kind>=<path>`` → (variant or "", kind, path): a control tuned to one
+    variant's false-alarm rate, or shared by every variant."""
+    head, _, path = spec.partition("=")
+    vid, _, kind = head.rpartition(":")
+    if not kind or not path:
+        raise ValueError(f"--control {spec}: expected [<variant>:]<kind>=<path>")
+    return vid, kind, path
+
+
+def _controls_for(
+    vid: str, controls: dict[tuple[str, str], list[ScenarioDetection]]
+) -> dict[str, list[ScenarioDetection]]:
+    kinds = {k for _, k in controls}
+    return {
+        k: controls[(vid, k)] if (vid, k) in controls else controls[("", k)]
+        for k in kinds
+        if (vid, k) in controls or ("", k) in controls
+    }
+
+
 def _sigma1(meta: dict[str, Any]) -> bool:
     return abs(float(meta["parameters"]["noise_sigma_rad"]) - G5_SLICE_SIGMA_RAD) <= 1e-6
 
@@ -133,7 +154,7 @@ def check_inputs(a: argparse.Namespace) -> tuple[GateDDecision, dict[str, Checkp
         body = json.loads(Path(am).read_text())
         allowed.extend(body.get("controls", []))
     for spec in a.control:
-        kind, _, path = spec.partition("=")
+        _, kind, path = _control(spec)
         ch, _ = read_detector_file(path)
         if ch.dataset_digest != file_digest(a.truth):
             raise RefusedError(f"{path}: bound to another split")
@@ -200,10 +221,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--amendment", action="append", default=[])
     ap.add_argument("--experiment", required=True)
     a = ap.parse_args(argv)
-    kinds = {c.partition("=")[0] for c in a.control}
     try:
-        if not set(GATED_CONTROLS) <= kinds:
-            raise RefusedError("Gate D needs the cusum and glr controls")
+        specs = [_control(c) for c in a.control]
+        for v in a.variant:
+            vid = _variant(v)[0]
+            have = {k for cv, k, _ in specs if cv in ("", vid)}
+            if not set(GATED_CONTROLS) <= have:
+                raise RefusedError(f"{vid}: Gate D needs the cusum and glr controls")
         decision, metas = check_inputs(a)
     except (RefusedError, RecordError, OSError, ValueError) as e:
         print(f"tma2-gd: refused: {e}", file=sys.stderr)
@@ -232,13 +256,14 @@ def main(argv: list[str] | None = None) -> int:
         if p:
             exp.add_artefact(p, f"predictions: {name}")
             preds[name] = load_g5_predictions(p, wanted)
-    controls: dict[str, list[ScenarioDetection]] = {}
-    for spec in a.control:
-        kind, _, path = spec.partition("=")
-        exp.add_artefact(path, f"control: {kind}")
-        controls[kind] = score_detector_file(path, sigma1, kind, decision)
+    controls: dict[tuple[str, str], list[ScenarioDetection]] = {}
+    for cv, kind, path in specs:
+        exp.add_artefact(path, f"control: {cv + ':' if cv else ''}{kind}")
+        controls[(cv, kind)] = score_detector_file(path, sigma1, kind, decision)
     variants: dict[str, Any] = {}
-    reported: dict[str, Any] = {"controls": {k: summary(v) for k, v in controls.items()}}
+    reported: dict[str, Any] = {
+        "controls": {(f"{cv}:{k}" if cv else k): summary(v) for (cv, k), v in controls.items()}
+    }
     for spec in a.variant:
         vid, meta_p, det_p, down_p = _variant(spec)
         exp.add_artefact(meta_p, f"checkpoint meta: {vid}")
@@ -250,7 +275,7 @@ def main(argv: list[str] | None = None) -> int:
         rows = downstream_rows(truths, preds)
         checks = variant_checks(
             det,
-            {k: controls[k] for k in GATED_CONTROLS},
+            {k: _controls_for(vid, controls)[k] for k in GATED_CONTROLS},
             rows,
             f"{vid}-downstream",
             decision.false_alarm_limit,
@@ -281,9 +306,11 @@ def main(argv: list[str] | None = None) -> int:
         }
         for name, v in rows.errors.items()
     }
-    reported["held_leg_false_alarm_imm_mode"] = (
-        summary(controls["imm_mode"])["held_leg_g5_false_alarm"] if "imm_mode" in controls else None
-    )
+    reported["held_leg_false_alarm_imm_mode"] = {
+        (f"{cv}:{k}" if cv else k): summary(v)["held_leg_g5_false_alarm"]
+        for (cv, k), v in controls.items()
+        if k == "imm_mode"
+    }
     per_variant = {vid: variant_result(c) for vid, c in variants.items()}
     if a.split == "test":
         exp.result = gate_result(variants)

@@ -5,9 +5,9 @@
 
 ``gd``: three seeds of each carried variant (causal, time-late; D2) and the classification-only
 control (one seed), at the research R2–R5 defaults (``tma2.models.detector_config``), on training
-stream 311 and validation seed 304. ``smoke``: two small detectors, two short epochs, to exercise the training workflow end to end
-(train, detect, downstream, results branch). ``bench``: the causal configuration and the
-classification-only
+stream 311 and validation seed 304. ``smoke``: two small detectors, two short epochs, to exercise
+the training workflow end to end (train, detect, downstream, results branch). ``bench``: the causal
+configuration and the classification-only
 control for two epochs of 4,000 scenarios on the runner (T021; the second epoch has compiled
 kernels).
 """
