@@ -94,3 +94,49 @@ def test_every_job_trains_at_least_one_epoch(tmp_path: Path) -> None:
     assert m1.epoch == 1 and not m1.complete
     m2 = train(plan, "t1", ck, data, max_wall_s=0.0, log=lambda _: None)
     assert m2.epoch == 2
+
+
+def test_minimum_improvement_rule() -> None:
+    from tma2.models.train import improved
+
+    assert improved(3.0, float("inf"), 1e-3)
+    assert not improved(3.2713, 3.2718, 1e-3)  # Gate 1's seed 2 "improvement"
+    assert improved(3.20, 3.2718, 1e-3)
+    assert improved(3.2713, 3.2718, None)  # absent = any decrease (spec 003 behaviour)
+
+
+def test_checkpoint_records_weights_digest_dirty_flag_and_liveness(tmp_path: Path) -> None:
+    from tma2.data.io import file_digest
+
+    plan = _plan(tmp_path)
+    ck = tmp_path / "ck"
+    meta = train(plan, "t1", ck, fixture_dir("iter4-seed777"), epochs=1, log=lambda _: None)
+    assert meta.weights_digest == file_digest(ck / "best.safetensors")
+    assert meta.jobs and meta.jobs[-1].git_dirty is not None
+    assert meta.liveness and {r.head for r in meta.liveness} == {
+        "weight_head",
+        "init_head",
+        "scale_head",
+    }
+
+
+def test_predictions_carry_the_weights_digest_and_need_best_weights(tmp_path: Path) -> None:
+    import os
+
+    import pytest
+
+    from tma2.data.io import file_digest
+    from tma2.eval.predictions import read_prediction_header
+    from tma2.models.predict import load_model, predict_split
+
+    plan = _plan(tmp_path)
+    data = fixture_dir("iter4-seed777")
+    ck = tmp_path / "ck"
+    train(plan, "t1", ck, data, epochs=1, log=lambda _: None)
+    model = load_model(plan, "t1", ck)
+    out = tmp_path / "p.ndjson"
+    predict_split(model, data / "test.f32pack", out, limit=2, log=lambda _: None)
+    assert read_prediction_header(out).weights_digest == file_digest(ck / "best.safetensors")
+    os.remove(ck / "best.safetensors")
+    with pytest.raises(FileNotFoundError):
+        load_model(plan, "t1", ck)

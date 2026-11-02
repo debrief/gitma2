@@ -94,6 +94,12 @@ def check_inputs(a: argparse.Namespace) -> tuple[Gate1Decision, CheckpointMeta]:
             h = check_bound(p, a.test)
             if name == "model" and h.estimator != a.carried:
                 raise RefusedError(f"{p}: estimator {h.estimator}, not {a.carried}")
+            if name == "model" and meta.weights_digest and h.weights_digest != meta.weights_digest:
+                # Spec 004 FR-004: the predictions were made from the carried checkpoint's weights.
+                raise RefusedError(
+                    f"{p}: weights digest {h.weights_digest} is not the checkpoint's "
+                    f"{meta.weights_digest}"
+                )
     return decision, meta
 
 
@@ -141,6 +147,9 @@ def main(argv: list[str] | None = None) -> int:
     for name in ("naive", "ekf", "imm", "oracle"):
         ap.add_argument(f"--{name}")
     ap.add_argument("--experiment", required=True)
+    ap.add_argument(
+        "--amendment", action="append", default=[], help="decision-record amendment in force"
+    )
     a = ap.parse_args(argv)
     try:
         decision, meta = check_inputs(a)
@@ -154,6 +163,8 @@ def main(argv: list[str] | None = None) -> int:
     wanted = gate_timestamps(truths)
     exp.add_dataset(a.test, dump_record(header))
     exp.add_artefact(a.decision, "decision")
+    for am in a.amendment:
+        exp.add_amendment(am)
     exp.add_artefact(a.plan, "plan")
     exp.add_artefact(a.model_meta, "carried model checkpoint meta")
     preds = {}

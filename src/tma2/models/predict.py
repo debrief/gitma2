@@ -16,6 +16,7 @@ import numpy as np
 import torch
 from safetensors.torch import load_file
 
+from tma2.data.io import file_digest
 from tma2.eval.predictions import PredictionWriter
 from tma2.sim.geometry import bearing_of, f32, f32_angle
 
@@ -33,8 +34,11 @@ def load_model(plan_path: str | Path, model_id: str, checkpoint: str | Path) -> 
     folder = Path(checkpoint)
     weights = folder / "best.safetensors"
     if not weights.exists():
-        weights = folder / "weights.safetensors"
+        # No fallback to the last epoch's weights: a gate scores the best weights or nothing
+        # (spec 004 FR-004; Gate 1 reproducibility review).
+        raise FileNotFoundError(f"{weights}: no best weights in this checkpoint")
     model.load_state_dict(load_file(str(weights)))
+    model.weights_digest = file_digest(weights)
     model.eval()
     model.set_implicit(False)
     return model
@@ -51,7 +55,9 @@ def predict_split(
     """Write predictions for the first ``limit`` scenarios (all by default); returns the count."""
     truth = Path(truth)
     batch_all = batch_from_pack(truth, limit or 10**9)
-    writer = PredictionWriter(out, model.cfg.id, "per_timestep", truth)
+    writer = PredictionWriter(
+        out, model.cfg.id, "per_timestep", truth, weights_digest=model.weights_digest
+    )
     n = len(batch_all)
     try:
         for a in range(0, n, chunk):

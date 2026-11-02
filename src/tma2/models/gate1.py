@@ -21,7 +21,9 @@ from torch import Tensor, nn
 from torch.nn import functional as F  # noqa: N812
 
 from tma2.physics.layer import PhysicsInputs, PhysicsLayer, cos_export
-from tma2.types.generated.tma import PhysicsHead, PhysicsModelConfig
+from tma2.types.generated.tma import HeadLiveness, PhysicsHead, PhysicsModelConfig
+
+from .heads import head, liveness
 
 FEATURES = 7
 POS_SCALE_M = 1e4
@@ -117,13 +119,6 @@ class Encoder(nn.Module):
         return out
 
 
-def _zero_linear(n_in: int, n_out: int) -> nn.Linear:
-    lin = nn.Linear(n_in, n_out)
-    nn.init.zeros_(lin.weight)
-    nn.init.zeros_(lin.bias)
-    return lin
-
-
 @dataclass
 class ModelOutput:
     state: Tensor  # [N, 4] (x, y, vx, vy) at the row
@@ -141,14 +136,38 @@ class Gate1Model(nn.Module):
         self.cfg = cfg
         self.encoder = Encoder(cfg)
         w = cfg.width
-        self.weight_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 1))
-        self.init_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 3))
-        self.scale_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 1))
-        self.direct_head = nn.Sequential(nn.Linear(w, w), nn.ReLU(), _zero_linear(w, 6))
+        self.weight_head = head(w, 1, cfg.head_activation)
+        self.init_head = head(w, 3, cfg.head_activation)
+        self.scale_head = head(w, 1, cfg.head_activation)
+        self.direct_head = head(w, 6, cfg.head_activation)
         self.physics = PhysicsLayer(iterations=cfg.iterations, knots=0)
+        self.weights_digest: str | None = None  # set by load_model (spec 004 FR-004)
 
     def set_implicit(self, implicit: bool) -> None:
         self.physics.implicit = implicit
+
+    def head_liveness(
+        self,
+        bearing: Tensor,
+        valid: Tensor,
+        ox: Tensor,
+        oy: Tensor,
+        t: Tensor,
+        sigma: Tensor,
+        n_rows: Tensor,
+    ) -> list[HeadLiveness]:
+        """Liveness of each head on the encoder's outputs for these windows (spec 004 R1)."""
+        r = bearing.shape[1]
+        pad = torch.arange(r, device=bearing.device).unsqueeze(0) >= n_rows.unsqueeze(1)
+        with torch.no_grad():
+            h = self.encoder(features(bearing, valid, ox, oy, t, sigma), pad)
+        h = h[~pad]
+        names = (
+            ("direct_head",)
+            if self.cfg.head == PhysicsHead.direct
+            else ("weight_head", "init_head", "scale_head")
+        )
+        return [liveness(n, getattr(self, n), h) for n in names]
 
     def forward(
         self,

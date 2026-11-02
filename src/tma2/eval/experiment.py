@@ -83,6 +83,7 @@ class Experiment:
     checks: list[Check] = field(default_factory=list)
     metrics: dict[str, Any] = field(default_factory=dict)
     artefacts: list[dict[str, str]] = field(default_factory=list)
+    amendments: list[dict[str, str]] = field(default_factory=list)
     root: Path = ROOT  # the repository whose state the record names (a clone, in tests)
 
     def add_artefact(self, path: str | Path, role: str) -> str:
@@ -94,6 +95,17 @@ class Experiment:
         except ValueError:
             pass
         self.artefacts.append({"path": str(shown), "digest": digest, "role": role})
+        return digest
+
+    def add_amendment(self, path: str | Path) -> str:
+        """A decision-record amendment in force, by path and digest (spec 004 FR-006)."""
+        digest = file_digest(path)
+        shown = Path(path).resolve()
+        try:
+            shown = shown.relative_to(ROOT)
+        except ValueError:
+            pass
+        self.amendments.append({"path": str(shown), "digest": digest, "role": "amendment"})
         return digest
 
     def add_dataset(self, path: str | Path, header: Any) -> None:
@@ -185,6 +197,8 @@ class Experiment:
             "environment": run_environment(),
             "artefacts": self.artefacts,
         }
+        if self.amendments:
+            manifest["amendments"] = self.amendments
         try:
             import torch
 

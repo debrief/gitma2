@@ -9,15 +9,15 @@ names its files and the requirement it serves.
   `JobRecord.git_dirty`, `PredictionHeader.weights_digest`, `ExperimentManifest.amendments`,
   `DetectorConfig`, `ControlSettings`, `DetectionRecord`, `GateDDecision`; regenerate types; tests
   (FR-001–FR-008, data-model)
-- [ ] T002 `models/heads.py`: head MLPs with relu | tanh; liveness diagnostics (alive share, output
+- [x] T002 `models/heads.py`: head MLPs with relu | tanh; liveness diagnostics (alive share, output
   sd); `gate1.py` uses it (relu kept for Gate 1's weights; a test re-loads them) (FR-001)
-- [ ] T003 Liveness and learnability test: a tiny model trained a few hundred steps on varying
+- [x] T003 Liveness and learnability test: a tiny model trained a few hundred steps on varying
   labels passes; a zeroed-head model fails (FR-002, SC-002)
-- [ ] T004 `train.py`: `min_improvement`; `git_dirty` in job records; `weights_digest` in
+- [x] T004 `train.py`: `min_improvement`; `git_dirty` in job records; `weights_digest` in
   checkpoint meta; liveness figures logged per epoch (FR-003, FR-005)
-- [ ] T005 `predict.py` and prediction headers: `weights_digest`; no fallback to non-best weights in
+- [x] T005 `predict.py` and prediction headers: `weights_digest`; no fallback to non-best weights in
   gate use; `tma2-g1` and the new gate check the digest; manifests list amendments (FR-004, FR-006)
-- [ ] T006 One median convention in reported efficiencies; one convergence definition in gross
+- [x] T006 One median convention in reported efficiencies; one convergence definition in gross
   counting with gross rows by cause (`eval/g1.py`, `eval/metrics.py`) (FR-007, FR-008)
 
 ## Phase 2: Data and references (US3, US4)

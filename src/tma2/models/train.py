@@ -196,6 +196,7 @@ class Checkpoint:
         if best is not None:
             save_file(best, str(self.folder / "best.safetensors.tmp"))
             os.replace(self.folder / "best.safetensors.tmp", self.folder / "best.safetensors")
+            meta.weights_digest = file_digest(self.folder / "best.safetensors")
         torch.save(opt.state_dict(), self.folder / "optim.pt.tmp")
         os.replace(self.folder / "optim.pt.tmp", self.folder / "optim.pt")
         f = AtomicFile(self.meta_path)
@@ -204,14 +205,31 @@ class Checkpoint:
 
 
 def _git_commit() -> str:
+    return git_state()[0]
+
+
+def git_state() -> tuple[str, bool]:
+    """(commit, dirty) of the repository the code runs from (spec 004 FR-005)."""
     import subprocess
 
     try:
-        return subprocess.run(
+        commit = subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT, check=True
         ).stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain"], capture_output=True, text=True, cwd=ROOT, check=True
+        ).stdout.strip()
+        return commit, status != ""
     except (OSError, subprocess.CalledProcessError):
-        return "unknown"
+        return "unknown", True
+
+
+def improved(value: float, best: float, min_improvement: float | None) -> bool:
+    """An epoch improves only if the validation loss falls by at least ``min_improvement``
+    (relative) below the best so far (spec 004 FR-003); the first finite value always does."""
+    if not np.isfinite(best):
+        return bool(np.isfinite(value))
+    return value < best - abs(best) * (min_improvement or 0.0)
 
 
 def train(
@@ -311,7 +329,11 @@ def train(
         meta.train_losses = [*(meta.train_losses or []), float(np.mean(losses))]
         meta.val_losses = [*(meta.val_losses or []), v]
         meta.epoch_seconds = [*(meta.epoch_seconds or []), secs]
-        if v < meta.best_val_loss:
+        g0 = val[0]
+        meta.liveness = model.head_liveness(
+            g0.bearing, g0.valid, g0.ox, g0.oy, g0.t, g0.sigma, g0.n_rows
+        )
+        if improved(v, meta.best_val_loss, cfg.min_improvement):
             meta.best_val_loss, meta.best_epoch = v, e
             best = {k: t.detach().clone().contiguous() for k, t in model.state_dict().items()}
         if e - meta.best_epoch >= cfg.patience or e >= cfg.epochs:
@@ -331,6 +353,7 @@ def train(
             )
         )
     env = run_environment()
+    commit, dirty = git_state()
     job = JobRecord(
         started=started,
         finished=dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat(),
@@ -339,7 +362,8 @@ def train(
         last_epoch=meta.epoch,
         cpu_model=str(env.get("cpu_model", "unknown")),
         threads=cfg.threads,
-        git_commit=_git_commit(),
+        git_commit=commit,
+        git_dirty=dirty,
     )
     meta.jobs = [*(meta.jobs or []), job]
     ck.save(model, best, opt, meta)
