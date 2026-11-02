@@ -11,6 +11,7 @@ import pytest
 
 from tests.conftest import fixture_dir
 from tests.unit.test_detector_train import _plan, _train_in_process
+from tma2.eval.gd import GATED
 from tma2.types import dump_record, parse_record
 from tma2.types.generated.tma import CheckpointMeta, GateDDecision
 
@@ -100,7 +101,7 @@ def test_tma2_gd_scores_fixture_outputs(tmp_path: Path, monkeypatch: pytest.Monk
         assert rc in (0, 3)
         verdict = json.loads((folder / "verdict.json").read_text())
         names = {c["name"] for c in verdict["checks"]}
-        assert {f"det-test:{n}" for n in gd.GATED} <= names
+        assert {f"det-test:{n}" for n in GATED} <= names
         assert verdict["gate"] == "GD" and verdict["result"] in ("pass", "fail", "inconclusive")
         metrics = json.loads((folder / "metrics.json").read_text())
         assert set(metrics["reported"]["controls"]) == {"cusum", "glr"}
