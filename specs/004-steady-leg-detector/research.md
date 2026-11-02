@@ -114,6 +114,25 @@ solve locally; with the encoder, labels and pairwise heads the step is measured 
 benchmark on the runner before the plan is fixed (budget: under an hour per 10⁵ scenarios, i.e.
 36 ms per scenario on the runner).
 
+**Measured after implementation** (T014, local 4 cores, nothing else running; the full step:
+batch inputs, encoder, pairwise heads, two downstream rows at 8 knots and K = 50, backward):
+
+| Batch | Inputs | Step | Total per scenario | Epoch of 10⁵ |
+| --- | --- | --- | --- | --- |
+| 32, tensor grid start | 1 ms | 63 ms | 64 ms | 107 min |
+| 32, numba grid start | 11 ms | 29 ms | 40 ms | 66 min |
+| 32, numba grid start in parallel | 4 ms | 30 ms | 34 ms | 57 min |
+| 64, numba grid start in parallel | 4 ms | 23 ms | 27 ms | 45 min |
+
+The grid start in tensors cost more than the solve (14 ms per row); it carries no gradient, so
+training uses gitma's numba one (equal to 1e-9; the tensor one stays for the exported graph). In
+the step, the 50 damped iterations take 62%, of which `atan2_export` is 18%; replacing it with
+`torch.atan2` in eager mode would break the spec 003 invariant that the eager solve equals the
+exported graph bit for bit, so it is not done. At the runner's ≈ 1.8× the batch-64 step is about
+80 min per 10⁵ scenarios: T021 measures it on the runner, and if it is over the hour the plan uses
+R5's levers in this order before registration: one downstream row per scenario (the G5 row), then
+40 training iterations.
+
 **Alternatives**: three scored rows (≈ 23 ms per scenario locally for the solve, likely over
 budget on the runner); 4 knots (half the cost; three manoeuvres need six knots).
 

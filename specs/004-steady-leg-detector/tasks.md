@@ -40,7 +40,7 @@ names its files and the requirement it serves.
 - [x] T013 `models/detector_loss.py`: classification losses with held-leg weighting; downstream
   CRB-normalised loss through the physics layer (implicit); classification-only mode; finite
   gradients test (FR-016–FR-018, R5)
-- [ ] T014 Training integration: detector configurations in plans, two downstream rows, one noise
+- [x] T014 Training integration: detector configurations in plans, two downstream rows, one noise
   draw, K = 50 training solve; resume equality test; local throughput measured (FR-019–FR-021)
 - [x] T015 `tma2-detect`: per-timestep outputs with weights digest (contracts/cli.md)
 

@@ -132,10 +132,11 @@ def run_downstream(
     sigma: Tensor,
     query: Tensor,
     k_state: Tensor | None = None,
+    theta0: Tensor | None = None,
 ) -> tuple[PhysicsOutputs, Tensor, Tensor]:
     """The physics layer at every present query (scenario b, slot q): returns its outputs and the
     (b, q) of each solved row. ``k_state`` [B, N] reports the state at another row than the
-    question's (the time-late variant)."""
+    question's (the time-late variant); ``theta0`` [B, N, 4] is the grid start per question."""
     from .detector_inputs import physics_inputs
 
     bi, qi = torch.nonzero(query >= 0, as_tuple=True)
@@ -150,6 +151,7 @@ def run_downstream(
         sigma[bi],
         k,
         k_state[bi, qi] if k_state is not None else None,
+        theta0[bi, qi] if theta0 is not None else None,
     )
     res: PhysicsOutputs = layer(x)
     return res, bi, qi

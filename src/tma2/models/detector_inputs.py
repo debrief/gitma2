@@ -39,10 +39,14 @@ def physics_inputs(
     sigma: Tensor,
     k: Tensor,
     k_state: Tensor | None = None,
+    theta0: Tensor | None = None,
 ) -> PhysicsInputs:
     """One question per scenario: w_change, p_kind [B, R] (row k's), the scenario's bearings,
-    valid (0/1), ownship [B, R, 2], t [B, R], σ [B], k [B] → the layer's inputs."""
-    theta0 = grid_start_tensor(t, own_xy[..., 0], own_xy[..., 1], bearing, valid, k)
+    valid (0/1), ownship [B, R, 2], t [B, R], σ [B], k [B] → the layer's inputs. ``theta0``, the
+    grid start, is computed in tensors when absent (the exported graph); training passes the
+    numba one (``lsq.grid_start``, the same candidates; no gradient reaches it)."""
+    if theta0 is None:
+        theta0 = grid_start_tensor(t, own_xy[..., 0], own_xy[..., 1], bearing, valid, k)
     return PhysicsInputs(
         bearing=bearing,
         valid=valid,

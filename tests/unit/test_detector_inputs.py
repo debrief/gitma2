@@ -74,3 +74,22 @@ def test_truth_segmentation_reproduces_oracle_knots() -> None:
         if done >= 10:
             break
     assert done > 0
+
+
+def test_numba_grid_start_equals_the_tensor_one() -> None:
+    from tma2.physics.segmentation import grid_start_tensor
+    from tma2.references import lsq
+
+    for i, (_, meta, own, _tgt, obs) in enumerate(
+        iter_pack_raw(fixture_dir("phase4-seed777") / "test.f32pack")
+    ):
+        d = bearing_data_from_arrays(meta, own, obs)
+        k = d.n - 1
+        found, th = lsq.grid_start(d.t, d.ox, d.oy, d.z, d.valid.astype(np.uint8), k + 1)
+        ts = grid_start_tensor(
+            tt(d.t), tt(d.ox), tt(d.oy), tt(d.z), tt(d.valid.astype(np.float64)), torch.tensor([k])
+        )
+        assert found
+        np.testing.assert_allclose(ts[0].numpy(), th, rtol=1e-9, atol=1e-6)
+        if i >= 10:
+            break

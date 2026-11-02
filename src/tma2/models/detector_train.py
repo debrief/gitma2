@@ -29,6 +29,7 @@ from typing import Any
 
 import numpy as np
 import torch
+from numba import njit, prange
 from safetensors.torch import load_file
 
 from tma2.data.io import file_digest
@@ -36,6 +37,7 @@ from tma2.eval.experiment import run_environment
 from tma2.eval.rows import G5_GATE_MIN
 from tma2.features.batch import Batch, generate_batch
 from tma2.physics.layer import PhysicsLayer
+from tma2.references import lsq
 from tma2.references.crb import crb_known_manoeuvres_fast
 from tma2.types.generated.tma import (
     CheckpointMeta,
@@ -101,6 +103,25 @@ def scored_rows(batch: Batch, rng: np.random.Generator, per_scenario: int) -> np
     return out
 
 
+@njit(parallel=True, cache=True)
+def grid_starts(
+    t: np.ndarray, ox: np.ndarray, oy: np.ndarray, z: np.ndarray, valid: np.ndarray, ks: np.ndarray
+) -> np.ndarray:
+    """gitma's grid start (``lsq.grid_start`` on rows [0, k]) for every question k ≥ 0 of
+    ks [B, N] (zeros where k < 0 or no bearing): [B, N, 4], scenarios in parallel."""
+    b_, n_ = ks.shape
+    out = np.zeros((b_, n_, 4))
+    for s in prange(b_):
+        for q in range(n_):
+            k = ks[s, q]
+            if k >= 0:
+                found, th = lsq.grid_start(t[s], ox[s], oy[s], z[s], valid[s], k + 1)
+                if found:
+                    for c in range(4):
+                        out[s, q, c] = th[c]
+    return out
+
+
 @dataclass
 class DetectorBatch:
     x: torch.Tensor  # [B, R, 13]
@@ -115,6 +136,7 @@ class DetectorBatch:
     truth: torch.Tensor  # [B, N, 4] (x, y, vx, vy) at the scored rows (NaN: none)
     bound_cov: torch.Tensor  # [B, N, 4, 4] known-manoeuvres bound (NaN: singular or none)
     own_at: torch.Tensor  # [B, N, 2] ownship at the scored rows
+    theta0: torch.Tensor  # [B, N, 4] grid start at each question's row (numba)
 
 
 def detector_batch(batch: Batch, cfg: DetectorConfig, rng: np.random.Generator) -> DetectorBatch:
@@ -146,6 +168,14 @@ def detector_batch(batch: Batch, cfg: DetectorConfig, rng: np.random.Generator) 
         query=torch.from_numpy(query),
     )
     b_, n_ = scored.shape
+    theta0 = grid_starts(
+        batch.t.astype(np.float64),
+        batch.own[..., 0].astype(np.float64),
+        batch.own[..., 1].astype(np.float64),
+        batch.bearing.astype(np.float64),
+        batch.valid.astype(np.uint8),
+        np.ascontiguousarray(query, dtype=np.int64),
+    )
     truth = np.full((b_, n_, 4), np.nan)
     bound = np.full((b_, n_, 4, 4), np.nan)
     own_at = np.zeros((b_, n_, 2))
@@ -189,6 +219,7 @@ def detector_batch(batch: Batch, cfg: DetectorConfig, rng: np.random.Generator) 
         truth=d(truth),
         bound_cov=d(bound),
         own_at=d(own_at),
+        theta0=d(theta0),
     )
 
 
@@ -209,6 +240,7 @@ def step_loss(
             xb.sigma,
             xb.y.query,
             k_state,
+            xb.theta0,
         )
         own = xb.own_at[bi, qi]
         ds = downstream_loss(res, xb.truth[bi, qi], xb.bound_cov[bi, qi], own[:, 0], own[:, 1])
