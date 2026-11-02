@@ -194,6 +194,22 @@ def ekf_update(
     return xn, _symmetrise(pn)
 
 
+@njit(cache=True)
+def ekf_nis(x: np.ndarray, p: np.ndarray, z: float, ox: float, oy: float, s2: float) -> float:
+    """Normalised innovation squared ν² / (H P Hᵀ + s2) of the bearing z at the predicted state
+    (spec 004: the CUSUM control uses s2 = σ², the measurement's own variance)."""
+    dx = x[0] - ox
+    dy = x[1] - oy
+    rho2 = dx * dx + dy * dy
+    h = np.array([dy / rho2, -dx / rho2, 0.0, 0.0])
+    s = s2
+    for i in range(4):
+        for k in range(4):
+            s += h[i] * p[i, k] * h[k]
+    nu = angle_diff(z, bearing_of(dx, dy))
+    return nu * nu / s
+
+
 def _state_row(d: BearingData, x: np.ndarray, i: int, converged: bool) -> dict[str, Any]:
     px, py, vx, vy = (float(v) for v in x)
     return {
@@ -222,9 +238,17 @@ def _empty_row(d: BearingData, i: int) -> dict[str, Any]:
 
 
 def ekf_predict(
-    d: BearingData, sigma_a: float, p0_scale: float = 1.0, r_scale: float = 1.0
+    d: BearingData,
+    sigma_a: float,
+    p0_scale: float = 1.0,
+    r_scale: float = 1.0,
+    nis_out: list[float] | None = None,
 ) -> dict[str, Any]:
-    """gitma ``ekfPredict``: one row per sample from zig_index + 1."""
+    """gitma ``ekfPredict``: one row per sample from zig_index + 1.
+
+    ``nis_out`` (spec 004) receives, per row, the normalised innovation squared of its bearing
+    against the predicted state with the measurement's own σ² (not the tuned R); NaN where the
+    row has no bearing or the filter is not running. Collecting it changes no estimate."""
     if not sigma_a >= 0:
         raise ValueError(f"EKF process noise must be ≥ 0, got {sigma_a}")
     if not (p0_scale > 0 and r_scale > 0):
@@ -247,6 +271,12 @@ def ekf_predict(
         if have:
             x, p = ekf_predict_step(t_prev, x, p, float(d.t[i]), sigma_a)
             t_prev = float(d.t[i])
+            if nis_out is not None:
+                nis_out.append(
+                    ekf_nis(x, p, float(d.z[i]), float(d.ox[i]), float(d.oy[i]), sigma * sigma)
+                    if d.valid[i] == 1
+                    else math.nan
+                )
             if d.valid[i] == 1:
                 x, p = ekf_update(x, p, float(d.z[i]), float(d.ox[i]), float(d.oy[i]), r2)
             if plausible_state4(float(d.ox[i]), float(d.oy[i]), x):
@@ -257,6 +287,8 @@ def ekf_predict(
             last_try = i - EKF_REINIT_EVERY
         else:
             rows.append(_empty_row(d, i))
+            if nis_out is not None:
+                nis_out.append(math.nan)
         if i - last_try >= EKF_REINIT_EVERY:
             have, t_prev, x, p = ekf_initialise(d.t, d.ox, d.oy, d.z, d.valid, i, sigma, p0_scale)
             last_try = i

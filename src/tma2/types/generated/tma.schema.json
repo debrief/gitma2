@@ -273,6 +273,7 @@
             "description": "A non-learned manoeuvre detector used as a Gate D control (Annex A \u00a7A.2).",
             "enum": [
                 "cusum",
+                "cusum_ekf",
                 "glr",
                 "imm_mode"
             ],
@@ -294,6 +295,13 @@
                     "description": "CUSUM drift \u03b4.",
                     "type": [
                         "number",
+                        "null"
+                    ]
+                },
+                "ekf": {
+                    "description": "Frozen EKF setting name (cusum_ekf).",
+                    "type": [
+                        "string",
                         "null"
                     ]
                 },
@@ -323,6 +331,13 @@
                 },
                 "threshold": {
                     "type": "number"
+                },
+                "tuned_on": {
+                    "description": "SHA-256 of the validation file the threshold was tuned on.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "required": [

@@ -46,7 +46,7 @@ names its files and the requirement it serves.
 
 ## Phase 4: Controls and metrics (US4, US5)
 
-- [ ] T016 `detect/controls.py`: CUSUM on least-squares innovations, linearised GLR (W = 30),
+- [x] T016 `detect/controls.py`: CUSUM on least-squares innovations, linearised GLR (W = 30),
   IMM μ_CT; `tma2-controls tune|run`; tests on synthetic manoeuvres (FR-022–FR-024, R6)
 - [ ] T017 `detect/matching.py`: alarms, detection, delays, misses, unresolved, held-leg false
   alarms (G5 fraction and per hour), kind accuracy, F1, ECE; tests (FR-028, R8)

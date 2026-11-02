@@ -119,24 +119,37 @@ budget on the runner); 4 knots (half the cost; three manoeuvres need six knots).
 
 ## R6. Controls
 
-**Decision**:
+**Decision** (revised during implementation, before registration; measurements on the first 300
+σ = 1° scenarios of validation seed 304, per-span detection at a matched 5% held-leg false-alarm
+rate):
 
-- **CUSUM** on the normalised innovations of the per-timestep batch least squares (the warm-started
-  solve of `tma2-solve --per-timestep`): ν_k = wrap(z_k − b̂_k|k−1) / σ, where b̂_k|k−1 is the
-  bearing predicted at t_k from the estimate at k − 1; S_k = max(0, S_{k−1} + ν_k² − 1 − δ) with
-  δ = 0.5; alarm while S_k > h, reset after 60 s without alarm.
-- **GLR** for a velocity change in the last W = 30 samples (5 min), linearised at the one-leg fit:
-  for each candidate change row τ in the window, the bearing Jacobian of a velocity increment at τ
-  is J_i(τ) = (t_i − t_τ)⁺ ∂b_i/∂(x, y); with r the normalised residuals of the one-leg fit over the
-  window, Λ(τ) = rᵀJ(JᵀJ)⁻¹Jᵀr (a 2 × 2 solve per τ), and the statistic is max_τ Λ(τ); alarm while
-  it exceeds h.
+- **CUSUM** (gated) on the normalised innovations of the per-timestep batch least squares, as
+  Annex A §A.2 writes it: ν_k = wrap(z_k − b̂_k|k−1) / σ, where b̂_k|k−1 is the bearing predicted
+  at t_k from the estimate at k − 1; S_k = max(0, S_{k−1} + ν_k² − 1 − δ) with δ = 0.5; alarm while
+  S_k > h. The single-leg fit is wrong after a scenario's first manoeuvre, so its innovations stay
+  biased and S grows on later held legs: h = 72, 10% of spans detected. This is a property of the
+  Annex's definition, reported as such; the R6 draft's "reset after 60 s" is dropped (the drift
+  ends an episode; episodes less than 60 s apart are merged for every detector when rising edges
+  are counted).
+- **CUSUM on the frozen EKF's innovations** (reported, not gated): the same recursion on
+  ν² / (H P Hᵀ + σ²) from the frozen EKF (Bar-Shalom's χ² detector), which re-converges after a
+  manoeuvre. Annex A names the least-squares CUSUM, so this one is a diagnostic.
+- **GLR** for a velocity change in the last W = 30 samples (5 min), linearised at the per-timestep
+  least-squares estimate θ̂_k: r_i the normalised residuals over the window, one-leg columns
+  A_i = (g_i, (t_i − t_k) g_i), change columns J_i(τ) = (t_i − t_τ)⁺ g_i, g_i = ∂b_i/∂(x, y) / σ. The
+  window's one-leg fit is projected out (P = I − UUᵀ, U an orthonormal basis of A, modified
+  Gram–Schmidt with a 1e-6 rank tolerance), Λ(τ) = (Pr)ᵀPJ(JᵀPJ)⁻¹JᵀPr, the statistic max_τ Λ(τ).
+  The R6 draft had no projection, which tests the whole-window fit's error rather than a change in
+  the window. Measured: 57% of spans at 5% (W = 60: 29%, so W = 30 stays).
 - **IMM mode probability**: the frozen IMM's coordinated-turn probability μ_CT at each row
-  (exposed from the existing step, which already computes it); alarm while μ_CT > h.
+  (``imm_predict(mu_ct_out=…)``); alarm while μ_CT > h: 44% of spans at 5%.
 
-Each threshold h is tuned on validation so that the control's held-leg false-alarm fraction on G5
-rows is closest to the detector's at its declared operating point (D1: p_change ≥ 0.5), and frozen
-in the decision record before the test split. The IMM's mode probability is also reported at
-μ_CT > 0.5, its natural threshold, for D3.
+Each threshold h is tuned on validation (``tma2-controls tune``) so that the control's held-leg
+false-alarm fraction on σ = 1° G5 rows is closest to the detector's at its declared operating
+point (D1: p_change ≥ 0.5), and frozen (by digest) before the test split. The IMM's mode
+probability is also reported at μ_CT > 0.5, its natural threshold, for D3. D-delay and D-miss
+compare the detector with the better of CUSUM and GLR, so the weak literal CUSUM does not lower
+the bar.
 
 **Rationale**: a literal refit of one and two legs at every candidate τ and every row would take
 about 6·10⁷ solves per test split (≈ 33 h); the linearised likelihood ratio is the same test to
@@ -146,7 +159,8 @@ legs".
 
 **Alternatives**: a Willsky–Jones mean-shift GLR on the innovations (simpler, but tests a bias in
 bearings, not a velocity change); a literal refit at a stride of 6 rows (still about 6 h, and
-coarser delays).
+coarser delays); proposing an Annex amendment to gate the EKF CUSUM (the owner's call: offered in
+the write-up, not assumed).
 
 ## R7. References re-tuned for manoeuvring data
 

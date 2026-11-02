@@ -266,7 +266,11 @@ class ControlKind(str, Enum):
     """
     cusum = "cusum"
     """
-    CUSUM on the per-timestep least-squares innovations.
+    CUSUM on the per-timestep least-squares innovations (gated).
+    """
+    cusum_ekf = "cusum_ekf"
+    """
+    CUSUM on the frozen EKF's innovations (reported, not gated).
     """
     glr = "glr"
     """
@@ -1309,7 +1313,7 @@ class Gate1Decision(ConfiguredBaseModel):
     bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     imm: str = Field(default=..., description="""Frozen IMM settings (JSON).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
-    ekf: str = Field(default=..., description="""Frozen EKF settings (JSON).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    ekf: str = Field(default=..., description="""Frozen EKF settings (JSON).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
     forecast: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     if_failed: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision']} })
     validation_rule: str = Field(default=..., description="""When validation stops the phase before test.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
@@ -1410,6 +1414,8 @@ class ControlSettings(ConfiguredBaseModel):
     cusum_drift: Optional[float] = Field(default=None, description="""CUSUM drift δ.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
     glr_window: Optional[int] = Field(default=None, description="""GLR window in samples.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
     imm: Optional[str] = Field(default=None, description="""Frozen IMM setting name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
+    ekf: Optional[str] = Field(default=None, description="""Frozen EKF setting name (cusum_ekf).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
+    tuned_on: Optional[str] = Field(default=None, description="""SHA-256 of the validation file the threshold was tuned on.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
     target_false_alarm: Optional[float] = Field(default=None, description="""Held-leg G5 false-alarm fraction the threshold was tuned to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
     achieved_false_alarm: Optional[float] = Field(default=None, description="""Held-leg G5 false-alarm fraction at the tuned threshold on validation.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
 
@@ -1550,7 +1556,7 @@ class GateDDecision(ConfiguredBaseModel):
     held_leg_weight: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'GateDDecision']} })
     controls_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
     imm: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
-    ekf: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    ekf: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
     criterion: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     validation_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     follow_on: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })

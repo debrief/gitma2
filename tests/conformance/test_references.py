@@ -139,3 +139,17 @@ def test_imm_mode_probability_changes_no_estimate() -> None:
                 assert 0.0 <= m <= 1.0
                 seen += 1
     assert seen > 0
+
+
+def test_ekf_innovations_change_no_estimate() -> None:
+    """Spec 004: nis_out has one value per row, finite and ≥ 0 exactly on running rows with a
+    bearing, and collecting it leaves every row identical."""
+    seen = 0
+    for _, meta, own, _tgt, obs in iter_pack_raw(fixture_dir("phase4-seed777") / "test.f32pack"):
+        d = bearing_data_from_arrays(meta, own, obs)
+        nis: list[float] = []
+        with_nis = ekf_predict(d, 0.03, 4.0, 8.0, nis_out=nis)
+        assert with_nis == ekf_predict(d, 0.03, 4.0, 8.0)
+        assert len(nis) == len(with_nis["rows"])
+        seen += sum(1 for q in nis if math.isfinite(q) and q >= 0)
+    assert seen > 0

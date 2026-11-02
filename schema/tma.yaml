@@ -122,7 +122,8 @@ enums:
   ControlKind:
     description: A non-learned manoeuvre detector used as a Gate D control (Annex A §A.2).
     permissible_values:
-      cusum: { description: CUSUM on the per-timestep least-squares innovations. }
+      cusum: { description: CUSUM on the per-timestep least-squares innovations (gated). }
+      cusum_ekf: { description: "CUSUM on the frozen EKF's innovations (reported, not gated)." }
       glr: { description: Linearised one-versus-two-leg GLR over a sliding window (research R6). }
       imm_mode: { description: The frozen IMM's coordinated-turn mode probability. }
   ModelKind:
@@ -1324,6 +1325,8 @@ classes:
       cusum_drift: { range: float, description: CUSUM drift δ. }
       glr_window: { range: integer, description: GLR window in samples. }
       imm: { range: string, description: Frozen IMM setting name. }
+      ekf: { range: string, description: Frozen EKF setting name (cusum_ekf). }
+      tuned_on: { range: string, description: SHA-256 of the validation file the threshold was tuned on. }
       target_false_alarm: { range: float, description: Held-leg G5 false-alarm fraction the threshold was tuned to. }
       achieved_false_alarm: { range: float, description: Held-leg G5 false-alarm fraction at the tuned threshold on validation. }
 
