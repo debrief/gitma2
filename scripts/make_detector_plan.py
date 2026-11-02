@@ -5,7 +5,9 @@
 
 ``gd``: three seeds of each carried variant (causal, time-late; D2) and the classification-only
 control (one seed), at the research R2–R5 defaults (``tma2.models.detector_config``), on training
-stream 311 and validation seed 304. ``bench``: the causal configuration and the classification-only
+stream 311 and validation seed 304. ``smoke``: two small detectors, two short epochs, to exercise the training workflow end to end
+(train, detect, downstream, results branch). ``bench``: the causal configuration and the
+classification-only
 control for two epochs of 4,000 scenarios on the runner (T021; the second epoch has compiled
 kernels).
 """
@@ -28,6 +30,12 @@ TRAIN_SEED = 311
 
 
 def detectors(preset: str) -> list[Any]:
+    if preset == "smoke":
+        small = {"epochs": 2, "patience": 2, "batch_scenarios": 32}
+        return [
+            detector_config("smoke-causal", **small),
+            detector_config("smoke-cls", loss_downstream_weight=0.0, **small),
+        ]
     if preset == "bench":
         return [
             detector_config("bench-causal", epochs=2, patience=2),
@@ -47,20 +55,21 @@ def detectors(preset: str) -> list[Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--preset", choices=("gd", "bench"), required=True)
+    ap.add_argument("--preset", choices=("gd", "bench", "smoke"), required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--validation", default=VALIDATION)
     ap.add_argument("--decision", default="none")
     a = ap.parse_args()
     header = read_pack_header(a.validation)
     bench = a.preset == "bench"
+    smoke = a.preset == "smoke"
     plan = TrainingPlan(
-        id="gd-bench" if bench else "gd-a",
+        id="gd-bench" if bench else "gd-smoke" if smoke else "gd-a",
         ranges=header.parameter_ranges,
         train_seed=TRAIN_SEED,
-        scenarios_per_epoch=4000 if bench else 50_000,
+        scenarios_per_epoch=4000 if bench else 500 if smoke else 50_000,
         validation=DatasetRef(path=a.validation, header=header, digest=file_digest(a.validation)),
-        validation_scenarios=1000 if bench else 2000,
+        validation_scenarios=1000 if bench else 100 if smoke else 2000,
         detectors=detectors(a.preset),
         decision=a.decision,
     )

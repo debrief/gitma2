@@ -133,6 +133,15 @@ exported graph bit for bit, so it is not done. At the runner's ≈ 1.8× the bat
 R5's levers in this order before registration: one downstream row per scenario (the G5 row), then
 40 training iterations.
 
+**Measured on the runner** (T021, `bench-gd/t021`, run 41417887072, AMD EPYC 9V74, 4 threads,
+batch 64, second epoch of 4,000 scenarios): causal 117.2 s training (29.3 ms per scenario),
+time-late 117.0 s (29.3 ms), classification-only 55.6 s (13.9 ms); validation of 1,000 scenarios
+≈ 30 s. One epoch of 10⁵ scenarios therefore takes about 49 min for the carried detectors (23 min
+for the control), under the hour, so neither lever is used: the plan keeps two downstream rows,
+8 knots and K = 50. This runner type is faster than the local machine (the 1.8× of spec 003 was
+measured on another CPU family); `cpu_model` is in every job record. All heads were alive after
+two short epochs (now head output sd 0.006, pairwise logits 0.14 and 0.04).
+
 **Alternatives**: three scored rows (≈ 23 ms per scenario locally for the solve, likely over
 budget on the runner); 4 knots (half the cost; three manoeuvres need six knots).
 
