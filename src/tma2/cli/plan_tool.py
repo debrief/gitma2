@@ -115,7 +115,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"plan={path}")
             print(f"id={plan.id}")
             print(f"digest={digest}")
-            print(f"models={json.dumps([m.id for m in plan.models])}")
+            ids = [m.id for m in plan.models or []] + [d.id for d in plan.detectors or []]
+            print(f"models={json.dumps(ids)}")
         elif a.cmd == "data":
             print(regenerate(Path(a.plan), Path(a.out), root, tuple(a.keep)))
         else:

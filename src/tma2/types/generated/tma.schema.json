@@ -174,6 +174,16 @@
                         "null"
                     ]
                 },
+                "liveness": {
+                    "description": "Per-head liveness after the last epoch.",
+                    "items": {
+                        "$ref": "#/$defs/HeadLiveness"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "model_id": {
                     "type": "string"
                 },
@@ -198,6 +208,13 @@
                     },
                     "type": [
                         "array",
+                        "null"
+                    ]
+                },
+                "weights_digest": {
+                    "description": "SHA-256 of best.safetensors (schema 0.20.0).",
+                    "type": [
+                        "string",
                         "null"
                     ]
                 }
@@ -250,6 +267,69 @@
                 "val_loss"
             ],
             "title": "Continuation",
+            "type": "object"
+        },
+        "ControlKind": {
+            "description": "A non-learned manoeuvre detector used as a Gate D control (Annex A \u00a7A.2).",
+            "enum": [
+                "cusum",
+                "glr",
+                "imm_mode"
+            ],
+            "title": "ControlKind",
+            "type": "string"
+        },
+        "ControlSettings": {
+            "additionalProperties": false,
+            "description": "A Gate D control's parameters and its tuned threshold (spec 004 R6).",
+            "properties": {
+                "achieved_false_alarm": {
+                    "description": "Held-leg G5 false-alarm fraction at the tuned threshold on validation.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "cusum_drift": {
+                    "description": "CUSUM drift \u03b4.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "glr_window": {
+                    "description": "GLR window in samples.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "imm": {
+                    "description": "Frozen IMM setting name.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "$ref": "#/$defs/ControlKind"
+                },
+                "target_false_alarm": {
+                    "description": "Held-leg G5 false-alarm fraction the threshold was tuned to.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "threshold": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "kind",
+                "threshold"
+            ],
+            "title": "ControlSettings",
             "type": "object"
         },
         "CrbHeader": {
@@ -521,6 +601,182 @@
             "title": "DatasetRef",
             "type": "object"
         },
+        "DetectionRecord": {
+            "additionalProperties": false,
+            "description": "One scenario's detections by one detector (spec 004 R8).",
+            "properties": {
+                "detector": {
+                    "type": "string"
+                },
+                "held_leg_alarms": {
+                    "description": "Rising edges on held legs.",
+                    "type": "integer"
+                },
+                "held_leg_g5_flagged": {
+                    "type": "integer"
+                },
+                "held_leg_g5_rows": {
+                    "type": "integer"
+                },
+                "held_leg_seconds": {
+                    "type": "number"
+                },
+                "scenario_index": {
+                    "type": "integer"
+                },
+                "spans": {
+                    "items": {
+                        "$ref": "#/$defs/SpanDetection"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "scenario_index",
+                "detector",
+                "held_leg_seconds",
+                "held_leg_alarms",
+                "held_leg_g5_rows",
+                "held_leg_g5_flagged"
+            ],
+            "title": "DetectionRecord",
+            "type": "object"
+        },
+        "DetectorConfig": {
+            "additionalProperties": false,
+            "description": "A steady-leg detector's configuration (spec 004, SRD Annex A); carried in its manifest.",
+            "properties": {
+                "batch_scenarios": {
+                    "type": "integer"
+                },
+                "downstream_rows": {
+                    "description": "Rows per scenario scored by the downstream loss.",
+                    "type": "integer"
+                },
+                "epochs": {
+                    "type": "integer"
+                },
+                "feedforward": {
+                    "type": "integer"
+                },
+                "head_activation": {
+                    "$ref": "#/$defs/HeadActivation"
+                },
+                "heads": {
+                    "type": "integer"
+                },
+                "held_leg_weight": {
+                    "description": "Weight of held-leg rows in the now loss.",
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "iterations": {
+                    "type": "integer"
+                },
+                "knots": {
+                    "type": "integer"
+                },
+                "layers": {
+                    "type": "integer"
+                },
+                "learning_rate": {
+                    "type": "number"
+                },
+                "loss_boundary_weight": {
+                    "type": "number"
+                },
+                "loss_downstream_weight": {
+                    "description": "0 for the classification-only control.",
+                    "type": "number"
+                },
+                "loss_kind_weight": {
+                    "type": "number"
+                },
+                "loss_now_weight": {
+                    "type": "number"
+                },
+                "min_improvement": {
+                    "type": "number"
+                },
+                "noise_draws": {
+                    "type": "integer"
+                },
+                "now_window_s": {
+                    "description": "A manoeuvre that began within this many seconds counts as now.",
+                    "type": "number"
+                },
+                "patience": {
+                    "type": "integer"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "threads": {
+                    "type": "integer"
+                },
+                "tolerance_s": {
+                    "description": "Half-width of the boundary targets and of matching (D1).",
+                    "type": "number"
+                },
+                "train_iterations": {
+                    "type": "integer"
+                },
+                "variant": {
+                    "$ref": "#/$defs/DetectorVariant"
+                },
+                "weight_decay": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "variant",
+                "width",
+                "layers",
+                "heads",
+                "feedforward",
+                "head_activation",
+                "now_window_s",
+                "tolerance_s",
+                "held_leg_weight",
+                "loss_now_weight",
+                "loss_boundary_weight",
+                "loss_kind_weight",
+                "loss_downstream_weight",
+                "knots",
+                "iterations",
+                "train_iterations",
+                "downstream_rows",
+                "noise_draws",
+                "batch_scenarios",
+                "learning_rate",
+                "weight_decay",
+                "epochs",
+                "patience",
+                "min_improvement",
+                "seed",
+                "threads"
+            ],
+            "title": "DetectorConfig",
+            "type": "object"
+        },
+        "DetectorVariant": {
+            "description": "Causal (instantaneous) or time-late steady-leg detector (Annex A \u00a7A.1, D2).",
+            "enum": [
+                "causal",
+                "time_late"
+            ],
+            "title": "DetectorVariant",
+            "type": "string"
+        },
         "EpochRecord": {
             "additionalProperties": false,
             "description": "",
@@ -571,6 +827,16 @@
             "additionalProperties": false,
             "description": "Everything needed to reproduce an experiment run.",
             "properties": {
+                "amendments": {
+                    "description": "Amendments of the decision record in force, by path and digest (schema 0.20.0).",
+                    "items": {
+                        "$ref": "#/$defs/ArtefactRef"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "artefacts": {
                     "items": {
                         "$ref": "#/$defs/ArtefactRef"
@@ -891,6 +1157,121 @@
             "title": "GateCheck",
             "type": "object"
         },
+        "GateDDecision": {
+            "additionalProperties": false,
+            "description": "The Gate D decision record (spec 004 FR-034), committed before training: what is trained, the defaults D1\u2013D4, how controls are tuned, what is scored on test, and what follows.",
+            "properties": {
+                "architecture_check": {
+                    "description": "FR-035: each registered check reviewed against the detector's architecture.",
+                    "type": "string"
+                },
+                "bootstrap_level": {
+                    "description": "D2.",
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "carried_rule": {
+                    "type": "string"
+                },
+                "carried_variants": {
+                    "description": "Detector ids per carried variant (three seeds each).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "control_models": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "controls_rule": {
+                    "type": "string"
+                },
+                "criterion": {
+                    "type": "string"
+                },
+                "ekf": {
+                    "type": "string"
+                },
+                "false_alarm_limit_rule": {
+                    "description": "D3.",
+                    "type": "string"
+                },
+                "follow_on": {
+                    "type": "string"
+                },
+                "forecast": {
+                    "type": "string"
+                },
+                "held_leg_weight": {
+                    "type": "number"
+                },
+                "imm": {
+                    "type": "string"
+                },
+                "knot_threshold": {
+                    "type": "number"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "test_count": {
+                    "type": "integer"
+                },
+                "test_seed": {
+                    "description": "D4.",
+                    "type": "integer"
+                },
+                "threshold": {
+                    "description": "D1 operating threshold on p_change.",
+                    "type": "number"
+                },
+                "tolerance_s": {
+                    "description": "D1 tolerance.",
+                    "type": "number"
+                },
+                "validation_rule": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "carried_variants",
+                "control_models",
+                "carried_rule",
+                "threshold",
+                "tolerance_s",
+                "knot_threshold",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "false_alarm_limit_rule",
+                "validation_seed",
+                "test_seed",
+                "test_count",
+                "held_leg_weight",
+                "controls_rule",
+                "imm",
+                "ekf",
+                "criterion",
+                "validation_rule",
+                "follow_on",
+                "forecast",
+                "architecture_check"
+            ],
+            "title": "GateDDecision",
+            "type": "object"
+        },
         "GateId": {
             "description": "",
             "enum": [
@@ -898,6 +1279,7 @@
                 "G0",
                 "G1",
                 "G2",
+                "GD",
                 "G3",
                 "G4",
                 "G5"
@@ -944,6 +1326,39 @@
             "title": "GateVerdict",
             "type": "object"
         },
+        "HeadActivation": {
+            "description": "Hidden activation of a model's heads (schema 0.20.0, spec 004 R1).",
+            "enum": [
+                "relu",
+                "tanh"
+            ],
+            "title": "HeadActivation",
+            "type": "string"
+        },
+        "HeadLiveness": {
+            "additionalProperties": false,
+            "description": "Whether a head still responds to its input (spec 004 R1).",
+            "properties": {
+                "alive_share": {
+                    "description": "Share of hidden units whose activation varies across rows.",
+                    "type": "number"
+                },
+                "head": {
+                    "type": "string"
+                },
+                "output_sd": {
+                    "description": "Standard deviation of the head's output across rows.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "head",
+                "alive_share",
+                "output_sd"
+            ],
+            "title": "HeadLiveness",
+            "type": "object"
+        },
         "JobRecord": {
             "additionalProperties": false,
             "description": "",
@@ -959,6 +1374,13 @@
                 },
                 "git_commit": {
                     "type": "string"
+                },
+                "git_dirty": {
+                    "description": "The job's working tree had uncommitted changes (schema 0.20.0).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
                 },
                 "last_epoch": {
                     "type": "integer"
@@ -1835,6 +2257,17 @@
                 "head": {
                     "$ref": "#/$defs/PhysicsHead"
                 },
+                "head_activation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/HeadActivation"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Absent = relu (Gate 1's weights); tanh from spec 004."
+                },
                 "heads": {
                     "description": "Attention heads.",
                     "type": "integer"
@@ -1863,6 +2296,13 @@
                 },
                 "loss_nll_weight": {
                     "type": "number"
+                },
+                "min_improvement": {
+                    "description": "Relative fall of the validation loss that counts as an improvement (absent = 0).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
                 },
                 "nll_beta": {
                     "type": "number"
@@ -2074,6 +2514,13 @@
                 },
                 "schema_version": {
                     "type": "string"
+                },
+                "weights_digest": {
+                    "description": "SHA-256 of the learned estimator's weights file (schema 0.20.0; required by gate commands for learned estimators).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -2472,6 +2919,51 @@
             "title": "ScenarioParameters",
             "type": "object"
         },
+        "SpanDetection": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "alarm_index": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "delay_s": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "end_index": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "kind_correct": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "outcome": {
+                    "description": "detected | missed | unresolved.",
+                    "type": "string"
+                },
+                "start_index": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "kind",
+                "start_index",
+                "end_index",
+                "outcome"
+            ],
+            "title": "SpanDetection",
+            "type": "object"
+        },
         "Split": {
             "description": "Dataset split. Train/validation/test are 80/10/10 by scenario index.",
             "enum": [
@@ -2709,6 +3201,16 @@
                     "description": "Path of the decision record it implements.",
                     "type": "string"
                 },
+                "detectors": {
+                    "description": "Steady-leg detectors trained by the plan (schema 0.20.0, spec 004).",
+                    "items": {
+                        "$ref": "#/$defs/DetectorConfig"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "id": {
                     "type": "string"
                 },
@@ -2716,7 +3218,10 @@
                     "items": {
                         "$ref": "#/$defs/PhysicsModelConfig"
                     },
-                    "type": "array"
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "ranges": {
                     "$ref": "#/$defs/ParameterRanges"
@@ -2743,7 +3248,6 @@
                 "scenarios_per_epoch",
                 "validation",
                 "validation_scenarios",
-                "models",
                 "decision"
             ],
             "title": "TrainingPlan",
@@ -2793,6 +3297,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.19.0"
+    "version": "0.20.0"
 }
 

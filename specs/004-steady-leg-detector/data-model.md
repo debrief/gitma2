@@ -12,7 +12,7 @@ validate every file read.
 | `JobRecord` | `git_dirty` |
 | `PredictionHeader` | `weights_digest` (optional; required by gate commands for learned estimators) |
 | `ExperimentManifest` | `amendments`: list of `ArtefactRef` (path, digest, role "amendment") |
-| `TrainingPlan` | `models` may hold detector configurations (a `kind` discriminator: physics_model \| detector) |
+| `TrainingPlan` | `detectors`: a list of `DetectorConfig` beside `models` (now optional) |
 
 ## New
 
@@ -22,6 +22,8 @@ validate every file read.
 classification-only control), `knots` (8), `train_iterations` (50), `iterations` (100),
 `downstream_rows` (2), `noise_draws` (1), optimiser fields, `epochs`, `patience`,
 `min_improvement`, `seed`, `threads`.
+
+**`HeadLiveness`** (in `CheckpointMeta.liveness`): head, alive share, output sd.
 
 **`DetectorOutputRow`** (per-timestep prediction record): timestamp_s, `p_change`, exported knots
 (row, weight, p_kind) as of this row; header carries the detector id and weights digest.

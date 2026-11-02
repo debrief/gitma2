@@ -74,10 +74,10 @@ def main() -> int:
     choice = json.loads(Path(a.tune).read_text())
     carried = [
         m.id
-        for m in plan.models
+        for m in plan.models or []
         if m.head == PhysicsHead.physics and m.causal and not m.shuffle_labels
     ]
-    controls = [m.id for m in plan.models if m.id not in carried]
+    controls = [m.id for m in plan.models or [] if m.id not in carried]
     rec = Gate1Decision(
         plan_id=plan.id,
         plan_digest=digest,

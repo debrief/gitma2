@@ -51,7 +51,7 @@ def load_plan(path: str | Path) -> tuple[TrainingPlan, str]:
 
 
 def model_from_plan(plan: TrainingPlan, model_id: str) -> PhysicsModelConfig:
-    for m in plan.models:
+    for m in plan.models or []:
         if m.id == model_id:
             return m
     raise ValueError(f"plan {plan.id} has no model {model_id}")

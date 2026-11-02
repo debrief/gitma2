@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.19.0
+version: 0.20.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -87,6 +87,10 @@ enums:
           gitma Gate 1; in gitma2 (spec 003) the constant-velocity gate of SRD §5: within 1.1 ×
           batch least squares on every metric, gross errors no worse, efficiency ≤ 1.25 settled.
       G2: {}
+      GD:
+        description: >-
+          gitma2 Gate D (SRD Annex A §A.5, spec 004): the steady-leg detector against CUSUM and GLR
+          at matched false-alarm rates, held-leg false alarms, and its downstream estimate.
       G3: {}
       G4: { description: "Better than the tuned tracker after a target turn (SRD Annex B §B.4)." }
       G5:
@@ -102,6 +106,24 @@ enums:
         description: >-
           Control (a): the same encoder regresses the state directly; never carried
           (constitution III).
+  HeadActivation:
+    description: Hidden activation of a model's heads (schema 0.20.0, spec 004 R1).
+    permissible_values:
+      relu:
+        description: Gate 1's heads (spec 003); a unit whose input stays negative never recovers.
+      tanh:
+        description: Cannot die (its derivative is never zero); every configuration from spec 004.
+  DetectorVariant:
+    description: Causal (instantaneous) or time-late steady-leg detector (Annex A §A.1, D2).
+    permissible_values:
+      causal: {}
+      time_late: {}
+  ControlKind:
+    description: A non-learned manoeuvre detector used as a Gate D control (Annex A §A.2).
+    permissible_values:
+      cusum: { description: CUSUM on the per-timestep least-squares innovations. }
+      glr: { description: Linearised one-versus-two-leg GLR over a sliding window (research R6). }
+      imm_mode: { description: The frozen IMM's coordinated-turn mode probability. }
   ModelKind:
     description: Model families of SRD §4.
     permissible_values:
@@ -572,6 +594,9 @@ classes:
       estimator: { range: string, required: true }
       mode: { range: PredictionMode, required: true }
       dataset_digest: { range: string, required: true, description: SHA-256 of the truth file. }
+      weights_digest:
+        range: string
+        description: SHA-256 of the learned estimator's weights file (schema 0.20.0; required by gate commands for learned estimators).
 
   CrbHeader:
     description: First record of a tma2-crb file (gitma2).
@@ -715,6 +740,11 @@ classes:
       command_lines: { range: string, multivalued: true, required: true }
       environment: { range: RunEnvironment, inlined: true }
       artefacts: { range: ArtefactRef, multivalued: true, inlined_as_list: true }
+      amendments:
+        range: ArtefactRef
+        multivalued: true
+        inlined_as_list: true
+        description: Amendments of the decision record in force, by path and digest (schema 0.20.0).
 
   GateCheck:
     attributes:
@@ -1058,6 +1088,8 @@ classes:
         description: >-
           Iterations of the tape-free solve during training, before the implicit Newton step (schema
           0.19.0; absent = iterations). Prediction, validation and the export use iterations.
+      head_activation: { range: HeadActivation, description: "Absent = relu (Gate 1's weights); tanh from spec 004." }
+      min_improvement: { range: float, description: Relative fall of the validation loss that counts as an improvement (absent = 0). }
       loss_init_weight: { range: float, required: true, description: Weight of the auxiliary initial-state loss. }
       loss_nll_weight: { range: float, required: true }
       nll_beta: { range: float, required: true }
@@ -1082,7 +1114,12 @@ classes:
       scenarios_per_epoch: { range: integer, required: true }
       validation: { range: DatasetRef, required: true, inlined: true }
       validation_scenarios: { range: integer, required: true, description: Validation scenarios scored each epoch. }
-      models: { range: PhysicsModelConfig, multivalued: true, inlined_as_list: true, required: true }
+      models: { range: PhysicsModelConfig, multivalued: true, inlined_as_list: true }
+      detectors:
+        range: DetectorConfig
+        multivalued: true
+        inlined_as_list: true
+        description: Steady-leg detectors trained by the plan (schema 0.20.0, spec 004).
       decision: { range: string, required: true, description: Path of the decision record it implements. }
 
   JobRecord:
@@ -1095,6 +1132,7 @@ classes:
       cpu_model: { range: string, required: true }
       threads: { range: integer, required: true }
       git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, description: The job's working tree had uncommitted changes (schema 0.20.0). }
 
   CheckpointMeta:
     description: The state beside a checkpoint's weights (spec 003 FR-015).
@@ -1110,6 +1148,15 @@ classes:
       epoch_seconds: { range: float, multivalued: true }
       complete: { range: boolean, required: true }
       jobs: { range: JobRecord, multivalued: true, inlined_as_list: true }
+      weights_digest: { range: string, description: SHA-256 of best.safetensors (schema 0.20.0). }
+      liveness: { range: HeadLiveness, multivalued: true, inlined_as_list: true, description: Per-head liveness after the last epoch. }
+
+  HeadLiveness:
+    description: Whether a head still responds to its input (spec 004 R1).
+    attributes:
+      head: { range: string, required: true }
+      alive_share: { range: float, required: true, description: Share of hidden units whose activation varies across rows. }
+      output_sd: { range: float, required: true, description: Standard deviation of the head's output across rows. }
 
   PhysicsModelManifest:
     description: The exported artefact's manifest (spec 003 FR-022).
@@ -1236,3 +1283,95 @@ classes:
         range: string
         required: true
         description: "SHA-256 (hex) of the model's model.json, its topology (schema 0.11.1)."
+
+  DetectorConfig:
+    description: A steady-leg detector's configuration (spec 004, SRD Annex A); carried in its manifest.
+    attributes:
+      id: { range: string, required: true }
+      variant: { range: DetectorVariant, required: true }
+      width: { range: integer, required: true }
+      layers: { range: integer, required: true }
+      heads: { range: integer, required: true }
+      feedforward: { range: integer, required: true }
+      head_activation: { range: HeadActivation, required: true }
+      now_window_s: { range: float, required: true, description: A manoeuvre that began within this many seconds counts as now. }
+      tolerance_s: { range: float, required: true, description: Half-width of the boundary targets and of matching (D1). }
+      held_leg_weight: { range: float, required: true, description: Weight of held-leg rows in the now loss. }
+      loss_now_weight: { range: float, required: true }
+      loss_boundary_weight: { range: float, required: true }
+      loss_kind_weight: { range: float, required: true }
+      loss_downstream_weight: { range: float, required: true, description: 0 for the classification-only control. }
+      knots: { range: integer, required: true }
+      iterations: { range: integer, required: true }
+      train_iterations: { range: integer, required: true }
+      downstream_rows: { range: integer, required: true, description: Rows per scenario scored by the downstream loss. }
+      noise_draws: { range: integer, required: true }
+      batch_scenarios: { range: integer, required: true }
+      learning_rate: { range: float, required: true }
+      weight_decay: { range: float, required: true }
+      epochs: { range: integer, required: true }
+      patience: { range: integer, required: true }
+      min_improvement: { range: float, required: true }
+      seed: { range: integer, required: true }
+      threads: { range: integer, required: true }
+
+  ControlSettings:
+    description: A Gate D control's parameters and its tuned threshold (spec 004 R6).
+    attributes:
+      kind: { range: ControlKind, required: true }
+      threshold: { range: float, required: true }
+      cusum_drift: { range: float, description: CUSUM drift δ. }
+      glr_window: { range: integer, description: GLR window in samples. }
+      imm: { range: string, description: Frozen IMM setting name. }
+      target_false_alarm: { range: float, description: Held-leg G5 false-alarm fraction the threshold was tuned to. }
+      achieved_false_alarm: { range: float, description: Held-leg G5 false-alarm fraction at the tuned threshold on validation. }
+
+  SpanDetection:
+    attributes:
+      kind: { range: string, required: true }
+      start_index: { range: integer, required: true }
+      end_index: { range: integer, required: true }
+      outcome: { range: string, required: true, description: detected | missed | unresolved. }
+      alarm_index: { range: integer }
+      delay_s: { range: float }
+      kind_correct: { range: boolean }
+
+  DetectionRecord:
+    description: One scenario's detections by one detector (spec 004 R8).
+    attributes:
+      scenario_index: { range: integer, required: true }
+      detector: { range: string, required: true }
+      spans: { range: SpanDetection, multivalued: true, inlined_as_list: true }
+      held_leg_seconds: { range: float, required: true }
+      held_leg_alarms: { range: integer, required: true, description: Rising edges on held legs. }
+      held_leg_g5_rows: { range: integer, required: true }
+      held_leg_g5_flagged: { range: integer, required: true }
+
+  GateDDecision:
+    description: >-
+      The Gate D decision record (spec 004 FR-034), committed before training: what is trained,
+      the defaults D1–D4, how controls are tuned, what is scored on test, and what follows.
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      carried_variants: { range: string, multivalued: true, required: true, description: Detector ids per carried variant (three seeds each). }
+      control_models: { range: string, multivalued: true, required: true }
+      carried_rule: { range: string, required: true }
+      threshold: { range: float, required: true, description: D1 operating threshold on p_change. }
+      tolerance_s: { range: float, required: true, description: D1 tolerance. }
+      knot_threshold: { range: float, required: true }
+      bootstrap_level: { range: float, required: true, description: D2. }
+      bootstrap_resamples: { range: integer, required: true }
+      false_alarm_limit_rule: { range: string, required: true, description: D3. }
+      validation_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true, description: D4. }
+      test_count: { range: integer, required: true }
+      held_leg_weight: { range: float, required: true }
+      controls_rule: { range: string, required: true }
+      imm: { range: string, required: true }
+      ekf: { range: string, required: true }
+      criterion: { range: string, required: true }
+      validation_rule: { range: string, required: true }
+      follow_on: { range: string, required: true }
+      forecast: { range: string, required: true }
+      architecture_check: { range: string, required: true, description: "FR-035: each registered check reviewed against the detector's architecture." }
