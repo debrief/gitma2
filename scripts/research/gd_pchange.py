@@ -43,13 +43,15 @@ def main() -> int:
             near.append(float(p[lo : hi + 1].max()))
         exported += sum(1 for ks in r.get("knot_sets") or [] if ks["knots"])
     q = [0.1, 0.5, 0.9, 0.99, 1.0]
+
+    def quantiles(x: list[float]) -> dict[str, float]:
+        return {str(p): float(v) for p, v in zip(q, np.quantile(x, q), strict=True)}
+
     out = {
         "scenarios": len(top),
         "spans": len(near),
-        "max_p_change_per_scenario_quantiles": dict(zip(map(str, q), np.quantile(top, q).tolist())),
-        "max_p_change_in_span_window_quantiles": dict(
-            zip(map(str, q), np.quantile(near, q).tolist())
-        ),
+        "max_p_change_per_scenario_quantiles": quantiles(top),
+        "max_p_change_in_span_window_quantiles": quantiles(near),
         "spans_reaching": {str(h): float(np.mean(np.asarray(near) >= h)) for h in (0.1, 0.2, 0.5)},
         "knot_sets_with_an_exported_knot": exported,
     }
