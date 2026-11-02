@@ -20,7 +20,7 @@ def test_g5_rows_are_zig_plus_5_to_20_min() -> None:
 
 def test_g5_grid_contains_p0_setting_at_its_centre() -> None:
     names = [imm_name(p) for p in G5_IMM_GRID]
-    assert len(names) == 243 and len(set(names)) == 243
+    assert len(names) == 243 + 26 and len(set(names)) == len(names)
     assert "imm-cv0.01-ct0.03-w0.01-s0.001-p4-r8" in names
     assert len(G5_EKF_GRID) == 21
 

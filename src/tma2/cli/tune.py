@@ -63,6 +63,17 @@ G5_IMM_GRID = [
         G5_R_SCALES,
     )
 ]
+# The first pass on seed 304 chose cv 0.003, ω 0.003, r 16: three edges with the error still
+# falling (ω 0.01 → 0.003: 0.1003 → 0.0970; r 8 → 16: 0.0985 → 0.0970), so each of those axes
+# reaches past its edge at the interior values of the others (ct 0.03, switch 0.001; spec 003's
+# rule, research R7). Earlier grid entries keep priority on ties.
+_G5_EXT = [
+    ImmParams(cv, 0.03, w, 0.001, 4.0, r)
+    for cv, w, r in itertools.product(
+        (0.0003, 0.001, 0.003), (0.0003, 0.001, 0.003), (16.0, 32.0, 64.0)
+    )
+]
+G5_IMM_GRID += [p for p in _G5_EXT if p not in G5_IMM_GRID]
 G5_EKF_GRID = [
     (sa, 4.0, r)
     for sa, r in itertools.product((0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3), G5_R_SCALES)
