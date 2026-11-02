@@ -1,0 +1,81 @@
+name: Gate 1 report (scored test predictions)
+
+# Spec 003, Gate 1 panel round 1. Push `report/<gate run id>`: re-uses that gate run's test
+# predictions (its `test-*` artefacts; the test split is NOT scored again, only reported more
+# fully) and the regenerated test split (digest checked against the committed gate record) to
+# write the constitution IV report: tma2-eval (medians, 90th percentiles, gross rates, slices,
+# curves, efficiency per slice against the full-window bound) and the panel's diagnostics
+# (scripts/g1_extras.py). Pushes `results/g1-a-g1-report-<gate run id>`.
+
+on:
+  push:
+    branches: ["report/**"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  DATA: ${{ github.workspace }}/../test-data
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - id: rid
+        run: echo "id=${GITHUB_REF_NAME#report/}" >> "$GITHUB_OUTPUT"
+      - name: Test split, regenerated at the gate run's commit, digest checked
+        run: |
+          REC=$(ls -d experiments/*-g1-a-g1 | tail -1)
+          echo "REC=$REC" >> "$GITHUB_ENV"
+          COMMIT=$(python3 -c "import json; print(json.load(open('$REC/manifest.json'))['git_commit'])")
+          git worktree add -q --detach "$RUNNER_TEMP/gen" "$COMMIT"
+          (cd "$RUNNER_TEMP/gen" && uv run --quiet tma2-generate --seed 303 --count 100000 --out "$DATA" \
+            --ranges tests/fixtures/gitma/iter4-seed777/ranges.json \
+            --heldout-ranges tests/fixtures/gitma/iter4-seed777/heldout-ranges.json --format f32pack)
+          rm -f "$DATA"/train.* "$DATA"/validation.* "$DATA"/heldout.*
+          want=$(cut -d' ' -f1 "$REC/test-digest.txt")
+          got=$(sha256sum "$DATA/test.f32pack" | cut -d' ' -f1)
+          echo "want $want got $got"; test "$want" = "$got"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: test-*
+          path: ${{ runner.temp }}/p
+          merge-multiple: true
+          run-id: ${{ steps.rid.outputs.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Report
+        run: |
+          P="$RUNNER_TEMP/p"
+          EXP="$REC/report"
+          mkdir -p "$EXP"
+          (cd "$P" && sha256sum *.ndjson) > "$EXP/prediction-digests.txt"
+          uv run tma2-crb --in "$DATA/test.f32pack" --out "$RUNNER_TEMP/crb.ndjson" --model full_window
+          uv run tma2-eval --truth "$DATA/test.f32pack" --crb "$RUNNER_TEMP/crb.ndjson" --points 300,600 \
+            --predictions "$P/test-model.ndjson" "$P/test-lsq.ndjson" "$P/test-naive.ndjson" \
+              "$P/test-ekf.ndjson" "$P/test-imm.ndjson" --out "$EXP/eval"
+          # The oracle file holds the G5 rows only (tma2-oracle's default), so it is not in the
+          # per-slice evaluation; diagnostics.json and the gate record compare it with the model.
+          uv run python scripts/g1_extras.py --test "$DATA/test.f32pack" --model "$P/test-model.ndjson" \
+            --lsq "$P/test-lsq.ndjson" --oracle "$P/test-oracle.ndjson" --out "$EXP/diagnostics.json" \
+            --extract-dir "$EXP/gate-rows" --extract model="$P/test-model.ndjson" \
+              lsq="$P/test-lsq.ndjson" naive="$P/test-naive.ndjson" ekf="$P/test-ekf.ndjson" \
+              imm="$P/test-imm.ndjson" oracle="$P/test-oracle.ndjson"
+          echo "EXP=$EXP" >> "$GITHUB_ENV"
+      - name: Push the report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/g1-a-g1-report-${{ steps.rid.outputs.id }}-${{ github.run_id }}"
+          git checkout -b "$BR" origin/main
+          git add -f "$EXP"
+          git commit -qm "experiments: Gate 1 report (gate run ${{ steps.rid.outputs.id }}, CI ${{ github.sha }})"
+          git push origin "$BR"
