@@ -5,7 +5,6 @@ title: Glossary
 # Glossary
 
 TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meaning.
-
 - **Batch least squares** — the classical reference: a Levenberg–Marquardt fit of a
   constant-velocity target to all bearings so far, from a coarse range–course–speed grid.
 - **Bearing** — true direction from ownship to the target, clockwise from north, radians
@@ -16,6 +15,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Cramér–Rao bound (CRB)** — the lowest variance any unbiased estimator can reach given the
   bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
   full window, known manoeuvres, per leg (see [CRB](algorithms/crb.md)).
+- **CUSUM** — cumulative-sum change detector: S(k) = max(0, S(k − 1) + ν(k)² − 1 − δ) on normalised innovations, an alarm while S exceeds a tuned threshold; a Gate D control (see [detector](algorithms/detector.md)).
 - **Efficiency** — the median over a slice's rows of error ÷ that row's CRB, divided by 0.6745,
   so an unbiased estimator at the bound scores 1; a flat efficiency across geometry slices is the
   signature of an approximation floor.
@@ -25,8 +25,10 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   them (gitma Annex C); one scenario contributes several rows, so bootstraps resample scenarios.
 - **Gate** — a pre-registered go/no-go check (P0, Gate 1, Gate D, Gate 2), judged by the agent
   review panel on a fresh test seed.
+- **Gate D** — the steady-leg detector's gate (SRD Annex A §A.5): detection delay and misses against CUSUM and GLR at matched false-alarm rates, held-leg false alarms, and the physics layer's error fed by the detector's knots against the IMM and batch least squares.
 - **Generator version** — the algorithm that turns (seed, index, ranges) into a scenario;
   gitma2 implements gitma's 0.5.0 and reproduces its files byte for byte.
+- **GLR** — generalised likelihood ratio test for a velocity change inside a sliding window, the window's one-leg fit projected out; a Gate D control.
 - **Grid start** — gitma's coarse initialisation for batch least squares: the lowest-cost candidate of 12 ranges × 8 courses × 3 speeds along the first valid bearing; the Gate 1 model corrects it before the solve.
 - **Held leg** — rows where the target's constant-velocity model holds: before any manoeuvre, or
   more than five minutes after the last one ended.
