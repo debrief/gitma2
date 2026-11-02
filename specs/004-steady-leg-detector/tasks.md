@@ -25,19 +25,19 @@ names its files and the requirement it serves.
 - [ ] T007 Validation split seed 304 (100,000; f32pack) and its digest
 - [ ] T008 `tma2-tune --criterion g5` and the G5 grid of R7; run on seed 304 from a clean tree;
   commit the tune record (FR-026)
-- [ ] T009 IMM: expose μ_CT per row (`references/imm.py`), with a conformance test that the
+- [x] T009 IMM: expose μ_CT per row (`references/imm.py`), with a conformance test that the
   estimates are unchanged (FR-024)
 
 ## Phase 3: Detector (US3)
 
-- [ ] T010 `models/detector_labels.py`: now, boundary (±60 s triangular) and kind targets; held and
+- [x] T010 `models/detector_labels.py`: now, boundary (±60 s triangular) and kind targets; held and
   settled flags; tests on fixture spans (FR-011, R3)
-- [ ] T011 `models/detector.py`: 13-channel encoder (spec 003 design), p_change, pairwise w_change
+- [x] T011 `models/detector.py`: 13-channel encoder (spec 003 design), p_change, pairwise w_change
   and p_kind heads (tanh, zero-initialised outputs), causal and time-late variants; untrained
   outputs give no knots; tests (FR-012, FR-013, FR-015, R2)
-- [ ] T012 Soft segmentation → physics inputs (R4) and knot export (local maxima above the
+- [x] T012 Soft segmentation → physics inputs (R4) and knot export (local maxima above the
   threshold, top 8, kinds); tests against the oracle's inputs on fixture spans (FR-014)
-- [ ] T013 `models/detector_loss.py`: classification losses with held-leg weighting; downstream
+- [x] T013 `models/detector_loss.py`: classification losses with held-leg weighting; downstream
   CRB-normalised loss through the physics layer (implicit); classification-only mode; finite
   gradients test (FR-016–FR-018, R5)
 - [ ] T014 Training integration: detector configurations in plans, two downstream rows, one noise

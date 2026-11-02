@@ -162,5 +162,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   model's for `torch.onnx.export`: the scripted loop's scalar constants follow it.
 - Experiments from a worktree: do not symlink `data` into it (`data/` in .gitignore matches
   directories, not a symlink, so the tree records as dirty); pass absolute data paths.
+- Never time anything while another CPU-heavy job runs: torch's OpenMP threads oversubscribed by
+  a parallel tune ran the physics layer 50–100× slower (48 s against 0.55 s per call; spec 004).
+- Within one process, a second training run can differ from the first in the last bits
+  (allocator state; 1e-16 in layer-norm weights); separate processes are byte-identical, so
+  determinism and resume tests run each job in a fresh interpreter (`test_detector_train.py`).
+- The known-manoeuvres Cramér–Rao bound has a numba port (`crb_known_manoeuvres_fast`, 0.4 ms
+  per scenario against 8 ms) for the training loss; `Batch.tm` carries the generator's table.
 - Docusaurus MDX: no `{...}` in prose (it is a JS expression); `scripts/data_dictionary.py`
   escapes `<` and braces outside code spans.

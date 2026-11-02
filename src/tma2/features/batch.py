@@ -6,7 +6,8 @@ parallel over scenarios; the result is a pure function of (seed, indices, ranges
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import math
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
@@ -40,6 +41,10 @@ class Batch:
     since_zig_s: np.ndarray  # (B, R) float32
     since_manoeuvre_end_s: np.ndarray  # (B, R) float32, −1 before any
     spans: np.ndarray  # (B, 4, 3) int32 padded with −1
+    # Generator manoeuvre table (kind 0 course / 1 speed, start_time_s, change, rate), rows
+    # [0, n_tm): the known-manoeuvres Cramér–Rao bound needs it (spec 004). n_tm −1 before 0.5.0.
+    tm: np.ndarray = field(default_factory=lambda: np.zeros((0, 4, 4)))  # (B, 4, 4) float64
+    n_tm: np.ndarray = field(default_factory=lambda: np.zeros(0, dtype=np.int32))  # (B,) int32
 
     def __len__(self) -> int:
         return int(self.index.shape[0])
@@ -67,6 +72,8 @@ def _fill_batch(
     since_zig: np.ndarray,
     since_m_end: np.ndarray,
     spans: np.ndarray,
+    tm_out: np.ndarray,
+    n_tm_out: np.ndarray,
 ) -> None:
     n = indices.shape[0]
     for b in prange(n):
@@ -96,6 +103,10 @@ def _fill_batch(
         )
         n_s = TI[sc.TI_SAMPLES]
         samples[b] = n_s
+        n_tm_out[b] = -1 if math.isnan(P[sc.P_N_TM]) else int(P[sc.P_N_TM])
+        for j in range(sc.MAX_TM):
+            for c in range(4):
+                tm_out[b, j, c] = tm[j, c]
         zig_index[b] = TI[sc.TI_ZIG]
         sigma[b] = P[sc.P_SIGMA]
         dropout[b] = P[sc.P_DROPOUT]
@@ -187,6 +198,8 @@ def generate_indices(
         since_zig_s=np.zeros((n, rmax), dtype=np.float32),
         since_manoeuvre_end_s=np.full((n, rmax), -1.0, dtype=np.float32),
         spans=np.full((n, sc.MAX_TM, 3), -1, dtype=np.int32),
+        tm=np.zeros((n, sc.MAX_TM, 4), dtype=np.float64),
+        n_tm=np.full(n, -1, dtype=np.int32),
     )
     previous = get_num_threads()
     if workers is not None:
@@ -213,6 +226,8 @@ def generate_indices(
             b.since_zig_s,
             b.since_manoeuvre_end_s,
             b.spans,
+            b.tm,
+            b.n_tm,
         )
     finally:
         if workers is not None:

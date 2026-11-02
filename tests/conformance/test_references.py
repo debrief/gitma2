@@ -121,3 +121,21 @@ def test_noise_free_recovery() -> None:
         assert row["converged"], meta["index"]
         worst = max(worst, abs(row["range_m"] - true_range) / true_range)
     assert worst < 1e-3, worst
+
+
+def test_imm_mode_probability_changes_no_estimate() -> None:
+    """Spec 004 FR-024: μ_CT is one value per row, in [0, 1] where the filter runs, NaN exactly
+    on the rows that are not converged, and collecting it leaves every row identical."""
+    seen = 0
+    for _, meta, own, _tgt, obs in iter_pack_raw(fixture_dir("phase4-seed777") / "test.f32pack"):
+        d = bearing_data_from_arrays(meta, own, obs)
+        mu: list[float] = []
+        with_mu = imm_predict(d, FROZEN_IMM, mu_ct_out=mu)
+        assert with_mu == imm_predict(d, FROZEN_IMM)
+        assert len(mu) == len(with_mu["rows"])
+        for m, r in zip(mu, with_mu["rows"], strict=True):
+            assert math.isnan(m) != bool(r["converged"])
+            if r["converged"]:
+                assert 0.0 <= m <= 1.0
+                seen += 1
+    assert seen > 0

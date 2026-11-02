@@ -26,7 +26,7 @@ from safetensors.torch import load_file, save_file
 from tma2.data.f32pack import iter_pack_raw
 from tma2.data.io import AtomicFile, file_digest
 from tma2.eval.experiment import ROOT, run_environment
-from tma2.features.batch import Batch, generate_batch
+from tma2.features.batch import KIND_COURSE, KIND_SPEED, Batch, generate_batch
 from tma2.types import dump_record, parse_record
 from tma2.types.generated.tma import (
     CheckpointMeta,
@@ -55,6 +55,9 @@ def model_from_plan(plan: TrainingPlan, model_id: str) -> PhysicsModelConfig:
         if m.id == model_id:
             return m
     raise ValueError(f"plan {plan.id} has no model {model_id}")
+
+
+KIND_CODES = {"course": KIND_COURSE, "speed": KIND_SPEED}
 
 
 def batch_from_pack(path: Path, limit: int) -> Batch:
@@ -86,8 +89,19 @@ def batch_from_pack(path: Path, limit: int) -> Batch:
         since_zig_s=np.zeros((s, rmax), dtype=np.float32),
         since_manoeuvre_end_s=np.full((s, rmax), -1.0, dtype=np.float32),
         spans=np.full((s, 4, 3), -1, dtype=np.int32),
+        tm=np.zeros((s, 4, 4), dtype=np.float64),
+        n_tm=np.full(s, -1, dtype=np.int32),
     )
     for i, (meta, own, tgt, obs) in enumerate(blocks):
+        # Manoeuvres (generator 0.5.0): spans for the detector's labels, the generator's table
+        # for the known-manoeuvres bound. Constant-velocity data has neither.
+        for j, sp in enumerate(meta.get("manoeuvres") or []):
+            b.spans[i, j] = (KIND_CODES[sp["kind"]], sp["start_index"], sp["end_index"])
+        tms = meta["parameters"].get("target_manoeuvres")
+        if tms is not None:
+            b.n_tm[i] = len(tms)
+            for j, m in enumerate(tms):
+                b.tm[i, j] = (KIND_CODES[m["kind"]], m["start_time_s"], m["change"], m["rate"])
         n = int(meta["samples"])
         b.t[i, :n] = own[:n, 0]
         b.mask[i, :n] = True
@@ -182,7 +196,7 @@ class Checkpoint:
 
     def save(
         self,
-        model: Gate1Model,
+        model: torch.nn.Module,
         best: dict[str, torch.Tensor] | None,
         opt: torch.optim.Optimizer,
         meta: CheckpointMeta,

@@ -31,6 +31,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+from numba import njit
 
 SINGULAR_COND = 1e12
 MIN_SIGMA_RAD = 1e-4
@@ -313,3 +314,144 @@ def crb_rows(
         start = leg_start(spans or [], k) if model == "per_leg" else 0
         out.append(crb_at_row(t, ox, oy, tx, ty, vx, vy, valid, start, k, sigma))
     return out
+
+
+# --- numba port of the known-manoeuvres bound's Jacobian and information (spec 004 R5) ---------
+# Same arithmetic as ``_pos_vel`` / ``_model_jacobian`` / the information loop above, for the
+# training loss (two rows per scenario). Manoeuvres as a table [M, 4] (kind 0 course / 1 speed,
+# start s, duration s, change), sorted by start time.
+
+
+@njit(cache=True)
+def _pos_vel_nb(theta: np.ndarray, t: float, mans: np.ndarray) -> tuple[float, float, float, float]:
+    x, y = theta[0], theta[1]
+    s = math.hypot(theta[2], theta[3])
+    c = math.atan2(theta[2], theta[3])
+    now = 0.0
+    for j in range(mans.shape[0]):
+        ts = mans[j, 1]
+        dur = mans[j, 2]
+        if t <= ts:
+            break
+        x += s * math.sin(c) * (ts - now)
+        y += s * math.cos(c) * (ts - now)
+        tau = min(t - ts, dur)
+        ch = theta[4 + j]
+        if mans[j, 0] == 0.0:
+            w = ch / dur
+            if abs(w) < 1e-15:
+                x += s * math.sin(c) * tau
+                y += s * math.cos(c) * tau
+            else:
+                x += (s / w) * (math.cos(c) - math.cos(c + w * tau))
+                y += (s / w) * (math.sin(c + w * tau) - math.sin(c))
+                c += w * tau
+        else:
+            a = ch / dur
+            dist = s * tau + 0.5 * a * tau * tau
+            x += dist * math.sin(c)
+            y += dist * math.cos(c)
+            s += a * tau
+        now = ts + tau
+        if t <= ts + dur:
+            return x, y, s * math.sin(c), s * math.cos(c)
+    x += s * math.sin(c) * (t - now)
+    y += s * math.cos(c) * (t - now)
+    return x, y, s * math.sin(c), s * math.cos(c)
+
+
+@njit(cache=True)
+def known_manoeuvre_information(
+    theta: np.ndarray,
+    mans: np.ndarray,
+    t: np.ndarray,
+    ox: np.ndarray,
+    oy: np.ndarray,
+    tx: np.ndarray,
+    ty: np.ndarray,
+    valid: np.ndarray,
+    rows: np.ndarray,
+    sigma: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """(information [Q, P, P] accumulated up to each of ``rows`` (ascending), state map
+    [Q, 4, P] at each row): the inputs of ``_bound``."""
+    n_p = theta.shape[0]
+    q_n = rows.shape[0]
+    last = rows[q_n - 1]
+    s2 = max(sigma, MIN_SIGMA_RAD) ** 2
+    info = np.zeros((n_p, n_p))
+    out_i = np.zeros((q_n, n_p, n_p))
+    out_g = np.zeros((q_n, 4, n_p))
+    jac = np.zeros((4, n_p))
+    up = theta.copy()
+    dn = theta.copy()
+    q = 0
+    for i in range(last + 1):
+        for p in range(n_p):
+            if p < 4:
+                h = 1.0 if p < 2 else 1e-3
+            else:
+                h = 1e-6 if mans[p - 4, 0] == 0.0 else 1e-4
+            up[p] = theta[p] + h
+            dn[p] = theta[p] - h
+            a = _pos_vel_nb(up, t[i], mans)
+            b = _pos_vel_nb(dn, t[i], mans)
+            jac[0, p] = (a[0] - b[0]) / (2 * h)
+            jac[1, p] = (a[1] - b[1]) / (2 * h)
+            jac[2, p] = (a[2] - b[2]) / (2 * h)
+            jac[3, p] = (a[3] - b[3]) / (2 * h)
+            up[p] = theta[p]
+            dn[p] = theta[p]
+        if valid[i] != 0:
+            dx = tx[i] - ox[i]
+            dy = ty[i] - oy[i]
+            rho2 = dx * dx + dy * dy
+            for a_ in range(n_p):
+                ga = (dy / rho2) * jac[0, a_] - (dx / rho2) * jac[1, a_]
+                for b_ in range(n_p):
+                    gb = (dy / rho2) * jac[0, b_] - (dx / rho2) * jac[1, b_]
+                    info[a_, b_] += ga * gb / s2
+        while q < q_n and rows[q] == i:
+            out_i[q] = info
+            out_g[q] = jac
+            q += 1
+    return out_i, out_g
+
+
+def crb_known_manoeuvres_fast(
+    t: np.ndarray,
+    ox: np.ndarray,
+    oy: np.ndarray,
+    tx: np.ndarray,
+    ty: np.ndarray,
+    tvx: np.ndarray,
+    tvy: np.ndarray,
+    valid: np.ndarray,
+    tm: np.ndarray,
+    rows: list[int],
+    sigma: float,
+) -> list[CrbRow]:
+    """``crb_known_manoeuvres`` with the manoeuvres as the generator's table ``tm`` [M, 4]
+    (kind 0 course / 1 speed, start_time_s, change, rate) and the Jacobian in numba."""
+    order = np.argsort(tm[:, 1], kind="stable")
+    tms = tm[order]
+    mans = np.stack([tms[:, 0], tms[:, 1], np.abs(tms[:, 2]) / tms[:, 3], tms[:, 2]], axis=1)
+    theta = np.concatenate([[tx[0], ty[0], tvx[0], tvy[0]], tms[:, 2]]).astype(np.float64)
+    want = sorted(set(rows))
+    info, g = known_manoeuvre_information(
+        theta,
+        np.ascontiguousarray(mans, dtype=np.float64),
+        t.astype(np.float64),
+        ox.astype(np.float64),
+        oy.astype(np.float64),
+        tx.astype(np.float64),
+        ty.astype(np.float64),
+        valid.astype(np.float64),
+        np.asarray(want, dtype=np.int64),
+        float(sigma),
+    )
+    by_row = {
+        k: _bound(info[q], g[q], tx[k] - ox[k], ty[k] - oy[k], float(tvx[k]), float(tvy[k]))
+        for q, k in enumerate(want)
+    }
+    return [by_row[k] for k in rows]
