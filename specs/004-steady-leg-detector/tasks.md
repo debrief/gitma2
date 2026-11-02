@@ -66,7 +66,7 @@ names its files and the requirement it serves.
   plan's rules before registration (SC-003)
 - [x] T022 `configs/gate-d/plan.json` and the decision record with FR-035's architecture check;
   commit before training (FR-032, FR-034, FR-035)
-- [ ] T023 Train (`train/gd-a`); validation workflow: detector outputs, control tuning (amendment by
+- [x] T023 Train (`train/gd-a`); validation workflow: detector outputs, control tuning (amendment by
   digest), validation report with the carried rule and the validation rule
 - [ ] T024 Gate workflow on seed 305 if the validation rule is met; `tma2-gd`; agent panel;
   `review.md`; `decided_by`

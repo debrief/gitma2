@@ -1,0 +1,264 @@
+{
+  "amendment_sha256": "e03376262f883bc95d599605a634c3e7d08f385833b713ee1087b71bf26bee95",
+  "carried": {
+    "causal": {
+      "detector": "gd-causal-s1",
+      "held_leg_g5_false_alarm": 0.0
+    },
+    "time_late": {
+      "detector": "gd-late-s2",
+      "held_leg_g5_false_alarm": 0.0
+    }
+  },
+  "controls": {
+    "gd-causal-s1:cusum": {
+      "achieved_false_alarm": 0.0,
+      "cusum_drift": 0.5,
+      "kind": "cusum",
+      "target_false_alarm": 0.0,
+      "threshold": 1443302.3680945653,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    },
+    "gd-causal-s1:cusum_ekf": {
+      "achieved_false_alarm": 0.0,
+      "cusum_drift": 0.5,
+      "ekf": "ekf-sa0.03-p4-r8",
+      "kind": "cusum_ekf",
+      "target_false_alarm": 0.0,
+      "threshold": 31495.348482659192,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    },
+    "gd-causal-s1:glr": {
+      "achieved_false_alarm": 0.0,
+      "glr_window": 30,
+      "kind": "glr",
+      "target_false_alarm": 0.0,
+      "threshold": 226595.10869273797,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    },
+    "gd-causal-s1:imm_mode": {
+      "achieved_false_alarm": 0.0,
+      "imm": "imm-cv0.0003-ct0.03-w0.003-s0.001-p4-r16",
+      "kind": "imm_mode",
+      "target_false_alarm": 0.0,
+      "threshold": 0.9764297980625293,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    },
+    "gd-late-s2:cusum": {
+      "achieved_false_alarm": 0.0,
+      "cusum_drift": 0.5,
+      "kind": "cusum",
+      "target_false_alarm": 0.0,
+      "threshold": 1443302.3680945653,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    },
+    "gd-late-s2:cusum_ekf": {
+      "achieved_false_alarm": 0.0,
+      "cusum_drift": 0.5,
+      "ekf": "ekf-sa0.03-p4-r8",
+      "kind": "cusum_ekf",
+      "target_false_alarm": 0.0,
+      "threshold": 31495.348482659192,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    },
+    "gd-late-s2:glr": {
+      "achieved_false_alarm": 0.0,
+      "glr_window": 30,
+      "kind": "glr",
+      "target_false_alarm": 0.0,
+      "threshold": 226595.10869273797,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    },
+    "gd-late-s2:imm_mode": {
+      "achieved_false_alarm": 0.0,
+      "imm": "imm-cv0.0003-ct0.03-w0.003-s0.001-p4-r16",
+      "kind": "imm_mode",
+      "target_false_alarm": 0.0,
+      "threshold": 0.9764297980625293,
+      "tuned_on": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58"
+    }
+  },
+  "imm_median_range_rel": 0.09517073609862792,
+  "seeds": {
+    "gd-causal-s1": {
+      "downstream_all_ratio": 1.206685405200915,
+      "held_leg_g5_false_alarm": 0.0,
+      "median_range_rel": 0.11484113825244219,
+      "summary": {
+        "delay_median_s": NaN,
+        "delay_p90_s": NaN,
+        "detected": 0,
+        "ece_kind": 0.018613956641207074,
+        "ece_now": 0.023366697825694435,
+        "held_leg_alarms_per_hour": 0.0,
+        "held_leg_g5_false_alarm": 0.0,
+        "held_leg_g5_rows": 7620,
+        "kind_accuracy": NaN,
+        "kind_coverage": NaN,
+        "miss_rate": 1.0,
+        "missed": 8943,
+        "segmentation_f1": 0.0575268817204301,
+        "segmentation_precision": 0.305365296803653,
+        "segmentation_recall": 0.031754510921177585,
+        "spans": 8943,
+        "unresolved": 0
+      },
+      "variant": "causal"
+    },
+    "gd-causal-s2": {
+      "downstream_all_ratio": 1.1931292565921474,
+      "held_leg_g5_false_alarm": 0.0,
+      "median_range_rel": 0.11355098961068337,
+      "summary": {
+        "delay_median_s": NaN,
+        "delay_p90_s": NaN,
+        "detected": 0,
+        "ece_kind": 0.027481996615194536,
+        "ece_now": 0.0248599898983029,
+        "held_leg_alarms_per_hour": 0.0,
+        "held_leg_g5_false_alarm": 0.0,
+        "held_leg_g5_rows": 7620,
+        "kind_accuracy": NaN,
+        "kind_coverage": NaN,
+        "miss_rate": 1.0,
+        "missed": 8943,
+        "segmentation_f1": 0.11059907834101383,
+        "segmentation_precision": 0.2770768864556058,
+        "segmentation_recall": 0.06908831908831908,
+        "spans": 8943,
+        "unresolved": 0
+      },
+      "variant": "causal"
+    },
+    "gd-causal-s3": {
+      "downstream_all_ratio": 1.2731065221846831,
+      "held_leg_g5_false_alarm": 0.0,
+      "median_range_rel": 0.12116248484828046,
+      "summary": {
+        "delay_median_s": NaN,
+        "delay_p90_s": NaN,
+        "detected": 0,
+        "ece_kind": 0.016793844921269254,
+        "ece_now": 0.0271346555488414,
+        "held_leg_alarms_per_hour": 0.0,
+        "held_leg_g5_false_alarm": 0.0,
+        "held_leg_g5_rows": 7620,
+        "kind_accuracy": NaN,
+        "kind_coverage": NaN,
+        "miss_rate": 1.0,
+        "missed": 8943,
+        "segmentation_f1": NaN,
+        "segmentation_precision": NaN,
+        "segmentation_recall": 0.0,
+        "spans": 8943,
+        "unresolved": 0
+      },
+      "variant": "causal"
+    },
+    "gd-cls": {
+      "downstream_all_ratio": 1.2672570820037885,
+      "held_leg_g5_false_alarm": 0.0,
+      "median_range_rel": 0.12060578932049983,
+      "summary": {
+        "delay_median_s": NaN,
+        "delay_p90_s": NaN,
+        "detected": 0,
+        "ece_kind": 0.014679483138753816,
+        "ece_now": 0.01844929967430193,
+        "held_leg_alarms_per_hour": 0.0,
+        "held_leg_g5_false_alarm": 0.0,
+        "held_leg_g5_rows": 7620,
+        "kind_accuracy": NaN,
+        "kind_coverage": NaN,
+        "miss_rate": 1.0,
+        "missed": 8943,
+        "segmentation_f1": 0.002961734391659756,
+        "segmentation_precision": 0.7352941176470589,
+        "segmentation_recall": 0.0014838556505223173,
+        "spans": 8943,
+        "unresolved": 0
+      },
+      "variant": "causal"
+    },
+    "gd-late-s1": {
+      "downstream_all_ratio": 2.0031296747501575,
+      "held_leg_g5_false_alarm": 0.0,
+      "median_range_rel": 0.1906393256469776,
+      "summary": {
+        "delay_median_s": NaN,
+        "delay_p90_s": NaN,
+        "detected": 0,
+        "ece_kind": 0.03615536045457611,
+        "ece_now": 0.02687807331304104,
+        "held_leg_alarms_per_hour": 0.0,
+        "held_leg_g5_false_alarm": 0.0,
+        "held_leg_g5_rows": 7620,
+        "kind_accuracy": NaN,
+        "kind_coverage": NaN,
+        "miss_rate": 1.0,
+        "missed": 8943,
+        "segmentation_f1": 0.1343363782912413,
+        "segmentation_precision": 0.16942260775277854,
+        "segmentation_recall": 0.11128917378917379,
+        "spans": 8943,
+        "unresolved": 0
+      },
+      "variant": "time_late"
+    },
+    "gd-late-s2": {
+      "downstream_all_ratio": 2.8193776968664332,
+      "held_leg_g5_false_alarm": 0.0,
+      "median_range_rel": 0.2683222507508327,
+      "summary": {
+        "delay_median_s": NaN,
+        "delay_p90_s": NaN,
+        "detected": 0,
+        "ece_kind": 0.06680211164228046,
+        "ece_now": 0.02550733997610929,
+        "held_leg_alarms_per_hour": 0.0,
+        "held_leg_g5_false_alarm": 0.0,
+        "held_leg_g5_rows": 7620,
+        "kind_accuracy": NaN,
+        "kind_coverage": NaN,
+        "miss_rate": 1.0,
+        "missed": 8943,
+        "segmentation_f1": 0.020057306590257878,
+        "segmentation_precision": 0.14,
+        "segmentation_recall": 0.010802469135802469,
+        "spans": 8943,
+        "unresolved": 0
+      },
+      "variant": "time_late"
+    },
+    "gd-late-s3": {
+      "downstream_all_ratio": 2.834299707175275,
+      "held_leg_g5_false_alarm": 0.0,
+      "median_range_rel": 0.2697423894559965,
+      "summary": {
+        "delay_median_s": NaN,
+        "delay_p90_s": NaN,
+        "detected": 0,
+        "ece_kind": 0.027545861722398438,
+        "ece_now": 0.024336111988665855,
+        "held_leg_alarms_per_hour": 0.0,
+        "held_leg_g5_false_alarm": 0.0,
+        "held_leg_g5_rows": 7620,
+        "kind_accuracy": NaN,
+        "kind_coverage": NaN,
+        "miss_rate": 1.0,
+        "missed": 8943,
+        "segmentation_f1": 0.025191675794085433,
+        "segmentation_precision": 0.16288951841359772,
+        "segmentation_recall": 0.013651471984805319,
+        "spans": 8943,
+        "unresolved": 0
+      },
+      "variant": "time_late"
+    }
+  },
+  "validation_carried": [],
+  "variant_results": {
+    "gd-causal-s1": "fail",
+    "gd-late-s2": "fail"
+  }
+}
