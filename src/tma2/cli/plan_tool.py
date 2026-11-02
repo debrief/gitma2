@@ -106,6 +106,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     c = sub.add_parser("complete")
     c.add_argument("--checkpoint", required=True)
+    k = sub.add_parser("kind", help="print model or detector for an id of the plan")
+    k.add_argument("--plan", required=True)
+    k.add_argument("--model", required=True)
     a = ap.parse_args(argv)
     root = Path.cwd()
     try:
@@ -117,6 +120,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"digest={digest}")
             ids = [m.id for m in plan.models or []] + [d.id for d in plan.detectors or []]
             print(f"models={json.dumps(ids)}")
+        elif a.cmd == "kind":
+            plan, _ = load_plan(a.plan)
+            if a.model in {d.id for d in plan.detectors or []}:
+                print("detector")
+            elif a.model in {m.id for m in plan.models or []}:
+                print("model")
+            else:
+                raise ValueError(f"plan {plan.id} has no model or detector {a.model}")
         elif a.cmd == "data":
             print(regenerate(Path(a.plan), Path(a.out), root, tuple(a.keep)))
         else:
