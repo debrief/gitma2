@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.20.0"
+version = "0.21.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -108,6 +108,10 @@ class RecordKind(str, Enum):
     crb = "crb"
     """
     One CrbRecord (gitma2).
+    """
+    detector = "detector"
+    """
+    One DetectorRecord (gitma2, schema 0.21.0).
     """
 
 
@@ -539,7 +543,9 @@ class Scenario(ConfiguredBaseModel):
                        'Prediction',
                        'PredictionHeader',
                        'CrbHeader',
-                       'CrbRecord']} })
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
     metadata: ScenarioMetadata = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
     ownship: Track = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
     target: Track = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
@@ -557,14 +563,17 @@ class DatasetHeader(ConfiguredBaseModel):
                        'Prediction',
                        'PredictionHeader',
                        'CrbHeader',
-                       'CrbRecord']} })
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
@@ -640,8 +649,10 @@ class Prediction(ConfiguredBaseModel):
                        'Prediction',
                        'PredictionHeader',
                        'CrbHeader',
-                       'CrbRecord']} })
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectionRecord']} })
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
     estimator: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
                        'MetricsRecord',
@@ -662,26 +673,30 @@ class PredictionHeader(ConfiguredBaseModel):
                        'Prediction',
                        'PredictionHeader',
                        'CrbHeader',
-                       'CrbRecord']} })
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     estimator: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
                        'MetricsRecord',
                        'CurvePoint',
                        'PairedComparison']} })
     mode: PredictionMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader']} })
-    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader', 'DetectorHeader']} })
     weights_digest: Optional[str] = Field(default=None, description="""SHA-256 of the learned estimator's weights file (schema 0.20.0; required by gate commands for learned estimators).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'Continuation',
                        'ModelManifest',
                        'CheckpointMeta',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
 
 
 class CrbHeader(ConfiguredBaseModel):
@@ -695,16 +710,19 @@ class CrbHeader(ConfiguredBaseModel):
                        'Prediction',
                        'PredictionHeader',
                        'CrbHeader',
-                       'CrbRecord']} })
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'CrbHeader',
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     model: CrbModel = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CrbHeader', 'ModelDigest']} })
-    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader', 'DetectorHeader']} })
 
 
 class CrbRecord(ConfiguredBaseModel):
@@ -718,8 +736,10 @@ class CrbRecord(ConfiguredBaseModel):
                        'Prediction',
                        'PredictionHeader',
                        'CrbHeader',
-                       'CrbRecord']} })
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectionRecord']} })
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
     first_row: int = Field(default=..., description="""Row index of the first entry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
     sd_range_rel: Optional[list[float]] = Field(default=None, description="""Bound on range error ÷ range.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
     sd_course_deg: Optional[list[float]] = Field(default=None, description="""Bound on course error (degrees).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
@@ -837,7 +857,8 @@ class ExperimentManifest(ConfiguredBaseModel):
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
@@ -903,7 +924,8 @@ class NaiveModel(ConfiguredBaseModel):
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     train_digest: str = Field(default=..., description="""SHA-256 of the train file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
     final: NaiveMeans = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
     per_timestep: NaiveMeans = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
@@ -988,7 +1010,8 @@ class Continuation(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'CheckpointMeta',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     best_epoch: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Continuation',
                        'ModelManifest',
                        'CheckpointMeta',
@@ -1022,7 +1045,8 @@ class ModelManifest(ConfiguredBaseModel):
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
@@ -1050,7 +1074,8 @@ class ModelManifest(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'CheckpointMeta',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     git_commit: Optional[str] = Field(default=None, description="""Commit of the training code, read when training started (absent before schema 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'Continuation',
                        'ModelManifest',
@@ -1202,7 +1227,8 @@ class CheckpointMeta(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'CheckpointMeta',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     liveness: Optional[list[HeadLiveness]] = Field(default=None, description="""Per-head liveness after the last epoch.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta']} })
 
 
@@ -1230,7 +1256,8 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'ExperimentManifest',
                        'NaiveModel',
                        'ModelManifest',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
@@ -1252,7 +1279,8 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'CheckpointMeta',
-                       'PhysicsModelManifest']} })
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
     onnx_digest: Optional[str] = Field(default=None, description="""SHA-256 of the exported graph.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest']} })
     window_rows: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest']} })
 
@@ -1340,7 +1368,7 @@ class DetectorConfig(ConfiguredBaseModel):
                        'PhysicsModelConfig',
                        'TrainingPlan',
                        'DetectorConfig']} })
-    variant: DetectorVariant = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig']} })
+    variant: DetectorVariant = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'DetectorHeader']} })
     width: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     layers: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
     heads: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
@@ -1353,7 +1381,7 @@ class DetectorConfig(ConfiguredBaseModel):
     loss_boundary_weight: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig']} })
     loss_kind_weight: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig']} })
     loss_downstream_weight: float = Field(default=..., description="""0 for the classification-only control.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig']} })
-    knots: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig']} })
+    knots: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'KnotSet']} })
     iterations: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow', 'PhysicsModelConfig', 'DetectorConfig']} })
     train_iterations: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     downstream_rows: int = Field(default=..., description="""Rows per scenario scored by the downstream loss.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig']} })
@@ -1386,6 +1414,83 @@ class ControlSettings(ConfiguredBaseModel):
     achieved_false_alarm: Optional[float] = Field(default=None, description="""Held-leg G5 false-alarm fraction at the tuned threshold on validation.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
 
 
+class DetectorHeader(ConfiguredBaseModel):
+    """
+    First record of a tma2-detect or tma2-controls file (spec 004 contracts/cli.md): which detector, on which truth file, with which weights; knots are exported with the threshold and count named here.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
+    schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'ExperimentManifest',
+                       'NaiveModel',
+                       'ModelManifest',
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
+    detector: str = Field(default=..., description="""Detector id or control name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'DetectionRecord']} })
+    variant: Optional[DetectorVariant] = Field(default=None, description="""Learned detectors only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'DetectorHeader']} })
+    control: Optional[ControlSettings] = Field(default=None, description="""Controls only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader', 'DetectorHeader']} })
+    weights_digest: Optional[str] = Field(default=None, description="""SHA-256 of best.safetensors (learned detectors).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
+                       'Continuation',
+                       'ModelManifest',
+                       'CheckpointMeta',
+                       'PhysicsModelManifest',
+                       'DetectorHeader']} })
+    knot_threshold: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'GateDDecision']} })
+    max_knots: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader']} })
+
+
+class KnotEstimate(ConfiguredBaseModel):
+    """
+    One exported knot (a local maximum of w_change at or above the threshold).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    row: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['KnotEstimate']} })
+    weight: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['KnotEstimate']} })
+    p_kind: float = Field(default=..., description="""Probability of a course change (≥ 0.5: course).""", json_schema_extra = { "linkml_meta": {'domain_of': ['KnotEstimate']} })
+
+
+class KnotSet(ConfiguredBaseModel):
+    """
+    The knots exported by the question asked at one row.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    query_row: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['KnotSet']} })
+    knots: Optional[list[KnotEstimate]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'KnotSet']} })
+
+
+class DetectorRecord(ConfiguredBaseModel):
+    """
+    One scenario's detector outputs (spec 004 FR-013, R8): p_change at every row of the window (a control's alarm statistic mapped to [0, 1] where it has one, else 0/1 alarms), p_kind of the last row's question at every row, and the knot sets asked at the σ = 1° G5 rows and at the last row (learned detectors; empty for controls).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
+    p_change: list[float] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorRecord']} })
+    p_kind_last: Optional[list[float]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorRecord']} })
+    knot_sets: Optional[list[KnotSet]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorRecord']} })
+
+
 class SpanDetection(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
@@ -1407,8 +1512,8 @@ class DetectionRecord(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectionRecord']} })
-    detector: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectionRecord']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
+    detector: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'DetectionRecord']} })
     spans: Optional[list[SpanDetection]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DetectionRecord']} })
     held_leg_seconds: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectionRecord']} })
     held_leg_alarms: int = Field(default=..., description="""Rising edges on held legs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectionRecord']} })
@@ -1435,7 +1540,7 @@ class GateDDecision(ConfiguredBaseModel):
     carried_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     threshold: float = Field(default=..., description="""D1 operating threshold on p_change.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck', 'ControlSettings', 'GateDDecision']} })
     tolerance_s: float = Field(default=..., description="""D1 tolerance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'GateDDecision']} })
-    knot_threshold: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
+    knot_threshold: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'GateDDecision']} })
     bootstrap_level: float = Field(default=..., description="""D2.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     false_alarm_limit_rule: str = Field(default=..., description="""D3.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
@@ -1501,6 +1606,10 @@ ChangeDecision.model_rebuild()
 ModelDigest.model_rebuild()
 DetectorConfig.model_rebuild()
 ControlSettings.model_rebuild()
+DetectorHeader.model_rebuild()
+KnotEstimate.model_rebuild()
+KnotSet.model_rebuild()
+DetectorRecord.model_rebuild()
 SpanDetection.model_rebuild()
 DetectionRecord.model_rebuild()
 GateDDecision.model_rebuild()

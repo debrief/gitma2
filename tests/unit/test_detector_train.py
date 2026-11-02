@@ -114,3 +114,32 @@ def test_local_step_throughput(tmp_path: Path, capsys: object) -> None:
         f"step {1000 * (t2 - t1) / 16:.1f} ms ({lp.downstream_rows} downstream rows)"
     )
     assert lp.downstream_rows > 0
+
+
+def test_tma2_detect_writes_parseable_records(tmp_path: Path) -> None:
+    from tma2.cli.detect import main
+    from tma2.types import parse_record
+    from tma2.types.generated.tma import DetectorHeader, DetectorRecord
+
+    for variant in (DetectorVariant.causal, DetectorVariant.time_late):
+        plan = _plan(tmp_path, variant)
+        ck = tmp_path / f"ck-{variant.value}"
+        _train_in_process(plan, ck, 1)
+        out = tmp_path / f"det-{variant.value}.ndjson"
+        args = ["--plan", str(plan), "--model", "det-test", "--checkpoint", str(ck)]
+        args += ["--truth", str(DATA / "test.f32pack"), "--out", str(out), "--limit", "5"]
+        assert main(args) == 0
+        lines = out.read_text().splitlines()
+        hdr = parse_record(DetectorHeader, json.loads(lines[0]), str(out), 1)
+        assert hdr.weights_digest == file_digest(ck / "best.safetensors")
+        assert hdr.variant == variant
+        assert len(lines) == 6
+        for i, line in enumerate(lines[1:]):
+            rec = parse_record(DetectorRecord, json.loads(line), str(out), i + 2)
+            assert len(rec.p_change) == len(rec.p_kind_last or [])
+            sets = rec.knot_sets or []
+            assert sets and sets[-1].query_row == len(rec.p_change) - 1
+            if variant == DetectorVariant.time_late:
+                assert len(sets) == 1
+    (tmp_path / "ck-causal" / "best.safetensors").unlink()
+    assert main([*args[:4], "--checkpoint", str(tmp_path / "ck-causal"), *args[6:]]) == 2

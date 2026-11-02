@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.20.0
+version: 0.21.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -25,6 +25,7 @@ enums:
       scenario: { description: One Scenario. }
       prediction: { description: One Prediction. }
       crb: { description: One CrbRecord (gitma2). }
+      detector: { description: "One DetectorRecord (gitma2, schema 0.21.0)." }
   Split:
     description: Dataset split. Train/validation/test are 80/10/10 by scenario index.
     permissible_values:
@@ -1325,6 +1326,48 @@ classes:
       imm: { range: string, description: Frozen IMM setting name. }
       target_false_alarm: { range: float, description: Held-leg G5 false-alarm fraction the threshold was tuned to. }
       achieved_false_alarm: { range: float, description: Held-leg G5 false-alarm fraction at the tuned threshold on validation. }
+
+  DetectorHeader:
+    description: >-
+      First record of a tma2-detect or tma2-controls file (spec 004 contracts/cli.md): which
+      detector, on which truth file, with which weights; knots are exported with the threshold
+      and count named here.
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      detector: { range: string, required: true, description: Detector id or control name. }
+      variant: { range: DetectorVariant, description: Learned detectors only. }
+      control: { range: ControlSettings, description: Controls only. }
+      dataset_digest: { range: string, required: true, description: SHA-256 of the truth file. }
+      weights_digest: { range: string, description: SHA-256 of best.safetensors (learned detectors). }
+      knot_threshold: { range: float, required: true }
+      max_knots: { range: integer, required: true }
+
+  KnotEstimate:
+    description: One exported knot (a local maximum of w_change at or above the threshold).
+    attributes:
+      row: { range: integer, required: true }
+      weight: { range: float, required: true }
+      p_kind: { range: float, required: true, description: "Probability of a course change (≥ 0.5: course)." }
+
+  KnotSet:
+    description: The knots exported by the question asked at one row.
+    attributes:
+      query_row: { range: integer, required: true }
+      knots: { range: KnotEstimate, multivalued: true, inlined_as_list: true }
+
+  DetectorRecord:
+    description: >-
+      One scenario's detector outputs (spec 004 FR-013, R8): p_change at every row of the window
+      (a control's alarm statistic mapped to [0, 1] where it has one, else 0/1 alarms), p_kind of
+      the last row's question at every row, and the knot sets asked at the σ = 1° G5 rows and at the
+      last row (learned detectors; empty for controls).
+    attributes:
+      record: { range: RecordKind, required: true }
+      scenario_index: { range: integer, required: true }
+      p_change: { range: float, multivalued: true, required: true }
+      p_kind_last: { range: float, multivalued: true }
+      knot_sets: { range: KnotSet, multivalued: true, inlined_as_list: true }
 
   SpanDetection:
     attributes:

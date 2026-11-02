@@ -768,6 +768,114 @@
             "title": "DetectorConfig",
             "type": "object"
         },
+        "DetectorHeader": {
+            "additionalProperties": false,
+            "description": "First record of a tma2-detect or tma2-controls file (spec 004 contracts/cli.md): which detector, on which truth file, with which weights; knots are exported with the threshold and count named here.",
+            "properties": {
+                "control": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ControlSettings"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Controls only."
+                },
+                "dataset_digest": {
+                    "description": "SHA-256 of the truth file.",
+                    "type": "string"
+                },
+                "detector": {
+                    "description": "Detector id or control name.",
+                    "type": "string"
+                },
+                "knot_threshold": {
+                    "type": "number"
+                },
+                "max_knots": {
+                    "type": "integer"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "variant": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/DetectorVariant"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Learned detectors only."
+                },
+                "weights_digest": {
+                    "description": "SHA-256 of best.safetensors (learned detectors).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "detector",
+                "dataset_digest",
+                "knot_threshold",
+                "max_knots"
+            ],
+            "title": "DetectorHeader",
+            "type": "object"
+        },
+        "DetectorRecord": {
+            "additionalProperties": false,
+            "description": "One scenario's detector outputs (spec 004 FR-013, R8): p_change at every row of the window (a control's alarm statistic mapped to [0, 1] where it has one, else 0/1 alarms), p_kind of the last row's question at every row, and the knot sets asked at the \u03c3 = 1\u00b0 G5 rows and at the last row (learned detectors; empty for controls).",
+            "properties": {
+                "knot_sets": {
+                    "items": {
+                        "$ref": "#/$defs/KnotSet"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "p_change": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "p_kind_last": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "scenario_index": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "record",
+                "scenario_index",
+                "p_change"
+            ],
+            "title": "DetectorRecord",
+            "type": "object"
+        },
         "DetectorVariant": {
             "description": "Causal (instantaneous) or time-late steady-leg detector (Annex A \u00a7A.1, D2).",
             "enum": [
@@ -1406,6 +1514,52 @@
                 "git_commit"
             ],
             "title": "JobRecord",
+            "type": "object"
+        },
+        "KnotEstimate": {
+            "additionalProperties": false,
+            "description": "One exported knot (a local maximum of w_change at or above the threshold).",
+            "properties": {
+                "p_kind": {
+                    "description": "Probability of a course change (\u2265 0.5: course).",
+                    "type": "number"
+                },
+                "row": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "row",
+                "weight",
+                "p_kind"
+            ],
+            "title": "KnotEstimate",
+            "type": "object"
+        },
+        "KnotSet": {
+            "additionalProperties": false,
+            "description": "The knots exported by the question asked at one row.",
+            "properties": {
+                "knots": {
+                    "items": {
+                        "$ref": "#/$defs/KnotEstimate"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "query_row": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "query_row"
+            ],
+            "title": "KnotSet",
             "type": "object"
         },
         "ManoeuvreKind": {
@@ -2629,7 +2783,8 @@
                 "header",
                 "scenario",
                 "prediction",
-                "crb"
+                "crb",
+                "detector"
             ],
             "title": "RecordKind",
             "type": "string"
@@ -3297,6 +3452,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.20.0"
+    "version": "0.21.0"
 }
 

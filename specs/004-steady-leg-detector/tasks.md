@@ -42,7 +42,7 @@ names its files and the requirement it serves.
   gradients test (FR-016–FR-018, R5)
 - [ ] T014 Training integration: detector configurations in plans, two downstream rows, one noise
   draw, K = 50 training solve; resume equality test; local throughput measured (FR-019–FR-021)
-- [ ] T015 `tma2-detect`: per-timestep outputs with weights digest (contracts/cli.md)
+- [x] T015 `tma2-detect`: per-timestep outputs with weights digest (contracts/cli.md)
 
 ## Phase 4: Controls and metrics (US4, US5)
 
