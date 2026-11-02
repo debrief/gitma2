@@ -81,16 +81,12 @@ def seeded_detector(cfg: DetectorConfig, seed: int) -> Detector:
     torch.manual_seed(seed)
     model = Detector(cfg)
     g = torch.Generator().manual_seed(seed + 1)
+    last = model.now_head[2]
+    assert isinstance(last, nn.Linear)
     with torch.no_grad():
-        for p in (
-            model.now_head[2].weight,
-            model.now_head[2].bias,
-            model.w_head.k.weight,
-            model.w_head.k.bias,
-            model.kind_head.k.weight,
-            model.kind_head.k.bias,
-        ):
-            p.copy_(0.1 * torch.randn(p.shape, generator=g))
+        for lin in (last, model.w_head.k, model.kind_head.k):
+            for p in (lin.weight, lin.bias):
+                p.copy_(0.1 * torch.randn(tuple(p.shape), generator=g))
         model.w_head.bias.fill_(-1.0)  # weights in (0, 1), some above the export threshold
     return model
 
@@ -102,7 +98,7 @@ def golden_batch(fixture: Path, r_max: int, n: int = 4) -> dict[str, np.ndarray]
             break
         s = int(meta["samples"])
 
-        def pad(a: np.ndarray) -> np.ndarray:
+        def pad(a: np.ndarray, s: int = s) -> np.ndarray:
             out = np.zeros(r_max)
             out[:s] = a[:s]
             return out
