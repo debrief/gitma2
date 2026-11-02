@@ -358,6 +358,10 @@ class GateResult(str, Enum):
     """
     The 95% bootstrap interval straddles the threshold (G1 report, T033).
     """
+    reported = "reported"
+    """
+    A figure reported beside the gate, not gated (schema 0.21.0).
+    """
 
 
 
@@ -1550,6 +1554,7 @@ class GateDDecision(ConfiguredBaseModel):
     bootstrap_level: float = Field(default=..., description="""D2.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
     false_alarm_limit_rule: str = Field(default=..., description="""D3.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
+    false_alarm_limit: float = Field(default=..., description="""D3's limit as a number: 0.05, or the frozen IMM's validation rate at μ_CT > 0.5 if lower.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
     validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
     test_seed: int = Field(default=..., description="""D4.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ChangeDecision', 'GateDDecision']} })
     test_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })

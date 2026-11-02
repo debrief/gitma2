@@ -85,6 +85,8 @@ class Experiment:
     artefacts: list[dict[str, str]] = field(default_factory=list)
     amendments: list[dict[str, str]] = field(default_factory=list)
     root: Path = ROOT  # the repository whose state the record names (a clone, in tests)
+    # A gate whose rule is not "every check passes" (Gate D: any carried variant) sets it.
+    result: str | None = None
 
     def add_artefact(self, path: str | Path, role: str) -> str:
         """Record a file the experiment read or wrote (prediction caches, conformance results)."""
@@ -170,7 +172,9 @@ class Experiment:
         return [f":(exclude){rel}"]
 
     def verdict_result(self) -> str:
-        gated = [c for c in self.checks if c.result != "skipped"]
+        if self.result is not None:
+            return self.result
+        gated = [c for c in self.checks if c.result not in ("skipped", "reported")]
         if any(c.result == "fail" for c in gated):
             return "fail"
         if any(c.result == "inconclusive" for c in gated):

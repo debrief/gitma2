@@ -52,7 +52,7 @@ names its files and the requirement it serves.
   alarms (G5 fraction and per hour), kind accuracy, F1, ECE; tests (FR-028, R8)
 - [x] T018 `detect/downstream.py`: exported knots and kinds → physics layer with trivial weights at
   G5 rows; reported beside batch LS, IMM, EKF, oracle (FR-027, FR-028)
-- [ ] T019 `eval/gd.py` + `tma2-gd`: bindings and refusals, Gate D checks with 97.5% clustered
+- [x] T019 `eval/gd.py` + `tma2-gd`: bindings and refusals, Gate D checks with 97.5% clustered
   bootstraps, validation rule, record and verdict; tests (FR-029–FR-031)
 
 ## Phase 5: Export (US7)

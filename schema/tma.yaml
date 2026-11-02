@@ -184,6 +184,7 @@ enums:
       fail: {}
       inconclusive:
         description: The 95% bootstrap interval straddles the threshold (G1 report, T033).
+      reported: { description: "A figure reported beside the gate, not gated (schema 0.21.0)." }
 
 classes:
   FloatRange:
@@ -1409,6 +1410,7 @@ classes:
       bootstrap_level: { range: float, required: true, description: D2. }
       bootstrap_resamples: { range: integer, required: true }
       false_alarm_limit_rule: { range: string, required: true, description: D3. }
+      false_alarm_limit: { range: float, required: true, description: "D3's limit as a number: 0.05, or the frozen IMM's validation rate at μ_CT > 0.5 if lower." }
       validation_seed: { range: integer, required: true }
       test_seed: { range: integer, required: true, description: D4. }
       test_count: { range: integer, required: true }

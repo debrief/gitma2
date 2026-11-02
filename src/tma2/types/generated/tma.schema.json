@@ -1320,6 +1320,10 @@
                 "ekf": {
                     "type": "string"
                 },
+                "false_alarm_limit": {
+                    "description": "D3's limit as a number: 0.05, or the frozen IMM's validation rate at \u03bc_CT > 0.5 if lower.",
+                    "type": "number"
+                },
                 "false_alarm_limit_rule": {
                     "description": "D3.",
                     "type": "string"
@@ -1379,6 +1383,7 @@
                 "bootstrap_level",
                 "bootstrap_resamples",
                 "false_alarm_limit_rule",
+                "false_alarm_limit",
                 "validation_seed",
                 "test_seed",
                 "test_count",
@@ -1415,7 +1420,8 @@
             "enum": [
                 "pass",
                 "fail",
-                "inconclusive"
+                "inconclusive",
+                "reported"
             ],
             "title": "GateResult",
             "type": "string"
