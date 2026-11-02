@@ -1,0 +1,33 @@
+name: Runner detector training throughput
+
+# Spec 004 T021: two epochs of 4,000 scenarios for each detector of configs/gate-d-bench/plan.json
+# (causal, time-late, classification-only) on a GitHub-hosted runner; the second epoch runs with
+# compiled kernels. The log lines give total, training and validation seconds per epoch; the
+# extrapolation to 10^5 scenarios goes in research R5 before the plan is registered.
+
+on:
+  push:
+    branches: ["bench-gd/**"]
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run tma2-plan data --plan configs/gate-d-bench/plan.json --out "$RUNNER_TEMP/data"
+      - name: Two epochs per detector
+        run: |
+          lscpu | grep "Model name"
+          for m in bench-causal bench-late bench-cls; do
+            uv run tma2-train --plan configs/gate-d-bench/plan.json --model "$m" \
+              --checkpoint "$RUNNER_TEMP/ck-$m" --data "$RUNNER_TEMP/data" | tee -a "$RUNNER_TEMP/bench.log"
+            cat "$RUNNER_TEMP/ck-$m/meta.json"
+          done
