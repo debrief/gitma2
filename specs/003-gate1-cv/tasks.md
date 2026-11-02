@@ -70,19 +70,19 @@ equality, export conformance.
 
 - [x] T018 `configs/gate1/plan.json` (three seeds of the carried configuration; controls a, c, d)
   and `experiments/<date>-g1-decision/decision.json` with forecast; commit before training
-- [ ] T019 Push `train/g1-a`; monitor; collect results; validation report with the carried rule
+- [x] T019 Push `train/g1-a`; monitor; collect results; validation report with the carried rule
   applied, controls checked (shuffled no better than batch LS, amendment 1; time-late ≥ causal)
 
 ## Phase 9: Gate (US3)
 
-- [ ] T020 `eval/g1.py` + `tma2-g1`: decision and seed checks, same-rows scoring of every
+- [x] T020 `eval/g1.py` + `tma2-g1`: decision and seed checks, same-rows scoring of every
   reference, clustered ratios and gross-error difference, efficiency per slice, verdict
-- [ ] T021 Test split (seed 303), predictions, `tma2-g1`, the agent panel (rounds), `review.md`,
+- [x] T021 Test split (seed 303), predictions, `tma2-g1`, the agent panel (rounds), `review.md`,
   `decided_by`
 
 ## Phase 10: Site (US7)
 
-- [ ] T022 `site/docs/algorithms/gate1-model.md`; glossary; the Gate 1 write-up with the numbers;
+- [x] T022 `site/docs/algorithms/gate1-model.md`; glossary; the Gate 1 write-up with the numbers;
   README, AGENTS and welcome status
 
 ## Follow-ups found during training (not changed for g1-a: the plan was pinned)
@@ -114,3 +114,8 @@ equality, export conformance.
   `np.median` differ on even row counts: 0.9906 against 0.9914).
 - **Gross-error definitions:** the model's "converged" is plausibility only; least squares' also
   needs LM convergence. Report gross rows by cause beside the check (done for Gate 1 in the report).
+- **One convergence definition** for the model and least squares (numerics, round 2): the Gate 1
+  gross margin was 4 rows where least squares' LM flag fired and the layer's plausibility test did
+  not.
+
+Gate 1 decided: **pass**, panel round 2 (`experiments/20261101-g1-a-g1/review.md`).

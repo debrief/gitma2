@@ -123,4 +123,57 @@ angle, σ, time since zig), curves at every post-zig timestep, efficiency per sl
 Amendment binding: `experiments/20261101-g1-decision/amendment-1.md` sha256 `43e165f61072f0081bc3c7416e4187a1bf6da4e5447b66c104593cf6dc598fe8` (wording as
 corrected in round 1; the decision it records is unchanged).
 
-Round 2: the reviewers are re-invited with this response.
+Original wording (as it stood when the validation report ran, commit 2acc466): sha256
+`fa37f4cb8c877937d5282295840b45fa3c6ec2ef061fb02610e4d4803f4661f5`.
+
+## Round 2 (2026-11-02)
+
+The five reviewers were re-invited with the response above and the report
+(`report/eval/`, `report/diagnostics.json`, `report/gate-rows/`), at commit 530a18e.
+
+| Reviewer | Verdict | Blockers | Majors | Minors |
+| --- | --- | --- | --- | --- |
+| TMA geometry | approve | 0 | 0 | 1 |
+| Estimation and numerics | approve | 0 | 0 | 2 |
+| Evaluation statistics | approve | 0 | 0 | 2 |
+| Reproducibility | approve | 0 | 0 | 2 |
+| Red team | approve | 0 | 0 | 2 |
+
+Reproducibility re-checked the six prediction digests against the gate manifest, found every
+baseline gate row identical to predictions regenerated at ef2f340, found 296 of the model's gate
+rows identical when re-predicted from the committed weights on a different CPU, and re-scored all
+seven checks from the extracts to the last bit.
+
+Remaining minors and their disposition:
+
+- `decided_by` still "machine" (geometry, statistics, red team) → set to this round.
+- State the outcome and the label in the record, not only in the blog (geometry) → closing
+  statement below.
+- Blog: "about 1e-10" names no comparison (statistics) → reworded: the trained model against the
+  same model with zeroed heads (validation, 3.5e-11 median); against the trivial-input layer on the
+  test gate rows the median difference is 0 and the largest 1.4e-4 (relative range).
+- Blog: the gross result is "no worse than least squares", not "better", since 4 discordant rows
+  give exact p = 0.0625 (numerics) → reworded.
+- One convergence definition for the model and least squares before Gate 2 (numerics) → follow-up
+  (tasks.md).
+- Bind the amendment's original wording (reproducibility) → digest above.
+- Weights digest, `git_dirty`, amendments in manifests stay open until Gate 2 (reproducibility,
+  accepted as recorded follow-ups).
+- Keep "a legitimate optimum on constant-velocity data" in the write-up (red team) → kept.
+
+## Verdict
+
+**Gate 1: pass, decided by panel round 2** (five reviewers, no reviewer rejecting, no blocker or
+major finding open).
+
+What the pass means, stated here so the record does not depend on the write-up: *on
+constant-velocity data the end-to-end model passes Gate 1 because it reduces to batch least squares
+through the physics layer; training left the heads input-independent (dead ReLU units, constant
+outputs). Gate 1 shows that end-to-end training through the declared layer is stable and does not
+degrade least squares at the information limit; it does not show that the learned component adds
+anything, which is untested until Gate 2.* In `metrics.json` the estimator labelled `oracle` is,
+on constant-velocity data, **the physics layer with trivial inputs (= the untrained model)**, not a
+ceiling. The gross-error check is met under the registered rule; its margin (4 of 4,884 rows) is
+the two estimators' convergence definitions, and the gross result reads "no worse than least
+squares". Amendment 1 changed the validation rule after training began and turned a validation
+stop into a proceed (owner decision, disclosed above).

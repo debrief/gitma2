@@ -19,8 +19,11 @@ Spec Kit is installed (`.specify/`, skills in `.claude/skills/speckit-*`). Featu
 `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement`. Specs live under
 `specs/<NNN-feature>/` and cite the SRD section(s) they implement. Done: 001 (types and
 generator), 002 (references, physics layer, ONNX harness, P0; **P0 passed**, panel round 3,
-`experiments/20261101-p0-r4/`). In progress: 003 (Gate 1, constant velocity; PR 7): model, training,
-export (one ONNX Loop), `tma2-tune`, the training workflow (push `train/<plan id>`).
+`experiments/20261101-p0-r4/`). 003 (Gate 1, constant velocity): **Gate 1 passed** (panel round 2,
+`experiments/20261101-g1-a-g1/`), but only because the model reduces to batch least squares: the
+heads died in training, so learning is untested until Gate 2 (prerequisites in
+`specs/003-gate1-cv/tasks.md`). Workflows: `train/<plan>`, `validate/<run>`, `gate/<plan>`,
+`report/<gate run>`.
 
 ## Stack (owner decisions, 2026-10-31)
 
