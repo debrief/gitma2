@@ -23,7 +23,13 @@ generator), 002 (references, physics layer, ONNX harness, P0; **P0 passed**, pan
 `experiments/20261101-g1-a-g1/`), but only because the model reduces to batch least squares: the
 heads died in training, so learning is untested until Gate 2 (prerequisites in
 `specs/003-gate1-cv/tasks.md`). Workflows: `train/<plan>`, `validate/<run>`, `gate/<plan>`,
-`report/<gate run>`.
+`report/<gate run>`. 004 (steady-leg detector, Annex A): **Gate D stopped at validation**
+(panel round 2, `experiments/20261102-gd-a-val/`). The detector raised no alarm: its p_change
+reads only time since the zig. Downstream it scored 0.95× batch least squares but 1.21× the IMM,
+and the time-late variant failed. Test seed 305 is unscored and reserved. Annex A §A.6 applies:
+publish, and Gate 2 uses the CUSUM/GLR segmenter at an operating point its spec declares
+(recommended: GLR at a 5% held-leg false-alarm rate). Write-up: `site/blog/2026-11-02-gate-d.md`.
+Detector workflows: `train/gd-a`, `validate-gd/<run>`.
 
 ## Stack (owner decisions, 2026-10-31)
 

@@ -68,6 +68,7 @@ names its files and the requirement it serves.
   commit before training (FR-032, FR-034, FR-035)
 - [x] T023 Train (`train/gd-a`); validation workflow: detector outputs, control tuning (amendment by
   digest), validation report with the carried rule and the validation rule
-- [ ] T024 Gate workflow on seed 305 if the validation rule is met; `tma2-gd`; agent panel;
-  `review.md`; `decided_by`
-- [ ] T025 Site: detector algorithm note, glossary, Gate D write-up; AGENTS status (FR-036)
+- [x] T024 Gate workflow on seed 305 if the validation rule is met; `tma2-gd`; agent panel;
+  `review.md`; `decided_by` (validation rule not met: no test; the panel reviewed the validation
+  stop, round 2, `experiments/20261102-gd-a-val/review.md`)
+- [x] T025 Site: detector algorithm note, glossary, Gate D write-up; AGENTS status (FR-036)
