@@ -55,6 +55,8 @@ jobs:
       - run: uv sync
       - name: Warm the numba cache
         run: uv run python -c "from tma2.sim.generate import warm_up; warm_up()"
+      - name: Runner CPU (last-bit numerics differ between CPU families)
+        run: lscpu | grep "Model name"
       - name: Unit, golden, conformance and performance tests
         run: uv run pytest -q
 
