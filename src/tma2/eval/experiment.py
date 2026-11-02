@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import os
 import platform
 import subprocess
@@ -65,12 +66,33 @@ class Check:
     ci_level: float | None = None
 
     def as_record(self) -> dict[str, Any]:
+        """Strict JSON: a non-finite number (e.g. Gate D's +∞ delay ratio when nothing is
+        detected) is left out of its field and named in the detail instead."""
         rec: dict[str, Any] = {"name": self.name, "result": self.result, "detail": self.detail}
+        odd = []
         for key in ("value", "threshold", "threshold_low", "ci_low", "ci_high", "ci_level"):
             v = getattr(self, key)
-            if v is not None:
+            if v is None:
+                continue
+            if math.isfinite(float(v)):
                 rec[key] = float(v)
+            else:
+                odd.append(f"{key} = {float(v)}")
+        if odd:
+            rec["detail"] = "; ".join([self.detail, *odd]) if self.detail else "; ".join(odd)
         return rec
+
+
+def _strict(obj: Any) -> Any:
+    """The same structure with non-finite floats as their names ("inf", "-inf", "nan"), so the
+    file is strict JSON (JavaScript's JSON.parse and jq refuse bare Infinity and NaN)."""
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return str(obj)
+    if isinstance(obj, dict):
+        return {k: _strict(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_strict(v) for v in obj]
+    return obj
 
 
 @dataclass
@@ -220,7 +242,7 @@ class Experiment:
         for name, obj in (
             ("manifest.json", manifest),
             ("verdict.json", verdict),
-            ("metrics.json", self.metrics),
+            ("metrics.json", _strict(self.metrics)),
         ):
             f = AtomicFile(self.folder / name)
             f.write((json.dumps(obj, indent=2, sort_keys=True) + "\n").encode("utf-8"))

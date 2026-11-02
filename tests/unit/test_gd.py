@@ -108,3 +108,27 @@ def test_resampler_is_seeded() -> None:
     a = Resampler([1, 2, 3], 5)
     b = Resampler([1, 2, 3], 5)
     assert all(np.array_equal(x, y) for x, y in zip(a.picks, b.picks, strict=True))
+
+
+def test_records_are_strict_json(tmp_path: Any) -> None:
+    import json
+    from pathlib import Path
+
+    from tma2.eval.experiment import ROOT, Check, Experiment
+
+    folder = Path(ROOT) / "experiments" / "ci-strict-json"
+    try:
+        exp = Experiment(id="ci-strict-json", folder=folder)
+        exp.checks.append(Check("D-delay", "fail", "n", value=math.inf, ci_low=math.inf))
+        exp.metrics = {"a": math.nan, "b": [1.0, -math.inf]}
+        exp.write("GD")
+        for name in ("verdict.json", "metrics.json"):
+            text = (folder / name).read_text()
+            assert "Infinity" not in text and "NaN" not in text
+            json.loads(text, parse_constant=lambda c: (_ for _ in ()).throw(ValueError(c)))
+        rec = json.loads((folder / "verdict.json").read_text())["checks"][0]
+        assert "value" not in rec and "value = inf" in rec["detail"]
+    finally:
+        import shutil
+
+        shutil.rmtree(folder, ignore_errors=True)

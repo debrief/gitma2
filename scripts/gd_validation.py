@@ -155,15 +155,18 @@ def main() -> int:
             cmd += ["--control", f"{vid}:{kind}={work / f'{vid}-{kind}.ndjson'}"]
     cmd += ["--control", f"imm_mode={nat_rows}"]
     cmd += ["--least-squares", a.lsq, "--imm", a.imm, "--ekf", a.ekf, "--oracle", a.oracle]
-    cmd += ["--amendment", str(am_path), "--experiment", str(out / "gd")]
+    # The record's own folder: Experiment excludes it from the dirty check, so the files this
+    # script writes beside the record (work/, amendment.json) do not mark the tree dirty (panel
+    # round 1 of the spec 004 validation stop found git_dirty true with the record in out/gd).
+    cmd += ["--amendment", str(am_path), "--experiment", str(out)]
     status = gd_main(cmd)
-    metrics = json.loads((out / "gd" / "metrics.json").read_text())
+    metrics = json.loads((out / "metrics.json").read_text())
     report["validation_carried"] = metrics["reported"].get("validation_carried", [])
     report["variant_results"] = metrics["reported"].get("variant_results", {})
     (out / "validation.json").write_text(
         json.dumps(report, indent=2, sort_keys=True, default=float) + "\n"
     )
-    (out / "validation.md").write_text(_markdown(report, out / "gd"))
+    (out / "validation.md").write_text(_markdown(report, out))
     print(json.dumps({"carried": report["validation_carried"], "status": status}))
     if status not in (0, 3):
         return status
