@@ -57,7 +57,7 @@ names its files and the requirement it serves.
 
 ## Phase 5: Export (US7)
 
-- [ ] T020 `models/detector_export.py`: ONNX, safetensors, manifest, golden batch; three legs;
+- [x] T020 `models/detector_export.py`: ONNX, safetensors, manifest, golden batch; three legs;
   WASM time per window under one second; CI step (FR-033)
 
 ## Phase 6: Pre-registration, training and the gate (US5, US6)

@@ -146,3 +146,14 @@ if (bad.length) {
   console.error(`wasm leg exceeds ${TOL}:`, bad);
   process.exit(1);
 }
+// Spec 004 (Annex A §A.4): an export may declare a time limit per window in its manifest.
+const limit = manifest.max_s_per_window;
+if (limit !== undefined) {
+  const windows = Object.values(manifest.inputs)[0].shape[0];
+  const perWindow = results.ms / 1000 / windows;
+  console.log(JSON.stringify({ s_per_window: perWindow, limit }));
+  if (!(perWindow < limit)) {
+    console.error(`wasm leg: ${perWindow.toFixed(3)} s per window, limit ${limit} s`);
+    process.exit(1);
+  }
+}
