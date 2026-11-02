@@ -62,9 +62,9 @@ names its files and the requirement it serves.
 
 ## Phase 6: Pre-registration, training and the gate (US5, US6)
 
-- [ ] T021 Runner throughput (bench) for the detector configuration; adjust per R5 within the
+- [x] T021 Runner throughput (bench) for the detector configuration; adjust per R5 within the
   plan's rules before registration (SC-003)
-- [ ] T022 `configs/gate-d/plan.json` and the decision record with FR-035's architecture check;
+- [x] T022 `configs/gate-d/plan.json` and the decision record with FR-035's architecture check;
   commit before training (FR-032, FR-034, FR-035)
 - [ ] T023 Train (`train/gd-a`); validation workflow: detector outputs, control tuning (amendment by
   digest), validation report with the carried rule and the validation rule
