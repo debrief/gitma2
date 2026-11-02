@@ -90,18 +90,25 @@ angle, σ, time since zig), curves at every post-zig timestep, efficiency per sl
    Gate 2.* The forecast's mechanism is recorded as wrong; the CV "oracle" row is reported as
    "physics layer, trivial inputs (= untrained model)", not as a ceiling.
 2. **Gross check** — the report (`report/diagnostics.json`) gives the discordant counts, the exact
-   sign test and the gross rows split by cause for the model, least squares and the untrained layer
-   (numbers below once the report lands). The check is reported as met under the registered rule
-   and attributed to the solver and the convergence definitions.
+   sign test and the gross rows split by cause. Least squares 62 gross rows = 24 not converged + 38
+   with range error over 50%; the model 58 = 20 + 38; the untrained layer 58 = 20 + 38. **The 38
+   large-error rows are the same for every estimator; the whole margin is 4 rows where least
+   squares' LM flagged non-convergence and the layer did not.** Model-only gross rows: 0; exact
+   one-sided sign test p = 0.0625. The check is met under the registered rule and is attributed
+   to the convergence definitions and the solver, not to the model or to learning. Model against
+   the untrained layer on the gate rows: median absolute difference 0 on every metric, at most
+   1.4e-4 in relative range (3 of 4,864 rows over 1e-6), no convergence mismatch.
 3. **Amendment disclosure** — `amendment-1.md` now states that the registered rule would have
    stopped the phase at validation (3.71% against a 32.5% floor), that the per-epoch losses seen
    were validation metrics, and its commit times. Its digest is bound below. The forecast's
    "shuffled at naive level" is recorded as wrong.
 4. **Reporting** — `report/eval/` holds tma2-eval on the gate run's own test predictions (medians,
    90th percentiles, gross rates, slices, curves, efficiency per slice against the full-window
-   bound), for the model, least squares, naive, EKF, IMM and the trivial-input layer; the test
-   split's digest is re-checked and nothing is re-scored. `report/gate-rows/` keeps every
-   estimator's gate rows in the repository.
+   bound), for the model, least squares, naive, EKF and IMM (the trivial-input layer's file holds
+   the G5 rows only, so it is compared in `diagnostics.json` instead); the test split's digest is
+   re-checked and nothing is re-scored. `report/gate-rows/` keeps every estimator's gate rows in
+   the repository. At σ = 1°, zig + 5 min: 90th percentile of range error 14.4% (model) against
+   14.5% (least squares), EKF 17.3%, IMM 16.8%; at σ = 2° (not gated) 29.2% against 29.6%.
 5. **Minor findings** — fixed: speed labelled in knots and a time-late efficiency caveat in the
    validation report (script; the committed report is left as generated); oracle added to the
    validation workflow for future gates (on test the oracle row is reported); the layer comment;
@@ -113,4 +120,7 @@ angle, σ, time since zig), curves at every post-zig timestep, efficiency per sl
    the reviewer saw a stale local ref. The second-zig overlap and the median-efficiency caveat go
    into the write-up.
 
-Amendment binding: `amendment-1.md` sha256 recorded with the round-2 commit.
+Amendment binding: `experiments/20261101-g1-decision/amendment-1.md` sha256 `43e165f61072f0081bc3c7416e4187a1bf6da4e5447b66c104593cf6dc598fe8` (wording as
+corrected in round 1; the decision it records is unchanged).
+
+Round 2: the reviewers are re-invited with this response.
