@@ -22,8 +22,8 @@ names its files and the requirement it serves.
 
 ## Phase 2: Data and references (US3, US4)
 
-- [ ] T007 Validation split seed 304 (100,000; f32pack) and its digest
-- [ ] T008 `tma2-tune --criterion g5` and the G5 grid of R7; run on seed 304 from a clean tree;
+- [x] T007 Validation split seed 304 (100,000; f32pack) and its digest
+- [x] T008 `tma2-tune --criterion g5` and the G5 grid of R7; run on seed 304 from a clean tree;
   commit the tune record (FR-026)
 - [x] T009 IMM: expose μ_CT per row (`references/imm.py`), with a conformance test that the
   estimates are unchanged (FR-024)
@@ -48,9 +48,9 @@ names its files and the requirement it serves.
 
 - [x] T016 `detect/controls.py`: CUSUM on least-squares innovations, linearised GLR (W = 30),
   IMM μ_CT; `tma2-controls tune|run`; tests on synthetic manoeuvres (FR-022–FR-024, R6)
-- [ ] T017 `detect/matching.py`: alarms, detection, delays, misses, unresolved, held-leg false
+- [x] T017 `detect/matching.py`: alarms, detection, delays, misses, unresolved, held-leg false
   alarms (G5 fraction and per hour), kind accuracy, F1, ECE; tests (FR-028, R8)
-- [ ] T018 `detect/downstream.py`: exported knots and kinds → physics layer with trivial weights at
+- [x] T018 `detect/downstream.py`: exported knots and kinds → physics layer with trivial weights at
   G5 rows; reported beside batch LS, IMM, EKF, oracle (FR-027, FR-028)
 - [ ] T019 `eval/gd.py` + `tma2-gd`: bindings and refusals, Gate D checks with 97.5% clustered
   bootstraps, validation rule, record and verdict; tests (FR-029–FR-031)

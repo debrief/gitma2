@@ -29,3 +29,22 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(json.dumps({"scenarios": n, "out": a.out, "weights_digest": model.weights_digest}))
     return 0
+
+
+def downstream_main(argv: list[str] | None = None) -> int:
+    """``tma2-downstream``: the physics layer fed a detector file's exported knots at G5 rows."""
+    from tma2.detect.downstream import downstream_split
+
+    ap = argparse.ArgumentParser(prog="tma2-downstream")
+    ap.add_argument("--detector", required=True, help="tma2-detect output")
+    ap.add_argument("--truth", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--limit", type=int)
+    a = ap.parse_args(argv)
+    try:
+        res = downstream_split(a.detector, a.truth, a.out, limit=a.limit)
+    except (OSError, ValueError, RecordError, StopIteration) as e:
+        print(f"tma2-downstream: {e or 'detector file ends before the truth file'}", file=sys.stderr)
+        return 2
+    print(json.dumps(res))
+    return 0
