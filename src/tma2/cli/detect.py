@@ -44,7 +44,9 @@ def downstream_main(argv: list[str] | None = None) -> int:
     try:
         res = downstream_split(a.detector, a.truth, a.out, limit=a.limit)
     except (OSError, ValueError, RecordError, StopIteration) as e:
-        print(f"tma2-downstream: {e or 'detector file ends before the truth file'}", file=sys.stderr)
+        print(
+            f"tma2-downstream: {e or 'detector file ends before the truth file'}", file=sys.stderr
+        )
         return 2
     print(json.dumps(res))
     return 0
