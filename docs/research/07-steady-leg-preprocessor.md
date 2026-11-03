@@ -69,8 +69,8 @@ decision is taken by the physics layer, the same piecewise solver Gate 2 uses:
    degrees of freedom, the velocity increment). It is used from row a on.
 
 Placement is then within 2 rows (20 s, median) of the true boundary, against 235 s from the
-window alone. τ removes chance alarms: at τ = 13.8, 17% of knots are false at any nomination
-rate.
+window alone. τ removes chance alarms: at τ = 13.8, 13–17% of knots are false at every
+nomination rate tried, and 6–9% at τ = 20.
 
 Results at σ = 1° G5 rows, validation seed 304, first 500 scenarios (1,663 rows):
 
@@ -78,15 +78,29 @@ Results at σ = 1° G5 rows, validation seed 304, first 500 scenarios (1,663 row
 | --- | --- | --- | --- | --- |
 | batch least squares (the layer, no knots) | 12.6% | 7.9% | 43° | 1.97 kt |
 | IMM (frozen) | 9.7% | 7.8% | 22° | 1.83 kt |
-| confirmed knots, 10% nomination, τ = 13.8, speed prior | **9.2%** | **6.5%** | 24° | **1.47 kt** |
+| confirmed knots, 20% nomination, τ = 13.8, speed prior | **8.5%** | **6.1%** | **21°** | **1.39 kt** |
 | oracle (truth spans) | 5.4% | 4.4% | 9° | 0.78 kt |
 
-The full sweep is in `confirm.json`. The pattern:
-- higher τ is better in every row;
-- more nominations help once τ is strict;
-- the speed prior always helps.
+The sweeps are in `confirm.json` (nomination 1–10%, τ 6–13.8) and `confirm2.log` (10–20%,
+τ 13.8–30). Median range error with the speed prior:
 
-<!-- SWEEP2 -->
+| Nomination | τ = 6 | τ = 9.21 | τ = 13.8 | τ = 20 | τ = 30 |
+| --- | --- | --- | --- | --- | --- |
+| 1% | | | 10.7% | | |
+| 3% | | | 9.7% | | |
+| 5% | | | 9.4% | | |
+| 10% | | | 9.2% | 9.2% | 9.7% |
+| 20% | | | **8.5%** | 8.7% | 9.1% |
+| 40% | | | (running) | | |
+
+(τ = 6 and 9.21 were worse than 13.8 at every nomination rate; `confirm.json` has them.)
+
+The pattern:
+- **Nominating more helps.** Nominations are cheap to reject, and misses are what cost range now.
+- **τ ≈ 14–20 is the right strictness.** τ = 6–9 lets chance knots through. τ = 30 rejects true
+  ones: knots per scenario fall from 1.34 to 0.99 at 20% nomination.
+- **The speed prior always helps.** It is worth about 1 percentage point of range error and
+  0.5 kt of speed.
 
 ## 5. The Steady Leg flag
 
@@ -104,16 +118,17 @@ the segmentation the physics layer consumes.
 
 ## 6. Critical assessment
 
-- **In-sample.** τ, the nomination rate and W were chosen on the rows scored. The margin over
-  the IMM (9.2% against 9.7%) is small and has no interval yet. It needs a fresh validation
-  split and a scenario-clustered paired bootstrap before anyone relies on it.
-- **Course is worse than the IMM** (24° against 22°), and speed and settled range are better. A
-  per-quantity verdict is needed, not an overall one.
-- **Most of the oracle's gain is still missing.** At 9.2% against the oracle's 5.4%, about 11%
+- **In-sample.** τ, the nomination rate and W were chosen from 16 configurations on the rows
+  scored. The margin over the IMM (8.5% against 9.7%) has no interval yet. It needs a fresh
+  validation split and a scenario-clustered paired bootstrap before anyone relies on it.
+- **Course only ties the IMM** (21.2° against 21.9°). Range, settled range and speed are clearly
+  better. A per-quantity verdict is needed, not an overall one.
+- **Most of the oracle's gain is still missing.** At 8.5% against the oracle's 5.4%, about 29%
   of the gap between the IMM and the oracle is closed. Misses dominate now that false knots are
-  17%.
-- **Cost.** About 13 extra layer solves per alarm episode. That is cheap offline, but heavier
-  than a filter for real-time use.
+  13%.
+- **Cost.** About 13 extra layer solves per alarm episode, and alarm episodes rise with the
+  nomination rate: one 500-scenario configuration took 23 minutes at 20% against 15 at 10%.
+  That is fine offline, but heavier than a filter for real-time use.
 - **It is classical.** This is option A of note 06 done well, not learning. It raises the bar a
   learned detector has to beat (option B), and it is the obvious source of B's inputs.
 
