@@ -192,6 +192,8 @@ spans: the confirmed detector finds more of the harder spans, and finds them lat
   - τ = 13.8.
   - Knots carry the speed-continuity prior.
 - **Code:** `tma2.detect.confirm.confirm_knots`.
+- **Add:** re-test while an episode stays raised (§5 item 10). It must be measured on
+  validation before the Gate 2 spec fixes it.
 
 Annex A §A.6 asks for "the CUSUM/GLR segmenter at an operating point its spec declares". This is
 the GLR segmenter with a confirmation step. The Gate 2 spec will declare the step, its
@@ -231,6 +233,18 @@ becomes an annex amendment, and the owner merges that.
 9. **Cost.** Confirmation runs about 5 s per scenario on one core (12 candidate solves per
    episode). A tracker running in real time at 10 s per bearing can afford it. A Gate 2 training
    loop cannot: knots must be computed once, offline, per scenario.
-10. **The detectability measure is an oracle quantity.** It uses true knots, measured 300 s
+10. **Why detectable spans are missed.** 117 of 689 spans with detectability ≥ 50 have no knot
+    on them. The causes:
+    - **60 (51%): already raised.** The GLR was already above its threshold when the manoeuvre
+      began, often since the ownship zig. Confirmation runs only at an episode's first row, so a
+      manoeuvre inside a running episode is never tested. Sample 513 in the deck is one.
+    - **45: nominated but not accepted.** Either the confirmation rejected the knot, or it put
+      the knot off the span.
+    - **12: never nominated.** In 11 of these, the GLR is 0 throughout, because the per-timestep
+      least-squares states it is linearised at are invalid (long range).
+
+    Re-testing while an episode stays raised (say every 6 rows) is a cheap fix for the first
+    group, and Gate 2's spec should include it.
+11. **The detectability measure is an oracle quantity.** It uses true knots, measured 300 s
     after the end. It describes the data, not a detector, and it understates evidence that
     arrives later.
