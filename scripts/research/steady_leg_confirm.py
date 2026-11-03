@@ -29,18 +29,17 @@ import torch
 
 from tma2.cli.oracle import run_layer
 from tma2.data.f32pack import iter_pack_raw
+from tma2.detect.confirm import BATCH, confirm_knots, knot_inputs
 from tma2.detect.controls import parse_imm_name
-from tma2.detect.matching import episodes
 from tma2.detect.steady_leg import split_stat, window_fits
 from tma2.eval.errors import Truth, row_error
 from tma2.eval.rows import G5_GATE_MIN, settled_row
 from tma2.physics.layer import PhysicsLayer
-from tma2.physics.segmentation import LayerInputs, oracle_inputs, trivial_inputs
+from tma2.physics.segmentation import LayerInputs, oracle_inputs
 from tma2.references.classical import bearing_data_from_arrays
 from tma2.references.imm import imm_predict
 
 IMM = "imm-cv0.0003-ct0.03-w0.003-s0.001-p4-r16"
-BATCH = 256
 
 
 def main() -> int:
@@ -75,24 +74,6 @@ def main() -> int:
     def g5(meta: dict[str, Any], d: Any) -> list[int]:
         rows = (d.zig_index + int(round(x * 60 / float(d.t[1] - d.t[0]))) for x in G5_GATE_MIN)
         return [k for k in rows if k < d.n]
-
-    def knot_inputs(d: Any, k: int, knots: list[int], prior: bool) -> LayerInputs | None:
-        base = trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, k)
-        if base is None:
-            return None
-        cp = np.zeros(d.n)
-        for r in knots:
-            if 0 < r <= k:
-                cp[r] = 1.0
-        sw = cp.copy() if prior else np.zeros(d.n)
-        return LayerInputs(cp, sw, base.log_weight, base.theta0, sw.copy())
-
-    def costs(items: list[tuple[Any, int, LayerInputs]]) -> list[float]:
-        out: list[float] = []
-        for s in range(0, len(items), BATCH):
-            res = run_layer(layer, items[s : s + BATCH], r_max)
-            out.extend(float(c) for c in res.cost)
-        return out
 
     def score(make: Any) -> dict[str, Any]:
         items: list[tuple[Any, int, LayerInputs]] = []
@@ -139,42 +120,17 @@ def main() -> int:
         }
 
     def confirm(h: float, tau: float) -> list[list[tuple[int, int]]]:
-        eps = [[e0 for e0, _e1 in episodes(lam > h, 10.0, merge_s=0.0)] for *_x, lam in scen]
-        acc: list[list[tuple[int, int]]] = [[] for _ in scen]
-        for p in range(max((len(e) for e in eps), default=0)):
-            items: list[tuple[Any, int, LayerInputs]] = []
-            meta_: list[tuple[int, int, int]] = []
-            for i, (_m, d, _t, _l) in enumerate(scen):
-                if p >= len(eps[i]):
-                    continue
-                al = eps[i][p]
-                cur = [r for _a, r in acc[i]]
-                cands = [
-                    c
-                    for c in range(max(1, al - w + 1), al + 1, a.step)
-                    if all(abs(c - r) > a.step for r in cur)
-                ]
-                base = knot_inputs(d, al, cur, False)
-                if base is None or not cands:
-                    continue
-                items.append((d, al, base))
-                meta_.append((i, al, -1))
-                for c in cands:
-                    inp = knot_inputs(d, al, [*cur, c], False)
-                    assert inp is not None
-                    items.append((d, al, inp))
-                    meta_.append((i, al, c))
-            best: dict[int, dict[str, float]] = {}
-            for (i, al, c), cst in zip(meta_, costs(items), strict=True):
-                b = best.setdefault(i, {})
-                if c < 0:
-                    b["base"] = cst
-                elif cst < b.get("cost", math.inf):
-                    b.update(cost=cst, row=c, alarm=al)
-            for i, b in best.items():
-                if "row" in b and b["base"] - b["cost"] > tau:
-                    acc[i].append((int(b["alarm"]), int(b["row"])))
-        return acc
+        acc = confirm_knots(
+            layer,
+            [d for _m, d, _t, _l in scen],
+            [lam for *_x, lam in scen],
+            h,
+            tau,
+            w,
+            a.step,
+            r_max,
+        )
+        return [[(x.alarm, x.row) for x in kn] for kn in acc]
 
     t0 = time.time()
     results: dict[str, Any] = {"scenarios": len(scen), "window": w, "step": a.step}
