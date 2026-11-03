@@ -37,6 +37,7 @@ from typing import Any
 import numpy as np
 import torch
 
+from tma2.cli.controls import held_g5_rows
 from tma2.cli.oracle import run_layer
 from tma2.data.f32pack import iter_pack_raw
 from tma2.detect.confirm import Accepted, confirm_knots, knot_inputs, knots_at, layer_costs
@@ -67,6 +68,7 @@ IMM = "imm-cv0.0003-ct0.03-w0.003-s0.001-p4-r16"
 W = 36
 STEP = 3
 FARS = (0.01, 0.03, 0.05, 0.1)
+G5_FARS = (0.02, 0.05)  # held-leg G5 rows: Gate D's D-false measure (limit 5%)
 PER_ROW = ("split", "glr", "cusum", "imm")
 TOL_ROWS = 6  # ±60 s at 10 s
 LEVEL = 0.975
@@ -225,6 +227,12 @@ def thresholds(recs: list[dict[str, Any]], metas: dict[int, dict[str, Any]]) -> 
         for q in FARS:
             h, f = tune_threshold(vals, q)
             out[name][str(q)] = {"threshold": h, "achieved": f}
+        g5 = np.concatenate(
+            [r[name][held_g5_rows(metas[r["ordinal"]])] for r in recs if r["set"] == "tune"]
+        )
+        for q in G5_FARS:
+            h, f = tune_threshold(g5, q)
+            out[name][f"g5:{q}"] = {"threshold": h, "achieved": f}
     return out
 
 
@@ -361,6 +369,7 @@ def span_table(
             {
                 "resolved": b < n or bool(hit.size),
                 "complete": b < n,
+                "window_rows": b - a + 1,
                 "detected": bool(hit.size),
                 "delay_s": float(hit[0]) * dt if hit.size else None,
                 "onset": bool(onset.size),
@@ -402,7 +411,7 @@ def describe(
 ) -> dict[str, Any]:
     scored = []
     spans: list[dict[str, Any]] = []
-    held_n = held_hit = 0
+    held_n = held_hit = held_onsets = 0
     good = total = 0
     for j, meta, tgt, _own in scen:
         n = int(meta["samples"])
@@ -421,6 +430,9 @@ def describe(
         hr = held_rows(meta, n)
         held_n += len(hr)
         held_hit += int(al[hr].sum())
+        held_set = set(hr)
+        prev = np.concatenate([[False], al[:-1]])
+        held_onsets += sum(1 for k in np.flatnonzero(al & ~prev) if int(k) in held_set)
         if kn is not None:
             g, t = knot_precision(meta, kn)
             good += g
@@ -442,6 +454,13 @@ def describe(
     }
     out["held_row_false_alarm"] = held_hit / held_n if held_n else math.nan
     res = [r for r in spans if r["resolved"]]
+    # Chance floor: the probability that an alarm episode begins somewhere in a detection window
+    # of the mean length by chance, at the held-leg onset rate (Poisson approximation).
+    rate = held_onsets / held_n if held_n else math.nan
+    length = float(np.mean([r["window_rows"] for r in spans if r["complete"]] or [math.nan]))
+    out["held_onsets_per_row"] = rate
+    out["window_rows_mean"] = length
+    out["chance_onset_recall"] = 1.0 - math.exp(-rate * length)
     out["recall"] = sum(r["detected"] for r in res) / len(res) if res else math.nan
     out["onset_recall"] = sum(r["onset"] for r in res) / len(res) if res else math.nan
     od = [r["onset_delay_s"] for r in res if r["onset"]]
@@ -605,6 +624,10 @@ def cmd_report(a: argparse.Namespace) -> int:
                     for j, *_ in scen
                 }
             det[f"{name}@{q:g}"] = describe(name, scen, al, kn, recs)
+        for q in G5_FARS:
+            h = th[name][f"g5:{q}"]["threshold"]
+            al = {j: recs[j][name] > h for j, *_ in scen}
+            det[f"{name}@g5:{q:g}"] = describe(name, scen, al, None, recs)
         print(f"{name} scored [{time.time() - t0:.0f} s]", flush=True)
     confirmed = parse_configs(a.configs)
     for nom, q, tau in confirmed:
@@ -613,28 +636,41 @@ def cmd_report(a: argparse.Namespace) -> int:
         al = {j: alarm_from_confirmed(int(m["samples"]), acc[j]) for j, m, *_ in scen}
         kn = {j: [x.row for x in acc[j]] for j, *_ in scen}
         det[nm] = describe(nm, scen, al, kn, recs)
-        # Matched false alarms: the GLR and the split statistic alone at the confirmed
-        # detector's own held-row false-alarm fraction, tuned on the scored rows (in the
-        # controls' favour, as Annex A §A.2 tunes controls to the detector's rate).
-        f = det[nm]["held_row_false_alarm"]
+        # Matched false alarms: each per-row control at the confirmed detector's own false-alarm
+        # fraction, on all held-leg rows and on held-leg G5 rows (Gate D's D-false measure),
+        # tuned on the scored rows (in the controls' favour, as Annex A §A.2 tunes controls to
+        # the detector's rate).
         det[nm]["matched"] = {}
-        for ctrl in ("glr", "split"):
-            vals = np.concatenate(
-                [recs[j][ctrl][held_rows(m, int(m["samples"]))] for j, m, *_ in scen]
-            )
-            h, got = tune_threshold(vals, f)
-            alc = {j: recs[j][ctrl] > h for j, *_ in scen}
-            dc = describe(ctrl, scen, alc, None, recs)
-            det[nm]["matched"][ctrl] = {
-                "threshold": h,
-                "held_row_false_alarm": got,
-                "recall": dc["recall"],
-                "onset_recall": dc["onset_recall"],
-                "delay_median_s": dc["delay_median_s"],
-                "onset_delay_median_s": dc["onset_delay_median_s"],
-                "miss_difference": miss_difference(det[nm], dc, "detected"),
-                "onset_miss_difference": miss_difference(det[nm], dc, "onset"),
-            }
+        for measure, key in (
+            ("held_row", "held_row_false_alarm"),
+            ("g5", "held_leg_g5_false_alarm"),
+        ):
+            f = det[nm][key]
+            for ctrl in PER_ROW:
+                vals = np.concatenate(
+                    [
+                        recs[j][ctrl][
+                            held_rows(m, int(m["samples"]))
+                            if measure == "held_row"
+                            else held_g5_rows(m)
+                        ]
+                        for j, m, *_ in scen
+                    ]
+                )
+                h, got = tune_threshold(vals, f)
+                alc = {j: recs[j][ctrl] > h for j, *_ in scen}
+                dc = describe(ctrl, scen, alc, None, recs)
+                det[nm]["matched"][f"{ctrl}@{measure}"] = {
+                    "threshold": h,
+                    "false_alarm": got,
+                    "recall": dc["recall"],
+                    "onset_recall": dc["onset_recall"],
+                    "chance_onset_recall": dc["chance_onset_recall"],
+                    "delay_median_s": dc["delay_median_s"],
+                    "onset_delay_median_s": dc["onset_delay_median_s"],
+                    "miss_difference": miss_difference(det[nm], dc, "detected"),
+                    "onset_miss_difference": miss_difference(det[nm], dc, "onset"),
+                }
         print(f"{nm} scored [{time.time() - t0:.0f} s]", flush=True)
     # Downstream on the scored G5 rows.
     ds: dict[str, Any] = {}
