@@ -692,9 +692,13 @@ def cmd_report(a: argparse.Namespace) -> int:
         acc = load_confirmed(a.work, nm)
         al = {j: alarm_from_confirmed(int(m["samples"]), acc[j]) for j, m, *_ in scen}
         kn = {j: knots_at(acc[j], int(m["samples"]) - 1) for j, m, *_ in scen}
+        # each confirmed turn located at its midpoint (a window's centre, a point knot itself), so
+        # windows and point knots get the same ±3 min tolerance
         tn = {
-            j: [(x.row, min(x.end, int(m["samples"]) - 1) if x.end > 0 else x.row) for x in acc[j]]
-            for j, m, *_ in scen
+            j: [
+                (x.row + (x.end - x.row) // 2,) * 2 if x.end > 0 else (x.row, x.row) for x in acc[j]
+            ]
+            for j, *_ in scen
         }
         det[nm] = describe(nm, scen, al, kn, recs, tn)
         # Matched false alarms: each per-row control at the confirmed detector's own false-alarm
@@ -782,6 +786,22 @@ def cmd_report(a: argparse.Namespace) -> int:
             "settled_course_vs_ls": ratio(ds[nm], ds["least_squares"], 3, True),
             "settled_speed_vs_ls": ratio(ds[nm], ds["least_squares"], 4, True),
         }
+        point = config_name(nom, q, tau)
+        if w and point in ds:
+            # turn windows against point knots, same nominator, same rows
+            result["intervals"][nm].update(
+                {
+                    f"{f}_vs_point": ratio(ds[nm], ds[point], col, settled)
+                    for f, col, settled in (
+                        ("range", 2, False),
+                        ("course", 3, False),
+                        ("speed", 4, False),
+                        ("settled_range", 2, True),
+                        ("settled_course", 3, True),
+                        ("settled_speed", 4, True),
+                    )
+                }
+            )
     result["seconds"] = time.time() - t0
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)

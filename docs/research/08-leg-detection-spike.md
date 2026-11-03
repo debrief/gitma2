@@ -194,6 +194,10 @@ spans: the confirmed detector finds more of the harder spans, and finds them lat
 - **Code:** `tma2.detect.confirm.confirm_knots`.
 - **Add:** re-test while an episode stays raised (§5 item 10). It must be measured on
   validation before the Gate 2 spec fixes it.
+- **Turns as 3-minute windows (§6):** carried as an option for the Gate 2 spec to declare.
+  Windows give 7% lower speed error, with an interval wholly below 1. Point knots detect
+  slightly more manoeuvres. Neither is clearly better on range or course.
+- **Scoring:** report each knot against the turn ±3 min next to Annex A's ±60 s.
 
 Annex A §A.6 asks for "the CUSUM/GLR segmenter at an operating point its spec declares". This is
 the GLR segmenter with a confirmation step. The Gate 2 spec will declare the step, its
@@ -222,8 +226,8 @@ becomes an annex amendment, and the owner merges that.
    below 13 are out of reach for any detector.
 5. **Speed changes are mostly invisible** (onset recall 0.28; 81% below the detectability
    floor). The speed prior is what keeps settled speed at 0.74 kt, not detection.
-6. **19% of knots are off-span.** Many are late placements of a real manoeuvre (sample 555 in
-   the deck). Some are genuine false knots (sample 932, a held-course scenario: 2 of 138 such
+6. **19% of knots are off-span at ±60 s, but only 4% at ±3 min** (§6). Most are placed 1–3
+   min from a real manoeuvre (sample 555 in the deck). Some are genuine false knots (sample 932, a held-course scenario: 2 of 138 such
    scenarios got a knot). Each costs a velocity increment's variance.
 7. **Annex A's detection window rewards flicker.** [start − 1, end + 30] is about 36 rows, so a
    statistic alarming on 5% of rows in short bursts gets about 0.55 recall by chance. Future
@@ -248,3 +252,60 @@ becomes an annex amendment, and the owner merges that.
 11. **The detectability measure is an oracle quantity.** It uses true knots, measured 300 s
     after the end. It describes the data, not a detector, and it understates evidence that
     arrives later.
+
+## 6. Turns as 3-minute windows (owner, 3 November 2026)
+
+A target turn is not instantaneous. The owner asked for a 3-minute window, as in the 2017
+Debrief note "Identifying multiple target legs", which moves a 3-minute window through an
+ownship leg and compares the fits before and after it. Two changes follow.
+
+**Detector: `confirm_knots(..., turn_rows=18)`.** A candidate is a window [c, c + 3 min]:
+- **Knots:** one at each end, with the target on the chord between them. The speed prior sits
+  on the end knot, as the oracle's does.
+- **Closed window:** it adds two velocity increments, so it is tested at the χ² point with
+  4 degrees of freedom that has τ's tail probability (18.45 for τ 13.8).
+- **Open window:** one still open at the alarm row is tested as a point knot, at τ.
+- **The end knot** comes into use once the window has passed.
+
+**Scoring.** Each confirmed turn is located at its midpoint: a window's centre, or a point
+knot itself. It counts as correct if the midpoint lies in the manoeuvre ±3 min. A span counts as
+segmented if a turn does. Annex A's ±60 s figures stay alongside.
+
+Same nominator (GLR, 20%), same τ, same 1,000 scenarios:
+
+| | Point knots | 3-min windows |
+| --- | --- | --- |
+| Turns per engagement | 1.23 | 1.00 |
+| Onset recall | 0.59 | 0.52 |
+| Held G5 rows flagged | 3.1% | 2.5% |
+| Span recall, ±60 s / ±3 min | 0.54 / 0.66 | 0.58 / 0.63 |
+| Turn precision, ±60 s / ±3 min | 0.81 / 0.96 | 0.54 per knot / 0.93 |
+| Span F1 at ±3 min | 0.78 | 0.75 |
+| Range ÷ IMM | 0.81 [0.74, 0.88] | 0.79 [0.72, 0.87] |
+| Course ÷ IMM | 0.95 [0.81, 1.06] | 0.91 [0.80, 0.99] |
+| Speed ÷ IMM | 0.63 [0.58, 0.69] | 0.59 [0.53, 0.65] |
+| Settled range, course, speed ÷ LS | 0.71, 0.63, 0.72 | 0.74, 0.61, 0.66 |
+
+Windows ÷ point knots, paired on the same rows:
+- **All G5 rows:** range 0.98 [0.93, 1.03], course 0.96 [0.88, 1.03], speed **0.93 [0.87, 0.99]**.
+- **Settled rows:** range 1.05 [0.98, 1.11], course 0.97 [0.88, 1.08], speed 0.92 [0.84, 1.01].
+
+**What this shows:**
+- **The owner's point holds for scoring.** At ±3 min, point knots' precision rises from 0.81 to
+  0.96 and span F1 from 0.65 to 0.78. Most "off-span" knots are real manoeuvres located 1–3 min
+  out. Annex A's ±60 s understates the segmenter.
+- **Windows trade detection for speed.**
+  - Fewer turns are accepted: the stricter test on closed windows, and two close manoeuvres
+    merge into one window. Onset recall falls by 7 points.
+  - Speed error falls by 7% (interval wholly below 1). Range and course tie with point knots.
+  - Against the IMM, course is now wholly below 1. The change from point knots is not
+    significant.
+- **Not tuned.** Windows ran at τ's equivalent only. A lower closed-window threshold might
+  recover the lost recall. The window length (3 min) was fixed, not fitted. Most simulated
+  turns last under 2 min (median 50 s, P90 100 s), so the window is generous for this generator.
+- **The window ÷ IMM figures share the caveat of §5 item 1:** they were selected on the
+  scoring set.
+
+Records: `spike.json` configuration `glr-q0.2-t13.8-w18`, with `*_vs_point` intervals. The
+±3-min fields are `span_recall_3min`, `turn_precision_3min` and `span_f1_3min`.
+
