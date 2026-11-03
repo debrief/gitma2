@@ -40,7 +40,14 @@ import torch
 from tma2.cli.controls import held_g5_rows
 from tma2.cli.oracle import run_layer
 from tma2.data.f32pack import iter_pack_raw
-from tma2.detect.confirm import Accepted, confirm_knots, knot_inputs, knots_at, layer_costs
+from tma2.detect.confirm import (
+    Accepted,
+    confirm_knots,
+    knot_inputs,
+    knots_at,
+    layer_costs,
+    window_inputs,
+)
 from tma2.detect.controls import (
     CUSUM_DRIFT,
     GLR_WINDOW,
@@ -70,7 +77,8 @@ STEP = 3
 FARS = (0.01, 0.03, 0.05, 0.1)
 G5_FARS = (0.02, 0.05)  # held-leg G5 rows: Gate D's D-false measure (limit 5%)
 PER_ROW = ("split", "glr", "cusum", "imm")
-TOL_ROWS = 6  # ±60 s at 10 s
+TOL_ROWS = 6  # ±60 s at 10 s (Annex A)
+TOL3_ROWS = 18  # ±3 min: a turn is not instantaneous (owner, 3 November 2026)
 LEVEL = 0.975
 RESAMPLES = 2000
 KT = 3600.0 / 1852.0
@@ -254,23 +262,27 @@ def tune_metas(path: str, tune: int) -> dict[int, dict[str, Any]]:
 # ---------------------------------------------------------------- confirm
 
 
-def parse_configs(s: str) -> list[tuple[str, float, float]]:
-    out: list[tuple[str, float, float]] = []
+def parse_configs(s: str) -> list[tuple[str, float, float, int]]:
+    """``nom:q:tau[:turn_rows]``; turn_rows > 0 confirms turn windows (tma2.detect.confirm)."""
+    out: list[tuple[str, float, float, int]] = []
     for c in filter(None, s.split(",")):
-        nom, q, tau = c.split(":")
-        out.append((nom, float(q), float(tau)))
+        parts = c.split(":")
+        nom, q, tau = parts[:3]
+        out.append((nom, float(q), float(tau), int(parts[3]) if len(parts) > 3 else 0))
     return out
 
 
-def config_name(nom: str, q: float, tau: float) -> str:
-    return f"{nom}-q{q:g}-t{tau:g}"
+def config_name(nom: str, q: float, tau: float, w: int = 0) -> str:
+    return f"{nom}-q{q:g}-t{tau:g}" + (f"-w{w}" if w else "")
 
 
-def confirm_task(args: tuple[str, str, int, int, str, float, float, float, int, int]) -> str:
-    path, work, tune, score, nom, q, tau, h, shard, shards = args
+def confirm_task(
+    args: tuple[str, str, int, int, str, float, float, int, float, int, int],
+) -> str:
+    path, work, tune, score, nom, q, tau, w, h, shard, shards = args
     torch.set_num_threads(1)
     torch.set_default_dtype(torch.float64)
-    out = Path(work) / "confirm" / f"{config_name(nom, q, tau)}-s{shard}of{shards}.json"
+    out = Path(work) / "confirm" / f"{config_name(nom, q, tau, w)}-s{shard}of{shards}.json"
     if out.exists():
         return f"{out.name} (cached)"
     recs = {r["ordinal"]: r for r in load_stats(work) if r["set"] == "score"}
@@ -284,13 +296,15 @@ def confirm_task(args: tuple[str, str, int, int, str, float, float, float, int, 
         stats.append(recs[j][nom])
         ords.append(j)
     t0 = time.time()
-    acc = confirm_knots(PhysicsLayer(), data, stats, h, tau, W, STEP, max(d.n for d in data))
+    acc = confirm_knots(
+        PhysicsLayer(), data, stats, h, tau, W, STEP, max(d.n for d in data), turn_rows=w
+    )
     rec = {
-        "config": config_name(nom, q, tau),
+        "config": config_name(nom, q, tau, w),
         "threshold": h,
         "seconds": time.time() - t0,
         "knots": {
-            str(j): [[x.alarm, x.alarm_end, x.row, x.cost_drop] for x in kn]
+            str(j): [[x.alarm, x.alarm_end, x.row, x.cost_drop, x.end] for x in kn]
             for j, kn in zip(ords, acc, strict=True)
         },
     }
@@ -305,10 +319,10 @@ def cmd_confirm(a: argparse.Namespace) -> int:
     recs = load_stats(a.work)
     metas = tune_metas(a.validation, a.tune)
     tasks = []
-    for nom, q, tau in parse_configs(a.configs):
+    for nom, q, tau, w in parse_configs(a.configs):
         h = config_threshold(nom, q, recs, metas)
         for s in range(a.shards):
-            tasks.append((a.validation, a.work, a.tune, a.score, nom, q, tau, h, s, a.shards))
+            tasks.append((a.validation, a.work, a.tune, a.score, nom, q, tau, w, h, s, a.shards))
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
         for msg in ex.map(confirm_task, tasks):
             print(msg, flush=True)
@@ -325,7 +339,12 @@ def load_confirmed(work: str, name: str) -> dict[int, list[Accepted]]:
         raise FileNotFoundError(f"{name}: {len(files)} of {shards} shards")
     for p in files:
         for j, kn in json.loads(p.read_text())["knots"].items():
-            out[int(j)] = [Accepted(int(x[0]), int(x[1]), int(x[2]), float(x[3])) for x in kn]
+            out[int(j)] = [
+                Accepted(
+                    int(x[0]), int(x[1]), int(x[2]), float(x[3]), int(x[4]) if len(x) > 4 else -1
+                )
+                for x in kn
+            ]
     return out
 
 
@@ -345,6 +364,7 @@ def span_table(
     al: np.ndarray,
     knots: list[int] | None,
     detect: list[float],
+    turns: list[tuple[int, int]] | None = None,
 ) -> list[dict[str, Any]]:
     """Per span: resolved, detected, delay, kind, size band, detectability band, localisation.
 
@@ -360,10 +380,16 @@ def span_table(
         hit = np.flatnonzero(al[max(a, 0) : min(b, n - 1) + 1])
         onset = rising[(rising >= max(a, 0)) & (rising <= min(b, n - 1))]
         loc = None
+        seg3 = False
         if knots:
             near = [r for r in knots if a - TOL_ROWS <= r <= int(sp["end_index"]) + TOL_ROWS]
             if near:
                 loc = min(min(abs(r - a), abs(r - int(sp["end_index"]))) for r in near)
+        if turns:
+            # a confirmed turn (a point knot, or a window [row, end]) overlapping the span ±3 min
+            seg3 = any(
+                r0 <= int(sp["end_index"]) + TOL3_ROWS and r1 >= a - TOL3_ROWS for r0, r1 in turns
+            )
         size = span_size(sp, tgt)
         rows.append(
             {
@@ -383,6 +409,7 @@ def span_table(
                 if math.isfinite(detect[s_i])
                 else "n/a",
                 "segmented": loc is not None,
+                "segmented_3min": seg3,
                 "localisation_rows": loc,
             }
         )
@@ -402,17 +429,36 @@ def knot_precision(meta: dict[str, Any], knots: list[int]) -> tuple[int, int]:
     return good, len(knots)
 
 
+def turn_precision(meta: dict[str, Any], turns: list[tuple[int, int]]) -> tuple[int, int]:
+    """Confirmed turns (point knots or windows) that overlap some span ±3 min, and their count."""
+    spans = meta.get("manoeuvres") or []
+    good = sum(
+        1
+        for r0, r1 in turns
+        if any(
+            r0 <= int(s["end_index"]) + TOL3_ROWS and r1 >= int(s["start_index"]) - 1 - TOL3_ROWS
+            for s in spans
+        )
+    )
+    return good, len(turns)
+
+
 def describe(
     name: str,
     scen: list[tuple[int, dict[str, Any], np.ndarray, np.ndarray]],
     alarms: dict[int, np.ndarray],
     knots: dict[int, list[int]] | None,
     recs: dict[int, dict[str, Any]],
+    turns: dict[int, list[tuple[int, int]]] | None = None,
 ) -> dict[str, Any]:
+    """``turns``: each confirmed turn as (first, last) row, for the ±3 min measures; by default
+    each knot is a turn of its own."""
+    if turns is None and knots is not None:
+        turns = {j: [(r, r) for r in v] for j, v in knots.items()}
     scored = []
     spans: list[dict[str, Any]] = []
     held_n = held_hit = held_onsets = 0
-    good = total = 0
+    good = total = good3 = total3 = 0
     for j, meta, tgt, _own in scen:
         n = int(meta["samples"])
         al = alarms[j]
@@ -424,7 +470,8 @@ def describe(
             else [],
         }
         scored.append(score_scenario(meta, det, name))
-        for row in span_table(meta, tgt, al, kn, recs[j]["detectability"]):
+        tn = turns[j] if turns is not None else None
+        for row in span_table(meta, tgt, al, kn, recs[j]["detectability"], tn):
             row["ordinal"] = j
             spans.append(row)
         hr = held_rows(meta, n)
@@ -437,6 +484,10 @@ def describe(
             g, t = knot_precision(meta, kn)
             good += g
             total += t
+        if tn is not None:
+            g3, t3 = turn_precision(meta, tn)
+            good3 += g3
+            total3 += t3
     s = summary(scored)
     out = {
         k: s[k]
@@ -489,6 +540,12 @@ def describe(
         out["knot_precision"] = prec
         out["span_f1"] = 2 * seg * prec / (seg + prec) if seg + prec > 0 else math.nan
         out["localisation_median_s"] = float(np.median(locs)) * 10.0 if locs else math.nan
+        seg3 = sum(r["segmented_3min"] for r in res) / len(res) if res else math.nan
+        prec3 = good3 / total3 if total3 else math.nan
+        out["turns_per_scenario"] = total3 / len(scen)
+        out["span_recall_3min"] = seg3
+        out["turn_precision_3min"] = prec3
+        out["span_f1_3min"] = 2 * seg3 * prec3 / (seg3 + prec3) if seg3 + prec3 > 0 else math.nan
     out["_spans"] = spans
     return out
 
@@ -630,12 +687,16 @@ def cmd_report(a: argparse.Namespace) -> int:
             det[f"{name}@g5:{q:g}"] = describe(name, scen, al, None, recs)
         print(f"{name} scored [{time.time() - t0:.0f} s]", flush=True)
     confirmed = parse_configs(a.configs)
-    for nom, q, tau in confirmed:
-        nm = config_name(nom, q, tau)
+    for nom, q, tau, w in confirmed:
+        nm = config_name(nom, q, tau, w)
         acc = load_confirmed(a.work, nm)
         al = {j: alarm_from_confirmed(int(m["samples"]), acc[j]) for j, m, *_ in scen}
-        kn = {j: [x.row for x in acc[j]] for j, *_ in scen}
-        det[nm] = describe(nm, scen, al, kn, recs)
+        kn = {j: knots_at(acc[j], int(m["samples"]) - 1) for j, m, *_ in scen}
+        tn = {
+            j: [(x.row, min(x.end, int(m["samples"]) - 1) if x.end > 0 else x.row) for x in acc[j]]
+            for j, m, *_ in scen
+        }
+        det[nm] = describe(nm, scen, al, kn, recs, tn)
         # Matched false alarms: each per-row control at the confirmed detector's own false-alarm
         # fraction, on all held-leg rows and on held-leg G5 rows (Gate D's D-false measure),
         # tuned on the scored rows (in the controls' favour, as Annex A §A.2 tunes controls to
@@ -686,14 +747,14 @@ def cmd_report(a: argparse.Namespace) -> int:
         ),
     )
     ds["imm"] = imm_downstream(scen, data, truths)
-    for nom, q, tau in confirmed:
-        nm = config_name(nom, q, tau)
+    for nom, q, tau, w in confirmed:
+        nm = config_name(nom, q, tau, w)
         acc = load_confirmed(a.work, nm)
         ds[nm] = downstream(
             scen,
             data,
             truths,
-            lambda j, m, d, k, acc=acc: knot_inputs(d, k, knots_at(acc[j], k), True),
+            lambda j, m, d, k, acc=acc: window_inputs(d, k, acc[j], True),
         )
         print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
     result["downstream"] = {
@@ -710,8 +771,8 @@ def cmd_report(a: argparse.Namespace) -> int:
         for name, v in ds.items()
     }
     result["intervals"] = {}
-    for nom, q, tau in confirmed:
-        nm = config_name(nom, q, tau)
+    for nom, q, tau, w in confirmed:
+        nm = config_name(nom, q, tau, w)
         result["intervals"][nm] = {
             "range_vs_imm": ratio(ds[nm], ds["imm"], 2, False),
             "course_vs_imm": ratio(ds[nm], ds["imm"], 3, False),
@@ -753,9 +814,9 @@ def flags(rec: dict[str, Any], acc: list[Accepted], nom: str, h_nom: float, n: i
 def cmd_samples(a: argparse.Namespace) -> int:
     recs_all = load_stats(a.work)
     metas_t = tune_metas(a.validation, a.tune)
-    nom, q, tau = parse_configs(a.config)[0]
+    nom, q, tau, w = parse_configs(a.config)[0]
     h = config_threshold(nom, q, recs_all, metas_t)
-    acc = load_confirmed(a.work, config_name(nom, q, tau))
+    acc = load_confirmed(a.work, config_name(nom, q, tau, w))
     recs = {r["ordinal"]: r for r in recs_all}
     want = [int(x) for x in a.ordinals.split(",")]
     out = []
@@ -773,13 +834,13 @@ def cmd_samples(a: argparse.Namespace) -> int:
                 "own": np.round(own.astype(np.float64), 2).tolist(),
                 "tgt": np.round(tgt.astype(np.float64), 2).tolist(),
                 "flag": flags(recs[j], acc[j], nom, h, n),
-                "knots": [[x.alarm, x.row] for x in acc[j]],
+                "knots": [[x.alarm, x.row, x.end] for x in acc[j]],
                 "nominator": nom,
                 "statistic": np.round(recs[j][nom], 2).tolist(),
                 "threshold": h,
             }
         )
-    Path(a.out).write_text(json.dumps({"config": config_name(nom, q, tau), "scenarios": out}))
+    Path(a.out).write_text(json.dumps({"config": config_name(nom, q, tau, w), "scenarios": out}))
     print(f"{len(out)} samples")
     return 0
 

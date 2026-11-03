@@ -7,6 +7,13 @@ far, and once more with each candidate knot c in the window (every ``step`` rows
 is accepted if it lowers the cost by more than τ (the cost is Σ (r/σ)², so τ is a χ² value with 2
 degrees of freedom, the velocity increment). An accepted knot is used from row a on.
 
+With ``turn_rows`` > 0 a manoeuvre is not instantaneous: a candidate is a turn *window* [c, c + T]
+with a knot at each end, and the target moves on the chord between them (docs/research/08 §6; the
+3-minute window of the 2017 Debrief note "Identifying multiple target legs"). A window that has
+ended by row a adds two velocity increments and is tested at the χ² point with 4 degrees of
+freedom that has the same tail probability as τ; one still open at a adds only its start knot and
+is tested at τ. An accepted window's end knot comes into use once the window has passed.
+
 The scenarios are processed side by side: every scenario's p-th episode is solved in one batched
 pass, so a pass costs (1 + candidates) layer solves per scenario that has a p-th episode.
 """
@@ -36,6 +43,19 @@ class Accepted:
     alarm_end: int
     row: int
     cost_drop: float
+    end: int = -1  # the turn window's end knot (−1: a point knot)
+
+
+def tau_4dof(tau: float) -> float:
+    """The χ² value with 4 degrees of freedom whose tail probability equals that of ``tau`` with 2
+    (P₂(x) = e^(−x/2); P₄(x) = e^(−x/2)(1 + x/2)), by Newton's method."""
+    p = math.exp(-tau / 2.0)
+    x = tau + 4.0
+    for _ in range(50):
+        f = math.exp(-x / 2.0) * (1.0 + x / 2.0) - p
+        df = -math.exp(-x / 2.0) * x / 4.0
+        x -= f / df
+    return x
 
 
 def knot_inputs(d: BearingData, k: int, knots: list[int], prior: bool) -> LayerInputs | None:
@@ -49,6 +69,29 @@ def knot_inputs(d: BearingData, k: int, knots: list[int], prior: bool) -> LayerI
         if 0 < r <= k:
             cp[r] = 1.0
     sw = cp.copy() if prior else np.zeros(d.n)
+    return LayerInputs(cp, sw, base.log_weight, base.theta0, sw.copy())
+
+
+def window_inputs(d: BearingData, k: int, acc: list[Accepted], prior: bool) -> LayerInputs | None:
+    """Inputs on [0, k] for the knots in use at row k (alarm ≤ k). A point knot carries the
+    speed-continuity weight on itself (as ``knot_inputs``); a turn window carries it on its end
+    knot once that is in use, skipping the start knot's increment (the chord), as the oracle does
+    across a course change, and on its start knot while the window is still open."""
+    base = trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, k)
+    if base is None:
+        return None
+    cp = np.zeros(d.n)
+    sw = np.zeros(d.n)
+    for a in acc:
+        if a.alarm > k or not 0 < a.row <= k:
+            continue
+        cp[a.row] = 1.0
+        if 0 < a.end <= k:
+            cp[a.end] = 1.0
+            if prior:
+                sw[a.end] = 1.0
+        elif prior:
+            sw[a.row] = 1.0
     return LayerInputs(cp, sw, base.log_weight, base.theta0, sw.copy())
 
 
@@ -71,8 +114,11 @@ def confirm_knots(
     window: int,
     step: int,
     r_max: int,
+    turn_rows: int = 0,
 ) -> list[list[Accepted]]:
-    """Accepted knots per scenario, in time order, for alarms ``stats[i] > threshold``."""
+    """Accepted knots per scenario, in time order, for alarms ``stats[i] > threshold``; turn
+    windows of ``turn_rows`` rows when it is positive (module docstring)."""
+    tau4 = tau_4dof(tau)
     eps = [episodes(s > threshold, 10.0, merge_s=0.0) for s in stats]
     acc: list[list[Accepted]] = [[] for _ in data]
     for p in range(max((len(e) for e in eps), default=0)):
@@ -82,7 +128,7 @@ def confirm_knots(
             if p >= len(eps[i]):
                 continue
             al, al_end = eps[i][p]
-            cur = [a.row for a in acc[i]]
+            cur = [r for a in acc[i] for r in (a.row, a.end) if 0 < r <= al]
             cands = [
                 c
                 for c in range(max(1, al - window + 1), al + 1, step)
@@ -94,7 +140,8 @@ def confirm_knots(
             items.append((d, al, base))
             tags.append((i, al, al_end, -1))
             for c in cands:
-                inp = knot_inputs(d, al, [*cur, c], False)
+                new = [c, c + turn_rows] if turn_rows > 0 else [c]
+                inp = knot_inputs(d, al, [*cur, *new], False)
                 assert inp is not None
                 items.append((d, al, inp))
                 tags.append((i, al, al_end, c))
@@ -103,18 +150,28 @@ def confirm_knots(
             b = best.setdefault(i, {})
             if c < 0:
                 b["base"] = cst
-            elif cst < b.get("cost", math.inf):
-                b.update(cost=cst, row=c, alarm=al, alarm_end=al_end)
+            else:
+                # with turn windows the candidates differ in size: compare their excess over
+                # their own threshold (the base row comes first, so b["base"] is set)
+                t = tau4 if 0 < turn_rows and c + turn_rows <= al else tau
+                score = b["base"] - cst - t
+                if score > b.get("score", -math.inf):
+                    b.update(score=score, cost=cst, row=c, alarm=al, alarm_end=al_end)
         for i, b in best.items():
-            if "row" in b and b["base"] - b["cost"] > tau:
+            if "row" in b and b["score"] > 0:
                 acc[i].append(
                     Accepted(
-                        int(b["alarm"]), int(b["alarm_end"]), int(b["row"]), b["base"] - b["cost"]
+                        int(b["alarm"]),
+                        int(b["alarm_end"]),
+                        int(b["row"]),
+                        b["base"] - b["cost"],
+                        int(b["row"]) + turn_rows if turn_rows > 0 else -1,
                     )
                 )
     return acc
 
 
 def knots_at(acc: list[Accepted], k: int) -> list[int]:
-    """The knots in use at row k: those whose nominating alarm began at or before k."""
-    return [a.row for a in acc if a.alarm <= k]
+    """The knot rows in use at row k: those whose nominating alarm began at or before k, with a
+    turn window's end knot once it is ≤ k."""
+    return [r for a in acc if a.alarm <= k for r in (a.row, a.end) if 0 < r <= k]
