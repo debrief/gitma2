@@ -735,15 +735,15 @@ def cmd_report(a: argparse.Namespace) -> int:
 # ---------------------------------------------------------------- samples
 
 
-def flags(rec: dict[str, Any], acc: list[Accepted], h_nom: float, n: int) -> list[str]:
-    """Note 07 §5's Steady Leg flag per row."""
+def flags(rec: dict[str, Any], acc: list[Accepted], nom: str, h_nom: float, n: int) -> list[str]:
+    """Note 07 §5's Steady Leg flag per row, with ``nom`` the nominating statistic."""
     out = []
     for k in range(n):
         if not rec["sl_ok"][k]:
             out.append("unknown")
         elif any(x.alarm <= k < x.alarm + W for x in acc):
             out.append("changed")
-        elif rec["split"][k] > h_nom:
+        elif rec[nom][k] > h_nom:
             out.append("suspect")
         else:
             out.append("steady")
@@ -772,9 +772,10 @@ def cmd_samples(a: argparse.Namespace) -> int:
                 "manoeuvres": meta.get("manoeuvres") or [],
                 "own": np.round(own.astype(np.float64), 2).tolist(),
                 "tgt": np.round(tgt.astype(np.float64), 2).tolist(),
-                "flag": flags(recs[j], acc[j], h, n),
+                "flag": flags(recs[j], acc[j], nom, h, n),
                 "knots": [[x.alarm, x.row] for x in acc[j]],
-                "split": np.round(recs[j]["split"], 2).tolist(),
+                "nominator": nom,
+                "statistic": np.round(recs[j][nom], 2).tolist(),
                 "threshold": h,
             }
         )
