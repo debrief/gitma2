@@ -82,7 +82,7 @@ Results at σ = 1° G5 rows, validation seed 304, first 500 scenarios (1,663 row
 | oracle (truth spans) | 5.4% | 4.4% | 9° | 0.78 kt |
 
 The sweeps are in `confirm.json` (nomination 1–10%, τ 6–13.8) and `confirm2.log` (10–20%,
-τ 13.8–30). Median range error with the speed prior:
+τ 13.8–30) and `confirm3.json` (40%, τ 13.8). Median range error with the speed prior:
 
 | Nomination | τ = 6 | τ = 9.21 | τ = 13.8 | τ = 20 | τ = 30 |
 | --- | --- | --- | --- | --- | --- |
@@ -91,12 +91,15 @@ The sweeps are in `confirm.json` (nomination 1–10%, τ 6–13.8) and `confirm2
 | 5% | | | 9.4% | | |
 | 10% | | | 9.2% | 9.2% | 9.7% |
 | 20% | | | **8.5%** | 8.7% | 9.1% |
-| 40% | | | (running) | | |
+| 40% | | | 8.7% | | |
 
 (τ = 6 and 9.21 were worse than 13.8 at every nomination rate; `confirm.json` has them.)
 
 The pattern:
-- **Nominating more helps.** Nominations are cheap to reject, and misses are what cost range now.
+- **Nominating more helps, up to about 20%.** Nominations are cheap to reject, and misses are what
+  cost range now. At 40% the result is flat: range 8.7%, settled 6.0%, course 21.6°, speed
+  1.38 kt. The knots per scenario are unchanged (1.34), with fewer false (9% against 13%), so
+  the extra nominations find nothing new.
 - **τ ≈ 14–20 is the right strictness.** τ = 6–9 lets chance knots through. τ = 30 rejects true
   ones: knots per scenario fall from 1.34 to 0.99 at 20% nomination.
 - **The speed prior always helps.** It is worth about 1 percentage point of range error and
@@ -118,7 +121,7 @@ the segmentation the physics layer consumes.
 
 ## 6. Critical assessment
 
-- **In-sample.** τ, the nomination rate and W were chosen from 16 configurations on the rows
+- **In-sample.** τ, the nomination rate and W were chosen from 17 configurations on the rows
   scored. The margin over the IMM (8.5% against 9.7%) has no interval yet. It needs a fresh
   validation split and a scenario-clustered paired bootstrap before anyone relies on it.
 - **Course only ties the IMM** (21.2° against 21.9°). Range, settled range and speed are clearly
