@@ -67,6 +67,19 @@ Reasons for the defaults:
 - **The 3-minute figure of the 2017 note** is a search-window size, not a turn duration. It is
   not a default here.
 
+## Clarifications
+
+### Session 2026-11-03 (plan research)
+
+- **C's design.** The additive search with top-k refinement (draft FR-022) measured well below
+  GLR + confirm on validation: recall 0.56 against 0.67, precision 0.78 against 0.97. Refining it
+  did not recover the gap. So C confirms nominations from both the GLR and the search, using the
+  coupled cost on each nomination's own prefix (research R1–R2). Gate S's S2 is unchanged: C
+  must still beat plain GLR + confirm.
+- **Search penalty.** It is calibrated to ≤ 5% false splits on a tuning set, not taken from a
+  per-hypothesis χ² point (which gave 45% false splits).
+- **Gap normalisation (FR-061).** Raw medians, with efficiency reported beside.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A classical segmenter that finds legs, not edges (Priority: P1)
@@ -216,17 +229,19 @@ labels.
 - **FR-020**: C MUST model the target as constant-velocity legs in absolute coordinates, separated
   by transitions of at least T_min. Legs may span ownship transitions.
 - **FR-021**: C MUST search the number of legs, their boundaries and the transition lengths
-  jointly, not one split at a time.
-- **FR-022**: C MUST run in two stages:
-  - **Search.** Segments are scored by additive costs: each candidate leg's own constant-velocity
-    fit residual. Each extra leg is charged a penalty derived from the known bearing noise σ
-    (BIC-style), replacing ZigRatio.
-  - **Coupled refinement.** The best few segmentations from the search (k declared in the plan)
-    are re-scored by the whole-history physics-layer solve, in which legs share the target's
-    position. The best is kept.
+  jointly, not one split at a time. A turn inside an alarm episode that is already raised MUST
+  be re-tested; an episode is not tested only at its first row.
+- **FR-022** (amended by the plan, R1–R2): C MUST combine two stages.
+  - **Search (nominator).** An additive search over legs scored by their own constant-velocity
+    fits, with a per-leg penalty calibrated to a declared false-split rate. Its transitions
+    nominate candidates, alongside GLR alarm episodes.
+  - **Coupled confirmation (decider).** Each nomination is tested by the physics-layer solve on
+    the prefix ending at the nomination time. The test searches the transition's start and
+    length, and accepts the best candidate if its cost drop exceeds the χ² point for its degrees
+    of freedom. Accepted boundaries are then polished under the coupled cost.
 
-  Reason: the additive search needs independent leg costs, but within one ownship leg the range
-  comes only from coupling the legs, so the final choice must be made coupled.
+  Reason: measured on validation, the additive search alone, or refined only, is well below
+  note 08's GLR + confirm (F1 0.65 against 0.79); see research.md.
 - **FR-023**: C MUST label as unknown any interval on which the best and runner-up segmentations
   differ and whose cost margin is below the declared value.
 - **FR-024**: C MUST segment one prefix of 300 bearings in at most 10 s on one 4-core runner

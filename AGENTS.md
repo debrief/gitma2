@@ -33,7 +33,9 @@ Detector workflows: `train/gd-a`, `validate-gd/<run>`. Research note 08 (leg-det
 validation only) recommends GLR + physics-layer confirmation as the interim Gate 2 segmenter.
 005 (steady-leg segmentation, Gate S; Annex A §A.9, owner merges): specified. Components O
 (ownship), C (classical target segmenter, the reference) and L (learned, starts equal to C); fresh
-test seed from 312.
+test seed from 312. Planned (`specs/005-steady-leg-segmentation/plan.md`): measured on validation,
+an additive leg search is far weaker than GLR + confirm (F1 0.65 vs 0.79), so C confirms
+nominations from both by the coupled physics-layer cost on each nomination's own prefix.
 
 ## Stack (owner decisions, 2026-10-31)
 
