@@ -150,3 +150,56 @@ overrule any of them on the spec's PR.
   rate on validation is below 5%, the limit becomes that rate, and the decision record says so.
 - **D4** Test seed: a **fresh seed from 301 onward** (gitma's 201–212 and the oracle
   experiment's 777 stay reserved), its digest pinned in the plan.
+
+## A.9 Amendment: steady-leg segmentation and Gate S (proposed 2026-11-03; owner merges)
+
+Gate D stopped at validation (`experiments/20261102-gd-a-val/`). Its criteria and verdict stand,
+and test seed 305 stays reserved. Research note 08 then scored the classical candidates as
+detectors, and recommended GLR nominations confirmed by the physics layer, which reaches range
+0.81 × the IMM on validation. The owner's draft of 3 November 2026 changes the unit of detection
+from a turn edge to a **steady leg**. This amendment adds that design as spec 005 and a new gate,
+**Gate S**. It does not change A.0–A.8.
+
+- **Problem (replaces point knots for Gate 2).** Each bearing time is labelled, per vessel,
+  steady, transition or unknown:
+  - **Steady:** course within ± 2° and speed within ± 0.5 kt of the leg mean, for at least 2 min.
+  - **Transition:** at least 30 s; its length is estimated.
+  - **Unknown:** reported, never forced into a leg.
+
+  Segmentation is offline on each prefix: at a scored row k, bearings at rows ≤ k only.
+- **Components.**
+  - **O:** an ownship steady-leg detector, from navigation data.
+  - **C:** a classical target segmenter. A joint search over leg count, boundaries and transition
+    lengths, with a noise-derived per-leg penalty, then a coupled physics-layer refinement.
+  - **L:** a learned segmenter that adds per-bearing evidence to C's search. It starts at zero,
+    so untrained it equals C, and it is trained by the likelihood of the truth segmentation.
+- **Physics layer.** Transitions are handed over as gaps (bearings excluded) or chords (knots at
+  both ends, the speed prior across them). Which one is chosen on validation and declared before
+  test scoring.
+- **Metrics:**
+  - contamination (primary);
+  - coverage;
+  - false-split rate;
+  - leg-count accuracy on detectable changes;
+  - boundary error at ± 60 s and ± 3 min;
+  - gap recovered, from one leg to the oracle.
+
+  Downstream against batch least squares, the frozen IMM, the oracle and GLR + confirm, on the
+  same rows. Everything stratified by detectability (note 08).
+- **Gate S** (limits fixed in a decision record before any training of L; fresh test seed from
+  312):
+  - **S1:** O's contamination P90 on ownship legs is within its limit (sanity).
+  - **S2:** C recovers more of the gap than GLR + confirm. If not, the better of the two is the
+    reference.
+  - **S3:** L's contamination and false-split rate are no worse than the reference's, within
+    their limits.
+  - **S4:** L recovers more of the gap than the reference. This is the only learning claim.
+- **Follow-on, fixed now.**
+  - If S4 passes, L is Gate 2's segmenter and control.
+  - Otherwise the reference carries into Gate 2 and learning is recorded as not shown.
+  - In either case, Gate 2 reports its "half the gap to the oracle" for the carried classical
+    segmenter too.
+- **A.6 is superseded for Gate 2's segmenter.** Gate 2 uses Gate S's carried segmenter, not the
+  bare CUSUM/GLR segmenter. Until Gate S has a verdict, GLR + confirm (note 08) is the interim
+  segmenter.
+- **Specification:** `specs/005-steady-leg-segmentation/spec.md`.

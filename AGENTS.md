@@ -29,7 +29,11 @@ reads only time since the zig. Downstream it scored 0.95× batch least squares b
 and the time-late variant failed. Test seed 305 is unscored and reserved. Annex A §A.6 applies:
 publish, and Gate 2 uses the CUSUM/GLR segmenter at an operating point its spec declares
 (recommended: GLR at a 5% held-leg false-alarm rate). Write-up: `site/blog/2026-11-02-gate-d.md`.
-Detector workflows: `train/gd-a`, `validate-gd/<run>`.
+Detector workflows: `train/gd-a`, `validate-gd/<run>`. Research note 08 (leg-detection spike,
+validation only) recommends GLR + physics-layer confirmation as the interim Gate 2 segmenter.
+005 (steady-leg segmentation, Gate S; Annex A §A.9, owner merges): specified. Components O
+(ownship), C (classical target segmenter, the reference) and L (learned, starts equal to C); fresh
+test seed from 312.
 
 ## Stack (owner decisions, 2026-10-31)
 

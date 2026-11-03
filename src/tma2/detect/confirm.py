@@ -9,7 +9,8 @@ degrees of freedom, the velocity increment). An accepted knot is used from row a
 
 With ``turn_rows`` > 0 a manoeuvre is not instantaneous: a candidate is a turn *window* [c, c + T]
 with a knot at each end, and the target moves on the chord between them (docs/research/08 §6; the
-3-minute window of the 2017 Debrief note "Identifying multiple target legs"). A window that has
+2017 Debrief note "Identifying multiple target legs", whose 3-minute search window this borrows as a
+fixed turn length; spec 005 estimates transition lengths instead). A window that has
 ended by row a adds two velocity increments and is tested at the χ² point with 4 degrees of
 freedom that has the same tail probability as τ; one still open at a adds only its start knot and
 is tested at τ. An accepted window's end knot comes into use once the window has passed.

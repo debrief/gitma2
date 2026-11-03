@@ -255,9 +255,12 @@ becomes an annex amendment, and the owner merges that.
 
 ## 6. Turns as 3-minute windows (owner, 3 November 2026)
 
-A target turn is not instantaneous. The owner asked for a 3-minute window, as in the 2017
-Debrief note "Identifying multiple target legs", which moves a 3-minute window through an
-ownship leg and compares the fits before and after it. Two changes follow.
+A target turn is not instantaneous, and the owner asked for a 3-minute allowance. The 2017
+Debrief note "Identifying multiple target legs" moves a 3-minute window through an ownship leg
+and compares the fits before and after it. Its 3 minutes is a *search-window size*, not a turn
+duration (owner's correction, spec 005); this section uses it as a fixed window length because
+that is what was trialled. Spec 005 instead estimates transition lengths, with T_min = 30 s.
+Two changes follow.
 
 **Detector: `confirm_knots(..., turn_rows=18)`.** A candidate is a window [c, c + 3 min]:
 - **Knots:** one at each end, with the target on the chord between them. The speed prior sits
