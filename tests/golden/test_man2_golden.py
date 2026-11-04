@@ -1,8 +1,8 @@
 """Golden test for generator 0.6.0's MAN2 path (spec 006, T020): seed 316, 40 scenarios, the
 MAN2 ranges with their held-out twin, written in both formats with fixed provenance. The digests
 in ``tests/fixtures/man2-seed316/digests.json`` were made by this test at the commit that added
-the leg model; ``UPDATE_GOLDEN=1`` rewrites them and the commit must say why. The header's schema version is
-pinned to 0.22.0, the version they were made under."""
+the leg model; ``UPDATE_GOLDEN=1`` rewrites them and the commit must say why. The header's
+schema version is pinned to 0.22.0, the version they were made under."""
 
 from __future__ import annotations
 
