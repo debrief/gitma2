@@ -108,3 +108,19 @@ def test_aux_loss() -> None:
     assert float(aux_loss(e, codes, 4)) < 0.01
     assert float(aux_loss(-e, codes, 4)) > 4.0
     assert float(aux_loss(e, np.full(4, UNKNOWN, np.int8), 4)) == 0.0
+
+
+def test_vectorised_partition_equals_reference() -> None:
+    """The vectorised recursion equals the reference one, value and gradient."""
+    torch.set_default_dtype(torch.float64)
+    for seed in (0, 2, 4):
+        grid, cost, valid = _toy(seed)
+        lat = Lattice(grid, cost, valid, PEN, T_MIN, T_MAX)
+        e1 = torch.tensor(np.random.default_rng(seed).normal(size=grid[-1] + 1), requires_grad=True)
+        e2 = e1.detach().clone().requires_grad_(True)
+        z1, z2 = lat.log_partition(e1), lat.log_partition_reference(e2)
+        assert abs(float(z1 - z2)) < 1e-9
+        z1.backward()  # type: ignore[no-untyped-call]
+        z2.backward()  # type: ignore[no-untyped-call]
+        assert e1.grad is not None and e2.grad is not None
+        assert float((e1.grad - e2.grad).abs().max()) < 1e-9

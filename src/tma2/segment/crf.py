@@ -15,7 +15,8 @@ recursion). Both terms are differentiable in e; at e = 0 the gradient is the dif
 the model's expected per-row labels and the truth path's, generally non-zero (SC-003).
 
 The **truth path** is the lattice segmentation that agrees with the most truth-labelled rows
-(rows the truth marks unknown are ignored), found by the same recursion with max-plus.
+(rows the truth marks unknown are ignored) and, among those, scores best at zero evidence; found
+by the same recursion with max-plus on (agreement, score) pairs.
 """
 
 from __future__ import annotations
@@ -27,6 +28,8 @@ import torch
 from torch import Tensor
 
 from . import STEADY, TRANSITION
+
+NEG = -1e30  # log of an impossible configuration (finite, so gradients stay finite)
 
 
 def _cum(x: Tensor) -> Tensor:
@@ -87,12 +90,63 @@ class Lattice:
     def _trans_e(self, ce: Tensor, p: int, i: int) -> Tensor:
         return ce[self.grid[i]] - ce[self.grid[p] + 1]
 
+    def _index(self) -> None:
+        """Per grid point j, the legs and transitions ending there as index arrays (built once,
+        on first use)."""
+        if hasattr(self, "_legs_j"):
+            return
+        gr = np.asarray(self.grid, dtype=np.int64)
+        self._legs_j: dict[int, tuple[Tensor, Tensor, Tensor, Tensor]] = {}
+        for j, lst in self.legs_into.items():
+            i = np.array([x for x, _ in lst], dtype=np.int64)
+            self._legs_j[j] = (
+                torch.as_tensor(i),
+                torch.as_tensor(np.array([v for _, v in lst])),
+                torch.as_tensor(gr[i]),
+                torch.as_tensor(i == 0),
+            )
+        self._trans_j: dict[int, tuple[Tensor, Tensor, Tensor]] = {}
+        for j, lst in self.trans_into.items():
+            q = np.array([x for x, _ in lst], dtype=np.int64)
+            self._trans_j[j] = (
+                torch.as_tensor(q),
+                torch.as_tensor(np.array([v for _, v in lst])),
+                torch.as_tensor(gr[q] + 1),
+            )
+
     def log_partition(self, evidence: Tensor) -> Tensor:
-        """log Z over every lattice segmentation of [0, grid[−1]]."""
+        """log Z over every lattice segmentation of [0, grid[−1]] (vectorised over the legs and
+        transitions ending at each grid point)."""
+        self._index()
         ce = _cum(evidence)
         last = self.grid[-1]
-        alpha: dict[int, Tensor] = {}  # log-sum over segmentations with a leg ending at j
-        beta: dict[int, Tensor] = {}  # … with a transition ending just before grid[i]
+        neg = evidence.new_full((), NEG)
+        alpha: list[Tensor] = [neg] * self.g  # log-sum over segmentations with a leg ending at j
+        beta: list[Tensor] = [neg] * self.g  # … with a transition ending just before grid[i]
+        for j in range(1, self.g):
+            if j in self._trans_j:
+                q, s, r0 = self._trans_j[j]
+                al = torch.stack(alpha[:j])[q]
+                beta[j] = torch.logsumexp(al + s - (ce[self.grid[j]] - ce[r0]), 0)
+            if j in self._legs_j:
+                i, s, r0, first = self._legs_j[j]
+                be = torch.stack(beta[:j])[i]
+                base = torch.where(first, torch.zeros_like(be), be)
+                alpha[j] = torch.logsumexp(base + s + ce[self.grid[j] + 1] - ce[r0], 0)
+        ends = [alpha[self.g - 1]]
+        for p, s_ in self.open:
+            ends.append(alpha[p] + s_ - (ce[last + 1] - ce[self.grid[p] + 1]))
+        z = torch.logsumexp(torch.stack(ends), 0)
+        if float(z.detach()) < NEG / 2:
+            raise ValueError("no lattice segmentation covers the prefix")
+        return z
+
+    def log_partition_reference(self, evidence: Tensor) -> Tensor:
+        """The unvectorised recursion (documentation of record; tests compare the two)."""
+        ce = _cum(evidence)
+        last = self.grid[-1]
+        alpha: dict[int, Tensor] = {}
+        beta: dict[int, Tensor] = {}
         for j in range(1, self.g):
             tb = [
                 alpha[p] + s - self._trans_e(ce, p, j)
@@ -138,32 +192,36 @@ class Lattice:
         return total
 
     def truth_path(self, codes: np.ndarray) -> tuple[list[tuple[int, int]], bool]:
-        """The lattice segmentation agreeing with the most truth-labelled rows (max-plus)."""
+        """The lattice segmentation agreeing with the most truth-labelled rows; among those, the
+        one with the best score at zero evidence (max-plus, compared lexicographically). Rows
+        the truth marks unknown (before the zig, short legs) are then decided by the cost, not
+        by the order of the recursion."""
         last = self.grid[-1]
         st = np.concatenate([[0], np.cumsum(codes[: last + 1] == STEADY)])
         tr = np.concatenate([[0], np.cumsum(codes[: last + 1] == TRANSITION)])
         g = self.g
-        a = np.full(g, -np.inf)
+        ninf = (-np.inf, -np.inf)
+        a: list[tuple[float, float]] = [ninf] * g
         a_back: list[tuple[int, int] | None] = [None] * g  # (leg start i, previous leg end p or −1)
-        b = np.full(g, -np.inf)
+        b: list[tuple[float, float]] = [ninf] * g
         b_back = np.full(g, -1, dtype=np.int64)
         for j in range(1, g):
-            for p, _s in self.trans_into.get(j, []):
-                v = a[p] + (tr[self.grid[j]] - tr[self.grid[p] + 1])
+            for p, s in self.trans_into.get(j, []):
+                v = (a[p][0] + float(tr[self.grid[j]] - tr[self.grid[p] + 1]), a[p][1] + s)
                 if v > b[j]:
                     b[j], b_back[j] = v, p
-            for i, _s in self.legs_into.get(j, []):
-                le = st[self.grid[j] + 1] - st[self.grid[i]]
-                v = le if i == 0 else b[i] + le
+            for i, s in self.legs_into.get(j, []):
+                le = float(st[self.grid[j] + 1] - st[self.grid[i]])
+                v = (le, s) if i == 0 else (b[i][0] + le, b[i][1] + s)
                 if v > a[j]:
                     a[j] = v
                     a_back[j] = (i, -1 if i == 0 else int(b_back[i]))
         best, end_p = a[-1], -1
-        for p, _s in self.open:
-            v = a[p] + (tr[last + 1] - tr[self.grid[p] + 1])
+        for p, s in self.open:
+            v = (a[p][0] + float(tr[last + 1] - tr[self.grid[p] + 1]), a[p][1] + s)
             if v > best:
                 best, end_p = v, p
-        if not np.isfinite(best):
+        if not np.isfinite(best[0]):
             raise ValueError("no lattice segmentation covers the prefix")
         legs: list[tuple[int, int]] = []
         j = end_p if end_p >= 0 else g - 1

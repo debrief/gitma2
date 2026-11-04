@@ -1,7 +1,8 @@
 """tma2-segment: segment the target on every scored prefix of the selected scenarios (spec 005
 contracts/cli.md).
 
-    uv run tma2-segment --in <split.f32pack> --out <seg.ndjson> [--segmenter C]
+    uv run tma2-segment --in <split.f32pack> --out <seg.ndjson> [--segmenter C | L --weights
+        <best.safetensors> --plan <gs-plan.json>]
         [--params <SegmentParameters json>] [--set key=value …] [--glr-tune START:COUNT]
         [--start S --count N] [--rows g5|last] [--workers 4] [--allow-dirty]
 
@@ -81,7 +82,7 @@ def tune_glr(path: str, start: int, count: int, p: SegmentParameters, workers: i
     return float(h)
 
 
-def _segment_task(args: tuple[str, int, int, str, str]) -> list[dict[str, Any]]:
+def _segment_task(args: tuple[str, int, int, str, str, str, str]) -> list[dict[str, Any]]:
     import torch
 
     from tma2.physics.layer import PhysicsLayer
@@ -90,23 +91,38 @@ def _segment_task(args: tuple[str, int, int, str, str]) -> list[dict[str, Any]]:
     from tma2.segment.score import g5_rows, iter_selected
     from tma2.segment.segmenter import segment
 
-    path, start, count, params_json, rows_mode = args
+    path, start, count, params_json, rows_mode, weights, net_json = args
     torch.set_num_threads(1)
     torch.set_default_dtype(torch.float64)
     p = SegmentParameters.model_validate_json(params_json)
-    data, metas, rows, ords = [], [], [], []
+    data, metas, rows, ords, owns = [], [], [], [], []
     for j, m, own, _tgt, obs in iter_selected(path, start, count):
         d = bearing_data_from_arrays(m, own, obs)
         ks = g5_rows(m, d.n) if rows_mode == "g5" else [d.n - 1]
         if not ks:
             continue
+        owns.append(own)
         data.append(d)
         metas.append(m)
         rows.append(ks)
         ords.append(j)
     if not data:
         return []
-    segs = segment(PhysicsLayer(), data, metas, rows, p)
+    evidence = None
+    if weights:
+        from safetensors.torch import load_file
+
+        from tma2.segment.evidence import EvidenceNet, evidence_for, scenario_features
+
+        cfg = json.loads(net_json)
+        net = EvidenceNet(
+            width=int(cfg["width"]), kernel=int(cfg["kernel"]), dilations=tuple(cfg["dilations"])
+        ).double()
+        net.load_state_dict(load_file(weights))
+        net.eval()
+        feats = [scenario_features(d, own, p) for d, own in zip(data, owns, strict=True)]
+        evidence = evidence_for(net, feats)
+    segs = segment(PhysicsLayer(), data, metas, rows, p, evidence=evidence)
     out = []
     for j, m, sg in zip(ords, metas, segs, strict=True):
         for ps in sg:
@@ -139,7 +155,9 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-segment")
     ap.add_argument("--in", dest="inp", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--segmenter", default="C", choices=["C"])
+    ap.add_argument("--segmenter", default="C", choices=["C", "L"])
+    ap.add_argument("--weights", help="L: the evidence network's best.safetensors")
+    ap.add_argument("--plan", help="L: the plan naming the evidence network's configuration")
     ap.add_argument("--params")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE")
     ap.add_argument("--glr-tune", metavar="START:COUNT")
@@ -167,6 +185,14 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         upd[key] = json.loads(val)
     p = SegmentParameters.model_validate({**p.model_dump(), **upd})
+    if (a.segmenter == "L") != bool(a.weights and a.plan):
+        print("--segmenter L needs --weights and --plan (and C takes neither)", file=sys.stderr)
+        return 2
+    net_json = ""
+    sha = params_digest(p)
+    if a.weights:
+        net_json = json.dumps(json.loads(Path(a.plan).read_text())["evidence_network"])
+        sha = hashlib.sha256(f"{sha}:{file_digest(a.weights)}:{net_json}".encode()).hexdigest()
     t0 = time.time()
     if a.glr_tune:
         s, _, c = a.glr_tune.partition(":")
@@ -179,18 +205,18 @@ def main(argv: list[str] | None = None) -> int:
         record=RecordKind.header,
         schema_version=SCHEMA_VERSION,
         segmenter=a.segmenter,
-        segmenter_sha256=params_digest(p),
+        segmenter_sha256=sha if a.weights else params_digest(p),
         dataset_digest=file_digest(a.inp),
         parameters=p,
         git_commit=commit,
         git_dirty=dirty,
     )
     chunks = [
-        (a.inp, s, CHUNK, p.model_dump_json(), a.rows)
+        (a.inp, s, CHUNK, p.model_dump_json(), a.rows, a.weights or "", net_json)
         for s in range(a.start, a.start + min(a.count, 1 << 20), CHUNK)
         if s < a.start + a.count
     ]
-    chunks = [(x[0], x[1], min(CHUNK, a.start + a.count - x[1]), x[3], x[4]) for x in chunks]
+    chunks = [(x[0], x[1], min(CHUNK, a.start + a.count - x[1]), *x[3:]) for x in chunks]
     recs: list[dict[str, Any]] = []
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
         for part in ex.map(_segment_task, chunks):

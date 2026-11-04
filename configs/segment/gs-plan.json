@@ -1,0 +1,89 @@
+{
+  "id": "gs-plan",
+  "description": "Spec 005 Gate S plan (T026): segmenters C and L, the references, L's training stream and the test seed. Generator 0.6.0 (MAN2). Fixed before any L training; the test digest is filled at generation (T028) by an amendment listed by digest.",
+  "generator_version": "0.6.0",
+  "ranges": "configs/man2-ranges.json",
+  "heldout": "configs/man2-heldout.json",
+  "validation": {
+    "seed": 314,
+    "count": 100000,
+    "split": "validation",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "digest": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "tuning_ordinals": [0, 500],
+    "scoring_ordinals": [500, 1500],
+    "ordinals_of": "sigma = 1 deg scenarios in file order (note 08)"
+  },
+  "test": {
+    "seed": 315,
+    "count": 100000,
+    "split": "test",
+    "scenarios_in_split": 10000,
+    "commit": null,
+    "digest": null,
+    "scored": "every sigma = 1 deg scenario of the test split with a G5 row; every G5 row of each"
+  },
+  "l_stream": {
+    "seed": 317,
+    "count": 12500,
+    "split": "train",
+    "scenarios_in_split": 10000,
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "digest": "387013c56db44042063c90bb8666b6f70afb6ccc1c02fc441469e35e2bff1ae3",
+    "tables": "per-shard SHA-256 in each training run's results branch (tables.sha256)",
+    "noise": "one draw (the generated bearings); cost tables are computed once per scenario, so the per-epoch re-noise of spec 003 is not used"
+  },
+  "segmenter": {
+    "parameters": {
+      "course_tol_deg": 5.0,
+      "speed_tol_kt": 0.5,
+      "course_change_deg": 10.0,
+      "speed_change_kt": 1.0,
+      "l_min_rows": 30,
+      "t_min_rows": 6,
+      "t_lengths_rows": [6, 9, 12, 18, 24, 36],
+      "search_penalty": 30.0,
+      "nominator_far": 0.2,
+      "retest_rows": 6,
+      "tau": 13.8,
+      "margin": 0.0,
+      "mode": "MODE",
+      "glr_threshold": 4.665063657744733,
+      "glr_window": 30,
+      "window_rows": 36,
+      "candidate_step_rows": 3,
+      "search_every_rows": 30,
+      "search_step_rows": 6,
+      "search_horizon_rows": 18,
+      "polish_rows": 3
+    },
+    "glr_threshold_from": "tuned on validation tuning ordinals 0-499 to nominator_far (results/segment-man2-val-c-41876210154); fixed for every later run, test included"
+  },
+  "references": {
+    "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+    "ekf": "ekf-sa0.00003-p4-r0.03125",
+    "glr_confirm": "glr-q0.2-t13.8",
+    "glr_confirm_thresholds_from": "validation seed 314, tuning ordinals 0-499 (experiments/20261104-man2-refs/spike.json)"
+  },
+  "evidence_network": {
+    "channels": 10,
+    "width": 32,
+    "kernel": 5,
+    "dilations": [1, 2, 4, 8],
+    "activation": "SiLU",
+    "head": "zero-initialised 1x1 convolution"
+  },
+  "training": {
+    "seeds": [1, 2, 3],
+    "shuffled_control_seed": 1,
+    "loss": {"crf": 1.0, "auxiliary_bce": 0.1},
+    "optimiser": "Adam",
+    "learning_rate": 0.001,
+    "batch_scenarios": 16,
+    "max_epochs": 20,
+    "early_stopping": {"patience_epochs": 3, "relative_min_improvement": 0.001},
+    "validation_for_early_stopping": "CRF loss on validation tuning ordinals 0-499",
+    "carried_rule": "median of the three seeds by validation gap recovered (range) on scoring ordinals 500-1499"
+  },
+  "bootstrap": {"level": 0.975, "resamples": 2000, "cluster": "scenario", "seed": 0}
+}

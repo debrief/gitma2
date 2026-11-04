@@ -24,8 +24,10 @@ import torch
 from torch import Tensor, nn
 
 from tma2.references.classical import BearingData
+from tma2.types.generated.tma import SegmentParameters
 
-from . import STEADY, TRANSITION, UNKNOWN
+from . import STEADY, TRANSITION, UNKNOWN, to_codes
+from .ownship import segment_ownship
 
 CHANNELS = 10
 
@@ -64,6 +66,30 @@ def features(d: BearingData, own_codes: np.ndarray, innov: np.ndarray) -> np.nda
     f[8] = own_codes[:n] == UNKNOWN
     f[9] = innov[:n]
     return f
+
+
+def online_ownship_codes(
+    course: np.ndarray, speed: np.ndarray, n: int, p: SegmentParameters
+) -> np.ndarray:
+    """O's label of each row r from O run on the prefix [0, r] alone: the causal ownship channel.
+    (O on the whole window would label a row from ownship navigation after it, and the label of
+    a row near a prefix's end changes with the prefix; this way one forward pass serves every
+    prefix, FR-002.)"""
+    out = np.full(n, UNKNOWN, dtype=np.int8)
+    for r in range(n):
+        out[r] = to_codes(segment_ownship(course, speed, r, p), r + 1)[r]
+    return out
+
+
+def scenario_features(d: BearingData, own: np.ndarray, p: SegmentParameters) -> np.ndarray:
+    """[CHANNELS, n] causal features of one scenario: online O labels and per-timestep least
+    squares innovations (``own`` columns 3 and 4 are course and speed)."""
+    from tma2.detect.controls import ls_states
+    from tma2.references.classical import classical_predict
+
+    lst, lok = ls_states(d, classical_predict(d, "per_timestep")["rows"])
+    oc = online_ownship_codes(own[:, 3], own[:, 4], d.n, p)
+    return features(d, oc, innovations(d, lst, lok))
 
 
 class CausalConv(nn.Module):
