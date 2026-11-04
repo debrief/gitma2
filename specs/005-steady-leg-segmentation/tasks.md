@@ -128,14 +128,14 @@ before US3, because L uses O's labels as input (FR-043).
 
 **Independent test**: O against the ownship truth labels on seed 314, with no transition called on wander or oscillation.
 
-- [ ] T022 [P] [US4] Implement O in `src/tma2/segment/ownship.py`, the two-pass detector of Annex B (FR-010–FR-013):
+- [x] T022 [P] [US4] Implement O in `src/tma2/segment/ownship.py`, the two-pass detector of Annex B (FR-010–FR-013):
   - **Coarse pass:** 1-min moving averages, compared against D for course (wrap at 360°) and D_S for speed.
   - **Fine pass:** a walk to the sign change of the turn rate, or to the ± C band, with a delayed end.
   - **Turn test:** the signed-change test (net ≥ 90% of the total absolute change).
   - **Legs:** the ± C and ± S band, L_min and T_min, and 30 s trimmed from each end.
 
   It supersedes the penalised change-point search in research R5.
-- [ ] T023 [US4] Add `tests/unit/test_segment_ownship.py`, covering the constructed tracks of FR-014 and US4's scenarios. Extend `tests/unit/test_steady_leg.py`'s wander cases:
+- [x] T023 [US4] Add `tests/unit/test_segment_ownship.py`, covering the constructed tracks of FR-014 and US4's scenarios. Extend `tests/unit/test_steady_leg.py`'s wander cases:
   - helm wander and autopilot oscillation inside ± C call no transition;
   - turns of 10–15° and 30° have their boundaries found;
   - one zig gives two legs and one transition within ± 30 s before trimming;
