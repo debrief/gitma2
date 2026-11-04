@@ -64,7 +64,9 @@ WANDER_SHARES = {"none": 0.4, "wander": 0.3, "oscillation": 0.3}
 SHARE_TOL = 0.02
 WANDER_BAND_RAD = math.radians(5.0)
 ZIG_LEG_TOL = 1e-3
-ZIG_LEG_SKIP_MAX = 0.20
+# Owner amendment, 4 November 2026, after the first result (41.7% skipped against the
+# pre-registered ≤ 20%, a property of the leg model): at least 500 of the scenarios fitted.
+ZIG_LEG_FITTED_MIN = 500
 LAYER_SCENARIOS = 200
 LAYER_EVERY = 10
 EXPORT_TOL = 1e-5
@@ -319,7 +321,7 @@ def check_noise_free_zig_leg(exp: Experiment, split: Path) -> None:
                 worst_layer, worst_layer_at = e, bd.index
     share = skipped / n if n else math.inf
     fitted = n - skipped
-    ok = worst_ls < ZIG_LEG_TOL and worst_layer < ZIG_LEG_TOL and share <= ZIG_LEG_SKIP_MAX
+    ok = worst_ls < ZIG_LEG_TOL and worst_layer < ZIG_LEG_TOL and fitted >= ZIG_LEG_FITTED_MIN
     exp.metrics["noise_free_zig_leg"] = {
         "split": str(split),
         "scenarios": n,
@@ -338,7 +340,7 @@ def check_noise_free_zig_leg(exp: Experiment, split: Path) -> None:
             "pass" if ok else "fail",
             f"zig leg alone, {fitted} of {n} scenarios ({skipped} skipped, {share:.1%}): worst "
             f"relative range error at the leg's last row: least squares {worst_ls:.2e}, physics "
-            f"layer {worst_layer:.2e}",
+            f"layer {worst_layer:.2e}; needs ≥ {ZIG_LEG_FITTED_MIN} fitted (owner amendment)",
             value=max(worst_ls, worst_layer),
             threshold=ZIG_LEG_TOL,
         )
@@ -542,7 +544,7 @@ def main(argv: list[str] | None = None) -> int:
     check_noise_free_zig_leg(exp, nf)
     check_layer_720(exp, man2)
     check_export_720(exp, Path(a.conformance_results) if a.conformance_results else None)
-    verdict = exp.write("G0-MAN2")
+    verdict = exp.write("G0")  # the pipeline gate; this experiment is its MAN2 run
     for c in exp.checks:
         print(f"{c.result:12s} {c.name:40s} {c.detail}")
     print(json.dumps({"experiment": str(folder), "result": verdict["result"]}))

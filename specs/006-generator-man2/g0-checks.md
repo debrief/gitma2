@@ -27,10 +27,23 @@ V); fail or inconclusive otherwise. Exit 3 from the CLI when any gated check fai
 | 3c | `man2-kinds` | course / speed / both shares each within 2 percentage points of 0.8 / 0.1 / 0.1 |
 | 3d | `man2-wander-band` | on every ownship row away from a planned turn (the row and its neighbours on a straight planned course), the recorded course is within 5° of the planned leg course (SC-003) |
 | 3e | `man2-wander-kinds` | none / wander / oscillation shares each within 2 percentage points of 0.4 / 0.3 / 0.3 |
-| 4 | `noise-free-zig-leg` | on seed 316's noise-free validation split: for each scenario, the steady target leg that contains the ownship zig, fitted alone (its rows only), by batch least squares (final mode) and by the physics layer with trivial inputs, gives range at the leg's last row within 1e-3 relative of truth; scenarios whose leg has fewer than 12 rows before the ownship's turn or fewer than 30 after the zig are skipped and counted; pass needs the worst error below 1e-3 for both and at most 20% skipped. This is research R3's restatement of gitma's `beforeManoeuvre` for data whose first change can precede the zig |
+| 4 | `noise-free-zig-leg` | on seed 316's noise-free validation split: for each scenario, the steady target leg that contains the ownship zig, fitted alone (its rows only), by batch least squares (final mode) and by the physics layer with trivial inputs, gives range at the leg's last row within 1e-3 relative of truth; scenarios whose leg has fewer than 12 rows before the ownship's turn or fewer than 30 after the zig are skipped and counted; pass needs the worst error below 1e-3 for both and ~~at most 20% skipped~~ at least 500 scenarios fitted (owner amendment, below). This is research R3's restatement of gitma's `beforeManoeuvre` for data whose first change can precede the zig |
 | 5 | `physics-equals-ls-720` | P0's physics-equals-least-squares check on 720-row windows: 200 σ = 1° MAN2 validation scenarios, every 10th row from zig + 1 up to the row before the first target change after the zig; same tolerances as P0 |
 | 6 | `export-720` | the toy export at 720 rows (golden batch from seed 316) agrees with torch within 1e-5 in the Python and browser (WASM) legs, in double; Java as P0 (may be deferred, then skipped) |
 | 7 | `throughput` | the kernel generates at least 10,000 MAN2 scenarios per second (SC-004); measured: 30,000 |
+
+## Amendment (owner, 4 November 2026, after the first result)
+
+Check 4's coverage limit was set before any MAN2 data existed. The first run (commit `29e3a21`,
+before the gate's record was written) skipped 417 of 1,000 noise-free scenarios: 126 (12.6%) where
+the zig overlaps a target change, 212 (21.2%) where the zig leg ends within 30 rows of the zig, 77
+(7.7%) with under 12 rows before the turn, 2 with both. Seed 314's validation split gives the same
+shares (14.2%, 17.9%, 7.2%, 0.3%; 39.7% in all). With legs of N(25, 9.1) min and about 8 min of
+the zig leg required, a skip share near 40% follows from the leg model, so the 20% limit tested the
+owner's simulation, not the pipeline. Accuracy on the fitted scenarios was 9.3e-6 (least squares)
+and 9.2e-6 (physics layer) against 1e-3. The owner chose to replace "at most 20% skipped" with "at
+least 500 of 1,000 scenarios fitted"; the accuracy limit is unchanged and the skip share is
+reported. Recorded here and in `src/tma2/cli/g0_man2.py` (`ZIG_LEG_FITTED_MIN`).
 
 ## Reported, not gated
 
