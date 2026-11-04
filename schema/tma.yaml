@@ -560,7 +560,9 @@ classes:
         description: >-
           First timestep after the target's turn completes (generator 0.4.0; absent when the
           target holds course). Gate G4 counts time from here, as earlier gates count from
-          zig_index. Under generator 0.5.0, after the last manoeuvre completes.
+          zig_index. Under generator 0.5.0, after the last manoeuvre completes. Under 0.6.0 the last
+          change may still be in progress at the window's end, and then this (and that span's
+          end_index) is at or beyond `samples`: no row of the window is after it.
       manoeuvres:
         range: ManoeuvreSpan
         multivalued: true
@@ -587,7 +589,12 @@ classes:
     attributes:
       kind: { range: ManoeuvreKind, required: true }
       start_index: { range: integer, required: true, description: First timestep after it starts. }
-      end_index: { range: integer, required: true, description: First timestep after it completes. }
+      end_index:
+        range: integer
+        required: true
+        description: >-
+          First timestep after it completes; at or beyond `samples` when the change is still in
+          progress at the window's end (generator 0.6.0).
 
   Scenario:
     description: One ownship-vs-target run over a window.

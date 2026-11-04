@@ -211,6 +211,14 @@ def validate_ranges(r: dict[str, Any]) -> None:
                     "target_change_kind_weights with speed or both needs "
                     "target_speed_change_abs_mps and target_speed_change_rate_mps2"
                 )
+            if not (
+                float(r["target_speed_change_abs_mps"]["min"]) > 0
+                and float(r["target_speed_change_rate_mps2"]["min"]) > 0
+            ):
+                raise RangesError(
+                    "target_speed_change_abs_mps and target_speed_change_rate_mps2 must be "
+                    "positive when speed or both changes are drawn"
+                )
     elif r.get("target_change_kind_weights") is not None:
         raise RangesError("target_change_kind_weights needs target_leg_length_s")
     if (r.get("ownship_wander") is not None or r.get("ownship_oscillation") is not None) and r.get(

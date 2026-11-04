@@ -30,7 +30,7 @@ import numpy as np
 
 from tma2.eval.rows import G5_GATE_MIN, G5_SLICE_SIGMA_RAD, settled_row
 from tma2.eval.stats import ascending, percentile
-from tma2.features.batch import is_turn_kind
+from tma2.kinds import is_turn_kind
 from tma2.types.generated.tma import DetectionRecord, SpanDetection
 
 THRESHOLD = 0.5
@@ -38,9 +38,6 @@ TOLERANCE_S = 60.0
 RESOLVE_ROWS = 30
 MERGE_S = 60.0
 ECE_BINS = 10
-
-
-_is_turn = is_turn_kind  # "course", or generator 0.6.0's "both"
 
 
 def alarms(p_change: list[float] | np.ndarray, threshold: float = THRESHOLD) -> np.ndarray:
@@ -138,7 +135,7 @@ def score_scenario(
             if knots:
                 j = int(np.argmin([abs(r - int(s["start_index"])) for r in knot_rows]))
                 if abs(knot_rows[j] - int(s["start_index"])) <= tol:
-                    sd.kind_correct = (float(knots[j]["p_kind"]) >= 0.5) == _is_turn(s["kind"])
+                    sd.kind_correct = (float(knots[j]["p_kind"]) >= 0.5) == is_turn_kind(s["kind"])
                     kind_scored += 1
                     kind_correct += int(sd.kind_correct)
         else:
@@ -181,7 +178,7 @@ def score_scenario(
         for s in spans:
             for r in (int(s["start_index"]), int(s["end_index"])):
                 if 0 < r < n:
-                    sc.calibration_kind.append((float(pk[r]), float(_is_turn(s["kind"]))))
+                    sc.calibration_kind.append((float(pk[r]), float(is_turn_kind(s["kind"]))))
     return sc
 
 

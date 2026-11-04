@@ -27,7 +27,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from tma2.eval.rows import G5_SETTLE_S
-from tma2.features.batch import is_turn_kind
+from tma2.kinds import is_turn_kind
 
 NOW_WINDOW_S = 60.0
 TOLERANCE_S = 60.0

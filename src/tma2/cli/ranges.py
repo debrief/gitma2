@@ -51,7 +51,8 @@ def describe(r: dict[str, Any]) -> list[str]:
     if leg is not None:
         m, sd, lo = leg["mean"], leg["sd"], leg["min"]
         p5, p95 = max(lo, m - _Z95 * sd), m + _Z95 * sd
-        share = 0.5 * (1.0 + math.erf((600.0 - m) / (sd * math.sqrt(2.0))))
+        # the clip moves the lower tail to `min`: no leg is shorter than it
+        share = 0.0 if lo > 600.0 else 0.5 * (1.0 + math.erf((600.0 - m) / (sd * math.sqrt(2.0))))
         out.append(
             f"target legs: N({m / 60:.1f}, {sd / 60:.1f}) min, floor {lo / 60:.1f} min; "
             f"P5/P50/P95 {p5 / 60:.1f} / {m / 60:.1f} / {p95 / 60:.1f} min; "
@@ -116,10 +117,15 @@ def sample(r: dict[str, Any], n: int, seed: int) -> list[str]:
         changes.append(len(spans))
         for sp in spans:
             kinds[str(getattr(sp.kind, "value", sp.kind))] += 1
-            if sp.end_index >= m.samples:
-                clipped += 1  # cut off by the window's end: its length is not a duration
+        for tm in m.parameters.target_manoeuvres or []:
+            # the plan's exact duration (spans are whole rows); "both" lasts the longer part
+            dur = abs(tm.change) / tm.rate
+            if tm.change2 is not None and tm.rate2:
+                dur = max(dur, abs(tm.change2) / tm.rate2)
+            if tm.start_time_s + dur > (m.samples - 1) * dt:
+                clipped += 1  # cut off by the window's end: not seen whole
                 continue
-            trans.append((sp.end_index - sp.start_index + 1) * dt)
+            trans.append(dur)
         for a, b in zip(spans, spans[1:], strict=False):
             legs.append((b.start_index - 1 - a.end_index) * dt / 60.0)
         if m.ownship_wander is not None:

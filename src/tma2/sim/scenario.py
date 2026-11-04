@@ -421,12 +421,16 @@ def target_manoeuvres(
         n_spans += 1
         sign = -1.0 if change < 0 else 1.0
         stop = end if end < samples else samples
+        bx = xs
+        by = ys
+        b_t = 0.0
         for i in range(k + 1, stop):
             tau = (i - k) * dt
             if kind == 2:
-                bx, by, bc, bv = both_state(
-                    xs, ys, c, v, sign * rate, dur_c, change2, rate2, dur_v, tau
+                bx, by, bc, bv = both_continue(
+                    bx, by, b_t, c, v, sign * rate, dur_c, change2, rate2, dur_v, tau
                 )
+                b_t = tau
                 tgt_x[i] = bx
                 tgt_y[i] = by
                 tgt_c[i] = bc
@@ -444,8 +448,8 @@ def target_manoeuvres(
                 tgt_c[i] = c
                 tgt_v[i] = v + sign * rate * tau
         if kind == 2:
-            bx, by, _bc, _bv = both_state(
-                xs, ys, c, v, sign * rate, dur_c, change2, rate2, dur_v, dur
+            bx, by, _bc, _bv = both_continue(
+                bx, by, b_t, c, v, sign * rate, dur_c, change2, rate2, dur_v, dur
             )
             x = bx
             y = by
@@ -490,10 +494,31 @@ def both_state(
     """State ``tau`` seconds into a combined manoeuvre (generator 0.6.0 kind "both"): the course
     turns at ``omega`` for ``dur_c`` s while the speed changes by ``dv`` at ``acc`` for ``dur_v``
     s. Course and speed are exact; position is integrated with 1 s midpoint steps."""
+    return both_continue(x0, y0, 0.0, c0, v0, omega, dur_c, dv, acc, dur_v, tau)
+
+
+@njit(cache=True)
+def both_continue(
+    x0: float,
+    y0: float,
+    t_from: float,
+    c0: float,
+    v0: float,
+    omega: float,
+    dur_c: float,
+    dv: float,
+    acc: float,
+    dur_v: float,
+    tau: float,
+) -> tuple[float, float, float, float]:
+    """``both_state`` resumed from position (x0, y0) at ``t_from`` s into the manoeuvre (c0, v0
+    are its start course and speed). With ``t_from`` on the integration's 1 s grid, as every row
+    time is, the steps and their sums are exactly those of one integration from 0, so the
+    generator can advance row by row in linear time."""
     sgn = -1.0 if dv < 0 else 1.0
     x = x0
     y = y0
-    t = 0.0
+    t = t_from
     while t < tau:
         h = 1.0 if tau - t > 1.0 else tau - t
         tmid = t + 0.5 * h
@@ -708,8 +733,10 @@ def apply_wander(
 @njit(cache=True)
 def zig_on_manoeuvre(TI: np.ndarray, spans: np.ndarray) -> bool:
     """Whether the ownship's turn rows [turn start, zig) share a row with a target manoeuvre span
-    [start_index, end_index); both ends are exclusive. Without a rate-limited turn the zig is the
-    single row ``zig``."""
+    [start_index, end_index); both intervals are half-open, start included and end excluded, and
+    both start on the first row after the motion starts changing (the generator's convention for
+    spans and for the ownship turn). Without a rate-limited turn the zig is the single row
+    ``zig``."""
     if TI[TI_TURN_START] != -1:
         a = TI[TI_TURN_START]
         b = TI[TI_ZIG]

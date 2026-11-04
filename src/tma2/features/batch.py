@@ -13,25 +13,17 @@ from typing import Any
 import numpy as np
 from numba import get_num_threads, njit, prange, set_num_threads, uint64
 
+from tma2.kinds import KIND_BOTH as KIND_BOTH  # re-exported for existing importers
+from tma2.kinds import KIND_COURSE as KIND_COURSE
+from tma2.kinds import KIND_NAMES as KIND_NAMES
+from tma2.kinds import KIND_SPEED as KIND_SPEED
+from tma2.kinds import is_speed_kind as is_speed_kind
+from tma2.kinds import is_turn_kind as is_turn_kind
 from tma2.sim import scenario as sc
 from tma2.sim.geometry import f32
 from tma2.sim.ranges import flatten_ranges, noise_free, rows_for
 
 KIND_NONE = -1
-KIND_COURSE = 0
-KIND_SPEED = 1
-KIND_BOTH = 2  # generator 0.6.0
-KIND_NAMES = ("course", "speed", "both")
-
-
-def is_turn_kind(kind: int | str) -> bool:
-    """A manoeuvre that changes course: "course", or generator 0.6.0's "both"."""
-    return kind in (KIND_COURSE, KIND_BOTH, "course", "both")
-
-
-def is_speed_kind(kind: int | str) -> bool:
-    """A manoeuvre that changes speed: "speed", or generator 0.6.0's "both"."""
-    return kind in (KIND_SPEED, KIND_BOTH, "speed", "both")
 
 
 @dataclass

@@ -257,8 +257,8 @@ def test_wander_weight_validation() -> None:
 
 
 def test_both_kind_counts_as_a_turn_and_a_speed_change() -> None:
-    from tma2.detect.matching import _is_turn
     from tma2.eval.slices import manoeuvre_band
+    from tma2.kinds import is_turn_kind as _is_turn
 
     plan = {"parameters": {"target_manoeuvres": [{"kind": "speed"}, {"kind": "both"}]}}
     assert manoeuvre_band(plan) == "1turn+speed"
@@ -310,3 +310,53 @@ def test_validation_refuses_impossible_values() -> None:
     bad_osc = {"amp_rad": {"min": 0.01, "max": 0.05}, "period_s": {"min": 0, "max": 360}}
     with pytest.raises(RangesError, match="period"):
         flatten_ranges({**MAN2, "ownship_oscillation": bad_osc})
+
+
+def test_both_kind_row_by_row_equals_one_integration() -> None:
+    args = (0.3, 4.0, math.radians(0.4), 150.0, -2.0, 0.02, 100.0)
+    x, y, t = 10.0, -20.0, 0.0
+    for tau in (10.0, 20.0, 30.0, 100.0, 150.0):
+        x, y, c, v = sc.both_continue(x, y, t, *args, tau)
+        t = tau
+        fx, fy, fc, fv = sc.both_state(10.0, -20.0, *args, tau)
+        assert (x, y, c, v) == (fx, fy, fc, fv)
+
+
+def test_many_turns_share_one_band() -> None:
+    from tma2.eval.slices import manoeuvre_band
+
+    plan = {"parameters": {"target_manoeuvres": [{"kind": "course"}] * 7 + [{"kind": "speed"}]}}
+    assert manoeuvre_band(plan) == "4+turns+speed"
+    three = {"parameters": {"target_manoeuvres": [{"kind": "course"}] * 3}}
+    assert manoeuvre_band(three) == "3turns"  # 0.5.0 labels unchanged
+
+
+def test_crb_rows_known_manoeuvres_on_man2() -> None:
+    from tma2.references.crb import crb_known_manoeuvres, crb_rows
+
+    a = generate_scenario(314, 0, MAN2).scenario
+    m = a.metadata
+    plan = [
+        t.model_dump(mode="json", exclude_none=True) for t in m.parameters.target_manoeuvres or []
+    ]
+    own = np.array(
+        [[s.timestamp_s, s.x_m, s.y_m, s.course_rad, s.speed_mps] for s in a.ownship.states]
+    )
+    tgt = np.array(
+        [[s.timestamp_s, s.x_m, s.y_m, s.course_rad, s.speed_mps] for s in a.target.states]
+    )
+    obs = np.array(
+        [[o.timestamp_s, o.bearing_rad, 1.0 if o.valid else 0.0] for o in a.observations]
+    )
+    rows = [m.zig_index + 30, m.samples - 1]
+    fast = crb_rows(own, tgt, obs, 0.0175, m.zig_index, None, rows, "known_manoeuvres", plan)
+    t = own[:, 0]
+    tvx = tgt[:, 4] * np.sin(tgt[:, 3])
+    tvy = tgt[:, 4] * np.cos(tgt[:, 3])
+    ref = crb_known_manoeuvres(
+        t, own[:, 1], own[:, 2], tgt[:, 1], tgt[:, 2], tvx, tvy, obs[:, 2], plan, rows, 0.0175
+    )
+    for f, r in zip(fast, ref, strict=True):
+        assert f.singular == r.singular
+        if not f.singular:
+            assert math.isclose(f.sd_range_rel, r.sd_range_rel, rel_tol=1e-8)

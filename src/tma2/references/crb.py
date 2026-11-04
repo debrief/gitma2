@@ -229,6 +229,8 @@ def manoeuvre_model(
         changes.append(float(m["change"]))
         dur2 = 0.0
         if kind == "both":
+            if not float(m.get("change2") or 0.0) or not float(m.get("rate2") or 0.0) > 0:
+                raise ValueError("a 'both' manoeuvre needs a non-zero change2 and a positive rate2")
             changes.append(float(m["change2"]))
             dur2 = abs(float(m["change2"])) / float(m["rate2"])
         spec.append((kind, float(m["start_time_s"]), dur, dur2))
@@ -340,9 +342,27 @@ def crb_rows(
             raise ValueError("known_manoeuvres needs the scenario's target_manoeuvres plan")
         tvx = speed * np.sin(course)
         tvy = speed * np.cos(course)
-        return crb_known_manoeuvres(
-            t, ox, oy, tx, ty, tvx, tvy, valid, list(target_manoeuvres or []), rows, sigma
-        )
+        # the numba path (tested equal to the Python reference, test_crb_fast): with generator
+        # 0.6.0's ~25 manoeuvres per scenario the reference is too slow for whole splits
+        codes = {"course": 0.0, "speed": 1.0, "both": 2.0}
+        plan = list(target_manoeuvres or [])
+        table = np.array(
+            [
+                [
+                    codes[str(m["kind"]).split(".")[-1]],
+                    float(m["start_time_s"]),
+                    float(m["change"]),
+                    float(m["rate"]),
+                    float(m.get("change2") or 0.0),
+                    float(m.get("rate2") or 0.0),
+                ]
+                for m in plan
+            ],
+            dtype=np.float64,
+        ).reshape(len(plan), 6)
+        if not plan:
+            return crb_known_manoeuvres(t, ox, oy, tx, ty, tvx, tvy, valid, [], rows, sigma)
+        return crb_known_manoeuvres_fast(t, ox, oy, tx, ty, tvx, tvy, valid, table, rows, sigma)
     for k in rows:
         vx = speed[k] * math.sin(course[k])
         vy = speed[k] * math.cos(course[k])
