@@ -94,20 +94,28 @@ def test_manoeuvre_ranges_need_heldout(
 
 def test_p0_noise_free_check_ignores_default_dtype() -> None:
     """The noise-free check gives the same value whatever default dtype an earlier check left
-    (P0 panel round 2: 2.383024e-6 alone against 2.383046e-6 after the physics check)."""
-    import torch
+    (P0 panel round 2: 2.383024e-6 alone against 2.383046e-6 after the physics check).
 
-    from tma2.cli import p0
-    from tma2.eval.experiment import ROOT, Experiment
+    Each dtype runs in a fresh interpreter: within one process, allocator state can move torch's
+    reductions in the last bit, and the damped solve's accept/reject steps amplify that (CI saw
+    2.3830463673e-6 against 2.3830464493e-6 in one process; AGENTS.md gotchas). Separate
+    processes are byte-identical, so the equality stays exact."""
+    import subprocess
+    import sys
 
-    values = []
-    for dt in (torch.float32, torch.float64):
-        before = torch.get_default_dtype()
-        torch.set_default_dtype(dt)
-        try:
-            exp = Experiment(id="x", folder=ROOT / "experiments" / "_test-noise-free")
-            p0.check_noise_free(exp)
-            values.append(exp.checks[0].value)
-        finally:
-            torch.set_default_dtype(before)
+    code = (
+        "import sys, torch\n"
+        "from tma2.cli import p0\n"
+        "from tma2.eval.experiment import ROOT, Experiment\n"
+        "torch.set_default_dtype(getattr(torch, sys.argv[1]))\n"
+        "exp = Experiment(id='x', folder=ROOT / 'experiments' / '_test-noise-free')\n"
+        "p0.check_noise_free(exp)\n"
+        "print(repr(exp.checks[0].value))\n"
+    )
+    values = [
+        subprocess.run([sys.executable, "-c", code, dt], check=True, capture_output=True, text=True)
+        .stdout.strip()
+        .splitlines()[-1]
+        for dt in ("float32", "float64")
+    ]
     assert values[0] == values[1]
