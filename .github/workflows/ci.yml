@@ -114,11 +114,22 @@ jobs:
             (cd conformance/onnx && node wasm_leg.mjs --dir "detector-$v" --out "detector-$v/results.json")
             uv run python conformance/onnx/java_leg.py "conformance/onnx/detector-$v" "conformance/onnx/detector-$v/results.json"
           done
+      - name: 720-row toy export (generator 0.6.0 MAN2 windows, golden rows from seed 316), three legs
+        run: |
+          t0=$(date +%s)
+          uv run python -m tma2.export.onnx_export --out conformance/onnx/export720 --man2
+          t1=$(date +%s)
+          (cd conformance/onnx && node wasm_leg.mjs --dir export720/f64 --out export720/results.json)
+          t2=$(date +%s)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/export720/f64 conformance/onnx/export720/results.json
+          t3=$(date +%s)
+          echo "720-row export: export + Python leg $((t1 - t0)) s, WASM $((t2 - t1)) s, Java $((t3 - t2)) s" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
           path: |
             conformance/onnx/results.json
+            conformance/onnx/export720/results.json
             conformance/onnx/gate1/results.json
             conformance/onnx/gate1/python_leg.json
             conformance/onnx/detector-*/results.json
