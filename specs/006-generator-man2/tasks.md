@@ -32,7 +32,7 @@ files, no dependency on an unfinished task).
 
 - [x] T008 [US1] Add `tests/golden/test_generator_060_identity.py`: generate 200 scenarios of `tests/fixtures/gitma/phase4-seed777/ranges.json` and of the iteration-1 and 0.3.0 fixture ranges with seeds 777 and 304, assert arrays equal to the pre-0.6.0 generator's committed outputs (reuse the existing golden fixtures' arrays), and assert `TI`/`spans` padding beyond `n_spans` is −1 with `MAX_TM = 24`
 - [x] T009 [US1] Add to `tests/unit/test_ranges.py`: the three new validation errors fire; a ranges file without new fields flattens to NaN in the new slots; `rows_for` gives 720 for `configs/man2-ranges.json`
-- [ ] T010 [US1] Regenerate seed 304 with `tma2-generate` on the phase-4 fixture ranges into a scratch directory and compare `digests.json` with `data/gd-val`'s committed digests; record the command and result in `experiments/<date>-g0-man2/README.md` (created in T030)
+- [x] T010 [US1] Regenerate seed 304 with `tma2-generate` on the phase-4 fixture ranges into a scratch directory and compare `digests.json` with `data/gd-val`'s committed digests; record the command and result in `experiments/<date>-g0-man2/README.md` (created in T030)
 
 ## Phase 4: User Story 2, target legs follow the owner's model (P1)
 
@@ -60,7 +60,7 @@ files, no dependency on an unfinished task).
 - [x] T021 [US3] In `src/tma2/sim/scenario.py` add `draw_wander(seed, attempt, R) -> (kind, params)` on stream `derive_seed(scenario_seed, 3 + 2*attempt)` and `apply_wander(P, kind, params, own_x, own_y, own_c, TI, s_w)`: per steady leg (rows before `TI_TURN_START`, between `TI_ZIG` and the second turn, after it), course error = AR(1) (ρ = exp(−dt/τ), innovations from the wander stream, clipped) and/or sinusoid; positions re-integrated with the trapezoid of the wandered course from the leg's entry point; turns keep the planned arc from the actual entry point; called from `simulate_truth` only when kind ≠ none
 - [x] T022 [US3] Header: write `ownship_wander` (kind and drawn parameters) per scenario in `src/tma2/sim/generate.py`; `zig_on_manoeuvre` from T015
 - [x] T023 [P] [US3] Unit test `tests/unit/test_wander.py`: 500 MAN2 scenarios: for every wander row |recorded − planned course| ≤ 5°; positions equal the trapezoid integral of the recorded course to 1e-6 m; regenerating with `ownship_wander_weights` {none: 1} leaves `tgt`, `bearing`, `valid`, `spans` and the header's manoeuvres identical and changes only `own`; wander kinds drawn within ±3 pp of 0.4/0.3/0.3
-- [ ] T024 [US3] Confirm `ownship_legs` in `src/tma2/detect/steady_leg.py` still finds the planned turns on wander tracks with a tolerance argument (document: spec 005's O replaces it for wander data); add a test case in `tests/unit/test_steady_leg.py`
+- [x] T024 [US3] Confirm `ownship_legs` in `src/tma2/detect/steady_leg.py` still finds the planned turns on wander tracks with a tolerance argument (document: spec 005's O replaces it for wander data); add a test case in `tests/unit/test_steady_leg.py`
 
 ## Phase 6: User Story 4, the pipeline still passes and references are re-frozen (P2)
 
@@ -68,13 +68,13 @@ files, no dependency on an unfinished task).
 
 **Independent test**: `tma2-p0` on MAN2 exits 0 with a panel-approved `review.md`; `experiments/<date>-man2-tune/` names the frozen IMM and EKF; `experiments/<date>-man2-refs/spike.json` exists.
 
-- [ ] T025 Parameterise `R_MAX` in `src/tma2/cli/p0.py` from the experiment's ranges (`rows_for`) and in `src/tma2/export/onnx_export.py` via `--rows` (default 360); the Gate 1 model export already uses `rows_for(ranges)`
-- [ ] T026 [P] Add the 720-row conformance artefact: `onnx_export --rows 720` in `.github/workflows/ci.yml` beside the 360-row one; both run through `conformance/onnx/wasm_leg.mjs` and `java_leg.py`; record timing in the job summary
-- [ ] T027 [US4] Restate the before-manoeuvre check in `src/tma2/cli/p0.py` for ranges with `target_leg_length_s`: "on the zig leg" (research R3): find the steady target leg containing the ownship zig's end row; fit batch least squares on that leg's rows; require noise-free recovery at its last row; skip and count legs ending within 30 rows of the zig; report `zig_leg_skipped` in `checks.json`
+- [x] T025 Parameterise `R_MAX` in `src/tma2/cli/p0.py` from the experiment's ranges (`rows_for`) and in `src/tma2/export/onnx_export.py` via `--rows` (default 360); the Gate 1 model export already uses `rows_for(ranges)`
+- [x] T026 [P] Add the 720-row conformance artefact: `onnx_export --rows 720` in `.github/workflows/ci.yml` beside the 360-row one; both run through `conformance/onnx/wasm_leg.mjs` and `java_leg.py`; record timing in the job summary
+- [x] T027 [US4] Restate the before-manoeuvre check in `src/tma2/cli/p0.py` for ranges with `target_leg_length_s`: "on the zig leg" (research R3): find the steady target leg containing the ownship zig's end row; fit batch least squares on that leg's rows; require noise-free recovery at its last row; skip and count legs ending within 30 rows of the zig; report `zig_leg_skipped` in `checks.json`
 - [ ] T028 [US4] Generate from a clean tree: seed 314 (10,000) with `configs/man2-ranges.json` → `data/man2-val`; seed 316 (10,000) with `configs/man2-noise-free.json` → `data/man2-g0`; seed 315 (10,000) → `data/man2-test` (reserved, digests only committed; *not generated yet: it is generated when Gate S's decision record is committed, so no file exists to be read early*); commit `digests.json` files under `experiments/20261104-g0-man2/dataset-digests/` with the generating commit; record that 312/313 are unused
-- [ ] T029 [US4] Measure and record kernel throughput at 720 rows (`tma2-generate` on 10,000 scenarios, f32pack) and physics-layer cost per solve at 360 vs 720 rows (batch 64, 4 threads) in `experiments/<date>-g0-man2/throughput.json`
-- [ ] T030 [US4] Run `tma2-p0 --experiment experiments/<date>-g0-man2 --oracle-data data/man2-val` on MAN2 (generator conformance, references, physics ≡ LS, noise-free recovery incl. the zig-leg check, efficiency, throughput, oracle, IMM at scale, export at 720 rows); fix what fails; write `README.md`
-- [ ] T031 [US4] Agent review panel on the gate (≥ 5 reviewers: TMA geometry, estimation and numerics, evaluation statistics, reproducibility, red team); respond; repeat until no blocker or major is open; commit `review.md`; set `decided_by`
+- [x] T029 [US4] Measure and record kernel throughput at 720 rows (`tma2-generate` on 10,000 scenarios, f32pack) and physics-layer cost per solve at 360 vs 720 rows (batch 64, 4 threads) in `experiments/<date>-g0-man2/throughput.json`
+- [x] T030 [US4] Run `tma2-p0 --experiment experiments/<date>-g0-man2 --oracle-data data/man2-val` on MAN2 (generator conformance, references, physics ≡ LS, noise-free recovery incl. the zig-leg check, efficiency, throughput, oracle, IMM at scale, export at 720 rows); fix what fails; write `README.md`
+- [x] T031 [US4] Agent review panel on the gate (≥ 5 reviewers: TMA geometry, estimation and numerics, evaluation statistics, reproducibility, red team); respond; repeat until no blocker or major is open; commit `review.md`; set `decided_by`
 - [ ] T032 [P] [US4] Re-tune the IMM and EKF on `data/man2-val/validation.f32pack` with spec 004's grids via `tma2-tune`; freeze by name; commit `experiments/<date>-man2-tune/` (grids, results, frozen names, git commit)
 - [ ] T033 [P] [US4] Re-run note 08's reference on seed 314: `scripts/research/leg_spike.py stats|confirm|report` with `--configs glr:0.2:13.8` (tuning on the first 500 σ = 1°, scoring on the next 1,000), using the frozen MAN2 IMM from T032; commit `experiments/<date>-man2-refs/spike.json`, the detectability quantiles and a README with the baseline ratios spec 005's S2 will cite
 
@@ -135,3 +135,15 @@ files, no dependency on an unfinished task).
 - Then US3 (wander), then US4 (data, gate, references), which is where the clock time goes: the
   gate's panel rounds and the IMM re-tune.
 - Spec 005's decision record waits for T032 and T033.
+
+## Done notes (pipeline gate, 4 November)
+
+- T025: done as an `r_max` argument to P0's layer check and `onnx_export --man2` (720 rows from
+  the MAN2 ranges) rather than a general `--rows`.
+- T027 and T030: `tma2-g0-man2` (not `tma2-p0`) runs the checks pre-registered in `g0-checks.md`;
+  P0's references, oracle and IMM-at-scale are recorded there as not applicable to MAN2.
+- T029: throughput and layer cost are in the gate record's `metrics.json`, not a separate file.
+- T031: **G0-MAN2 passed**, panel round 2, record `experiments/20261104-g0-man2-r2/` (review.md);
+  r0 and r1 kept. Two owner amendments after results (check 4 coverage, throughput method).
+- T028: seeds 314 and 316 generated at d72cb81 with digests committed; seed 315 is generated when
+  Gate S's decision record is committed.

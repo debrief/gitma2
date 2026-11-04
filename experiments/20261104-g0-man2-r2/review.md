@@ -1,5 +1,8 @@
 # G0-MAN2 agent review panel
 
+**Decided: pass, panel round 2, on record r2** (`experiments/20261104-g0-man2-r2/`, commit
+31ea6cf, 17 of 17 checks).
+
 Pipeline gate on generator 0.6.0 (spec 006 FR-051, SC-001–SC-005), checks pre-registered in
 `specs/006-generator-man2/g0-checks.md`. Records:
 
@@ -27,7 +30,26 @@ pre-registered checks expand to 15). Corrected here.
    threads, timed with nothing else running; the one-thread loop reported.
 
 Both amendments are in `g0-checks.md` with dates. The owner's choices were given in this session
-in answer to multiple-choice questions; the PR for this gate quotes them.
+in answer to multiple-choice questions; verbatim, the options the owner chose were:
+
+1. *"Amend coverage (Recommended): Replace '≤ 20% skipped' with 'at least 500 of 1,000 scenarios
+   fitted'; the 1e-3 accuracy limit is unchanged. Record it in g0-checks.md as an owner amendment
+   made after the result, with the skip breakdown. The panel then reviews G0-MAN2 on that basis."*
+2. *"generate_indices, 4 threads (Recommended): Gate on the training path, the one that matters
+   on 4-core runners, re-timed with nothing else running. The one-thread loop is reported beside
+   it. Recorded as your amendment after the result, like check 4."*
+
+**The first run's check-4 line**, verbatim from the session log (2026-11-04T13:02:32Z, an
+in-process run of `check_distributions` and `check_noise_free_zig_leg` at commit 0900c43 plus the
+uncommitted CLI, before 29e3a21): `fail noise-free-zig-leg zig leg alone, 583 of 1000 scenarios
+(417 skipped, 41.7%): worst relative range error at the leg's last row: least squares 9.27e-06,
+physics layer 9.22e-06`. The five distribution checks passed in the same run with the values r2
+records.
+
+**Dry run of checks 8 and 9.** After registering them (bf4eaeb) and before r2, both were run once
+in-process at 4d0d74d (NIS 1.018, efficiency 1.010, the values r2 records). Between bf4eaeb and
+31ea6cf their code did not change and their text changed only in the IMM name's spelling, so the
+dry run moved nothing (statistics and red-team reviewers checked the diff).
 
 ## Round 1 (4 November 2026): record r1 at 42d6a8b
 
@@ -94,3 +116,44 @@ told not to time anything.
   reported item and is not in the gate record: it comes from the re-tune (T032,
   `experiments/20261104-man2-tune/grid.csv`, which includes that setting); NIS on settled rows is
   replaced by check 8.
+
+## Round 2 (4 November 2026): record r2 at 31ea6cf
+
+The same five reviewers, given review.md's round-1 section and the r2 record. A tuning job ran on
+three cores; nobody timed anything; r2's own timed checks ran with that job paused.
+
+| Reviewer | Verdict |
+| --- | --- |
+| TMA geometry | approve |
+| Estimation and numerics | approve |
+| Evaluation statistics | approve |
+| Reproducibility | approve (manifest digests, code, export model and inputs digests, Python and WASM legs, checks 8 and 9 re-run: all identical) |
+| Red team | approve-with-findings (no blocker or major open) |
+
+### Minors raised in round 2 and responses
+
+- **Owner consent attested only by the agent** (statistics, red team): the chosen options are
+  quoted verbatim above and in the PR.
+- **The ~6.8% window-conditioned expectation came from an uncommitted script** (red team):
+  committed as `scripts/research/man2_window_bias.py` (output: 6.8–6.9% with row rounding, 6.4%
+  continuous; P5/P50/P95 8.9/23.5/38.2 min; 93.7% with two or more changes).
+- **The first run's record and the dry run** (red team, statistics): quoted above with timestamp
+  and commit.
+- **`zig_leg`'s end row against check 5's wording** (statistics): `zig_leg` ends a leg at
+  `start_index − 2` (one row conservative); check 5 scores every tenth row up to the same row
+  (`rows_of` in `g0_man2.py` uses `a − 2`), so "the row before the first target change" in
+  `g0-checks.md` means that row. No behaviour differs.
+- **The Python entry in the 720-row results has no inputs digest** (reproducibility): the Python
+  leg runs inside the gate on the gate's own export, so it is bound by construction.
+- **The float32 export now differs from torch by about 6e-2 on the covariance** (r1's batch:
+  2e-4) (reproducibility): the masked, late legs extrapolate the state to t = 0 over up to
+  5,500 s, which float32 cannot hold; float32 is reported, never the conformance artefact
+  (AGENTS gotcha), and Gate S's models run in double.
+- **Carried to spec 005** (numerics, red team): the physics layer's knot path at 720 rows is not
+  checked for conformance or equivalence; check 4 has little power against a one-row convention
+  error; check 5 tests mis-specified fits.
+- **Checks 3d/3e cannot fail on missing wander** (red team): mitigated by the reported realised
+  wander per kind (none 0°, wander 4.0°, oscillation 3.0°), not gated.
+
+**Decision**: no reviewer rejects and no blocker or major finding is open. G0-MAN2 **passes**;
+`verdict.json`'s `decided_by` names this round. Training on MAN2 data may proceed (FR-051).
