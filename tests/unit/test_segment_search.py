@@ -17,7 +17,9 @@ from tma2.segment.truth import change_rows
 L_MIN, T_MIN, T_MAX, STEP, PENALTY = 30, 6, 36, 6, 20.0
 
 
-def _short(pack: Path, n_max: int = 420, count: int = 3) -> list[tuple[dict[str, Any], BearingData]]:
+def _short(
+    pack: Path, n_max: int = 420, count: int = 3
+) -> list[tuple[dict[str, Any], BearingData]]:
     out = []
     for _, m, own, _tgt, obs in iter_pack_raw(pack):
         if int(m["samples"]) <= n_max:
@@ -41,7 +43,9 @@ def test_anchored_grid() -> None:
         prefix_grid(g, 95)
 
 
-def test_noise_free_transitions_recovered(noise_free: list[tuple[dict[str, Any], BearingData]]) -> None:
+def test_noise_free_transitions_recovered(
+    noise_free: list[tuple[dict[str, Any], BearingData]],
+) -> None:
     """Every target change with a full leg on both sides is found, both boundaries within 8 rows
     (grid step 6), and nothing else is reported away from the window's ends."""
     checked = 0
