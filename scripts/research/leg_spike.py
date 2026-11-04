@@ -72,6 +72,7 @@ from tma2.references.classical import BearingData, bearing_data_from_arrays, cla
 from tma2.references.imm import imm_predict
 
 IMM = "imm-cv0.0003-ct0.03-w0.003-s0.001-p4-r16"
+DEFAULT_IMM = IMM  # note 08's (0.5.0) reference
 W = 36
 STEP = 3
 FARS = (0.01, 0.03, 0.05, 0.1)
@@ -140,6 +141,15 @@ def band(x: float, edges: tuple[float, ...], fmt: str) -> str:
 # ---------------------------------------------------------------- stats
 
 
+def _check_imm(work: Path) -> None:
+    """The work folder's statistics belong to one IMM reference: refuse another (spec 006)."""
+    tag = work / "imm.txt"
+    if tag.exists() and tag.read_text().strip() != IMM:
+        raise SystemExit(f"{work} was made with IMM {tag.read_text().strip()}, not {IMM}")
+    if (work / "stats.pkl").exists() and not tag.exists() and IMM != DEFAULT_IMM:
+        raise SystemExit(f"{work} predates --imm (made with {DEFAULT_IMM}); use a new --work")
+
+
 def cmd_stats(a: argparse.Namespace) -> int:
     torch.set_default_dtype(torch.float64)
     work = Path(a.work)
@@ -148,6 +158,7 @@ def cmd_stats(a: argparse.Namespace) -> int:
     if out.exists():
         print(f"{out} exists")
         return 0
+    (work / "imm.txt").write_text(IMM + "\n")
     imm = parse_imm_name(IMM)
     recs: list[dict[str, Any]] = []
     t0 = time.time()
@@ -867,6 +878,7 @@ def cmd_samples(a: argparse.Namespace) -> int:
 
 
 def main() -> int:
+    global IMM
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("stats", "confirm", "report", "samples"):
@@ -888,8 +900,8 @@ def main() -> int:
             p.add_argument("--ordinals", required=True)
             p.add_argument("--out", required=True)
     a = ap.parse_args()
-    global IMM
     IMM = a.imm
+    _check_imm(Path(a.work))
     fn = {"stats": cmd_stats, "confirm": cmd_confirm, "report": cmd_report, "samples": cmd_samples}
     return fn[a.cmd](a)
 

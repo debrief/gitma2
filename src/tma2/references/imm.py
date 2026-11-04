@@ -298,8 +298,9 @@ def imm_predict(
     ``mu_ct_out`` (spec 004 FR-024) receives the coordinated-turn mode probability after each
     row's update, one value per row (NaN where the filter is not running: before initialisation
     or after an implausible estimate). ``nis_out`` likewise receives one value per row: the
-    cycle's NIS, −1 for a cycle without a bearing, NaN where the filter is not running. Collecting
-    either changes no estimate."""
+    cycle's NIS (also on a row whose estimate is then found implausible, as ``ekf_predict``), −1
+    for a cycle without a bearing, NaN where the filter is not running. Collecting either changes
+    no estimate."""
     for name in ("sigma_cv", "sigma_ct", "sigma_omega", "switch_per_s", "p0_scale", "r_scale"):
         v = getattr(params, name)
         if not (v >= 0):

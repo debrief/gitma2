@@ -122,7 +122,8 @@ def _planned_courses(m: dict[str, Any], own_c: np.ndarray) -> list[tuple[int, in
     planned course exactly (``apply_wander``), so each segment's course is read from the row that
     ends the previous turn (the zig rows) or, for the first, the row before the first turn."""
     n = int(m["samples"])
-    turns = [(int(m["turn_start_index"]), int(m["zig_index"]))]
+    ts = m.get("turn_start_index")
+    turns = [(int(m["zig_index"]) if ts is None else int(ts), int(m["zig_index"]))]
     if m.get("turn2_start_index") is not None:
         turns.append((int(m["turn2_start_index"]), int(m["zig2_index"])))
     segs: list[tuple[int, int, float]] = []
@@ -249,7 +250,9 @@ def check_distributions(exp: Experiment, split: Path) -> None:
     exp.metrics["man2_distributions"] = {
         "split": str(split),
         "scenarios": n,
-        "transition_s_p10_p50_p90": [float(x) for x in np.quantile(trans, [0.1, 0.5, 0.9])],
+        "transition_s_p10_p50_p90": (
+            [float(x) for x in np.quantile(trans, [0.1, 0.5, 0.9])] if trans else []
+        ),
         "transitions_cut_off": cut,
         "changes_per_engagement": {str(k): int(c) for k, c in enumerate(counts)},
         "two_or_more": two,
@@ -267,7 +270,9 @@ def check_distributions(exp: Experiment, split: Path) -> None:
         },
         "complete_legs": len(legs_min),
         "complete_leg_min_p5_p50_p95": [float(x) for x in q],
-        "complete_leg_share_le_10_min": float(np.mean(np.asarray(legs_min) <= 10.0)),
+        "complete_leg_share_le_10_min": (
+            float(np.mean(np.asarray(legs_min) <= 10.0)) if legs_min else math.nan
+        ),
         "zig_on_manoeuvre": zom,
     }
 
@@ -314,6 +319,7 @@ def check_noise_free_zig_leg(exp: Experiment, split: Path) -> None:
         tr = math.hypot(float(tgt[last, 1] - own[last, 1]), float(tgt[last, 2] - own[last, 2]))
         row = classical_predict(bd, "final")["rows"][-1]
         e = abs(row["range_m"] - tr) / tr if row["converged"] else math.inf
+        e = e if math.isfinite(e) else math.inf  # a NaN range must not pass
         if e > worst_ls:
             worst_ls, worst_ls_at = e, int(meta["index"])
         k = bd.n - 1
@@ -332,6 +338,7 @@ def check_noise_free_zig_leg(exp: Experiment, split: Path) -> None:
         for b, (bd, _k, _inp) in enumerate(chunk):
             tr = truths[c + b]
             e = abs(float(out.range[b]) - tr) / tr if bool(out.plausible[b]) else math.inf
+            e = e if math.isfinite(e) else math.inf
             if e > worst_layer:
                 worst_layer, worst_layer_at = e, bd.index
     share = skipped / n if n else math.inf

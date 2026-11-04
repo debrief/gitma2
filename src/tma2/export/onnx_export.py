@@ -76,6 +76,8 @@ def golden_batch(
         theta0.append(inp.theta0)
         if len(k) == n:
             break
+    if zig_leg_rows and len(k) < n:
+        raise ValueError(f"{fixture_pack}: only {len(k)} zig legs end at row {MAN2_MIN_K} or later")
     f = np.float32
     return {
         "bearing": np.stack(bearing).astype(f),

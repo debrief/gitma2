@@ -802,8 +802,13 @@ def check_export(exp: Experiment) -> None:
         d32 = export(Path(tmp) / "f32", fixture, dtype="float32")
         sha = hashlib.sha256((Path(tmp) / "f64" / "toy.onnx").read_bytes()).hexdigest()
         ops = (Path(tmp) / "f64" / "ops.txt").read_text().split()
+        h = hashlib.sha256()
+        for f in sorted(q.name for q in (Path(tmp) / "f64").glob("in_*.bin")):
+            h.update((Path(tmp) / "f64" / f).read_bytes())
+        inputs_sha = h.hexdigest()
     exp.metrics["export"] = {
         "onnx_sha256": sha,
+        "inputs_sha256": inputs_sha,
         "ops": ops,
         "python_f64_max_rel_diff": d64,
         "python_f32_max_rel_diff_reported_only": d32,
@@ -840,12 +845,13 @@ def check_export(exp: Experiment) -> None:
         if v is None:
             exp.checks.append(Check(f"export-{leg}", "fail", "leg missing from results.json"))
             continue
-        if v.get("onnx_sha256") != sha:
+        if v.get("onnx_sha256") != sha or v.get("inputs_sha256") != inputs_sha:
             exp.checks.append(
                 Check(
                     f"export-{leg}",
                     "fail",
-                    f"leg ran on {v.get('onnx_sha256')}, not this export ({sha})",
+                    f"leg ran on model {v.get('onnx_sha256')} with inputs "
+                    f"{v.get('inputs_sha256')}, not this export ({sha}, {inputs_sha})",
                 )
             )
             continue
