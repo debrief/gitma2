@@ -138,6 +138,8 @@ def export(net: EvidenceNet, out_dir: Path) -> dict[str, Any]:
         {k: v.contiguous() for k, v in net.state_dict().items()}, out_dir / "weights.safetensors"
     )
     (out_dir / "in_features.bin").write_bytes(np.ascontiguousarray(batch["features"]).tobytes())
+    # the Java leg reads the input shapes from here (as the detector export writes them)
+    (out_dir / "shapes.json").write_text(json.dumps({"features": list(x.shape)}))
     (out_dir / "out_evidence.bin").write_bytes(np.ascontiguousarray(ref).tobytes())
     (out_dir / "manifest.json").write_text(
         json.dumps(
