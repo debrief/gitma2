@@ -467,15 +467,13 @@ def check_throughput(exp: Experiment, count: int = 10_000) -> None:
 
 
 def layer_cost(exp: Experiment, split: Path) -> None:
-    """Reported: the physics layer's forward cost per solve at 360 and 720 rows, batch 64."""
-    items = []
+    """Reported: the physics layer's forward cost per solve at 360 and 720 rows, batch 64: the
+    first 64 scenarios of at least 600 rows, all their rows padded to 720, and their first 360."""
+    blocks = []
     for _, meta, own, _tgt, obs in iter_pack_raw(split):
-        bd = bearing_data_from_arrays(meta, own, obs)
-        k = bd.n - 1
-        inp = trivial_inputs(bd.t, bd.ox, bd.oy, bd.z, bd.valid, k)
-        if inp is not None:
-            items.append((bd, k, inp))
-        if len(items) == 64:
+        if int(meta["samples"]) >= 600:
+            blocks.append((meta, own, obs))
+        if len(blocks) == 64:
             break
     threads = torch.get_num_threads()
     torch.set_num_threads(4)
@@ -483,7 +481,12 @@ def layer_cost(exp: Experiment, split: Path) -> None:
         layer = PhysicsLayer()
         out: dict[str, float] = {}
         for r in (360, 720):
-            sub = [(bd, min(k, r - 1), inp) for bd, k, inp in items]
+            sub = []
+            for meta, own, obs in blocks:
+                bd = _leg_data(meta, own, obs, 0, min(r, int(meta["samples"])) - 1)
+                inp = trivial_inputs(bd.t, bd.ox, bd.oy, bd.z, bd.valid, bd.n - 1)
+                if inp is not None:
+                    sub.append((bd, bd.n - 1, inp))
             best = math.inf
             for _ in range(2):
                 t0 = time.perf_counter()
@@ -494,7 +497,7 @@ def layer_cost(exp: Experiment, split: Path) -> None:
         torch.set_num_threads(threads)
     exp.metrics["physics_layer_cost"] = {
         **out,
-        "batch": len(items),
+        "batch": len(blocks),
         "threads": 4,
         "iterations": ITERATIONS,
         "trials": TRIALS,
