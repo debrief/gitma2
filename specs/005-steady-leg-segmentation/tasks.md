@@ -190,7 +190,7 @@ before US3, because L uses O's labels as input (FR-043).
 
 ## Phase 8: Gate S
 
-- [ ] T037 Add gate mode to `tma2-gs` (`--decision --plan --split test`):
+- [x] T037 Add gate mode to `tma2-gs` (`--decision --plan --split test`): — done (f8e7709): `segment/gate.py`, `tma2-gs --decision --plan --split`; smoke on 4 validation scenarios ran end to end (exit 3, manifest clean, amendments listed). L carried weights come from `carried.json` beside the decision (T036)
   - **Refusals:** a decision whose seed, plan, data digest or weights digest does not match the inputs.
   - **Outputs:** `verdict.json` with S1–S4, and `manifest.json` with every digest, the amendments and `git_dirty`.
   - **Exit code:** 3 unless every criterion passes.
