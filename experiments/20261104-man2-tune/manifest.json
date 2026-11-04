@@ -1,0 +1,174 @@
+{
+  "artefacts": [],
+  "command_lines": [
+    "tma2-tune --criterion g5 --validation /home/runner/work/gitma2/gitma2/../man2-val/validation.f32pack --experiment experiments/20261104-man2-tune --scenarios 2000 --from-parts /home/runner/work/_temp/parts/grid-part-0.csv /home/runner/work/_temp/parts/grid-part-1.csv /home/runner/work/_temp/parts/grid-part-2.csv /home/runner/work/_temp/parts/grid-part-3.csv /home/runner/work/_temp/parts/grid-part-4.csv /home/runner/work/_temp/parts/grid-part-5.csv /home/runner/work/_temp/parts/grid-part-6.csv /home/runner/work/_temp/parts/grid-part-7.csv",
+    "parts: /home/runner/work/_temp/parts/grid-part-0.csv /home/runner/work/_temp/parts/grid-part-1.csv /home/runner/work/_temp/parts/grid-part-2.csv /home/runner/work/_temp/parts/grid-part-3.csv /home/runner/work/_temp/parts/grid-part-4.csv /home/runner/work/_temp/parts/grid-part-5.csv /home/runner/work/_temp/parts/grid-part-6.csv /home/runner/work/_temp/parts/grid-part-7.csv"
+  ],
+  "created": "2026-11-04T18:47:43Z",
+  "datasets": [
+    {
+      "digest": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+      "header": {
+        "created_by": "tma2-generate --seed 314 --count 100000 --ranges sha256:9ceb50b4deddc42da4edc1901e75b78d7dfb5bbd3d491bcad4e6f97986125c72 --heldout-ranges sha256:22361dbea7e9343b491b19145f5bcd4ece5bd53c3de5ece9449d7843eb29d404",
+        "dataset_seed": "314",
+        "generator_git_commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+        "generator_git_dirty": false,
+        "generator_version": "0.6.0",
+        "index_end": 90000,
+        "index_start": 80000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.1,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.017453292519943295,
+            0.03490658503988659
+          ],
+          "ownship_oscillation": {
+            "amp_rad": {
+              "max": 0.05235987755982989,
+              "min": 0.017453292519943295
+            },
+            "period_s": {
+              "max": 360.0,
+              "min": 120.0
+            }
+          },
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "ownship_wander": {
+            "clip_rad": 0.06981317007977318,
+            "sd_rad": 0.02617993877991494,
+            "tau_s": 60.0
+          },
+          "ownship_wander_weights": {
+            "both": 0.0,
+            "none": 0.4,
+            "oscillation": 0.3,
+            "wander": 0.3
+          },
+          "range_distribution": "log_uniform",
+          "target_change_kind_weights": {
+            "both": 0.1,
+            "course": 0.8,
+            "speed": 0.1
+          },
+          "target_leg_length_s": {
+            "mean": 1500.0,
+            "min": 300.0,
+            "sd": 546.0
+          },
+          "target_manoeuvre_angle_abs_rad": {
+            "max": 2.0943951023931953,
+            "min": 0.5235987755982988
+          },
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_change_abs_mps": {
+            "max": 3.086666666666667,
+            "min": 1.028888888888889
+          },
+          "target_speed_change_rate_mps2": {
+            "max": 0.05,
+            "min": 0.01
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "target_turn_rate_rad_s": {
+            "max": 0.017453292519943295,
+            "min": 0.004363323129985824
+          },
+          "window_s": {
+            "max": 7200.0,
+            "min": 2400.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 76,
+        "scenario_count": 10000,
+        "schema_version": "0.22.0",
+        "split": "validation"
+      },
+      "path": "/home/runner/work/gitma2/man2-val/validation.f32pack"
+    }
+  ],
+  "environment": {
+    "cpu_count": 4,
+    "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+    "lockfile_digest": "e4c602b906c86ce1a532f3a6f97c87bfa6355adcfbc643b262d1366a7a463dbf",
+    "packages": [
+      {
+        "name": "numpy",
+        "version": "2.5.4"
+      },
+      {
+        "name": "numba",
+        "version": "0.68.1"
+      },
+      {
+        "name": "torch",
+        "version": "2.15.0+cpu"
+      },
+      {
+        "name": "onnx",
+        "version": "1.23.2"
+      },
+      {
+        "name": "onnxruntime",
+        "version": "1.31.1"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.2"
+      }
+    ],
+    "torch_threads": 2
+  },
+  "estimators": [
+    {
+      "name": "imm-cv0.03-ct0.1-w0.01-s0.0003-p4-r2",
+      "settings_json": "{\"median_range_rel_g5\": 0.5851764385916192, \"name\": \"imm-cv0.03-ct0.1-w0.01-s0.0003-p4-r2\", \"p0_scale\": 4.0, \"r_scale\": 2.0, \"sigma_ct\": 0.1, \"sigma_cv\": 0.03, \"sigma_omega\": 0.01, \"switch_per_s\": 0.0003}"
+    },
+    {
+      "name": "ekf-sa0.0003-p4-r2",
+      "settings_json": "{\"median_range_rel_g5\": 0.5833150460487698, \"name\": \"ekf-sa0.0003-p4-r2\", \"p0_scale\": 4.0, \"r_scale\": 2.0, \"sigma_a\": 0.0003}"
+    }
+  ],
+  "generator_version": "0.6.0",
+  "git_commit": "796427070c98d7c788c50ff6acd205c828cfc64c",
+  "git_dirty": false,
+  "id": "20261104-man2-tune",
+  "python_version": "3.12.3",
+  "schema_version": "0.23.0",
+  "torch_version": "2.15.0+cpu"
+}
