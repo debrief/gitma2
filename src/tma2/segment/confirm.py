@@ -15,7 +15,8 @@
 2. At the best start, every length.
 3. The best candidate is accepted if its cost drop exceeds the χ² point for its degrees of
    freedom: 4 for a closed transition (two velocity increments, ``tau_4dof``), 2 for one still open
-   at a (its start knot only, ``tau``).
+   at a (its start knot only, ``tau``). With L's evidence, the point is shifted by twice the
+   evidence summed over the candidate's rows, capped at ± τ/2 (zero evidence: C).
 4. **Polish:** a closed transition's start, then its end, is re-optimised within ± ``polish_rows``
    under the same coupled cost.
 
@@ -146,7 +147,7 @@ def _free(c: int, e: int, acc: list[Transition], gap: int) -> bool:
 
 
 def _confirm_one(
-    n: int, noms: list[Nomination], p: SegmentParameters
+    n: int, noms: list[Nomination], p: SegmentParameters, evidence: np.ndarray | None = None
 ) -> Generator[list[Request], list[float], Confirmed]:
     tau = p.tau
     tau4 = tau_4dof(tau)
@@ -160,8 +161,17 @@ def _confirm_one(
     heapq.heapify(heap)
     seq = len(noms)
 
+    ce = None if evidence is None else np.concatenate([[0.0], np.cumsum(evidence)])
+
     def thr(c: int, length: int, a: int) -> float:
-        return tau4 if c + length - 1 <= a else tau
+        """The χ² point for the candidate's degrees of freedom, shifted by L's evidence over
+        its rows (a prior log-odds: + steady raises it), capped at ± τ/2 (research R6)."""
+        base = tau4 if c + length - 1 <= a else tau
+        if ce is None:
+            return base
+        e = min(c + length - 1, a)
+        shift = 2.0 * float(ce[e + 1] - ce[c])
+        return base + max(-tau / 2.0, min(tau / 2.0, shift))
 
     def polish(
         a: int, others: list[tuple[int, int]], c: int, e: int, cost: float
@@ -246,11 +256,15 @@ def confirm(
     p: SegmentParameters,
     r_max: int,
     speed_prior: bool = False,
+    evidence: list[np.ndarray] | None = None,
 ) -> list[Confirmed]:
     """Run every scenario's confirmation side by side; each round batches all pending requests.
     The confirmation cost is the chord with no speed prior by default, as note 08's
     ``knot_inputs`` (the hand-over mode is applied afterwards)."""
-    gens = [_confirm_one(d.n, noms, p) for d, noms in zip(data, nominations, strict=True)]
+    gens = [
+        _confirm_one(d.n, noms, p, None if evidence is None else evidence[i])
+        for i, (d, noms) in enumerate(zip(data, nominations, strict=True))
+    ]
     out: list[Confirmed | None] = [None] * len(data)
     pending: dict[int, list[Request]] = {}
     for i, g in enumerate(gens):

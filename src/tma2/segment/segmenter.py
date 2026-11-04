@@ -143,7 +143,7 @@ def segment(
             )
         )
     r_max = max(d.n for d in data)
-    confs = confirm(layer, data, noms, p, r_max)
+    confs = confirm(layer, data, noms, p, r_max, evidence=evidence)
     items: list[tuple[BearingData, int, LayerInputs]] = []
     owners: list[tuple[int, int]] = []
     segs: list[list[PrefixSegmentation]] = []
