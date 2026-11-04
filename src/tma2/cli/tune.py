@@ -78,6 +78,22 @@ G5_EKF_GRID = [
     (sa, 4.0, r)
     for sa, r in itertools.product((0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3), G5_R_SCALES)
 ]
+# MAN2 pass 2 (spec 006 T032): the first pass on seed 314 chose imm-cv0.03-ct0.1-w0.01-s0.0003-p4-r2
+# and ekf-sa0.0003-p4-r2, every axis but ω on an edge with the error still falling (cv 0.01 → 0.03:
+# 0.5913 → 0.5852; ct 0.03 → 0.1: 0.5876 → 0.5852; r 8 → 2: 0.601 → 0.585; switch 0.001 → 0.0003:
+# 0.5858 → 0.5852; sa 0.001 → 0.0003: 0.5886 → 0.5833). Each axis reaches past its edge (spec
+# 003's rule), with the first pass's choices included so the comparison is on the same rows.
+MAN2_PASS2_IMM_GRID = [
+    ImmParams(cv, ct, 0.01, sw, 4.0, r)
+    for cv, ct, sw, r in itertools.product(
+        (0.03, 0.1, 0.3), (0.1, 0.3, 1.0), (0.0003, 0.0001), (2.0, 1.0)
+    )
+]
+MAN2_PASS2_EKF_GRID = [
+    (sa, 4.0, r) for sa, r in itertools.product((0.0003, 0.0001, 0.00003), (2.0, 1.0))
+]
+GRIDS = {"default": None, "man2-pass2": (MAN2_PASS2_IMM_GRID, MAN2_PASS2_EKF_GRID)}
+
 CRITERIA = {
     "zig300": "median relative range error at zig + 5 min, σ = 1° validation rows",
     "g5": "median relative range error over all σ = 1° G5 rows (zig + 5/10/15/20 min), validation",
@@ -131,6 +147,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--allow-dirty", action="store_true", help="exploration only: not frozen")
     ap.add_argument("--criterion", choices=sorted(CRITERIA), default="zig300")
     ap.add_argument(
+        "--grid",
+        choices=sorted(GRIDS),
+        default="default",
+        help="man2-pass2: the second pass past the MAN2 first pass's edges (g5 only)",
+    )
+    ap.add_argument(
         "--shard",
         metavar="I/N",
         help="score only grid entries I, I + N, … and write grid-part-I.csv (no choice); "
@@ -157,6 +179,13 @@ def main(argv: list[str] | None = None) -> int:
     imm_grid, ekf_grid = (
         (IMM_GRID, EKF_GRID) if a.criterion == "zig300" else (G5_IMM_GRID, G5_EKF_GRID)
     )
+    chosen = GRIDS[a.grid]
+    if chosen is not None:
+        if a.criterion != "g5":
+            print("tma2-tune: --grid man2-pass2 needs --criterion g5", file=sys.stderr)
+            return 2
+        imm_grid, ekf_grid = chosen
+        exp.command_lines.append(f"grid: {a.grid}")
     jobs: list[tuple[str, Any, str, int, str]] = [
         ("imm", p, a.validation, a.scenarios, a.criterion) for p in imm_grid
     ]
