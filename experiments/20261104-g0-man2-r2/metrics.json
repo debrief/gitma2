@@ -1,0 +1,167 @@
+{
+  "export_720": {
+    "batch": 8,
+    "golden_k": [
+      486,
+      549,
+      512,
+      481,
+      497,
+      490,
+      480,
+      495
+    ],
+    "golden_valid_rows": [
+      287,
+      370,
+      324,
+      321,
+      331,
+      204,
+      318,
+      247
+    ],
+    "inputs_sha256": "3efd1eca490745b9158073aa0975b00236ed06108d79edb9e9f4290560e8d913",
+    "onnx_sha256": "bc44c90b50aeabeef4f3975a45372bc66a08ed1e3b8d5ac53ace5856eac89e6e",
+    "python_f64_max_rel_diff": {
+      "cost": 5.716093753891438e-15,
+      "cov": 3.137050541960154e-10,
+      "plausible": 0.0,
+      "state": 3.142330839978058e-11
+    },
+    "rows": 720
+  },
+  "least_squares_efficiency_zig_leg": {
+    "efficiency_course": 0.9619223085176996,
+    "efficiency_range": 1.0346573430358823,
+    "efficiency_speed": 1.0101791401663016,
+    "rows": 2000,
+    "scenarios": 2000,
+    "singular_bound": 0
+  },
+  "man2_distributions": {
+    "changes_per_engagement": {
+      "0": 1,
+      "1": 647,
+      "2": 2864,
+      "3": 3240,
+      "4": 2297,
+      "5": 824,
+      "6": 119,
+      "7": 8
+    },
+    "complete_leg_min_p5_p50_p95": [
+      8.666666666666666,
+      23.333333333333332,
+      38.166666666666664
+    ],
+    "complete_leg_share_le_10_min": 0.07023892138395955,
+    "complete_legs": 20174,
+    "kind_counts": {
+      "both": 3060,
+      "course": 24072,
+      "speed": 3041
+    },
+    "scenarios": 10000,
+    "split": "/home/user/gitma2/data/man2-val/validation.f32pack",
+    "transition_s_p10_p50_p90": [
+      54.241004572508764,
+      115.89197058200814,
+      239.51862385558246
+    ],
+    "transitions_cut_off": 828,
+    "two_or_more": 0.9352,
+    "wander_counts": {
+      "none": 4054,
+      "oscillation": 3005,
+      "wander": 2941
+    },
+    "wander_realised_deg_by_kind": {
+      "none": {
+        "max": 0.0,
+        "median_of_segment_max": 0.0,
+        "segments": 12162
+      },
+      "oscillation": {
+        "max": 2.9993819513627193,
+        "median_of_segment_max": 1.9767387080717302,
+        "segments": 9015
+      },
+      "wander": {
+        "max": 4.000018325147926,
+        "median_of_segment_max": 3.7776956676640125,
+        "segments": 8823
+      }
+    },
+    "wander_worst_deg": 4.000018325147926,
+    "zig_on_manoeuvre": 1307
+  },
+  "noise_free_zig_leg": {
+    "fitted": 583,
+    "layer_without_grid_start": 0,
+    "scenarios": 1000,
+    "skipped_share": 0.417,
+    "split": "/home/user/gitma2/data/man2-g0/validation.f32pack",
+    "worst_least_squares": 9.26710583129228e-06,
+    "worst_least_squares_index": 8633,
+    "worst_physics_layer": 9.21985030726516e-06,
+    "worst_physics_layer_index": 8633,
+    "zig_leg_skipped": 417
+  },
+  "physics-equals-ls-720": {
+    "both_implausible_rows": 385,
+    "covariance_degenerate_rows": 2,
+    "determined_rows": 1138,
+    "iterations": 100,
+    "layer_cost_higher_rows": 0,
+    "layer_cost_lower_rows": 1,
+    "nonfinite_sd_rows": 0,
+    "plausibility_flag_mismatches": 0,
+    "range_determined_speed_undetermined_rows": 15,
+    "rows": 1689,
+    "same_minimum_plausible_rows": 1162,
+    "solver_converged_rows": 1548,
+    "solver_unconverged_layer_cost_lower": 36,
+    "solver_unconverged_layer_plausible": 68,
+    "speed_determined_rows": 1126,
+    "trials": 1,
+    "worst_difference_in_sd_same_minimum": 0.0013495951918573391,
+    "worst_relative_difference_determined": 7.597000074603043e-05,
+    "worst_sd_on_lower_cost_rows": 0.0009643613163983557
+  },
+  "physics_layer_cost": {
+    "batch": 64,
+    "iterations": 100,
+    "ms_per_solve_360": 18.1861902499989,
+    "ms_per_solve_720": 24.165248671870643,
+    "threads": 4,
+    "trials": 1
+  },
+  "regen_050": {
+    "dataset_seed": 304,
+    "first_difference": null,
+    "generator_in_file": "0.5.0",
+    "identical": 10000,
+    "scenarios": 10000,
+    "split": "/home/user/gitma2/data/gd-val/validation.f32pack"
+  },
+  "throughput": {
+    "kernel_scenarios_per_s_050_phase4": 49291.09959539327,
+    "kernel_scenarios_per_s_man2": 26666.33479522628,
+    "method": "features.batch.generate_indices, 4 threads, best of two",
+    "python_loop_one_thread_050_phase4": 16526.44924751225,
+    "python_loop_one_thread_man2": 7630.658539546626,
+    "scenarios": 10000,
+    "threads": 4
+  },
+  "tracker_nis": {
+    "imm": "imm-cv0-ct0.01-w0.001-s0.00001",
+    "median_mean_nis": 1.0183046233511555,
+    "per_scenario_p10_p90": [
+      0.7994527327615887,
+      1.3317413594273646
+    ],
+    "rows": 14571,
+    "scenarios": 200
+  }
+}
