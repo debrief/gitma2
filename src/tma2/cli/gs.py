@@ -192,6 +192,7 @@ def main(argv: list[str] | None = None) -> int:
         return {"value": si.value, "lo": si.lo, "hi": si.hi}
 
     everyone = np.ones(len(rows), dtype=bool)
+    seg_names = [n for n in errs if n not in ("one_leg", "oracle", "imm", "ekf")]
     result: dict[str, Any] = {
         "truth": a.truth,
         "ordinals": [a.start, a.start + a.count - 1],
@@ -217,6 +218,13 @@ def main(argv: list[str] | None = None) -> int:
             if "glr_confirm" in errs and name != "glr_confirm":
                 rec["gap_minus_glr_confirm"] = {
                     c: gap(name, i, "glr_confirm") for i, c in enumerate(COLS)
+                }
+            # paired differences against every other segmentation scored here, e.g. C-gap
+            # minus C-chord (the FR-031 mode choice) with its interval
+            others = [o for o in seg_names if o not in (name, "glr_confirm")]
+            if others:
+                rec["gap_minus"] = {
+                    o: {c: gap(name, i, o) for i, c in enumerate(COLS)} for o in others
                 }
         if name in seg_ivs:
             p = params.get(name, next(iter(params.values()), default_parameters()))
@@ -276,6 +284,15 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(a.experiment)
     out.mkdir(parents=True, exist_ok=True)
     (out / "metrics.json").write_text(json.dumps(result, indent=2) + "\n")
+    # per-row errors, so later paired comparisons need no re-solve (not committed: large)
+    arrays: dict[str, Any] = {
+        "ordinal": cluster,
+        "k": np.array([r.k for r in rows], dtype=np.int64),
+        "settled": settled,
+        "columns": np.array(COLS),
+    }
+    arrays.update({f"err_{n}": e for n, e in errs.items()})
+    np.savez_compressed(out / "errors.npz", **arrays)
     lines = [
         f"# Segmentation scoring: {a.truth}, ordinals {a.start}–{a.start + a.count - 1}",
         "",

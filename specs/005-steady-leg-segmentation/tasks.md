@@ -149,7 +149,7 @@ before US3, because L uses O's labels as input (FR-043).
 - [ ] T026 Write the plan `configs/segment/gs-plan.json`:
   - validation 314 with its digest;
   - L stream 317: `count` and `generator_git_commit`, with the shard digests recorded when the tables are made;
-  - test seed 315 with count 10,000, its digest filled at generation;
+  - test seed 315: `--count 100000`, whose test split holds the 10,000 scenarios (80/10/10 by index; `--count 10000` would give 1,000), its digest filled at generation;
   - the evidence-network configuration and the loss weights (CRF 1.0, auxiliary 0.1).
 - [ ] T027 Commit the decision record `experiments/<date>-gs-decision/decision.json` (type `GateSDecision`) with a `README.md`:
   - SegmentParameters, final (from T010, T021 and T024);
@@ -158,7 +158,7 @@ before US3, because L uses O's labels as input (FR-043).
   - the seeds, a forecast for S1–S4, and the follow-on copied from Annex A §A.9.
 
   This must be committed before T029–T035.
-- [ ] T028 Generate seed 315 (`tma2-generate --seed 315 --count 10000 --ranges configs/man2-ranges.json --heldout-ranges configs/man2-heldout.json --format f32pack`) at a clean commit after T027. Commit its digests to `experiments/<date>-gs-decision/seed315-digests.json`. Do not open or score it until T038
+- [ ] T028 Generate seed 315 (`tma2-generate --seed 315 --count 100000 --ranges configs/man2-ranges.json --heldout-ranges configs/man2-heldout.json --format f32pack`) at a clean commit after T027. Commit its digests to `experiments/<date>-gs-decision/seed315-digests.json`. Do not open or score it until T038
 
 ## Phase 7: User Story 3, learned segmenter L (P2)
 
