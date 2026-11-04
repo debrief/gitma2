@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,6 +33,7 @@ from tma2.eval.rows import G5_GATE_MIN
 from tma2.physics.layer import PhysicsLayer
 from tma2.physics.segmentation import LayerInputs, oracle_inputs
 from tma2.references.classical import BearingData
+from tma2.references.ekf import ekf_predict
 from tma2.references.imm import imm_predict
 from tma2.types.generated.tma import SegmentParameters
 
@@ -123,18 +125,41 @@ def layer_errors(
     return out
 
 
+def parse_ekf_name(name: str) -> tuple[float, float, float]:
+    """(σ_a, P0 scale, R scale) from ``ekf-sa<a>[-p<p>][-r<r>]`` (``ekf_name``'s format)."""
+    m = re.fullmatch(r"ekf-sa([0-9.e+-]+?)(?:-p([0-9.e+-]+?))?(?:-r([0-9.e+-]+))?", name)
+    if m is None:
+        raise ValueError(f"not an EKF name: {name}")
+    return float(m.group(1)), float(m.group(2) or 1.0), float(m.group(3) or 1.0)
+
+
 def imm_errors(
     rows: list[Row], data: dict[int, BearingData], truths: dict[int, Truth], imm: str
 ) -> Errors:
     params = parse_imm_name(imm)
+    return tracker_errors(rows, data, truths, lambda d: imm_predict(d, params))
+
+
+def ekf_errors(
+    rows: list[Row], data: dict[int, BearingData], truths: dict[int, Truth], ekf: str
+) -> Errors:
+    sa, p0, r = parse_ekf_name(ekf)
+    return tracker_errors(rows, data, truths, lambda d: ekf_predict(d, sa, p0, r))
+
+
+def tracker_errors(
+    rows: list[Row],
+    data: dict[int, BearingData],
+    truths: dict[int, Truth],
+    predict: Callable[[BearingData], dict[str, Any]],
+) -> Errors:
+    """A per-timestep tracker's errors at each row (rows it does not report: ∞)."""
     out = np.full((len(rows), 3), np.inf)
     cache: dict[int, dict[float, dict[str, Any]]] = {}
     for q, r in enumerate(rows):
         d = data[r.ordinal]
         if r.ordinal not in cache:
-            cache[r.ordinal] = {
-                round(float(x["timestamp_s"]), 3): x for x in imm_predict(d, params)["rows"]
-            }
+            cache[r.ordinal] = {round(float(x["timestamp_s"]), 3): x for x in predict(d)["rows"]}
         row = cache[r.ordinal].get(round(float(d.t[r.k]), 3))
         if row is not None:
             e = row_error(truths[r.ordinal], row, "plausible")

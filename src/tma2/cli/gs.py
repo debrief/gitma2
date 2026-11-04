@@ -96,6 +96,7 @@ def main(argv: list[str] | None = None) -> int:
         "leg-count accuracy on detectable changes and every measure by detectability band",
     )
     ap.add_argument("--imm", required=True)
+    ap.add_argument("--ekf", help="the frozen EKF, scored as a further reference")
     ap.add_argument("--experiment", required=True)
     a = ap.parse_args(argv)
     torch.set_default_dtype(torch.float64)
@@ -119,6 +120,8 @@ def main(argv: list[str] | None = None) -> int:
         "oracle": sc.layer_errors(layer, rows, data, metas, truths, sc.oracle),
         "imm": sc.imm_errors(rows, data, truths, a.imm),
     }
+    if a.ekf:
+        errs["ekf"] = sc.ekf_errors(rows, data, truths, a.ekf)
     print(f"references [{time.time() - t0:.0f} s]", flush=True)
     det: dict[int, list[float]] | None = None
     row_bands = np.array(["all"] * len(rows))
@@ -196,19 +199,20 @@ def main(argv: list[str] | None = None) -> int:
         "rows": len(rows),
         "settled_rows": int(settled.sum()),
         "imm": a.imm,
+        "ekf": a.ekf,
         "level": LEVEL,
         "resamples": RESAMPLES,
         "segmenters": {},
     }
     for name, e in errs.items():
         rec: dict[str, Any] = {"all": summary(e, everyone), "settled": summary(e, settled)}
-        if name not in ("imm",):
+        if name not in ("imm", "ekf"):
             rec["vs_imm"] = {c: ratio(name, "imm", i, everyone) for i, c in enumerate(COLS)}
         if name not in ("one_leg",):
             rec["vs_one_leg_settled"] = {
                 c: ratio(name, "one_leg", i, settled) for i, c in enumerate(COLS)
             }
-        if name not in ("one_leg", "oracle", "imm"):
+        if name not in ("one_leg", "oracle", "imm", "ekf"):
             rec["gap_recovered"] = {c: gap(name, i) for i, c in enumerate(COLS)}
             if "glr_confirm" in errs and name != "glr_confirm":
                 rec["gap_minus_glr_confirm"] = {
