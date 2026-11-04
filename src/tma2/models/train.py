@@ -26,7 +26,8 @@ from safetensors.torch import load_file, save_file
 from tma2.data.f32pack import iter_pack_raw
 from tma2.data.io import AtomicFile, file_digest
 from tma2.eval.experiment import ROOT, run_environment
-from tma2.features.batch import KIND_COURSE, KIND_SPEED, Batch, generate_batch
+from tma2.features.batch import KIND_BOTH, KIND_COURSE, KIND_SPEED, Batch, generate_batch
+from tma2.sim import scenario as sc
 from tma2.types import dump_record, parse_record
 from tma2.types.generated.tma import (
     CheckpointMeta,
@@ -57,7 +58,7 @@ def model_from_plan(plan: TrainingPlan, model_id: str) -> PhysicsModelConfig:
     raise ValueError(f"plan {plan.id} has no model {model_id}")
 
 
-KIND_CODES = {"course": KIND_COURSE, "speed": KIND_SPEED}
+KIND_CODES = {"course": KIND_COURSE, "speed": KIND_SPEED, "both": KIND_BOTH}
 
 
 def batch_from_pack(path: Path, limit: int) -> Batch:
@@ -88,8 +89,8 @@ def batch_from_pack(path: Path, limit: int) -> Batch:
         last_kind=np.full((s, rmax), -1, dtype=np.int8),
         since_zig_s=np.zeros((s, rmax), dtype=np.float32),
         since_manoeuvre_end_s=np.full((s, rmax), -1.0, dtype=np.float32),
-        spans=np.full((s, 4, 3), -1, dtype=np.int32),
-        tm=np.zeros((s, 4, 4), dtype=np.float64),
+        spans=np.full((s, sc.MAX_TM, 3), -1, dtype=np.int32),
+        tm=np.zeros((s, sc.MAX_TM, sc.TM_COLS), dtype=np.float64),
         n_tm=np.full(s, -1, dtype=np.int32),
     )
     for i, (meta, own, tgt, obs) in enumerate(blocks):
@@ -101,7 +102,14 @@ def batch_from_pack(path: Path, limit: int) -> Batch:
         if tms is not None:
             b.n_tm[i] = len(tms)
             for j, m in enumerate(tms):
-                b.tm[i, j] = (KIND_CODES[m["kind"]], m["start_time_s"], m["change"], m["rate"])
+                b.tm[i, j] = (
+                    KIND_CODES[m["kind"]],
+                    m["start_time_s"],
+                    m["change"],
+                    m["rate"],
+                    m.get("change2") or 0.0,
+                    m.get("rate2") or 0.0,
+                )
         n = int(meta["samples"])
         b.t[i, :n] = own[:n, 0]
         b.mask[i, :n] = True

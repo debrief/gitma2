@@ -24,7 +24,8 @@ points. Mapping to the source (gitma function → here):
 | ``generateScenario``      | ``generate_into``         |
 
 Parameters live in a float64 array ``P`` (``P_*`` indices; NaN = key absent) plus a manoeuvre
-table ``tm[MAX_TM, 4]`` (kind, start_time_s, change, rate). Truth indices live in an int64 array
+table ``tm[MAX_TM, TM_COLS]`` (kind, start_time_s, change, rate, change2, rate2). Truth
+indices live in an int64 array
 ``TI`` (``TI_*`` indices; −1 = null) plus ``spans[MAX_TM, 3]`` (kind, start_index, end_index).
 """
 
@@ -56,11 +57,20 @@ from .ranges import (
     R_DT,
     R_DV_MAX,
     R_DV_MIN,
+    R_KIND_COURSE,
+    R_KIND_SPEED,
+    R_LEG_MEAN,
+    R_LEG_MIN,
+    R_LEG_SD,
     R_LOS_MAX,
     R_LOS_MIN,
     R_MIN_RANGE,
     R_N_SIGMA,
     R_N_WEIGHTS,
+    R_OSC_AMP_MAX,
+    R_OSC_AMP_MIN,
+    R_OSC_PERIOD_MAX,
+    R_OSC_PERIOD_MIN,
     R_OWN_SPEED_MAX,
     R_OWN_SPEED_MIN,
     R_RANGE0_MAX,
@@ -80,9 +90,15 @@ from .ranges import (
     R_TM_SPACING,
     R_TURN_RATE_MAX,
     R_TURN_RATE_MIN,
+    R_WANDER_CLIP,
+    R_WANDER_SD,
+    R_WANDER_TAU,
     R_WEIGHT0,
     R_WINDOW_MAX,
     R_WINDOW_MIN,
+    R_WW_NONE,
+    R_WW_OSC,
+    R_WW_WANDER,
     R_ZIG2_DELAY_MAX,
     R_ZIG2_DELAY_MIN,
     R_ZIG_ABS_MAX,
@@ -114,7 +130,16 @@ P_TM_TIME = 15  # generator 0.4.0 single turn
 P_TM_ANGLE = 16
 P_TM_RATE = 17
 P_N_TM = 18  # generator 0.5.0: −1 key absent, else number of planned manoeuvres
-P_LEN = 19
+# Generator 0.6.0 (SRD Annex B, MAN2); NaN when absent.
+P_WANDER_KIND = 19  # 0 none, 1 wander, 2 oscillation, 3 both
+P_W_SD = 20
+P_W_TAU = 21
+P_W_CLIP = 22
+P_OSC_AMP = 23
+P_OSC_PERIOD = 24
+P_OSC_PHASE = 25
+P_ZIG_ON_MAN = 26  # 1.0 when the ownship zig row lies inside a target manoeuvre span
+P_LEN = 27
 
 # Manoeuvre table columns.
 TM_KIND = 0  # 0 course, 1 speed, 2 both (generator 0.6.0)
@@ -379,15 +404,34 @@ def target_manoeuvres(
         dur = abs(change) / rate
         end = k + turn_rows(dur, dt)
         kind = int(tm[j, TM_KIND])
+        change2 = 0.0
+        rate2 = 0.0
+        dur_c = dur
+        dur_v = 0.0
+        if kind == 2:
+            change2 = tm[j, TM_CHANGE2]
+            rate2 = tm[j, TM_RATE2]
+            dur_v = abs(change2) / rate2
+            if dur_v > dur:
+                dur = dur_v
+            end = k + turn_rows(dur, dt)
         spans[n_spans, 0] = kind
         spans[n_spans, 1] = k + 1
-        spans[n_spans, 2] = end
+        spans[n_spans, 2] = end if end < samples else samples
         n_spans += 1
         sign = -1.0 if change < 0 else 1.0
         stop = end if end < samples else samples
         for i in range(k + 1, stop):
             tau = (i - k) * dt
-            if kind == 0:
+            if kind == 2:
+                bx, by, bc, bv = both_state(
+                    xs, ys, c, v, sign * rate, dur_c, change2, rate2, dur_v, tau
+                )
+                tgt_x[i] = bx
+                tgt_y[i] = by
+                tgt_c[i] = bc
+                tgt_v[i] = bv
+            elif kind == 0:
                 ax, ay, ac = arc_position(xs, ys, c, v, sign * rate, tau)
                 tgt_x[i] = ax
                 tgt_y[i] = ay
@@ -399,7 +443,15 @@ def target_manoeuvres(
                 tgt_y[i] = ys + math.cos(c) * d
                 tgt_c[i] = c
                 tgt_v[i] = v + sign * rate * tau
-        if kind == 0:
+        if kind == 2:
+            bx, by, _bc, _bv = both_state(
+                xs, ys, c, v, sign * rate, dur_c, change2, rate2, dur_v, dur
+            )
+            x = bx
+            y = by
+            c = wrap2pi(c + change)
+            v = v + change2
+        elif kind == 0:
             ax, ay, _ac = arc_position(xs, ys, c, v, sign * rate, dur)
             x = ax
             y = ay
@@ -420,6 +472,246 @@ def target_manoeuvres(
     if n_spans > 0:
         TI[TI_M_START] = spans[0, 1]
         TI[TI_M_INDEX] = spans[n_spans - 1, 2]
+
+
+@njit(cache=True)
+def both_state(
+    x0: float,
+    y0: float,
+    c0: float,
+    v0: float,
+    omega: float,
+    dur_c: float,
+    dv: float,
+    acc: float,
+    dur_v: float,
+    tau: float,
+) -> tuple[float, float, float, float]:
+    """State ``tau`` seconds into a combined manoeuvre (generator 0.6.0 kind "both"): the course
+    turns at ``omega`` for ``dur_c`` s while the speed changes by ``dv`` at ``acc`` for ``dur_v``
+    s. Course and speed are exact; position is integrated with 1 s midpoint steps."""
+    sgn = -1.0 if dv < 0 else 1.0
+    x = x0
+    y = y0
+    t = 0.0
+    while t < tau:
+        h = 1.0 if tau - t > 1.0 else tau - t
+        tmid = t + 0.5 * h
+        cm = c0 + omega * (tmid if tmid < dur_c else dur_c)
+        vm = v0 + sgn * acc * (tmid if tmid < dur_v else dur_v)
+        x += vm * math.sin(cm) * h
+        y += vm * math.cos(cm) * h
+        t += h
+    c_end = c0 + omega * (tau if tau < dur_c else dur_c)
+    v_end = v0 + sgn * acc * (tau if tau < dur_v else dur_v)
+    return x, y, wrap2pi(c_end), v_end
+
+
+@njit(cache=True)
+def plan_target_legs(
+    scenario_seed: uint64, attempt: int, R: np.ndarray, P: np.ndarray, tm: np.ndarray
+) -> int:
+    """Generator 0.6.0 target legs (SRD Annex B, MAN2), drawn from their own stream so that no
+    0.5.0 draw moves. Legs ~ N(mean, sd) clipped at min are laid end to end; the first change
+    comes after a uniform fraction of the first leg. Each leg ends in a course change, a speed
+    change or both, by weight. Every leg draws the same values in the same order whatever its
+    kind (sign, angle, turn rate, speed sign, Δv, acceleration, next leg length). A speed change
+    that fits neither sign becomes a course change. Changes are planned until one would start at
+    or after the window's end. Returns and stores the number planned (``P[P_N_TM]``)."""
+    s2 = create_rng(derive_seed(scenario_seed, 2 + 2 * attempt))
+    dt = P[P_DT]
+    samples = js_round(P[P_WINDOW] / dt)
+    mean = R[R_LEG_MEAN]
+    sd = R[R_LEG_SD]
+    lo = R[R_LEG_MIN]
+    pc = R[R_KIND_COURSE]
+    ps = R[R_KIND_SPEED]
+    has_speed = not math.isnan(R[R_DV_MIN]) and not math.isnan(R[R_ACC_MIN])
+    v = P[P_TGT_SPEED]
+    leg = mean + sd * gaussian(s2)
+    if leg < lo:
+        leg = lo
+    t = uniform01(s2) * leg
+    n = 0
+    while n < MAX_TM:
+        u_kind = uniform01(s2)
+        sign_c = -1.0 if uniform01(s2) < 0.5 else 1.0
+        angle = uniform(s2, R[R_TM_ANGLE_MIN], R[R_TM_ANGLE_MAX])
+        rate_c = uniform(s2, R[R_TM_RATE_MIN], R[R_TM_RATE_MAX])
+        sign_v = -1.0 if uniform01(s2) < 0.5 else 1.0
+        dv = uniform(s2, R[R_DV_MIN], R[R_DV_MAX]) if has_speed else 0.0
+        acc = uniform(s2, R[R_ACC_MIN], R[R_ACC_MAX]) if has_speed else 0.0
+        nxt = mean + sd * gaussian(s2)
+        if nxt < lo:
+            nxt = lo
+        k = js_round(t / dt)
+        if k < 1:
+            k = 1
+        if k >= samples:
+            break
+        kind = 0 if u_kind < pc else (1 if u_kind < pc + ps else 2)
+        dvs = 0.0
+        if kind != 0:
+            if not has_speed:
+                kind = 0
+            elif v + sign_v * dv >= R[R_TGT_SPEED_MIN] and v + sign_v * dv <= R[R_TGT_SPEED_MAX]:
+                dvs = sign_v * dv
+            elif v - sign_v * dv >= R[R_TGT_SPEED_MIN] and v - sign_v * dv <= R[R_TGT_SPEED_MAX]:
+                dvs = -sign_v * dv
+            else:
+                kind = 0
+        for c in range(TM_COLS):
+            tm[n, c] = 0.0
+        tm[n, TM_KIND] = float(kind)
+        tm[n, TM_START] = f32(k * dt)
+        if kind == 1:
+            tm[n, TM_CHANGE] = f32(dvs)
+            tm[n, TM_RATE] = f32(acc)
+            dur = abs(dvs) / acc
+            v = v + dvs
+        else:
+            tm[n, TM_CHANGE] = f32(sign_c * angle)
+            tm[n, TM_RATE] = f32(rate_c)
+            dur = angle / rate_c
+            if kind == 2:
+                tm[n, TM_CHANGE2] = f32(dvs)
+                tm[n, TM_RATE2] = f32(acc)
+                dv_dur = abs(dvs) / acc
+                if dv_dur > dur:
+                    dur = dv_dur
+                v = v + dvs
+        n += 1
+        t = k * dt + dur + nxt
+    P[P_N_TM] = float(n)
+    return n
+
+
+@njit(cache=True)
+def target_position(P: np.ndarray, tm: np.ndarray, k: int, rmax: int) -> tuple[float, float]:
+    """The target's position at row ``k`` with its planned manoeuvres (generator 0.6.0)."""
+    tgt_x = np.empty(rmax)
+    tgt_y = np.empty(rmax)
+    tgt_c = np.empty(rmax)
+    tgt_v = np.empty(rmax)
+    TI = np.full(TI_LEN, -1, dtype=np.int64)
+    spans = np.empty((MAX_TM, 3), dtype=np.int64)
+    dt = P[P_DT]
+    samples = js_round(P[P_WINDOW] / dt)
+    TI[TI_SAMPLES] = samples
+    tx0 = P[P_RANGE0] * math.sin(P[P_BEARING0])
+    ty0 = P[P_RANGE0] * math.cos(P[P_BEARING0])
+    tvx = P[P_TGT_SPEED] * math.sin(P[P_TGT_COURSE])
+    tvy = P[P_TGT_SPEED] * math.cos(P[P_TGT_COURSE])
+    for i in range(samples):
+        tgt_x[i] = tx0 + tvx * i * dt
+        tgt_y[i] = ty0 + tvy * i * dt
+        tgt_c[i] = P[P_TGT_COURSE]
+        tgt_v[i] = P[P_TGT_SPEED]
+    target_manoeuvres(P, tm, tgt_x, tgt_y, tgt_c, tgt_v, TI, spans)
+    if k >= samples:
+        k = samples - 1
+    return tgt_x[k], tgt_y[k]
+
+
+@njit(cache=True)
+def apply_wander(
+    scenario_seed: uint64,
+    attempt: int,
+    R: np.ndarray,
+    P: np.ndarray,
+    own_x: np.ndarray,
+    own_y: np.ndarray,
+    own_c: np.ndarray,
+    samples: int,
+) -> None:
+    """Generator 0.6.0 ownship course wander (SRD Annex B FR-006), from its own stream: helm
+    wander (an AR(1) course error, clipped) and/or autopilot oscillation (a sinusoid), on steady
+    rows only (a row whose planned course equals the previous row's). Positions are re-integrated
+    from the recorded course: steady rows by the trapezoid rule, turn rows by the planned arc's own
+    displacement, so the recorded track is the true track. Records the kind and parameters in
+    ``P``. Draws: kind, amplitude, period, phase, then one innovation per row."""
+    s3 = create_rng(derive_seed(scenario_seed, 3 + 2 * attempt))
+    u = uniform01(s3)
+    has_osc = not math.isnan(R[R_OSC_AMP_MIN])
+    amp = uniform(s3, R[R_OSC_AMP_MIN], R[R_OSC_AMP_MAX]) if has_osc else 0.0
+    period = (
+        uniform(s3, R[R_OSC_PERIOD_MIN], R[R_OSC_PERIOD_MAX])
+        if not math.isnan(R[R_OSC_PERIOD_MIN])
+        else 1.0
+    )
+    phase = uniform(s3, 0.0, TWO_PI)
+    kind = 0
+    if u < R[R_WW_NONE]:
+        kind = 0
+    elif u < R[R_WW_NONE] + R[R_WW_WANDER]:
+        kind = 1
+    elif u < R[R_WW_NONE] + R[R_WW_WANDER] + R[R_WW_OSC]:
+        kind = 2
+    else:
+        kind = 3
+    has_ar = not math.isnan(R[R_WANDER_SD])
+    if (kind == 1 or kind == 3) and not has_ar:
+        kind = 2 if has_osc else 0
+    if (kind == 2 or kind == 3) and not has_osc:
+        kind = 1 if has_ar else 0
+    P[P_WANDER_KIND] = float(kind)
+    if kind == 0:
+        return
+    dt = P[P_DT]
+    v = P[P_OWN_SPEED]
+    use_ar = kind == 1 or kind == 3
+    use_osc = kind == 2 or kind == 3
+    sd = R[R_WANDER_SD] if use_ar else 0.0
+    tau = R[R_WANDER_TAU] if use_ar else 1.0
+    clip = R[R_WANDER_CLIP] if use_ar else 0.0
+    if use_ar:
+        P[P_W_SD] = f32(sd)
+        P[P_W_TAU] = f32(tau)
+        P[P_W_CLIP] = f32(clip)
+    if use_osc:
+        P[P_OSC_AMP] = f32(amp)
+        P[P_OSC_PERIOD] = f32(period)
+        P[P_OSC_PHASE] = f32(phase)
+    rho = math.exp(-dt / tau)
+    innov = sd * math.sqrt(1.0 - rho * rho)
+    e = sd * gaussian(s3) if use_ar else 0.0
+    planned_x = own_x.copy()
+    planned_y = own_y.copy()
+    planned_c = own_c.copy()
+    for i in range(samples):
+        if i > 0:
+            g = gaussian(s3)
+            if use_ar:
+                e = rho * e + innov * g
+        err = 0.0
+        if use_ar:
+            err = e if abs(e) <= clip else (clip if e > 0 else -clip)
+        if use_osc:
+            err += amp * math.sin(TWO_PI * i * dt / period + phase)
+        steady = i == 0 or planned_c[i] == planned_c[i - 1]
+        if i + 1 < samples and planned_c[i + 1] != planned_c[i]:
+            steady = False  # the row before a turn keeps the planned course
+        own_c[i] = wrap2pi(planned_c[i] + err) if steady else planned_c[i]
+        if i == 0:
+            own_x[i] = planned_x[i]
+            own_y[i] = planned_y[i]
+        elif steady and planned_c[i - 1] == planned_c[i]:
+            own_x[i] = own_x[i - 1] + 0.5 * v * dt * (math.sin(own_c[i - 1]) + math.sin(own_c[i]))
+            own_y[i] = own_y[i - 1] + 0.5 * v * dt * (math.cos(own_c[i - 1]) + math.cos(own_c[i]))
+        else:
+            own_x[i] = own_x[i - 1] + (planned_x[i] - planned_x[i - 1])
+            own_y[i] = own_y[i - 1] + (planned_y[i] - planned_y[i - 1])
+
+
+@njit(cache=True)
+def zig_on_manoeuvre(TI: np.ndarray, spans: np.ndarray) -> bool:
+    """Whether the ownship zig rows (turn start to zig) overlap a target manoeuvre span."""
+    a = TI[TI_TURN_START] if TI[TI_TURN_START] != -1 else TI[TI_ZIG]
+    b = TI[TI_ZIG]
+    for j in range(max(TI[TI_N_SPANS], 0)):
+        if spans[j, 1] <= b and spans[j, 2] >= a:
+            return True
+    return False
 
 
 @njit(cache=True)
@@ -444,8 +736,13 @@ def simulate_truth(
 
 
 @njit(cache=True)
-def plan_manoeuvres(s: np.ndarray, R: np.ndarray, P: np.ndarray, rmax: int) -> None:
-    """Generator 0.3.0 draws: across-LOS offsets and the second zig; updates ``P`` in place."""
+def plan_manoeuvres(s: np.ndarray, R: np.ndarray, P: np.ndarray, tm: np.ndarray, rmax: int) -> None:
+    """Generator 0.3.0 draws: across-LOS offsets and the second zig; updates ``P`` in place.
+
+    With the 0.6.0 leg model the target's legs are planned first (own stream), so the target
+    position at a zig row is taken from its simulated track, not from its initial constant
+    velocity; ``tm`` holds that plan. Before 0.6.0 ``P[P_N_TM]`` is −1 here and ``tm`` is unused."""
+    legs = not math.isnan(R[R_LEG_MEAN])
     across = R[R_ACROSS_LOS] > 0
     has_delay = not math.isnan(R[R_ZIG2_DELAY_MIN])
     if not across and not has_delay:
@@ -464,7 +761,10 @@ def plan_manoeuvres(s: np.ndarray, R: np.ndarray, P: np.ndarray, rmax: int) -> N
         t = k * P[P_DT]
         c0 = P[P_COURSE0]
         v = P[P_OWN_SPEED]
-        tx, ty = target_at(P, t)
+        if legs:
+            tx, ty = target_position(P, tm, k, rmax)
+        else:
+            tx, ty = target_at(P, t)
         P[P_ZIG] = f32(
             across_los_turn(v * math.sin(c0) * t, v * math.cos(c0) * t, c0, tx, ty, offset1)
         )
@@ -481,11 +781,13 @@ def plan_manoeuvres(s: np.ndarray, R: np.ndarray, P: np.ndarray, rmax: int) -> N
         tgt_v = np.empty(rmax)
         TI = np.empty(TI_LEN, dtype=np.int64)
         spans = np.empty((MAX_TM, 3), dtype=np.int64)
-        tm = np.empty((MAX_TM, 4))
         simulate_truth(P, tm, own_x, own_y, own_c, tgt_x, tgt_y, tgt_c, tgt_v, TI, spans)
         k2 = TI[TI_ZIG] + js_round(delay / P[P_DT])
         if k2 < TI[TI_SAMPLES]:
-            tx, ty = target_at(P, k2 * P[P_DT])
+            if legs:
+                tx, ty = tgt_x[k2], tgt_y[k2]
+            else:
+                tx, ty = target_at(P, k2 * P[P_DT])
             zig2 = across_los_turn(own_x[k2], own_y[k2], own_c[k2], tx, ty, zig2_drawn)
     P[P_ZIG2_DELAY] = delay
     P[P_ZIG2_ANGLE] = f32(zig2)
@@ -610,7 +912,7 @@ def plan_target_manoeuvres(
     tgt_v = np.empty(rmax)
     TI = np.empty(TI_LEN, dtype=np.int64)
     spans = np.empty((MAX_TM, 3), dtype=np.int64)
-    tm_none = np.empty((MAX_TM, 4))
+    tm_none = np.empty((MAX_TM, TM_COLS))
     P[P_N_TM] = -1.0  # simulate without manoeuvres, as gitma's simulateTruth(p) before the plan
     simulate_truth(P, tm_none, own_x, own_y, own_c, tgt_x, tgt_y, tgt_c, tgt_v, TI, spans)
     lo = TI[TI_ZIG] + int(math.ceil(R[R_TM_AFTER] / dt))
@@ -656,6 +958,8 @@ def draw_scenario(
     n_course: int,
     speed_change: bool,
     rmax: int,
+    scenario_seed: uint64,
+    attempt: int,
 ) -> bool:
     """One parameter draw (gitma ``drawScenario``); fills ``P``/``tm``; returns ``fits``."""
     dt = R[R_DT]
@@ -694,7 +998,9 @@ def draw_scenario(
     P[P_TGT_COURSE] = f32_angle(target_course)
     P[P_SIGMA] = f32(sigma)
     P[P_DROPOUT] = f32(dropout)
-    plan_manoeuvres(s, R, P, rmax)
+    if not math.isnan(R[R_LEG_MEAN]):
+        plan_target_legs(scenario_seed, attempt, R, P, tm)
+    plan_manoeuvres(s, R, P, tm, rmax)
     if not plan_target_manoeuvre(s, R, P, rmax):
         return False
     return bool(plan_target_manoeuvres(s, R, P, tm, n_course, speed_change, rmax))
@@ -780,7 +1086,7 @@ def generate_into(
     tgt_c = np.empty(rmax)
     tgt_v = np.empty(rmax)
     for redraws in range(MAX_REDRAWS + 1):
-        if not draw_scenario(s, R, P, tm, n_course, speed_change, rmax):
+        if not draw_scenario(s, R, P, tm, n_course, speed_change, rmax, seed, redraws):
             continue
         simulate_truth(P, tm, own_x, own_y, own_c, tgt_x, tgt_y, tgt_c, tgt_v, TI, spans)
         samples = TI[TI_SAMPLES]
@@ -788,6 +1094,10 @@ def generate_into(
             continue
         if TI[TI_ZIG2] != -1 and TI[TI_ZIG2] >= samples:
             continue
+        if not math.isnan(R[R_WW_NONE]):
+            apply_wander(seed, redraws, R, P, own_x, own_y, own_c, samples)
+        if not math.isnan(R[R_LEG_MEAN]):
+            P[P_ZIG_ON_MAN] = 1.0 if zig_on_manoeuvre(TI, spans) else 0.0
         mean_r, min_r = range_stats(samples, own_x, own_y, tgt_x, tgt_y)
         if min_r < R[R_MIN_RANGE]:
             continue

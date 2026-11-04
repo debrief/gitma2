@@ -145,24 +145,81 @@ def _bound(info: np.ndarray, g: np.ndarray, dx: float, dy: float, tvx: float, tv
     )
 
 
+Manoeuvre = tuple[str, float, float, float]
+"""(kind, start s, duration s, second duration s): the second duration is the speed change's
+for kind "both" (generator 0.6.0) and 0 otherwise."""
+
+
+def param_kinds(mans: list[Manoeuvre]) -> list[str]:
+    """The kind of each change parameter θ[4:], in order: "both" contributes a course change and
+    then a speed change."""
+    out: list[str] = []
+    for kind, *_ in mans:
+        out += ["course", "speed"] if kind == "both" else [kind]
+    return out
+
+
+def _both_advance(
+    x: float,
+    y: float,
+    c: float,
+    s: float,
+    w: float,
+    dur_c: float,
+    a: float,
+    dur_v: float,
+    tau: float,
+) -> tuple[float, float, float, float]:
+    """``tau`` s into a combined manoeuvre: course turning at w for dur_c, speed changing at a for
+    dur_v, position by 1 s midpoint steps (the generator's ``both_state``)."""
+    t = 0.0
+    x1, y1 = x, y
+    while t < tau:
+        h = 1.0 if tau - t > 1.0 else tau - t
+        tm = t + 0.5 * h
+        cm = c + w * (tm if tm < dur_c else dur_c)
+        vm = s + a * (tm if tm < dur_v else dur_v)
+        x1 += vm * math.sin(cm) * h
+        y1 += vm * math.cos(cm) * h
+        t += h
+    return (
+        x1,
+        y1,
+        c + w * (tau if tau < dur_c else dur_c),
+        s + a * (tau if tau < dur_v else dur_v),
+    )
+
+
 def _pos_vel(
-    theta: np.ndarray, t: float, mans: list[tuple[str, float, float]]
+    theta: np.ndarray, t: float, mans: list[Manoeuvre]
 ) -> tuple[float, float, float, float]:
     """Target position and velocity at time t for θ = (x0, y0, vx0, vy0, change_1 …) under the
-    generator's manoeuvre kinematics (0.5.0): a course change is an arc at constant speed, a speed
-    change constant acceleration on a constant course; ``mans`` holds (kind, start s, duration s)
-    in time order and the j-th change is θ[4 + j]."""
+    generator's manoeuvre kinematics: a course change is an arc at constant speed, a speed change
+    constant acceleration on a constant course (0.5.0), and "both" turns and accelerates at once
+    (0.6.0, two parameters). ``mans`` holds ``Manoeuvre`` tuples in time order."""
     x, y = float(theta[0]), float(theta[1])
     s = math.hypot(float(theta[2]), float(theta[3]))
     c = math.atan2(float(theta[2]), float(theta[3]))
     now = 0.0
-    for j, (kind, ts, dur) in enumerate(mans):
+    p = 4
+    for kind, ts, dur_a, dur_b in mans:
         if t <= ts:
             break
         x += s * math.sin(c) * (ts - now)
         y += s * math.cos(c) * (ts - now)
+        dur = max(dur_a, dur_b) if kind == "both" else dur_a
         tau = min(t - ts, dur)
-        ch = float(theta[4 + j])
+        if kind == "both":
+            w = float(theta[p]) / dur_a
+            a_ = float(theta[p + 1]) / dur_b
+            p += 2
+            x, y, c, s = _both_advance(x, y, c, s, w, dur_a, a_, dur_b, tau)
+            now = ts + tau
+            if t <= ts + dur:
+                return x, y, s * math.sin(c), s * math.cos(c)
+            continue
+        ch = float(theta[p])
+        p += 1
         if kind == "course":
             w = ch / dur
             if abs(w) < 1e-15:
@@ -188,29 +245,35 @@ def _pos_vel(
 
 def manoeuvre_model(
     manoeuvres: list[dict[str, Any]], tx0: float, ty0: float, tvx0: float, tvy0: float
-) -> tuple[np.ndarray, list[tuple[str, float, float]]]:
-    """θ at the truth and the (kind, start, duration) list from a scenario's
-    ``parameters.target_manoeuvres`` (duration = |change| / rate)."""
+) -> tuple[np.ndarray, list[Manoeuvre]]:
+    """θ at the truth and the ``Manoeuvre`` list from a scenario's ``parameters.target_manoeuvres``
+    (duration = |change| / rate; kind "both" adds change2 / rate2 as a second parameter)."""
     mans = sorted(manoeuvres, key=lambda m: float(m["start_time_s"]))
-    theta = np.array([tx0, ty0, tvx0, tvy0] + [float(m["change"]) for m in mans])
-    spec = [
-        (str(m["kind"]), float(m["start_time_s"]), abs(float(m["change"])) / float(m["rate"]))
-        for m in mans
-    ]
+    changes: list[float] = []
+    spec: list[Manoeuvre] = []
+    for m in mans:
+        kind = str(m["kind"]).split(".")[-1]
+        dur = abs(float(m["change"])) / float(m["rate"])
+        changes.append(float(m["change"]))
+        dur2 = 0.0
+        if kind == "both":
+            changes.append(float(m["change2"]))
+            dur2 = abs(float(m["change2"])) / float(m["rate2"])
+        spec.append((kind, float(m["start_time_s"]), dur, dur2))
+    theta = np.array([tx0, ty0, tvx0, tvy0] + changes)
     return theta, spec
 
 
 _FD_STEP = (1.0, 1.0, 1e-3, 1e-3)  # m, m, m/s, m/s; changes: 1e-6 rad or 1e-4 m/s
 
 
-def _model_jacobian(
-    theta: np.ndarray, times: np.ndarray, mans: list[tuple[str, float, float]]
-) -> np.ndarray:
+def _model_jacobian(theta: np.ndarray, times: np.ndarray, mans: list[Manoeuvre]) -> np.ndarray:
     """∂(x, y, vx, vy)(t_i)/∂θ by central differences: [N, 4, P]."""
     n_p = theta.shape[0]
     out = np.empty((times.shape[0], 4, n_p))
+    kinds = param_kinds(mans)
     for p in range(n_p):
-        h = _FD_STEP[p] if p < 4 else (1e-6 if mans[p - 4][0] == "course" else 1e-4)
+        h = _FD_STEP[p] if p < 4 else (1e-6 if kinds[p - 4] == "course" else 1e-4)
         up = theta.copy()
         dn = theta.copy()
         up[p] += h
@@ -318,8 +381,8 @@ def crb_rows(
 
 # --- numba port of the known-manoeuvres bound's Jacobian and information (spec 004 R5) ---------
 # Same arithmetic as ``_pos_vel`` / ``_model_jacobian`` / the information loop above, for the
-# training loss (two rows per scenario). Manoeuvres as a table [M, 4] (kind 0 course / 1 speed,
-# start s, duration s, change), sorted by start time.
+# training loss (two rows per scenario). Manoeuvres as a table [M, 5] (kind 0 course / 1 speed /
+# 2 both, start s, duration s, change, second duration s), sorted by start time.
 
 
 @njit(cache=True)
@@ -328,16 +391,40 @@ def _pos_vel_nb(theta: np.ndarray, t: float, mans: np.ndarray) -> tuple[float, f
     s = math.hypot(theta[2], theta[3])
     c = math.atan2(theta[2], theta[3])
     now = 0.0
+    p = 4
     for j in range(mans.shape[0]):
         ts = mans[j, 1]
-        dur = mans[j, 2]
+        kind = mans[j, 0]
+        dur_a = mans[j, 2]
+        dur_b = mans[j, 4]
         if t <= ts:
             break
         x += s * math.sin(c) * (ts - now)
         y += s * math.cos(c) * (ts - now)
+        dur = max(dur_a, dur_b) if kind == 2.0 else dur_a
         tau = min(t - ts, dur)
-        ch = theta[4 + j]
-        if mans[j, 0] == 0.0:
+        if kind == 2.0:
+            w = theta[p] / dur_a
+            a = theta[p + 1] / dur_b
+            p += 2
+            tt = 0.0
+            while tt < tau:
+                h = 1.0 if tau - tt > 1.0 else tau - tt
+                tm = tt + 0.5 * h
+                cm = c + w * (tm if tm < dur_a else dur_a)
+                vm = s + a * (tm if tm < dur_b else dur_b)
+                x += vm * math.sin(cm) * h
+                y += vm * math.cos(cm) * h
+                tt += h
+            c = c + w * (tau if tau < dur_a else dur_a)
+            s = s + a * (tau if tau < dur_b else dur_b)
+            now = ts + tau
+            if t <= ts + dur:
+                return x, y, s * math.sin(c), s * math.cos(c)
+            continue
+        ch = theta[p]
+        p += 1
+        if kind == 0.0:
             w = ch / dur
             if abs(w) < 1e-15:
                 x += s * math.sin(c) * tau
@@ -385,13 +472,23 @@ def known_manoeuvre_information(
     jac = np.zeros((4, n_p))
     up = theta.copy()
     dn = theta.copy()
+    pk = np.zeros(max(n_p - 4, 1))  # 0 course-like step, 1 speed-like step, per change parameter
+    m = 0
+    for j in range(mans.shape[0]):
+        if mans[j, 0] == 2.0:
+            pk[m] = 0.0
+            pk[m + 1] = 1.0
+            m += 2
+        else:
+            pk[m] = mans[j, 0]
+            m += 1
     q = 0
     for i in range(last + 1):
         for p in range(n_p):
             if p < 4:
                 h = 1.0 if p < 2 else 1e-3
             else:
-                h = 1e-6 if mans[p - 4, 0] == 0.0 else 1e-4
+                h = 1e-6 if pk[p - 4] == 0.0 else 1e-4
             up[p] = theta[p] + h
             dn[p] = theta[p] - h
             a = _pos_vel_nb(up, t[i], mans)
@@ -431,12 +528,22 @@ def crb_known_manoeuvres_fast(
     rows: list[int],
     sigma: float,
 ) -> list[CrbRow]:
-    """``crb_known_manoeuvres`` with the manoeuvres as the generator's table ``tm`` [M, 4]
-    (kind 0 course / 1 speed, start_time_s, change, rate) and the Jacobian in numba."""
+    """``crb_known_manoeuvres`` with the manoeuvres as the generator's table ``tm`` [M, ≥ 4]
+    (kind 0 course / 1 speed / 2 both, start_time_s, change, rate[, change2, rate2]) and the
+    Jacobian in numba."""
     order = np.argsort(tm[:, 1], kind="stable")
     tms = tm[order]
-    mans = np.stack([tms[:, 0], tms[:, 1], np.abs(tms[:, 2]) / tms[:, 3], tms[:, 2]], axis=1)
-    theta = np.concatenate([[tx[0], ty[0], tvx[0], tvy[0]], tms[:, 2]]).astype(np.float64)
+    both = tms[:, 0] == 2.0
+    dur2 = np.zeros(tms.shape[0])
+    if tms.shape[1] >= 6 and both.any():
+        dur2[both] = np.abs(tms[both, 4]) / tms[both, 5]
+    mans = np.stack([tms[:, 0], tms[:, 1], np.abs(tms[:, 2]) / tms[:, 3], tms[:, 2], dur2], axis=1)
+    changes: list[float] = []
+    for r in range(tms.shape[0]):
+        changes.append(float(tms[r, 2]))
+        if both[r]:
+            changes.append(float(tms[r, 4]))
+    theta = np.concatenate([[tx[0], ty[0], tvx[0], tvy[0]], changes]).astype(np.float64)
     want = sorted(set(rows))
     info, g = known_manoeuvre_information(
         theta,

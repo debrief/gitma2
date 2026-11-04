@@ -79,6 +79,7 @@ _PARAM_KEYS: tuple[tuple[str, int], ...] = (
 )
 
 _KINDS = ("course", "speed", "both")
+_WANDER_KINDS = ("none", "wander", "oscillation", "both")
 
 
 def kernel_to_record_parts(
@@ -137,6 +138,22 @@ def kernel_to_record_parts(
             }
             for j in range(int(TI[sc.TI_N_SPANS]))
         ]
+    if not math.isnan(P[sc.P_WANDER_KIND]):
+        kind = _WANDER_KINDS[int(P[sc.P_WANDER_KIND])]
+        wander: dict[str, Any] = {"kind": kind}
+        for key, i in (
+            ("sd_rad", sc.P_W_SD),
+            ("tau_s", sc.P_W_TAU),
+            ("clip_rad", sc.P_W_CLIP),
+            ("amp_rad", sc.P_OSC_AMP),
+            ("period_s", sc.P_OSC_PERIOD),
+            ("phase_rad", sc.P_OSC_PHASE),
+        ):
+            if not math.isnan(P[i]):
+                wander[key] = float(P[i])
+        metadata["ownship_wander"] = wander
+    if not math.isnan(P[sc.P_ZIG_ON_MAN]):
+        metadata["zig_on_manoeuvre"] = bool(P[sc.P_ZIG_ON_MAN] > 0)
     metadata["zig_time_s"] = float(buf.stats[0])
     metadata["mean_range_m"] = float(buf.stats[1])
     metadata["min_range_m"] = float(buf.stats[2])
