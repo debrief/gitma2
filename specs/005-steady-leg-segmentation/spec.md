@@ -51,9 +51,9 @@ same definitions to the true tracks.
 
 | Term | Definition | Adopted default (Annex B, 4 Nov 2026) |
 | --- | --- | --- |
-| Steady leg | Course within ± C of the leg mean and speed within ± S, for at least L_min | C = 5° (the helm wander), S = 0.5 kt, L_min = 2 min (Annex B: 5 min; held open, see Clarifications) |
+| Steady leg | Course within ± C of the leg mean and speed within ± S, for at least L_min | C = 5° (the helm wander), S = 0.5 kt, L_min = 5 min |
 | Deliberate course change | Adjacent non-overlapping moving averages of course differ by more than D | D = 10°, window 1 min; both configurable. The same test applies to speed with its own threshold D_S (proposed 1 kt) |
-| Transition | Interval between two steady legs; no motion model assumed | Length ≥ T_min = 30 s (Annex B: 1 min; held open); estimated, not fixed |
+| Transition | Interval between two steady legs; no motion model assumed | Length ≥ T_min = 1 min; estimated, not fixed |
 | Unknown | Interval the data cannot classify (too short, or too little bearing information) | Reported, never forced into a leg |
 | Gap | A transition handed to the physics layer: its bearings excluded and a knot at each end | — |
 | Chord | A transition handed to the physics layer: a knot at each end, the bearings kept, the speed prior across it | — |
@@ -65,16 +65,24 @@ Reasons for the defaults:
 - **C is 5°, not 2°** (Annex B): the band must hold helm wander, which the generator will produce
   (Annex B FR-006, staged). On generator 0.5.0 tracks are exactly piecewise constant, so C does
   not bind yet. D = 10° is then about 2C: a change of less than D stays inside one leg's band.
-- **L_min is 2 min, not 5.** On validation seed 304, 64% of the gaps between consecutive target
-  manoeuvres are under 5 min (median 4.2 min; the generator spaces them at least 3 min apart).
-  With L_min = 5 most real legs between turns would be unknown by definition.
-- **T_min is 30 s.** Simulated turns last 20 s at the 10th percentile and 50 s at the median.
+- **L_min = 5 min and T_min = 1 min are Annex B's, and the data changes to suit them** (owner,
+  4 Nov 2026). On generator 0.5.0 they do not fit: 64% of gaps between target manoeuvres are
+  under 5 min and the median turn lasts 50 s. The owner's answer was to change the simulation
+  model, not the thresholds: generator 0.6.0 gives target legs of 10–40 min (bell shaped, 5% at
+  10 min) and transitions of about a minute. Spec 005 is built and gated on 0.6.0 data.
 - **The 3-minute figure of the 2017 note** is a search-window size, not a turn duration. It is
   not a default here.
 
 ## Clarifications
 
 ### Session 2026-11-04 (Annex B, the owner's matured requirements)
+
+- **L_min and T_min closed, and the generator changes.** Asked to choose between Annex B's
+  5 min / 1 min and the data's 2 min / 30 s, the owner changed the data: "the target will
+  typically stay on one course from 10 to 40 minutes with a bell curve of leg length frequencies,
+  only turning at 10 minutes on 5% of occasions." L_min = 5 min and T_min = 1 min stand. Generator
+  0.6.0 (its own spec) comes first, and Gate S is scored on its data (FR-050, FR-052). The staging
+  below is superseded where it says 0.5.0.
 
 - **Source.** The owner's document of 3–4 November is committed as SRD Annex B. This spec now
   traces to it, and Annex B wins where they differ.
@@ -87,8 +95,8 @@ Reasons for the defaults:
   the median simulated turn lasts 50 s, so a 1 min T_min would label steady rows as transition
   around most turns). The owner's answer closes both, and the decision record fixes them.
 - **Generator.** Annex B requires wander, oscillation and target changes during ownship turns.
-  They are staged into generator 0.6.0 (a separate spec with a G0 run) so that spec 005 can build
-  and gate O, C and L on 0.5.0 data without a generator change in the same step (FR-050).
+  With the owner's leg-length model they form generator 0.6.0, a separate spec with a G0 run,
+  which now precedes Gate S (see the item above).
 - **Real time** is deferred (Annex B), but its live metrics are reported now (FR-060).
 - **Turn-size strata** and the overlap and speed-only strata of Annex B are added (FR-063).
 
@@ -319,20 +327,21 @@ labels.
 
 **Data and truth**
 
-- **FR-050**: The data for building and gating O, C and L MUST come from generator 0.5.0
-  unchanged. It already has turn rates of 0.5–3°/s, rate-limited speed changes, 0–3 target
-  changes and 180 s spacing (Annex B FR-030–FR-032, except changes during ownship turns). The
-  remaining Annex B generator requirements (FR-006 and FR-033: helm wander and autopilot
-  oscillation; FR-032: target changes during ownship turns) are **staged** into generator 0.6.0,
-  a separate spec with its own G0 run, behind new ranges fields so that 0.5.0 ranges stay
-  byte-identical. Until then, O's wander behaviour is covered by FR-014's constructed tracks,
-  and S1 is a sanity check only.
+- **FR-050**: The data for gating O, C and L MUST come from generator 0.6.0 (the SRD's MAN2
+  variant; owner decision of 4 Nov 2026): target legs of 10–40 min with a bell-shaped length
+  distribution, transitions of about T_min, helm wander and autopilot oscillation inside ± C,
+  target changes allowed during ownship turns, behind new ranges fields so that 0.5.0 ranges stay
+  byte-identical. Generator 0.6.0 is its own spec (G0 run, IMM re-tune, note 08's GLR + confirm
+  reference re-run on its validation split) and precedes this spec's decision record.
+  Development of O, C and L MAY start on 0.5.0 data, and O's wander behaviour is covered by
+  FR-014's constructed tracks until 0.6.0 exists.
 - **FR-051**: Truth labels (steady, transition, unknown per vessel per row) MUST be derived from
   the stored true tracks with the Definitions, by a deterministic function under test, and stored
   or recomputed with the data's provenance.
-- **FR-052**: Development MAY use validation seed 304. Gate S MUST be scored on a fresh test seed
-  from 312 onward. Training data for L MUST come from a fresh seed. The seeds are pinned in the
-  plan by digest. Seed 305 stays reserved for Gate D, and 311 was spec 004's training stream.
+- **FR-052**: Development MAY use validation seed 304 (0.5.0) and generator 0.6.0's validation
+  seed. Gate S MUST be scored on a fresh 0.6.0 test seed from 312 onward. Training data for L
+  MUST come from a fresh 0.6.0 seed. The seeds are pinned in the plan by digest. Seed 305 stays
+  reserved for Gate D, and 311 was spec 004's training stream.
 
 **Metrics**
 
@@ -446,8 +455,8 @@ labels.
 - Real sensor data, navigation error, non-Gaussian noise, several contacts.
 - Causal, real-time segmentation (Annex B: deferred to a later spec; its live metrics are
   reported here, FR-060).
-- Generator changes: ownship wander, autopilot oscillation, target changes during ownship turns
-  (Annex B requires them; staged into generator 0.6.0, a separate spec).
+- The generator change itself (0.6.0: leg lengths, wander, oscillation, changes during ownship
+  turns) is a separate spec that this one depends on.
 - Re-scoring or amending Gate D.
 
 ## Risks

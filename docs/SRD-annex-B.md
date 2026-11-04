@@ -15,10 +15,16 @@ the owner's earlier draft of 3 November, which spec 005 was first written from.
   (session 2026-11-04). Two of the owner's defaults are held open there: L_min (5 min here,
   2 min in spec 005 on the data's evidence) and T_min (1 min here, 30 s in spec 005). The owner's
   answer closes them.
-- The generator changes the owner requires (FR-030–FR-033, and FR-006's wander and oscillation)
-  are staged: spec 005 builds and gates O, C and L on generator 0.5.0 first, with O unit-tested on
-  constructed wander and oscillation; generator 0.6.0 adds them behind new ranges fields so that
-  0.5.0 ranges stay byte-identical, and is a separate spec with its own G0 run.
+- **Owner decision, 4 November 2026 (on L_min and T_min):** "we need to change our simulation
+  model: the target will typically stay on one course from 10 to 40 minutes with a bell curve of
+  leg length frequencies, only turning at 10 minutes on 5% of occasions." So the thresholds are
+  not fitted to generator 0.5.0 (median leg 4 min): the generator changes to match the owner's
+  model, L_min = 5 min and T_min = 1 min stand, and spec 005 builds and gates on the new data.
+  Generator 0.6.0 therefore comes **first**, as its own spec (target leg lengths, helm wander and
+  autopilot oscillation, target changes during ownship turns, slower turns so that transitions
+  last about T_min), behind new ranges fields so that 0.5.0 ranges stay byte-identical, with a
+  G0 run, a re-tuned IMM and note 08's reference re-run on its validation split. The agent's
+  scoping of 0.6.0 is `docs/research/09-generator-060-scope.md`.
 - "Future work: real time" is recorded as a later spec. Its live metrics (detection delay, false
   alarms per hour, how often a confirmed boundary later moves) are defined and reported, not
   gated, in spec 005 so the offline segmenter is not tuned to measures that will not transfer.
