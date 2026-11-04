@@ -429,39 +429,54 @@ def check_export_720(exp: Experiment, results: Path | None) -> None:
 
 
 def check_throughput(exp: Experiment, count: int = 10_000) -> None:
-    """Check 7 (SC-004): the kernel alone on MAN2 ranges, one thread, best of two passes over
-    ``count`` scenarios (the first call compiles); 0.5.0 phase-4 ranges reported beside it. Also
-    reports the physics layer's forward cost per solve at 360 and 720 rows (batch 64)."""
+    """Check 7 (SC-004): the kernel on MAN2 ranges through ``generate_indices``, the path that
+    generates training data on the fly (the scenario kernel in a numba ``prange`` over four
+    threads, labels and padding included), best of two passes over ``count`` scenarios after a
+    compiling call; this is how the pre-registered 30,000/s was measured. 0.5.0 phase-4 ranges,
+    and a one-thread Python loop over ``run_kernel`` (dominated by call overhead), are reported."""
+    from tma2.features.batch import generate_indices
+
     ranges = json.loads(MAN2_RANGES.read_text())
     p4 = json.loads(
         (ROOT / "tests" / "fixtures" / "gitma" / "phase4-seed777" / "ranges.json").read_text()
     )
+    idx = np.arange(count, dtype=np.int64)
 
-    def rate(r: dict[str, Any]) -> float:
-        R = flatten_ranges(r)
-        buf = KernelBuffers.for_rows(rows_for(r))
-        run_kernel(np.uint64(314), 0, R, buf)
+    def batched(r: dict[str, Any]) -> float:
+        generate_indices(np.uint64(314), idx[:64], r, workers=4)
         best = math.inf
         for _ in range(2):
             t0 = time.perf_counter()
-            for i in range(count):
-                run_kernel(np.uint64(314), i, R, buf)
+            generate_indices(np.uint64(314), idx, r, workers=4)
             best = min(best, time.perf_counter() - t0)
         return count / best
 
-    man2 = rate(ranges)
-    v050 = rate(p4)
+    def looped(r: dict[str, Any]) -> float:
+        R = flatten_ranges(r)
+        buf = KernelBuffers.for_rows(rows_for(r))
+        run_kernel(np.uint64(314), 0, R, buf)
+        t0 = time.perf_counter()
+        for i in range(count):
+            run_kernel(np.uint64(314), i, R, buf)
+        return count / (time.perf_counter() - t0)
+
+    man2 = batched(ranges)
+    v050 = batched(p4)
     exp.metrics["throughput"] = {
+        "method": "features.batch.generate_indices, 4 threads, best of two",
         "kernel_scenarios_per_s_man2": man2,
         "kernel_scenarios_per_s_050_phase4": v050,
+        "python_loop_one_thread_man2": looped(ranges),
+        "python_loop_one_thread_050_phase4": looped(p4),
         "scenarios": count,
-        "threads": 1,
+        "threads": 4,
     }
     exp.checks.append(
         Check(
             "throughput",
             "pass" if man2 >= THROUGHPUT_MIN else "fail",
-            f"kernel {man2:,.0f} MAN2 scenarios/s (0.5.0 phase-4 ranges {v050:,.0f}/s), one thread",
+            f"kernel {man2:,.0f} MAN2 scenarios/s (0.5.0 phase-4 ranges {v050:,.0f}/s), "
+            "generate_indices on four threads",
             value=man2,
             threshold=THROUGHPUT_MIN,
         )

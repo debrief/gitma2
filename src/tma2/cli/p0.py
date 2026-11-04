@@ -84,6 +84,7 @@ def check_generator(exp: Experiment) -> None:
                     generator_git_commit=hdr["generator_git_commit"],
                     generator_git_dirty=hdr["generator_git_dirty"],
                     schema_version=hdr["schema_version"],
+                    generator_version=hdr["generator_version"],
                 )
             )
             expected = json.loads((d / "digests.json").read_text())
