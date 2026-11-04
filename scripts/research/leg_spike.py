@@ -349,7 +349,8 @@ def cmd_confirm(a: argparse.Namespace) -> int:
     metas = tune_metas(a.validation, a.tune)
     tasks = []
     for nom, q, tau, w in parse_configs(a.configs):
-        h = config_threshold(nom, q, recs, metas)
+        # Gate S's test split: the threshold tuned on validation, never re-tuned on test rows
+        h = a.threshold if a.threshold is not None else config_threshold(nom, q, recs, metas)
         for s in range(a.shards):
             tasks.append((a.validation, a.work, a.tune, a.score, nom, q, tau, w, h, s, a.shards))
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
@@ -910,6 +911,12 @@ def main() -> int:
             p.add_argument("--workers", type=int, default=4)
         if name == "confirm":
             p.add_argument("--configs", required=True)
+            p.add_argument(
+                "--threshold",
+                type=float,
+                help="use this nominator threshold (e.g. validation's, from its confirm shards) "
+                "instead of tuning one on the --tune scenarios; for a test split, with --tune 0",
+            )
             p.add_argument("--shards", type=int, default=8)
             p.add_argument("--workers", type=int, default=4)
         if name == "report":
