@@ -6,8 +6,8 @@ O sees only the recorded course and speed, never helm orders.
    unwrapped course are compared at every row; a row is flagged when they differ by more than D
    (``course_change_deg``). The same test on speed uses D_S (``speed_change_kt``). Runs of
    flagged rows are candidate changes.
-2. **Fine pass.** From the candidate's steepest row turning in its direction, walk back to the turn's start: the first row
-   (walking back) where the smoothed turn rate (3-row central difference) no longer has the
+2. **Fine pass.** From the candidate's steepest row turning in its direction, walk back to the
+   turn's start: the first row (walking back) where the smoothed turn rate (3-row central difference) no longer has the
    turn's sign, or the course sits inside the preceding leg's ± C band. Walk forward the same way
    for the end, against the following leg's band: the end is declared ``window`` rows later than
    it happened, since the following leg's mean needs them.

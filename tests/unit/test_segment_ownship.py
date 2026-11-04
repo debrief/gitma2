@@ -31,7 +31,8 @@ def _turn(
         c[r] = course0 + (
             step * min(r - at + 1, rows) if r - at + 1 < rows else math.radians(size_deg)
         )
-    return np.mod(c, 2 * math.pi)
+    out: np.ndarray = np.mod(c, 2 * math.pi)
+    return out
 
 
 def _wander(
