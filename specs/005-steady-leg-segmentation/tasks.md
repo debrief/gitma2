@@ -91,7 +91,7 @@ before US3, because L uses O's labels as input (FR-043).
   - prefix invariance: segmenting [0, k] with the later bearings deleted gives a byte-identical result;
   - before the zig, C never invents a transition;
   - a target change during an ownship turn is accepted with legs spanning it.
-- [ ] T015 [US1] Implement `tma2-segment` in `src/tma2/cli/segment.py` (`contracts/cli.md`):
+- [x] T015 [US1] Implement `tma2-segment` in `src/tma2/cli/segment.py` (`contracts/cli.md`):
   - options `--segmenter C|L`, `--params`, `--rows g5|all|<list>`, `--vessel`, `--workers` and `--work`;
   - a header record with provenance, parameters and `segmenter_sha256`;
   - one Segmentation per scenario, vessel and prefix row;
@@ -105,7 +105,7 @@ before US3, because L uses O's labels as input (FR-043).
 
 **Independent test**: the oracle's gap recovered is 1 and one leg's is 0. GLR + confirm reproduces spec 006 T033's record to the printed precision (SC-002).
 
-- [ ] T017 [P] [US2] Add the reference segmentations in `src/tma2/segment/references.py`: oracle (from spans), one-leg, and GLR + confirm. GLR + confirm calls `scripts/research/leg_spike.py`'s confirm path through `detect/confirm.py`, at the configuration `glr:0.2:13.8` and the frozen MAN2 IMM recorded in T033
+- [x] T017 [P] [US2] Add the reference segmentations in `src/tma2/segment/references.py`: oracle (from spans), one-leg, and GLR + confirm. GLR + confirm calls `scripts/research/leg_spike.py`'s confirm path through `detect/confirm.py`, at the configuration `glr:0.2:13.8` and the frozen MAN2 IMM recorded in T033
 - [ ] T018 [US2] Implement `tma2-gs` in `src/tma2/cli/gs.py` (diagnostic mode):
   - **Scoring:** the same σ = 1° G5 rows and settled rows for every segmenter, with batch least squares and the frozen MAN2 IMM on those rows; downstream medians, P90, gross rates and known-manoeuvres efficiency.
   - **Intervals:** scenario-clustered paired bootstraps at 97.5% (2,000 resamples).
