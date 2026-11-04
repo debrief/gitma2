@@ -62,13 +62,13 @@ only.
 
 ## 3. Consequences to decide in the spec
 
-1. **Window length.** With legs of about 25 min, a 20–60 min window holds about one target change,
-   and roughly a third of engagements hold none. That is enough spans statistically (10,000
-   scenarios give about 10,000 spans) but few multi-leg engagements, which are the case Annex B
-   is built for. Lengthening windows to 40–120 min gives 1–3 changes per engagement but doubles
-   the padded row count (360 → 720), the physics-layer export window, and training cost per
-   scenario. **Owner's call**; recommended default: keep 20–60 min for Gate S, and report the
-   multi-change stratum, because the 720-row change touches every exported model.
+1. **Window length: 40–120 min (owner, 4 November 2026).** With legs of about 25 min this gives
+   1–3 target changes per engagement, the multi-leg case Annex B is built for. The padded row
+   count rises from 360 to 720 (`rows_for`), which touches the Gate 1 model's fixed export window,
+   the physics-layer cost per solve (about 2×) and training throughput per scenario; the 0.6.0
+   spec measures each and the ONNX conformance export moves to 720 rows. G5 rows at zig + 5 to
+   20 min are unchanged; the zig fraction (0.4–0.6 of the window) puts the zig at 16–72 min, so
+   there is always at least 20 min after it.
 2. **G5 rows** (zig + 5/10/15/20 min) and "settled" (> 5 min after the last change) keep their
    definitions; with long legs most G5 rows will be settled, so the all-rows and settled
    comparisons converge. Gate 2's criteria still read as written.

@@ -48,7 +48,7 @@ Two problem variants are used, in this order:
 | --- | --- | --- |
 | **CV** | gitma 0.3.0: constant-velocity target, three ownship legs (`zig_rule: across_los`), σ ∈ {1°, 2°}, 0–10% dropouts, 10–40 min windows | pipeline gate, Gate 1 |
 | **MAN** | gitma 0.5.0: 0–3 target course changes (P = 0.2, 0.3, 0.3, 0.2), one speed change in 30%, 20–60 min windows, phase-4 ranges | Annex A detector gate, Gate 2 |
-| **MAN2** | gitma2 0.6.0 (owner, 2026-11-04; Annex B): target legs of 10–40 min with a bell-shaped length distribution (5% at 10 min), transitions of about a minute, helm wander and autopilot oscillation, target changes allowed during ownship turns; 0.5.0 ranges reproduce 0.5.0 byte for byte | Gate S (spec 005), Gate 2 |
+| **MAN2** | gitma2 0.6.0 (owner, 2026-11-04; Annex B): target legs of 10–40 min with a bell-shaped length distribution (5% at 10 min), transitions of about a minute, helm wander and autopilot oscillation, target changes allowed during ownship turns, 40–120 min windows (720 rows); 0.5.0 ranges reproduce 0.5.0 byte for byte | Gate S (spec 005), Gate 2 |
 
 Both consumers (instantaneous, causal; time-late, full window) remain, scored as gitma does: the
 instantaneous model at every timestep after the zig as a curve against time since zig, gates at
@@ -164,7 +164,8 @@ and recorded, not asked.
   owner (constitution 1.1.0).
 - **2026-11-04 (owner):** the steady-leg requirements are Annex B. The simulation model changes
   to match them rather than the thresholds to the simulation: target legs of 10–40 min, bell
-  shaped, 5% at 10 min (generator 0.6.0, the MAN2 variant), before spec 005 is gated.
+  shaped, 5% at 10 min, in 40–120 min windows (generator 0.6.0, the MAN2 variant), before spec
+  005 is gated.
 - **2026-11-01 (agent, proposed; owner to merge):** Gate 1's efficiency criterion corrected. As
   written ("efficiency ≥ 0.8") it pointed the wrong way for an error-over-bound ratio, so every
   inefficient model passed (P0 panel round 2, statistics). Now ≤ 1.25 on the settled slices,
