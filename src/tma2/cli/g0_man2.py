@@ -46,6 +46,7 @@ from tma2.physics.layer import PhysicsLayer
 from tma2.physics.reference import ITERATIONS, TRIALS
 from tma2.physics.segmentation import trivial_inputs
 from tma2.references.classical import BearingData, bearing_data_from_arrays, classical_predict
+from tma2.references.imm import ImmParams, imm_name, imm_predict
 from tma2.sim.generate import KernelBuffers, generate_scenario, run_kernel
 from tma2.sim.ranges import flatten_ranges, rows_for
 from tma2.types import dump_record
@@ -348,6 +349,143 @@ def check_noise_free_zig_leg(exp: Experiment, split: Path) -> None:
     )
 
 
+NIS_BAND = (0.75, 1.3)  # gitma's TRACKER_NIS_BAND (phase-4 G0, panel round 2)
+NIS_SCENARIOS = 200
+NIS_SETTLE_S = 60.0  # gitma's PER_TIMESTEP_SETTLE_S
+# gitma's G0_IMM_STRAIGHT, at the scenario's own measurement variance (r_scale 1).
+NIS_IMM = ImmParams(0.0, 0.01, 0.001, 1e-5, 1.0, 1.0)
+EFFICIENCY_BAND = (0.8, 1.3)  # P0's (spec 002 SC-005)
+EFFICIENCY_SCENARIOS = 2000
+
+
+def _leg_arrays(
+    own: np.ndarray, tgt: np.ndarray, obs: np.ndarray, first: int, last: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Pack arrays cut to the leg's rows, time re-based to its first row (as ``_leg_data``)."""
+    s = slice(first, last + 1)
+    o, g, b = own[s].copy(), tgt[s].copy(), obs[s].copy()
+    t0 = own[first, 0]
+    o[:, 0] -= t0
+    g[:, 0] -= t0
+    b[:, 0] -= t0
+    return o, g, b
+
+
+def _sigma1(meta: dict[str, Any]) -> bool:
+    return abs(float(meta["parameters"]["noise_sigma_rad"]) - G5_SLICE_SIGMA_RAD) <= 1e-6
+
+
+def check_tracker_nis(exp: Experiment, split: Path) -> None:
+    """Check 8 (FR-051, research R6; gitma's phase-4 ``tracker-nis`` restated on the zig leg): the
+    straight-leg IMM run through ``imm_predict`` on the zig leg alone of the first 200 σ = 1°
+    scenarios that have one; each scenario's mean NIS over rows from zig + 60 s to the leg's last
+    row; the median over scenarios must lie in [0.75, 1.3]."""
+    means: list[float] = []
+    rows = 0
+    for _, meta, own, _tgt, obs in iter_pack_raw(split):
+        if not _sigma1(meta):
+            continue
+        leg = zig_leg(meta)
+        if leg is None:
+            continue
+        first, last = leg
+        bd = _leg_data(meta, own, obs, first, last)
+        nis: list[float] = []
+        imm_predict(bd, NIS_IMM, nis_out=nis)
+        # one value per row from zig + 1: NaN where the filter is not running, −1 without a bearing
+        settle = int(round(NIS_SETTLE_S / float(meta["parameters"]["dt_s"])))
+        vals = [v for j, v in enumerate(nis) if j + 1 >= settle and v >= 0.0]  # NaN ≥ 0 is False
+        if vals:
+            means.append(float(np.mean(vals)))
+            rows += len(vals)
+        if len(means) == NIS_SCENARIOS:
+            break
+    med = float(np.median(means)) if means else math.nan
+    lo, hi = NIS_BAND
+    exp.metrics["tracker_nis"] = {
+        "scenarios": len(means),
+        "rows": rows,
+        "median_mean_nis": med,
+        "imm": imm_name(NIS_IMM),
+        "per_scenario_p10_p90": [float(x) for x in np.quantile(means, [0.1, 0.9])],
+    }
+    exp.checks.append(
+        Check(
+            "tracker-nis",
+            "pass" if lo <= med <= hi else "fail",
+            f"straight-leg IMM ({imm_name(NIS_IMM)}) on the zig leg alone, {len(means)} σ = 1° "
+            f"scenarios, {rows} rows from zig + 60 s: median per-scenario mean NIS {med:.3f}, "
+            f"band [{lo}, {hi}]",
+            value=med,
+            threshold=hi,
+            threshold_low=lo,
+        )
+    )
+
+
+def check_efficiency(exp: Experiment, split: Path) -> None:
+    """Check 9 (FR-051, research R6; P0's ``least-squares-efficiency-speed`` restated on the zig
+    leg): batch least squares (final mode) on the zig leg alone of the first 2,000 σ = 1°
+    scenarios that have one, scored at the leg's last row against the full-window Cramér–Rao bound
+    at truth on the same rows (the leg is constant velocity, so that bound is the right one);
+    speed efficiency median(|e|/σ)/0.6745 in [0.8, 1.3]; range and course reported."""
+    from tma2.eval.metrics import efficiency
+    from tma2.references.crb import crb_rows
+
+    pairs: dict[str, list[tuple[float, float]]] = {"range": [], "course": [], "speed": []}
+    singular = 0
+    n = 0
+    for _, meta, own, tgt, obs in iter_pack_raw(split):
+        if not _sigma1(meta):
+            continue
+        leg = zig_leg(meta)
+        if leg is None:
+            continue
+        n += 1
+        first, last = leg
+        bd = _leg_data(meta, own, obs, first, last)
+        o, g, b = _leg_arrays(own, tgt, obs, first, last)
+        k = bd.n - 1
+        bound = crb_rows(o, g, b, bd.sigma, bd.zig_index, None, [k], "full_window")[0]
+        if bound.singular:
+            singular += 1
+        else:
+            row = classical_predict(bd, "final")["rows"][-1]
+            tr = math.hypot(float(g[k, 1] - o[k, 1]), float(g[k, 2] - o[k, 2]))
+            if row["converged"]:
+                er = abs(row["range_m"] - tr) / tr
+                dc = row["course_rad"] - float(g[k, 3])
+                ec = abs(math.degrees(math.atan2(math.sin(dc), math.cos(dc))))
+                es = abs(row["speed_mps"] - float(g[k, 4])) * 3600.0 / 1852.0
+            else:
+                er = ec = es = math.inf
+            pairs["range"].append((er, bound.sd_range_rel))
+            pairs["course"].append((ec, bound.sd_course_deg))
+            pairs["speed"].append((es, bound.sd_speed_kt))
+        if n == EFFICIENCY_SCENARIOS:
+            break
+    eff = {key: efficiency(v) for key, v in pairs.items()}
+    lo, hi = EFFICIENCY_BAND
+    exp.metrics["least_squares_efficiency_zig_leg"] = {
+        **{f"efficiency_{key}": v for key, v in eff.items()},
+        "rows": len(pairs["speed"]),
+        "scenarios": n,
+        "singular_bound": singular,
+    }
+    exp.checks.append(
+        Check(
+            "least-squares-efficiency-speed",
+            "pass" if lo <= eff["speed"] <= hi else "fail",
+            f"zig leg alone, last row, {len(pairs['speed'])} σ = 1° scenarios ({singular} singular "
+            f"bounds left out): speed efficiency {eff['speed']:.3f} (range {eff['range']:.3f}, "
+            f"course {eff['course']:.3f}); band [{lo}, {hi}]",
+            value=eff["speed"],
+            threshold=hi,
+            threshold_low=lo,
+        )
+    )
+
+
 def check_layer_720(exp: Experiment, split: Path) -> None:
     """Check 5: P0's physics-equals-least-squares on 720-row MAN2 windows."""
     blocks: list[tuple[dict[str, Any], np.ndarray, np.ndarray]] = []
@@ -574,6 +712,8 @@ def main(argv: list[str] | None = None) -> int:
     check_regen_050(exp, regen)
     check_distributions(exp, man2)
     check_noise_free_zig_leg(exp, nf)
+    check_tracker_nis(exp, man2)
+    check_efficiency(exp, man2)
     check_layer_720(exp, man2)
     check_export_720(exp, Path(a.conformance_results) if a.conformance_results else None)
     verdict = exp.write("G0")  # the pipeline gate; this experiment is its MAN2 run

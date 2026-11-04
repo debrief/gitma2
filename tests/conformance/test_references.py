@@ -153,3 +153,14 @@ def test_ekf_innovations_change_no_estimate() -> None:
         assert len(nis) == len(with_nis["rows"])
         seen += sum(1 for q in nis if math.isfinite(q) and q >= 0)
     assert seen > 0
+
+
+def test_imm_nis_out_one_value_per_row() -> None:
+    """Spec 006 G0-MAN2: imm_predict's nis_out has one value per row, like ekf_predict's."""
+    pack = fixture_dir("phase4-seed777") / "test.f32pack"
+    for _, meta, own, _tgt, obs in list(iter_pack_raw(pack))[:5]:
+        d = bearing_data_from_arrays(meta, own, obs)
+        nis: list[float] = []
+        pred = imm_predict(d, ImmParams(0.0, 0.01, 0.001, 1e-5), nis_out=nis)
+        assert len(nis) == len(pred["rows"])
+        assert pred == imm_predict(d, ImmParams(0.0, 0.01, 0.001, 1e-5))
