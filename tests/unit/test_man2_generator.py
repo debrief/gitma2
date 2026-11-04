@@ -140,7 +140,7 @@ def test_generated_spans_and_both_kind_are_recorded() -> None:
         m = generate_scenario(314, i, MAN2).scenario.metadata
         for sp in m.manoeuvres or []:
             kinds.add(_name(sp.kind))
-            assert 1 <= sp.start_index <= sp.end_index <= m.samples
+            assert 1 <= sp.start_index <= m.samples - 1 and sp.end_index >= sp.start_index
         for t in m.parameters.target_manoeuvres or []:
             if _name(t.kind) == "both":
                 assert t.change2 is not None and t.rate2 is not None
@@ -218,10 +218,8 @@ def test_wander_positions_are_the_integral_of_the_recorded_course() -> None:
         ca = [s.course_rad for s in a.ownship.states]
         cb = [s.course_rad for s in b.ownship.states]
         for j in range(1, len(ca)):
-            if cb[j] != cb[j - 1] or (j + 1 < len(cb) and cb[j + 1] != cb[j]):
-                continue  # turn rows, and the row before one, keep the planned arc
             if cb[j - 1] != cb[j]:
-                continue
+                continue  # a turn step keeps the planned arc's displacement
             p0, p1 = a.ownship.states[j - 1], a.ownship.states[j]
             ex = p0.x_m + 0.5 * v * dt * (math.sin(ca[j - 1]) + math.sin(ca[j]))
             ey = p0.y_m + 0.5 * v * dt * (math.cos(ca[j - 1]) + math.cos(ca[j]))
@@ -278,3 +276,37 @@ def test_fast_bound_refuses_a_narrow_table_with_both() -> None:
     tm = np.array([[2.0, 100.0, 0.5, 0.01]])
     with pytest.raises(ValueError, match="six-column"):
         crb_known_manoeuvres_fast(t, z, z, z + 5000, z + 5000, z + 1, z, np.ones(n), tm, [40], 0.02)
+
+
+def test_spans_may_run_past_the_window_and_none_starts_on_the_last_row() -> None:
+    past = 0
+    for i in range(150):
+        m = generate_scenario(314, i, MAN2).scenario.metadata
+        for sp in m.manoeuvres or []:
+            assert sp.start_index <= m.samples - 1  # at least one row inside the window
+            past += sp.end_index >= m.samples
+    assert past > 0  # in progress at the window's end: the true end is kept, not clipped
+
+
+def test_open_spans_add_no_end_boundary() -> None:
+    from tma2.models.detector_labels import row_labels
+
+    n, dt = 100, 10.0
+    spans = np.full((1, sc.MAX_TM, 3), -1, dtype=np.int32)
+    spans[0, 0] = (0, 95, 120)  # starts near the end, still turning at row 99
+    lab = row_labels(spans, np.array([n]), np.array([dt]), n)
+    # only the start's triangle: it falls off monotonically after row 95
+    b = lab.boundary[0]
+    assert b[95] == b.max() and np.all(np.diff(b[95:n]) <= 0)
+
+
+def test_validation_refuses_impossible_values() -> None:
+    with pytest.raises(RangesError, match="must be positive"):
+        flatten_ranges({**MAN2, "target_leg_length_s": {"mean": 1500, "sd": 0, "min": 300}})
+    with pytest.raises(RangesError, match="too short for window_s.max"):
+        flatten_ranges({**MAN2, "target_leg_length_s": {"mean": 1500, "sd": 546, "min": 60}})
+    with pytest.raises(RangesError, match="tau_s > 0"):
+        flatten_ranges({**MAN2, "ownship_wander": {**MAN2["ownship_wander"], "tau_s": 0}})
+    bad_osc = {"amp_rad": {"min": 0.01, "max": 0.05}, "period_s": {"min": 0, "max": 360}}
+    with pytest.raises(RangesError, match="period"):
+        flatten_ranges({**MAN2, "ownship_oscillation": bad_osc})

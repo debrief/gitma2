@@ -575,8 +575,9 @@ classes:
       zig_on_manoeuvre:
         range: boolean
         description: >-
-          The ownship zig row lies inside a target manoeuvre span (generator 0.6.0, where target
-          changes may precede or overlap the zig).
+          The ownship's turn rows (from turn_start_index up to, not including, zig_index) share a
+          row with a target manoeuvre span [start_index, end_index): the target manoeuvres while
+          ownship turns (generator 0.6.0). Without a rate-limited turn, the zig row alone.
       zig_time_s: { range: float, required: true, unit: { ucum_code: s } }
       mean_range_m: { range: float, required: true, unit: { ucum_code: m } }
       min_range_m: { range: float, required: true, unit: { ucum_code: m } }

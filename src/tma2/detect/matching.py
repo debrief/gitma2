@@ -30,6 +30,7 @@ import numpy as np
 
 from tma2.eval.rows import G5_GATE_MIN, G5_SLICE_SIGMA_RAD, settled_row
 from tma2.eval.stats import ascending, percentile
+from tma2.features.batch import is_turn_kind
 from tma2.types.generated.tma import DetectionRecord, SpanDetection
 
 THRESHOLD = 0.5
@@ -39,9 +40,7 @@ MERGE_S = 60.0
 ECE_BINS = 10
 
 
-def _is_turn(kind: str) -> bool:
-    """A span whose kind includes a course change: "course", or generator 0.6.0's "both"."""
-    return kind in ("course", "both")
+_is_turn = is_turn_kind  # "course", or generator 0.6.0's "both"
 
 
 def alarms(p_change: list[float] | np.ndarray, threshold: float = THRESHOLD) -> np.ndarray:
@@ -165,7 +164,8 @@ def score_scenario(
         held_leg_g5_rows=len(g5_held),
         held_leg_g5_flagged=sum(1 for k in g5_held if al[k]),
     )
-    bounds = truth_boundaries(spans)
+    # a span still in progress at the window's end has no end boundary inside it (generator 0.6.0)
+    bounds = [r for r in truth_boundaries(spans) if r < n]
     sc = ScenarioDetection(
         record=rec,
         knots_exported=len(knot_rows),

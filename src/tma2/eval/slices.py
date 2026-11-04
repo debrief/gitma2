@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from tma2.features.batch import is_speed_kind, is_turn_kind
 from tma2.sim.geometry import rad_to_deg
 
 RANGE_BANDS_KM = [(0, 2), (2, 5), (5, 10), (10, 20), (20, 30)]
@@ -48,8 +49,8 @@ def manoeuvre_band(m: dict[str, Any]) -> str:
     plan = m["parameters"].get("target_manoeuvres")
     if plan is not None:
         # generator 0.6.0's "both" is a turn and a speed change at once
-        turns = sum(1 for x in plan if x["kind"] in ("course", "both"))
-        speed = any(x["kind"] in ("speed", "both") for x in plan)
+        turns = sum(1 for x in plan if is_turn_kind(x["kind"]))
+        speed = any(is_speed_kind(x["kind"]) for x in plan)
         if turns == 0 and not speed:
             return "held"
         return f"{turns}turn{'' if turns == 1 else 's'}{'+speed' if speed else ''}"

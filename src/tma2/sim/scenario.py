@@ -108,7 +108,7 @@ from .ranges import (
 )
 
 MAX_REDRAWS = 1000
-MAX_TM = 24  # 0.5.0: ≤ 3 course + 1 speed change; 0.6.0: a 120-min window at the 5-min floor
+MAX_TM = 32  # 0.5.0: ≤ 3 course + 1 speed change; 0.6.0: validated as window max / leg min + 1
 
 # Parameter array layout (ScenarioParameters); NaN means the optional key is absent.
 P_WINDOW = 0
@@ -138,7 +138,7 @@ P_W_CLIP = 22
 P_OSC_AMP = 23
 P_OSC_PERIOD = 24
 P_OSC_PHASE = 25
-P_ZIG_ON_MAN = 26  # 1.0 when the ownship zig row lies inside a target manoeuvre span
+P_ZIG_ON_MAN = 26  # 1.0 when the ownship turn rows [turn start, zig) share a row with a span
 P_LEN = 27
 
 # Manoeuvre table columns.
@@ -417,7 +417,7 @@ def target_manoeuvres(
             end = k + turn_rows(dur, dt)
         spans[n_spans, 0] = kind
         spans[n_spans, 1] = k + 1
-        spans[n_spans, 2] = end if end < samples else samples
+        spans[n_spans, 2] = end  # may lie beyond the window: the change is still in progress
         n_spans += 1
         sign = -1.0 if change < 0 else 1.0
         stop = end if end < samples else samples
@@ -547,7 +547,7 @@ def plan_target_legs(
         k = js_round(t / dt)
         if k < 1:
             k = 1
-        if k >= samples:
+        if k >= samples - 1:  # a change on the last row would leave no row inside it
             break
         kind = 0 if u_kind < pc else (1 if u_kind < pc + ps else 2)
         dvs = 0.0
@@ -695,7 +695,9 @@ def apply_wander(
         if i == 0:
             own_x[i] = planned_x[i]
             own_y[i] = planned_y[i]
-        elif steady and planned_c[i - 1] == planned_c[i]:
+        elif planned_c[i - 1] == planned_c[i]:
+            # a straight step (including the row before a turn, whose course is the planned one):
+            # the trapezoid of the recorded courses, so the track is the integral of the course
             own_x[i] = own_x[i - 1] + 0.5 * v * dt * (math.sin(own_c[i - 1]) + math.sin(own_c[i]))
             own_y[i] = own_y[i - 1] + 0.5 * v * dt * (math.cos(own_c[i - 1]) + math.cos(own_c[i]))
         else:

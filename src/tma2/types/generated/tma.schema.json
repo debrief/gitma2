@@ -3161,7 +3161,7 @@
                     "type": "integer"
                 },
                 "zig_on_manoeuvre": {
-                    "description": "The ownship zig row lies inside a target manoeuvre span (generator 0.6.0, where target changes may precede or overlap the zig).",
+                    "description": "The ownship's turn rows (from turn_start_index up to, not including, zig_index) share a row with a target manoeuvre span [start_index, end_index): the target manoeuvres while ownship turns (generator 0.6.0). Without a rate-limited turn, the zig row alone.",
                     "type": [
                         "boolean",
                         "null"

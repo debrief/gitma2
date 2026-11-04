@@ -358,54 +358,113 @@ def crb_rows(
 
 
 @njit(cache=True)
-def _pos_vel_nb(theta: np.ndarray, t: float, mans: np.ndarray) -> tuple[float, float, float, float]:
+def _segment_nb(
+    kind: float,
+    x: float,
+    y: float,
+    c: float,
+    s: float,
+    p: int,
+    theta: np.ndarray,
+    dur_a: float,
+    dur_b: float,
+    tau: float,
+) -> tuple[float, float, float, float]:
+    """State ``tau`` s into one manoeuvre starting from (x, y, c, s); its parameters are θ[p] (and
+    θ[p + 1] for kind 2)."""
+    if kind == 2.0:
+        dv = theta[p + 1]
+        return both_state(x, y, c, s, theta[p] / dur_a, dur_a, dv, abs(dv) / dur_b, dur_b, tau)
+    ch = theta[p]
+    if kind == 0.0:
+        w = ch / dur_a
+        if abs(w) < 1e-15:
+            return x + s * math.sin(c) * tau, y + s * math.cos(c) * tau, c, s
+        return (
+            x + (s / w) * (math.cos(c) - math.cos(c + w * tau)),
+            y + (s / w) * (math.sin(c + w * tau) - math.sin(c)),
+            c + w * tau,
+            s,
+        )
+    a = ch / dur_a
+    dist = s * tau + 0.5 * a * tau * tau
+    return x + dist * math.sin(c), y + dist * math.cos(c), c, s + a * tau
+
+
+@njit(cache=True)
+def _manoeuvre_states_nb(
+    theta: np.ndarray, mans: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """For θ: each manoeuvre's state at its start and at its end [M, 4] (x, y, course, speed), its
+    duration [M] and its first parameter index [M]. Computed once per θ, so a time inside or
+    after a manoeuvre costs at most that manoeuvre's own integration, not every earlier one's."""
+    m_n = mans.shape[0]
+    starts = np.zeros((m_n, 4))
+    ends = np.zeros((m_n, 4))
+    durs = np.zeros(m_n)
+    pidx = np.zeros(m_n, dtype=np.int64)
     x, y = theta[0], theta[1]
     s = math.hypot(theta[2], theta[3])
     c = math.atan2(theta[2], theta[3])
     now = 0.0
     p = 4
-    for j in range(mans.shape[0]):
-        ts = mans[j, 1]
+    for j in range(m_n):
         kind = mans[j, 0]
-        dur_a = mans[j, 2]
-        dur_b = mans[j, 4]
-        if t <= ts:
-            break
+        ts = mans[j, 1]
+        dur = max(mans[j, 2], mans[j, 4]) if kind == 2.0 else mans[j, 2]
         x += s * math.sin(c) * (ts - now)
         y += s * math.cos(c) * (ts - now)
-        dur = max(dur_a, dur_b) if kind == 2.0 else dur_a
-        tau = min(t - ts, dur)
-        if kind == 2.0:
-            w = theta[p] / dur_a
-            dv = theta[p + 1]
-            p += 2
-            x, y, c, s = both_state(x, y, c, s, w, dur_a, dv, abs(dv) / dur_b, dur_b, tau)
-            now = ts + tau
-            if t <= ts + dur:
-                return x, y, s * math.sin(c), s * math.cos(c)
-            continue
-        ch = theta[p]
-        p += 1
-        if kind == 0.0:
-            w = ch / dur
-            if abs(w) < 1e-15:
-                x += s * math.sin(c) * tau
-                y += s * math.cos(c) * tau
-            else:
-                x += (s / w) * (math.cos(c) - math.cos(c + w * tau))
-                y += (s / w) * (math.sin(c + w * tau) - math.sin(c))
-                c += w * tau
-        else:
-            a = ch / dur
-            dist = s * tau + 0.5 * a * tau * tau
-            x += dist * math.sin(c)
-            y += dist * math.cos(c)
-            s += a * tau
-        now = ts + tau
-        if t <= ts + dur:
-            return x, y, s * math.sin(c), s * math.cos(c)
-    x += s * math.sin(c) * (t - now)
-    y += s * math.cos(c) * (t - now)
+        starts[j, 0], starts[j, 1], starts[j, 2], starts[j, 3] = x, y, c, s
+        pidx[j] = p
+        x, y, c, s = _segment_nb(kind, x, y, c, s, p, theta, mans[j, 2], mans[j, 4], dur)
+        ends[j, 0], ends[j, 1], ends[j, 2], ends[j, 3] = x, y, c, s
+        durs[j] = dur
+        p += 2 if kind == 2.0 else 1
+        now = ts + dur
+    return starts, ends, durs, pidx
+
+
+@njit(cache=True)
+def _pos_vel_nb(
+    theta: np.ndarray,
+    t: float,
+    mans: np.ndarray,
+    starts: np.ndarray,
+    ends: np.ndarray,
+    durs: np.ndarray,
+    pidx: np.ndarray,
+) -> tuple[float, float, float, float]:
+    """Target position and velocity at t (as ``_pos_vel``), from ``_manoeuvre_states_nb``."""
+    last = -1
+    for j in range(mans.shape[0]):
+        if t <= mans[j, 1]:
+            break
+        last = j
+    if last < 0:
+        s = math.hypot(theta[2], theta[3])
+        c = math.atan2(theta[2], theta[3])
+        x = theta[0] + s * math.sin(c) * t
+        y = theta[1] + s * math.cos(c) * t
+        return x, y, s * math.sin(c), s * math.cos(c)
+    ts = mans[last, 1]
+    if t <= ts + durs[last]:
+        x, y, c, s = _segment_nb(
+            mans[last, 0],
+            starts[last, 0],
+            starts[last, 1],
+            starts[last, 2],
+            starts[last, 3],
+            pidx[last],
+            theta,
+            mans[last, 2],
+            mans[last, 4],
+            t - ts,
+        )
+        return x, y, s * math.sin(c), s * math.cos(c)
+    x, y, c, s = ends[last, 0], ends[last, 1], ends[last, 2], ends[last, 3]
+    rest = t - (ts + durs[last])
+    x += s * math.sin(c) * rest
+    y += s * math.cos(c) * rest
     return x, y, s * math.sin(c), s * math.cos(c)
 
 
@@ -444,23 +503,30 @@ def known_manoeuvre_information(
         else:
             pk[m] = mans[j, 0]
             m += 1
+    # Jacobian at every row, one parameter at a time, so each perturbed θ's manoeuvre states are
+    # computed once (a "both" manoeuvre is integrated numerically; spec 006 review).
+    jac_all = np.zeros((last + 1, 4, n_p))
+    for p in range(n_p):
+        if p < 4:
+            h = 1.0 if p < 2 else 1e-3
+        else:
+            h = 1e-6 if pk[p - 4] == 0.0 else 1e-4
+        up[p] = theta[p] + h
+        dn[p] = theta[p] - h
+        su, eu, du, iu = _manoeuvre_states_nb(up, mans)
+        sd_, ed, dd, id_ = _manoeuvre_states_nb(dn, mans)
+        for i in range(last + 1):
+            a = _pos_vel_nb(up, t[i], mans, su, eu, du, iu)
+            b = _pos_vel_nb(dn, t[i], mans, sd_, ed, dd, id_)
+            jac_all[i, 0, p] = (a[0] - b[0]) / (2 * h)
+            jac_all[i, 1, p] = (a[1] - b[1]) / (2 * h)
+            jac_all[i, 2, p] = (a[2] - b[2]) / (2 * h)
+            jac_all[i, 3, p] = (a[3] - b[3]) / (2 * h)
+        up[p] = theta[p]
+        dn[p] = theta[p]
     q = 0
     for i in range(last + 1):
-        for p in range(n_p):
-            if p < 4:
-                h = 1.0 if p < 2 else 1e-3
-            else:
-                h = 1e-6 if pk[p - 4] == 0.0 else 1e-4
-            up[p] = theta[p] + h
-            dn[p] = theta[p] - h
-            a = _pos_vel_nb(up, t[i], mans)
-            b = _pos_vel_nb(dn, t[i], mans)
-            jac[0, p] = (a[0] - b[0]) / (2 * h)
-            jac[1, p] = (a[1] - b[1]) / (2 * h)
-            jac[2, p] = (a[2] - b[2]) / (2 * h)
-            jac[3, p] = (a[3] - b[3]) / (2 * h)
-            up[p] = theta[p]
-            dn[p] = theta[p]
+        jac[:, :] = jac_all[i]
         if valid[i] != 0:
             dx = tx[i] - ox[i]
             dy = ty[i] - oy[i]

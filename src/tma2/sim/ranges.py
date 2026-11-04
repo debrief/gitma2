@@ -15,7 +15,7 @@ import numpy as np
 from .geometry import deg_to_rad, kt_to_mps
 
 LIST_MAX = 8
-MAX_COUNT_WEIGHTS = 4  # kernel table holds 3 course changes + 1 speed change (scenario.MAX_TM)
+MAX_COUNT_WEIGHTS = 4  # 0.5.0 count model: at most 3 course changes + 1 speed change
 
 # Layout of the flat ranges array (float64). Keep in step with ``flatten_ranges``.
 R_WINDOW_MIN = 0
@@ -182,8 +182,17 @@ def validate_ranges(r: dict[str, Any]) -> None:
         if clash:
             raise RangesError(
                 "target_leg_length_s cannot be combined with target_course_change_count_weights, "
-                "target_manoeuvre_spacing_s, target_manoeuvre_after_zig_s or "
-                "target_manoeuvre_margin_s"
+                "target_manoeuvre_spacing_s, target_manoeuvre_after_zig_s, "
+                "target_manoeuvre_margin_s or target_manoeuvre_fraction"
+            )
+        if not (float(leg["mean"]) > 0 and float(leg["sd"]) > 0 and float(leg["min"]) > 0):
+            raise RangesError("target_leg_length_s mean, sd and min must be positive")
+        from .scenario import MAX_TM
+
+        if float(r["window_s"]["max"]) / float(leg["min"]) + 1 > MAX_TM:
+            raise RangesError(
+                f"target_leg_length_s.min is too short for window_s.max: the kernel's table holds "
+                f"{MAX_TM} changes"
             )
         if any(
             r.get(k) is None for k in ("target_manoeuvre_angle_abs_rad", "target_turn_rate_rad_s")
@@ -218,6 +227,17 @@ def validate_ranges(r: dict[str, Any]) -> None:
         vals = [float(w[n]) for n in names]
         if any(v < 0 for v in vals) or sum(vals) <= 0:
             raise RangesError(f"{key} must be non-negative with a positive sum")
+    hw = r.get("ownship_wander")
+    if hw is not None and not (
+        float(hw["sd_rad"]) >= 0 and float(hw["tau_s"]) > 0 and float(hw["clip_rad"]) > 0
+    ):
+        raise RangesError("ownship_wander needs sd_rad ≥ 0, tau_s > 0 and clip_rad > 0")
+    osc = r.get("ownship_oscillation")
+    if osc is not None and not (
+        0 <= float(osc["amp_rad"]["min"]) <= float(osc["amp_rad"]["max"])
+        and 0 < float(osc["period_s"]["min"]) <= float(osc["period_s"]["max"])
+    ):
+        raise RangesError("ownship_oscillation needs 0 ≤ amp min ≤ max and 0 < period min ≤ max")
     ww = r.get("ownship_wander_weights")
     if ww is not None:
         if (float(ww["wander"]) > 0 or float(ww["both"]) > 0) and r.get("ownship_wander") is None:

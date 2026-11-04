@@ -21,6 +21,17 @@ KIND_NONE = -1
 KIND_COURSE = 0
 KIND_SPEED = 1
 KIND_BOTH = 2  # generator 0.6.0
+KIND_NAMES = ("course", "speed", "both")
+
+
+def is_turn_kind(kind: int | str) -> bool:
+    """A manoeuvre that changes course: "course", or generator 0.6.0's "both"."""
+    return kind in (KIND_COURSE, KIND_BOTH, "course", "both")
+
+
+def is_speed_kind(kind: int | str) -> bool:
+    """A manoeuvre that changes speed: "speed", or generator 0.6.0's "both"."""
+    return kind in (KIND_SPEED, KIND_BOTH, "speed", "both")
 
 
 @dataclass
@@ -44,7 +55,7 @@ class Batch:
     spans: np.ndarray  # (B, MAX_TM, 3) int32 padded with −1
     # Generator manoeuvre table (kind 0 course / 1 speed, start_time_s, change, rate), rows
     # [0, n_tm): the known-manoeuvres Cramér–Rao bound needs it (spec 004). n_tm −1 before 0.5.0.
-    tm: np.ndarray = field(default_factory=lambda: np.zeros((0, 24, 6)))  # (B, MAX_TM, TM_COLS)
+    tm: np.ndarray = field(default_factory=lambda: np.zeros((0, sc.MAX_TM, sc.TM_COLS)))
     n_tm: np.ndarray = field(default_factory=lambda: np.zeros(0, dtype=np.int32))  # (B,) int32
 
     def __len__(self) -> int:
