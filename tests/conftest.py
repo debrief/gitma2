@@ -34,3 +34,29 @@ def _warm_numba() -> None:
     from tma2.sim.generate import warm_up
 
     warm_up()
+
+
+@pytest.fixture(scope="session")
+def man2_pack(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A small MAN2 split (generator 0.6.0, seed 316, 60 scenarios; the train split, 48 of them),
+    generated once per session so no binary fixture is committed."""
+    import numpy as np
+
+    from tma2.data.dataset import GenerateOptions, generate_dataset
+
+    root = Path(__file__).resolve().parents[1] / "configs"
+    out = tmp_path_factory.mktemp("man2")
+    generate_dataset(
+        GenerateOptions(
+            seed=np.uint64(316),
+            count=60,
+            out_dir=out,
+            ranges=json.loads((root / "man2-ranges.json").read_text()),
+            heldout_ranges=json.loads((root / "man2-heldout.json").read_text()),
+            format="f32pack",
+            created_by="tests",
+            generator_git_commit=TEST_PROVENANCE[0],
+            generator_git_dirty=TEST_PROVENANCE[1],
+        )
+    )
+    return out / "train.f32pack"

@@ -1448,6 +1448,190 @@
             "title": "GateResult",
             "type": "string"
         },
+        "GateSDecision": {
+            "additionalProperties": false,
+            "description": "The Gate S decision record (spec 005 FR-070, contracts/decision-record.md), committed before any L training.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "carried_rule": {
+                    "type": "string"
+                },
+                "criterion": {
+                    "type": "string"
+                },
+                "follow_on": {
+                    "type": "string"
+                },
+                "forecast": {
+                    "type": "string"
+                },
+                "gap_normalisation": {
+                    "description": "raw (R7).",
+                    "type": "string"
+                },
+                "glr_confirm": {
+                    "description": "GLR + confirm configuration.",
+                    "type": "string"
+                },
+                "imm": {
+                    "description": "Frozen MAN2 IMM name.",
+                    "type": "string"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/SegmentParameters"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "s1_limit": {
+                    "description": "O's contamination P90 limit on ownship legs.",
+                    "type": "number"
+                },
+                "s2_validation": {
+                    "description": "C \u2212 GLR + confirm on validation and the S4 reference it implies.",
+                    "type": "string"
+                },
+                "s3_contamination_limit": {
+                    "description": "L's contamination may exceed the reference's by at most this.",
+                    "type": "number"
+                },
+                "s3_false_split_limit": {
+                    "type": "number"
+                },
+                "s4_reference": {
+                    "description": "C or glr-confirm.",
+                    "type": "string"
+                },
+                "shuffled_rule": {
+                    "type": "string"
+                },
+                "test_count": {
+                    "type": "integer"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "train_seed": {
+                    "description": "L's training stream.",
+                    "type": "integer"
+                },
+                "validation_digest": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "validation_seed",
+                "validation_digest",
+                "test_seed",
+                "test_count",
+                "train_seed",
+                "parameters",
+                "gap_normalisation",
+                "s1_limit",
+                "s3_contamination_limit",
+                "s3_false_split_limit",
+                "s2_validation",
+                "s4_reference",
+                "imm",
+                "glr_confirm",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "carried_rule",
+                "shuffled_rule",
+                "criterion",
+                "follow_on",
+                "forecast"
+            ],
+            "title": "GateSDecision",
+            "type": "object"
+        },
+        "GateSRecord": {
+            "additionalProperties": false,
+            "description": "The Gate S scoring record (spec 005 data-model.md); metrics live in metrics.json beside it.",
+            "properties": {
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "decided_by": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "decision_sha256": {
+                    "type": "string"
+                },
+                "metrics_sha256": {
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "segmenters": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "split": {
+                    "$ref": "#/$defs/Split"
+                },
+                "verdicts": {
+                    "$ref": "#/$defs/GateSVerdicts"
+                }
+            },
+            "required": [
+                "decision_sha256",
+                "split",
+                "seed",
+                "dataset_digest",
+                "segmenters",
+                "metrics_sha256",
+                "verdicts"
+            ],
+            "title": "GateSRecord",
+            "type": "object"
+        },
+        "GateSVerdicts": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "s1": {
+                    "description": "pass | fail | inconclusive.",
+                    "type": "string"
+                },
+                "s2": {
+                    "type": "string"
+                },
+                "s3": {
+                    "type": "string"
+                },
+                "s4": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "s1",
+                "s2",
+                "s3",
+                "s4"
+            ],
+            "title": "GateSVerdicts",
+            "type": "object"
+        },
         "GateVerdict": {
             "additionalProperties": false,
             "description": "Machine verdict for a gate; the team review records the final decision.",
@@ -2995,7 +3179,8 @@
                 "scenario",
                 "prediction",
                 "crb",
-                "detector"
+                "detector",
+                "segmentation"
             ],
             "title": "RecordKind",
             "type": "string"
@@ -3301,6 +3486,225 @@
                 "dropout_fraction"
             ],
             "title": "ScenarioParameters",
+            "type": "object"
+        },
+        "SegmentInterval": {
+            "additionalProperties": false,
+            "description": "One interval of a Segmentation; rows are inclusive sample indices.",
+            "properties": {
+                "end_index": {
+                    "description": "Inclusive; \u2265 start_index.",
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "kind": {
+                    "$ref": "#/$defs/SegmentKind"
+                },
+                "open": {
+                    "description": "True only for the last interval when a transition is still in progress at the prefix end.",
+                    "type": "boolean"
+                },
+                "start_index": {
+                    "minimum": 0,
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "kind",
+                "start_index",
+                "end_index",
+                "open"
+            ],
+            "title": "SegmentInterval",
+            "type": "object"
+        },
+        "SegmentKind": {
+            "description": "An interval of a segmentation (spec 005, SRD Annex B).",
+            "enum": [
+                "steady",
+                "transition",
+                "unknown"
+            ],
+            "title": "SegmentKind",
+            "type": "string"
+        },
+        "SegmentMode": {
+            "description": "How a segmentation is handed to the physics layer (spec 005 FR-030).",
+            "enum": [
+                "gap",
+                "chord"
+            ],
+            "title": "SegmentMode",
+            "type": "string"
+        },
+        "SegmentParameters": {
+            "additionalProperties": false,
+            "description": "A segmenter's fixed parameters (spec 005 data-model.md; defaults from SRD Annex B and the MAN2 re-plan). Copied into each segmentation file's header.",
+            "properties": {
+                "course_change_deg": {
+                    "description": "D: a deliberate course change (ownship coarse pass).",
+                    "type": "number"
+                },
+                "course_tol_deg": {
+                    "description": "C: half-width of a steady leg's course band.",
+                    "type": "number"
+                },
+                "l_min_rows": {
+                    "description": "L_min in rows.",
+                    "type": "integer"
+                },
+                "margin": {
+                    "description": "Cost margin below which differing intervals are unknown (FR-023).",
+                    "type": "number"
+                },
+                "mode": {
+                    "$ref": "#/$defs/SegmentMode"
+                },
+                "nominator_far": {
+                    "description": "GLR nominator's held-leg false-alarm fraction.",
+                    "type": "number"
+                },
+                "retest_rows": {
+                    "description": "Re-test interval of a raised alarm episode.",
+                    "type": "integer"
+                },
+                "search_penalty": {
+                    "description": "Per-leg penalty of the additive search (decision record).",
+                    "type": "number"
+                },
+                "speed_change_kt": {
+                    "description": "D_S: a deliberate speed change (ownship coarse pass).",
+                    "type": "number"
+                },
+                "speed_tol_kt": {
+                    "description": "S: half-width of a steady leg's speed band.",
+                    "type": "number"
+                },
+                "t_lengths_rows": {
+                    "description": "Transition lengths searched, in rows.",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "type": "array"
+                },
+                "t_min_rows": {
+                    "description": "T_min in rows.",
+                    "type": "integer"
+                },
+                "tau": {
+                    "description": "Confirmation threshold (\u03c7\u00b2, 4 dof, before scaling).",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "course_tol_deg",
+                "speed_tol_kt",
+                "course_change_deg",
+                "speed_change_kt",
+                "l_min_rows",
+                "t_min_rows",
+                "t_lengths_rows",
+                "search_penalty",
+                "nominator_far",
+                "retest_rows",
+                "tau",
+                "margin",
+                "mode"
+            ],
+            "title": "SegmentParameters",
+            "type": "object"
+        },
+        "Segmentation": {
+            "additionalProperties": false,
+            "description": "One vessel's segmentation of the prefix [0, prefix_row] of one scenario (spec 005 FR-001, FR-003). Intervals tile [0, prefix_row] in order without overlap.",
+            "properties": {
+                "cost": {
+                    "description": "Physics-layer cost of the accepted segmentation on [0, k]; null for O.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "intervals": {
+                    "items": {
+                        "$ref": "#/$defs/SegmentInterval"
+                    },
+                    "type": "array"
+                },
+                "margin": {
+                    "description": "Smallest cost drop among accepted transitions minus its threshold; null for O.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "prefix_row": {
+                    "description": "k: only bearings at rows \u2264 k were used.",
+                    "type": "integer"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "scenario_index": {
+                    "type": "integer"
+                },
+                "vessel": {
+                    "$ref": "#/$defs/TrackId"
+                }
+            },
+            "required": [
+                "record",
+                "scenario_index",
+                "vessel",
+                "prefix_row",
+                "intervals"
+            ],
+            "title": "Segmentation",
+            "type": "object"
+        },
+        "SegmentationHeader": {
+            "additionalProperties": false,
+            "description": "First record of a tma2-segment file.",
+            "properties": {
+                "dataset_digest": {
+                    "description": "SHA-256 of the truth file.",
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "parameters": {
+                    "$ref": "#/$defs/SegmentParameters"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "segmenter": {
+                    "description": "C, L-s<seed>, oracle, one-leg or glr-confirm.",
+                    "type": "string"
+                },
+                "segmenter_sha256": {
+                    "description": "Configuration digest (C) or weights digest (L).",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "segmenter",
+                "segmenter_sha256",
+                "dataset_digest",
+                "parameters",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "SegmentationHeader",
             "type": "object"
         },
         "SpanDetection": {
@@ -3651,6 +4055,31 @@
             "title": "TrainingPlan",
             "type": "object"
         },
+        "TruthLabels": {
+            "additionalProperties": false,
+            "description": "Per-row truth labels for one vessel of one scenario (spec 005 FR-051, R4).",
+            "properties": {
+                "labels": {
+                    "items": {
+                        "$ref": "#/$defs/SegmentKind"
+                    },
+                    "type": "array"
+                },
+                "scenario_index": {
+                    "type": "integer"
+                },
+                "vessel": {
+                    "$ref": "#/$defs/TrackId"
+                }
+            },
+            "required": [
+                "scenario_index",
+                "vessel",
+                "labels"
+            ],
+            "title": "TruthLabels",
+            "type": "object"
+        },
         "WanderKind": {
             "description": "Which ownship course-wander process a scenario drew (generator 0.6.0).",
             "enum": [
@@ -3732,6 +4161,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.22.0"
+    "version": "0.23.0"
 }
 

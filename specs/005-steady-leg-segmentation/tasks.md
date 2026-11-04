@@ -40,27 +40,27 @@ before US3, because L uses O's labels as input (FR-043).
 
 ## Phase 2: Foundational (blocking)
 
-- [ ] T004 Add the following classes to `schema/tma.yaml` and bump its minor version:
+- [x] T004 Add the following classes to `schema/tma.yaml` and bump its minor version:
   - `SegmentInterval`: kind enum `steady|transition|unknown`, `start_index` ≥ 0, `end_index` ≥ `start_index` (inclusive), `open` bool;
   - `Segmentation`: `scenario_index`, vessel enum `ownship|target`, `prefix_row`, `intervals`, `cost`, `margin` (optional; null for O), `segmenter`, `segmenter_sha256`;
   - `SegmentParameters`: every field of data-model.md with its T002 defaults, and mode enum `gap|chord`;
   - `TruthLabels`, `GateSDecision` (the fields of `contracts/decision-record.md`) and `GateSRecord`.
 
   Then regenerate the types (`uv run python scripts/gen_types.py`) and the data dictionary (`scripts/data_dictionary.py`).
-- [ ] T005 Add a validator `tma2.segment.validate(seg, k)` in `src/tma2/segment/__init__.py`. It checks that the intervals tile [0, k] exactly, in order, without overlap; that steady intervals are ≥ `l_min_rows` and transitions ≥ `t_min_rows`, unless the interval is unknown or open; and that only the last interval may be open. Test it in `tests/unit/test_segment_validate.py`
+- [x] T005 Add a validator `tma2.segment.validate(seg, k)` in `src/tma2/segment/__init__.py`. It checks that the intervals tile [0, k] exactly, in order, without overlap; that steady intervals are ≥ `l_min_rows` and transitions ≥ `t_min_rows`, unless the interval is unknown or open; and that only the last interval may be open. Test it in `tests/unit/test_segment_validate.py`
 - [ ] T006 Check the physics layer's knot path at 720 rows; G0-MAN2 left it untested. Both checks use 50 seed-314 σ = 1° scenarios with ≥ 600 rows and every truth knot:
   - **Equivalence.** In `tests/unit/test_physics_knots_720.py`, compare `physics/layer.py` with `physics/reference.py` on `oracle_inputs` in both chord and masked-turn modes (relative range ≤ 1e-4, flags exact), and the gradients for finiteness.
   - **Export.** Add `--man2 --knots` to `src/tma2/export/onnx_export.py`: a golden batch with knots at 720 rows (k ≥ 480), conformance across Python, WASM and Java to 1e-5, and `inputs_sha256` bound. Add the CI step to `.github/workflows/ci.yml`.
 
   If either fails, fix the layer before T013 depends on it.
-- [ ] T007 [P] Implement truth labels in `src/tma2/segment/truth.py` (research R4):
+- [x] T007 [P] Implement truth labels in `src/tma2/segment/truth.py` (research R4):
   - **Target:** steady and transition from the generator's spans and the true track, at Annex B's tolerances.
   - **Ownship:** labels from the true course and speed, with wander inside ± C kept steady.
   - **Unknown:** rows before the first ownship zig ends.
 
   Add `tests/unit/test_segment_truth.py`, where labels match the span rows exactly on 20 seed-316 noise-free scenarios. Add a golden on the 0.5.0 fixture `tests/fixtures/gitma/phase4-seed777`.
-- [ ] T008 [P] Implement the metrics in `src/tma2/segment/metrics.py` (FR-060, FR-061, R7): contamination, coverage, false split, leg-count accuracy on detectable changes, boundary error at ± 60 s and ± 3 min, gap recovered (range and velocity, raw medians), and the live metrics (delay, false transitions per hour, boundary moves after acceptance). Add `tests/unit/test_segment_metrics.py`: the oracle gives contamination 0, coverage 1 and gap 1; one leg gives gap 0
-- [ ] T009 [P] Implement `Segmentation → LayerInputs` in `src/tma2/segment/inputs.py` (FR-030):
+- [x] T008 [P] Implement the metrics in `src/tma2/segment/metrics.py` (FR-060, FR-061, R7): contamination, coverage, false split, leg-count accuracy on detectable changes, boundary error at ± 60 s and ± 3 min, gap recovered (range and velocity, raw medians), and the live metrics (delay, false transitions per hour, boundary moves after acceptance). Add `tests/unit/test_segment_metrics.py`: the oracle gives contamination 0, coverage 1 and gap 1; one leg gives gap 0
+- [x] T009 [P] Implement `Segmentation → LayerInputs` in `src/tma2/segment/inputs.py` (FR-030):
   - **gap:** knots at both ends, transition bearings masked;
   - **chord:** knots at both ends, bearings kept, the speed prior across course-only transitions.
 
