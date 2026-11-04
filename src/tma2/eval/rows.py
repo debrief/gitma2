@@ -58,15 +58,17 @@ def g5_rows(metas: list[dict[str, Any]]) -> list[G5Row]:
 def zig_leg(m: dict[str, Any], before: int = 12, after: int = 30) -> tuple[int, int] | None:
     """The steady target leg that contains the ownship zig, as rows (first, last), or None.
 
-    A target leg runs from the end of one manoeuvre span (or row 0) to the row before the next
-    span starts (or the last row). The zig leg is the one containing the ownship's turn, from
+    A target leg runs from the end of one manoeuvre span (or row 0) to two rows before the next
+    span starts (or the last row): row ``start_index − 1`` is still on the leg, so this is one row
+    conservative. The zig leg is the one containing the ownship's turn, from
     ``turn_start_index`` (or ``zig_index``) to ``zig_index``; it must have at least ``before``
     rows before the turn and ``after`` rows after the zig, so that least squares on the leg alone
     is determined. None when the zig overlaps a target manoeuvre or the leg is too short. Spec 006
     research R3: the MAN2 restatement of gitma's ``beforeManoeuvre``."""
     n = int(m["samples"])
     zig = int(m["zig_index"])
-    turn = int(m.get("turn_start_index", zig))
+    ts = m.get("turn_start_index")
+    turn = zig if ts is None else int(ts)  # an instant turn has no start row
     first, last = 0, n - 1
     for sp in m.get("manoeuvres") or []:
         a, b = int(sp["start_index"]), int(sp["end_index"])

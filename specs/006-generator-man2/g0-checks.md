@@ -32,7 +32,7 @@ V); fail or inconclusive otherwise. Exit 3 from the CLI when any gated check fai
 | 6 | `export-720` | the toy export at 720 rows (golden batch from seed 316) agrees with torch within 1e-5 in the Python and browser (WASM) legs, in double; Java as P0 (may be deferred, then skipped) |
 | 8 | `tracker-nis` | added 4 November 2026 after panel round 1 (FR-051 and research R6 name it; it was missing), before its first run: gitma's phase-4 `tracker-nis` restated on the zig leg. The straight-leg IMM (`imm-cv0-ct0.01-w0.001-s1e-05`, gitma's `G0_IMM_STRAIGHT`, r scale 1, p0 scale 1) through `imm_predict` on the zig leg alone of the first 200 σ = 1° seed-314 validation scenarios that have one; each scenario's mean NIS over rows from zig + 60 s to the leg's last row; pass when the median over scenarios is in [0.75, 1.3] (gitma's band) |
 | 9 | `least-squares-efficiency-speed` | added with check 8, before its first run: P0's efficiency check restated on the zig leg. Batch least squares (final mode) on the zig leg alone of the first 2,000 σ = 1° seed-314 validation scenarios that have one, at the leg's last row, against the full-window Cramér–Rao bound at truth on the same rows (the leg is constant velocity); pass when the speed efficiency, median(\|e\|/σ)/0.6745, is in [0.8, 1.3] (P0's band); range and course reported |
-| 7 | `throughput` | the kernel generates at least 10,000 MAN2 scenarios per second (SC-004); measured: 30,000 |
+| 7 | `throughput` | the kernel generates at least 10,000 MAN2 scenarios per second (SC-004); measured: 30,000. *Method fixed by owner amendment (below): `features.batch.generate_indices` on four threads, timed with nothing else running* |
 
 **Not restated for MAN2** (FR-051 and R6 listed P0's whole set): P0's `references` (gitma's
 prediction fixtures exist only for 0.5.0 data, and the reference code is unchanged; `tma2-p0`
@@ -53,6 +53,17 @@ owner's simulation, not the pipeline. Accuracy on the fitted scenarios was 9.3e-
 and 9.2e-6 (physics layer) against 1e-3. The owner chose to replace "at most 20% skipped" with "at
 least 500 of 1,000 scenarios fitted"; the accuracy limit is unchanged and the skip share is
 reported. Recorded here and in `src/tma2/cli/g0_man2.py` (`ZIG_LEG_FITTED_MIN`).
+
+## Amendment (owner, 4 November 2026, after runs r0 and r1): throughput method
+
+The table named no method. Run r0 timed a one-thread Python loop over `run_kernel` (8,245/s,
+fail); run r1 timed `features.batch.generate_indices` on four threads (21,527/s, pass), the path
+that generates training data on the fly and the one behind the "measured: 30,000" figure (taken
+in this session at 12:53 on 4 November with `generate_indices`, four threads, labels and padding
+included; it was not committed). The red-team reviewer (panel round 1) objected that this was a
+change of method after a result, and that both runs were timed beside other jobs. The owner chose
+`generate_indices` on four threads, re-timed with nothing else running; the one-thread loop is
+reported beside it.
 
 ## Reported, not gated
 

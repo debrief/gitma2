@@ -147,6 +147,7 @@ def check_distributions(exp: Experiment, split: Path) -> None:
     worst_where: tuple[int, int] | None = None
     band_rows = 0
     course0_mismatch = 0
+    realised: dict[str, list[float]] = {}  # per wander kind: largest deviation per segment
     n = 0
     for _, m, own, _tgt, _obs in iter_pack_raw(split):
         n += 1
@@ -175,9 +176,12 @@ def check_distributions(exp: Experiment, split: Path) -> None:
             > 1e-6
         ):
             course0_mismatch += 1
+        wk = _kind(w["kind"]) if w is not None else "absent"
         for first, last, course in _planned_courses(m, own_c):
             d = np.abs(np.angle(np.exp(1j * (own_c[first : last + 1] - course))))
             band_rows += int(d.size)
+            if d.size:
+                realised.setdefault(wk, []).append(float(d.max()))
             if d.size and float(d.max()) > worst_band:
                 worst_band = float(d.max())
                 worst_where = (int(m["index"]), first + int(np.argmax(d)))
@@ -252,6 +256,15 @@ def check_distributions(exp: Experiment, split: Path) -> None:
         "kind_counts": dict(kinds),
         "wander_counts": dict(wander),
         "wander_worst_deg": math.degrees(worst_band),
+        # reported (panel round 1): realised wander per kind, so missing wander would show
+        "wander_realised_deg_by_kind": {
+            k: {
+                "segments": len(v),
+                "max": math.degrees(max(v)),
+                "median_of_segment_max": math.degrees(float(np.median(v))),
+            }
+            for k, v in sorted(realised.items())
+        },
         "complete_legs": len(legs_min),
         "complete_leg_min_p5_p50_p95": [float(x) for x in q],
         "complete_leg_share_le_10_min": float(np.mean(np.asarray(legs_min) <= 10.0)),
