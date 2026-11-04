@@ -1,0 +1,133 @@
+name: Segmentation runs
+
+# Spec 005: run tma2-segment over a slice of a MAN2 split on several 4-core runners (C takes tens
+# of seconds per 720-row scenario). A plan file (configs/segment/<name>.json) names the data (seed,
+# ranges, the commit that generated it and the committed digest), the ordinals, the shards, the
+# segmenter parameters (--set) and the GLR tuning ordinals. Each shard regenerates the split at
+# the generating commit (headers carry no timestamp, so the bytes reproduce), checks its digest,
+# segments its ordinals and uploads its file; the last job merges them in ordinal order and pushes
+# results/segment-<plan>-<run id>. Nothing merges automatically.
+
+on:
+  push:
+    branches: ["segment/**"]
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: plan file under configs/segment/
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.p.outputs.plan }}
+      shards: ${{ steps.p.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          if [ -n "${{ github.event.inputs.plan }}" ]; then
+            PLAN="${{ github.event.inputs.plan }}"
+          else
+            PLAN="configs/segment/${GITHUB_REF_NAME#segment/}.json"
+          fi
+          test -f "$PLAN"
+          echo "plan=$PLAN" >> "$GITHUB_OUTPUT"
+          echo "shards=$(python3 -c "import json; n=json.load(open('$PLAN'))['shards']; print(json.dumps(list(range(n))))")" >> "$GITHUB_OUTPUT"
+
+  segment:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+      DATA: ${{ github.workspace }}/../data
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Regenerate the split at its generating commit and check its digest
+        run: |
+          read -r SEED COUNT RANGES HELDOUT GEN SPLIT DIGESTS <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); d = p['data']
+          print(d['seed'], d['count'], d['ranges'], d['heldout'], d['commit'], d['split'], d['digests'])")"
+          git worktree add "$RUNNER_TEMP/gen" "$GEN"
+          (cd "$RUNNER_TEMP/gen" && uv sync && uv run tma2-generate --seed "$SEED" --count "$COUNT" \
+            --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$DATA")
+          want=$(python3 -c "import json; print(json.load(open('$DIGESTS'))['$SPLIT.f32pack'])")
+          got=$(sha256sum "$DATA/$SPLIT.f32pack" | cut -d' ' -f1)
+          echo "$SPLIT.f32pack: $got (committed $want)"
+          [ "$got" = "$want" ]
+          echo "SPLIT=$SPLIT" >> "$GITHUB_ENV"
+      - run: uv sync
+      - name: Segment this shard's ordinals
+        run: |
+          ARGS=$(python3 -c "
+          import json, shlex; p = json.load(open('$PLAN')); s = ${{ matrix.shard }}
+          a, b = p['ordinals']; n = p['shards']; per = -(-(b - a) // n)
+          start = a + s * per; count = max(0, min(per, b - start))
+          out = ['--start', str(start), '--count', str(count), '--rows', p.get('rows', 'g5')]
+          for k, v in p.get('set', {}).items(): out += ['--set', f'{k}={json.dumps(v)}']
+          if p.get('glr_tune'): out += ['--glr-tune', p['glr_tune']]
+          print(shlex.join(out))")
+          eval uv run tma2-segment --in "$DATA/$SPLIT.f32pack" --out "seg/shard-${{ matrix.shard }}.ndjson" --workers 4 $ARGS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: seg/shard-${{ matrix.shard }}.ndjson
+
+  merge:
+    needs: [plan, segment]
+    runs-on: ubuntu-latest
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: shards
+          merge-multiple: true
+      - name: Merge the shards and push the results branch
+        run: |
+          NAME=$(basename "$PLAN" .json)
+          OUT="experiments/segment-runs/$NAME-${{ github.run_id }}"
+          mkdir -p "$OUT"
+          python3 - "$OUT" shards <<'EOF'
+          import glob, json, sys
+          out, d = sys.argv[1], sys.argv[2]
+          files = sorted(glob.glob(f"{d}/shard-*.ndjson"), key=lambda f: int(f.split("-")[-1].split(".")[0]))
+          headers, recs = [], []
+          for f in files:
+              lines = open(f, encoding="utf-8").read().splitlines()
+              headers.append(json.loads(lines[0]))
+              recs += [json.loads(x) for x in lines[1:]]
+          keys = ("segmenter", "segmenter_sha256", "dataset_digest", "parameters", "git_commit", "git_dirty")
+          for h in headers[1:]:
+              assert all(h[k] == headers[0][k] for k in keys), "shard headers differ"
+          recs.sort(key=lambda r: (r["ordinal"], r["prefix_row"]))
+          with open(f"{out}/segmentations.ndjson", "w", encoding="utf-8") as f:
+              f.write(json.dumps(headers[0]) + "\n")
+              for r in recs:
+                  f.write(json.dumps(r) + "\n")
+          print(f"{len(recs)} segmentations from {len(files)} shards")
+          EOF
+          cp "$PLAN" "$OUT/plan.json"
+          printf '{"run_id": "%s", "commit": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" > "$OUT/run.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/segment-$NAME-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: segmentation run $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"
