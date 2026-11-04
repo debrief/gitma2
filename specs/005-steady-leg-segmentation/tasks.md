@@ -166,7 +166,7 @@ before US3, because L uses O's labels as input (FR-043).
 
 **Independent test**: untrained L equals C byte for byte (SC-003). The first step's gradient is non-zero. The shuffled control is not better than C.
 
-- [ ] T029 [P] [US3] Implement the semi-Markov forward recursion in `src/tma2/segment/crf.py` (log-sum-exp, the R6 lattice). It covers the truth path's score, the negative log-likelihood, and the auxiliary per-bearing term at 0.1. Add `tests/unit/test_segment_crf.py`: the gradient at zero evidence matches finite differences and is non-zero, and the normaliser equals brute-force enumeration on a 30-row toy
+- [x] T029 [P] [US3] Implement the semi-Markov forward recursion in `src/tma2/segment/crf.py` (log-sum-exp, the R6 lattice). It covers the truth path's score, the negative log-likelihood, and the auxiliary per-bearing term at 0.1. Add `tests/unit/test_segment_crf.py`: the gradient at zero evidence matches finite differences and is non-zero, and the normaliser equals brute-force enumeration on a 30-row toy
 - [ ] T030 [P] [US3] Implement the evidence network in `src/tma2/segment/evidence.py`:
   - **Inputs (FR-043):** the per-bearing features, O's labels and C's residuals, normalised from inputs only.
   - **Architecture:** a small causal 1-D convolution, or the Gate 1 encoder, with no GELU and attention written out (export rules). The head is zero-initialised, with no dying ReLU before it.
