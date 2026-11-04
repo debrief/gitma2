@@ -130,6 +130,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--allow-dirty", action="store_true", help="exploration only: not frozen")
     ap.add_argument("--criterion", choices=sorted(CRITERIA), default="zig300")
+    ap.add_argument(
+        "--shard",
+        metavar="I/N",
+        help="score only grid entries I, I + N, … and write grid-part-I.csv (no choice); "
+        "a long tune split over several runners",
+    )
+    ap.add_argument(
+        "--from-parts",
+        nargs="+",
+        metavar="CSV",
+        help="score nothing: read the shards' grid-part files and choose as the whole grid would "
+        "(the same order, so ties still go to the earlier entry)",
+    )
     a = ap.parse_args(argv)
     folder = Path(a.experiment)
     exp = Experiment(id=folder.name, folder=folder)
@@ -148,8 +161,32 @@ def main(argv: list[str] | None = None) -> int:
         ("imm", p, a.validation, a.scenarios, a.criterion) for p in imm_grid
     ]
     jobs += [("ekf", p, a.validation, a.scenarios, a.criterion) for p in ekf_grid]
-    with ProcessPoolExecutor(max_workers=a.workers) as pool:
-        results = list(pool.map(_score, jobs))
+    if a.shard:
+        i, n = (int(x) for x in a.shard.split("/"))
+        with ProcessPoolExecutor(max_workers=a.workers) as pool:
+            part = list(pool.map(_score, jobs[i::n]))
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"grid-part-{i}.csv").write_text(
+            "".join(f"{pk},{pn},{pm!r}\n" for pk, pn, pm in part)
+        )
+        return 0
+    if a.from_parts:
+        scored: dict[tuple[str, str], float] = {}
+        for f in a.from_parts:
+            for line in Path(f).read_text().splitlines():
+                k_s, n_s, m_s = line.split(",")
+                scored[(k_s, n_s)] = float(m_s)
+        results: list[tuple[str, str, float]] = []
+        for job_kind, params, *_ in jobs:
+            nm = imm_name(params) if job_kind == "imm" else ekf_name(*params)
+            if (job_kind, nm) not in scored:
+                print(f"tma2-tune: {job_kind} {nm} missing from the parts", file=sys.stderr)
+                return 2
+            results.append((job_kind, nm, scored[(job_kind, nm)]))
+        exp.command_lines.append("parts: " + " ".join(a.from_parts))
+    else:
+        with ProcessPoolExecutor(max_workers=a.workers) as pool:
+            results = list(pool.map(_score, jobs))
     lines = [f"filter,name,median_range_rel_{a.criterion}"]
     best: dict[str, tuple[str, float, Any]] = {}
     for (kind, name, med), job in zip(results, jobs, strict=True):
