@@ -169,3 +169,5 @@ and recorded, not asked.
 ## Annexes
 
 - [Annex A: Steady-leg detector and Gate D](SRD-annex-A.md) (draft 2026-10-31).
+- [Annex B: Ownship and target manoeuvres, steady-leg segmentation](SRD-annex-B.md) (owner's
+  requirements, 2026-11-04; implemented by spec 005 and Gate S, Annex A §A.9).

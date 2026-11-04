@@ -14,8 +14,9 @@ handed to the physics layer as gaps or chords; contamination as the primary erro
 whose only learning claim is recovering more of the gap to the oracle than the classical
 segmenter.
 
-**SRD traceability**: SRD Annex A as amended by §A.9 (this spec's companion amendment, merged by
-the owner); SRD §4 (physics layer inputs), §5 (references, metrics, statistics; Gate 2's "half the
+**SRD traceability**: SRD Annex B (the owner's requirements for ownship and target manoeuvres and
+steady-leg segmentation, 2026-11-04; Annex B wins where this spec differs); SRD Annex A as amended
+by §A.9 (Gate S, merged by the owner); SRD §4 (physics layer inputs), §5 (references, metrics, statistics; Gate 2's "half the
 gap to the oracle"); constitution 1.2.0 III (physics does the numerics, learning the judgement),
 IV (honest measurement), V (gates). Evidence: `docs/research/05` (oracle segmentation), `06`
 (design rethink), `07` (steady-leg pilot), `08` (leg-detection spike, §6 turn windows);
@@ -48,10 +49,11 @@ transition lasts.
 Each bearing time is labelled, per vessel, steady, transition or unknown. Truth labels apply the
 same definitions to the true tracks.
 
-| Term | Definition | Adopted default (owner, 3 Nov 2026) |
+| Term | Definition | Adopted default (Annex B, 4 Nov 2026) |
 | --- | --- | --- |
-| Steady leg | Course within ± C of the leg mean and speed within ± S, for at least L_min | C = 2°, S = 0.5 kt, L_min = 2 min |
-| Transition | Interval between two steady legs; no motion model assumed | Length ≥ T_min = 30 s; estimated, not fixed |
+| Steady leg | Course within ± C of the leg mean and speed within ± S, for at least L_min | C = 5° (the helm wander), S = 0.5 kt, L_min = 2 min (Annex B: 5 min; held open, see Clarifications) |
+| Deliberate course change | Adjacent non-overlapping moving averages of course differ by more than D | D = 10°, window 1 min; both configurable. The same test applies to speed with its own threshold D_S (proposed 1 kt) |
+| Transition | Interval between two steady legs; no motion model assumed | Length ≥ T_min = 30 s (Annex B: 1 min; held open); estimated, not fixed |
 | Unknown | Interval the data cannot classify (too short, or too little bearing information) | Reported, never forced into a leg |
 | Gap | A transition handed to the physics layer: its bearings excluded and a knot at each end | — |
 | Chord | A transition handed to the physics layer: a knot at each end, the bearings kept, the speed prior across it | — |
@@ -60,6 +62,9 @@ same definitions to the true tracks.
 | Detectable change | A target change whose detectability (note 08 §2: the oracle cost drop, χ² with 4 dof) is at least 13.3 | — |
 
 Reasons for the defaults:
+- **C is 5°, not 2°** (Annex B): the band must hold helm wander, which the generator will produce
+  (Annex B FR-006, staged). On generator 0.5.0 tracks are exactly piecewise constant, so C does
+  not bind yet. D = 10° is then about 2C: a change of less than D stays inside one leg's band.
 - **L_min is 2 min, not 5.** On validation seed 304, 64% of the gaps between consecutive target
   manoeuvres are under 5 min (median 4.2 min; the generator spaces them at least 3 min apart).
   With L_min = 5 most real legs between turns would be unknown by definition.
@@ -68,6 +73,24 @@ Reasons for the defaults:
   not a default here.
 
 ## Clarifications
+
+### Session 2026-11-04 (Annex B, the owner's matured requirements)
+
+- **Source.** The owner's document of 3–4 November is committed as SRD Annex B. This spec now
+  traces to it, and Annex B wins where they differ.
+- **O's method** is Annex B's two-pass detector (coarse moving averages with D, then a fine walk
+  to the turn's ends, with a signed-change test), replacing the penalised change-point search
+  (FR-010–FR-014). On generator 0.5.0 both reduce to the same answer; the difference shows on
+  wander, which O is unit-tested on now and the generator produces later.
+- **C = 5°** and **D = 10°** adopted. **L_min and T_min are held open:** Annex B says 5 min and
+  1 min; this spec keeps 2 min and 30 s on the data (64% of inter-manoeuvre gaps are under 5 min;
+  the median simulated turn lasts 50 s, so a 1 min T_min would label steady rows as transition
+  around most turns). The owner's answer closes both, and the decision record fixes them.
+- **Generator.** Annex B requires wander, oscillation and target changes during ownship turns.
+  They are staged into generator 0.6.0 (a separate spec with a G0 run) so that spec 005 can build
+  and gate O, C and L on 0.5.0 data without a generator change in the same step (FR-050).
+- **Real time** is deferred (Annex B), but its live metrics are reported now (FR-060).
+- **Turn-size strata** and the overlap and speed-only strata of Annex B are added (FR-063).
 
 ### Session 2026-11-03 (plan research)
 
@@ -219,10 +242,26 @@ labels.
 
 **O — ownship steady-leg detector**
 
-- **FR-010**: O MUST segment ownship navigation into steady legs, transitions and unknown, using
-  course and speed jointly, by a penalised change-point search with course wrap at 360°.
-- **FR-011**: O MUST accept a leg only if every sample lies within ± C and ± S of its mean, and
-  MUST enforce L_min and T_min, trimming 30 s from each leg end.
+- **FR-010**: O MUST segment the *recorded* ownship course and speed into steady legs,
+  transitions and unknown. It sees only the recorded track, never helm orders (Annex B FR-001).
+- **FR-011**: O MUST run two passes (Annex B FR-002, FR-003):
+  - **Coarse.** Flag a deliberate change where adjacent non-overlapping moving averages (window
+    about 1 min) of course differ by more than D, with course wrap at 360°; the same test on speed
+    with D_S.
+  - **Fine.** From the flagged window, walk back to the turn's start: the last point where the
+    smoothed turn rate changes sign, or the course last sat inside the preceding leg's ± C band.
+    Walk forward the same way for the end, declared with a delay, since turns end more slowly
+    than they start.
+- **FR-012**: O MUST accept a turn only if the cumulative signed course change between its ends
+  is almost all one sign (Annex B FR-004; the proposed test is that the net change is at least
+  90% of the total absolute change). Wander of ± C with no persistent direction is not a
+  transition, whether irregular (helmsman) or cyclic (autopilot) (Annex B FR-006).
+- **FR-013**: O MUST accept a leg only if every sample lies within ± C and ± S of its mean, and
+  MUST enforce L_min and T_min, trimming 30 s from each leg end (Annex B FR-005).
+- **FR-014**: O MUST be unit-tested on constructed tracks with helm wander and autopilot
+  oscillation inside ± C (no transition called) and with 10–15° and 30° turns (boundaries
+  found), before generator 0.6.0 produces such tracks. On generator 0.5.0 data it MUST agree
+  with the exact-kinematics segmentation (`ownship_legs`).
 
 **C — classical target leg segmenter**
 
@@ -280,9 +319,14 @@ labels.
 
 **Data and truth**
 
-- **FR-050**: The data MUST come from generator 0.5.0 unchanged. It already has turn rates of
-  0.5–3°/s, rate-limited speed changes, 0–3 target changes and 180 s spacing. A new generator
-  version (ownship wander, target changes during ownship turns) is out of scope.
+- **FR-050**: The data for building and gating O, C and L MUST come from generator 0.5.0
+  unchanged. It already has turn rates of 0.5–3°/s, rate-limited speed changes, 0–3 target
+  changes and 180 s spacing (Annex B FR-030–FR-032, except changes during ownship turns). The
+  remaining Annex B generator requirements (FR-006 and FR-033: helm wander and autopilot
+  oscillation; FR-032: target changes during ownship turns) are **staged** into generator 0.6.0,
+  a separate spec with its own G0 run, behind new ranges fields so that 0.5.0 ranges stay
+  byte-identical. Until then, O's wander behaviour is covered by FR-014's constructed tracks,
+  and S1 is a sanity check only.
 - **FR-051**: Truth labels (steady, transition, unknown per vessel per row) MUST be derived from
   the stored true tracks with the Definitions, by a deterministic function under test, and stored
   or recomputed with the data's provenance.
@@ -298,7 +342,12 @@ labels.
   - false-split rate on engagements with no target change;
   - leg-count accuracy on detectable changes only;
   - boundary error at ± 60 s and ± 3 min (diagnostic);
-  - gap recovered.
+  - gap recovered;
+  - **live metrics, reported and not gated** (Annex B, Future work): detection delay from the
+    change's start to the first prefix on which it is segmented, false transitions per hour of
+    steady leg, and how often an accepted boundary moves by more than ± 60 s on a later prefix.
+    They are defined now so the offline segmenter is not tuned to measures that will not
+    transfer.
 - **FR-061**: Gap recovered MUST be measured on σ = 1° G5 rows, in range and in velocity:
   (median error with one leg − median error with the segmentation) ÷ (median error with one
   leg − median error with the oracle). The decision record fixes whether errors are normalised by
@@ -312,10 +361,12 @@ labels.
   - GLR + confirm (note 08's configuration).
 - **FR-063**: Everything MUST be stratified by:
   - detectability band (0–13, 13–50, 50–200, ≥ 200);
-  - change kind and size;
+  - change kind and size (for O, turn size in bands 10–15°, 15–30°, ≥ 30°: Annex B FR-007);
   - transition duration;
   - range band;
-  - number of changes.
+  - number of changes;
+  - whether a target change overlaps an ownship turn (empty on 0.5.0; Annex B);
+  - speed-only changes (Annex B).
 
   Efficiency against the known-manoeuvres bound and gross-error rates MUST be reported per slice
   (constitution IV).
@@ -393,8 +444,10 @@ labels.
 ## Out of Scope
 
 - Real sensor data, navigation error, non-Gaussian noise, several contacts.
-- Causal, real-time segmentation (owner decision: offline on each prefix only).
-- Generator changes: ownship wander, autopilot oscillation, target changes during ownship turns.
+- Causal, real-time segmentation (Annex B: deferred to a later spec; its live metrics are
+  reported here, FR-060).
+- Generator changes: ownship wander, autopilot oscillation, target changes during ownship turns
+  (Annex B requires them; staged into generator 0.6.0, a separate spec).
 - Re-scoring or amending Gate D.
 
 ## Risks
@@ -404,7 +457,7 @@ labels.
   records it.
 - **C's compute.** The search may exceed 10 s at 600 bearings. Mitigation: cap candidate
   boundaries and warm-start segment fits; the coupled stage runs on k segmentations only.
-- **Tolerances drive results.** C, S, L_min and T_min shape every metric. They are fixed here and
+- **Tolerances drive results.** C, S, D, L_min and T_min shape every metric. They are fixed here and
   in the decision record before training.
 - **L may add nothing.** If C already recovers most of the gap, S4 fails, and C carries.
 - **Export.** The search may not fit in an ONNX graph; it runs in host code beside the exported

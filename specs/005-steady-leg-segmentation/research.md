@@ -119,7 +119,7 @@ cores at about 6 s each. If the measured time per prefix exceeds 10 s, L falls t
   The choice goes into the decision record before any test scoring.
 - **Alternative.** Fixing the chord now: rejected, because the spec makes this a measured choice.
 
-## R4. Truth labels
+## R4. Truth labels (Annex B FR-034)
 
 On 300 scenarios, the rows where the true course or speed differs from the previous row are
 exactly the generator's span rows [start_index, end_index] (row agreement 1.000, no row outside
@@ -139,17 +139,26 @@ tracks and golden-tested on fixture scenarios. No generator change is needed (FR
 
 ## R5. O: ownship steady legs
 
-Ownship navigation is exact. A penalised change-point search on course (wrapped) and speed
-reduces to marking rows whose course or speed differs from the previous row, as
-`ownship_legs` in `tma2.detect.steady_leg` already does. Legs of at least L_min are then kept,
-and 30 s is trimmed from each end.
+Annex B (4 Nov 2026) fixes O's method: a coarse pass on adjacent 1-minute moving averages with
+threshold D = 10° (and D_S on speed), then a fine walk back and forward to the turn's ends using
+the smoothed turn rate's sign and the preceding leg's ± C band, and a signed-change acceptance
+test. Ownship navigation is exact on generator 0.5.0, where this reduces to marking rows whose
+course or speed differs from the previous row, as `ownship_legs` already does.
 
-**Decision.** Implement O as the general penalised search, with a per-change penalty of 3σ of
-the navigation jitter (zero jitter here). It must agree with `ownship_legs` on generator data,
-under test. S1 is then a sanity check that is expected to pass with contamination 0.
+**Decision.** Implement Annex B's two passes as specified, with:
+- the moving-average window 6 rows (1 min at 10 s), D = 10°, D_S = 1 kt;
+- the smoothed turn rate from a 3-row central difference of unwrapped course;
+- acceptance when the net signed change is at least 90% of the total absolute change;
+- L_min, T_min and the 30 s trim as the decision record fixes them.
 
-**Alternative.** `ownship_legs` alone: it does not generalise to wander, which is out of scope
-now but named in the spec's Risks.
+It must agree with `ownship_legs` on generator 0.5.0 data (under test), and it is unit-tested on
+constructed tracks: irregular wander and cyclic oscillation inside ± 5° (no transition), and
+10–15° and 30° turns at 0.5–3°/s (boundaries within the fine pass's window). S1 is a sanity check
+until generator 0.6.0 produces wander.
+
+**Alternative rejected.** The penalised change-point search of the first plan: equivalent on
+exact tracks, but not what Annex B specifies, and its penalty would need its own calibration on
+wander.
 
 ## R6. L: semi-Markov likelihood
 

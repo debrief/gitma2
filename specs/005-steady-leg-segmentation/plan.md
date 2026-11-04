@@ -38,6 +38,8 @@ oracle and GLR + confirm, with the only learning claim being S4.
   - C at most 10 s per scenario (all scored prefixes) on one 4-core runner. The cost table is
     3.1 s median and 8.3 s at most per scenario (R1).
   - L one epoch over 10⁴ scenarios in under one hour.
+- **Requirements source:** SRD Annex B (owner, 4 Nov 2026) wins over the spec where they differ;
+  the spec's Clarifications of 2026-11-04 record the amendments.
 - **Constraints:**
   - Offline segmentation on each prefix: no bearing after k is used at row k.
   - Double precision for the physics layer.
@@ -112,6 +114,12 @@ confirmation primitives are reused, not copied, and the prototypes move from `sc
 the package with tests.
 
 ## Phases after this plan
+
+Annex B's generator requirements (helm wander, autopilot oscillation, target changes during
+ownship turns) are a separate spec (generator 0.6.0, behind new ranges fields, with a G0 run) that
+follows phase 1 below and precedes Gate S scoring only if the owner wants S1 tested on wander;
+otherwise Gate S runs on 0.5.0 and 0.6.0 re-scores O afterwards.
+
 
 1. **C and its scoring.**
    - Truth labels, O, the search, confirmation with lengths, polish, inputs and metrics.
