@@ -92,7 +92,22 @@ MAN2_PASS2_IMM_GRID = [
 MAN2_PASS2_EKF_GRID = [
     (sa, 4.0, r) for sa, r in itertools.product((0.0003, 0.0001, 0.00003), (2.0, 1.0))
 ]
-GRIDS = {"default": None, "man2-pass2": (MAN2_PASS2_IMM_GRID, MAN2_PASS2_EKF_GRID)}
+# MAN2 pass 3: pass 2 chose imm-cv0.03-ct1-w0.01-s0.0003-p4-r2 (0.5502), interior in cv, switch
+# and r but on the ct edge with the error still falling (ct 0.3 → 1 at r 2: 0.5685 → 0.5502), and
+# ekf-sa0.00003-p4 (r 1; 0.5732), on a plateau in sa (1e-4: 0.5733) but on the r edge still
+# falling (r 2 → 1: 0.5824 → 0.5732). Pass 3 reaches past those two edges.
+MAN2_PASS3_IMM_GRID = [
+    ImmParams(0.03, ct, 0.01, 0.0003, 4.0, r)
+    for ct, r in itertools.product((1.0, 3.0, 10.0, 30.0), (2.0, 1.0))
+]
+MAN2_PASS3_EKF_GRID = [
+    (sa, 4.0, r) for sa, r in itertools.product((0.00003, 0.0001), (1.0, 0.5, 0.25))
+]
+GRIDS = {
+    "default": None,
+    "man2-pass2": (MAN2_PASS2_IMM_GRID, MAN2_PASS2_EKF_GRID),
+    "man2-pass3": (MAN2_PASS3_IMM_GRID, MAN2_PASS3_EKF_GRID),
+}
 
 CRITERIA = {
     "zig300": "median relative range error at zig + 5 min, σ = 1° validation rows",
