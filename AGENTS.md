@@ -39,8 +39,12 @@ nominations from both by the coupled physics-layer cost on each nomination's own
 decision 2026-11-04 (Annex B, SRD §9): the simulation changes to the owner's manoeuvre model
 rather than the thresholds to the simulation. Generator 0.6.0 (MAN2: target legs 10–40 min, bell
 shaped; 40–120 min windows, 720 rows; wander; slower turns; scoping in `docs/research/09`) is
-spec 006 (`specs/006-generator-man2/spec.md`, specified) and precedes Gate S. Seeds: 314
-validation, 315 test (Gate S), 316 noise-free; 312/313 unused.
+spec 006 (`specs/006-generator-man2/`) and precedes Gate S: implemented (PR 13); **G0-MAN2
+passed** (panel round 2, `experiments/20261104-g0-man2-r2/`, CLI `tma2-g0-man2`; two owner
+amendments after results: check-4 coverage and the throughput method). Seeds: 314 validation
+(`data/man2-val`, digests in `experiments/20261104-g0-man2/dataset-digests/`), 315 test (Gate S;
+not generated until its decision record), 316 noise-free; 312/313 unused. IMM/EKF re-tune on 314:
+`tune/**` branches run `.github/workflows/tune.yml` (results to `results/man2-tune-<run id>`).
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -186,5 +190,18 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   determinism and resume tests run each job in a fresh interpreter (`test_detector_train.py`).
 - The known-manoeuvres Cramér–Rao bound has a numba port (`crb_known_manoeuvres_fast`, 0.4 ms
   per scenario against 8 ms) for the training loss; `Batch.tm` carries the generator's table.
+- Generator 0.6.0 (spec 006): `GenerateOptions.generator_version` defaults to 0.6.0; anything that
+  regenerates a 0.5.0 fixture must pass the fixture's version (P0's `check_generator` did not, and
+  `tma2-p0` was broken from PR 13 until the G0-MAN2 run found it). Pack headers carry no
+  timestamp, so data regenerated at the generating commit (a `git worktree` at
+  `generator_git_commit`) reproduce byte for byte; at any other commit only the header differs.
+- The toy model's ONNX digest does not change with its golden inputs: conformance legs must also
+  record `inputs_sha256` (SHA-256 over `in_*.bin` in name order), or stale results pass.
+- To time a gate check while a long job runs, pause that job (`kill -STOP` its processes, then
+  `kill -CONT`); stopping a `run_in_background` job's processes ends its wrapper shell (exit 147),
+  but the job continues after `CONT` and writes its own outputs.
+- MAN2 zig legs: ~40% of engagements have no usable zig leg (zig inside a target change, or the
+  leg ends within 5 min); single-leg fits on MAN2 data must use `eval.rows.zig_leg` and mask or
+  cut the rows before it, or the one-leg solve runs away (range 1e11 m).
 - Docusaurus MDX: no `{...}` in prose (it is a JS expression); `scripts/data_dictionary.py`
   escapes `<` and braces outside code spans.

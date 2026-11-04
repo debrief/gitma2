@@ -105,8 +105,8 @@ files, no dependency on an unfinished task).
 
 ## Phase 7: Polish
 
-- [ ] T034 [P] Update `AGENTS.md` (generator 0.6.0, MAN2 ranges, seeds 314/315/316, the zig-leg check, the two gotchas: streams 2/3 per attempt, kind-2 sub-stepping) and `docs/SRD.md` §2's MAN2 row if any value changed
-- [ ] T035 [P] Site: glossary entries (steady leg, transition, MAN2, helm wander, autopilot oscillation), data dictionary regenerated, and a short blog write-up `site/blog/<date>-generator-060.md` with the measured leg and transition distributions
+- [x] T034 [P] Update `AGENTS.md` (generator 0.6.0, MAN2 ranges, seeds 314/315/316, the zig-leg check, the two gotchas: streams 2/3 per attempt, kind-2 sub-stepping) and `docs/SRD.md` §2's MAN2 row if any value changed
+- [x] T035 [P] Site: glossary entries (steady leg, transition, MAN2, helm wander, autopilot oscillation), data dictionary regenerated, and a short blog write-up `site/blog/<date>-generator-060.md` with the measured leg and transition distributions
 - [ ] T036 Run `uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest -q` and `(cd site && npm run build)`; open the PR with the colleague decisions listed (leg reading, kind weights, rates, wander parameters, zig-leg check) for the owner to overrule
 
 ## Dependencies
