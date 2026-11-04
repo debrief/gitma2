@@ -2,7 +2,7 @@
 
     uv run tma2-gs --truth <split.f32pack> --start S --count N
         --segmentations NAME=<seg.ndjson> … [--glr-confirm WORK:CONFIG] --imm <frozen IMM>
-        --experiment <dir>
+        [--modes gap chord] --experiment <dir>
 
 On the σ = 1° G5 rows of ordinals S … S + N − 1 (the rows a segmentation file covers must
 include them), every segmenter is scored beside one leg (batch least squares), the oracle and
@@ -80,6 +80,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--start", type=int, required=True)
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--segmentations", nargs="*", default=[], metavar="NAME=PATH")
+    ap.add_argument(
+        "--modes",
+        nargs="*",
+        choices=["gap", "chord"],
+        help="score each segmentation in these hand-over modes (NAME-gap, NAME-chord) instead "
+        "of the mode its header names",
+    )
     ap.add_argument("--glr-confirm", metavar="WORK:CONFIG")
     ap.add_argument("--imm", required=True)
     ap.add_argument("--experiment", required=True)
@@ -118,15 +125,19 @@ def main(argv: list[str] | None = None) -> int:
                 f"{name}: {len(missing)} scored rows missing, e.g. {missing[:3]}", file=sys.stderr
             )
             return 2
-        params[name] = p
-        errs[name] = sc.layer_errors(
-            layer, rows, data, metas, truths, sc.from_segmentations(segs, str(p.mode))
-        )
-        seg_ivs[name] = {
+        trs = {
             key: [(iv.start, iv.end) for iv in ivs if iv.kind == TRANSITION]
             for key, ivs in segs.items()
         }
-        print(f"{name} downstream [{time.time() - t0:.0f} s]", flush=True)
+        # each requested hand-over mode is scored as its own segmenter (R3, FR-031)
+        for mode in a.modes or [str(p.mode)]:
+            nm = name if not a.modes else f"{name}-{mode}"
+            params[nm] = p.model_copy(update={"mode": mode})
+            errs[nm] = sc.layer_errors(
+                layer, rows, data, metas, truths, sc.from_segmentations(segs, mode)
+            )
+            seg_ivs[nm] = trs
+            print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
         acc = sc.load_confirmed(work, cfg)
