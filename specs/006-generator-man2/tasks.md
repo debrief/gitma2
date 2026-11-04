@@ -88,6 +88,20 @@ files, no dependency on an unfinished task).
   the model's 5.0%), which `tma2-ranges --sample` states.
 - The known-manoeuvres Cramér–Rao bound (reference and numba versions) gained the "both" kind,
   and batches carry the full six-column manoeuvre table (`tests/unit/test_crb_fast.py`).
+- Deviations from the task text, recorded rather than hidden (code review, 4 November):
+  - T017's tolerance is 1e-2 m, not 1e-6 relative: with zero acceleration the 1 s midpoint
+    rule differs from the analytic arc by about 1 mm per 2 min; the kind's end course and speed
+    are exact (tested to 1e-12).
+  - T020's golden is 40 scenarios of the noisy MAN2 ranges (with wander), which pins more of
+    the new path than 50 noise-free ones would.
+  - T008's padding check and T023's integral check are in `tests/unit/test_man2_generator.py`;
+    the integral is checked to 5 cm because stored positions and courses are float32.
+- Review fixes: "both" counts as a turn and a speed change in `eval/slices.manoeuvre_band`, and
+  as a turn in the detector's kind labels and scoring; `zig_on_manoeuvre` uses exclusive bounds
+  (255 of 2,000 MAN2 engagements overlap, not 277); wander and kind weights are validated (no
+  silent kind swap, no zero-sum or negative weights); the bound reuses the generator's
+  `both_state` instead of two copies of its integrator; `tma2-ranges` leaves transitions cut off
+  by the window out of its percentiles and prints the zig overlap only when it is known.
 
 ## Phase 7: Polish
 

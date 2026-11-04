@@ -705,11 +705,17 @@ def apply_wander(
 
 @njit(cache=True)
 def zig_on_manoeuvre(TI: np.ndarray, spans: np.ndarray) -> bool:
-    """Whether the ownship zig rows (turn start to zig) overlap a target manoeuvre span."""
-    a = TI[TI_TURN_START] if TI[TI_TURN_START] != -1 else TI[TI_ZIG]
-    b = TI[TI_ZIG]
+    """Whether the ownship's turn rows [turn start, zig) share a row with a target manoeuvre span
+    [start_index, end_index); both ends are exclusive. Without a rate-limited turn the zig is the
+    single row ``zig``."""
+    if TI[TI_TURN_START] != -1:
+        a = TI[TI_TURN_START]
+        b = TI[TI_ZIG]
+    else:
+        a = TI[TI_ZIG]
+        b = TI[TI_ZIG] + 1
     for j in range(max(TI[TI_N_SPANS], 0)):
-        if spans[j, 1] <= b and spans[j, 2] >= a:
+        if spans[j, 1] < b and spans[j, 2] > a:
             return True
     return False
 
@@ -816,7 +822,7 @@ def plan_target_manoeuvre(s: np.ndarray, R: np.ndarray, P: np.ndarray, rmax: int
     tgt_v = np.empty(rmax)
     TI = np.empty(TI_LEN, dtype=np.int64)
     spans = np.empty((MAX_TM, 3), dtype=np.int64)
-    tm = np.empty((MAX_TM, 4))
+    tm = np.empty((MAX_TM, TM_COLS))
     simulate_truth(P, tm, own_x, own_y, own_c, tgt_x, tgt_y, tgt_c, tgt_v, TI, spans)
     lo = TI[TI_ZIG] + int(math.ceil(R[R_TM_AFTER] / dt))
     hi = samples - 1 - int(math.ceil(R[R_TM_MARGIN] / dt)) - turn_rows(abs(angle) / rate, dt)
@@ -848,7 +854,7 @@ def plan_target_manoeuvres(
     max_course = n_w - 1
     has_speed = not math.isnan(R[R_DV_MIN]) and not math.isnan(R[R_ACC_MIN])
     # Candidate course changes: sign, |angle|, rate for every possible one.
-    cand = np.empty((MAX_TM, 4))
+    cand = np.empty((MAX_TM, TM_COLS))
     for k in range(max_course):
         sign = -1.0 if uniform01(s) < 0.5 else 1.0
         change = f32(sign * uniform(s, R[R_TM_ANGLE_MIN], R[R_TM_ANGLE_MAX]))

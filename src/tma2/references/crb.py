@@ -33,6 +33,8 @@ from typing import Any
 import numpy as np
 from numba import njit
 
+from tma2.sim.scenario import both_state
+
 SINGULAR_COND = 1e12
 MIN_SIGMA_RAD = 1e-4
 
@@ -159,37 +161,6 @@ def param_kinds(mans: list[Manoeuvre]) -> list[str]:
     return out
 
 
-def _both_advance(
-    x: float,
-    y: float,
-    c: float,
-    s: float,
-    w: float,
-    dur_c: float,
-    a: float,
-    dur_v: float,
-    tau: float,
-) -> tuple[float, float, float, float]:
-    """``tau`` s into a combined manoeuvre: course turning at w for dur_c, speed changing at a for
-    dur_v, position by 1 s midpoint steps (the generator's ``both_state``)."""
-    t = 0.0
-    x1, y1 = x, y
-    while t < tau:
-        h = 1.0 if tau - t > 1.0 else tau - t
-        tm = t + 0.5 * h
-        cm = c + w * (tm if tm < dur_c else dur_c)
-        vm = s + a * (tm if tm < dur_v else dur_v)
-        x1 += vm * math.sin(cm) * h
-        y1 += vm * math.cos(cm) * h
-        t += h
-    return (
-        x1,
-        y1,
-        c + w * (tau if tau < dur_c else dur_c),
-        s + a * (tau if tau < dur_v else dur_v),
-    )
-
-
 def _pos_vel(
     theta: np.ndarray, t: float, mans: list[Manoeuvre]
 ) -> tuple[float, float, float, float]:
@@ -211,9 +182,10 @@ def _pos_vel(
         tau = min(t - ts, dur)
         if kind == "both":
             w = float(theta[p]) / dur_a
-            a_ = float(theta[p + 1]) / dur_b
+            dv = float(theta[p + 1])
             p += 2
-            x, y, c, s = _both_advance(x, y, c, s, w, dur_a, a_, dur_b, tau)
+            # the generator's own kinematics (1 s midpoint steps), so the bound models its truth
+            x, y, c, s = both_state(x, y, c, s, w, dur_a, dv, abs(dv) / dur_b, dur_b, tau)
             now = ts + tau
             if t <= ts + dur:
                 return x, y, s * math.sin(c), s * math.cos(c)
@@ -405,19 +377,9 @@ def _pos_vel_nb(theta: np.ndarray, t: float, mans: np.ndarray) -> tuple[float, f
         tau = min(t - ts, dur)
         if kind == 2.0:
             w = theta[p] / dur_a
-            a = theta[p + 1] / dur_b
+            dv = theta[p + 1]
             p += 2
-            tt = 0.0
-            while tt < tau:
-                h = 1.0 if tau - tt > 1.0 else tau - tt
-                tm = tt + 0.5 * h
-                cm = c + w * (tm if tm < dur_a else dur_a)
-                vm = s + a * (tm if tm < dur_b else dur_b)
-                x += vm * math.sin(cm) * h
-                y += vm * math.cos(cm) * h
-                tt += h
-            c = c + w * (tau if tau < dur_a else dur_a)
-            s = s + a * (tau if tau < dur_b else dur_b)
+            x, y, c, s = both_state(x, y, c, s, w, dur_a, dv, abs(dv) / dur_b, dur_b, tau)
             now = ts + tau
             if t <= ts + dur:
                 return x, y, s * math.sin(c), s * math.cos(c)
@@ -535,7 +497,11 @@ def crb_known_manoeuvres_fast(
     tms = tm[order]
     both = tms[:, 0] == 2.0
     dur2 = np.zeros(tms.shape[0])
-    if tms.shape[1] >= 6 and both.any():
+    if both.any():
+        if tms.shape[1] < 6:
+            raise ValueError("a 'both' manoeuvre needs the six-column table (change2, rate2)")
+        if np.any(tms[both, 4] == 0.0) or np.any(tms[both, 5] <= 0.0):
+            raise ValueError("a 'both' manoeuvre needs a non-zero change2 and a positive rate2")
         dur2[both] = np.abs(tms[both, 4]) / tms[both, 5]
     mans = np.stack([tms[:, 0], tms[:, 1], np.abs(tms[:, 2]) / tms[:, 3], tms[:, 2], dur2], axis=1)
     changes: list[float] = []

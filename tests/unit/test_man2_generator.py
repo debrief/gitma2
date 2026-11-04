@@ -179,11 +179,102 @@ def test_zig_planned_on_the_simulated_target_and_flagged() -> None:
         k = TI[sc.TI_ZIG]
         tx, ty = sc.target_position(P, buf.tm, int(k), 720)
         assert abs(tx - buf.tgt[k, 0]) < 0.5 and abs(ty - buf.tgt[k, 1]) < 0.5  # float32 storage
-        a = TI[sc.TI_TURN_START] if TI[sc.TI_TURN_START] != -1 else TI[sc.TI_ZIG]
+        # rows shared by the ownship's turn [turn start, zig) and a span [start, end)
+        turn = set(range(TI[sc.TI_TURN_START], TI[sc.TI_ZIG]))
         inside = any(
-            buf.spans[j, 1] <= TI[sc.TI_ZIG] and buf.spans[j, 2] >= a
-            for j in range(TI[sc.TI_N_SPANS])
+            turn & set(range(buf.spans[j, 1], buf.spans[j, 2])) for j in range(TI[sc.TI_N_SPANS])
         )
         assert (P[sc.P_ZIG_ON_MAN] > 0) == inside
         flagged += inside
     assert flagged < 60
+
+
+def test_spans_are_padded_beyond_the_plan() -> None:
+    R = flatten_ranges(MAN2)
+    buf = KernelBuffers.for_rows(720)
+    run_kernel(np.uint64(314), 0, R, buf)
+    n = int(buf.TI[sc.TI_N_SPANS])
+    assert 0 < n < sc.MAX_TM
+    from tma2.features.batch import generate_indices
+
+    b = generate_indices(314, np.arange(3), MAN2)
+    assert b.spans.shape[1] == sc.MAX_TM and b.tm.shape[1:] == (sc.MAX_TM, sc.TM_COLS)
+    for i in range(3):
+        k = int(b.n_tm[i])
+        assert np.all(b.spans[i, k:] == -1)
+
+
+def test_wander_positions_are_the_integral_of_the_recorded_course() -> None:
+    checked = 0
+    for i in range(60):
+        a = generate_scenario(314, i, MAN2).scenario
+        b = generate_scenario(314, i, _no_wander(MAN2)).scenario
+        w = a.metadata.ownship_wander
+        assert w is not None
+        if _name(w.kind) == "none":
+            continue
+        v = float(a.metadata.parameters.ownship_speed_mps)
+        dt = float(a.metadata.parameters.dt_s)
+        ca = [s.course_rad for s in a.ownship.states]
+        cb = [s.course_rad for s in b.ownship.states]
+        for j in range(1, len(ca)):
+            if cb[j] != cb[j - 1] or (j + 1 < len(cb) and cb[j + 1] != cb[j]):
+                continue  # turn rows, and the row before one, keep the planned arc
+            if cb[j - 1] != cb[j]:
+                continue
+            p0, p1 = a.ownship.states[j - 1], a.ownship.states[j]
+            ex = p0.x_m + 0.5 * v * dt * (math.sin(ca[j - 1]) + math.sin(ca[j]))
+            ey = p0.y_m + 0.5 * v * dt * (math.cos(ca[j - 1]) + math.cos(ca[j]))
+            # stored positions and courses are float32: a few mm at ranges of tens of km
+            assert abs(p1.x_m - ex) < 0.05 and abs(p1.y_m - ey) < 0.05
+            checked += 1
+    assert checked > 1000
+
+
+def test_ranges_cli_describes_and_samples(capsys: pytest.CaptureFixture[str]) -> None:
+    from tma2.cli.ranges import main
+
+    assert main(["--describe", str(ROOT / "configs" / "man2-ranges.json"), "--sample", "60"]) == 0
+    out = capsys.readouterr().out
+    assert "generator 0.6.0 leg model" in out and "720 rows" in out
+    assert "P5/P50/P95 10.0 / 25.0 / 40.0 min" in out and "P(leg ≤ 10 min) 0.050" in out
+    assert "cut off by the window's end, left out" in out
+    assert "ownship zig overlapping" in out
+    phase4 = ROOT / "tests" / "fixtures" / "gitma" / "phase4-seed777" / "ranges.json"
+    assert main(["--describe", str(phase4), "--sample", "20"]) == 0
+    out = capsys.readouterr().out
+    assert "0.5.0 manoeuvre count model" in out and "ownship zig overlapping" not in out
+
+
+def test_wander_weight_validation() -> None:
+    no_osc = {k: v for k, v in MAN2.items() if k != "ownship_oscillation"}
+    with pytest.raises(RangesError, match="needs ownship_oscillation"):
+        flatten_ranges(no_osc)
+    zero = {**MAN2, "ownship_wander_weights": {"none": 0, "wander": 0, "oscillation": 0, "both": 0}}
+    with pytest.raises(RangesError, match="positive sum"):
+        flatten_ranges(zero)
+    neg = {**MAN2, "target_change_kind_weights": {"course": 1, "speed": -0.1, "both": 0.1}}
+    with pytest.raises(RangesError, match="non-negative"):
+        flatten_ranges(neg)
+
+
+def test_both_kind_counts_as_a_turn_and_a_speed_change() -> None:
+    from tma2.detect.matching import _is_turn
+    from tma2.eval.slices import manoeuvre_band
+
+    plan = {"parameters": {"target_manoeuvres": [{"kind": "speed"}, {"kind": "both"}]}}
+    assert manoeuvre_band(plan) == "1turn+speed"
+    only = {"parameters": {"target_manoeuvres": [{"kind": "both"}]}}
+    assert manoeuvre_band(only) == "1turn+speed"
+    assert _is_turn("both") and _is_turn("course") and not _is_turn("speed")
+
+
+def test_fast_bound_refuses_a_narrow_table_with_both() -> None:
+    from tma2.references.crb import crb_known_manoeuvres_fast
+
+    n = 50
+    t = np.arange(n) * 10.0
+    z = np.zeros(n)
+    tm = np.array([[2.0, 100.0, 0.5, 0.01]])
+    with pytest.raises(ValueError, match="six-column"):
+        crb_known_manoeuvres_fast(t, z, z, z + 5000, z + 5000, z + 1, z, np.ones(n), tm, [40], 0.02)

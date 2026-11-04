@@ -27,7 +27,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from tma2.eval.rows import G5_SETTLE_S
-from tma2.features.batch import KIND_COURSE
+from tma2.features.batch import KIND_BOTH, KIND_COURSE
 
 NOW_WINDOW_S = 60.0
 TOLERANCE_S = 60.0
@@ -127,7 +127,7 @@ def pair_labels(
                 continue
             seen = idx <= k
             # course first so that, at equal distance, the course boundary wins the tie
-            for r, kd in sorted(bounds, key=lambda x: x[1] != KIND_COURSE):
+            for r, kd in sorted(bounds, key=lambda x: x[1] not in (KIND_COURSE, KIND_BOTH)):
                 if r > k:
                     continue
                 tri = _tri(idx, r, half) * seen
@@ -135,5 +135,6 @@ def pair_labels(
                 d = np.abs(idx - r).astype(np.float64)
                 closer = (d < dist[i, q]) & seen
                 dist[i, q][closer] = d[closer]
-                kind[i, q][closer] = 1.0 if kd == KIND_COURSE else 0.0
+                # generator 0.6.0's "both" includes a course change: a turn for p_kind
+                kind[i, q][closer] = 1.0 if kd in (KIND_COURSE, KIND_BOTH) else 0.0
     return PairLabels(np.minimum(w, 1.0), kind, np.minimum(w, 1.0))

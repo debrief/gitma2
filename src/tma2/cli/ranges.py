@@ -107,6 +107,8 @@ def sample(r: dict[str, Any], n: int, seed: int) -> list[str]:
     kinds: collections.Counter[str] = collections.Counter()
     wander: collections.Counter[str] = collections.Counter()
     zom = 0
+    zom_known = False
+    clipped = 0
     for i in range(n):
         m = generate_scenario(seed, i, r).scenario.metadata
         dt = float(m.parameters.dt_s)
@@ -114,12 +116,17 @@ def sample(r: dict[str, Any], n: int, seed: int) -> list[str]:
         changes.append(len(spans))
         for sp in spans:
             kinds[str(getattr(sp.kind, "value", sp.kind))] += 1
+            if sp.end_index >= m.samples:
+                clipped += 1  # cut off by the window's end: its length is not a duration
+                continue
             trans.append((sp.end_index - sp.start_index + 1) * dt)
         for a, b in zip(spans, spans[1:], strict=False):
             legs.append((b.start_index - 1 - a.end_index) * dt / 60.0)
         if m.ownship_wander is not None:
             wander[str(getattr(m.ownship_wander.kind, "value", m.ownship_wander.kind))] += 1
-        zom += bool(m.zig_on_manoeuvre)
+        if m.zig_on_manoeuvre is not None:
+            zom_known = True
+            zom += bool(m.zig_on_manoeuvre)
     out = [f"sample: {n} scenarios, seed {seed}"]
     if legs:
         q = np.quantile(legs, [0.05, 0.5, 0.95])
@@ -130,7 +137,10 @@ def sample(r: dict[str, Any], n: int, seed: int) -> list[str]:
         )
     if trans:
         q = np.quantile(trans, [0.1, 0.5, 0.9])
-        out.append(f"transitions: P10/P50/P90 {q[0]:.0f} / {q[1]:.0f} / {q[2]:.0f} s")
+        out.append(
+            f"transitions: P10/P50/P90 {q[0]:.0f} / {q[1]:.0f} / {q[2]:.0f} s "
+            f"({clipped} cut off by the window's end, left out)"
+        )
     counts = np.bincount(np.asarray(changes, dtype=np.int64))
     dist = ", ".join(f"{k}: {c / n:.2f}" for k, c in enumerate(counts) if c)
     out.append(
@@ -139,7 +149,8 @@ def sample(r: dict[str, Any], n: int, seed: int) -> list[str]:
     out.append("change kinds: " + ", ".join(f"{k} {v}" for k, v in sorted(kinds.items())))
     if wander:
         out.append("wander drawn: " + ", ".join(f"{k} {v}" for k, v in sorted(wander.items())))
-    out.append(f"ownship zig overlapping a target change: {zom} of {n}")
+    if zom_known:
+        out.append(f"ownship zig overlapping a target change: {zom} of {n}")
     return out
 
 

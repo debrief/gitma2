@@ -47,8 +47,9 @@ def dropout_band(fraction: float) -> str:
 def manoeuvre_band(m: dict[str, Any]) -> str:
     plan = m["parameters"].get("target_manoeuvres")
     if plan is not None:
-        turns = sum(1 for x in plan if x["kind"] == "course")
-        speed = any(x["kind"] == "speed" for x in plan)
+        # generator 0.6.0's "both" is a turn and a speed change at once
+        turns = sum(1 for x in plan if x["kind"] in ("course", "both"))
+        speed = any(x["kind"] in ("speed", "both") for x in plan)
         if turns == 0 and not speed:
             return "held"
         return f"{turns}turn{'' if turns == 1 else 's'}{'+speed' if speed else ''}"

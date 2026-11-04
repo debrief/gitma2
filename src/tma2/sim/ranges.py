@@ -208,6 +208,26 @@ def validate_ranges(r: dict[str, Any]) -> None:
         "ownship_wander_weights"
     ) is None:
         raise RangesError("ownship_wander or ownship_oscillation needs ownship_wander_weights")
+    for key, names in (
+        ("target_change_kind_weights", ("course", "speed", "both")),
+        ("ownship_wander_weights", ("none", "wander", "oscillation", "both")),
+    ):
+        w = r.get(key)
+        if w is None:
+            continue
+        vals = [float(w[n]) for n in names]
+        if any(v < 0 for v in vals) or sum(vals) <= 0:
+            raise RangesError(f"{key} must be non-negative with a positive sum")
+    ww = r.get("ownship_wander_weights")
+    if ww is not None:
+        if (float(ww["wander"]) > 0 or float(ww["both"]) > 0) and r.get("ownship_wander") is None:
+            raise RangesError("ownship_wander_weights with wander or both needs ownship_wander")
+        if (float(ww["oscillation"]) > 0 or float(ww["both"]) > 0) and r.get(
+            "ownship_oscillation"
+        ) is None:
+            raise RangesError(
+                "ownship_wander_weights with oscillation or both needs ownship_oscillation"
+            )
 
 
 def flatten_ranges(r: dict[str, Any]) -> np.ndarray:
