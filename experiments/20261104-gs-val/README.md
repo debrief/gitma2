@@ -48,3 +48,32 @@ oscillation). **Caveat:** every MAN2 ownship turn is a zig of 30° or more, so t
 15–30° turn-size strata of FR-063 are empty. S1 tests O on the data's turns only. The
 constructed-track unit tests (12° and 15° turns, wander, oscillation) are the evidence for small
 turns. Proposed S1 limit: contamination P90 ≤ 0.02 (the spec's proposal; O is at 0).
+
+## Preliminary: C on the 1,000 scoring ordinals (`prelim-c/`)
+
+C's segmentations came from the CI run `results/segment-man2-val-c-41876210154` (plan
+`configs/segment/man2-val-c.json`: penalty 30, GLR threshold 4.665, tuned on ordinals 0–499).
+They are scored by `tma2-gs --modes chord gap` on 3,934 G5 rows (2,933 settled). **Preliminary.**
+The IMM column is the 0.5.0 setting (`imm-cv0.0003-ct0.03-w0.003-s0.001-p4-r16`), not yet
+re-tuned on MAN2, and GLR + confirm is not yet scored. Both follow T032/T033.
+
+| Segmenter | Median range (rel.) | Course ° | Speed kt | Gap recovered, range [97.5%] |
+| --- | --- | --- | --- | --- |
+| one leg (batch least squares) | 0.580 | 66.0 | 6.20 | 0 |
+| oracle | 0.064 | 7.4 | 0.97 | 1 |
+| C, chord | 0.123 | 16.0 | 1.64 | 0.885 [0.866, 0.904] |
+| C, gap | 0.120 | 15.6 | 1.62 | 0.891 [0.871, 0.911] |
+
+The segmentation measures are weaker than the downstream ones.
+- **Boundary hits:** 10% of truth changes have both boundaries within ± 60 s, and 43% within
+  ± 3 min.
+- **Contamination:** P90 is 0.27.
+- **False splits:** 8.3%, on only 24 change-free prefixes.
+- **Leg-count accuracy:** 0.50, counted over all changes. It is not yet restricted to detectable
+  ones; the detectability strata come from T033's statistics.
+
+C places a transition where the cost needs a knot, not where the truth's turn begins and ends.
+That suits the estimate, but it is weak on the definitions of contamination and boundaries.
+
+**Gap or chord (R3, FR-031):** gap has the lower median range error (0.120 against 0.123), so
+gap is the proposed mode. The paired difference gets an interval in the final scoring.
