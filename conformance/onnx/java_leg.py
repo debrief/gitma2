@@ -25,6 +25,14 @@ ORT_JAVA_VERSION = re.search(
 ).group(1)  # type: ignore[union-attr]
 
 
+def inputs_sha256(d: Path) -> str:
+    """The golden inputs, bound like the model: SHA-256 over every in_*.bin, in name order."""
+    h = hashlib.sha256()
+    for f in sorted(p.name for p in d.glob("in_*.bin")):
+        h.update((d / f).read_bytes())
+    return h.hexdigest()
+
+
 def main() -> int:
     export_dir = Path(sys.argv[1] if len(sys.argv) > 1 else HERE / "export").resolve()
     results_path = Path(sys.argv[2]) if len(sys.argv) > 2 else HERE / "results.json"
@@ -74,6 +82,7 @@ def main() -> int:
             "max_rel_diff": diffs,
             "tol": TOL,
             "onnx_sha256": hashlib.sha256((export_dir / model_file).read_bytes()).hexdigest(),
+            "inputs_sha256": inputs_sha256(export_dir),
             "runtime": "onnxruntime Java " + ORT_JAVA_VERSION,
         }
     )

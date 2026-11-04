@@ -1,0 +1,48 @@
+{
+  "python": {
+    "max_rel_diff": {
+      "state": 3.142330839978058e-11,
+      "cov": 3.137050541960154e-10,
+      "cost": 5.716093753891438e-15,
+      "plausible": 0
+    },
+    "tol": 1e-05,
+    "dtype": "float64",
+    "onnx_sha256": "bc44c90b50aeabeef4f3975a45372bc66a08ed1e3b8d5ac53ace5856eac89e6e",
+    "runtime": "onnxruntime 1.31.1 (Python)"
+  },
+  "wasm": {
+    "max_rel_diff": {
+      "state": 1.0308087716737191e-11,
+      "cov": 2.2937617955645441e-10,
+      "cost": 2.7704243200702703e-15,
+      "plausible": 0
+    },
+    "reference": "torch (float64)",
+    "vs_onnxruntime_python": {
+      "state": 2.111522068304339e-11,
+      "cov": 1.601763142866384e-10,
+      "cost": 5.579996283560658e-15,
+      "plausible": 0
+    },
+    "ms": 322.8000000002794,
+    "tol": 1e-05,
+    "onnx_sha256": "bc44c90b50aeabeef4f3975a45372bc66a08ed1e3b8d5ac53ace5856eac89e6e",
+    "inputs_sha256": "3efd1eca490745b9158073aa0975b00236ed06108d79edb9e9f4290560e8d913",
+    "runtime": "onnxruntime-web 1.31.1",
+    "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36"
+  },
+  "java": {
+    "deferred": false,
+    "max_rel_diff": {
+      "state": 3.142330839978058e-11,
+      "cov": 3.137050541960154e-10,
+      "cost": 5.716093753891438e-15,
+      "plausible": 0.0
+    },
+    "tol": 1e-05,
+    "onnx_sha256": "bc44c90b50aeabeef4f3975a45372bc66a08ed1e3b8d5ac53ace5856eac89e6e",
+    "inputs_sha256": "3efd1eca490745b9158073aa0975b00236ed06108d79edb9e9f4290560e8d913",
+    "runtime": "onnxruntime Java 1.31.1"
+  }
+}

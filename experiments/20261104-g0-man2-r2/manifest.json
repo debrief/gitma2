@@ -1,0 +1,391 @@
+{
+  "artefacts": [
+    {
+      "digest": "e396683d31f348d979094efb12e322b0e3a3eae32ff1e5cb523bf75d894349b0",
+      "path": "experiments/20261104-g0-man2-r2/conformance-720-results.json",
+      "role": "720-row export conformance results (browser and Java legs)"
+    }
+  ],
+  "command_lines": [
+    "tma2-g0-man2 --experiment experiments/20261104-g0-man2-r2 --man2 /home/user/gitma2/data/man2-val --noise-free /home/user/gitma2/data/man2-g0 --regen /home/user/gitma2/data/gd-val --conformance-results /tmp/claude-0/-home-user/af300153-f459-5cec-b506-0b839f7ae0fd/scratchpad/conf720.json",
+    "dataset: tma2-generate --seed 314 --count 100000 --ranges sha256:9ceb50b4deddc42da4edc1901e75b78d7dfb5bbd3d491bcad4e6f97986125c72 --heldout-ranges sha256:22361dbea7e9343b491b19145f5bcd4ece5bd53c3de5ece9449d7843eb29d404 (commit d72cb81d43297f34cad9dc06a76dc7b31c8fbea2)",
+    "dataset: tma2-generate --seed 316 --count 10000 --ranges sha256:0cb415d28b814ed1371876e97af827e28c6551a8ec45ddaff62c408c5fe40d58 --heldout-ranges sha256:0f1774e75f2448827fa64bb75552399bd41f73767bb5e9631b4ab043b66333d5 (commit d72cb81d43297f34cad9dc06a76dc7b31c8fbea2)",
+    "dataset: tma2-generate --seed 304 --count 100000 --ranges sha256:2147ade3b17fb9fd93d373687a7ae883e0c74670833ccc6870bb3ed0b3d1c558 --heldout-ranges sha256:41a406b1df129c6ead948764baeef8ae205f0628c0540495f0315a7e57328201 (commit 6f40281f850fa1e9778a5bfc74a5e0329102a432)",
+    "conformance: python -m tma2.export.onnx_export --out <dir> --man2; (cd conformance/onnx && node wasm_leg.mjs --dir <dir>/f64 --out <results>); python conformance/onnx/java_leg.py <dir>/f64"
+  ],
+  "created": "2026-11-04T13:56:46Z",
+  "datasets": [
+    {
+      "digest": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+      "header": {
+        "created_by": "tma2-generate --seed 314 --count 100000 --ranges sha256:9ceb50b4deddc42da4edc1901e75b78d7dfb5bbd3d491bcad4e6f97986125c72 --heldout-ranges sha256:22361dbea7e9343b491b19145f5bcd4ece5bd53c3de5ece9449d7843eb29d404",
+        "dataset_seed": "314",
+        "generator_git_commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+        "generator_git_dirty": false,
+        "generator_version": "0.6.0",
+        "index_end": 90000,
+        "index_start": 80000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.1,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.017453292519943295,
+            0.03490658503988659
+          ],
+          "ownship_oscillation": {
+            "amp_rad": {
+              "max": 0.05235987755982989,
+              "min": 0.017453292519943295
+            },
+            "period_s": {
+              "max": 360.0,
+              "min": 120.0
+            }
+          },
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "ownship_wander": {
+            "clip_rad": 0.06981317007977318,
+            "sd_rad": 0.02617993877991494,
+            "tau_s": 60.0
+          },
+          "ownship_wander_weights": {
+            "both": 0.0,
+            "none": 0.4,
+            "oscillation": 0.3,
+            "wander": 0.3
+          },
+          "range_distribution": "log_uniform",
+          "target_change_kind_weights": {
+            "both": 0.1,
+            "course": 0.8,
+            "speed": 0.1
+          },
+          "target_leg_length_s": {
+            "mean": 1500.0,
+            "min": 300.0,
+            "sd": 546.0
+          },
+          "target_manoeuvre_angle_abs_rad": {
+            "max": 2.0943951023931953,
+            "min": 0.5235987755982988
+          },
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_change_abs_mps": {
+            "max": 3.086666666666667,
+            "min": 1.028888888888889
+          },
+          "target_speed_change_rate_mps2": {
+            "max": 0.05,
+            "min": 0.01
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "target_turn_rate_rad_s": {
+            "max": 0.017453292519943295,
+            "min": 0.004363323129985824
+          },
+          "window_s": {
+            "max": 7200.0,
+            "min": 2400.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 76,
+        "scenario_count": 10000,
+        "schema_version": "0.22.0",
+        "split": "validation"
+      },
+      "path": "data/man2-val/validation.f32pack"
+    },
+    {
+      "digest": "10d5184d00558c54a1478e511e66942d754952aa1010d86701fd84dedaa936a4",
+      "header": {
+        "created_by": "tma2-generate --seed 316 --count 10000 --ranges sha256:0cb415d28b814ed1371876e97af827e28c6551a8ec45ddaff62c408c5fe40d58 --heldout-ranges sha256:0f1774e75f2448827fa64bb75552399bd41f73767bb5e9631b4ab043b66333d5",
+        "dataset_seed": "316",
+        "generator_git_commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+        "generator_git_dirty": false,
+        "generator_version": "0.6.0",
+        "index_end": 9000,
+        "index_start": 8000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.0,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.0
+          ],
+          "ownship_oscillation": {
+            "amp_rad": {
+              "max": 0.05235987755982989,
+              "min": 0.017453292519943295
+            },
+            "period_s": {
+              "max": 360.0,
+              "min": 120.0
+            }
+          },
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "ownship_wander": {
+            "clip_rad": 0.06981317007977318,
+            "sd_rad": 0.02617993877991494,
+            "tau_s": 60.0
+          },
+          "ownship_wander_weights": {
+            "both": 0.0,
+            "none": 0.4,
+            "oscillation": 0.3,
+            "wander": 0.3
+          },
+          "range_distribution": "log_uniform",
+          "target_change_kind_weights": {
+            "both": 0.1,
+            "course": 0.8,
+            "speed": 0.1
+          },
+          "target_leg_length_s": {
+            "mean": 1500.0,
+            "min": 300.0,
+            "sd": 546.0
+          },
+          "target_manoeuvre_angle_abs_rad": {
+            "max": 2.0943951023931953,
+            "min": 0.5235987755982988
+          },
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_change_abs_mps": {
+            "max": 3.086666666666667,
+            "min": 1.028888888888889
+          },
+          "target_speed_change_rate_mps2": {
+            "max": 0.05,
+            "min": 0.01
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "target_turn_rate_rad_s": {
+            "max": 0.017453292519943295,
+            "min": 0.004363323129985824
+          },
+          "window_s": {
+            "max": 7200.0,
+            "min": 2400.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 10,
+        "scenario_count": 1000,
+        "schema_version": "0.22.0",
+        "split": "validation"
+      },
+      "path": "data/man2-g0/validation.f32pack"
+    },
+    {
+      "digest": "6f668d973d08386f01c5d79fa897cea5105a3a610a6c40964e70083e6e592b58",
+      "header": {
+        "created_by": "tma2-generate --seed 304 --count 100000 --ranges sha256:2147ade3b17fb9fd93d373687a7ae883e0c74670833ccc6870bb3ed0b3d1c558 --heldout-ranges sha256:41a406b1df129c6ead948764baeef8ae205f0628c0540495f0315a7e57328201",
+        "dataset_seed": "304",
+        "generator_git_commit": "6f40281f850fa1e9778a5bfc74a5e0329102a432",
+        "generator_git_dirty": false,
+        "generator_version": "0.5.0",
+        "index_end": 90000,
+        "index_start": 80000,
+        "parameter_ranges": {
+          "dropout_fraction": {
+            "max": 0.1,
+            "min": 0.0
+          },
+          "dt_s": 10.0,
+          "los_offset_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "min_range_m": 100.0,
+          "noise_sigma_rad_values": [
+            0.017453292519943295,
+            0.03490658503988659
+          ],
+          "ownship_speed_mps": {
+            "max": 7.716666666666667,
+            "min": 2.5722222222222224
+          },
+          "ownship_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "range_distribution": "log_uniform",
+          "target_course_change_count_weights": [
+            0.2,
+            0.3,
+            0.3,
+            0.2
+          ],
+          "target_manoeuvre_after_zig_s": 120.0,
+          "target_manoeuvre_angle_abs_rad": {
+            "max": 2.0943951023931953,
+            "min": 0.5235987755982988
+          },
+          "target_manoeuvre_margin_s": 360.0,
+          "target_manoeuvre_spacing_s": 180.0,
+          "target_range0_m": {
+            "max": 20000.0,
+            "min": 2000.0
+          },
+          "target_speed_change_abs_mps": {
+            "max": 3.086666666666667,
+            "min": 1.028888888888889
+          },
+          "target_speed_change_fraction": 0.3,
+          "target_speed_change_rate_mps2": {
+            "max": 0.1028888888888889,
+            "min": 0.025722222222222226
+          },
+          "target_speed_mps": {
+            "max": 10.28888888888889,
+            "min": 1.5433333333333334
+          },
+          "target_turn_rate_rad_s": {
+            "max": 0.05235987755982989,
+            "min": 0.008726646259971648
+          },
+          "window_s": {
+            "max": 3600.0,
+            "min": 1200.0
+          },
+          "zig2_delay_s": {
+            "max": 300.0,
+            "min": 180.0
+          },
+          "zig_angle_abs_rad": {
+            "max": 1.5707963267948966,
+            "min": 0.5235987755982988
+          },
+          "zig_fraction": {
+            "max": 0.6,
+            "min": 0.4
+          },
+          "zig_rule": "across_los"
+        },
+        "record": "header",
+        "redraw_count": 4141,
+        "scenario_count": 10000,
+        "schema_version": "0.20.0",
+        "split": "validation"
+      },
+      "path": "data/gd-val/validation.f32pack"
+    }
+  ],
+  "environment": {
+    "cpu_count": 4,
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "lockfile_digest": "e4c602b906c86ce1a532f3a6f97c87bfa6355adcfbc643b262d1366a7a463dbf",
+    "packages": [
+      {
+        "name": "numpy",
+        "version": "2.5.4"
+      },
+      {
+        "name": "numba",
+        "version": "0.68.1"
+      },
+      {
+        "name": "torch",
+        "version": "2.15.0+cpu"
+      },
+      {
+        "name": "onnx",
+        "version": "1.23.2"
+      },
+      {
+        "name": "onnxruntime",
+        "version": "1.31.1"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.2"
+      }
+    ],
+    "torch_threads": 4
+  },
+  "estimators": [
+    {
+      "name": "classical",
+      "settings_json": "{\"grid_every\": 6, \"max_iterations\": 50}"
+    },
+    {
+      "name": "physics",
+      "settings_json": "{\"iterations\": 100, \"knots\": 0, \"trials\": 1}"
+    }
+  ],
+  "generator_version": "0.6.0",
+  "git_commit": "31ea6cfd3dfc20819114ae02e2ef86062d9f94a5",
+  "git_dirty": false,
+  "id": "20261104-g0-man2-r2",
+  "python_version": "3.12.13",
+  "schema_version": "0.22.0",
+  "torch_version": "2.15.0+cpu"
+}

@@ -297,7 +297,10 @@ def imm_predict(
 
     ``mu_ct_out`` (spec 004 FR-024) receives the coordinated-turn mode probability after each
     row's update, one value per row (NaN where the filter is not running: before initialisation
-    or after an implausible estimate). Collecting it changes no estimate."""
+    or after an implausible estimate). ``nis_out`` likewise receives one value per row: the
+    cycle's NIS (also on a row whose estimate is then found implausible, as ``ekf_predict``), −1
+    for a cycle without a bearing, NaN where the filter is not running. Collecting either changes
+    no estimate."""
     for name in ("sigma_cv", "sigma_ct", "sigma_omega", "switch_per_s", "p0_scale", "r_scale"):
         v = getattr(params, name)
         if not (v >= 0):
@@ -320,7 +323,9 @@ def imm_predict(
         mu0, mu1 = IMM_MU0
     last_try = first - 1
     for i in range(first, n):
+        cycled = False
         if have:
+            cycled = True
             has_z = d.valid[i] == 1
             xcv, pcv, xct, pct, mu0, mu1, nis = imm_step(
                 t_prev,
@@ -353,6 +358,8 @@ def imm_predict(
             have = False
             last_try = i - EKF_REINIT_EVERY
         rows.append(_row(d, None, i, False))
+        if nis_out is not None and not cycled:
+            nis_out.append(math.nan)  # one value per row, as ekf_predict
         if mu_ct_out is not None:
             mu_ct_out.append(math.nan)
         if i - last_try >= EKF_REINIT_EVERY:

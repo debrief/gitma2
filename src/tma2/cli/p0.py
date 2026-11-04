@@ -84,6 +84,7 @@ def check_generator(exp: Experiment) -> None:
                     generator_git_commit=hdr["generator_git_commit"],
                     generator_git_dirty=hdr["generator_git_dirty"],
                     schema_version=hdr["schema_version"],
+                    generator_version=hdr["generator_version"],
                 )
             )
             expected = json.loads((d / "digests.json").read_text())
@@ -186,6 +187,10 @@ def check_physics_equals_ls(
     exp: Experiment,
     layer: PhysicsLayer | None = None,
     sources: tuple[tuple[str, str], ...] | None = None,
+    blocks: list[tuple[dict[str, Any], np.ndarray, np.ndarray]] | None = None,
+    rows_of: Any = None,
+    r_max: int = R_MAX,
+    name: str = "physics-equals-least-squares",
 ) -> None:
     """FR-007 / SC-002 on every scored row of every split of both fixtures: the physics layer
     with trivial inputs against the ported batch least squares from the same grid start at that
@@ -196,6 +201,9 @@ def check_physics_equals_ls(
     determined (sd below half its value; owner decision 2026-11-01, after run r2) and both to
     1e-2 of the row's own standard deviations everywhere; rows where the layer reaches a lower
     cost than the solver are counted and reported.
+
+    ``blocks`` (meta, own, obs) replace the fixtures, ``rows_of(meta, bd)`` chooses the rows of each
+    and ``r_max`` the window (generator 0.6.0's pipeline gate: 720-row MAN2 windows, spec 006).
     """
     from tma2.references.classical import plausible, solve_batch
 
@@ -207,28 +215,37 @@ def check_physics_equals_ls(
         for n in ("phase4-seed777", "iter4-seed777")
         for sp in ("train", "validation", "test", "heldout")
     )
-    for name, split in sources or every:
-        for _, meta, own, _tgt, obs in iter_pack_raw(FIXTURES / name / f"{split}.f32pack"):
-            bd = bearing_data_from_arrays(meta, own, obs)
-            for k in range(bd.zig_index + 1, bd.n):
-                inp = trivial_inputs(bd.t, bd.ox, bd.oy, bd.z, bd.valid, k)
-                sol = solve_batch(bd, k + 1)
-                if inp is None or sol is None:
-                    continue
-                th = sol.theta
-                tk = float(bd.t[k])
-                rng = math.hypot(th[0] + th[2] * tk - bd.ox[k], th[1] + th[3] * tk - bd.oy[k])
-                refs.append(
-                    (
-                        rng,
-                        math.hypot(th[2], th[3]),
-                        sol.cost,
-                        sol.converged,
-                        bd.sigma,
-                        plausible(bd, sol, k),
-                    )
+
+    def scenarios() -> Any:
+        if blocks is not None:
+            yield from blocks
+            return
+        for fixture, split in sources or every:
+            for _, meta, own, _tgt, obs in iter_pack_raw(FIXTURES / fixture / f"{split}.f32pack"):
+                yield meta, own, obs
+
+    for meta, own, obs in scenarios():
+        bd = bearing_data_from_arrays(meta, own, obs)
+        rows = rows_of(meta, bd) if rows_of is not None else range(bd.zig_index + 1, bd.n)
+        for k in rows:
+            inp = trivial_inputs(bd.t, bd.ox, bd.oy, bd.z, bd.valid, k)
+            sol = solve_batch(bd, k + 1)
+            if inp is None or sol is None:
+                continue
+            th = sol.theta
+            tk = float(bd.t[k])
+            rng = math.hypot(th[0] + th[2] * tk - bd.ox[k], th[1] + th[3] * tk - bd.oy[k])
+            refs.append(
+                (
+                    rng,
+                    math.hypot(th[2], th[3]),
+                    sol.cost,
+                    sol.converged,
+                    bd.sigma,
+                    plausible(bd, sol, k),
                 )
-                items.append((bd, k, inp))
+            )
+            items.append((bd, k, inp))
     layer = layer or PhysicsLayer()
     short = 0  # layer cost above the solver's: it stopped short
     lower = 0  # layer cost below the solver's: the solver stopped short or another minimum
@@ -247,7 +264,7 @@ def check_physics_equals_ls(
     unconv_lower = 0
     implausible = 0  # both flag the solution implausible (gitma scores it as not converged)
     for a in range(0, len(items), 500):
-        out = run_layer(layer, items[a : a + 500], R_MAX)
+        out = run_layer(layer, items[a : a + 500], r_max)
         for j, (rng, spd, cost, conv, sigma, ok_ls) in enumerate(refs[a : a + 500]):
             if not conv:
                 # Reported: the layer's flag and whether it reached a lower cost than the
@@ -307,7 +324,7 @@ def check_physics_equals_ls(
                     worst = max(worst, rel_s)
                 elif sd_r < 0.5 * rr:
                     moved_out += 1  # range determined, speed not: tested in sd units only
-    exp.metrics["physics-equals-least-squares"] = {
+    exp.metrics[name] = {
         "rows": len(items),
         "solver_converged_rows": len(items) - unconverged,
         "plausibility_flag_mismatches": flag_mismatch,
@@ -339,7 +356,7 @@ def check_physics_equals_ls(
     )
     exp.checks.append(
         Check(
-            "physics-equals-least-squares",
+            name,
             "pass" if ok else "fail",
             f"{len(items)} rows ({len(items) - unconverged} with the solver converged; "
             f"plausibility flags differ on {flag_mismatch}, both implausible on {implausible}): "
@@ -785,8 +802,13 @@ def check_export(exp: Experiment) -> None:
         d32 = export(Path(tmp) / "f32", fixture, dtype="float32")
         sha = hashlib.sha256((Path(tmp) / "f64" / "toy.onnx").read_bytes()).hexdigest()
         ops = (Path(tmp) / "f64" / "ops.txt").read_text().split()
+        h = hashlib.sha256()
+        for f in sorted(q.name for q in (Path(tmp) / "f64").glob("in_*.bin")):
+            h.update((Path(tmp) / "f64" / f).read_bytes())
+        inputs_sha = h.hexdigest()
     exp.metrics["export"] = {
         "onnx_sha256": sha,
+        "inputs_sha256": inputs_sha,
         "ops": ops,
         "python_f64_max_rel_diff": d64,
         "python_f32_max_rel_diff_reported_only": d32,
@@ -823,12 +845,13 @@ def check_export(exp: Experiment) -> None:
         if v is None:
             exp.checks.append(Check(f"export-{leg}", "fail", "leg missing from results.json"))
             continue
-        if v.get("onnx_sha256") != sha:
+        if v.get("onnx_sha256") != sha or v.get("inputs_sha256") != inputs_sha:
             exp.checks.append(
                 Check(
                     f"export-{leg}",
                     "fail",
-                    f"leg ran on {v.get('onnx_sha256')}, not this export ({sha})",
+                    f"leg ran on model {v.get('onnx_sha256')} with inputs "
+                    f"{v.get('inputs_sha256')}, not this export ({sha}, {inputs_sha})",
                 )
             )
             continue

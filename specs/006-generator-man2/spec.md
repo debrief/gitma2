@@ -231,9 +231,12 @@ scripts on 314.
 
 - **SC-001**: All golden and gitma-conformance tests pass unchanged, and seed 304's validation
   split regenerates with the same digest.
-- **SC-002**: On seed 314, leg lengths are not rejected as the declared normal at the 1% level;
-  4–6% of complete legs are at or under 10 min; the median transition lasts 60–180 s; at least
-  60% of engagements have two or more target changes.
+- **SC-002**: The *planned* leg lengths (drawn from seed-314 streams in a long window, unit test)
+  are not rejected as the declared normal at the 1% level, with 4–6% at or under 10 min; on seed
+  314 the median transition lasts 60–180 s and at least 60% of engagements have two or more target
+  changes. *(Amended 4 November 2026, G0-MAN2 panel round 1: complete legs inside a 40–120 min
+  window are biased short, about 6.8% at or under 10 min for a correct generator; that share is
+  reported against this expectation, not gated.)*
 - **SC-003**: In every wander scenario, 100% of rows are within 5° of the leg's course; a scenario
   without wander regenerates byte-identically with wander disabled.
 - **SC-004**: Kernel throughput stays at or above 10,000 scenarios per second at 720 rows.

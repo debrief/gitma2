@@ -1,0 +1,66 @@
+{
+  "artefacts": [
+    {
+      "digest": "1806e4766c889b4e4b7439b45a650a423240edf369be22a1adfd33f324ee82f4",
+      "path": "experiments/20261104-g0-man2-r1/conformance-720-results.json",
+      "role": "720-row export conformance results (browser and Java legs)"
+    }
+  ],
+  "command_lines": [
+    "tma2-g0-man2 --experiment experiments/20261104-g0-man2-r1 --man2 /home/user/gitma2/data/man2-val --noise-free /home/user/gitma2/data/man2-g0 --regen /home/user/gitma2/data/gd-val --conformance-results /tmp/claude-0/-home-user/af300153-f459-5cec-b506-0b839f7ae0fd/scratchpad/conf720.json",
+    "dataset: tma2-generate --seed 314 --count 100000 --ranges sha256:9ceb50b4deddc42da4edc1901e75b78d7dfb5bbd3d491bcad4e6f97986125c72 --heldout-ranges sha256:22361dbea7e9343b491b19145f5bcd4ece5bd53c3de5ece9449d7843eb29d404 (commit d72cb81d43297f34cad9dc06a76dc7b31c8fbea2)",
+    "dataset: tma2-generate --seed 316 --count 10000 --ranges sha256:0cb415d28b814ed1371876e97af827e28c6551a8ec45ddaff62c408c5fe40d58 --heldout-ranges sha256:0f1774e75f2448827fa64bb75552399bd41f73767bb5e9631b4ab043b66333d5 (commit d72cb81d43297f34cad9dc06a76dc7b31c8fbea2)",
+    "conformance: python -m tma2.export.onnx_export --out <dir> --man2; (cd conformance/onnx && node wasm_leg.mjs --dir <dir>/f64 --out <results>); python conformance/onnx/java_leg.py <dir>/f64"
+  ],
+  "created": "2026-11-04T13:18:08Z",
+  "datasets": [],
+  "environment": {
+    "cpu_count": 4,
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "lockfile_digest": "e4c602b906c86ce1a532f3a6f97c87bfa6355adcfbc643b262d1366a7a463dbf",
+    "packages": [
+      {
+        "name": "numpy",
+        "version": "2.5.4"
+      },
+      {
+        "name": "numba",
+        "version": "0.68.1"
+      },
+      {
+        "name": "torch",
+        "version": "2.15.0+cpu"
+      },
+      {
+        "name": "onnx",
+        "version": "1.23.2"
+      },
+      {
+        "name": "onnxruntime",
+        "version": "1.31.1"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.2"
+      }
+    ],
+    "torch_threads": 4
+  },
+  "estimators": [
+    {
+      "name": "classical",
+      "settings_json": "{\"grid_every\": 6, \"max_iterations\": 50}"
+    },
+    {
+      "name": "physics",
+      "settings_json": "{\"iterations\": 100, \"knots\": 0, \"trials\": 1}"
+    }
+  ],
+  "generator_version": "0.6.0",
+  "git_commit": "42d6a8b279d2b590c362d6de45c361c0fbacbe17",
+  "git_dirty": false,
+  "id": "20261104-g0-man2-r1",
+  "python_version": "3.12.13",
+  "schema_version": "0.22.0",
+  "torch_version": "2.15.0+cpu"
+}
