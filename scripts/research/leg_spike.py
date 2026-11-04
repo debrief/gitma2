@@ -150,19 +150,16 @@ def _check_imm(work: Path) -> None:
         raise SystemExit(f"{work} predates --imm (made with {DEFAULT_IMM}); use a new --work")
 
 
-def cmd_stats(a: argparse.Namespace) -> int:
-    torch.set_default_dtype(torch.float64)
-    work = Path(a.work)
-    work.mkdir(parents=True, exist_ok=True)
-    out = work / "stats.pkl"
-    if out.exists():
-        print(f"{out} exists")
-        return 0
-    (work / "imm.txt").write_text(IMM + "\n")
-    imm = parse_imm_name(IMM)
+STATS_CHUNK = 25
+
+
+def _stats_task(args: tuple[str, int, int, int, str]) -> list[dict[str, Any]]:
+    """The per-row statistics of ordinals start … start + count − 1 (one worker, one thread)."""
+    path, start, count, tune, imm_name = args
+    torch.set_num_threads(1)
+    imm = parse_imm_name(imm_name)
     recs: list[dict[str, Any]] = []
-    t0 = time.time()
-    for j, meta, own, _tgt, obs in iter_selected(a.validation, 0, a.tune + a.score):
+    for j, meta, own, _tgt, obs in iter_selected(path, start, count):
         d = bearing_data_from_arrays(meta, own, obs)
         z0 = np.zeros(d.n, dtype=np.int64)
         st, ok, _mis = window_fits(d.t, d.ox, d.oy, d.z, d.valid, d.sigma, W, z0)
@@ -172,7 +169,7 @@ def cmd_stats(a: argparse.Namespace) -> int:
             {
                 "ordinal": j,
                 "index": int(meta["index"]),
-                "set": "tune" if j < a.tune else "score",
+                "set": "tune" if j < tune else "score",
                 "split": lam,
                 "split_row": where,
                 "sl_ok": ok,
@@ -183,7 +180,28 @@ def cmd_stats(a: argparse.Namespace) -> int:
                 "imm": imm_mode_stat(d, imm),
             }
         )
-        if len(recs) % 100 == 0:
+    return recs
+
+
+def cmd_stats(a: argparse.Namespace) -> int:
+    torch.set_default_dtype(torch.float64)
+    work = Path(a.work)
+    work.mkdir(parents=True, exist_ok=True)
+    out = work / "stats.pkl"
+    if out.exists():
+        print(f"{out} exists")
+        return 0
+    (work / "imm.txt").write_text(IMM + "\n")
+    total = a.tune + a.score
+    chunks = [
+        (a.validation, s, min(STATS_CHUNK, total - s), a.tune, IMM)
+        for s in range(0, total, STATS_CHUNK)
+    ]
+    recs: list[dict[str, Any]] = []
+    t0 = time.time()
+    with ProcessPoolExecutor(max_workers=a.workers) as ex:
+        for part in ex.map(_stats_task, chunks):
+            recs += part
             print(f"{len(recs)} scenarios [{time.time() - t0:.0f} s]", flush=True)
     detectability(a.validation, a.tune, a.score, recs)
     with open(out, "wb") as f:
@@ -888,6 +906,8 @@ def main() -> int:
         p.add_argument("--tune", type=int, default=500)
         p.add_argument("--score", type=int, default=1000)
         p.add_argument("--imm", default=IMM, help="frozen IMM reference (spec 006: the MAN2 one)")
+        if name == "stats":
+            p.add_argument("--workers", type=int, default=4)
         if name == "confirm":
             p.add_argument("--configs", required=True)
             p.add_argument("--shards", type=int, default=8)
