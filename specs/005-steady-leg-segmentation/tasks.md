@@ -158,7 +158,7 @@ before US3, because L uses O's labels as input (FR-043).
   - the seeds, a forecast for S1–S4, and the follow-on copied from Annex A §A.9.
 
   This must be committed before T029–T035.
-- [ ] T028 Generate seed 315 (`tma2-generate --seed 315 --count 100000 --ranges configs/man2-ranges.json --heldout-ranges configs/man2-heldout.json --format f32pack`) at a clean commit after T027. Commit its digests to `experiments/<date>-gs-decision/seed315-digests.json`. Do not open or score it until T038
+- [x] T028 Generate seed 315 (`tma2-generate --seed 315 --count 100000 --ranges configs/man2-ranges.json --heldout-ranges configs/man2-heldout.json --format f32pack`) at a clean commit after T027. Commit its digests to `experiments/<date>-gs-decision/seed315-digests.json`. Do not open or score it until T038 — done: generated at a38f61b; digests in `experiments/20261104-gs-decision/seed315-digests.json`
 
 ## Phase 7: User Story 3, learned segmenter L (P2)
 
