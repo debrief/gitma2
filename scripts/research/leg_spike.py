@@ -661,6 +661,7 @@ def cmd_report(a: argparse.Namespace) -> int:
     th = thresholds(recs_all, metas_t)
     result: dict[str, Any] = {
         "validation": a.validation,
+        "imm_reference": IMM,
         "tune_scenarios": a.tune,
         "score_scenarios": len(scen),
         "window": W,
@@ -874,6 +875,7 @@ def main() -> int:
         p.add_argument("--work", required=True)
         p.add_argument("--tune", type=int, default=500)
         p.add_argument("--score", type=int, default=1000)
+        p.add_argument("--imm", default=IMM, help="frozen IMM reference (spec 006: the MAN2 one)")
         if name == "confirm":
             p.add_argument("--configs", required=True)
             p.add_argument("--shards", type=int, default=8)
@@ -886,6 +888,8 @@ def main() -> int:
             p.add_argument("--ordinals", required=True)
             p.add_argument("--out", required=True)
     a = ap.parse_args()
+    global IMM
+    IMM = a.imm
     fn = {"stats": cmd_stats, "confirm": cmd_confirm, "report": cmd_report, "samples": cmd_samples}
     return fn[a.cmd](a)
 
