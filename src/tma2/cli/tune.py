@@ -103,7 +103,16 @@ MAN2_PASS3_IMM_GRID = [
 MAN2_PASS3_EKF_GRID = [
     (sa, 4.0, r) for sa, r in itertools.product((0.00003, 0.0001), (1.0, 0.5, 0.25))
 ]
+# MAN2 pass 4: pass 3 put the IMM's ct inside (3, 10, 30 all worse than 1), so the IMM is
+# imm-cv0.03-ct1-w0.01-s0.0003-p4-r2 (0.5502); the EKF's r is still falling at its edge
+# (0.5 → 0.25: 0.5669 → 0.5581). Pass 4 reaches the EKF's r further (the IMM row repeats the
+# frozen choice so the record names it).
+MAN2_PASS4_IMM_GRID = [ImmParams(0.03, 1.0, 0.01, 0.0003, 4.0, 2.0)]
+MAN2_PASS4_EKF_GRID = [
+    (sa, 4.0, r) for sa, r in itertools.product((0.00003,), (0.25, 0.125, 0.0625, 0.03125))
+]
 GRIDS = {
+    "man2-pass4": (MAN2_PASS4_IMM_GRID, MAN2_PASS4_EKF_GRID),
     "default": None,
     "man2-pass2": (MAN2_PASS2_IMM_GRID, MAN2_PASS2_EKF_GRID),
     "man2-pass3": (MAN2_PASS3_IMM_GRID, MAN2_PASS3_EKF_GRID),
