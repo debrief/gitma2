@@ -234,3 +234,17 @@ the deployable graph (FR-045).
 | Re-test while raised | — | every 6 rows | note 08 §5 item 10 |
 | Gap normalisation (FR-061) | decision record | raw medians, efficiency beside | R7 |
 | L's loss (FR-042) | semi-Markov likelihood | the same, plus an auxiliary per-bearing term at 0.1 | R6 |
+
+## Addendum (MAN2 re-plan, 2026-11-04): the knot path at 720 rows (tasks T006)
+
+G0-MAN2 checked the physics layer at 720 rows on the trivial path only. With every truth knot:
+- **Equivalence** (`tests/unit/test_physics_knots_720.py`): on 16 MAN2 windows of ≥ 600 rows
+  (seed 316, k = the last row, chord and masked-turn modes, 4–16 knots), the tensor layer equals
+  the NumPy reference. Cost agrees to 1e-9, plausibility flags are exact, and the worst relative
+  state difference over determined rows is 2.0e-7 (limit 1e-4). Gradients through the implicit
+  step are finite in the log-weights and changepoints.
+- **Export** (`onnx_export --man2 --knots`, the physics layer alone fed truth knots, 16 knot
+  slots, eight windows with k 492–693, 4–10 knots each, alternately chord and masked): against
+  torch in double, Python onnxruntime 1.8e-10, WASM 2.8e-10, Java 1.8e-10 (covariance, the worst
+  output; limit 1e-5). The inputs digest binds both legs. CI runs it beside the 720-row toy
+  export.

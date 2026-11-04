@@ -48,7 +48,7 @@ before US3, because L uses O's labels as input (FR-043).
 
   Then regenerate the types (`uv run python scripts/gen_types.py`) and the data dictionary (`scripts/data_dictionary.py`).
 - [x] T005 Add a validator `tma2.segment.validate(seg, k)` in `src/tma2/segment/__init__.py`. It checks that the intervals tile [0, k] exactly, in order, without overlap; that steady intervals are ≥ `l_min_rows` and transitions ≥ `t_min_rows`, unless the interval is unknown or open; and that only the last interval may be open. Test it in `tests/unit/test_segment_validate.py`
-- [ ] T006 Check the physics layer's knot path at 720 rows; G0-MAN2 left it untested. Both checks use 50 seed-314 σ = 1° scenarios with ≥ 600 rows and every truth knot:
+- [x] T006 Check the physics layer's knot path at 720 rows; G0-MAN2 left it untested. Both checks use 50 seed-314 σ = 1° scenarios with ≥ 600 rows and every truth knot:
   - **Equivalence.** In `tests/unit/test_physics_knots_720.py`, compare `physics/layer.py` with `physics/reference.py` on `oracle_inputs` in both chord and masked-turn modes (relative range ≤ 1e-4, flags exact), and the gradients for finiteness.
   - **Export.** Add `--man2 --knots` to `src/tma2/export/onnx_export.py`: a golden batch with knots at 720 rows (k ≥ 480), conformance across Python, WASM and Java to 1e-5, and `inputs_sha256` bound. Add the CI step to `.github/workflows/ci.yml`.
 

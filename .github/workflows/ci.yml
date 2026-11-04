@@ -124,12 +124,18 @@ jobs:
           uv run python conformance/onnx/java_leg.py conformance/onnx/export720/f64 conformance/onnx/export720/results.json
           t3=$(date +%s)
           echo "720-row export: export + Python leg $((t1 - t0)) s, WASM $((t2 - t1)) s, Java $((t3 - t2)) s" >> "$GITHUB_STEP_SUMMARY"
+      - name: 720-row knot-path export (physics layer fed truth knots, chord and masked; spec 005 T006), three legs
+        run: |
+          uv run python -m tma2.export.onnx_export --out conformance/onnx/export720k --man2 --knots
+          (cd conformance/onnx && node wasm_leg.mjs --dir export720k/f64 --out export720k/results.json)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/export720k/f64 conformance/onnx/export720k/results.json
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
           path: |
             conformance/onnx/results.json
             conformance/onnx/export720/results.json
+            conformance/onnx/export720k/results.json
             conformance/onnx/gate1/results.json
             conformance/onnx/gate1/python_leg.json
             conformance/onnx/detector-*/results.json
