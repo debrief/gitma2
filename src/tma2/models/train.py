@@ -26,7 +26,8 @@ from safetensors.torch import load_file, save_file
 from tma2.data.f32pack import iter_pack_raw
 from tma2.data.io import AtomicFile, file_digest
 from tma2.eval.experiment import ROOT, run_environment
-from tma2.features.batch import KIND_BOTH, KIND_COURSE, KIND_SPEED, Batch, generate_batch
+from tma2.features.batch import Batch, generate_batch
+from tma2.kinds import KIND_CODES, kind_name, manoeuvre_table
 from tma2.sim import scenario as sc
 from tma2.types import dump_record, parse_record
 from tma2.types.generated.tma import (
@@ -56,9 +57,6 @@ def model_from_plan(plan: TrainingPlan, model_id: str) -> PhysicsModelConfig:
         if m.id == model_id:
             return m
     raise ValueError(f"plan {plan.id} has no model {model_id}")
-
-
-KIND_CODES = {"course": KIND_COURSE, "speed": KIND_SPEED, "both": KIND_BOTH}  # = tma2.kinds
 
 
 def batch_from_pack(path: Path, limit: int) -> Batch:
@@ -97,19 +95,12 @@ def batch_from_pack(path: Path, limit: int) -> Batch:
         # Manoeuvres (generator 0.5.0): spans for the detector's labels, the generator's table
         # for the known-manoeuvres bound. Constant-velocity data has neither.
         for j, sp in enumerate(meta.get("manoeuvres") or []):
-            b.spans[i, j] = (KIND_CODES[sp["kind"]], sp["start_index"], sp["end_index"])
+            b.spans[i, j] = (KIND_CODES[kind_name(sp["kind"])], sp["start_index"], sp["end_index"])
         tms = meta["parameters"].get("target_manoeuvres")
         if tms is not None:
             b.n_tm[i] = len(tms)
-            for j, m in enumerate(tms):
-                b.tm[i, j] = (
-                    KIND_CODES[m["kind"]],
-                    m["start_time_s"],
-                    m["change"],
-                    m["rate"],
-                    m.get("change2") or 0.0,
-                    m.get("rate2") or 0.0,
-                )
+            if tms:
+                b.tm[i, : len(tms)] = manoeuvre_table(tms)
         n = int(meta["samples"])
         b.t[i, :n] = own[:n, 0]
         b.mask[i, :n] = True

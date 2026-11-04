@@ -53,8 +53,9 @@ from tma2.eval.gd import (
 from tma2.eval.predictions import check_bound, iter_predictions_raw
 from tma2.eval.rows import G5_SLICE_SIGMA_RAD
 from tma2.eval.stats import ascending, percentile
+from tma2.kinds import KIND_CODES, kind_name
 from tma2.models.detector_labels import row_labels
-from tma2.models.train import KIND_CODES, load_plan
+from tma2.models.train import load_plan
 from tma2.sim import scenario as sc_
 from tma2.types import RecordError, dump_record, parse_record
 from tma2.types.generated.tma import CheckpointMeta, GateDDecision
@@ -196,7 +197,7 @@ def score_detector_file(
         n = int(meta["samples"])
         spans = np.full((1, sc_.MAX_TM, 3), -1, dtype=np.int32)
         for j, s in enumerate(meta.get("manoeuvres") or []):
-            spans[0, j] = (KIND_CODES[s["kind"]], s["start_index"], s["end_index"])
+            spans[0, j] = (KIND_CODES[kind_name(s["kind"])], s["start_index"], s["end_index"])
         now = row_labels(spans, np.array([n]), np.array([float(meta["parameters"]["dt_s"])]), n)
         out.append(
             score_scenario(meta, rec, name, decision.threshold, decision.tolerance_s, now.now[0])

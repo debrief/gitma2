@@ -33,7 +33,7 @@ from typing import Any
 import numpy as np
 from numba import njit
 
-from tma2.kinds import manoeuvre_table
+from tma2.kinds import kind_name, manoeuvre_table
 from tma2.sim.scenario import both_state
 
 SINGULAR_COND = 1e12
@@ -225,7 +225,7 @@ def manoeuvre_model(
     changes: list[float] = []
     spec: list[Manoeuvre] = []
     for m in mans:
-        kind = str(m["kind"]).split(".")[-1]
+        kind = kind_name(m["kind"])
         dur = abs(float(m["change"])) / float(m["rate"])
         changes.append(float(m["change"]))
         dur2 = 0.0

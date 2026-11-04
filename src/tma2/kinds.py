@@ -21,14 +21,20 @@ def kind_name(kind: object) -> str:
     return str(getattr(kind, "value", kind)).split(".")[-1]
 
 
-def is_turn_kind(kind: int | str) -> bool:
-    """A manoeuvre that changes course: "course", or generator 0.6.0's "both"."""
-    return kind in (KIND_COURSE, KIND_BOTH, "course", "both")
+def is_turn_kind(kind: object) -> bool:
+    """A manoeuvre that changes course: "course", or generator 0.6.0's "both" (a code, a name or
+    an enum member)."""
+    if isinstance(kind, int | np.integer):
+        return int(kind) in (KIND_COURSE, KIND_BOTH)
+    return kind_name(kind) in ("course", "both")
 
 
-def is_speed_kind(kind: int | str) -> bool:
-    """A manoeuvre that changes speed: "speed", or generator 0.6.0's "both"."""
-    return kind in (KIND_SPEED, KIND_BOTH, "speed", "both")
+def is_speed_kind(kind: object) -> bool:
+    """A manoeuvre that changes speed: "speed", or generator 0.6.0's "both" (a code, a name or an
+    enum member)."""
+    if isinstance(kind, int | np.integer):
+        return int(kind) in (KIND_SPEED, KIND_BOTH)
+    return kind_name(kind) in ("speed", "both")
 
 
 def manoeuvre_table(plan: list[dict[str, Any]]) -> np.ndarray:
