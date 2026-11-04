@@ -256,3 +256,59 @@ def gap_recovered_cols(cols: dict[str, np.ndarray], seg: str, col: int) -> float
 
 def codes_of(intervals: list[Interval], k: int) -> np.ndarray:
     return to_codes(intervals, k + 1)
+
+
+# --- detectability (note 08 §2) and its strata (FR-063, SC-006) --------------------------------
+
+DETECTABILITY_BANDS = (13.28, 50.0, 200.0)  # χ²(4) 1% point, then roughly decades
+DETECTABLE = DETECTABILITY_BANDS[0]
+
+
+def detectability(
+    layer: PhysicsLayer, data: dict[int, BearingData], metas: dict[int, dict[str, Any]]
+) -> dict[int, list[float]]:
+    """Each target change's detectability: the physics layer on [0, k], k = min(end + 30, n − 1),
+    with every span's true knots, against the same without this span's (a χ² with 4 degrees of
+    freedom; note 08's definition, ``leg_spike.detectability``). Spans in the metadata's order."""
+    from tma2.detect.confirm import layer_costs
+
+    items: list[tuple[BearingData, int, LayerInputs]] = []
+    tags: list[tuple[int, int]] = []
+    out: dict[int, list[float]] = {}
+    for j, m in metas.items():
+        d = data[j]
+        spans = m.get("manoeuvres") or []
+        out[j] = [math.nan] * len(spans)
+        for s_i, sp in enumerate(spans):
+            k = min(int(sp["end_index"]) + 30, d.n - 1)
+            others = [x for x_i, x in enumerate(spans) if x_i != s_i]
+            full = oracle_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, spans, False)
+            less = oracle_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, others, False)
+            if full is None or less is None:
+                continue
+            items += [(d, k, full), (d, k, less)]
+            tags.append((j, s_i))
+    r_max = max(d.n for d in data.values())
+    costs = layer_costs(layer, items, r_max)
+    for q, (j, s_i) in enumerate(tags):
+        out[j][s_i] = costs[2 * q + 1] - costs[2 * q]
+    return out
+
+
+def band(x: float) -> str:
+    if not math.isfinite(x):
+        return "unknown"
+    lo = 0.0
+    for e in DETECTABILITY_BANDS:
+        if x < e:
+            return f"{lo:g}-{e:g}"
+        lo = e
+    return f">={lo:g}"
+
+
+def row_band(meta: dict[str, Any], k: int, det: list[float]) -> str:
+    """A G5 row's stratum: the detectability band of the last target change begun by row k, or
+    ``none`` when no change has begun."""
+    spans = meta.get("manoeuvres") or []
+    last = [i for i, s in enumerate(spans) if int(s["start_index"]) <= k]
+    return band(det[last[-1]]) if last else "none"

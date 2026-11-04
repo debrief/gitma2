@@ -73,6 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     from tma2.references.classical import bearing_data_from_arrays
     from tma2.segment import TRANSITION, default_parameters
     from tma2.segment import score as sc
+    from tma2.segment.metrics import gap_recovered
     from tma2.types.generated.tma import SegmentParameters
 
     ap = argparse.ArgumentParser(prog="tma2-gs")
@@ -88,6 +89,12 @@ def main(argv: list[str] | None = None) -> int:
         "of the mode its header names",
     )
     ap.add_argument("--glr-confirm", metavar="WORK:CONFIG")
+    ap.add_argument(
+        "--detectability",
+        action="store_true",
+        help="compute each change's detectability (two layer solves per change) and report "
+        "leg-count accuracy on detectable changes and every measure by detectability band",
+    )
     ap.add_argument("--imm", required=True)
     ap.add_argument("--experiment", required=True)
     a = ap.parse_args(argv)
@@ -113,6 +120,12 @@ def main(argv: list[str] | None = None) -> int:
         "imm": sc.imm_errors(rows, data, truths, a.imm),
     }
     print(f"references [{time.time() - t0:.0f} s]", flush=True)
+    det: dict[int, list[float]] | None = None
+    row_bands = np.array(["all"] * len(rows))
+    if a.detectability:
+        det = sc.detectability(layer, data, metas)
+        row_bands = np.array([sc.row_band(metas[r.ordinal], r.k, det[r.ordinal]) for r in rows])
+        print(f"detectability [{time.time() - t0:.0f} s]", flush=True)
     params: dict[str, SegmentParameters] = {}
     seg_ivs: dict[str, dict[tuple[int, int], list[tuple[int, int]]]] = {}
     for spec in a.segmentations:
@@ -204,7 +217,13 @@ def main(argv: list[str] | None = None) -> int:
         if name in seg_ivs:
             p = params.get(name, next(iter(params.values()), default_parameters()))
             pm = [
-                sc.prefix_metrics(seg_ivs[name][(r.ordinal, r.k)], metas[r.ordinal], r.k, p)
+                sc.prefix_metrics(
+                    seg_ivs[name][(r.ordinal, r.k)],
+                    metas[r.ordinal],
+                    r.k,
+                    p,
+                    None if det is None else [x >= sc.DETECTABLE for x in det[r.ordinal]],
+                )
                 for r in rows
             ]
             cont = np.array([x.contamination for x in pm])
@@ -224,6 +243,31 @@ def main(argv: list[str] | None = None) -> int:
                 "hits_3min": float(np.mean(h180)) if h180 else math.nan,
                 "changes": len(h60),
             }
+            if det is not None:
+                by: dict[str, list[tuple[bool, bool]]] = {}
+                for r, x in zip(rows, pm, strict=True):
+                    for i, (h1, h3) in enumerate(zip(x.hits60, x.hits180, strict=True)):
+                        by.setdefault(sc.band(det[r.ordinal][i]), []).append((h1, h3))
+                rec["segmentation"]["hits_by_detectability"] = {
+                    b_: {
+                        "hits_60s": float(np.mean([h[0] for h in v])),
+                        "hits_3min": float(np.mean([h[1] for h in v])),
+                        "changes": len(v),
+                    }
+                    for b_, v in sorted(by.items())
+                }
+        if det is not None:
+            rec["by_row_band"] = {}
+            for b_ in sorted(set(row_bands.tolist())):
+                mask = row_bands == b_
+                one = float(np.median(errs["one_leg"][mask, 0]))
+                ora = float(np.median(errs["oracle"][mask, 0]))
+                med = float(np.median(e[mask, 0]))
+                rec["by_row_band"][b_] = {
+                    "rows": int(mask.sum()),
+                    "range_median": med,
+                    "gap_recovered_range": gap_recovered(one, med, ora),
+                }
         result["segmenters"][name] = rec
     out = Path(a.experiment)
     out.mkdir(parents=True, exist_ok=True)
