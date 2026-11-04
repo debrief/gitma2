@@ -337,3 +337,17 @@ def row_band(meta: dict[str, Any], k: int, det: list[float]) -> str:
     spans = meta.get("manoeuvres") or []
     last = [i for i, s in enumerate(spans) if int(s["start_index"]) <= k]
     return band(det[last[-1]]) if last else "none"
+
+
+def ownship_contamination(
+    own: np.ndarray, meta: dict[str, Any], k: int, p: SegmentParameters
+) -> float:
+    """S1's measure on one prefix: O's contamination against the ownship truth labels on rows
+    0 … k (``own`` columns 3 and 4 are course and speed)."""
+    from . import to_codes
+    from .metrics import contamination
+    from .ownship import segment_ownship
+
+    pred = to_codes(segment_ownship(own[:, 3], own[:, 4], k, p), k + 1)
+    truth = truth_codes(meta, "ownship", p.l_min_rows, p.t_min_rows, n=k + 1)
+    return contamination(pred, truth)

@@ -14,7 +14,9 @@ the frozen IMM, and GLR + confirm when given:
 * **segmentation:** contamination (median, P90), coverage, false-split rate, leg-count accuracy,
   boundary hits at ± 60 s and ± 3 min, from each segmentation's intervals.
 
-Writes ``metrics.json`` and ``report.md``. Gate mode (``--decision``) is tasks T037.
+Writes ``metrics.json`` and ``report.md``. **Gate mode** (``--decision --plan --split``, T037)
+refuses inputs that do not match the decision (``segment/gate.py``), scores S1–S4 and writes
+``verdict.json`` and ``manifest.json``; exit 3 unless every criterion passes.
 """
 
 from __future__ import annotations
@@ -60,6 +62,181 @@ def read_segmentations(path: str) -> tuple[dict[str, Any], dict[tuple[int, int],
     return header, segs
 
 
+def _gate_preflight(a: argparse.Namespace) -> dict[str, Any] | None:
+    """Gate mode's refusals (T037): the decision, plan, split, segmentations and carried weights
+    must match. Returns what the gate needs, or None after printing every reason."""
+    from tma2.cli.segment import params_digest
+    from tma2.segment import gate
+    from tma2.types.generated.tma import GateSDecision
+
+    errs = []
+    if not (a.plan and a.split):
+        errs.append("gate mode needs --decision, --plan and --split")
+    if a.modes:
+        errs.append("gate mode scores the decision's mode: no --modes")
+    if not a.glr_confirm:
+        errs.append("gate mode needs --glr-confirm (S2's reference)")
+    if errs:
+        print("\n".join(f"refusing: {e}" for e in errs), file=sys.stderr)
+        return None
+    ddir = Path(a.decision).parent
+    raw = json.loads(Path(a.decision).read_text())
+    decision = GateSDecision.model_validate(raw)
+    plan = json.loads(Path(a.plan).read_text())
+    test_digest = None
+    dig = ddir / f"seed{decision.test_seed}-digests.json"
+    if dig.exists():
+        test_digest = json.loads(dig.read_text()).get("test.f32pack")
+    carried = (
+        json.loads((ddir / gate.CARRIED).read_text()) if (ddir / gate.CARRIED).exists() else None
+    )
+    headers = {}
+    for spec in a.segmentations:
+        name, _, path = spec.partition("=")
+        with open(path, encoding="utf-8") as f:
+            headers[name] = json.loads(f.readline())
+    truth_sha = gate.sha256_file(a.truth)
+    errs = gate.check_inputs(
+        raw,
+        gate.sha256_file(a.plan),
+        a.split,
+        truth_sha,
+        test_digest,
+        headers,
+        params_digest(decision.parameters),
+        carried,
+        plan,
+    )
+    if errs:
+        print("\n".join(f"refusing: {e}" for e in errs), file=sys.stderr)
+        return None
+    return {
+        "decision": decision,
+        "decision_sha256": gate.sha256_file(a.decision),
+        "parameters": decision.parameters,
+        "carried": carried,
+        "truth_sha256": truth_sha,
+        "plan_sha256": gate.sha256_file(a.plan),
+        "headers": headers,
+        "amendments": gate.amendments(ddir),
+    }
+
+
+def _gate(
+    a: argparse.Namespace,
+    gi: dict[str, Any],
+    result: dict[str, Any],
+    rows: list[Any],
+    cluster: np.ndarray,
+    prefix_by_name: dict[str, list[Any]],
+    own_cont: np.ndarray,
+    out: Path,
+) -> int:
+    """S1–S4 (FR-071) from the scored rows; writes verdict.json and manifest.json; exit 3 unless
+    every criterion passes."""
+    from tma2.data.provenance import read_git_provenance
+    from tma2.eval.bootstrap import bootstrap_clustered_statistic
+    from tma2.segment import gate
+    from tma2.types.generated.tma import GateSRecord, GateSVerdicts, Split
+
+    d = gi["decision"]
+    segs = result["segmenters"]
+
+    def finite_stat(x: np.ndarray, cl: np.ndarray, q: float) -> gate.Interval:
+        ok = np.isfinite(x)
+        si = bootstrap_clustered_statistic(
+            {"x": x[ok]}, cl[ok], lambda c: float(np.quantile(c["x"], q)), LEVEL, RESAMPLES
+        )
+        return gate.Interval(si.value, si.lo, si.hi)
+
+    def paired(name: str, ref: str, field: str, q: float | None) -> gate.Interval:
+        a_ = np.array([getattr(x, field) for x in prefix_by_name[name]], dtype=object)
+        b_ = np.array([getattr(x, field) for x in prefix_by_name[ref]], dtype=object)
+        ok = np.array([x is not None and y is not None for x, y in zip(a_, b_, strict=True)])
+        av, bv = a_[ok].astype(float), b_[ok].astype(float)
+        ok2 = np.isfinite(av) & np.isfinite(bv)
+        cl = cluster[ok][ok2]
+        if not cl.size:
+            return gate.Interval(0.0, 0.0, 0.0)
+
+        def stat(c: dict[str, np.ndarray]) -> float:
+            if q is None:
+                return float(np.mean(c["a"]) - np.mean(c["b"]))
+            return float(np.quantile(c["a"], q) - np.quantile(c["b"], q))
+
+        si = bootstrap_clustered_statistic({"a": av[ok2], "b": bv[ok2]}, cl, stat, LEVEL, RESAMPLES)
+        return gate.Interval(si.value, si.lo, si.hi)
+
+    s1_iv = finite_stat(own_cont, cluster, 0.9)
+    s1 = gate.within_limit(s1_iv, d.s1_limit)
+    s2_iv = gate.Interval.of(segs["C"]["gap_minus_glr_confirm"]["range"])
+    s2 = gate.above_zero(s2_iv)
+    ref = gate.reference(
+        s2,
+        segs["C"]["gap_recovered"]["range"]["value"],
+        segs["glr_confirm"]["gap_recovered"]["range"]["value"],
+    )
+    s3_ivs = {
+        "contamination_median": paired("L", ref, "contamination", 0.5),
+        "contamination_p90": paired("L", ref, "contamination", 0.9),
+        "false_split": paired("L", ref, "false_split", None),
+    }
+    s3 = gate.all_of(
+        [
+            gate.within_limit(s3_ivs["contamination_median"], d.s3_contamination_limit),
+            gate.within_limit(s3_ivs["contamination_p90"], d.s3_contamination_limit),
+            gate.within_limit(s3_ivs["false_split"], d.s3_false_split_limit),
+        ]
+    )
+    s4_key = "gap_minus_glr_confirm" if ref == "glr_confirm" else "gap_minus"
+    s4_raw = segs["L"][s4_key]["range"] if ref == "glr_confirm" else segs["L"][s4_key]["C"]["range"]
+    s4_iv = gate.Interval.of(s4_raw)
+    shuffled = str((gi["carried"] or {}).get("shuffled_rule", gate.FAIL))
+    s4 = gate.s4_verdict(s4_iv, shuffled)
+    (out / "metrics.json").write_text(json.dumps(result, indent=2) + "\n")
+    metrics_sha = gate.sha256_file(out / "metrics.json")
+    rec = GateSRecord(
+        decision_sha256=gi["decision_sha256"],
+        split=Split(a.split),
+        seed=d.test_seed if a.split == "test" else d.validation_seed,
+        dataset_digest=gi["truth_sha256"],
+        segmenters=sorted(prefix_by_name),
+        metrics_sha256=metrics_sha,
+        verdicts=GateSVerdicts(s1=s1, s2=s2, s3=s3, s4=s4),
+    )
+    detail = {
+        "record": json.loads(rec.model_dump_json(exclude_none=True)),
+        "reference": ref,
+        "s1": {"o_contamination_p90": s1_iv.__dict__, "limit": d.s1_limit},
+        "s2": {"c_minus_glr_confirm_gap_range": s2_iv.__dict__},
+        "s3": {k: v.__dict__ for k, v in s3_ivs.items()}
+        | {"limits": [d.s3_contamination_limit, d.s3_false_split_limit]},
+        "s4": {"l_minus_reference_gap_range": s4_iv.__dict__, "shuffled_rule": shuffled},
+    }
+    (out / "verdict.json").write_text(json.dumps(detail, indent=2) + "\n")
+    gp = read_git_provenance()
+    manifest = {
+        "decision": a.decision,
+        "decision_sha256": gi["decision_sha256"],
+        "plan": a.plan,
+        "plan_sha256": gi["plan_sha256"],
+        "truth": a.truth,
+        "truth_sha256": gi["truth_sha256"],
+        "segmentations": {
+            n: {"segmenter_sha256": h.get("segmenter_sha256"), "git_commit": h.get("git_commit")}
+            for n, h in gi["headers"].items()
+        },
+        "carried": gi["carried"],
+        "amendments": gi["amendments"],
+        "metrics_sha256": metrics_sha,
+        "git_commit": gp.commit,
+        "git_dirty": gp.dirty,
+    }
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(json.dumps({"S1": s1, "S2": s2, "S3": s3, "S4": s4, "reference": ref}))
+    return 0 if all(v == gate.PASS for v in (s1, s2, s3, s4)) else 3
+
+
 def main(argv: list[str] | None = None) -> int:
     import torch
 
@@ -98,12 +275,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--imm", required=True)
     ap.add_argument("--ekf", help="the frozen EKF, scored as a further reference")
     ap.add_argument("--experiment", required=True)
+    ap.add_argument("--decision", help="gate mode: the GateSDecision record (T037)")
+    ap.add_argument("--plan", help="gate mode: the plan the decision binds")
+    ap.add_argument("--split", choices=["validation", "test"], help="gate mode: the split scored")
     a = ap.parse_args(argv)
+    gate_inputs: dict[str, Any] | None = None
+    if a.decision:
+        gate_inputs = _gate_preflight(a)
+        if gate_inputs is None:
+            return 2
     torch.set_default_dtype(torch.float64)
     t0 = time.time()
 
-    data, metas, truths = {}, {}, {}
+    data, metas, truths, owns = {}, {}, {}, {}
     for j, m, own, tgt, obs in sc.iter_selected(a.truth, a.start, a.count):
+        owns[j] = own
         data[j] = bearing_data_from_arrays(m, own, obs)
         metas[j] = m
         truths[j] = Truth.from_block(m, own, tgt)
@@ -193,6 +379,7 @@ def main(argv: list[str] | None = None) -> int:
 
     everyone = np.ones(len(rows), dtype=bool)
     seg_names = [n for n in errs if n not in ("one_leg", "oracle", "imm", "ekf")]
+    prefix_by_name: dict[str, list[Any]] = {}
     result: dict[str, Any] = {
         "truth": a.truth,
         "ordinals": [a.start, a.start + a.count - 1],
@@ -238,6 +425,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 for r in rows
             ]
+            prefix_by_name[name] = pm
             cont = np.array([x.contamination for x in pm])
             cov = np.array([x.coverage for x in pm])
             fs = [x.false_split for x in pm if x.false_split is not None]
@@ -322,6 +510,12 @@ def main(argv: list[str] | None = None) -> int:
         )
     (out / "report.md").write_text("\n".join(lines) + "\n")
     print(f"wrote {out} [{time.time() - t0:.0f} s]")
+    if gate_inputs is not None:
+        gp = gate_inputs["parameters"]
+        own_cont = np.array(
+            [sc.ownship_contamination(owns[r.ordinal], metas[r.ordinal], r.k, gp) for r in rows]
+        )
+        return _gate(a, gate_inputs, result, rows, cluster, prefix_by_name, own_cont, out)
     return 0
 
 
