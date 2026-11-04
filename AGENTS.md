@@ -38,8 +38,9 @@ an additive leg search is far weaker than GLR + confirm (F1 0.65 vs 0.79), so C 
 nominations from both by the coupled physics-layer cost on each nomination's own prefix. Owner
 decision 2026-11-04 (Annex B, SRD §9): the simulation changes to the owner's manoeuvre model
 rather than the thresholds to the simulation. Generator 0.6.0 (MAN2: target legs 10–40 min, bell
-shaped; wander; slower turns; scoping in `docs/research/09`) is the next spec and precedes
-Gate S.
+shaped; 40–120 min windows, 720 rows; wander; slower turns; scoping in `docs/research/09`) is
+spec 006 (`specs/006-generator-man2/spec.md`, specified) and precedes Gate S. Seeds: 314
+validation, 315 test (Gate S), 316 noise-free; 312/313 unused.
 
 ## Stack (owner decisions, 2026-10-31)
 
