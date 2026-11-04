@@ -77,13 +77,13 @@ before US3, because L uses O's labels as input (FR-043).
 **Independent test**: on noise-free seed 316, transitions lie within ± 60 s on detectable changes and there is no false split (SC-001). Prefix invariance holds.
 
 - [x] T011 [P] [US1] Move the search from `scripts/research/seg_search.py` into `src/tma2/segment/search.py`: the numba cost table, the DP over the lattice (steady ≥ `l_min_rows`, transitions in `t_lengths_rows`), and the per-leg penalty. Leave the script as a thin wrapper. Add `tests/unit/test_segment_search.py`: a constructed three-leg track is recovered, and the result matches the script's output on 20 seed-304 scenarios
-- [ ] T012 [US1] Implement the coupled nominate-and-confirm in `src/tma2/segment/confirm.py` (research R2):
+- [x] T012 [US1] Implement the coupled nominate-and-confirm in `src/tma2/segment/confirm.py` (research R2):
   - **Nominations:** GLR alarm episodes (re-tested every `retest_rows` while raised) and the search's transitions.
   - **Confirmation:** each nomination is tested on its own prefix with `layer_costs`, searching the transition's start and length. A candidate is accepted when its drop exceeds `tau_4dof(tau)`.
   - **Polish:** accepted boundaries are then polished under the coupled cost.
 
   The machinery comes from `src/tma2/detect/confirm.py`, reused rather than copied.
-- [ ] T013 [US1] Implement C in `src/tma2/segment/segmenter.py`. Per prefix it runs the nominators and the confirmation, then builds the Segmentation. It labels as unknown any interval where the best and runner-up segmentations differ by less than the margin (FR-023), and it records cost and margin. Add an `evidence` hook that defaults to zero (for L)
+- [x] T013 [US1] Implement C in `src/tma2/segment/segmenter.py`. Per prefix it runs the nominators and the confirmation, then builds the Segmentation. It labels as unknown any interval where the best and runner-up segmentations differ by less than the margin (FR-023), and it records cost and margin. Add an `evidence` hook that defaults to zero (for L)
 - [ ] T014 [US1] Add `tests/unit/test_segment_c.py`, covering US1's acceptance scenarios on constructed noise-free engagements:
   - two target zigs inside one ownship leg give 3 legs and 2 transitions within ± 60 s;
   - no manoeuvre gives one leg;

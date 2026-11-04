@@ -8,6 +8,7 @@ open)`` tuples and per-row labels are ``int8`` codes ``STEADY``, ``TRANSITION``,
 
 from __future__ import annotations
 
+import math
 from typing import NamedTuple
 
 import numpy as np
@@ -34,8 +35,9 @@ class Interval(NamedTuple):
 
 
 def default_parameters(**overrides: object) -> SegmentParameters:
-    """Annex B's defaults and the MAN2 re-plan's (data-model.md). ``search_penalty``, ``margin``
-    and ``mode`` are placeholders until the decision record fixes them."""
+    """Annex B's defaults and the MAN2 re-plan's (data-model.md). ``search_penalty``, ``margin``,
+    ``mode`` and ``glr_threshold`` (∞: no GLR nominations) are placeholders until validation
+    measurements and the decision record fix them."""
     base: dict[str, object] = {
         "course_tol_deg": 5.0,
         "speed_tol_kt": 0.5,
@@ -50,6 +52,14 @@ def default_parameters(**overrides: object) -> SegmentParameters:
         "tau": 13.8,
         "margin": 0.0,
         "mode": SegmentMode.chord,
+        "glr_threshold": math.inf,
+        "glr_window": 30,
+        "window_rows": 36,
+        "candidate_step_rows": 3,
+        "search_every_rows": 30,
+        "search_step_rows": 6,
+        "search_horizon_rows": 18,
+        "polish_rows": 3,
     }
     base.update(overrides)
     return SegmentParameters.model_validate(base)

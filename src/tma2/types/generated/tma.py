@@ -1500,7 +1500,7 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'PhysicsModelManifest',
                        'DetectorHeader']} })
     onnx_digest: Optional[str] = Field(default=None, description="""SHA-256 of the exported graph.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest']} })
-    window_rows: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest']} })
+    window_rows: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest', 'SegmentParameters']} })
 
 
 class Gate1Decision(ConfiguredBaseModel):
@@ -1643,7 +1643,7 @@ class ControlSettings(ConfiguredBaseModel):
                        'SegmentInterval']} })
     threshold: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck', 'ControlSettings', 'GateDDecision']} })
     cusum_drift: Optional[float] = Field(default=None, description="""CUSUM drift δ.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
-    glr_window: Optional[int] = Field(default=None, description="""GLR window in samples.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
+    glr_window: Optional[int] = Field(default=None, description="""GLR window in samples.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings', 'SegmentParameters']} })
     imm: Optional[str] = Field(default=None, description="""Frozen IMM setting name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'ControlSettings',
                        'GateDDecision',
@@ -1864,6 +1864,14 @@ class SegmentParameters(ConfiguredBaseModel):
     tau: float = Field(default=..., description="""Confirmation threshold (χ², 4 dof, before scaling).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
     margin: float = Field(default=..., description="""Cost margin below which differing intervals are unknown (FR-023).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters', 'Segmentation']} })
     mode: SegmentMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader', 'SegmentParameters']} })
+    glr_threshold: float = Field(default=..., description="""GLR alarm threshold, tuned on the tuning scenarios' held-leg rows to nominator_far.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    glr_window: int = Field(default=..., description="""GLR window in rows (spec 004).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings', 'SegmentParameters']} })
+    window_rows: int = Field(default=..., description="""W: a nomination's candidates start in its last W rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest', 'SegmentParameters']} })
+    candidate_step_rows: int = Field(default=..., description="""Spacing of candidate transition starts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    search_every_rows: int = Field(default=..., description="""The search nominates from prefixes this many rows apart on its grid.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    search_step_rows: int = Field(default=..., description="""The search's grid step.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    search_horizon_rows: int = Field(default=..., description="""A search transition is tested on the prefix this many rows after its end.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    polish_rows: int = Field(default=..., description="""Each accepted boundary is re-optimised within ± this many rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
 
 
 class SegmentationHeader(ConfiguredBaseModel):

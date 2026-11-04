@@ -1578,6 +1578,14 @@ classes:
       tau: { range: float, required: true, description: "Confirmation threshold (χ², 4 dof, before scaling)." }
       margin: { range: float, required: true, description: "Cost margin below which differing intervals are unknown (FR-023)." }
       mode: { range: SegmentMode, required: true }
+      glr_threshold: { range: float, required: true, description: "GLR alarm threshold, tuned on the tuning scenarios' held-leg rows to nominator_far." }
+      glr_window: { range: integer, required: true, description: "GLR window in rows (spec 004)." }
+      window_rows: { range: integer, required: true, description: "W: a nomination's candidates start in its last W rows." }
+      candidate_step_rows: { range: integer, required: true, description: "Spacing of candidate transition starts." }
+      search_every_rows: { range: integer, required: true, description: "The search nominates from prefixes this many rows apart on its grid." }
+      search_step_rows: { range: integer, required: true, description: "The search's grid step." }
+      search_horizon_rows: { range: integer, required: true, description: "A search transition is tested on the prefix this many rows after its end." }
+      polish_rows: { range: integer, required: true, description: "Each accepted boundary is re-optimised within ± this many rows." }
 
   SegmentationHeader:
     description: First record of a tma2-segment file.

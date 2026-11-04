@@ -3541,6 +3541,10 @@
             "additionalProperties": false,
             "description": "A segmenter's fixed parameters (spec 005 data-model.md; defaults from SRD Annex B and the MAN2 re-plan). Copied into each segmentation file's header.",
             "properties": {
+                "candidate_step_rows": {
+                    "description": "Spacing of candidate transition starts.",
+                    "type": "integer"
+                },
                 "course_change_deg": {
                     "description": "D: a deliberate course change (ownship coarse pass).",
                     "type": "number"
@@ -3548,6 +3552,14 @@
                 "course_tol_deg": {
                     "description": "C: half-width of a steady leg's course band.",
                     "type": "number"
+                },
+                "glr_threshold": {
+                    "description": "GLR alarm threshold, tuned on the tuning scenarios' held-leg rows to nominator_far.",
+                    "type": "number"
+                },
+                "glr_window": {
+                    "description": "GLR window in rows (spec 004).",
+                    "type": "integer"
                 },
                 "l_min_rows": {
                     "description": "L_min in rows.",
@@ -3564,13 +3576,29 @@
                     "description": "GLR nominator's held-leg false-alarm fraction.",
                     "type": "number"
                 },
+                "polish_rows": {
+                    "description": "Each accepted boundary is re-optimised within \u00b1 this many rows.",
+                    "type": "integer"
+                },
                 "retest_rows": {
                     "description": "Re-test interval of a raised alarm episode.",
+                    "type": "integer"
+                },
+                "search_every_rows": {
+                    "description": "The search nominates from prefixes this many rows apart on its grid.",
+                    "type": "integer"
+                },
+                "search_horizon_rows": {
+                    "description": "A search transition is tested on the prefix this many rows after its end.",
                     "type": "integer"
                 },
                 "search_penalty": {
                     "description": "Per-leg penalty of the additive search (decision record).",
                     "type": "number"
+                },
+                "search_step_rows": {
+                    "description": "The search's grid step.",
+                    "type": "integer"
                 },
                 "speed_change_kt": {
                     "description": "D_S: a deliberate speed change (ownship coarse pass).",
@@ -3594,6 +3622,10 @@
                 "tau": {
                     "description": "Confirmation threshold (\u03c7\u00b2, 4 dof, before scaling).",
                     "type": "number"
+                },
+                "window_rows": {
+                    "description": "W: a nomination's candidates start in its last W rows.",
+                    "type": "integer"
                 }
             },
             "required": [
@@ -3609,7 +3641,15 @@
                 "retest_rows",
                 "tau",
                 "margin",
-                "mode"
+                "mode",
+                "glr_threshold",
+                "glr_window",
+                "window_rows",
+                "candidate_step_rows",
+                "search_every_rows",
+                "search_step_rows",
+                "search_horizon_rows",
+                "polish_rows"
             ],
             "title": "SegmentParameters",
             "type": "object"
