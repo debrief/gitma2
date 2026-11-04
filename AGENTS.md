@@ -10,7 +10,7 @@ tuned IMM wherever it does not? It starts from [debrief/Gitma](https://github.co
 
 - Principles: `.specify/memory/constitution.md` (v1.2.0). Plans MUST pass its checks.
 - Research and the owner's decisions: `docs/research/` (notes 01–05; decisions in 04 §6).
-- Requirements: `docs/SRD.md` (draft) and `docs/SRD-annex-A.md` (steady-leg detector, Gate D). Read them before planning any feature; where this file and the SRD disagree, the SRD wins.
+- Requirements: `docs/SRD.md` (draft), `docs/SRD-annex-A.md` (steady-leg detector, Gate D; §A.9 Gate S) and `docs/SRD-annex-B.md` (the owner's requirements for ownship and target manoeuvres and steady-leg segmentation, 2026-11-04). Read them before planning any feature; where this file and the SRD disagree, the SRD wins.
 
 ## Spec-driven workflow (GitHub Spec Kit)
 
@@ -33,7 +33,14 @@ Detector workflows: `train/gd-a`, `validate-gd/<run>`. Research note 08 (leg-det
 validation only) recommends GLR + physics-layer confirmation as the interim Gate 2 segmenter.
 005 (steady-leg segmentation, Gate S; Annex A §A.9, owner merges): specified. Components O
 (ownship), C (classical target segmenter, the reference) and L (learned, starts equal to C); fresh
-test seed from 312.
+test seed from 312. Planned (`specs/005-steady-leg-segmentation/plan.md`): measured on validation,
+an additive leg search is far weaker than GLR + confirm (F1 0.65 vs 0.79), so C confirms
+nominations from both by the coupled physics-layer cost on each nomination's own prefix. Owner
+decision 2026-11-04 (Annex B, SRD §9): the simulation changes to the owner's manoeuvre model
+rather than the thresholds to the simulation. Generator 0.6.0 (MAN2: target legs 10–40 min, bell
+shaped; 40–120 min windows, 720 rows; wander; slower turns; scoping in `docs/research/09`) is
+spec 006 (`specs/006-generator-man2/spec.md`, specified) and precedes Gate S. Seeds: 314
+validation, 315 test (Gate S), 316 noise-free; 312/313 unused.
 
 ## Stack (owner decisions, 2026-10-31)
 
