@@ -349,7 +349,9 @@ def test_crb_rows_known_manoeuvres_on_man2() -> None:
         [[o.timestamp_s, o.bearing_rad, 1.0 if o.valid else 0.0] for o in a.observations]
     )
     rows = [m.zig_index + 30, m.samples - 1]
-    fast = crb_rows(own, tgt, obs, 0.0175, m.zig_index, None, rows, "known_manoeuvres", plan)
+    fast = crb_rows(
+        own, tgt, obs, 0.0175, m.zig_index, None, rows, "known_manoeuvres", plan, fast=True
+    )
     t = own[:, 0]
     tvx = tgt[:, 4] * np.sin(tgt[:, 3])
     tvy = tgt[:, 4] * np.cos(tgt[:, 3])
@@ -360,3 +362,33 @@ def test_crb_rows_known_manoeuvres_on_man2() -> None:
         assert f.singular == r.singular
         if not f.singular:
             assert math.isclose(f.sd_range_rel, r.sd_range_rel, rel_tol=1e-8)
+
+
+def test_validation_refuses_partial_weights_and_sub_row_legs() -> None:
+    with pytest.raises(RangesError, match="needs every weight"):
+        flatten_ranges({**MAN2, "target_change_kind_weights": {"course": 0.9, "speed": 0.1}})
+    with pytest.raises(RangesError, match="two rows"):
+        flatten_ranges({**MAN2, "target_leg_length_s": {"mean": 1500, "sd": 546, "min": 15}})
+
+
+def test_recorded_oscillation_reproduces_the_course() -> None:
+    for i in range(80):
+        a = generate_scenario(314, i, MAN2).scenario
+        b = generate_scenario(314, i, _no_wander(MAN2)).scenario
+        w = a.metadata.ownship_wander
+        assert w is not None
+        if _name(w.kind) != "oscillation":
+            continue
+        assert w.amp_rad is not None and w.period_s is not None and w.phase_rad is not None
+        dt = float(a.metadata.parameters.dt_s)
+        for j, (sa, sb) in enumerate(zip(a.ownship.states, b.ownship.states, strict=True)):
+            if j == 0 or j + 1 >= len(b.ownship.states):
+                continue
+            prev, nxt = b.ownship.states[j - 1], b.ownship.states[j + 1]
+            if not (prev.course_rad == sb.course_rad == nxt.course_rad):
+                continue  # turn rows and the rows either side keep the planned course
+            err = w.amp_rad * math.sin(2 * math.pi * j * dt / w.period_s + w.phase_rad)
+            d = math.remainder(sa.course_rad - sb.course_rad - err, 2 * math.pi)
+            assert abs(d) < 2e-6  # float32 storage of the course
+        return
+    pytest.fail("no oscillation scenario in the first 80")

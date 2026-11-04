@@ -689,14 +689,22 @@ def apply_wander(
     sd = R[R_WANDER_SD] if use_ar else 0.0
     tau = R[R_WANDER_TAU] if use_ar else 1.0
     clip = R[R_WANDER_CLIP] if use_ar else 0.0
+    # the course is driven by the float32-rounded values that are recorded, so the header's
+    # ownship_wander reproduces the recorded course exactly (the generator's rounding rule)
+    sd = f32(sd)
+    tau = f32(tau)
+    clip = f32(clip)
+    amp = f32(amp)
+    period = f32(period)
+    phase = f32(phase)
     if use_ar:
-        P[P_W_SD] = f32(sd)
-        P[P_W_TAU] = f32(tau)
-        P[P_W_CLIP] = f32(clip)
+        P[P_W_SD] = sd
+        P[P_W_TAU] = tau
+        P[P_W_CLIP] = clip
     if use_osc:
-        P[P_OSC_AMP] = f32(amp)
-        P[P_OSC_PERIOD] = f32(period)
-        P[P_OSC_PHASE] = f32(phase)
+        P[P_OSC_AMP] = amp
+        P[P_OSC_PERIOD] = period
+        P[P_OSC_PHASE] = phase
     rho = math.exp(-dt / tau)
     innov = sd * math.sqrt(1.0 - rho * rho)
     e = sd * gaussian(s3) if use_ar else 0.0

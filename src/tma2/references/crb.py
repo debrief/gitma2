@@ -33,6 +33,7 @@ from typing import Any
 import numpy as np
 from numba import njit
 
+from tma2.kinds import manoeuvre_table
 from tma2.sim.scenario import both_state
 
 SINGULAR_COND = 1e12
@@ -320,8 +321,12 @@ def crb_rows(
     rows: list[int],
     model: str | bool = "full_window",
     target_manoeuvres: list[dict[str, Any]] | None = None,
+    fast: bool = False,
 ) -> list[CrbRow]:
-    """Bounds at the given rows from pack arrays own/tgt [S,5] and obs [S,3]."""
+    """Bounds at the given rows from pack arrays own/tgt [S,5] and obs [S,3]. ``fast`` computes the
+    known-manoeuvres bound with the numba port (equal to the Python reference to 1e-8, see
+    test_crb_fast), which generator 0.6.0's ~25 manoeuvres per scenario need; the default keeps
+    the reference, so committed bounds reproduce."""
     t = own[:, 0].astype(np.float64)
     ox = own[:, 1].astype(np.float64)
     oy = own[:, 2].astype(np.float64)
@@ -342,27 +347,11 @@ def crb_rows(
             raise ValueError("known_manoeuvres needs the scenario's target_manoeuvres plan")
         tvx = speed * np.sin(course)
         tvy = speed * np.cos(course)
-        # the numba path (tested equal to the Python reference, test_crb_fast): with generator
-        # 0.6.0's ~25 manoeuvres per scenario the reference is too slow for whole splits
-        codes = {"course": 0.0, "speed": 1.0, "both": 2.0}
         plan = list(target_manoeuvres or [])
-        table = np.array(
-            [
-                [
-                    codes[str(m["kind"]).split(".")[-1]],
-                    float(m["start_time_s"]),
-                    float(m["change"]),
-                    float(m["rate"]),
-                    float(m.get("change2") or 0.0),
-                    float(m.get("rate2") or 0.0),
-                ]
-                for m in plan
-            ],
-            dtype=np.float64,
-        ).reshape(len(plan), 6)
-        if not plan:
-            return crb_known_manoeuvres(t, ox, oy, tx, ty, tvx, tvy, valid, [], rows, sigma)
-        return crb_known_manoeuvres_fast(t, ox, oy, tx, ty, tvx, tvy, valid, table, rows, sigma)
+        if fast:
+            table = manoeuvre_table(plan)
+            return crb_known_manoeuvres_fast(t, ox, oy, tx, ty, tvx, tvy, valid, table, rows, sigma)
+        return crb_known_manoeuvres(t, ox, oy, tx, ty, tvx, tvy, valid, plan, rows, sigma)
     for k in rows:
         vx = speed[k] * math.sin(course[k])
         vy = speed[k] * math.cos(course[k])
@@ -373,8 +362,9 @@ def crb_rows(
 
 # --- numba port of the known-manoeuvres bound's Jacobian and information (spec 004 R5) ---------
 # Same arithmetic as ``_pos_vel`` / ``_model_jacobian`` / the information loop above, for the
-# training loss (two rows per scenario). Manoeuvres as a table [M, 5] (kind 0 course / 1 speed /
-# 2 both, start s, duration s, change, second duration s), sorted by start time.
+# training loss (two rows per scenario). Internally the manoeuvres are a table [M, 5] (kind 0
+# course / 1 speed / 2 both, start s, duration s, change, second duration s), sorted by start
+# time; callers pass the generator's six-column table (``tma2.kinds.manoeuvre_table``).
 
 
 @njit(cache=True)

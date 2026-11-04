@@ -45,8 +45,9 @@ class Batch:
     since_zig_s: np.ndarray  # (B, R) float32
     since_manoeuvre_end_s: np.ndarray  # (B, R) float32, −1 before any
     spans: np.ndarray  # (B, MAX_TM, 3) int32 padded with −1
-    # Generator manoeuvre table (kind 0 course / 1 speed, start_time_s, change, rate), rows
-    # [0, n_tm): the known-manoeuvres Cramér–Rao bound needs it (spec 004). n_tm −1 before 0.5.0.
+    # Generator manoeuvre table [MAX_TM, TM_COLS] (kind 0 course / 1 speed / 2 both,
+    # start_time_s, change, rate, change2, rate2; the last two only for "both"), rows [0, n_tm):
+    # the known-manoeuvres Cramér–Rao bound needs all six columns. n_tm −1 before 0.5.0.
     tm: np.ndarray = field(default_factory=lambda: np.zeros((0, sc.MAX_TM, sc.TM_COLS)))
     n_tm: np.ndarray = field(default_factory=lambda: np.zeros(0, dtype=np.int32))  # (B,) int32
 

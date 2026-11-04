@@ -187,9 +187,14 @@ def validate_ranges(r: dict[str, Any]) -> None:
             )
         if not (float(leg["mean"]) > 0 and float(leg["sd"]) > 0 and float(leg["min"]) > 0):
             raise RangesError("target_leg_length_s mean, sd and min must be positive")
+        if float(leg["min"]) < 2 * float(r["dt_s"]):
+            # a shorter leg can round into the previous change's last row
+            raise RangesError("target_leg_length_s.min must be at least two rows (2 × dt_s)")
         from .scenario import MAX_TM
 
-        if float(r["window_s"]["max"]) / float(leg["min"]) + 1 > MAX_TM:
+        # each start rounds to a row, which can shorten a leg by up to one row
+        dt = float(r["dt_s"])
+        if float(r["window_s"]["max"]) / (float(leg["min"]) - dt) + 2 > MAX_TM:
             raise RangesError(
                 f"target_leg_length_s.min is too short for window_s.max: the kernel's table holds "
                 f"{MAX_TM} changes"
@@ -232,6 +237,9 @@ def validate_ranges(r: dict[str, Any]) -> None:
         w = r.get(key)
         if w is None:
             continue
+        missing = [n for n in names if n not in w]
+        if missing:
+            raise RangesError(f"{key} needs every weight: {', '.join(names)}")
         vals = [float(w[n]) for n in names]
         if any(v < 0 for v in vals) or sum(vals) <= 0:
             raise RangesError(f"{key} must be non-negative with a positive sum")

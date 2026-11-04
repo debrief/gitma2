@@ -58,7 +58,7 @@ def model_from_plan(plan: TrainingPlan, model_id: str) -> PhysicsModelConfig:
     raise ValueError(f"plan {plan.id} has no model {model_id}")
 
 
-KIND_CODES = {"course": KIND_COURSE, "speed": KIND_SPEED, "both": KIND_BOTH}
+KIND_CODES = {"course": KIND_COURSE, "speed": KIND_SPEED, "both": KIND_BOTH}  # = tma2.kinds
 
 
 def batch_from_pack(path: Path, limit: int) -> Batch:

@@ -224,6 +224,12 @@ def crb_main(argv: list[str] | None = None) -> int:
         "regime), per_leg (diagnostic)",
     )
     ap.add_argument("--per-leg", action="store_true", help="alias for --model per_leg")
+    ap.add_argument(
+        "--fast",
+        action="store_true",
+        help="known_manoeuvres with the numba port (equal to the reference to 1e-8); needed for "
+        "generator 0.6.0 data, whose ~25 manoeuvres per scenario make the reference slow",
+    )
     a = ap.parse_args(argv)
     model = "per_leg" if a.per_leg else a.model
     _, blocks = open_split(a.inp)
@@ -252,6 +258,7 @@ def crb_main(argv: list[str] | None = None) -> int:
                 rows,
                 model,
                 meta["parameters"].get("target_manoeuvres"),
+                fast=a.fast,
             )
             rec = CrbRecord(
                 record=RecordKind.crb,

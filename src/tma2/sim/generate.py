@@ -12,6 +12,7 @@ from typing import Any
 
 import numpy as np
 
+from tma2.kinds import KIND_NAMES
 from tma2.types import Scenario
 
 from . import scenario as sc
@@ -78,7 +79,7 @@ _PARAM_KEYS: tuple[tuple[str, int], ...] = (
     ("target_turn_rate_rad_s", sc.P_TM_RATE),
 )
 
-_KINDS = ("course", "speed", "both")
+_KINDS = KIND_NAMES
 _WANDER_KINDS = ("none", "wander", "oscillation", "both")
 
 
