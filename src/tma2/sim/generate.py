@@ -12,6 +12,7 @@ from typing import Any
 
 import numpy as np
 
+from tma2.kinds import KIND_NAMES
 from tma2.types import Scenario
 
 from . import scenario as sc
@@ -44,7 +45,7 @@ class KernelBuffers:
             bearing=np.zeros(rmax),
             valid=np.zeros(rmax, dtype=np.bool_),
             P=np.full(sc.P_LEN, np.nan),
-            tm=np.zeros((sc.MAX_TM, 4)),
+            tm=np.zeros((sc.MAX_TM, sc.TM_COLS)),
             TI=np.full(sc.TI_LEN, -1, dtype=np.int64),
             spans=np.zeros((sc.MAX_TM, 3), dtype=np.int64),
             stats=np.zeros(3),
@@ -78,7 +79,8 @@ _PARAM_KEYS: tuple[tuple[str, int], ...] = (
     ("target_turn_rate_rad_s", sc.P_TM_RATE),
 )
 
-_KINDS = ("course", "speed")
+_KINDS = KIND_NAMES
+_WANDER_KINDS = ("none", "wander", "oscillation", "both")
 
 
 def kernel_to_record_parts(
@@ -98,6 +100,14 @@ def kernel_to_record_parts(
                 "start_time_s": float(buf.tm[j, sc.TM_START]),
                 "change": float(buf.tm[j, sc.TM_CHANGE]),
                 "rate": float(buf.tm[j, sc.TM_RATE]),
+                **(
+                    {
+                        "change2": float(buf.tm[j, sc.TM_CHANGE2]),
+                        "rate2": float(buf.tm[j, sc.TM_RATE2]),
+                    }
+                    if int(buf.tm[j, sc.TM_KIND]) == 2
+                    else {}
+                ),
             }
             for j in range(n_tm)
         ]
@@ -129,6 +139,22 @@ def kernel_to_record_parts(
             }
             for j in range(int(TI[sc.TI_N_SPANS]))
         ]
+    if not math.isnan(P[sc.P_WANDER_KIND]):
+        kind = _WANDER_KINDS[int(P[sc.P_WANDER_KIND])]
+        wander: dict[str, Any] = {"kind": kind}
+        for key, i in (
+            ("sd_rad", sc.P_W_SD),
+            ("tau_s", sc.P_W_TAU),
+            ("clip_rad", sc.P_W_CLIP),
+            ("amp_rad", sc.P_OSC_AMP),
+            ("period_s", sc.P_OSC_PERIOD),
+            ("phase_rad", sc.P_OSC_PHASE),
+        ):
+            if not math.isnan(P[i]):
+                wander[key] = float(P[i])
+        metadata["ownship_wander"] = wander
+    if not math.isnan(P[sc.P_ZIG_ON_MAN]):
+        metadata["zig_on_manoeuvre"] = bool(P[sc.P_ZIG_ON_MAN] > 0)
     metadata["zig_time_s"] = float(buf.stats[0])
     metadata["mean_range_m"] = float(buf.stats[1])
     metadata["min_range_m"] = float(buf.stats[2])

@@ -13,16 +13,16 @@ files, no dependency on an unfinished task).
 
 ## Phase 1: Setup
 
-- [ ] T001 Restart the branch from `origin/main` after PR 12 merges; set `.specify/feature.json` to `specs/006-generator-man2`
-- [ ] T002 [P] Add `configs/man2-ranges.json` (phase-4 ranges with `window_s` 2400–7200, `target_turn_rate_rad_s` 0.25–1°/s, `target_speed_change_rate_mps2` 0.01–0.05, `target_leg_length_s` {mean 1500, sd 546, min 300}, `target_change_kind_weights` {course 0.8, speed 0.1, both 0.1}, `ownship_wander` {sd 1.5°, tau 60 s, clip 4°}, `ownship_oscillation` {amp 1–3°, period 120–360 s}, `ownship_wander_weights` {none 0.4, wander 0.3, oscillation 0.3, both 0}; no count weights, spacing, after-zig or margin), `configs/man2-heldout.json` (range 20–30 km) and `configs/man2-noise-free.json` (σ = 0, no dropouts)
+- [x] T001 Restart the branch from `origin/main` after PR 12 merges; set `.specify/feature.json` to `specs/006-generator-man2`
+- [x] T002 [P] Add `configs/man2-ranges.json` (phase-4 ranges with `window_s` 2400–7200, `target_turn_rate_rad_s` 0.25–1°/s, `target_speed_change_rate_mps2` 0.01–0.05, `target_leg_length_s` {mean 1500, sd 546, min 300}, `target_change_kind_weights` {course 0.8, speed 0.1, both 0.1}, `ownship_wander` {sd 1.5°, tau 60 s, clip 4°}, `ownship_oscillation` {amp 1–3°, period 120–360 s}, `ownship_wander_weights` {none 0.4, wander 0.3, oscillation 0.3, both 0}; no count weights, spacing, after-zig or margin), `configs/man2-heldout.json` (range 20–30 km) and `configs/man2-noise-free.json` (σ = 0, no dropouts)
 
 ## Phase 2: Foundational (schema and layout)
 
-- [ ] T003 Add to `schema/tma.yaml` (version 0.22.0): `ParameterRanges.target_leg_length_s` {mean, sd, min; all > 0}, `target_change_kind_weights` {course, speed, both; ≥ 0}, `ownship_wander` {sd_rad, tau_s, clip_rad}, `ownship_oscillation` {amp_rad {min, max}, period_s {min, max}}, `ownship_wander_weights` {none, wander, oscillation, both}; a new `OwnshipWander` class (kind enum none|wander|oscillation|both; sd_rad, tau_s, clip_rad, amp_rad, period_s, phase_rad optional); scenario header fields `ownship_wander: OwnshipWander?` and `zig_on_manoeuvre: bool`; `ManoeuvreSpan.kind` enum gains `both`
-- [ ] T004 Regenerate types with `uv run python scripts/gen_types.py` and the data dictionary with `scripts/data_dictionary.py`; commit `src/tma2/types/generated/` and `site/docs/data-dictionary.md`
-- [ ] T005 Extend the flat layout in `src/tma2/sim/ranges.py`: new `R_*` slots after `R_TM_SPACING` (leg mean/sd/min; three kind weights; wander sd/tau/clip; oscillation amp min/max, period min/max; four wander weights), `R_LEN` updated, `flatten_ranges` fills them (NaN when absent); `validate_ranges` raises `RangesError` with the three messages of `contracts/cli.md`
-- [ ] T006 Set `MAX_TM = 24` in `src/tma2/sim/scenario.py`, `MAX_COUNT_WEIGHTS` unchanged; confirm `src/tma2/features/batch.py` and `src/tma2/sim/generate.py` size their tables from `sc.MAX_TM` and that `Batch.tm`/`spans` docstrings say 24
-- [ ] T007 Bump `GENERATOR_VERSION` to "0.6.0" in `src/tma2/sim/version.py` and add it to `READABLE_GENERATOR_VERSIONS` in `src/tma2/data/versions.py`; run `uv run pytest -q tests/golden tests/conformance` and confirm every 0.5.0 golden and gitma fixture still passes (header version is excluded from digests as before; if any golden embeds the version string, update only that string and say so in the commit)
+- [x] T003 Add to `schema/tma.yaml` (version 0.22.0): `ParameterRanges.target_leg_length_s` {mean, sd, min; all > 0}, `target_change_kind_weights` {course, speed, both; ≥ 0}, `ownship_wander` {sd_rad, tau_s, clip_rad}, `ownship_oscillation` {amp_rad {min, max}, period_s {min, max}}, `ownship_wander_weights` {none, wander, oscillation, both}; a new `OwnshipWander` class (kind enum none|wander|oscillation|both; sd_rad, tau_s, clip_rad, amp_rad, period_s, phase_rad optional); scenario header fields `ownship_wander: OwnshipWander?` and `zig_on_manoeuvre: bool`; `ManoeuvreSpan.kind` enum gains `both`
+- [x] T004 Regenerate types with `uv run python scripts/gen_types.py` and the data dictionary with `scripts/data_dictionary.py`; commit `src/tma2/types/generated/` and `site/docs/data-dictionary.md`
+- [x] T005 Extend the flat layout in `src/tma2/sim/ranges.py`: new `R_*` slots after `R_TM_SPACING` (leg mean/sd/min; three kind weights; wander sd/tau/clip; oscillation amp min/max, period min/max; four wander weights), `R_LEN` updated, `flatten_ranges` fills them (NaN when absent); `validate_ranges` raises `RangesError` with the three messages of `contracts/cli.md`
+- [x] T006 Set `MAX_TM = 24` in `src/tma2/sim/scenario.py`, `MAX_COUNT_WEIGHTS` unchanged; confirm `src/tma2/features/batch.py` and `src/tma2/sim/generate.py` size their tables from `sc.MAX_TM` and that `Batch.tm`/`spans` docstrings say 24
+- [x] T007 Bump `GENERATOR_VERSION` to "0.6.0" in `src/tma2/sim/version.py` and add it to `READABLE_GENERATOR_VERSIONS` in `src/tma2/data/versions.py`; run `uv run pytest -q tests/golden tests/conformance` and confirm every 0.5.0 golden and gitma fixture still passes (header version is excluded from digests as before; if any golden embeds the version string, update only that string and say so in the commit)
 
 ## Phase 3: User Story 1, nothing already generated changes (P1)
 
@@ -30,8 +30,8 @@ files, no dependency on an unfinished task).
 
 **Independent test**: golden and gitma-conformance suites pass; seed 304's validation split regenerates with the committed digest.
 
-- [ ] T008 [US1] Add `tests/golden/test_generator_060_identity.py`: generate 200 scenarios of `tests/fixtures/gitma/phase4-seed777/ranges.json` and of the iteration-1 and 0.3.0 fixture ranges with seeds 777 and 304, assert arrays equal to the pre-0.6.0 generator's committed outputs (reuse the existing golden fixtures' arrays), and assert `TI`/`spans` padding beyond `n_spans` is −1 with `MAX_TM = 24`
-- [ ] T009 [US1] Add to `tests/unit/test_ranges.py`: the three new validation errors fire; a ranges file without new fields flattens to NaN in the new slots; `rows_for` gives 720 for `configs/man2-ranges.json`
+- [x] T008 [US1] Add `tests/golden/test_generator_060_identity.py`: generate 200 scenarios of `tests/fixtures/gitma/phase4-seed777/ranges.json` and of the iteration-1 and 0.3.0 fixture ranges with seeds 777 and 304, assert arrays equal to the pre-0.6.0 generator's committed outputs (reuse the existing golden fixtures' arrays), and assert `TI`/`spans` padding beyond `n_spans` is −1 with `MAX_TM = 24`
+- [x] T009 [US1] Add to `tests/unit/test_ranges.py`: the three new validation errors fire; a ranges file without new fields flattens to NaN in the new slots; `rows_for` gives 720 for `configs/man2-ranges.json`
 - [ ] T010 [US1] Regenerate seed 304 with `tma2-generate` on the phase-4 fixture ranges into a scratch directory and compare `digests.json` with `data/gd-val`'s committed digests; record the command and result in `experiments/<date>-g0-man2/README.md` (created in T030)
 
 ## Phase 4: User Story 2, target legs follow the owner's model (P1)
@@ -40,16 +40,16 @@ files, no dependency on an unfinished task).
 
 **Independent test**: `tma2-ranges --describe configs/man2-ranges.json --sample 10000 --seed 314` reports leg quantiles ≈ 10/25/40 min, 4–6% ≤ 10 min, median transition 60–180 s, ≥ 60% of engagements with ≥ 2 changes.
 
-- [ ] T011 [US2] In `src/tma2/sim/scenario.py` add `plan_target_legs(seed, attempt, R, P, tm, rmax) -> int` on stream `create_rng(derive_seed(scenario_seed, 2 + 2*attempt))`: first start = −U·L₁; loop: L ~ N(mean, sd) clipped at min (Box–Muller via `gaussian`), kind by weights, then sign, |angle| (0.5.0 range), turn rate; or sign, Δv, acceleration (flip sign if out of speed range, drop if neither fits); or both; append to `tm` (TM_KIND 0/1/2, TM_START = f32(start·dt rounded to a row)) until the next start ≥ window end or `MAX_TM` reached; return n_plan; set `P[P_N_TM]`
-- [ ] T012 [US2] Wire it in `generate_into`/`draw_scenario`: when `R[R_LEG_MEAN]` is not NaN, skip `draw_manoeuvre_count` and `plan_target_manoeuvres` (they already no-op with no weights) and call `plan_target_legs` after the main-stream draws of `draw_scenario`, per attempt; keep the 0.5.0 path byte-identical (no new call when the field is absent)
-- [ ] T013 [US2] Extend `target_manoeuvres` for kind 2: inside the span integrate position with 1 s sub-steps along an arc of rate `rate` while speed changes linearly at `acc` (both drawn into `tm` via two extra columns `TM_CHANGE2`, `TM_RATE2`; table width 6), span length = max(turn duration, acceleration duration); after the span continue analytically from the integrated end state; kinds 0 and 1 unchanged
-- [ ] T014 [US2] Record spans with kind 2 in `spans` and in the header's `manoeuvres` (kind "both"); `src/tma2/sim/generate.py` maps kind codes 0/1/2 to course/speed/both
-- [ ] T015 [US2] Zig planning (research R3): when the leg model is on, in `plan_manoeuvres` take the target position at the zig row from a target-only simulation of the planned legs (new `simulate_target_only`), not from `target_at`; set `zig_on_manoeuvre` when the zig row falls inside a span; 0.5.0 path unchanged
-- [ ] T016 [P] [US2] Unit tests `tests/unit/test_leg_plan.py`: on 10,000 planned scenarios the complete-leg lengths pass a KS test against N(1500, 546) truncated at 300 (p > 0.01); 4–6% ≤ 600 s; kind shares within ±2 pp of 0.8/0.1/0.1; a speed change never leaves the speed range; the first change's phase is uniform (KS p > 0.01); the plan is identical across two calls with the same seed and differs with `attempt`
-- [ ] T017 [P] [US2] Unit test `tests/unit/test_both_kind.py`: a kind-2 span's end position, course and speed match the 1 s integration to 1e-6 relative, and with acceleration 0 equal the kind-0 analytic arc to 1e-9
-- [ ] T018 [P] [US2] Unit test `tests/unit/test_zig_plan_man2.py`: with a target change before the zig, the across-LOS zig computed from the simulated target position satisfies the LOS-offset relation at the zig row; `zig_on_manoeuvre` is set exactly when the zig row is inside a span
-- [ ] T019 [US2] Add `src/tma2/cli/ranges.py` (`tma2-ranges --describe <ranges> [--sample n --seed s]`) per `contracts/cli.md`, registered in `pyproject.toml`; unit test `tests/unit/test_ranges_cli.py` on `configs/man2-ranges.json` with `--sample 2000`
-- [ ] T020 [US2] New golden `tests/golden/test_man2_golden.py` with fixture `tests/fixtures/man2-seed316/` (50 noise-free scenarios, f32pack + digests) generated once from a clean tree; the test regenerates and compares byte for byte
+- [x] T011 [US2] In `src/tma2/sim/scenario.py` add `plan_target_legs(seed, attempt, R, P, tm, rmax) -> int` on stream `create_rng(derive_seed(scenario_seed, 2 + 2*attempt))`: first start = −U·L₁; loop: L ~ N(mean, sd) clipped at min (Box–Muller via `gaussian`), kind by weights, then sign, |angle| (0.5.0 range), turn rate; or sign, Δv, acceleration (flip sign if out of speed range, drop if neither fits); or both; append to `tm` (TM_KIND 0/1/2, TM_START = f32(start·dt rounded to a row)) until the next start ≥ window end or `MAX_TM` reached; return n_plan; set `P[P_N_TM]`
+- [x] T012 [US2] Wire it in `generate_into`/`draw_scenario`: when `R[R_LEG_MEAN]` is not NaN, skip `draw_manoeuvre_count` and `plan_target_manoeuvres` (they already no-op with no weights) and call `plan_target_legs` after the main-stream draws of `draw_scenario`, per attempt; keep the 0.5.0 path byte-identical (no new call when the field is absent)
+- [x] T013 [US2] Extend `target_manoeuvres` for kind 2: inside the span integrate position with 1 s sub-steps along an arc of rate `rate` while speed changes linearly at `acc` (both drawn into `tm` via two extra columns `TM_CHANGE2`, `TM_RATE2`; table width 6), span length = max(turn duration, acceleration duration); after the span continue analytically from the integrated end state; kinds 0 and 1 unchanged
+- [x] T014 [US2] Record spans with kind 2 in `spans` and in the header's `manoeuvres` (kind "both"); `src/tma2/sim/generate.py` maps kind codes 0/1/2 to course/speed/both
+- [x] T015 [US2] Zig planning (research R3): when the leg model is on, in `plan_manoeuvres` take the target position at the zig row from a target-only simulation of the planned legs (new `simulate_target_only`), not from `target_at`; set `zig_on_manoeuvre` when the zig row falls inside a span; 0.5.0 path unchanged
+- [x] T016 [P] [US2] Unit tests `tests/unit/test_leg_plan.py`: on 10,000 planned scenarios the complete-leg lengths pass a KS test against N(1500, 546) truncated at 300 (p > 0.01); 4–6% ≤ 600 s; kind shares within ±2 pp of 0.8/0.1/0.1; a speed change never leaves the speed range; the first change's phase is uniform (KS p > 0.01); the plan is identical across two calls with the same seed and differs with `attempt`
+- [x] T017 [P] [US2] Unit test `tests/unit/test_both_kind.py`: a kind-2 span's end position, course and speed match the 1 s integration to 1e-6 relative, and with acceleration 0 equal the kind-0 analytic arc to 1e-9
+- [x] T018 [P] [US2] Unit test `tests/unit/test_zig_plan_man2.py`: with a target change before the zig, the across-LOS zig computed from the simulated target position satisfies the LOS-offset relation at the zig row; `zig_on_manoeuvre` is set exactly when the zig row is inside a span
+- [x] T019 [US2] Add `src/tma2/cli/ranges.py` (`tma2-ranges --describe <ranges> [--sample n --seed s]`) per `contracts/cli.md`, registered in `pyproject.toml`; unit test `tests/unit/test_ranges_cli.py` on `configs/man2-ranges.json` with `--sample 2000`
+- [x] T020 [US2] New golden `tests/golden/test_man2_golden.py` with fixture `tests/fixtures/man2-seed316/` (50 noise-free scenarios, f32pack + digests) generated once from a clean tree; the test regenerates and compares byte for byte
 
 ## Phase 5: User Story 3, ownship wanders inside the band (P2)
 
@@ -57,9 +57,9 @@ files, no dependency on an unfinished task).
 
 **Independent test**: every wander row within 5° of the leg course; a scenario regenerated with weights {none: 1} differs only in the ownship arrays.
 
-- [ ] T021 [US3] In `src/tma2/sim/scenario.py` add `draw_wander(seed, attempt, R) -> (kind, params)` on stream `derive_seed(scenario_seed, 3 + 2*attempt)` and `apply_wander(P, kind, params, own_x, own_y, own_c, TI, s_w)`: per steady leg (rows before `TI_TURN_START`, between `TI_ZIG` and the second turn, after it), course error = AR(1) (ρ = exp(−dt/τ), innovations from the wander stream, clipped) and/or sinusoid; positions re-integrated with the trapezoid of the wandered course from the leg's entry point; turns keep the planned arc from the actual entry point; called from `simulate_truth` only when kind ≠ none
-- [ ] T022 [US3] Header: write `ownship_wander` (kind and drawn parameters) per scenario in `src/tma2/sim/generate.py`; `zig_on_manoeuvre` from T015
-- [ ] T023 [P] [US3] Unit test `tests/unit/test_wander.py`: 500 MAN2 scenarios: for every wander row |recorded − planned course| ≤ 5°; positions equal the trapezoid integral of the recorded course to 1e-6 m; regenerating with `ownship_wander_weights` {none: 1} leaves `tgt`, `bearing`, `valid`, `spans` and the header's manoeuvres identical and changes only `own`; wander kinds drawn within ±3 pp of 0.4/0.3/0.3
+- [x] T021 [US3] In `src/tma2/sim/scenario.py` add `draw_wander(seed, attempt, R) -> (kind, params)` on stream `derive_seed(scenario_seed, 3 + 2*attempt)` and `apply_wander(P, kind, params, own_x, own_y, own_c, TI, s_w)`: per steady leg (rows before `TI_TURN_START`, between `TI_ZIG` and the second turn, after it), course error = AR(1) (ρ = exp(−dt/τ), innovations from the wander stream, clipped) and/or sinusoid; positions re-integrated with the trapezoid of the wandered course from the leg's entry point; turns keep the planned arc from the actual entry point; called from `simulate_truth` only when kind ≠ none
+- [x] T022 [US3] Header: write `ownship_wander` (kind and drawn parameters) per scenario in `src/tma2/sim/generate.py`; `zig_on_manoeuvre` from T015
+- [x] T023 [P] [US3] Unit test `tests/unit/test_wander.py`: 500 MAN2 scenarios: for every wander row |recorded − planned course| ≤ 5°; positions equal the trapezoid integral of the recorded course to 1e-6 m; regenerating with `ownship_wander_weights` {none: 1} leaves `tgt`, `bearing`, `valid`, `spans` and the header's manoeuvres identical and changes only `own`; wander kinds drawn within ±3 pp of 0.4/0.3/0.3
 - [ ] T024 [US3] Confirm `ownship_legs` in `src/tma2/detect/steady_leg.py` still finds the planned turns on wander tracks with a tolerance argument (document: spec 005's O replaces it for wander data); add a test case in `tests/unit/test_steady_leg.py`
 
 ## Phase 6: User Story 4, the pipeline still passes and references are re-frozen (P2)
@@ -77,6 +77,31 @@ files, no dependency on an unfinished task).
 - [ ] T031 [US4] Agent review panel on the gate (≥ 5 reviewers: TMA geometry, estimation and numerics, evaluation statistics, reproducibility, red team); respond; repeat until no blocker or major is open; commit `review.md`; set `decided_by`
 - [ ] T032 [P] [US4] Re-tune the IMM and EKF on `data/man2-val/validation.f32pack` with spec 004's grids via `tma2-tune`; freeze by name; commit `experiments/<date>-man2-tune/` (grids, results, frozen names, git commit)
 - [ ] T033 [P] [US4] Re-run note 08's reference on seed 314: `scripts/research/leg_spike.py stats|confirm|report` with `--configs glr:0.2:13.8` (tuning on the first 500 σ = 1°, scoring on the next 1,000), using the frozen MAN2 IMM from T032; commit `experiments/<date>-man2-refs/spike.json`, the detectability quantiles and a README with the baseline ratios spec 005's S2 will cite
+
+## Done notes (implementation, 4 November)
+
+- T008/T009 live in the existing golden and conformance suites (0.5.0 byte identity, with the
+  header's generator version passed as the fixture's, as the schema version already was) and in
+  `tests/unit/test_man2_generator.py` (validation, layout).
+- T016 measures the *planned* leg lengths in a window long enough not to select short legs:
+  complete legs inside a 40–120 min window favour short ones (6.5% at or under 10 min against
+  the model's 5.0%), which `tma2-ranges --sample` states.
+- The known-manoeuvres Cramér–Rao bound (reference and numba versions) gained the "both" kind,
+  and batches carry the full six-column manoeuvre table (`tests/unit/test_crb_fast.py`).
+- Deviations from the task text, recorded rather than hidden (code review, 4 November):
+  - T017's tolerance is 1e-2 m, not 1e-6 relative: with zero acceleration the 1 s midpoint
+    rule differs from the analytic arc by about 1 mm per 2 min; the kind's end course and speed
+    are exact (tested to 1e-12).
+  - T020's golden is 40 scenarios of the noisy MAN2 ranges (with wander), which pins more of
+    the new path than 50 noise-free ones would.
+  - T008's padding check and T023's integral check are in `tests/unit/test_man2_generator.py`;
+    the integral is checked to 5 cm because stored positions and courses are float32.
+- Review fixes: "both" counts as a turn and a speed change in `eval/slices.manoeuvre_band`, and
+  as a turn in the detector's kind labels and scoring; `zig_on_manoeuvre` uses exclusive bounds
+  (255 of 2,000 MAN2 engagements overlap, not 277); wander and kind weights are validated (no
+  silent kind swap, no zero-sum or negative weights); the bound reuses the generator's
+  `both_state` instead of two copies of its integrator; `tma2-ranges` leaves transitions cut off
+  by the window out of its percentiles and prints the zig overlap only when it is known.
 
 ## Phase 7: Polish
 

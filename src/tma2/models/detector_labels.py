@@ -27,7 +27,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from tma2.eval.rows import G5_SETTLE_S
-from tma2.features.batch import KIND_COURSE
+from tma2.kinds import is_turn_kind
 
 NOW_WINDOW_S = 60.0
 TOLERANCE_S = 60.0
@@ -95,7 +95,8 @@ def row_labels(
             recent = (idx >= s) & (idx - s < win)
             now[i, in_span | recent] = 1.0
             boundary[i] = np.maximum(boundary[i], _tri(idx, s, half))
-            boundary[i] = np.maximum(boundary[i], _tri(idx, e, half))
+            if e < int(samples[i]):  # a span still in progress at the window's end has no end yet
+                boundary[i] = np.maximum(boundary[i], _tri(idx, e, half))
             # settled_row: in progress, or ended less than 300 s before, is not held
             held[i, in_span] = False
             held[i, (idx >= e) & (idx - e < settle)] = False
@@ -127,7 +128,7 @@ def pair_labels(
                 continue
             seen = idx <= k
             # course first so that, at equal distance, the course boundary wins the tie
-            for r, kd in sorted(bounds, key=lambda x: x[1] != KIND_COURSE):
+            for r, kd in sorted(bounds, key=lambda x: not is_turn_kind(x[1])):
                 if r > k:
                     continue
                 tri = _tri(idx, r, half) * seen
@@ -135,5 +136,6 @@ def pair_labels(
                 d = np.abs(idx - r).astype(np.float64)
                 closer = (d < dist[i, q]) & seen
                 dist[i, q][closer] = d[closer]
-                kind[i, q][closer] = 1.0 if kd == KIND_COURSE else 0.0
+                # generator 0.6.0's "both" includes a course change: a turn for p_kind
+                kind[i, q][closer] = 1.0 if is_turn_kind(kd) else 0.0
     return PairLabels(np.minimum(w, 1.0), kind, np.minimum(w, 1.0))

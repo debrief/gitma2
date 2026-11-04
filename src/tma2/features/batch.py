@@ -13,13 +13,17 @@ from typing import Any
 import numpy as np
 from numba import get_num_threads, njit, prange, set_num_threads, uint64
 
+from tma2.kinds import KIND_BOTH as KIND_BOTH  # re-exported for existing importers
+from tma2.kinds import KIND_COURSE as KIND_COURSE
+from tma2.kinds import KIND_NAMES as KIND_NAMES
+from tma2.kinds import KIND_SPEED as KIND_SPEED
+from tma2.kinds import is_speed_kind as is_speed_kind
+from tma2.kinds import is_turn_kind as is_turn_kind
 from tma2.sim import scenario as sc
 from tma2.sim.geometry import f32
 from tma2.sim.ranges import flatten_ranges, noise_free, rows_for
 
 KIND_NONE = -1
-KIND_COURSE = 0
-KIND_SPEED = 1
 
 
 @dataclass
@@ -40,10 +44,11 @@ class Batch:
     last_kind: np.ndarray  # (B, R) int8
     since_zig_s: np.ndarray  # (B, R) float32
     since_manoeuvre_end_s: np.ndarray  # (B, R) float32, −1 before any
-    spans: np.ndarray  # (B, 4, 3) int32 padded with −1
-    # Generator manoeuvre table (kind 0 course / 1 speed, start_time_s, change, rate), rows
-    # [0, n_tm): the known-manoeuvres Cramér–Rao bound needs it (spec 004). n_tm −1 before 0.5.0.
-    tm: np.ndarray = field(default_factory=lambda: np.zeros((0, 4, 4)))  # (B, 4, 4) float64
+    spans: np.ndarray  # (B, MAX_TM, 3) int32 padded with −1
+    # Generator manoeuvre table [MAX_TM, TM_COLS] (kind 0 course / 1 speed / 2 both,
+    # start_time_s, change, rate, change2, rate2; the last two only for "both"), rows [0, n_tm):
+    # the known-manoeuvres Cramér–Rao bound needs all six columns. n_tm −1 before 0.5.0.
+    tm: np.ndarray = field(default_factory=lambda: np.zeros((0, sc.MAX_TM, sc.TM_COLS)))
     n_tm: np.ndarray = field(default_factory=lambda: np.zeros(0, dtype=np.int32))  # (B,) int32
 
     def __len__(self) -> int:
@@ -82,7 +87,7 @@ def _fill_batch(
         bearing_b = np.zeros(rmax)
         valid_b = np.zeros(rmax, dtype=np.bool_)
         P = np.full(sc.P_LEN, np.nan)
-        tm = np.zeros((sc.MAX_TM, 4))
+        tm = np.zeros((sc.MAX_TM, sc.TM_COLS))
         TI = np.full(sc.TI_LEN, -1, dtype=np.int64)
         sp = np.zeros((sc.MAX_TM, 3), dtype=np.int64)
         stats = np.zeros(3)
@@ -105,7 +110,7 @@ def _fill_batch(
         samples[b] = n_s
         n_tm_out[b] = -1 if math.isnan(P[sc.P_N_TM]) else int(P[sc.P_N_TM])
         for j in range(sc.MAX_TM):
-            for c in range(4):
+            for c in range(sc.TM_COLS):
                 tm_out[b, j, c] = tm[j, c]
         zig_index[b] = TI[sc.TI_ZIG]
         sigma[b] = P[sc.P_SIGMA]
@@ -198,7 +203,7 @@ def generate_indices(
         since_zig_s=np.zeros((n, rmax), dtype=np.float32),
         since_manoeuvre_end_s=np.full((n, rmax), -1.0, dtype=np.float32),
         spans=np.full((n, sc.MAX_TM, 3), -1, dtype=np.int32),
-        tm=np.zeros((n, sc.MAX_TM, 4), dtype=np.float64),
+        tm=np.zeros((n, sc.MAX_TM, sc.TM_COLS), dtype=np.float64),
         n_tm=np.full(n, -1, dtype=np.int32),
     )
     previous = get_num_threads()

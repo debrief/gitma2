@@ -15,7 +15,7 @@ import numpy as np
 from .geometry import deg_to_rad, kt_to_mps
 
 LIST_MAX = 8
-MAX_COUNT_WEIGHTS = 4  # kernel table holds 3 course changes + 1 speed change (scenario.MAX_TM)
+MAX_COUNT_WEIGHTS = 4  # 0.5.0 count model: at most 3 course changes + 1 speed change
 
 # Layout of the flat ranges array (float64). Keep in step with ``flatten_ranges``.
 R_WINDOW_MIN = 0
@@ -59,7 +59,25 @@ R_DV_MAX = R_DV_MIN + 1
 R_ACC_MIN = R_DV_MAX + 1
 R_ACC_MAX = R_ACC_MIN + 1
 R_TM_SPACING = R_ACC_MAX + 1
-R_LEN = R_TM_SPACING + 1
+# Generator 0.6.0 (SRD Annex B, MAN2); NaN when absent.
+R_LEG_MEAN = R_TM_SPACING + 1
+R_LEG_SD = R_LEG_MEAN + 1
+R_LEG_MIN = R_LEG_SD + 1
+R_KIND_COURSE = R_LEG_MIN + 1  # change-kind weights, normalised at flatten time
+R_KIND_SPEED = R_KIND_COURSE + 1
+R_KIND_BOTH = R_KIND_SPEED + 1
+R_WANDER_SD = R_KIND_BOTH + 1
+R_WANDER_TAU = R_WANDER_SD + 1
+R_WANDER_CLIP = R_WANDER_TAU + 1
+R_OSC_AMP_MIN = R_WANDER_CLIP + 1
+R_OSC_AMP_MAX = R_OSC_AMP_MIN + 1
+R_OSC_PERIOD_MIN = R_OSC_AMP_MAX + 1
+R_OSC_PERIOD_MAX = R_OSC_PERIOD_MIN + 1
+R_WW_NONE = R_OSC_PERIOD_MAX + 1  # wander-kind weights, normalised
+R_WW_WANDER = R_WW_NONE + 1
+R_WW_OSC = R_WW_WANDER + 1
+R_WW_BOTH = R_WW_OSC + 1
+R_LEN = R_WW_BOTH + 1
 
 DEFAULT_RANGES: dict[str, Any] = {
     "window_s": {"min": 600, "max": 2400},
@@ -147,6 +165,105 @@ def validate_ranges(r: dict[str, Any]) -> None:
             )
     if len(r["noise_sigma_rad_values"]) > LIST_MAX:
         raise RangesError(f"at most {LIST_MAX} noise sigma values are supported")
+    # generator 0.6.0
+    leg = r.get("target_leg_length_s")
+    if leg is not None:
+        clash = [
+            k
+            for k in (
+                "target_course_change_count_weights",
+                "target_manoeuvre_spacing_s",
+                "target_manoeuvre_after_zig_s",
+                "target_manoeuvre_margin_s",
+                "target_manoeuvre_fraction",
+            )
+            if r.get(k) is not None
+        ]
+        if clash:
+            raise RangesError(
+                "target_leg_length_s cannot be combined with target_course_change_count_weights, "
+                "target_manoeuvre_spacing_s, target_manoeuvre_after_zig_s, "
+                "target_manoeuvre_margin_s or target_manoeuvre_fraction"
+            )
+        if not (float(leg["mean"]) > 0 and float(leg["sd"]) > 0 and float(leg["min"]) > 0):
+            raise RangesError("target_leg_length_s mean, sd and min must be positive")
+        if float(leg["min"]) < 2 * float(r["dt_s"]):
+            # a shorter leg can round into the previous change's last row
+            raise RangesError("target_leg_length_s.min must be at least two rows (2 × dt_s)")
+        from .scenario import MAX_TM
+
+        # each start rounds to a row, which can shorten a leg by up to one row
+        dt = float(r["dt_s"])
+        if float(r["window_s"]["max"]) / (float(leg["min"]) - dt) + 2 > MAX_TM:
+            raise RangesError(
+                f"target_leg_length_s.min is too short for window_s.max: the kernel's table holds "
+                f"{MAX_TM} changes"
+            )
+        if any(
+            r.get(k) is None for k in ("target_manoeuvre_angle_abs_rad", "target_turn_rate_rad_s")
+        ):
+            raise RangesError(
+                "target_leg_length_s needs target_manoeuvre_angle_abs_rad and "
+                "target_turn_rate_rad_s"
+            )
+        kinds = r.get("target_change_kind_weights")
+        if kinds is not None and (kinds.get("speed", 0) > 0 or kinds.get("both", 0) > 0):
+            if (
+                r.get("target_speed_change_abs_mps") is None
+                or r.get("target_speed_change_rate_mps2") is None
+            ):
+                raise RangesError(
+                    "target_change_kind_weights with speed or both needs "
+                    "target_speed_change_abs_mps and target_speed_change_rate_mps2"
+                )
+            if not (
+                float(r["target_speed_change_abs_mps"]["min"]) > 0
+                and float(r["target_speed_change_rate_mps2"]["min"]) > 0
+            ):
+                raise RangesError(
+                    "target_speed_change_abs_mps and target_speed_change_rate_mps2 must be "
+                    "positive when speed or both changes are drawn"
+                )
+    elif r.get("target_change_kind_weights") is not None:
+        raise RangesError("target_change_kind_weights needs target_leg_length_s")
+    if (r.get("ownship_wander") is not None or r.get("ownship_oscillation") is not None) and r.get(
+        "ownship_wander_weights"
+    ) is None:
+        raise RangesError("ownship_wander or ownship_oscillation needs ownship_wander_weights")
+    for key, names in (
+        ("target_change_kind_weights", ("course", "speed", "both")),
+        ("ownship_wander_weights", ("none", "wander", "oscillation", "both")),
+    ):
+        w = r.get(key)
+        if w is None:
+            continue
+        missing = [n for n in names if n not in w]
+        if missing:
+            raise RangesError(f"{key} needs every weight: {', '.join(names)}")
+        vals = [float(w[n]) for n in names]
+        if any(v < 0 for v in vals) or sum(vals) <= 0:
+            raise RangesError(f"{key} must be non-negative with a positive sum")
+    hw = r.get("ownship_wander")
+    if hw is not None and not (
+        float(hw["sd_rad"]) >= 0 and float(hw["tau_s"]) > 0 and float(hw["clip_rad"]) > 0
+    ):
+        raise RangesError("ownship_wander needs sd_rad ≥ 0, tau_s > 0 and clip_rad > 0")
+    osc = r.get("ownship_oscillation")
+    if osc is not None and not (
+        0 <= float(osc["amp_rad"]["min"]) <= float(osc["amp_rad"]["max"])
+        and 0 < float(osc["period_s"]["min"]) <= float(osc["period_s"]["max"])
+    ):
+        raise RangesError("ownship_oscillation needs 0 ≤ amp min ≤ max and 0 < period min ≤ max")
+    ww = r.get("ownship_wander_weights")
+    if ww is not None:
+        if (float(ww["wander"]) > 0 or float(ww["both"]) > 0) and r.get("ownship_wander") is None:
+            raise RangesError("ownship_wander_weights with wander or both needs ownship_wander")
+        if (float(ww["oscillation"]) > 0 or float(ww["both"]) > 0) and r.get(
+            "ownship_oscillation"
+        ) is None:
+            raise RangesError(
+                "ownship_wander_weights with oscillation or both needs ownship_oscillation"
+            )
 
 
 def flatten_ranges(r: dict[str, Any]) -> np.ndarray:
@@ -196,4 +313,33 @@ def flatten_ranges(r: dict[str, Any]) -> np.ndarray:
     rng("target_speed_change_rate_mps2", R_ACC_MIN, R_ACC_MAX)
     if r.get("target_manoeuvre_spacing_s") is not None:
         out[R_TM_SPACING] = float(r["target_manoeuvre_spacing_s"])
+    # generator 0.6.0
+    leg = r.get("target_leg_length_s")
+    if leg is not None:
+        out[R_LEG_MEAN] = float(leg["mean"])
+        out[R_LEG_SD] = float(leg["sd"])
+        out[R_LEG_MIN] = float(leg["min"])
+        kinds = r.get("target_change_kind_weights") or {"course": 1.0, "speed": 0.0, "both": 0.0}
+        tot = float(kinds["course"]) + float(kinds["speed"]) + float(kinds["both"])
+        out[R_KIND_COURSE] = float(kinds["course"]) / tot
+        out[R_KIND_SPEED] = float(kinds["speed"]) / tot
+        out[R_KIND_BOTH] = float(kinds["both"]) / tot
+    w = r.get("ownship_wander")
+    if w is not None:
+        out[R_WANDER_SD] = float(w["sd_rad"])
+        out[R_WANDER_TAU] = float(w["tau_s"])
+        out[R_WANDER_CLIP] = float(w["clip_rad"])
+    o = r.get("ownship_oscillation")
+    if o is not None:
+        out[R_OSC_AMP_MIN] = float(o["amp_rad"]["min"])
+        out[R_OSC_AMP_MAX] = float(o["amp_rad"]["max"])
+        out[R_OSC_PERIOD_MIN] = float(o["period_s"]["min"])
+        out[R_OSC_PERIOD_MAX] = float(o["period_s"]["max"])
+    ww = r.get("ownship_wander_weights")
+    if ww is not None:
+        tot = sum(float(ww[k]) for k in ("none", "wander", "oscillation", "both"))
+        out[R_WW_NONE] = float(ww["none"]) / tot
+        out[R_WW_WANDER] = float(ww["wander"]) / tot
+        out[R_WW_OSC] = float(ww["oscillation"]) / tot
+        out[R_WW_BOTH] = float(ww["both"]) / tot
     return out

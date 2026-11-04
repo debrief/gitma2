@@ -30,6 +30,7 @@ import numpy as np
 
 from tma2.eval.rows import G5_GATE_MIN, G5_SLICE_SIGMA_RAD, settled_row
 from tma2.eval.stats import ascending, percentile
+from tma2.kinds import is_turn_kind
 from tma2.types.generated.tma import DetectionRecord, SpanDetection
 
 THRESHOLD = 0.5
@@ -134,7 +135,7 @@ def score_scenario(
             if knots:
                 j = int(np.argmin([abs(r - int(s["start_index"])) for r in knot_rows]))
                 if abs(knot_rows[j] - int(s["start_index"])) <= tol:
-                    sd.kind_correct = (float(knots[j]["p_kind"]) >= 0.5) == (s["kind"] == "course")
+                    sd.kind_correct = (float(knots[j]["p_kind"]) >= 0.5) == is_turn_kind(s["kind"])
                     kind_scored += 1
                     kind_correct += int(sd.kind_correct)
         else:
@@ -160,7 +161,8 @@ def score_scenario(
         held_leg_g5_rows=len(g5_held),
         held_leg_g5_flagged=sum(1 for k in g5_held if al[k]),
     )
-    bounds = truth_boundaries(spans)
+    # a span still in progress at the window's end has no end boundary inside it (generator 0.6.0)
+    bounds = [r for r in truth_boundaries(spans) if r < n]
     sc = ScenarioDetection(
         record=rec,
         knots_exported=len(knot_rows),
@@ -176,7 +178,7 @@ def score_scenario(
         for s in spans:
             for r in (int(s["start_index"]), int(s["end_index"])):
                 if 0 < r < n:
-                    sc.calibration_kind.append((float(pk[r]), float(s["kind"] == "course")))
+                    sc.calibration_kind.append((float(pk[r]), float(is_turn_kind(s["kind"]))))
     return sc
 
 
