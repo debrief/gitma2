@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.21.0
+version: 0.22.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -58,6 +58,19 @@ enums:
         description: A rate-limited course change at constant speed (an arc).
       speed:
         description: A constant-acceleration speed change on a constant course.
+      both:
+        description: >-
+          A course change and a speed change starting together (generator 0.6.0, SRD Annex B):
+          an arc while the speed changes linearly.
+  WanderKind:
+    description: Which ownship course-wander process a scenario drew (generator 0.6.0).
+    permissible_values:
+      none:
+      wander:
+        description: Helm wander, an irregular first-order autoregressive course error.
+      oscillation:
+        description: Autopilot oscillation, a sinusoidal course error.
+      both:
   CrbModel:
     description: Which model the Cramér–Rao bound assumes (gitma2, references/crb.py).
     permissible_values:
@@ -193,6 +206,58 @@ classes:
       min: { range: float, required: true }
       max: { range: float, required: true }
 
+  LegLengthModel:
+    description: >-
+      Target leg lengths (generator 0.6.0): normal with this mean and standard deviation, clipped
+      below at min. The MAN2 defaults are 1500, 546 and 300 s (5% of legs at or under 10 min).
+    attributes:
+      mean: { range: float, required: true, unit: { ucum_code: s } }
+      sd: { range: float, required: true, unit: { ucum_code: s } }
+      min: { range: float, required: true, unit: { ucum_code: s } }
+
+  ChangeKindWeights:
+    description: Relative weights of what ends a target leg (generator 0.6.0); normalised.
+    attributes:
+      course: { range: float, required: true }
+      speed: { range: float, required: true }
+      both: { range: float, required: true }
+
+  HelmWanderRanges:
+    description: >-
+      Helm wander (generator 0.6.0): a first-order autoregressive course error with standard
+      deviation sd_rad, correlation time tau_s and a hard clip at ±clip_rad.
+    attributes:
+      sd_rad: { range: float, required: true, unit: { ucum_code: rad } }
+      tau_s: { range: float, required: true, unit: { ucum_code: s } }
+      clip_rad: { range: float, required: true, unit: { ucum_code: rad } }
+
+  OscillationRanges:
+    description: >-
+      Autopilot oscillation (generator 0.6.0): a sinusoidal course error with amplitude and
+      period drawn uniformly from these ranges and a uniform phase.
+    attributes:
+      amp_rad: { range: FloatRange, required: true, inlined: true }
+      period_s: { range: FloatRange, required: true, inlined: true }
+
+  WanderWeights:
+    description: Relative weights of the ownship wander kinds per scenario (generator 0.6.0).
+    attributes:
+      none: { range: float, required: true }
+      wander: { range: float, required: true }
+      oscillation: { range: float, required: true }
+      both: { range: float, required: true }
+
+  OwnshipWander:
+    description: The ownship wander a scenario drew and its parameters (generator 0.6.0).
+    attributes:
+      kind: { range: WanderKind, required: true }
+      sd_rad: { range: float, unit: { ucum_code: rad } }
+      tau_s: { range: float, unit: { ucum_code: s } }
+      clip_rad: { range: float, unit: { ucum_code: rad } }
+      amp_rad: { range: float, unit: { ucum_code: rad } }
+      period_s: { range: float, unit: { ucum_code: s } }
+      phase_rad: { range: float, unit: { ucum_code: rad } }
+
   ScenarioParameters:
     description: The random draws that define one scenario.
     attributes:
@@ -303,6 +368,15 @@ classes:
         range: float
         required: true
         description: Magnitude of the rate of change, rad/s (course) or m/s² (speed).
+      change2:
+        range: float
+        description: >-
+          For kind both: the speed change (m/s) that accompanies the course change in `change`
+          (generator 0.6.0).
+      rate2:
+        range: float
+        description: >-
+          For kind both: the acceleration (m/s²) of that speed change.
 
   ParameterRanges:
     description: >-
@@ -397,6 +471,31 @@ classes:
         range: float
         unit: { ucum_code: s }
         description: Least time from the end of one target manoeuvre to the start of the next.
+      target_leg_length_s:
+        range: LegLengthModel
+        inlined: true
+        description: >-
+          Generator 0.6.0 (SRD Annex B, MAN2): target legs are drawn from this law and laid end
+          to end with a uniform first phase. Exclusive with the count weights, spacing, after-zig
+          and margin fields.
+      target_change_kind_weights:
+        range: ChangeKindWeights
+        inlined: true
+        description: What ends a target leg (generator 0.6.0); needs target_leg_length_s.
+      ownship_wander:
+        range: HelmWanderRanges
+        inlined: true
+        description: Helm wander on the recorded ownship course (generator 0.6.0).
+      ownship_oscillation:
+        range: OscillationRanges
+        inlined: true
+        description: Autopilot oscillation on the recorded ownship course (generator 0.6.0).
+      ownship_wander_weights:
+        range: WanderWeights
+        inlined: true
+        description: >-
+          Per-scenario choice of ownship wander kind (generator 0.6.0); required when
+          ownship_wander or ownship_oscillation is present.
       min_range_m:
         {
           range: float,
@@ -469,6 +568,15 @@ classes:
         description: >-
           Generator 0.5.0: each target manoeuvre's sample span, in time order (present, possibly
           empty, only under 0.5.0).
+      ownship_wander:
+        range: OwnshipWander
+        inlined: true
+        description: The ownship course wander drawn for this scenario (generator 0.6.0).
+      zig_on_manoeuvre:
+        range: boolean
+        description: >-
+          The ownship zig row lies inside a target manoeuvre span (generator 0.6.0, where target
+          changes may precede or overlap the zig).
       zig_time_s: { range: float, required: true, unit: { ucum_code: s } }
       mean_range_m: { range: float, required: true, unit: { ucum_code: m } }
       min_range_m: { range: float, required: true, unit: { ucum_code: m } }

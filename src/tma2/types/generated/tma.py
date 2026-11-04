@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.21.0"
+version = "0.22.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -164,6 +164,26 @@ class ManoeuvreKind(str, Enum):
     """
     A constant-acceleration speed change on a constant course.
     """
+    both = "both"
+    """
+    A course change and a speed change starting together (generator 0.6.0, SRD Annex B): an arc while the speed changes linearly.
+    """
+
+
+class WanderKind(str, Enum):
+    """
+    Which ownship course-wander process a scenario drew (generator 0.6.0).
+    """
+    none = "none"
+    wander = "wander"
+    """
+    Helm wander, an irregular first-order autoregressive course error.
+    """
+    oscillation = "oscillation"
+    """
+    Autopilot oscillation, a sinusoidal course error.
+    """
+    both = "both"
 
 
 class CrbModel(str, Enum):
@@ -371,8 +391,88 @@ class FloatRange(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    min: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['FloatRange']} })
+    min: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['FloatRange', 'LegLengthModel']} })
     max: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['FloatRange']} })
+
+
+class LegLengthModel(ConfiguredBaseModel):
+    """
+    Target leg lengths (generator 0.6.0): normal with this mean and standard deviation, clipped below at min. The MAN2 defaults are 1500, 546 and 300 s (5% of legs at or under 10 min).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    mean: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['LegLengthModel'], 'unit': {'ucum_code': 's'}} })
+    sd: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['LegLengthModel'], 'unit': {'ucum_code': 's'}} })
+    min: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['FloatRange', 'LegLengthModel'], 'unit': {'ucum_code': 's'}} })
+
+
+class ChangeKindWeights(ConfiguredBaseModel):
+    """
+    Relative weights of what ends a target leg (generator 0.6.0); normalised.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    course: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeKindWeights']} })
+    speed: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeKindWeights']} })
+    both: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeKindWeights', 'WanderWeights']} })
+
+
+class HelmWanderRanges(ConfiguredBaseModel):
+    """
+    Helm wander (generator 0.6.0): a first-order autoregressive course error with standard deviation sd_rad, correlation time tau_s and a hard clip at ±clip_rad.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    sd_rad: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'],
+         'unit': {'ucum_code': 'rad'}} })
+    tau_s: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'], 'unit': {'ucum_code': 's'}} })
+    clip_rad: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'],
+         'unit': {'ucum_code': 'rad'}} })
+
+
+class OscillationRanges(ConfiguredBaseModel):
+    """
+    Autopilot oscillation (generator 0.6.0): a sinusoidal course error with amplitude and period drawn uniformly from these ranges and a uniform phase.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    amp_rad: FloatRange = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OscillationRanges', 'OwnshipWander']} })
+    period_s: FloatRange = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OscillationRanges', 'OwnshipWander']} })
+
+
+class WanderWeights(ConfiguredBaseModel):
+    """
+    Relative weights of the ownship wander kinds per scenario (generator 0.6.0).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    none: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['WanderWeights']} })
+    wander: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['WanderWeights']} })
+    oscillation: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['WanderWeights']} })
+    both: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeKindWeights', 'WanderWeights']} })
+
+
+class OwnshipWander(ConfiguredBaseModel):
+    """
+    The ownship wander a scenario drew and its parameters (generator 0.6.0).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    kind: WanderKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
+                       'TargetManoeuvre',
+                       'ManoeuvreSpan',
+                       'ControlSettings',
+                       'SpanDetection']} })
+    sd_rad: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'],
+         'unit': {'ucum_code': 'rad'}} })
+    tau_s: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'], 'unit': {'ucum_code': 's'}} })
+    clip_rad: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'],
+         'unit': {'ucum_code': 'rad'}} })
+    amp_rad: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OscillationRanges', 'OwnshipWander'],
+         'unit': {'ucum_code': 'rad'}} })
+    period_s: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OscillationRanges', 'OwnshipWander'],
+         'unit': {'ucum_code': 's'}} })
+    phase_rad: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander'], 'unit': {'ucum_code': 'rad'}} })
 
 
 class ScenarioParameters(ConfiguredBaseModel):
@@ -416,13 +516,16 @@ class TargetManoeuvre(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    kind: ManoeuvreKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre',
+    kind: ManoeuvreKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
+                       'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
                        'SpanDetection']} })
     start_time_s: float = Field(default=..., description="""Time the manoeuvre starts, a whole number of samples.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre'], 'unit': {'ucum_code': 's'}} })
     change: float = Field(default=..., description="""Signed change: course in rad (positive clockwise) or speed in m/s (positive faster).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre', 'ChangeDecision']} })
     rate: float = Field(default=..., description="""Magnitude of the rate of change, rad/s (course) or m/s² (speed).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre']} })
+    change2: Optional[float] = Field(default=None, description="""For kind both: the speed change (m/s) that accompanies the course change in `change` (generator 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre']} })
+    rate2: Optional[float] = Field(default=None, description="""For kind both: the acceleration (m/s²) of that speed change.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre']} })
 
 
 class ParameterRanges(ConfiguredBaseModel):
@@ -456,6 +559,11 @@ class ParameterRanges(ConfiguredBaseModel):
     target_speed_change_abs_mps: Optional[FloatRange] = Field(default=None, description="""Absolute speed change; its sign is uniform ±, flipped if the new speed would leave target_speed_mps (redrawn if both signs would).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges']} })
     target_speed_change_rate_mps2: Optional[FloatRange] = Field(default=None, description="""Magnitude of the target's acceleration during a speed change.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges']} })
     target_manoeuvre_spacing_s: Optional[float] = Field(default=None, description="""Least time from the end of one target manoeuvre to the start of the next.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges'], 'unit': {'ucum_code': 's'}} })
+    target_leg_length_s: Optional[LegLengthModel] = Field(default=None, description="""Generator 0.6.0 (SRD Annex B, MAN2): target legs are drawn from this law and laid end to end with a uniform first phase. Exclusive with the count weights, spacing, after-zig and margin fields.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges']} })
+    target_change_kind_weights: Optional[ChangeKindWeights] = Field(default=None, description="""What ends a target leg (generator 0.6.0); needs target_leg_length_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges']} })
+    ownship_wander: Optional[HelmWanderRanges] = Field(default=None, description="""Helm wander on the recorded ownship course (generator 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges', 'ScenarioMetadata']} })
+    ownship_oscillation: Optional[OscillationRanges] = Field(default=None, description="""Autopilot oscillation on the recorded ownship course (generator 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges']} })
+    ownship_wander_weights: Optional[WanderWeights] = Field(default=None, description="""Per-scenario choice of ownship wander kind (generator 0.6.0); required when ownship_wander or ownship_oscillation is present.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges']} })
     min_range_m: float = Field(default=..., description="""Geometries closer than this at any sample are redrawn.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges', 'ScenarioMetadata']} })
 
 
@@ -519,6 +627,8 @@ class ScenarioMetadata(ConfiguredBaseModel):
     manoeuvre_start_index: Optional[int] = Field(default=None, description="""First timestep after the target's turn starts (generator 0.4.0; absent when the target holds course). Under generator 0.5.0, after the first manoeuvre starts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
     manoeuvre_index: Optional[int] = Field(default=None, description="""First timestep after the target's turn completes (generator 0.4.0; absent when the target holds course). Gate G4 counts time from here, as earlier gates count from zig_index. Under generator 0.5.0, after the last manoeuvre completes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
     manoeuvres: Optional[list[ManoeuvreSpan]] = Field(default=None, description="""Generator 0.5.0: each target manoeuvre's sample span, in time order (present, possibly empty, only under 0.5.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
+    ownship_wander: Optional[OwnshipWander] = Field(default=None, description="""The ownship course wander drawn for this scenario (generator 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges', 'ScenarioMetadata']} })
+    zig_on_manoeuvre: Optional[bool] = Field(default=None, description="""The ownship zig row lies inside a target manoeuvre span (generator 0.6.0, where target changes may precede or overlap the zig).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
     zig_time_s: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata'], 'unit': {'ucum_code': 's'}} })
     mean_range_m: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata'], 'unit': {'ucum_code': 'm'}} })
     min_range_m: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ParameterRanges', 'ScenarioMetadata'],
@@ -531,7 +641,8 @@ class ManoeuvreSpan(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    kind: ManoeuvreKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre',
+    kind: ManoeuvreKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
+                       'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
                        'SpanDetection']} })
@@ -1410,7 +1521,8 @@ class ControlSettings(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    kind: ControlKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre',
+    kind: ControlKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
+                       'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
                        'SpanDetection']} })
@@ -1504,7 +1616,8 @@ class DetectorRecord(ConfiguredBaseModel):
 class SpanDetection(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    kind: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre',
+    kind: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
+                       'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
                        'SpanDetection']} })
@@ -1572,6 +1685,12 @@ class GateDDecision(ConfiguredBaseModel):
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 FloatRange.model_rebuild()
+LegLengthModel.model_rebuild()
+ChangeKindWeights.model_rebuild()
+HelmWanderRanges.model_rebuild()
+OscillationRanges.model_rebuild()
+WanderWeights.model_rebuild()
+OwnshipWander.model_rebuild()
 ScenarioParameters.model_rebuild()
 TargetManoeuvre.model_rebuild()
 ParameterRanges.model_rebuild()

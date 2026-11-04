@@ -92,7 +92,7 @@ from .ranges import (
 )
 
 MAX_REDRAWS = 1000
-MAX_TM = 4  # at most 3 course changes + 1 speed change
+MAX_TM = 24  # 0.5.0: ≤ 3 course + 1 speed change; 0.6.0: a 120-min window at the 5-min floor
 
 # Parameter array layout (ScenarioParameters); NaN means the optional key is absent.
 P_WINDOW = 0
@@ -117,10 +117,13 @@ P_N_TM = 18  # generator 0.5.0: −1 key absent, else number of planned manoeuvr
 P_LEN = 19
 
 # Manoeuvre table columns.
-TM_KIND = 0  # 0 course, 1 speed
+TM_KIND = 0  # 0 course, 1 speed, 2 both (generator 0.6.0)
 TM_START = 1
 TM_CHANGE = 2
 TM_RATE = 3
+TM_CHANGE2 = 4  # kind 2: the speed change that accompanies the turn
+TM_RATE2 = 5  # kind 2: its acceleration
+TM_COLS = 6
 
 # Truth index array layout; −1 means null.
 TI_SAMPLES = 0

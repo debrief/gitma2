@@ -82,7 +82,7 @@ def _fill_batch(
         bearing_b = np.zeros(rmax)
         valid_b = np.zeros(rmax, dtype=np.bool_)
         P = np.full(sc.P_LEN, np.nan)
-        tm = np.zeros((sc.MAX_TM, 4))
+        tm = np.zeros((sc.MAX_TM, sc.TM_COLS))
         TI = np.full(sc.TI_LEN, -1, dtype=np.int64)
         sp = np.zeros((sc.MAX_TM, 3), dtype=np.int64)
         stats = np.zeros(3)
