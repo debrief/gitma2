@@ -48,6 +48,7 @@ from tma2.physics.segmentation import trivial_inputs
 from tma2.references.classical import BearingData, bearing_data_from_arrays, classical_predict
 from tma2.sim.generate import KernelBuffers, generate_scenario, run_kernel
 from tma2.sim.ranges import flatten_ranges, rows_for
+from tma2.types import dump_record
 from tma2.types.generated.tma import Scenario
 
 from .oracle import run_layer
@@ -380,13 +381,27 @@ def check_export_720(exp: Experiment, results: Path | None) -> None:
         pack, rows = man2_fixture(Path(tmp))
         d64 = export(Path(tmp) / "f64", pack, dtype="float64", rows=rows, zig_leg_rows=True)
         sha = hashlib.sha256((Path(tmp) / "f64" / "toy.onnx").read_bytes()).hexdigest()
+        man = json.loads((Path(tmp) / "f64" / "manifest.json").read_text())
+        h = hashlib.sha256()
+        for f in sorted(q.name for q in (Path(tmp) / "f64").glob("in_*.bin")):
+            h.update((Path(tmp) / "f64" / f).read_bytes())
+        inputs_sha = h.hexdigest()
     worst = max(d64.values())
-    exp.metrics["export_720"] = {"onnx_sha256": sha, "rows": rows, "python_f64_max_rel_diff": d64}
+    exp.metrics["export_720"] = {
+        "onnx_sha256": sha,
+        "inputs_sha256": inputs_sha,
+        "rows": rows,
+        "batch": len(man["golden_k"]),
+        "golden_k": man["golden_k"],
+        "golden_valid_rows": man["golden_valid_rows"],
+        "python_f64_max_rel_diff": d64,
+    }
     exp.checks.append(
         Check(
             "export-720-python",
             "pass" if worst <= EXPORT_TOL else "fail",
-            f"max relative difference {worst:.1e} (double, {rows} rows)",
+            f"max relative difference {worst:.1e} (double, {rows} rows; batch of "
+            f"{len(man['golden_k'])}, k {min(man['golden_k'])}–{max(man['golden_k'])})",
             value=worst,
             threshold=EXPORT_TOL,
         )
@@ -407,12 +422,13 @@ def check_export_720(exp: Experiment, results: Path | None) -> None:
         if v is None:
             exp.checks.append(Check(f"export-720-{leg}", "fail", "leg missing from the results"))
             continue
-        if v.get("onnx_sha256") != sha:
+        if v.get("onnx_sha256") != sha or v.get("inputs_sha256") != inputs_sha:
             exp.checks.append(
                 Check(
                     f"export-720-{leg}",
                     "fail",
-                    f"leg ran on {v.get('onnx_sha256')}, not this export ({sha})",
+                    f"leg ran on model {v.get('onnx_sha256')} with inputs "
+                    f"{v.get('inputs_sha256')}, not this export ({sha}, {inputs_sha})",
                 )
             )
             continue
@@ -539,11 +555,12 @@ def main(argv: list[str] | None = None) -> int:
     man2 = Path(a.man2) / "validation.f32pack"
     nf = Path(a.noise_free) / "validation.f32pack"
     regen = Path(a.regen) / "validation.f32pack"
-    for p in (man2, nf):
+    for p in (man2, nf, regen):
         h = read_pack_header(p)
-        if h.generator_version != "0.6.0":
+        if p != regen and h.generator_version != "0.6.0":
             raise SystemExit(f"{p}: generator {h.generator_version}, expected 0.6.0")
         exp.command_lines.append(f"dataset: {h.created_by} (commit {h.generator_git_commit})")
+        exp.add_dataset(str(p), dump_record(h))  # binds the file's digest and header
     exp.command_lines.append(
         "conformance: python -m tma2.export.onnx_export --out <dir> --man2; "
         "(cd conformance/onnx && node wasm_leg.mjs --dir <dir>/f64 --out <results>); "

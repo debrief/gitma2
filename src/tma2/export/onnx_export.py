@@ -29,27 +29,33 @@ OPSET = 17
 TOL = 1e-5
 
 
+# MAN2 golden rows end at or after this row (spec 006 G0-MAN2 panel round 1: exercise data rows
+# past the 360-row window, not only padding).
+MAN2_MIN_K = 480
+
+
 def golden_batch(
     fixture_pack: Path, n: int = 8, rows: int = R_MAX, zig_leg_rows: bool = False
 ) -> dict[str, np.ndarray]:
     """Eight rows for the conformance batch: ``zig + 30`` (the 0.5.0 fixtures), or, with
-    ``zig_leg_rows`` (MAN2), the last row of the steady target leg containing the zig, in
-    scenarios where that leg starts at row 0, so the toy model's single constant-velocity leg over
-    the prefix is the truth and the solve is well-posed. On
-    MAN2 data ``zig + 30`` can fall after a target turn, where the one-leg fit runs away along a
-    flat valley (range 1e11 m, covariance condition 1e19) and no two runtimes need agree."""
+    ``zig_leg_rows`` (MAN2), the last row of the steady target leg containing the zig, with every
+    bearing before the leg's first row marked invalid, so the toy model's single constant-velocity
+    leg is the truth over the rows it uses and the solve is well-posed. Only legs ending at row
+    ``MAN2_MIN_K`` or later are taken, so the batch exercises data rows past the old 360-row
+    window. On MAN2 data ``zig + 30`` can fall after a target turn, where the one-leg fit runs
+    away along a flat valley (range 1e11 m, covariance condition 1e19) and no two runtimes need
+    agree."""
     from tma2.eval.rows import zig_leg
 
     bearing, valid, own, t, sigma, k, theta0 = [], [], [], [], [], [], []
     for _, meta, own_a, _tgt, obs in iter_pack_raw(fixture_pack):
         d = bearing_data_from_arrays(meta, own_a, obs)
         if zig_leg_rows:
-            # the toy model fits one leg over the whole prefix [0, k]: the target must hold its
-            # course from row 0 to k, i.e. the zig leg must start at row 0
             leg = zig_leg(meta)
-            if leg is None or leg[0] != 0:
+            if leg is None or leg[1] < MAN2_MIN_K:
                 continue
-            kk = leg[1]
+            first, kk = leg
+            d.valid[:first] = 0  # the fit sees the zig leg only
         else:
             kk = min(d.zig_index + 30, d.n - 1)
         inp = trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, kk)
@@ -83,7 +89,7 @@ def golden_batch(
 
 
 def man2_fixture(tmp: Path) -> tuple[Path, int]:
-    """A small MAN2 pack (generator 0.6.0, seed 316, 80 scenarios) and its window rows (720),
+    """A small MAN2 pack (generator 0.6.0, seed 316, 400 scenarios) and its window rows (720),
     generated deterministically so no binary fixture is committed."""
     from tma2.data.dataset import GenerateOptions, generate_dataset
     from tma2.sim.ranges import rows_for
@@ -94,7 +100,7 @@ def man2_fixture(tmp: Path) -> tuple[Path, int]:
     generate_dataset(
         GenerateOptions(
             seed=np.uint64(316),
-            count=80,
+            count=400,
             out_dir=tmp,
             ranges=ranges,
             heldout_ranges=heldout,
@@ -188,6 +194,8 @@ def _export(
                 "outputs": {
                     n: {"shape": list(a.shape), "dtype": str(a.dtype)} for n, a in outs.items()
                 },
+                "golden_k": [int(x) for x in batch["k"]],
+                "golden_valid_rows": [int(x) for x in np.asarray(batch["valid"]).sum(axis=1)],
             },
             indent=2,
         )

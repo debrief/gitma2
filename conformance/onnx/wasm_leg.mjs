@@ -4,7 +4,7 @@
 //
 // Usage: node wasm_leg.mjs [--dir <export dir>] [--out results.json]
 import { createServer } from "node:http";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join, extname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -120,6 +120,14 @@ function maxRel(ref) {
   }
   return out;
 }
+// The golden inputs, bound like the model: SHA-256 over every in_*.bin, in name order.
+function inputsSha256(d) {
+  const h = createHash("sha256");
+  for (const f of readdirSync(d).filter((f) => f.startsWith("in_") && f.endsWith(".bin")).sort()) {
+    h.update(readFileSync(join(d, f)));
+  }
+  return h.digest("hex");
+}
 const diffs = maxRel(expected);
 const vsOrtPython = maxRel(ortRef);
 const pythonLeg = existsSync(join(dir, "python_leg.json")) ? JSON.parse(readFileSync(join(dir, "python_leg.json"), "utf8")) : null;
@@ -135,6 +143,7 @@ const report = {
     ms: results.ms,
     tol: TOL,
     onnx_sha256: createHash("sha256").update(model).digest("hex"),
+    inputs_sha256: inputsSha256(dir),
     runtime: `onnxruntime-web ${JSON.parse(readFileSync(join(here, "node_modules", "onnxruntime-web", "package.json"), "utf8")).version}`,
     browser: results.userAgent,
   },
