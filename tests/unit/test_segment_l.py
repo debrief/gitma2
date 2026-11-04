@@ -63,3 +63,15 @@ def test_untrained_l_equals_c(man2_pack: Path) -> None:
     for a, b in zip(c, lsg, strict=True):
         for x, y in zip(a, b, strict=True):
             assert x.intervals == y.intervals and x.cost == y.cost and x.margin == y.margin
+
+
+def test_export_form_equals_network() -> None:
+    """T035: the exported graph (convolutions as matrix products) equals the network."""
+    from tma2.segment.evidence_export import MatMulNet, seeded_net
+
+    torch.set_default_dtype(torch.float64)
+    net = seeded_net({"width": 32, "kernel": 5, "dilations": [1, 2, 4, 8]}, 3)
+    x = torch.randn(3, CHANNELS, 300, dtype=torch.float64)
+    with torch.no_grad():
+        a, b = net(x), MatMulNet(net)(x)
+    assert float(a.abs().max()) > 0 and float((a - b).abs().max()) < 1e-12

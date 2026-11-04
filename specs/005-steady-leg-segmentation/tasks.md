@@ -185,7 +185,7 @@ before US3, because L uses O's labels as input (FR-043).
 
   Add `tests/unit/test_segtrain.py`: separate processes give byte-identical results, resume equals uninterrupted, and the head stays alive after a small run. Measure the throughput: one epoch over 10⁴ scenarios in under an hour on four cores.
 - [ ] T034 [US3] Add the training workflow `.github/workflows/train-segL.yml` on `train/segL` branches, following the spec 003 pattern. It runs three seeds and the shuffled control, pushing to `results/segL-<run id>`. Push the branch and fetch the results
-- [ ] T035 [US3] Export L's evidence network to ONNX (fixed 720-row window, dynamic batch) in `src/tma2/segment/evidence.py`. Check conformance across Python, WASM and Java to 1e-5, with `inputs_sha256`. Add the CI step
+- [x] T035 [US3] Export L's evidence network to ONNX (fixed 720-row window, dynamic batch) in `src/tma2/segment/evidence.py`. Check conformance across Python, WASM and Java to 1e-5, with `inputs_sha256`. Add the CI step — done: `segment/evidence_export.py` (convolutions as MatMul: onnxruntime has no double Conv); Python and WASM legs 1.3e-15 locally, WASM 91 ms for four windows; Java leg in CI. The carried weights are exported with `--weights` after T036
 - [ ] T036 [US3] Run validation diagnostics for the three seeds and the control (`tma2-gs`, no decision) in `experiments/<date>-segL-val/`. Apply the carried rule, then freeze the carried weights by digest
 
 ## Phase 8: Gate S

@@ -129,6 +129,11 @@ jobs:
           uv run python -m tma2.export.onnx_export --out conformance/onnx/export720k --man2 --knots
           (cd conformance/onnx && node wasm_leg.mjs --dir export720k/f64 --out export720k/results.json)
           uv run python conformance/onnx/java_leg.py conformance/onnx/export720k/f64 conformance/onnx/export720k/results.json
+      - name: L's evidence network export (seeded weights, 720-row window; spec 005 T035), three legs
+        run: |
+          uv run python -m tma2.segment.evidence_export --out conformance/onnx/evidence
+          (cd conformance/onnx && node wasm_leg.mjs --dir evidence --out evidence/results.json)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/evidence conformance/onnx/evidence/results.json
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
@@ -136,6 +141,7 @@ jobs:
             conformance/onnx/results.json
             conformance/onnx/export720/results.json
             conformance/onnx/export720k/results.json
+            conformance/onnx/evidence/results.json
             conformance/onnx/gate1/results.json
             conformance/onnx/gate1/python_leg.json
             conformance/onnx/detector-*/results.json
