@@ -31,7 +31,7 @@ Trains L.
 uv run tma2-segtrain --plan <plan.json> --seed <s> --out <model dir> [--resume] [--shuffled]
 ```
 
-- **Plan.** It names the training stream (seed 313, digest), the cost-table shards, the
+- **Plan.** It names the training stream (seed 317, digest), the cost-table shards, the
   validation split, the evidence-network configuration, and the loss weights (the CRF, plus the
   auxiliary term at 0.1).
 - **Checkpoints** are written per epoch, with Adam state, in the spec 003/004 layout. Weights are

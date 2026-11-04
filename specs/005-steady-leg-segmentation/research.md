@@ -173,7 +173,7 @@ At zero evidence, the gradient is the difference between the truth's expected fe
 the model's, which is generally non-zero, so the head learns from step one (SC-003). A unit test
 checks it against finite differences.
 
-**Training data.** Training is on a fresh stream (seed 313), regenerated per epoch from stored
+**Training data.** Training is on a fresh stream (seed 317, generator 0.6.0), regenerated per epoch from stored
 truth with fresh noise (spec 003's on-the-fly path).
 
 **Cost.**
@@ -211,9 +211,11 @@ equals C (SC-003).
 - **Intervals:** scenario-clustered paired bootstraps (2,000 resamples, 97.5%), using
   `bootstrap_clustered_quantile_ratio` and the paired difference for the S2 and S4 differences.
 - **Seeds**, each pinned by digest in the plan file:
-  - 312: Gate S test (10,000 scenarios);
-  - 313: L's training stream;
-  - 304: validation;
+  - 315: Gate S test (10,000 scenarios, generator 0.6.0), generated after the decision record;
+  - 317: L's training stream (generator 0.6.0);
+  - 314: validation (generator 0.6.0); 304 (0.5.0) was used for R1–R3;
+  - 312 and 313 were declared here for 0.5.0 and are left unused (re-planned for MAN2,
+    2026-11-04);
   - 305 stays reserved, and 311 was used by spec 004.
 
 ## R8. Export

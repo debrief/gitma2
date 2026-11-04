@@ -1,7 +1,7 @@
 # Quickstart: spec 005 validation scenarios
 
-Prerequisites: `uv sync`, and the validation split `data/gd-val/validation.f32pack` (seed 304;
-see `experiments/20261102-gd-a-val/` for its digest). Contracts: [contracts/cli.md](contracts/cli.md).
+Prerequisites: `uv sync`, and the MAN2 validation split `data/man2-val/validation.f32pack` (seed
+314, generator 0.6.0; digests in `experiments/20261104-g0-man2/dataset-digests/`). Contracts: [contracts/cli.md](contracts/cli.md).
 
 ## 1. Unit and golden tests
 
@@ -19,7 +19,7 @@ Expected results:
 ## 2. C on validation
 
 ```bash
-uv run tma2-segment --in data/gd-val/validation.f32pack --out data/seg/val-C.ndjson --segmenter C --params configs/segment/c-default.json --rows g5 --vessel both
+uv run tma2-segment --in data/man2-val/validation.f32pack --out data/seg/val-C.ndjson --segmenter C --params configs/segment/c-default.json --rows g5 --vessel both
 ```
 
 Expected: under 10 s per scenario on a 4-core runner (SC-004), and no interval that uses a bearing
@@ -28,12 +28,12 @@ after its prefix row. A test re-runs a prefix with the later bearings removed an
 ## 3. Scoring on validation (diagnostic)
 
 ```bash
-uv run tma2-gs --truth data/gd-val/validation.f32pack --segmentations data/seg/val-C.ndjson --experiment experiments/<date>-gs-val
+uv run tma2-gs --truth data/man2-val/validation.f32pack --segmentations data/seg/val-C.ndjson --experiment experiments/<date>-gs-val
 ```
 
 Expected:
-- GLR + confirm reproduces note 08: range 0.81 × the IMM [0.74, 0.88] on the 1,000 scoring
-  scenarios (SC-002).
+- GLR + confirm reproduces its MAN2 reference record (`experiments/<date>-man2-refs/`, spec 006
+  T033) on the same 1,000 scoring scenarios (SC-002).
 - C's false-split rate is at most the declared 5%.
 - Every metric appears per detectability band (SC-006).
 
@@ -46,7 +46,7 @@ Run step 2 with `mode` set to `gap`, then to `chord`. Compare median range over 
 
 ```bash
 uv run tma2-segtrain --plan configs/segment/l-plan.json --seed 1 --out models/segL/s1
-uv run tma2-segment --in data/gd-val/validation.f32pack --out data/seg/val-L0.ndjson --segmenter L --weights <untrained>
+uv run tma2-segment --in data/man2-val/validation.f32pack --out data/seg/val-L0.ndjson --segmenter L --weights <untrained>
 ```
 
 Expected: an untrained L's segmentations equal C's byte for byte (SC-003).

@@ -20,7 +20,7 @@ ownship (O) and target, and hand the target's transitions to the physics layer a
 to the confirmation threshold. It starts at zero, so untrained it equals C. It is trained by the
 semi-Markov likelihood of the truth segmentation (R6).
 
-**Gate S** scores everything on fresh seed 312 against batch least squares, the frozen IMM, the
+**Gate S** scores everything on fresh seed 315 (generator 0.6.0, MAN2) against batch least squares, the frozen IMM, the
 oracle and GLR + confirm, with the only learning claim being S4.
 
 ## Technical Context
@@ -44,18 +44,23 @@ oracle and GLR + confirm, with the only learning claim being S4.
   - Offline segmentation on each prefix: no bearing after k is used at row k.
   - Double precision for the physics layer.
   - No paid compute.
-  - Generator 0.5.0 unchanged.
-- **Scale/Scope:**
-  - Validation: 10,000 scenarios (5,014 σ = 1°).
-  - Gate S test: seed 312, 10,000.
-  - L training stream: seed 313.
+  - Generator 0.6.0 (MAN2, spec 006) unchanged; 0.5.0 ranges still reproduce 0.5.0.
+- **Scale/Scope** (re-planned for MAN2, 2026-11-04):
+  - Windows of 40–120 min, up to 720 rows (0.5.0: 360).
+  - Validation: seed 314, `data/man2-val` (digests in
+    `experiments/20261104-g0-man2/dataset-digests/`). Development tunes on its first 500 σ = 1°
+    scenarios and scores on the next 1,000, as note 08 did.
+  - Gate S test: seed 315, 10,000 scenarios, generated only after the decision record is
+    committed.
+  - L training stream: seed 317 (fresh; 316 is the G0-MAN2 noise-free set, 312 and 313 were
+    declared for 0.5.0 and are left unused so no reader confuses the generators).
 
 ## Constitution Check
 
 | Principle | How this plan meets it |
 | --- | --- |
 | I. Types once in LinkML | Segmentation, TruthLabels, GateSDecision and GateSRecord are added to `schema/tma.yaml`, then regenerated |
-| II. Determinism | The search and confirmation are deterministic. L is seeded, and separate processes are byte-identical (spec 004's test pattern). Seeds 312 and 313 are pinned by digest |
+| II. Determinism | The search and confirmation are deterministic. L is seeded, and separate processes are byte-identical (spec 004's test pattern). Seeds 315 and 317 are pinned by digest |
 | III. Physics does the numerics | The estimate always comes from the physics layer. Segmenters only set knots and weights |
 | IV. Honest measurement | On the same rows: naive, batch least squares, the frozen IMM, the oracle and GLR + confirm. Medians, P90, gross rates and efficiency per slice. Clustered intervals. Three L seeds, carried by a declared rule. A shuffled-label control. The decision record comes before training |
 | V. Gates | Gate S is new, with its follow-on fixed in Annex A §A.9. Gate D is untouched. The verdict comes from the panel |
@@ -115,11 +120,14 @@ the package with tests.
 
 ## Phases after this plan
 
-Annex B's generator requirements (helm wander, autopilot oscillation, target changes during
-ownship turns) are a separate spec (generator 0.6.0, behind new ranges fields, with a G0 run) that
-follows phase 1 below and precedes Gate S scoring only if the owner wants S1 tested on wander;
-otherwise Gate S runs on 0.5.0 and 0.6.0 re-scores O afterwards.
-
+Generator 0.6.0 (spec 006) is built and its pipeline gate G0-MAN2 passed (panel round 2,
+`experiments/20261104-g0-man2-r2/`). Everything below runs on its data. The research measurements
+R1–R3 were made on 0.5.0 (seed 304) and are re-measured on seed 314 in phase 1 where they set a
+decision-record value: the search penalty, the gap or chord mode, and the cost per prefix. The
+cost table is quadratic in rows, so 720-row windows may exceed the 10 s budget; phase 1 measures
+it and, if so, the plan's grid or budget is revised before the decision record (a plan goal, not a
+gate criterion). The physics layer's knot path at 720 rows (untested by G0-MAN2) gets an
+equivalence and export check before C depends on it.
 
 1. **C and its scoring.**
    - Truth labels, O, the search, confirmation with lengths, polish, inputs and metrics.
@@ -130,9 +138,9 @@ otherwise Gate S runs on 0.5.0 and 0.6.0 re-scores O afterwards.
 2. **Decision record** committed: S1 and S3 limits, the penalty, the mode, the seeds, a forecast.
    S2 is evaluated on validation first. If C does not beat GLR + confirm there, the record says
    so and S4 uses GLR + confirm as the reference.
-3. **L:** cost tables for seed 313 on runners, then CRF training with three seeds, the shuffled
+3. **L:** cost tables for seed 317 on runners, then CRF training with three seeds, the shuffled
    control, and export.
-4. **Gate S on seed 312:** the panel, `review.md`, the verdict, and site pages (algorithm note,
+4. **Gate S on seed 315:** the panel, `review.md`, the verdict, and site pages (algorithm note,
    glossary, write-up).
 
 ## Complexity Tracking
