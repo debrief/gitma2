@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -28,17 +29,35 @@ OPSET = 17
 TOL = 1e-5
 
 
-def golden_batch(fixture_pack: Path, n: int = 8) -> dict[str, np.ndarray]:
+def golden_batch(
+    fixture_pack: Path, n: int = 8, rows: int = R_MAX, zig_leg_rows: bool = False
+) -> dict[str, np.ndarray]:
+    """Eight rows for the conformance batch: ``zig + 30`` (the 0.5.0 fixtures), or, with
+    ``zig_leg_rows`` (MAN2), the last row of the steady target leg containing the zig, in
+    scenarios where that leg starts at row 0, so the toy model's single constant-velocity leg over
+    the prefix is the truth and the solve is well-posed. On
+    MAN2 data ``zig + 30`` can fall after a target turn, where the one-leg fit runs away along a
+    flat valley (range 1e11 m, covariance condition 1e19) and no two runtimes need agree."""
+    from tma2.eval.rows import zig_leg
+
     bearing, valid, own, t, sigma, k, theta0 = [], [], [], [], [], [], []
     for _, meta, own_a, _tgt, obs in iter_pack_raw(fixture_pack):
         d = bearing_data_from_arrays(meta, own_a, obs)
-        kk = min(d.zig_index + 30, d.n - 1)
+        if zig_leg_rows:
+            # the toy model fits one leg over the whole prefix [0, k]: the target must hold its
+            # course from row 0 to k, i.e. the zig leg must start at row 0
+            leg = zig_leg(meta)
+            if leg is None or leg[0] != 0:
+                continue
+            kk = leg[1]
+        else:
+            kk = min(d.zig_index + 30, d.n - 1)
         inp = trivial_inputs(d.t, d.ox, d.oy, d.z, d.valid, kk)
         if inp is None:
             continue
 
         def pad(a: np.ndarray) -> np.ndarray:
-            out = np.zeros(R_MAX)
+            out = np.zeros(rows)
             out[: a.shape[0]] = a
             return out
 
@@ -63,8 +82,38 @@ def golden_batch(fixture_pack: Path, n: int = 8) -> dict[str, np.ndarray]:
     }
 
 
+def man2_fixture(tmp: Path) -> tuple[Path, int]:
+    """A small MAN2 pack (generator 0.6.0, seed 316, 80 scenarios) and its window rows (720),
+    generated deterministically so no binary fixture is committed."""
+    from tma2.data.dataset import GenerateOptions, generate_dataset
+    from tma2.sim.ranges import rows_for
+
+    root = Path(__file__).resolve().parents[3] / "configs"
+    ranges = json.loads((root / "man2-ranges.json").read_text())
+    heldout = json.loads((root / "man2-heldout.json").read_text())
+    generate_dataset(
+        GenerateOptions(
+            seed=np.uint64(316),
+            count=80,
+            out_dir=tmp,
+            ranges=ranges,
+            heldout_ranges=heldout,
+            format="f32pack",
+            created_by="onnx_export --man2",
+            generator_git_commit="export",
+            generator_git_dirty=False,
+        )
+    )
+    return tmp / "train.f32pack", rows_for(ranges)
+
+
 def export(
-    out_dir: Path, fixture_pack: Path, seed: int = 1, dtype: str = "float64"
+    out_dir: Path,
+    fixture_pack: Path,
+    seed: int = 1,
+    dtype: str = "float64",
+    rows: int = R_MAX,
+    zig_leg_rows: bool = False,
 ) -> dict[str, float]:
     """Export in ``dtype`` (float64 by default: the iterative solve amplifies float32 kernel
     differences between runtimes to ~1e-4, so the conformance proof is made in double).
@@ -75,16 +124,18 @@ def export(
     default = torch.get_default_dtype()
     torch.set_default_dtype(torch.float32)
     try:
-        return _export(out_dir, fixture_pack, seed, dtype)
+        return _export(out_dir, fixture_pack, seed, dtype, rows, zig_leg_rows)
     finally:
         torch.set_default_dtype(default)
 
 
-def _export(out_dir: Path, fixture_pack: Path, seed: int, dtype: str) -> dict[str, float]:
+def _export(
+    out_dir: Path, fixture_pack: Path, seed: int, dtype: str, rows: int, zig_leg_rows: bool
+) -> dict[str, float]:
     out_dir.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(seed)
     model = ToyModel().eval()
-    batch = golden_batch(fixture_pack)
+    batch = golden_batch(fixture_pack, rows=rows, zig_leg_rows=zig_leg_rows)
     np_dtype = np.float64 if dtype == "float64" else np.float32
     batch = {n: (a.astype(np_dtype) if a.dtype != np.int64 else a) for n, a in batch.items()}
     if dtype == "float64":
@@ -180,9 +231,25 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
     ap.add_argument("--fixture", default="tests/fixtures/gitma/phase4-seed777/test.f32pack")
+    ap.add_argument(
+        "--man2",
+        action="store_true",
+        help="720-row windows: the golden batch is generated from configs/man2-ranges.json, "
+        "seed 316 (generator 0.6.0, spec 006), instead of read from --fixture",
+    )
     a = ap.parse_args(argv)
-    d64 = export(Path(a.out) / "f64", Path(a.fixture), dtype="float64")
-    d32 = export(Path(a.out) / "f32", Path(a.fixture), dtype="float32")
+    rows = R_MAX
+    fixture = Path(a.fixture)
+    tmp = None
+    if a.man2:
+        tmp = tempfile.TemporaryDirectory()
+        fixture, rows = man2_fixture(Path(tmp.name))
+    try:
+        d64 = export(Path(a.out) / "f64", fixture, dtype="float64", rows=rows, zig_leg_rows=a.man2)
+        d32 = export(Path(a.out) / "f32", fixture, dtype="float32", rows=rows, zig_leg_rows=a.man2)
+    finally:
+        if tmp is not None:
+            tmp.cleanup()
     print(json.dumps({"f64_vs_torch": d64, "f32_vs_torch": d32}))
     bad = {k: v for k, v in d64.items() if v > TOL}
     if bad:
