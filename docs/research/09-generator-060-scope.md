@@ -69,6 +69,11 @@ only.
    spec measures each and the ONNX conformance export moves to 720 rows. G5 rows at zig + 5 to
    20 min are unchanged; the zig fraction (0.4–0.6 of the window) puts the zig at 16–72 min, so
    there is always at least 20 min after it.
+   **Measured (4 Nov 2026):** the current generator at 40–120 min windows runs at 1,500
+   scenarios/s end to end with f32pack writing (10,000 scenarios in 7.4 s); the physics layer
+   costs 25.7 ms per solve at 720 rows against 20.8 ms at 360 (batch 64, 4 threads), +24% not
+   2×, because the batched solve is dominated by per-iteration overhead rather than row count.
+   The doubling applies to memory and file size, not to solve time.
 2. **G5 rows** (zig + 5/10/15/20 min) and "settled" (> 5 min after the last change) keep their
    definitions; with long legs most G5 rows will be settled, so the all-rows and settled
    comparisons converge. Gate 2's criteria still read as written.
