@@ -3,7 +3,9 @@ name: Segmentation runs
 # Spec 005: run tma2-segment over a slice of a MAN2 split on several 4-core runners (C takes tens
 # of seconds per 720-row scenario). A plan file (configs/segment/<name>.json) names the data (seed,
 # ranges, the commit that generated it and the committed digest), the ordinals, the shards, the
-# segmenter parameters (--set) and the GLR tuning ordinals. Each shard regenerates the split at
+# segmenter parameters (--set, or "params_from": a plan whose segmenter.parameters are used) and the
+# GLR tuning ordinals. With "weights"
+# ({"branch", "path", "plan"}), the segmenter is L with that best.safetensors from a results branch. Each shard regenerates the split at
 # the generating commit (headers carry no timestamp, so the bytes reproduce), checks its digest,
 # segments its ordinals and uploads its file; the last job merges them in ordinal order and pushes
 # results/segment-<plan>-<run id>. Nothing merges automatically.
@@ -79,8 +81,22 @@ jobs:
           start = a + s * per; count = max(0, min(per, b - start))
           out = ['--start', str(start), '--count', str(count), '--rows', p.get('rows', 'g5')]
           for k, v in p.get('set', {}).items(): out += ['--set', f'{k}={json.dumps(v)}']
+          if p.get('params_from'): out += ['--params', '$RUNNER_TEMP/params.json']
           if p.get('glr_tune'): out += ['--glr-tune', p['glr_tune']]
+          if p.get('weights'):
+              out += ['--segmenter', 'L', '--weights', '$RUNNER_TEMP/weights.safetensors', '--plan', p['weights']['plan']]
           print(shlex.join(out))")
+          W=$(python3 -c "import json; w = json.load(open('$PLAN')).get('weights'); print(f\"{w['branch']}:{w['path']}\" if w else '')")
+          if [ -n "$W" ]; then
+            git fetch -q origin "${W%%:*}"
+            git show "FETCH_HEAD:${W#*:}" > "$RUNNER_TEMP/weights.safetensors"
+            sha256sum "$RUNNER_TEMP/weights.safetensors"
+          fi
+          python3 -c "
+          import json; p = json.load(open('$PLAN'))
+          if p.get('params_from'):
+              q = json.load(open(p['params_from']))['segmenter']['parameters']
+              json.dump(q, open('$RUNNER_TEMP/params.json', 'w'))"
           eval uv run tma2-segment --in "$DATA/$SPLIT.f32pack" --out "seg/shard-${{ matrix.shard }}.ndjson" --workers 4 $ARGS
       - uses: actions/upload-artifact@v4
         with:
