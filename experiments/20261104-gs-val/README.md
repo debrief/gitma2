@@ -49,7 +49,7 @@ oscillation). **Caveat:** every MAN2 ownship turn is a zig of 30° or more, so t
 constructed-track unit tests (12° and 15° turns, wander, oscillation) are the evidence for small
 turns. Proposed S1 limit: contamination P90 ≤ 0.02 (the spec's proposal; O is at 0).
 
-## Preliminary: C on the 1,000 scoring ordinals (`prelim-c/`)
+## Preliminary: C on the 1,000 scoring ordinals (`prelim-c/`, superseded by `c-final/` below)
 
 C's segmentations came from the CI run `results/segment-man2-val-c-41876210154` (plan
 `configs/segment/man2-val-c.json`: penalty 30, GLR threshold 4.665, tuned on ordinals 0–499).
@@ -77,3 +77,44 @@ That suits the estimate, but it is weak on the definitions of contamination and 
 
 **Gap or chord (R3, FR-031):** gap has the lower median range error (0.120 against 0.123), so
 gap is the proposed mode. The paired difference gets an interval in the final scoring.
+
+## Final validation scoring (`c-final/`): the references re-tuned, S2 and the mode
+
+The same C segmentations, scored by `tma2-gs --modes chord gap --glr-confirm --detectability`
+against the frozen MAN2 IMM `imm-cv0.03-ct1-w0.01-s0.0003-p4-r2` and EKF
+`ekf-sa0.00003-p4-r0.03125`. 3,934 G5 rows (2,933 settled) on 1,000 scenarios; medians; 97.5%
+scenario-clustered intervals.
+
+| Estimator | Range (rel.) | Course ° | Speed kt | Range ÷ IMM | Gap recovered (range) |
+| --- | --- | --- | --- | --- | --- |
+| one leg (batch least squares) | 0.580 | 66.0 | 6.20 | 1.077 [1.022, 1.135] | 0 |
+| frozen IMM | 0.539 | 52.3 | 5.79 | 1 | — |
+| frozen EKF | 0.498 | 57.5 | 5.20 | — | — |
+| GLR + confirm | 0.447 | 44.4 | 4.57 | 0.829 [0.757, 0.924] | 0.259 [0.157, 0.333] |
+| **C, gap** | **0.120** | **15.6** | **1.62** | **0.223 [0.199, 0.247]** | **0.891 [0.871, 0.911]** |
+| C, chord | 0.123 | 16.0 | 1.64 | 0.229 [0.205, 0.252] | 0.885 [0.866, 0.904] |
+| oracle | 0.064 | 7.4 | 0.97 | 0.118 [0.106, 0.131] | 1 |
+
+**S2 on validation.** C (gap) − GLR + confirm, gap recovered in range: **+0.632 [0.558, 0.734]**.
+Course gives +0.49 and speed +0.56, both intervals above zero. C beats GLR + confirm, which
+implies that C is the S4 reference. S2 is decided again on test.
+
+**Mode (FR-031).** The decision rule is the lower median range error, with ties going to the
+chord. Gap gives 0.120 against the chord's 0.123, so **gap** is carried. The paired difference is
+small and its interval includes zero (gap − chord, gap recovered: +0.006 [−0.002, 0.014]).
+
+**SC-002** is reproduced (`sc002.md`).
+
+**Segmentation measures**, identical for C's two modes:
+- contamination: median 0, P90 0.272 (GLR + confirm 0.289);
+- false split: 2 of only 24 change-free prefixes, 0.083, the same for GLR + confirm;
+- leg-count accuracy on detectable changes: 0.67 (GLR + confirm 0.27);
+- boundaries within ± 3 min: 0.43 overall, rising from 0.13 in the lowest detectability band to
+  0.70 in the highest.
+
+C places a transition where the cost needs a knot, not where the truth's turn begins, so it is
+weak on boundaries and contamination but strong downstream.
+
+**The trackers.** The EKF (0.498) beats the IMM (0.539) on range, but not on course. The IMM stays
+the gated reference (D3); the EKF caveat is in `experiments/20261104-man2-tune-pass4/`. Both
+were tuned on rows that include these ordinals, which favours them.

@@ -248,3 +248,25 @@ G0-MAN2 checked the physics layer at 720 rows on the trivial path only. With eve
   torch in double, Python onnxruntime 1.8e-10, WASM 2.8e-10, Java 1.8e-10 (covariance, the worst
   output; limit 1e-5). The inputs digest binds both legs. CI runs it beside the 720-row toy
   export.
+
+## Addendum (2026-11-04): R1 and R3 on MAN2, seed 314 (tasks T010, T021)
+
+Measured on validation seed 314 (`experiments/20261104-gs-val/README.md`), on a quiet machine.
+
+- **Cost table at 720 rows.** On a 6-row grid: median 3.0 s, 9.6 s at ≥ 600 rows, worst 12.0 s.
+  On a 3-row grid: 10.9 s, 36.7 s and 46.9 s. **The grid step is 6 rows**, equal to T_min.
+  `t_lengths_rows` stays [6, 9, 12, 18, 24, 36]: up to 6 min, which covers MAN2's transitions
+  (median 116 s).
+- **The 10 s budget.** Full C (GLR, cost table, confirmation, four prefixes) takes about 41 s per
+  scenario per core, so about 10 s per scenario on a 4-core runner. That meets SC-004's budget at
+  the margin. Large runs are sharded on CI (`segment.yml`).
+- **Search penalty.** 30, the smallest on the grid at or below 5% of prefixes with a false
+  transition: 3.5%, with recall 12.7% at ± 60 s. The search is a weak nominator on MAN2, as on
+  0.5.0, so GLR alarms are C's main nominator.
+- **Mode (R3).** Gap, with median range 0.120 against the chord's 0.123. The paired difference in
+  gap recovered is +0.006 [−0.002, 0.014].
+- **Margin (FR-023).** 0. Confirmation already requires a χ² cost drop (τ = 13.8), so an
+  accepted transition is not marginal. A positive margin would turn confirmed transitions into
+  unknown rows, which the hand-over then treats as steady.
+- **S2 on validation.** C − GLR + confirm in gap recovered (range) is +0.632 [0.558, 0.734], so C
+  is the implied S4 reference.

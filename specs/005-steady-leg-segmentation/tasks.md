@@ -65,7 +65,7 @@ before US3, because L uses O's labels as input (FR-043).
   - **chord:** knots at both ends, bearings kept, the speed prior across course-only transitions.
 
   It reuses `detect/confirm.knot_inputs` and `physics/segmentation.oracle_inputs`. Add `tests/unit/test_segment_inputs.py`: the truth segmentation gives the same inputs as `oracle_inputs`.
-- [ ] T010 Re-measure research R1 on seed 314 and add an "R1 on MAN2" addendum to `research.md`:
+- [x] T010 Re-measure research R1 on seed 314 and add an "R1 on MAN2" addendum to `research.md`: — done: research.md addendum "R1 and R3 on MAN2" (grid step 6, budget met at the margin)
   - **Cost table timing** at 720 rows: median and maximum per scenario, with nothing else running.
   - **Grid step** (3 or 6 rows) and `t_lengths_rows` from MAN2's transition-duration distribution (median 116 s).
   - **The verdict on the 10 s budget.** If the budget is exceeded, the grid or budget is revised here, before the decision record.
@@ -115,8 +115,8 @@ before US3, because L uses O's labels as input (FR-043).
   - the oracle's gap recovered is 1 and one leg's is 0;
   - the strata partition the rows;
   - the bootstrap is deterministic for a fixed seed.
-- [ ] T020 [US2] Run SC-002 on seed 314's 1,000 scoring scenarios: GLR + confirm's ratios reproduce `experiments/<date>-man2-refs/spike.json` to the printed precision. Write the result to `experiments/<date>-gs-dev/sc002.md`
-- [ ] T021 [US2] Run the phase-1 validation measurements on seed 314 (tune on 500, score on 1,000). Write them to `experiments/<date>-gs-val/` (`metrics.json`, `README.md`):
+- [x] T020 [US2] Run SC-002 on seed 314's 1,000 scoring scenarios: GLR + confirm's ratios reproduce `experiments/<date>-man2-refs/spike.json` to the printed precision. Write the result to `experiments/<date>-gs-dev/sc002.md` — done: `experiments/20261104-gs-val/sc002.md` (ratios and intervals identical; all-row medians differ only by the median convention)
+- [x] T021 [US2] Run the phase-1 validation measurements on seed 314 (tune on 500, score on 1,000). Write them to `experiments/<date>-gs-val/` (`metrics.json`, `README.md`): — done: `experiments/20261104-gs-val/` (penalty 30, mode gap, margin 0, S2 +0.632 [0.558, 0.734])
   - **Search penalty** at ≤ 5% false splits on the tuning scenarios (R1).
   - **Gap or chord**, the lower median range error over G5 rows, with ties going to the chord (R3, FR-031).
   - **Margin** (FR-023).
@@ -141,17 +141,17 @@ before US3, because L uses O's labels as input (FR-043).
   - one zig gives two legs and one transition within ± 30 s before trimming;
   - a course across 0°/360° calls no transition;
   - O agrees with `ownship_legs` on 0.5.0 fixture data.
-- [ ] T024 [US4] Run O on seed 314's ownship tracks: contamination (median, P90) on ownship legs per turn-size band (10–15°, 15–30°, ≥ 30°) and per wander kind. Write it to `experiments/<date>-gs-val/ownship.md`. This proposes the S1 limit (spec: 0.02)
+- [x] T024 [US4] Run O on seed 314's ownship tracks: contamination (median, P90) on ownship legs per turn-size band (10–15°, 15–30°, ≥ 30°) and per wander kind. Write it to `experiments/<date>-gs-val/ownship.md`. This proposes the S1 limit (spec: 0.02) — done: `experiments/20261104-gs-val/ownship.json` (contamination 0; small-turn strata empty on MAN2)
 
 ## Phase 6: Pre-registration (blocks all L training and the test data)
 
-- [ ] T025 Confirm that SRD Annex A §A.9 (Gate S) is on `main`, merged by the owner (spec Assumptions). If it is not, stop and ask the owner one multiple-choice question
-- [ ] T026 Write the plan `configs/segment/gs-plan.json`:
+- [x] T025 Confirm that SRD Annex A §A.9 (Gate S) is on `main`, merged by the owner (spec Assumptions). If it is not, stop and ask the owner one multiple-choice question — done: §A.9 is on main
+- [x] T026 Write the plan `configs/segment/gs-plan.json`: — done: `configs/segment/gs-plan.json`
   - validation 314 with its digest;
   - L stream 317: `count` and `generator_git_commit`, with the shard digests recorded when the tables are made;
   - test seed 315: `--count 100000`, whose test split holds the 10,000 scenarios (80/10/10 by index; `--count 10000` would give 1,000), its digest filled at generation;
   - the evidence-network configuration and the loss weights (CRF 1.0, auxiliary 0.1).
-- [ ] T027 Commit the decision record `experiments/<date>-gs-decision/decision.json` (type `GateSDecision`) with a `README.md`:
+- [x] T027 Commit the decision record `experiments/<date>-gs-decision/decision.json` (type `GateSDecision`) with a `README.md`: — done: `experiments/20261104-gs-decision/`
   - SegmentParameters, final (from T010, T021 and T024);
   - mode, gap normalisation `raw`, S1 and S3 limits, and the S2 validation outcome with the implied S4 reference;
   - the carried rule (median of three seeds by validation gap recovered in range) and the shuffled rule;
