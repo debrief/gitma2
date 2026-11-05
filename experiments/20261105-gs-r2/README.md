@@ -46,7 +46,16 @@ weights are unchanged. Record r1 (`experiments/20261105-gs/`) stays as reviewed 
 | L | 0.118 | 0.4% | 11.7% | 0.117 | 2.7 | 0.899 [0.890, 0.908] |
 | oracle | 0.065 | 0.0% | 2.4% | 0.065 | 1.6 | 1 |
 
+Conventions (panel round 2): "No estimate" is a row with no inputs or an implausible solution,
+scored +inf; "Range > 50%" includes those rows; efficiency counts them above any finite value, as
+`eval.metrics` does (on its finite rows alone one leg's range efficiency is 9.6, the IMM's 9.6).
+The bound is the known-manoeuvres Cramér–Rao bound: it knows each change's time, duration and
+rate, leaving one magnitude per change unknown. The oracle's gap hand-over masks the transition
+bearings the bound uses, so the oracle's 1.6 is the hand-over's floor, not an estimation error.
+
 Reading:
+- **C against the oracle and the naive baseline:** C's median range error is 1.8 times the
+  oracle's (0.118 against 0.065) and 0.30 times the naive baseline's (0.397).
 - **S2's margin is segmentation, not hand-over.** GLR + confirm handed over as C is (gap mode)
   recovers 0.108, no more than its own point-knot hand-over (0.143).
 - **The references fail outright on a fifth to a quarter of the rows**, and the naive baseline's

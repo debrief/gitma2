@@ -38,7 +38,10 @@ COLS = ("range", "course_deg", "speed_kt")
 
 
 def _q(v: np.ndarray, q: float) -> float:
-    v = v[np.isfinite(v)] if np.isinf(v).all() else v
+    """Quantile with the decision record's ``inverted_cdf`` convention; a missing or non-finite
+    value counts as +inf (above any finite one), so a cell where every row failed is +inf."""
+    if v.size == 0:
+        return math.nan
     return float(np.quantile(np.where(np.isfinite(v), v, np.inf), q, method="inverted_cdf"))
 
 

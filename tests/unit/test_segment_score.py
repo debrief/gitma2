@@ -62,3 +62,75 @@ def test_bootstrap_clustered_statistic_deterministic() -> None:
     a = bootstrap_clustered_statistic({"x": x}, cl, lambda c: float(np.median(c["x"])), 0.95, 500)
     b = bootstrap_clustered_statistic({"x": x}, cl, lambda c: float(np.median(c["x"])), 0.95, 500)
     assert (a.lo, a.hi) == (b.lo, b.hi) and a.lo <= a.value <= a.hi and a.clusters == 20
+
+
+# --- reporting beside the gate (Gate S panel rounds 1 and 2) ---------------------------------
+
+
+def test_efficiency_of() -> None:
+    """median(|e| / σ) / 0.6745 with the lower median; rows without a bound are ignored and a
+    failed row (+inf) counts above any finite value."""
+    from tma2.segment.score import efficiency_of
+
+    sd = np.array([1.0, 2.0, np.nan, 1.0])
+    e = np.array([0.6744897501960817, 2 * 0.6744897501960817, 5.0, np.inf])
+    assert efficiency_of(e, sd) == pytest.approx(1.0)
+    assert np.isnan(efficiency_of(e, np.full(4, np.nan)))
+
+
+def test_quantile_convention() -> None:
+    """``tma2-gs``'s quantile: lower middle value, failures as +inf, empty as NaN."""
+    from tma2.cli.gs import _q
+
+    assert _q(np.array([1.0, 2.0, 3.0, 4.0]), 0.5) == 2.0
+    assert _q(np.array([1.0, np.inf, np.nan]), 0.5) == np.inf
+    assert _q(np.array([np.inf, np.inf]), 0.5) == np.inf  # panel round 2: crashed before
+    assert np.isnan(_q(np.array([]), 0.5))
+
+
+def test_strata() -> None:
+    from tma2.segment.score import strata
+
+    m = _meta([(100, 112), (200, 230)])
+    m["manoeuvres"][1]["kind"] = "speed"
+    own = np.zeros((400, 5))
+    tgt = np.zeros((400, 5))
+    tgt[:, 1] = 3000.0  # 3 km east of ownship
+    s = strata(m, own, tgt, 150)
+    assert s["range_band"] == "2-5km" and s["changes"] == "1-5"
+    assert s["latest_kind"] == "course" and s["latest_duration"] == "10-20 rows"
+    s = strata(m, own, tgt, 250)
+    assert s["latest_kind"] == "speed" and s["speed_only"] == "yes"
+    assert s["latest_duration"] == ">20 rows"
+    assert strata(m, own, tgt, 50)["changes"] == "0"
+
+
+def test_bounds_and_naive(man2_pack: Any) -> None:
+    """Known-manoeuvres bounds are finite and positive on G5 rows of the MAN2 fixture, and the
+    naive baseline answers every row."""
+    from tma2.eval.errors import Truth
+    from tma2.references.naive import fit_naive
+    from tma2.segment import score as sc
+
+    metas, owns, tgts, obss, truths = {}, {}, {}, {}, {}
+    for j, (_, m, o, t, ob) in enumerate(iter_raw(man2_pack)):
+        if j == 4:
+            break
+        metas[j], owns[j], tgts[j], obss[j] = m, o, t, ob
+        truths[j] = Truth.from_block(m, o, t)
+    rows = [
+        sc.Row(j, k, False) for j in metas for k in sc.g5_rows(metas[j], int(metas[j]["samples"]))
+    ]
+    assert rows
+    sd = sc.bounds(rows, metas, owns, tgts, obss)
+    ok = np.isfinite(sd).all(axis=1)
+    assert ok.mean() > 0.9 and (sd[ok] > 0).all()
+    model = fit_naive(((j, metas[j], owns[j], tgts[j], obss[j]) for j in metas), "test")
+    e = sc.naive_errors(rows, owns, obss, truths, model)
+    assert np.isfinite(e).all()
+
+
+def iter_raw(path: Any) -> Any:
+    from tma2.data.f32pack import iter_pack_raw
+
+    return iter_pack_raw(path)
