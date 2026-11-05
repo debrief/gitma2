@@ -1,0 +1,65 @@
+{
+  "record": {
+    "decision_sha256": "668712538bd5b091f4511cc9407114e8882a9b853ed5aba123aae5cd6dbd5878",
+    "split": "test",
+    "seed": 315,
+    "dataset_digest": "1a8d55fe6c2c851c04edbf820a788dc99c6e741f53a2905b252e01f7078bb3bd",
+    "segmenters": [
+      "C",
+      "L",
+      "glr_confirm"
+    ],
+    "metrics_sha256": "73437aa699b44657e28181f9f860f722d63a52866d03ad2907211ef41614a5ed",
+    "verdicts": {
+      "s1": "pass",
+      "s2": "pass",
+      "s3": "pass",
+      "s4": "inconclusive"
+    }
+  },
+  "reference": "C",
+  "s1": {
+    "o_contamination_p90": {
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0
+    },
+    "limit": 0.02
+  },
+  "s2": {
+    "c_minus_glr_confirm_gap_range": {
+      "value": 0.754777420731441,
+      "lo": 0.71122968569985,
+      "hi": 0.7975910243866691
+    }
+  },
+  "s3": {
+    "contamination_median": {
+      "value": 0.0,
+      "lo": -0.008333333333333333,
+      "hi": 0.0
+    },
+    "contamination_p90": {
+      "value": -0.0004997501249375258,
+      "lo": -0.005572801182558429,
+      "hi": 0.003430335097001913
+    },
+    "false_split": {
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0
+    },
+    "limits": [
+      0.01,
+      0.05
+    ]
+  },
+  "s4": {
+    "l_minus_reference_gap_range": {
+      "value": 0.0014077470601687736,
+      "lo": -0.0029795713415589065,
+      "hi": 0.005142472038996093
+    },
+    "shuffled_rule": "pass"
+  }
+}
