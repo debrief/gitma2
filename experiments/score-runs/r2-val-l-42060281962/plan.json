@@ -1,0 +1,56 @@
+{
+  "description": "Gate S round 2: C and the four L models (three seeds, shuffled control) on seed 314 validation ordinals 500-1499 at 7fe8874, in gap mode (the decision's), for the carried rule and the shuffled rule again (as experiments/20261105-segL-val).",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "start": 500,
+  "count": 1000,
+  "segmentations": {
+    "C": {
+      "branch": "results/segment-man2-val-c-42031087882",
+      "path": "experiments/segment-runs/man2-val-c-42031087882/segmentations.ndjson"
+    },
+    "segL-s1": {
+      "branch": "results/segment-segL-val-s1-42031091757",
+      "path": "experiments/segment-runs/segL-val-s1-42031091757/segmentations.ndjson"
+    },
+    "segL-s2": {
+      "branch": "results/segment-segL-val-s2-42031096857",
+      "path": "experiments/segment-runs/segL-val-s2-42031096857/segmentations.ndjson"
+    },
+    "segL-s3": {
+      "branch": "results/segment-segL-val-s3-42031102049",
+      "path": "experiments/segment-runs/segL-val-s3-42031102049/segmentations.ndjson"
+    },
+    "segL-shuffled": {
+      "branch": "results/segment-segL-val-shuffled-42031108574",
+      "path": "experiments/segment-runs/segL-val-shuffled-42031108574/segmentations.ndjson"
+    }
+  },
+  "modes": [
+    "gap"
+  ],
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125"
+}
