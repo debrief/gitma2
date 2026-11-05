@@ -1,0 +1,40 @@
+{
+  "description": "Smoke test of score.yml: C (round-2 validation segmentations) on 3 validation scenarios.",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "start": 500,
+  "count": 3,
+  "segmentations": {
+    "C": {
+      "branch": "results/segment-man2-val-c-42031087882",
+      "path": "experiments/segment-runs/man2-val-c-42031087882/segmentations.ndjson"
+    }
+  },
+  "modes": [
+    "gap"
+  ],
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125"
+}
