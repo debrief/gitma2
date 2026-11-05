@@ -167,6 +167,8 @@ def _gate(
 
     def finite_stat(x: np.ndarray, cl: np.ndarray, q: float) -> gate.Interval:
         ok = np.isfinite(x)
+        if not ok.any():  # no rows: neither pass nor fail (panel round 2)
+            return gate.Interval(math.nan, math.nan, math.nan)
 
         def stat(c: dict[str, np.ndarray]) -> float:
             return float(np.quantile(c["x"], q, method="inverted_cdf"))

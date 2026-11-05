@@ -10,6 +10,15 @@ up to the closing row, and earlier prefixes reported that start. Fixed in 7fe887
 the bug-fix re-run: the decision record, plan, limits, rows, parameters, data and the carried
 weights are unchanged. Record r1 (`experiments/20261105-gs/`) stays as reviewed in round 1.
 
+**Why the same seed.** Constitution IV wants a fresh test seed for every look. r2 is not a new
+look: it corrects a measurement error that the panel found in r1 and required to be fixed. The fix
+is confined to prefixes inside an open transition (the statistics reviewer checked: between r1 and
+r2 the one-leg, oracle, IMM and GLR + confirm errors are byte-identical, and 728 of C's 732
+changed prefixes hold an open transition), nothing else changed, the validation rules were
+re-applied before test and chose the same things, and the verdicts are identical. Moving to a
+fresh seed would itself amend the decision's bound test seed after a result existed. r2 is not an
+independent confirmation of r1, and Gate 2 takes a fresh seed.
+
 **How it was made.** Every input on CI from a clean tree:
 - C and L (segL-s3) on the test split at 7fe8874: `results/segment-gs-test-c-42031116381`,
   `results/segment-gs-test-l-42031120266` (C's segmenter digest equals the decision's parameter

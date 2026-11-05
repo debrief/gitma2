@@ -122,7 +122,9 @@ double-precision `Conv`.
 
 - **Contamination:** the share of a reported leg's rows that the truth labels as transition.
 - **Coverage:** the share of truth-steady rows inside reported legs.
-- **False split:** any transition on a scenario with no target change.
+- **False split:** any transition at a prefix where no target change has begun by its row k
+  (the measure as built, `segment/metrics.py`; on a scenario with no change at all, every prefix
+  counts).
 - **Gap recovered:** (median one-leg error − median segmentation error) ÷ (median one-leg error −
   median oracle error), on σ = 1° G5 rows. One leg scores 0 and the oracle 1.
 

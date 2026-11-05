@@ -107,7 +107,9 @@ jobs:
           mkdir -p "$OUT"
           cp -r "$RUNNER_TEMP/out/." "$OUT/"
           cp "$PLAN" "$OUT/plan.json"
-          printf '{"run_id": "%s", "commit": "%s", "exit": %s}\n' "${{ github.run_id }}" "${{ github.sha }}" "$rc" > "$OUT/run.json"
+          # physics-layer errors reproduce byte for byte only on the same CPU family (panel round 2)
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "exit": %s, "cpu_model": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" "$rc" "$CPU" > "$OUT/run.json"
       - name: Push the results branch
         run: |
           git config user.name "github-actions[bot]"

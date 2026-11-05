@@ -21,7 +21,10 @@ Seed 314, ordinals 500–1499, 3,934 G5 rows; 97.5% scenario-clustered intervals
 | L − C (s1 / s2 / s3) | −0.005 / −0.000 / −0.004 | −0.0045 / −0.0004 / −0.0039 |
 
 The fix changes the segmentations of prefixes inside open transitions only, and on validation it
-moves nothing that a rule decides: the mode, the carried model (s3, `carried.json` unchanged) and
+moves nothing that a rule decides. (Small differences between the two scorings and round 1 are
+partly runner noise: the physics-layer errors reproduce byte for byte only on the same CPU family.
+The two scorings here ran at the same commit on different runners; the one-leg median is 0.581251
+in `c/` and 0.580468 in `l/` and round 1. Each rule compares estimators within one run.) the mode, the carried model (s3, `carried.json` unchanged) and
 the shuffled rule are as before.
 
 **New in round 2 (panel round 1, R5 and R6):**
