@@ -277,6 +277,7 @@ def main(argv: list[str] | None = None) -> int:
     from tma2.references.classical import bearing_data_from_arrays
     from tma2.segment import TRANSITION, default_parameters
     from tma2.segment import score as sc
+    from tma2.segment.inputs import segmentation_inputs
     from tma2.segment.metrics import gap_recovered
     from tma2.types.generated.tma import SegmentParameters
 
@@ -404,6 +405,17 @@ def main(argv: list[str] | None = None) -> int:
             for r in rows
         }
         print(f"glr_confirm downstream [{time.time() - t0:.0f} s]", flush=True)
+        # Diagnostic (panel round 1, red team): GLR + confirm's knots handed over as C's are
+        # (gap mode, a point knot as T_min rows), separating the hand-over from the segmentation
+        # in S2's margin. Reported, not gated.
+        g_ivs = seg_ivs["glr_confirm"]
+
+        def glr_gap(j: int, _m: dict[str, Any], d: Any, k: int) -> Any:
+            return segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, g_ivs[(j, k)], "gap", True)
+
+        errs["glr_confirm_gap"] = sc.layer_errors(layer, rows, data, metas, truths, glr_gap)
+        seg_ivs["glr_confirm_gap"] = g_ivs
+        print(f"glr_confirm_gap downstream [{time.time() - t0:.0f} s]", flush=True)
 
     def summary(e: np.ndarray, mask: np.ndarray) -> dict[str, float]:
         out: dict[str, float] = {}
