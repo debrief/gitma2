@@ -1,0 +1,52 @@
+{
+  "description": "Gate S round 2 (panel round 1 bug-fix re-run, record r2): the gate on seed 315's test split (5,059 sigma = 1 deg scenarios) with C and the carried L (segL-s3; the carried rule re-applied on the corrected validation segmentations picks s3 again) re-segmented at 7fe8874, GLR + confirm from its frozen test shards, the trackers, the oracle, one leg and the naive baseline (seed 314 tuning ordinals). Decision, plan, limits and rows unchanged.",
+  "data": {
+    "seed": 315,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "a38f61be852d3fa031f16f096d15483cc8ab0099",
+    "split": "test",
+    "digests": "experiments/20261104-gs-decision/seed315-digests.json"
+  },
+  "start": 0,
+  "count": 5059,
+  "segmentations": {
+    "C": {
+      "branch": "results/segment-gs-test-c-42031116381",
+      "path": "experiments/segment-runs/gs-test-c-42031116381/segmentations.ndjson"
+    },
+    "L": {
+      "branch": "results/segment-gs-test-l-42031120266",
+      "path": "experiments/segment-runs/gs-test-l-42031120266/segmentations.ndjson"
+    }
+  },
+  "detectability": true,
+  "glr_confirm": {
+    "branch": "results/glr-confirm-gs-test-glr-41979573239",
+    "dir": "experiments/glr-confirm-runs/gs-test-glr-41979573239",
+    "config": "glr-q0.2-t13.8"
+  },
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125",
+  "gate": {
+    "decision": "experiments/20261104-gs-decision/decision.json",
+    "plan": "configs/segment/gs-plan.json",
+    "split": "test"
+  }
+}

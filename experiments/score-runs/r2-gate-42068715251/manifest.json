@@ -1,0 +1,54 @@
+{
+  "decision": "experiments/20261104-gs-decision/decision.json",
+  "decision_sha256": "668712538bd5b091f4511cc9407114e8882a9b853ed5aba123aae5cd6dbd5878",
+  "plan": "configs/segment/gs-plan.json",
+  "plan_sha256": "921c2bdb80199d1442b01c7ad7f64ca05ce153e97541f26bcd2a34bbd85418b6",
+  "truth": "/home/runner/work/_temp/data/test.f32pack",
+  "truth_sha256": "1a8d55fe6c2c851c04edbf820a788dc99c6e741f53a2905b252e01f7078bb3bd",
+  "segmentations": {
+    "C": {
+      "segmenter_sha256": "60e6ee635d9390e2c959b408997e39e8c30859febcb2d86f199142ea66aa425f",
+      "git_commit": "7fe887472e439cee2369d73899b1b5311bb590f9"
+    },
+    "L": {
+      "segmenter_sha256": "a187379e5640fe62de66f1107b56b2f2764fc9928e2d03ee9e90bf78cdc063ff",
+      "git_commit": "7fe887472e439cee2369d73899b1b5311bb590f9"
+    }
+  },
+  "carried": {
+    "amendment": "T036: the carried L weights and the shuffled rule's outcome, fixed on validation before the test split is opened (changes no criterion)",
+    "model": "segL-s3",
+    "weights_sha256": "1b2430204933bfe3117f78a6597e13344bac42c28af93aaaeef8953c7471370a",
+    "weights": "experiments/20261105-segL-val/models/segL-s3/best.safetensors (also results/segL-41923847724)",
+    "training_run": "41923847724 at 4abab2a136ab8d55a0921a6e29c3fc139295d624",
+    "carried_rule": "median of the three seeds by validation gap recovered in range (seed 314, ordinals 500-1499, mode gap): s1 0.8868, s3 0.8877, s2 0.8910; median s3",
+    "shuffled_rule": "pass",
+    "shuffled_rule_evidence": "segL-shuffled minus C, gap recovered in range: -0.0020 [-0.0093, 0.0047] (97.5%, clustered): the interval includes zero",
+    "validation": "experiments/20261105-segL-val/"
+  },
+  "amendments": [
+    {
+      "file": "carried.json",
+      "sha256": "c3083fa153631afee96de44b5867687605c3e4651dbd84025b74fd3e59d16a2f"
+    },
+    {
+      "file": "seed315-digests.json",
+      "sha256": "741c123a14e5023a23034d6686d26c6d75ac06c60276c15c26f088492c015ce7"
+    }
+  ],
+  "inputs": {
+    "segmentations": {
+      "C": "e33a1cd1ffae6d473c66e682f7eb754655a508c495c5b29377a7fc9521314a42",
+      "L": "02d6807af222232739046589ad49a67ff7a0ecc381ba926e94154e400e6e1dde"
+    },
+    "glr_confirm": {
+      "config": "glr-q0.2-t13.8",
+      "files": 66,
+      "sha256": "38bd1f049ffdad145214c89f7897aa20f96b1680639c10f20669d114755391ce"
+    },
+    "naive_train": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8"
+  },
+  "metrics_sha256": "18ddb4f0197ff18071c0b95ab8f2b90299df1e833cd2e2d3549973ab7e495647",
+  "git_commit": "995747105dc8941eaca4f126b8499b402883f053",
+  "git_dirty": false
+}
