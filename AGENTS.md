@@ -52,10 +52,13 @@ run `.github/workflows/tune.yml` (results to `results/man2-tune-<run id>`); froz
 (`segtrain/**` → `.github/workflows/segtrain.yml`, validation `experiments/20261105-segL-val/`),
 test segmentations on CI (`segment.yml` plans `configs/segment/gs-test-*.json`;
 `glr-confirm/**` for the reference), scoring `tma2-gs ... --decision --plan --split test`.
-**Gate S scored** (`experiments/20261105-gs/`; review panel pending): S1–S3 pass, S4
-inconclusive (L − C gap recovered +0.0014 [−0.0030, +0.0051]); C recovers 0.898 of the
+**Gate S scored** (record r2 `experiments/20261105-gs-r2/`, after panel round 1 rejected r1 for a
+causality bug in C's open-transition start, fixed in 7fe8874; panel round 2 pending): S1–S3 pass,
+S4 inconclusive (L − C gap recovered +0.0012 [−0.0031, +0.0049]); C recovers 0.898 of the
 one-leg-to-oracle gap, GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
-passed): C is Gate 2's segmenter and control; learning recorded as not shown. Write-up:
+passed): C is Gate 2's segmenter and control; learning recorded as not shown. Scoring runs on CI
+(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Known defect to fix before
+Gate 2: the search's cost table has failed fits (`segment/search.py` warm starts). Write-up:
 `site/blog/2026-11-05-gate-s.md`.
 
 ## Stack (owner decisions, 2026-10-31)
@@ -224,6 +227,8 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   into an untracked experiment folder always records `git_dirty: true` (`tma2-gs` did, fixed in
   e648f8b). Workflows must keep downloaded tables and checkpoints outside the checkout
   (`RUNNER_TEMP`), or every job records a dirty tree.
+- Container restarts kill local background jobs (several per hour on 5 Nov): run anything over a
+  few minutes on CI (`score.yml`, `segment.yml`, `glr-confirm.yml`), not in the session.
 - Never edit or commit in the checkout while a gate run reads it: provenance is read once at
   launch and modules load lazily, so a mid-run change goes unrecorded. Run long scorings from a
   `git worktree` at the commit (pass absolute data paths).
