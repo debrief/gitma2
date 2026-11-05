@@ -134,7 +134,6 @@ def _gate(
 ) -> int:
     """S1–S4 (FR-071) from the scored rows; writes verdict.json and manifest.json; exit 3 unless
     every criterion passes."""
-    from tma2.data.provenance import read_git_provenance
     from tma2.eval.bootstrap import bootstrap_clustered_statistic
     from tma2.segment import gate
     from tma2.types.generated.tma import GateSRecord, GateSVerdicts, Split
@@ -214,7 +213,7 @@ def _gate(
         "s4": {"l_minus_reference_gap_range": s4_iv.__dict__, "shuffled_rule": shuffled},
     }
     (out / "verdict.json").write_text(json.dumps(detail, indent=2) + "\n")
-    gp = read_git_provenance()
+    gp = gi["git"]
     manifest = {
         "decision": a.decision,
         "decision_sha256": gi["decision_sha256"],
@@ -284,6 +283,11 @@ def main(argv: list[str] | None = None) -> int:
         gate_inputs = _gate_preflight(a)
         if gate_inputs is None:
             return 2
+        from tma2.data.provenance import read_git_provenance
+
+        # Read before anything is written: the experiment folder's own outputs would make the
+        # tree dirty if the status were read at the end.
+        gate_inputs["git"] = read_git_provenance()
     torch.set_default_dtype(torch.float64)
     t0 = time.time()
 
