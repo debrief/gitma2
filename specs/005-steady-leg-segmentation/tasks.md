@@ -201,14 +201,14 @@ before US3, because L uses O's labels as input (FR-043).
 
 ## Phase 9: Polish
 
-- [ ] T040 [P] Write the site pages:
+- [x] T040 [P] Write the site pages:
   - an algorithm note on C, L and the gap or chord handover in `site/docs/`;
   - glossary terms (contamination, coverage, gap recovered, nomination, confirmation, semi-Markov likelihood) in `site/docs/glossary.md`;
   - the Gate S write-up in `site/blog/`.
 
   Then run `(cd site && npm ci && npm run build)`.
-- [ ] T041 [P] Update `AGENTS.md`: the status of spec 005 and Gate S, the seeds used, and new gotchas
-- [ ] T042 Run `quickstart.md` end to end and fix any drift
+- [x] T041 [P] Update `AGENTS.md`: the status of spec 005 and Gate S, the seeds used, and new gotchas
+- [x] T042 Run `quickstart.md` end to end and fix any drift — done: rewritten to the commands as built (test files, `--params` from the plan, `tma2-segtrain tables`/`train`, `tma2-gs` inputs, CI and gate sections); each local step run on 2–3 scenarios; `tables` now creates its output folder
 
 ## Dependencies
 

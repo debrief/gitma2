@@ -103,6 +103,7 @@ def save_examples(path: str | Path, examples: list[Example], header: dict[str, A
         arrays[f"{q}/features"] = ex.features
         for r, c in enumerate(ex.codes):
             arrays[f"{q}/codes{r}"] = c
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path, **arrays)
 
 
