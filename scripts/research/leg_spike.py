@@ -359,6 +359,47 @@ def cmd_confirm(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_confirm_direct(a: argparse.Namespace) -> int:
+    """One confirm shard over the contiguous ordinals start … start + count − 1, the GLR
+    statistic computed inline (no stats stage): Gate S's test split on CI runners, at a fixed
+    threshold (``--threshold``, validation's). Writes the file ``confirm`` writes for that shard,
+    so ``load_confirmed`` and ``tma2-gs --glr-confirm`` read the shards as one configuration."""
+    torch.set_num_threads(1)
+    torch.set_default_dtype(torch.float64)
+    ((nom, q, tau, w),) = parse_configs(a.configs)
+    if nom != "glr" or a.threshold is None:
+        raise SystemExit("confirm-direct takes one glr configuration and --threshold")
+    out = Path(a.work) / "confirm" / f"{config_name(nom, q, tau, w)}-s{a.shard}of{a.shards}.json"
+    data: list[BearingData] = []
+    stats: list[np.ndarray] = []
+    ords: list[int] = []
+    for j, meta, own, _tgt, obs in iter_selected(a.validation, a.start, a.count):
+        d = bearing_data_from_arrays(meta, own, obs)
+        lst, lok = ls_states(d, classical_predict(d, "per_timestep")["rows"])
+        stats.append(glr_stat(d.t, d.ox, d.oy, d.z, d.valid, d.sigma, lst, lok, GLR_WINDOW))
+        data.append(d)
+        ords.append(j)
+    t0 = time.time()
+    acc = confirm_knots(
+        PhysicsLayer(), data, stats, a.threshold, tau, W, STEP, max(d.n for d in data),
+        turn_rows=w,
+    )  # fmt: skip
+    rec = {
+        "config": config_name(nom, q, tau, w),
+        "threshold": a.threshold,
+        "ordinals": [a.start, a.start + a.count - 1],
+        "seconds": time.time() - t0,
+        "knots": {
+            str(j): [[x.alarm, x.alarm_end, x.row, x.cost_drop, x.end] for x in kn]
+            for j, kn in zip(ords, acc, strict=True)
+        },
+    }
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(rec))
+    print(f"{out.name}: {len(ords)} scenarios [{rec['seconds']:.0f} s]")
+    return 0
+
+
 def load_confirmed(work: str, name: str) -> dict[int, list[Accepted]]:
     out: dict[int, list[Accepted]] = {}
     files = sorted((Path(work) / "confirm").glob(f"{name}-s*of*.json"))
@@ -900,6 +941,16 @@ def main() -> int:
     global IMM
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
+    d = sub.add_parser("confirm-direct")
+    d.add_argument("--validation", required=True, help="the split file (any split)")
+    d.add_argument("--work", required=True)
+    d.add_argument("--start", type=int, required=True)
+    d.add_argument("--count", type=int, required=True)
+    d.add_argument("--configs", required=True)
+    d.add_argument("--threshold", type=float, required=True)
+    d.add_argument("--shard", type=int, required=True)
+    d.add_argument("--shards", type=int, required=True)
+    d.add_argument("--imm", default=IMM)
     for name in ("stats", "confirm", "report", "samples"):
         p = sub.add_parser(name)
         p.add_argument("--validation", required=True)
@@ -929,7 +980,13 @@ def main() -> int:
     a = ap.parse_args()
     IMM = a.imm
     _check_imm(Path(a.work))
-    fn = {"stats": cmd_stats, "confirm": cmd_confirm, "report": cmd_report, "samples": cmd_samples}
+    fn = {
+        "stats": cmd_stats,
+        "confirm": cmd_confirm,
+        "confirm-direct": cmd_confirm_direct,
+        "report": cmd_report,
+        "samples": cmd_samples,
+    }
     return fn[a.cmd](a)
 
 
