@@ -175,8 +175,8 @@ before US3, because L uses O's labels as input (FR-043).
   - **Confirmation:** the threshold shifts by twice the evidence summed over the candidate's rows, capped at ± τ/2.
 
   Add `tests/unit/test_segment_l.py`: an untrained L's segmentations equal C's byte for byte on 50 seed-314 prefixes (SC-003). Also run the full validation check with `tma2-segment --segmenter L`.
-- [ ] T032 [US3] Add a cost-table workflow, `.github/workflows/segment-tables.yml`. It generates seed 317 at the plan's commit, writes per-shard `.npz` tables (not committed) as workflow artefacts or a `tables/` results branch, and records shard digests in the plan
-- [ ] T033 [US3] Implement `tma2-segtrain` in `src/tma2/cli/segtrain.py`:
+- [x] T032 [US3] Add a cost-table workflow, `.github/workflows/segment-tables.yml`. It generates seed 317 at the plan's commit, writes per-shard `.npz` tables (not committed) as workflow artefacts or a `tables/` results branch, and records shard digests in the plan — done as `.github/workflows/segtrain.yml` (tables jobs: seed 317 in eight shards plus validation tables; per-shard digests in each results branch)
+- [x] T033 [US3] Implement `tma2-segtrain` in `src/tma2/cli/segtrain.py`: — done: `tma2-segtrain`; tests in `tests/unit/test_segtrain.py`; throughput about 18 min per epoch over 10,000 scenarios on one runner thread (`experiments/20261105-segL-val/README.md`)
   - per-epoch checkpoints with Adam state, in the spec 003/004 layout;
   - weights bound by SHA-256;
   - early stopping with a relative minimum improvement;
@@ -184,9 +184,9 @@ before US3, because L uses O's labels as input (FR-043).
   - `git_dirty` in the job record.
 
   Add `tests/unit/test_segtrain.py`: separate processes give byte-identical results, resume equals uninterrupted, and the head stays alive after a small run. Measure the throughput: one epoch over 10⁴ scenarios in under an hour on four cores.
-- [ ] T034 [US3] Add the training workflow `.github/workflows/train-segL.yml` on `train/segL` branches, following the spec 003 pattern. It runs three seeds and the shuffled control, pushing to `results/segL-<run id>`. Push the branch and fetch the results
+- [x] T034 [US3] Add the training workflow `.github/workflows/train-segL.yml` on `train/segL` branches, following the spec 003 pattern. It runs three seeds and the shuffled control, pushing to `results/segL-<run id>`. Push the branch and fetch the results — done as `segtrain.yml` on `segtrain/**` (`train/**` belongs to train.yml): run 41923847724, `results/segL-41923847724`
 - [x] T035 [US3] Export L's evidence network to ONNX (fixed 720-row window, dynamic batch) in `src/tma2/segment/evidence.py`. Check conformance across Python, WASM and Java to 1e-5, with `inputs_sha256`. Add the CI step — done: `segment/evidence_export.py` (convolutions as MatMul: onnxruntime has no double Conv); Python and WASM legs 1.3e-15 locally, WASM 91 ms for four windows; Java leg in CI. The carried weights are exported with `--weights` after T036
-- [ ] T036 [US3] Run validation diagnostics for the three seeds and the control (`tma2-gs`, no decision) in `experiments/<date>-segL-val/`. Apply the carried rule, then freeze the carried weights by digest
+- [x] T036 [US3] Run validation diagnostics for the three seeds and the control (`tma2-gs`, no decision) in `experiments/<date>-segL-val/`. Apply the carried rule, then freeze the carried weights by digest — done: `experiments/20261105-segL-val/`; carried segL-s3 (`carried.json` beside the decision); shuffled rule passes; no seed beats C on validation
 
 ## Phase 8: Gate S
 
