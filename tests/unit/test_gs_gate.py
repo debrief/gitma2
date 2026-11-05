@@ -87,3 +87,10 @@ def test_amendments_list_every_other_file(tmp_path: Path) -> None:
     am = gate.amendments(tmp_path)
     assert [x["file"] for x in am] == ["carried.json", "seed315-digests.json"]
     assert all(len(x["sha256"]) == 64 for x in am)
+
+
+def test_no_rows_is_inconclusive() -> None:
+    """A criterion with nothing to measure neither passes nor fails (Gate S panel round 1)."""
+    nan = float("nan")
+    assert gate.within_limit(gate.Interval(nan, nan, nan), 0.05) == gate.INCONCLUSIVE
+    assert gate.above_zero(gate.Interval(nan, nan, nan)) == gate.INCONCLUSIVE

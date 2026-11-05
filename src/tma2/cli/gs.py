@@ -22,6 +22,7 @@ refuses inputs that do not match the decision (``segment/gate.py``), scores S1�
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import sys
@@ -122,6 +123,26 @@ def _gate_preflight(a: argparse.Namespace) -> dict[str, Any] | None:
     }
 
 
+def _input_digests(a: argparse.Namespace) -> dict[str, Any]:
+    from tma2.segment.gate import sha256_file as file_digest
+
+    out: dict[str, Any] = {
+        "segmentations": {
+            n: file_digest(p) for n, _, p in (x.partition("=") for x in a.segmentations)
+        }
+    }
+    if a.glr_confirm:
+        work, _, cfg = a.glr_confirm.partition(":")
+        files = sorted(p for p in Path(work).rglob("*") if p.is_file())
+        h = hashlib.sha256()
+        for f in files:
+            h.update(f"{f.relative_to(work)}:{file_digest(f)}\n".encode())
+        out["glr_confirm"] = {"config": cfg, "files": len(files), "sha256": h.hexdigest()}
+    if a.naive_train:
+        out["naive_train"] = file_digest(a.naive_train.split(":")[0])
+    return out
+
+
 def _gate(
     a: argparse.Namespace,
     gi: dict[str, Any],
@@ -143,9 +164,11 @@ def _gate(
 
     def finite_stat(x: np.ndarray, cl: np.ndarray, q: float) -> gate.Interval:
         ok = np.isfinite(x)
-        si = bootstrap_clustered_statistic(
-            {"x": x[ok]}, cl[ok], lambda c: float(np.quantile(c["x"], q)), LEVEL, RESAMPLES
-        )
+
+        def stat(c: dict[str, np.ndarray]) -> float:
+            return float(np.quantile(c["x"], q, method="inverted_cdf"))
+
+        si = bootstrap_clustered_statistic({"x": x[ok]}, cl[ok], stat, LEVEL, RESAMPLES)
         return gate.Interval(si.value, si.lo, si.hi)
 
     def paired(name: str, ref: str, field: str, q: float | None) -> gate.Interval:
@@ -155,13 +178,16 @@ def _gate(
         av, bv = a_[ok].astype(float), b_[ok].astype(float)
         ok2 = np.isfinite(av) & np.isfinite(bv)
         cl = cluster[ok][ok2]
-        if not cl.size:
-            return gate.Interval(0.0, 0.0, 0.0)
+        if not cl.size:  # no rows: nothing measured, so neither pass nor fail (panel round 1)
+            return gate.Interval(math.nan, math.nan, math.nan)
 
         def stat(c: dict[str, np.ndarray]) -> float:
             if q is None:
                 return float(np.mean(c["a"]) - np.mean(c["b"]))
-            return float(np.quantile(c["a"], q) - np.quantile(c["b"], q))
+            return float(
+                np.quantile(c["a"], q, method="inverted_cdf")
+                - np.quantile(c["b"], q, method="inverted_cdf")
+            )
 
         si = bootstrap_clustered_statistic({"a": av[ok2], "b": bv[ok2]}, cl, stat, LEVEL, RESAMPLES)
         return gate.Interval(si.value, si.lo, si.hi)
@@ -227,6 +253,8 @@ def _gate(
         },
         "carried": gi["carried"],
         "amendments": gi["amendments"],
+        # the files the scoring read, so the record binds its inputs (panel round 1)
+        "inputs": _input_digests(a),
         "metrics_sha256": metrics_sha,
         "git_commit": gp.commit,
         "git_dirty": gp.dirty,
@@ -273,6 +301,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--imm", required=True)
     ap.add_argument("--ekf", help="the frozen EKF, scored as a further reference")
+    ap.add_argument(
+        "--naive-train",
+        metavar="PATH[:START:COUNT]",
+        help="fit the naive baseline (training-set means) on these sigma = 1 deg ordinals of a "
+        "split (default ordinals 0-499) and score it on the same rows (constitution IV)",
+    )
     ap.add_argument("--experiment", required=True)
     ap.add_argument("--decision", help="gate mode: the GateSDecision record (T037)")
     ap.add_argument("--plan", help="gate mode: the plan the decision binds")
@@ -292,8 +326,12 @@ def main(argv: list[str] | None = None) -> int:
     t0 = time.time()
 
     data, metas, truths, owns = {}, {}, {}, {}
+    tgts: dict[int, np.ndarray] = {}
+    obss: dict[int, np.ndarray] = {}
     for j, m, own, tgt, obs in sc.iter_selected(a.truth, a.start, a.count):
         owns[j] = own
+        tgts[j] = tgt
+        obss[j] = obs
         data[j] = bearing_data_from_arrays(m, own, obs)
         metas[j] = m
         truths[j] = Truth.from_block(m, own, tgt)
@@ -312,6 +350,18 @@ def main(argv: list[str] | None = None) -> int:
     }
     if a.ekf:
         errs["ekf"] = sc.ekf_errors(rows, data, truths, a.ekf)
+    naive_src: dict[str, Any] | None = None
+    if a.naive_train:
+        from tma2.references.naive import fit_naive
+        from tma2.segment.gate import sha256_file as file_digest
+
+        path, *rng = a.naive_train.split(":")
+        n0, n1 = (int(rng[0]), int(rng[1])) if rng else (0, 500)
+        model = fit_naive(sc.iter_selected(path, n0, n1), file_digest(path))
+        naive_src = {"split": path, "sha256": file_digest(path), "ordinals": [n0, n0 + n1 - 1]}
+        errs["naive"] = sc.naive_errors(rows, owns, obss, truths, model)
+    sd = sc.bounds(rows, metas, owns, tgts, obss)
+    row_strata = [sc.strata(metas[r.ordinal], owns[r.ordinal], tgts[r.ordinal], r.k) for r in rows]
     print(f"references [{time.time() - t0:.0f} s]", flush=True)
     det: dict[int, list[float]] | None = None
     row_bands = np.array(["all"] * len(rows))
@@ -382,7 +432,7 @@ def main(argv: list[str] | None = None) -> int:
         return {"value": si.value, "lo": si.lo, "hi": si.hi}
 
     everyone = np.ones(len(rows), dtype=bool)
-    seg_names = [n for n in errs if n not in ("one_leg", "oracle", "imm", "ekf")]
+    seg_names = [n for n in errs if n not in ("one_leg", "oracle", "imm", "ekf", "naive")]
     prefix_by_name: dict[str, list[Any]] = {}
     result: dict[str, Any] = {
         "truth": a.truth,
@@ -394,6 +444,8 @@ def main(argv: list[str] | None = None) -> int:
         "ekf": a.ekf,
         "level": LEVEL,
         "resamples": RESAMPLES,
+        "naive": naive_src,
+        "bound": "known_manoeuvres",
         "segmenters": {},
     }
     for name, e in errs.items():
@@ -404,7 +456,31 @@ def main(argv: list[str] | None = None) -> int:
             rec["vs_one_leg_settled"] = {
                 c: ratio(name, "one_leg", i, settled) for i, c in enumerate(COLS)
             }
-        if name not in ("one_leg", "oracle", "imm", "ekf"):
+        rec["gross"] = {
+            "no_estimate": float(np.mean(~np.isfinite(e[:, 0]))),
+            "range_over_50pct": float(np.mean(~(e[:, 0] <= 0.5))),
+        }
+        fin = np.isfinite(e[:, 0])
+        rec["finite_rows"] = {"rows": int(fin.sum()), **summary(e, fin)}
+        rec["efficiency"] = {c: sc.efficiency_of(e[:, i], sd[:, i]) for i, c in enumerate(COLS)}
+        rec["strata"] = {}
+        for key in row_strata[0] if row_strata else []:
+            vals = np.array([st[key] for st in row_strata])
+            rec["strata"][key] = {}
+            for v in sorted(set(vals.tolist())):
+                mask = vals == v
+                cell = {
+                    "rows": int(mask.sum()),
+                    **{f"{c}_median": _q(e[mask, i], 0.5) for i, c in enumerate(COLS)},
+                    "gross_rate": float(np.mean(~(e[mask, 0] <= 0.5))),
+                    "efficiency_range": sc.efficiency_of(e[mask, 0], sd[mask, 0]),
+                }
+                if name not in ("one_leg", "oracle", "imm", "ekf", "naive"):
+                    one = _q(errs["one_leg"][mask, 0], 0.5)
+                    ora = _q(errs["oracle"][mask, 0], 0.5)
+                    cell["gap_recovered_range"] = gap_recovered(one, cell["range_median"], ora)
+                rec["strata"][key][v] = cell
+        if name not in ("one_leg", "oracle", "imm", "ekf", "naive"):
             rec["gap_recovered"] = {c: gap(name, i) for i, c in enumerate(COLS)}
             if "glr_confirm" in errs and name != "glr_confirm":
                 rec["gap_minus_glr_confirm"] = {
@@ -437,9 +513,9 @@ def main(argv: list[str] | None = None) -> int:
             h60 = [h for x in pm for h in x.hits60]
             h180 = [h for x in pm for h in x.hits180]
             rec["segmentation"] = {
-                "contamination_median": float(np.nanmedian(cont)),
-                "contamination_p90": float(np.nanquantile(cont, 0.9)),
-                "coverage_median": float(np.nanmedian(cov)),
+                "contamination_median": float(np.nanquantile(cont, 0.5, method="inverted_cdf")),
+                "contamination_p90": float(np.nanquantile(cont, 0.9, method="inverted_cdf")),
+                "coverage_median": float(np.nanquantile(cov, 0.5, method="inverted_cdf")),
                 "false_split_rate": float(np.mean(fs)) if fs else math.nan,
                 "false_split_rows": len(fs),
                 "leg_count_accuracy": float(np.mean(lc)) if lc else math.nan,
@@ -464,9 +540,9 @@ def main(argv: list[str] | None = None) -> int:
             rec["by_row_band"] = {}
             for b_ in sorted(set(row_bands.tolist())):
                 mask = row_bands == b_
-                one = float(np.median(errs["one_leg"][mask, 0]))
-                ora = float(np.median(errs["oracle"][mask, 0]))
-                med = float(np.median(e[mask, 0]))
+                one = _q(errs["one_leg"][mask, 0], 0.5)
+                ora = _q(errs["oracle"][mask, 0], 0.5)
+                med = _q(e[mask, 0], 0.5)
                 rec["by_row_band"][b_] = {
                     "rows": int(mask.sum()),
                     "range_median": med,
@@ -511,6 +587,23 @@ def main(argv: list[str] | None = None) -> int:
             + " | "
             + (f"{sg['false_split_rate']:.3f}" if sg else "—")
             + " |"
+        )
+    lines += [
+        "",
+        "Gross rows (no plausible estimate; range error over 50%), medians over the rows each "
+        "estimator answers, and efficiency (median |e|/σ / 0.6745 against the known-manoeuvres "
+        "bound). Strata are in `metrics.json`.",
+        "",
+        "| Estimator | No estimate | Range > 50% | Finite rows | Range (finite) "
+        "| Eff. range | Eff. course | Eff. speed |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for name, rec in result["segmenters"].items():
+        g, f, ef = rec["gross"], rec["finite_rows"], rec["efficiency"]
+        lines.append(
+            f"| {name} | {g['no_estimate']:.3f} | {g['range_over_50pct']:.3f} | {f['rows']} | "
+            f"{f['range_median']:.3f} | {ef['range']:.2f} | {ef['course_deg']:.2f} | "
+            f"{ef['speed_kt']:.2f} |"
         )
     (out / "report.md").write_text("\n".join(lines) + "\n")
     print(f"wrote {out} [{time.time() - t0:.0f} s]")

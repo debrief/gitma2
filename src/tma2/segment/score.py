@@ -272,10 +272,15 @@ def prefix_metrics(
     )
 
 
+def lower_median(x: np.ndarray) -> float:
+    """The decision record's median convention (``inverted_cdf``: the lower middle value)."""
+    return float(np.quantile(x, 0.5, method="inverted_cdf"))
+
+
 def gap_recovered_cols(cols: dict[str, np.ndarray], seg: str, col: int) -> float:
-    one = float(np.median(cols["one_leg"][:, col]))
-    ora = float(np.median(cols["oracle"][:, col]))
-    s = float(np.median(cols[seg][:, col]))
+    one = lower_median(cols["one_leg"][:, col])
+    ora = lower_median(cols["oracle"][:, col])
+    s = lower_median(cols[seg][:, col])
     return mx.gap_recovered(one, s, ora)
 
 
@@ -351,3 +356,99 @@ def ownship_contamination(
     pred = to_codes(segment_ownship(own[:, 3], own[:, 4], k, p), k + 1)
     truth = truth_codes(meta, "ownship", p.l_min_rows, p.t_min_rows, n=k + 1)
     return contamination(pred, truth)
+
+
+# --- Reporting beside the gate (constitution IV, FR-063; Gate S panel round 1) ---------------
+
+
+def naive_errors(
+    rows: list[Row],
+    owns: dict[int, np.ndarray],
+    obss: dict[int, np.ndarray],
+    truths: dict[int, Truth],
+    model: dict[str, Any],
+) -> Errors:
+    """The naive baseline (training-set means, ``tma2-naive``'s per-timestep model) at each row."""
+    from tma2.references.naive import _row as naive_row
+
+    out = np.full((len(rows), 3), np.inf)
+    for q, r in enumerate(rows):
+        row = naive_row(owns[r.ordinal], obss[r.ordinal], model["per_timestep"], r.k)
+        e = row_error(truths[r.ordinal], row, "plausible")
+        out[q] = (e.range_rel, e.course_deg, e.speed_kt)
+    return out
+
+
+def bounds(
+    rows: list[Row],
+    metas: dict[int, dict[str, Any]],
+    owns: dict[int, np.ndarray],
+    tgts: dict[int, np.ndarray],
+    obss: dict[int, np.ndarray],
+) -> np.ndarray:
+    """Known-manoeuvres Cramér–Rao bounds [rows, 3] (relative range, course °, speed kt) at each
+    row: the bound for manoeuvring rows (AGENTS.md); NaN where the information is singular."""
+    from tma2.references.crb import crb_rows
+
+    out = np.full((len(rows), 3), np.nan)
+    by: dict[int, list[int]] = {}
+    for q, r in enumerate(rows):
+        by.setdefault(r.ordinal, []).append(q)
+    for j, qs in by.items():
+        m = metas[j]
+        crb = crb_rows(
+            owns[j],
+            tgts[j],
+            obss[j],
+            float(m["parameters"]["noise_sigma_rad"]),
+            int(m["zig_index"]),
+            m.get("manoeuvres") or [],
+            [rows[q].k for q in qs],
+            model="known_manoeuvres",
+            target_manoeuvres=m["parameters"].get("target_manoeuvres") or [],
+            fast=True,
+        )
+        for q, c in zip(qs, crb, strict=True):
+            if not c.singular:
+                out[q] = (c.sd_range_rel, c.sd_course_deg, c.sd_speed_kt)
+    return out
+
+
+def efficiency_of(e: np.ndarray, sd: np.ndarray) -> float:
+    """median(|e| / σ) / 0.6745 over rows with a positive finite bound (``eval.metrics``)."""
+    ok = np.isfinite(sd) & (sd > 0)
+    if not ok.any():
+        return math.nan
+    z = np.sort(e[ok] / sd[ok])
+    return float(z[(z.size - 1) // 2]) / 0.6744897501960817  # lower median, as _q's inverted_cdf
+
+
+def _changes_by(meta: dict[str, Any], k: int) -> list[dict[str, Any]]:
+    return [s for s in meta.get("manoeuvres") or [] if int(s["start_index"]) <= k]
+
+
+def strata(meta: dict[str, Any], own: np.ndarray, tgt: np.ndarray, k: int) -> dict[str, str]:
+    """FR-063's row strata: range band at k, number of target changes begun by k, and the kind,
+    speed-only flag and duration of the latest one."""
+    from tma2.eval.slices import RANGE_BANDS_KM
+    from tma2.eval.slices import band as slice_band
+
+    rng_km = math.hypot(float(tgt[k, 1] - own[k, 1]), float(tgt[k, 2] - own[k, 2])) / 1000.0
+    ch = _changes_by(meta, k)
+    n = len(ch)
+    bands = ((0, "0"), (5, "1-5"), (10, "6-10"), (20, "11-20"))
+    count = next((lab for lim, lab in bands if n <= lim), ">20")
+    last = max(ch, key=lambda s: int(s["start_index"])) if ch else None
+    kind = "none" if last is None else str(last["kind"])
+    if last is None:
+        dur = "none"
+    else:
+        rows_ = int(last["end_index"]) - int(last["start_index"])
+        dur = "<10 rows" if rows_ < 10 else "10-20 rows" if rows_ <= 20 else ">20 rows"
+    return {
+        "range_band": slice_band(rng_km, RANGE_BANDS_KM, "km"),
+        "changes": count,
+        "latest_kind": kind,
+        "speed_only": "yes" if kind == "speed" else "no",
+        "latest_duration": dur,
+    }
