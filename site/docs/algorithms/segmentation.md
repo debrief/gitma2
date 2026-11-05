@@ -87,6 +87,11 @@ fits: a longer leg costs less than a nested shorter one (by more than 100 χ² f
 500 validation scenarios). It weakens the search nominator for C and L alike, and is fixed before
 Gate 2.
 
+**Reproducing a segmentation.** The physics-layer solves are batched 16 scenarios at a time and
+padded to the longest; the padding changes the last bits of the costs, which can flip a
+near-threshold acceptance. A scenario re-run alone can therefore differ from its CI segmentation;
+re-run with the plan's ordinals and shards.
+
 **Scoring conventions.** Contamination counts a segmenter's unknown rows as steady, and a truth
 transition [start_index, end_index] includes the first row on the new leg. Both are conservative
 and the same for every segmenter.

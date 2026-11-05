@@ -55,10 +55,13 @@ test segmentations on CI (`segment.yml` plans `configs/segment/gs-test-*.json`;
 **Gate S scored** (record r2 `experiments/20261105-gs-r2/`, after panel round 1 rejected r1 for a
 causality bug in C's open-transition start, fixed in 7fe8874; panel round 2 pending): S1–S3 pass,
 S4 inconclusive (L − C gap recovered +0.0012 [−0.0031, +0.0049]); C recovers 0.898 of the
-one-leg-to-oracle gap, GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
+one-leg-to-oracle gap (0.838 on the rows every estimator answers: one leg and the IMM fail on a
+quarter), GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
 passed): C is Gate 2's segmenter and control; learning recorded as not shown. Scoring runs on CI
-(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Known defect to fix before
-Gate 2: the search's cost table has failed fits (`segment/search.py` warm starts). Write-up:
+(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Before Gate 2: fix the
+search's cost-table fit failures (`segment/search.py` warm starts; check monotonicity on the
+validation tables), bind the segmenter's code commit in segmentation headers (the digest binds
+parameters only), fix one open-transition hand-over convention, and take a fresh test seed. Write-up:
 `site/blog/2026-11-05-gate-s.md`.
 
 ## Stack (owner decisions, 2026-10-31)
@@ -229,6 +232,10 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   (`RUNNER_TEMP`), or every job records a dirty tree.
 - Container restarts kill local background jobs (several per hour on 5 Nov): run anything over a
   few minutes on CI (`score.yml`, `segment.yml`, `glr-confirm.yml`), not in the session.
+- A segmentation is not a function of its scenario alone: the physics-layer batch is padded to
+  the longest scenario in the chunk (`r_max`, CHUNK = 16 in `cli/segment.py`), and last-bit cost
+  changes can flip a near-threshold acceptance (Gate S panel round 2: ordinal 25 alone differs
+  from 25–26). Reproduce a CI segmentation with the plan's ordinals and shards.
 - Never edit or commit in the checkout while a gate run reads it: provenance is read once at
   launch and modules load lazily, so a mid-run change goes unrecorded. Run long scorings from a
   `git worktree` at the commit (pass absolute data paths).

@@ -569,6 +569,8 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(a.experiment)
     out.mkdir(parents=True, exist_ok=True)
     (out / "metrics.json").write_text(json.dumps(result, indent=2) + "\n")
+    # the files read, in every mode (gate mode also puts them in manifest.json; panel round 2)
+    (out / "inputs.json").write_text(json.dumps(_input_digests(a), indent=2) + "\n")
     # per-row errors, so later paired comparisons need no re-solve (not committed: large)
     arrays: dict[str, Any] = {
         "ordinal": cluster,

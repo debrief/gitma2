@@ -107,7 +107,8 @@ C's, its downstream error is not.
   extra nominator, with the split from `glr_confirm_gap`.
 
 **R6 [major, red team] Gross rows and the slices the constitution requires are missing.**
-- *Fixed* (e4e550f). Per estimator: gross rates (no plausible estimate; range error over 50%),
+- *Fixed in part* (e4e550f; completed in round 2 by `slices-extra.json` for zig angle and time
+  since the zig). Per estimator: gross rates (no plausible estimate; range error over 50%),
   medians over the rows it answers, efficiency against the known-manoeuvres bound, and strata by
   range band, number of changes, latest change kind, speed-only and transition duration (FR-063);
   the naive baseline (training-set means fitted on seed-314 tuning ordinals 0–499) on the same

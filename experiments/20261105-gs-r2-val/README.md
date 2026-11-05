@@ -27,11 +27,17 @@ The two scorings here ran at the same commit on different runners; the one-leg m
 in `c/` and 0.580468 in `l/` and round 1. Each rule compares estimators within one run.) the mode, the carried model (s3, `carried.json` unchanged) and
 the shuffled rule are as before.
 
+Validation C's segmenter digest (2e05b4b6…) differs from the gate's (60e6ee63…) because the
+T021 plan sets `mode: chord`; confirmation never reads the mode (it sets only the reported cost),
+so the intervals are the gate's segmenter's, and `--modes` hands them over in each mode (panel
+round 2).
+
 **New in round 2 (panel round 1, R5 and R6):**
 - **GLR + confirm handed over as C is** (`glr_confirm_gap`, gap mode, a point knot as T_min rows):
   gap recovered 0.255 [0.149, 0.350], against 0.259 for note 08's point-knot hand-over. The
-  hand-over explains none of S2's margin; C's gain is in its segmentation (the extra nominator,
-  transition modelling and confirmation).
+  hand-over explains almost none of S2's margin (at most about 0.02 on test, where the gap
+  hand-over helps GLR + confirm slightly on the rows every estimator answers); C's gain is in its
+  segmentation (the extra nominator, transition modelling and confirmation).
 - **Gross rows and efficiency** (known-manoeuvres bound):
 
   | Estimator | No estimate | Range > 50% | Range median, finite rows | Efficiency (range) |

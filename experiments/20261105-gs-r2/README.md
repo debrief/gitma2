@@ -65,13 +65,34 @@ bearings the bound uses, so the oracle's 1.6 is the hand-over's floor, not an es
 Reading:
 - **C against the oracle and the naive baseline:** C's median range error is 1.8 times the
   oracle's (0.118 against 0.065) and 0.30 times the naive baseline's (0.397).
-- **S2's margin is segmentation, not hand-over.** GLR + confirm handed over as C is (gap mode)
-  recovers 0.108, no more than its own point-knot hand-over (0.143).
+- **S2's margin is mostly segmentation, not hand-over.** GLR + confirm handed over as C is (gap
+  mode) recovers 0.108 against 0.143 with its own point-knot hand-over on all rows; on the 14,142
+  rows every estimator answers the gap hand-over helps it a little (0.276 against 0.263). The
+  hand-over explains at most about 0.02 of S2's margin.
 - **The references fail outright on a fifth to a quarter of the rows**, and the naive baseline's
   median (0.397) is below one leg's, the IMM's and GLR + confirm's. C's 0.898 is measured from one
-  leg's median, which those rows inflate; on the rows every estimator answers, the medians are in
-  the finite-row column.
+  leg's median, which those rows inflate. On the 14,142 rows every estimator answers C recovers
+  0.838 (L 0.839, GLR + confirm 0.263); on the 15,047 rows one leg answers, 0.844; measured from
+  the naive baseline instead of one leg, 0.839 on all rows (`slices-extra.json`).
 - **C is 2.7× the known-manoeuvres bound** in range, the oracle 1.6×.
 
 Strata (range band, number of changes, latest change kind, speed-only, transition duration,
-detectability) are in `metrics.json`. `first-run`: r1's records are in `experiments/20261105-gs/`.
+detectability) are in `metrics.json`. Zig angle and time since the zig (zig + 5/10/15/20 min), and
+the finite-row figures above, are in `slices-extra.json`, computed after the panel's round 2 from
+this record's `errors.npz` (`scripts/research/gs_slices_extra.py`): C's gap recovered is
+0.88–0.95 in every zig-angle band and 0.88–0.91 at every time since the zig, and L − C lies within
+±0.007 in every cell. The "changes" stratum is nearly uninformative on MAN2 (19,849 of 19,921
+rows have 1–5 changes begun).
+
+**Not taken: the re-score.** Constitution IV allows one re-score of an inconclusive result on a
+larger fresh seed. The decision record fixed before any result that inconclusive counts as not
+passed, and S4 has no minimum effect size, so a larger seed could turn +0.001 into a pass that
+would change nothing in practice.
+
+**Reproducibility notes (panel round 2).** Physics-layer errors reproduce byte for byte only on
+the same CPU family (`run.json` now records the CPU model). Four test prefixes (scenario 3445, a
+closed transition [18, 39] in r1 and [18, 36] in r2) changed between r1 and r2 away from any open
+transition: a polish choice flipped on last-bit cost differences between runners. The segmenter
+digest binds parameters only, so the gate preflight cannot tell r1's segmentations from r2's; the
+manifest records each file's commit and SHA-256, and Gate 2 should bind the segmenter's code
+commit. `first-run`: r1's records are in `experiments/20261105-gs/`.
