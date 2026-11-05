@@ -1,0 +1,47 @@
+{
+  "description": "Gate S round 2 (panel round 1 bug-fix re-run): C on seed 314 validation scoring ordinals 500-1499 at 7fe8874, in both hand-over modes, against GLR + confirm (CI shards), its gap-mode hand-over, the frozen trackers, the oracle, one leg and the naive baseline; detectability strata. Settles R3's mode choice and S2 on validation again (as experiments/20261104-gs-val/c-final).",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "start": 500,
+  "count": 1000,
+  "segmentations": {
+    "C": {
+      "branch": "results/segment-man2-val-c-42031087882",
+      "path": "experiments/segment-runs/man2-val-c-42031087882/segmentations.ndjson"
+    }
+  },
+  "modes": [
+    "chord",
+    "gap"
+  ],
+  "detectability": true,
+  "glr_confirm": {
+    "branch": "results/glr-confirm-man2-val-glr-42045836931",
+    "dir": "experiments/glr-confirm-runs/man2-val-glr-42045836931",
+    "config": "glr-q0.2-t13.8"
+  },
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125"
+}
