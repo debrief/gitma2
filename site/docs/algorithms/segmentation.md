@@ -65,8 +65,8 @@ transition.
 3. **Segmentation of each prefix.** Accepted transitions become transitions, near misses become
    unknown, and the rest is steady.
 
-The search alone is a weak nominator on MAN2: it finds 13% of changes within ± 60 s. Most of C's
-accepted transitions come from GLR alarms.
+The search alone is a weak nominator on MAN2: it finds 13% of changes within ± 60 s. C's accepted
+transitions come from both nominators; the share from each has not been counted.
 
 ## Hand-over to the physics layer: gap or chord
 

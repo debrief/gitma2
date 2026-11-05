@@ -96,8 +96,8 @@ pre-registered.
 1. **Little headroom.** C already recovers 0.89 of the gap. The remaining 0.11 lies mostly in
    changes the bearings barely show, the low-detectability bands.
 2. **The objective and the mechanism do not match.** The CRF trains the evidence through the
-   additive search's lattice. C's accepted transitions come mostly from GLR nominations confirmed
-   by the coupled cost, and there the evidence only shifts a capped threshold.
+   additive search's lattice. C also confirms GLR nominations (the share from each nominator was
+   not counted; panel round 1), and there the evidence only shifts a capped threshold.
 
 Files:
 - `metrics.json`, `report.md`: from `tma2-gs`. The per-row `errors.npz` is not committed.
