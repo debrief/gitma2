@@ -35,6 +35,21 @@ and s3 after epoch 5, while their losses were still falling slowly.
   transition.
 - Only s2 has a clear label-specific part, about 0.5 nats beyond the control.
 
+**Correction (Gate S panel round 1, numerics).** The figures above are dominated by one prefix.
+On the validation tables (500 scenarios, 1,971 prefixes) the zero-evidence loss has median 3.84
+and P99 22.6, but one prefix (ordinal 225, k = 394) scores 96,195.7 nats: 48.8 of the 55.5 mean.
+Its truth path's last leg (rows 352–394) costs 192,383 where about 43 is expected, a failed fit
+in the search's cost table (warm starts propagated from shorter legs, a fresh grid start only
+every fourth step: `segment/search.py`). Without it the mean is 6.709; s2 lowers that to 5.921
+(−11.7%) and s3 to 6.293 (−6.2%). Early stopping's relative 1e-3 then asked for 0.055 nats where
+0.0067 was meant, so s1 and s3 stopped early (on the corrected scale s3's epochs 3 and 5 and s1's
+epoch 3 were improvements). So the learning was not "under 1.5%", and the carried s3 is not the
+best-trained seed. It does not change the reading downstream: s2, the best-trained, is no better
+than C on validation either (−0.0003 [−0.0099, +0.0086]). The evidence the models emit barely
+separates steady from transition rows (AUC 0.53 for s3, 0.42 for s2, 0.48 for the shuffled
+control). Any successor should exclude or clip absurd prefixes, early-stop on a median or
+trimmed loss, and re-solve cost-table entries that rise when a leg is shortened.
+
 **Provenance caveat.** Every training job recorded `git_dirty: true`. The workflow downloaded
 the tables into `tables/` and wrote checkpoints to `ck/` inside the checkout. The code was clean
 at 4abab2a. Both directories now live in `RUNNER_TEMP` (65b6bbf). The weights are bound by
