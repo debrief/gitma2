@@ -13,11 +13,15 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   internally.
 - **Changepoint weight** — the physics layer's input c ∈ [0, 1] per row: how free the target's
   velocity is to change there. The M largest become candidate knots; 0 everywhere is one leg.
+- **Confirmation** — C's decision step: a nominated transition is accepted only if the physics-layer solve on its own prefix, with knots at both its ends, lowers the cost by more than τ = 13.8 (χ² with 4 degrees of freedom); see [segmentation](algorithms/segmentation.md).
+- **Contamination** — the share of a reported steady leg's rows that the truth labels as transition; Gate S's primary segmentation measure (median and P90 over prefixes).
 - **Control (model)** — a variant trained only to test the pipeline, never carried: direct regression head, shuffled labels (must score no better than the design without learning: naive for a regressor, batch least squares for a physics-layer model), time-late (must score at least as well as the causal model).
+- **Coverage** — the share of truth-steady rows that lie inside reported steady legs.
 - **Cramér–Rao bound (CRB)** — the lowest variance any unbiased estimator can reach given the
   bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
   full window, known manoeuvres, per leg (see [CRB](algorithms/crb.md)).
 - **CUSUM** — cumulative-sum change detector: S(k) = max(0, S(k − 1) + ν(k)² − 1 − δ) on normalised innovations, an alarm while S exceeds a tuned threshold; a Gate D control (see [detector](algorithms/detector.md)).
+- **Detectability** — a change's oracle cost drop: the physics layer's cost on the prefix with every true knot, against the same without this change's (χ² with 4 degrees of freedom); note 08's bands are below 13.3, 13.3–50, 50–200 and at least 200.
 - **Efficiency** — the median over a slice's rows of error ÷ that row's CRB, divided by 0.6745,
   so an unbiased estimator at the bound scores 1; a flat efficiency across geometry slices is the
   signature of an approximation floor.
@@ -25,9 +29,11 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   inverse is the Cramér–Rao bound. See [CRB](algorithms/crb.md).
 - **G5 rows** — σ = 1° scenarios scored at zig + 5, 10, 15 and 20 min where the window reaches
   them (gitma Annex C); one scenario contributes several rows, so bootstraps resample scenarios.
+- **Gap recovered** — (median one-leg error − median segmentation error) ÷ (median one-leg error − median oracle error) on σ = 1° G5 rows: one leg scores 0, the oracle 1; S2 and S4 compare it between segmenters.
 - **Gate** — a pre-registered go/no-go check (P0, Gate 1, Gate D, Gate 2), judged by the agent
   review panel on a fresh test seed.
 - **Gate D** — the steady-leg detector's gate (SRD Annex A §A.5): detection delay and misses against CUSUM and GLR at matched false-alarm rates, held-leg false alarms, and the physics layer's error fed by the detector's knots against the IMM and batch least squares.
+- **Gate S** — the steady-leg segmentation gate (SRD Annex A §A.9): S1 O's ownship contamination, S2 C against GLR + confirm, S3 L's contamination and false splits, S4 L against the reference (the only learning claim).
 - **Generator version** — the algorithm that turns (seed, index, ranges) into a scenario;
   gitma2 implements gitma's 0.5.0 and reproduces its files byte for byte. Generator 0.6.0 adds the
   MAN2 model behind new ranges fields, so 0.5.0 ranges still give 0.5.0's bytes.
@@ -50,6 +56,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   helm wander or autopilot oscillation.
 - **Manoeuvre span** — the sample interval of one target course or speed change, from the first
   sample after it starts to the first sample after it ends.
+- **Nomination** — a candidate transition put to confirmation: a raised GLR alarm (re-tested while raised) or a transition of the additive leg search.
 - **Oracle ceiling** — the physics layer fed with the true manoeuvre times and kinds (knots at
   each manoeuvre's start and end, the chord of a turn, ridge τ_r = 3 m/s): the reference for any
   "segment, then solve" design. It is not a strict upper bound: on noise-free data most of its
@@ -64,6 +71,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Scenario** — one ownship-versus-target run: metadata, two truth tracks and a bearing series.
 - **Seed** — a 64-bit integer that determines a dataset; per-scenario seeds derive from it, so the
   same seed gives the same scenario in gitma and gitma2.
+- **Semi-Markov likelihood** — L's training loss: the negative log-likelihood of the truth segmentation over every segmentation of the search's lattice (legs and transitions with their own lengths), normalised by a log-sum-exp forward recursion.
 - **Settled row** — a scored row on a held leg (gitma Annex C §C.5's definition).
 - **Speed-continuity prior** — the physics layer's prior that speed carries through a course
   change (‖v_after‖ − ‖v_before‖)/1 m/s, skipping the chord leg inside the turn.
