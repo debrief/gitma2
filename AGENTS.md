@@ -64,7 +64,8 @@ validation tables), bind the segmenter's code commit in segmentation headers (th
 parameters only), fix one open-transition hand-over convention (the main lever: C recovers 0.66 of the gap on
 rows open at k against 0.91 elsewhere, and S4's whole L − C difference sits on those rows), stop
 transitions overlapping through open ones (`_free` treats an open transition as [s, s + 1]), and
-take a fresh test seed. Write-up:
+take a fresh test seed. Owner decision 2026-11-05: a learned nominator, or evidence trained
+through confirmation, is tested within Gate 2, not as a separate gate. Write-up:
 `site/blog/2026-11-05-gate-s.md`.
 
 ## Stack (owner decisions, 2026-10-31)
