@@ -71,6 +71,18 @@ class Transition:
     drop: float  # cost drop at acceptance
     score: float  # drop − threshold at acceptance
     source: str
+    # The start as accepted. Closing an open transition polishes its start with bearings up to
+    # the closing row, so prefixes before the close must keep this one (FR-002).
+    accepted_start: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.accepted_start is None:
+            self.accepted_start = self.start
+
+    def start_at(self, k: int) -> int:
+        """The start in use for prefix k (≥ accepted_at)."""
+        closed = self.end is not None and self.closed_at <= k
+        return self.start if closed or self.accepted_start is None else self.accepted_start
 
 
 @dataclass

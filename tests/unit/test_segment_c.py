@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +68,11 @@ def test_intervals_at() -> None:
     codes = to_codes(intervals_at(conf, 200, p), 201)
     assert (codes[150:161] == U).all() and (codes[112:150] == S).all() and (codes[161:] == S).all()
     assert (to_codes(intervals_at(conf, 169, p), 170)[112:] == S).all()
+    # closing an open transition polishes its start with later bearings: prefixes before the
+    # close keep the start as accepted (FR-002; Gate S panel round 1)
+    conf3 = Confirmed(transitions=[Transition(197, 228, 210, 245, 30.0, 10.0, "glr", 200)])
+    assert intervals_at(conf3, 230, p)[-1] == Interval(T, 200, 230, True)
+    assert intervals_at(conf3, 250, p)[1] == Interval(T, 197, 228)
     # a steady piece shorter than L_min is unknown
     conf2 = Confirmed(transitions=[Transition(50, 60, 70, 70, 40.0, 20.0, "glr")])
     assert intervals_at(conf2, 75, P)[-1] == Interval(U, 61, 75)
@@ -127,3 +133,29 @@ def test_prefix_invariance(man2_noise_free_pack: Path, layer: PhysicsLayer) -> N
     alone = segment(layer, [cut], [m], [[k]], P)[0][0]
     assert full.intervals == alone.intervals
     assert full.cost == pytest.approx(alone.cost, rel=1e-12)
+
+
+def test_prefix_invariance_open_transition(man2_pack: Path, layer: PhysicsLayer) -> None:
+    """At a prefix inside an open transition whose start is later polished, C's segmentation does
+    not change when the bearings after k are removed (Gate S panel round 1: the close rewrote the
+    start for earlier prefixes). Scenario 2 of the seed-316 fixture under the Gate S parameters:
+    accepted at row 573 with start 541, closed at 576 with start 538."""
+    from tma2.types.generated.tma import SegmentParameters
+
+    plan = Path(__file__).resolve().parents[2] / "configs" / "segment" / "gs-plan.json"
+    pg = SegmentParameters(**json.loads(plan.read_text())["segmenter"]["parameters"])
+    for q, (_, m, own, _tgt, obs) in enumerate(iter_pack_raw(man2_pack)):
+        if q == 2:
+            d = bearing_data_from_arrays(m, own, obs)
+            break
+    k = 574
+    rows = [int(m["zig_index"]), k]  # the search grid is anchored on the first scored row
+    full = segment(layer, [d], [m], [rows], pg)[0][1]
+    cut = BearingData(**{**d.__dict__})
+    cut.valid = d.valid.copy()
+    cut.valid[k + 1 :] = 0
+    cut.z = d.z.copy()
+    cut.z[k + 1 :] = 0.0
+    alone = segment(layer, [cut], [m], [rows], pg)[0][1]
+    assert full.intervals[-1].open and full.intervals[-1].start == 541
+    assert full.intervals == alone.intervals

@@ -100,7 +100,7 @@ def intervals_at(conf: Confirmed, k: int, p: SegmentParameters) -> list[Interval
         e = min(x.end, k) if closed and x.end is not None else k
         if not closed:
             open_at_k = True
-        codes[x.start : e + 1] = TRANSITION if x.score >= p.margin else UNKNOWN
+        codes[x.start_at(k) : e + 1] = TRANSITION if x.score >= p.margin else UNKNOWN
     for nm in conf.near_misses:
         if nm.row <= k:
             sl = codes[nm.start : min(nm.end, k) + 1]
