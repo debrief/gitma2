@@ -31,7 +31,7 @@ publish, and Gate 2 uses the CUSUM/GLR segmenter at an operating point its spec 
 (recommended: GLR at a 5% held-leg false-alarm rate). Write-up: `site/blog/2026-11-02-gate-d.md`.
 Detector workflows: `train/gd-a`, `validate-gd/<run>`. Research note 08 (leg-detection spike,
 validation only) recommends GLR + physics-layer confirmation as the interim Gate 2 segmenter.
-005 (steady-leg segmentation, Gate S; Annex A §A.9, owner merges): specified. Components O
+005 (steady-leg segmentation, Gate S; Annex A §A.9, owner merges): implemented and scored. Components O
 (ownship), C (classical target segmenter, the reference) and L (learned, starts equal to C); fresh
 test seed from 312. Planned (`specs/005-steady-leg-segmentation/plan.md`): measured on validation,
 an additive leg search is far weaker than GLR + confirm (F1 0.65 vs 0.79), so C confirms
@@ -43,8 +43,20 @@ spec 006 (`specs/006-generator-man2/`) and precedes Gate S: implemented (PR 13);
 passed** (panel round 2, `experiments/20261104-g0-man2-r2/`, CLI `tma2-g0-man2`; two owner
 amendments after results: check-4 coverage and the throughput method). Seeds: 314 validation
 (`data/man2-val`, digests in `experiments/20261104-g0-man2/dataset-digests/`), 315 test (Gate S;
-not generated until its decision record), 316 noise-free; 312/313 unused. IMM/EKF re-tune on 314:
-`tune/**` branches run `.github/workflows/tune.yml` (results to `results/man2-tune-<run id>`).
+generated at a38f61b after the decision record; now used), 316 noise-free, 317 L's training
+stream; 312/313 unused; the next fresh seed is 318. IMM/EKF re-tune on 314: `tune/**` branches
+run `.github/workflows/tune.yml` (results to `results/man2-tune-<run id>`); frozen
+`imm-cv0.03-ct1-w0.01-s0.0003-p4-r2`, EKF `ekf-sa0.00003-p4-r0.03125`
+(`experiments/20261104-man2-refs/`). Gate S: decision `experiments/20261104-gs-decision/` (plan
+`configs/segment/gs-plan.json`; carried L = seed 3, `carried.json`), L training on CI
+(`segtrain/**` → `.github/workflows/segtrain.yml`, validation `experiments/20261105-segL-val/`),
+test segmentations on CI (`segment.yml` plans `configs/segment/gs-test-*.json`;
+`glr-confirm/**` for the reference), scoring `tma2-gs ... --decision --plan --split test`.
+**Gate S scored** (`experiments/20261105-gs/`; review panel pending): S1–S3 pass, S4
+inconclusive (L − C gap recovered +0.0014 [−0.0030, +0.0051]); C recovers 0.898 of the
+one-leg-to-oracle gap, GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
+passed): C is Gate 2's segmenter and control; learning recorded as not shown. Write-up:
+`site/blog/2026-11-05-gate-s.md`.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -68,7 +80,10 @@ src/tma2/
   eval/                    errors, slices, stats, metrics (+ efficiency), bootstrap, rows (settled, G5), predictions, experiment
   export/                  toy model and ONNX export (f64 conformance artefact, f32 reported)
   models/                  Gate 1: rows, model (encoder, heads, physics layer), loss, train, predict, export
-  cli/                     tma2-generate, -solve, -track, -naive, -crb, -eval, -oracle, -p0, -train, -predict, -tune, -plan
+  detect/                  Gate D: CUSUM/GLR controls, confirmation, matching, downstream (spec 004)
+  segment/                 Gate S: O, C (nominate + confirm), L (evidence, crf, train, export), score, gate
+  cli/                     tma2-generate, -solve, -track, -naive, -crb, -eval, -oracle, -p0, -train, -predict, -tune, -plan,
+                           -gd, -g0-man2, -segment, -segtrain, -gs
 conformance/onnx/          browser (WASM, Playwright) and Java legs of the export check
 scripts/                   gen_types.py, data_dictionary.py, make_fixtures.sh, research/
 tests/                     unit, golden, conformance (gitma fixtures), perf; fixtures/gitma/<name>/
@@ -205,3 +220,14 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   cut the rows before it, or the one-leg solve runs away (range 1e11 m).
 - Docusaurus MDX: no `{...}` in prose (it is a JS expression); `scripts/data_dictionary.py`
   escapes `<` and braces outside code spans.
+- Provenance is read before any output is written: a CLI that checks `git status` after writing
+  into an untracked experiment folder always records `git_dirty: true` (`tma2-gs` did, fixed in
+  e648f8b). Workflows must keep downloaded tables and checkpoints outside the checkout
+  (`RUNNER_TEMP`), or every job records a dirty tree.
+- onnxruntime has no double `Conv`: the evidence network exports each convolution as a MatMul
+  per tap (`segment/evidence_export.py`, `MatMulNet`), checked against torch.
+- Training with torch on 4-core runners: `set_num_threads(1)` per worker is faster for L's
+  per-prefix CRF loss (24 ms per prefix) than 4 threads.
+- Semi-Markov truth paths: several lattice paths can agree equally with the truth codes; take the
+  lexicographic maximum on (agreement, zero-evidence score), or the CRF loss starts near 2,000
+  nats from an arbitrary path (`segment/crf.py`, `truth_path`).
