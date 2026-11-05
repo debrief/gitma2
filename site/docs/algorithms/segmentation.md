@@ -55,8 +55,13 @@ transition.
      coupled fit with knots at both transition ends.
    - **Search order.** Starts are searched at the middle transition length, then every length is
      tried at the best start.
-   - **Acceptance.** A candidate is accepted if its cost drop exceeds τ = 13.8 (the χ² point
-     with 4 degrees of freedom). Both boundaries are then polished by ± 3 rows.
+   - **Acceptance.** An open transition (start knot only) is accepted if its cost drop exceeds
+     τ = 13.8, the 0.1% point of χ² with 2 degrees of freedom; a closed one (two knots) against
+     the 4-degree-of-freedom point with the same tail probability, 18.45. Both boundaries are
+     then polished by ± 3 rows.
+   - **Causality.** Closing an open transition polishes its start with bearings up to the
+     closing row, so prefixes before the close keep the start as it was accepted (FR-002; the
+     Gate S panel found the start being rewritten for earlier prefixes, fixed in 7fe8874).
 3. **Segmentation of each prefix.** Accepted transitions become transitions, near misses become
    unknown, and the rest is steady.
 
@@ -65,12 +70,26 @@ accepted transitions come from GLR alarms.
 
 ## Hand-over to the physics layer: gap or chord
 
-A transition [s, e] gives the physics layer knots at s and e.
+A transition [s, e] gives the physics layer knots at s and e. An open transition at prefix k is
+[s, k], so it gets its second knot, and in chord mode the speed prior, at k itself; the oracle
+and confirmation instead treat an open span as a start knot only. Either way the state at k is
+weakly determined. Gate 2 must fix one convention for both. A segmenter reports no kinds, so the
+speed prior is applied across every transition, speed changes included.
 - **Gap:** the bearings inside the transition are excluded.
 - **Chord:** the bearings are kept, with the speed-continuity prior across a course-only
   transition.
 
 The mode is fixed on validation: gap had the lower median range error, 0.120 against 0.123.
+
+**Known defect (Gate S panel round 1).** The search's cost table warm-starts each leg's fit from
+the shorter leg's and takes a fresh grid start only every fourth step, so some entries are failed
+fits: a longer leg costs less than a nested shorter one (by more than 100 χ² for 3,191 pairs in
+500 validation scenarios). It weakens the search nominator for C and L alike, and is fixed before
+Gate 2.
+
+**Scoring conventions.** Contamination counts a segmenter's unknown rows as steady, and a truth
+transition [start_index, end_index] includes the first row on the new leg. Both are conservative
+and the same for every segmenter.
 
 ## L: learned evidence
 

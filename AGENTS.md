@@ -224,6 +224,11 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   into an untracked experiment folder always records `git_dirty: true` (`tma2-gs` did, fixed in
   e648f8b). Workflows must keep downloaded tables and checkpoints outside the checkout
   (`RUNNER_TEMP`), or every job records a dirty tree.
+- Never edit or commit in the checkout while a gate run reads it: provenance is read once at
+  launch and modules load lazily, so a mid-run change goes unrecorded. Run long scorings from a
+  `git worktree` at the commit (pass absolute data paths).
+- An open transition's state is decided at acceptance: anything a later close refines (C's
+  start polish) must not reach prefixes before the close (FR-002; `Transition.start_at`).
 - onnxruntime has no double `Conv`: the evidence network exports each convolution as a MatMul
   per tap (`segment/evidence_export.py`, `MatMulNet`), checked against torch.
 - Training with torch on 4-core runners: `set_num_threads(1)` per worker is faster for L's
