@@ -1,0 +1,119 @@
+name: Segmentation scoring
+
+# Spec 005 (Gate S): run tma2-gs on a 4-core runner from a clean checkout. Push `score/<name>`
+# with a plan configs/score/<name>.json:
+#   data            the split scored ({seed, count, ranges, heldout, commit, split, digests}, as
+#                   segment.yml's plans); regenerated at its commit and checked against its digest
+#   start, count    sigma = 1 deg ordinals
+#   segmentations   {NAME: {branch, path}}: segmentation files on results branches
+#   glr_confirm     optional {branch, dir, config}: GLR + confirm shards on a results branch
+#   naive           optional {data: {...}, ordinals: [start, count]}: the naive baseline's
+#                   training split (regenerated and digest-checked the same way)
+#   modes, detectability, imm, ekf   as tma2-gs
+#   gate            optional {decision, plan, split}: gate mode
+# The record goes to results/score-<name>-<run id> (errors.npz included). Nothing merges.
+
+on:
+  push:
+    branches: ["score/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Plan
+        run: |
+          PLAN="configs/score/${GITHUB_REF_NAME#score/}.json"
+          test -f "$PLAN"
+          echo "PLAN=$PLAN" >> "$GITHUB_ENV"
+          echo "NAME=$(basename "$PLAN" .json)" >> "$GITHUB_ENV"
+      - name: Regenerate the data at their generating commits and check their digests
+        run: |
+          gen() {  # $1: python expression for the data block, $2: output dir
+            read -r SEED COUNT RANGES HELDOUT GEN SPLIT DIGESTS <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); d = $1
+          print(d['seed'], d['count'], d['ranges'], d['heldout'], d['commit'], d['split'], d['digests'])")"
+            rm -rf "$RUNNER_TEMP/gen"; git worktree prune
+            git worktree add -q "$RUNNER_TEMP/gen" "$GEN"
+            (cd "$RUNNER_TEMP/gen" && uv sync -q && uv run tma2-generate --seed "$SEED" --count "$COUNT" \
+              --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$2")
+            want=$(python3 -c "import json; print(json.load(open('$DIGESTS'))['$SPLIT.f32pack'])")
+            got=$(sha256sum "$2/$SPLIT.f32pack" | cut -d' ' -f1)
+            echo "$2/$SPLIT.f32pack: $got (committed $want)"
+            [ "$got" = "$want" ]
+            git worktree remove --force "$RUNNER_TEMP/gen"
+          }
+          gen "p['data']" "$RUNNER_TEMP/data"
+          echo "TRUTH=$RUNNER_TEMP/data/$(python3 -c "import json; print(json.load(open('$PLAN'))['data']['split'])").f32pack" >> "$GITHUB_ENV"
+          if python3 -c "import json, sys; sys.exit(0 if json.load(open('$PLAN')).get('naive') else 1)"; then
+            gen "p['naive']['data']" "$RUNNER_TEMP/naive"
+            echo "NAIVE=$RUNNER_TEMP/naive/$(python3 -c "import json; print(json.load(open('$PLAN'))['naive']['data']['split'])").f32pack" >> "$GITHUB_ENV"
+          fi
+      - name: Fetch the inputs from their results branches
+        run: |
+          mkdir -p "$RUNNER_TEMP/in"
+          python3 -c "
+          import json; p = json.load(open('$PLAN'))
+          for n, s in p['segmentations'].items(): print(n, s['branch'], s['path'])" | while read -r N B P; do
+            git fetch -q origin "$B"
+            git show "FETCH_HEAD:$P" > "$RUNNER_TEMP/in/$N.ndjson"
+            sha256sum "$RUNNER_TEMP/in/$N.ndjson"
+          done
+          G=$(python3 -c "
+          import json; g = json.load(open('$PLAN')).get('glr_confirm')
+          print(f\"{g['branch']} {g['dir']}\" if g else '')")
+          if [ -n "$G" ]; then
+            set -- $G
+            git fetch -q origin "$1"
+            mkdir -p "$RUNNER_TEMP/glr"
+            git archive FETCH_HEAD "$2" | tar -x -C "$RUNNER_TEMP/glr"
+            echo "GLR=$RUNNER_TEMP/glr/$2" >> "$GITHUB_ENV"
+            ls "$RUNNER_TEMP/glr/$2/confirm" | wc -l
+          fi
+      - run: uv sync
+      - name: Score
+        run: |
+          OUT="experiments/score-runs/$NAME-${{ github.run_id }}"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          ARGS=$(python3 -c "
+          import json, shlex; p = json.load(open('$PLAN'))
+          out = ['--start', str(p['start']), '--count', str(p['count']), '--imm', p['imm']]
+          out += ['--segmentations'] + [f'{n}=$RUNNER_TEMP/in/{n}.ndjson' for n in p['segmentations']]
+          if p.get('modes'): out += ['--modes'] + p['modes']
+          if p.get('ekf'): out += ['--ekf', p['ekf']]
+          if p.get('detectability'): out += ['--detectability']
+          if p.get('glr_confirm'): out += ['--glr-confirm', '$GLR:' + p['glr_confirm']['config']]
+          if p.get('naive'):
+              a, c = p['naive']['ordinals']; out += ['--naive-train', f'$NAIVE:{a}:{c}']
+          if p.get('gate'):
+              g = p['gate']; out += ['--decision', g['decision'], '--plan', g['plan'], '--split', g['split']]
+          print(shlex.join(out))")
+          set +e
+          eval uv run tma2-gs --truth "$TRUTH" --experiment "$RUNNER_TEMP/out" $ARGS
+          rc=$?
+          set -e
+          echo "tma2-gs exit $rc"
+          [ "$rc" = 0 ] || [ "$rc" = 3 ]
+          mkdir -p "$OUT"
+          cp -r "$RUNNER_TEMP/out/." "$OUT/"
+          cp "$PLAN" "$OUT/plan.json"
+          printf '{"run_id": "%s", "commit": "%s", "exit": %s}\n' "${{ github.run_id }}" "${{ github.sha }}" "$rc" > "$OUT/run.json"
+      - name: Push the results branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/score-$NAME-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: scoring run $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"
