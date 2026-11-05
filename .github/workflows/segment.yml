@@ -139,7 +139,10 @@ jobs:
           print(f"{len(recs)} segmentations from {len(files)} shards")
           EOF
           cp "$PLAN" "$OUT/plan.json"
-          printf '{"run_id": "%s", "commit": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" > "$OUT/run.json"
+          # a segmentation's near-threshold decisions can flip on last-bit cost differences between
+          # CPU families (Gate S panel round 2); record the merge runner's (shards run alike)
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "cpu_model": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" "$CPU" > "$OUT/run.json"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           BR="results/segment-$NAME-${{ github.run_id }}"

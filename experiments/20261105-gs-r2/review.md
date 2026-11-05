@@ -1,5 +1,9 @@
 # Gate S agent review panel
 
+**Decided: S1 pass, S2 pass, S3 pass, S4 inconclusive; reference C; panel round 2, on record r2**
+(`experiments/20261105-gs-r2/`). Inconclusive counts as not passed (decision record), so C is
+Gate 2's segmenter and control, and learning is recorded as not shown (FR-072).
+
 Gate S (spec 005, Annex A §A.9), pre-registered in `experiments/20261104-gs-decision/`, judged on
 seed 315. Records:
 
@@ -70,8 +74,9 @@ from acceptance on. FR-002 broken on 1,148 of C's 19,921 test prefixes (5.8%) an
   a prefix's segmentation of [0, k] ends an open transition at k, so `segmentation_inputs` puts
   the second knot at k. The oracle and confirmation treat an open span as a start knot only. Under
   either convention the state at k is weakly determined (the transition's bearings are masked);
-  the convention is the same for C and L, so S4 is unaffected, and it cannot help C against GLR +
-  confirm. Changing it now would change C's design after results. The algorithm note states it,
+  it cannot help C against GLR + confirm. *Corrected in round 2 (geometry, N1):* the convention
+  is shared, but its effect is not neutral between C and L, because L is open at k less often
+  (944 rows against 1,148); see round 2. Changing it now would change C's design after results. The algorithm note states it,
   and Gate 2's decision record must fix one convention for open transitions across the oracle and
   segmenters before any result.
 
@@ -161,3 +166,108 @@ C's, its downstream error is not.
 - **R6's reporting:** the references give no plausible estimate on 20–25% of test rows; the naive
   baseline's median range error (0.397) is below one leg's (0.589) and the IMM's (0.577); C is at
   2.7× the known-manoeuvres bound in range, the oracle at 1.6×.
+
+
+## Round 2 (5 November 2026): record r2 at 9957471 (`experiments/20261105-gs-r2/`)
+
+The same five specialities, read-only, given round 1's findings and responses, the r2 record, the
+re-made inputs and the code changes since round 1.
+
+| Reviewer | Verdict | Blocker | Major | Minor |
+| --- | --- | --- | --- | --- |
+| TMA geometry | approve-with-findings | 0 | 0 | 4 |
+| Estimation and numerics | approve-with-findings | 0 | 0 | 4 |
+| Evaluation statistics | approve-with-findings | 0 | 0 | 4 |
+| Reproducibility | approve-with-findings | 0 | 0 | 3 |
+| Red team | approve-with-findings | 0 | 0 | 7 |
+
+Every round-1 blocker and major is resolved: R1 fixed and verified (geometry traced every other
+path by which a decision after k could reach prefix k and found none; red team re-segmented ten
+open-transition prefixes at HEAD with the bearings after k removed, all equal; statistics found
+the r1 → r2 change confined to C's and L's open-transition prefixes); R2 answered (with the
+correction N1 below); R3 and R4 answered and recorded; R5 resolved in substance; R6 fixed (with
+the slices completed in round 2).
+
+### Summaries
+
+**TMA geometry: approve-with-findings.** R1 resolved: the only field changed after acceptance is
+start/end/closed_at at close; end and closed_at are used only once closed_at ≤ k; score, drop and
+near misses never change; closed-at-acceptance transitions are polished only at acceptance; L's
+evidence, O's labels, GLR and the search are causal. Cutting fixture scenario 2 to n = k + 1 for
+k = 573–575: new code 0 of 3 differ, old code 3 of 3. r1 → r2: 728 of C's 732 changed prefixes hold
+an open transition, each moving its start by −3 to +3 rows (one merge, N3). R2 answered for S1–S3:
+on the 1,148 rows open at k C recovers 0.657 against 0.905 elsewhere, GLR + confirm 0.159 against
+0.142; without them S2's margin is 0.763. r2 is geometrically plausible (bands monotone; C at 2.7×
+and the oracle at 1.6× the bound consistent with the gap hand-over).
+- [minor] N1: S4's whole L − C difference sits on open-transition rows (neither open, 18,481 rows:
+  C 0.9066, L 0.9065; either open, 1,440 rows: C 0.677, L 0.732), because L is open less often;
+  round 1's "the convention is the same for C and L, so S4 is unaffected" is wrong. The verdict
+  does not change.
+- [minor] N2: the regression tests masked the bearings after k but kept n, so a close scheduled
+  after k still ran; the new test failed on the old code only through its pinned value.
+- [minor] N3: an open transition reserves [s, s + 1] in `_free`, so transitions can overlap and
+  merge; polished transitions reach 42 rows.
+- [minor] N4: the 4 changed prefixes away from open transitions (ordinal 3445) are put down to
+  runner noise without evidence; segment runs record no CPU model.
+
+**Estimation and numerics: approve-with-findings.** R3 resolved (answered: the README gives the corrected figures and cause; not retraining is correct; s2 no better than C, AUCs 0.42–0.53). R4 resolved as a recorded, deferred defect (C and L share the tables; confirmation re-costs every nomination; Gate 2's record should list the fix with a monotonicity check on the validation tables). Round-1 minors acceptable. New checks: efficiency reproduces exactly on all 5,059 scenarios (oracle 1.631/1.870/1.834, C 2.719/2.949/2.754, one leg 15.60/20.58/14.35, naive 7.987/22.65/6.287); 19 of 19,921 rows have a singular bound; in the 67 change-free rows every estimator scores 1.136 (the bound's scale is right); the oracle's 1.6 is the gap hand-over's floor (it masks bearings the bound uses); naive below one leg is genuine (one leg's constant-velocity fit over several unmodelled changes; naive also lower on one leg's finite rows, 0.399 vs 0.413).
+- [minor] `gs.py:41` `_q` raises IndexError on an all-infinite cell (not triggered here).
+- [minor] Labels: efficiency counts no-estimate rows as above any finite value (one leg 15.6 vs 9.6 on finite rows); "Range > 50%" includes no-estimate rows; neither stated.
+- [minor] Say what the bound assumes (change profiles known), so the oracle's 1.6 reads as the hand-over's floor; give C beside the oracle and naive too.
+- [minor] No unit tests for bounds, efficiency_of, naive_errors, strata, glr_confirm_intervals, _q.
+
+**Evaluation statistics: approve-with-findings.** Recomputed S1–S4 for r2 from `errors.npz` and the r2 segmentations with the repo's bootstrap: every number matches `verdict.json` to the last digit (S2 +0.7549249 [0.7112297, 0.7977379]; S3 P90 −0.0012464 [−0.0055556, +0.0036036] on 19,766 paired rows; S4 +0.0011798 [−0.0031191, +0.0049002]); README medians, gross rates and finite-row medians match for all nine estimators; committed files byte-identical to the CI branch. Between r1 and r2 the one-leg, oracle, IMM and GLR + confirm errors are byte-identical; only C (730 rows) and L (582) changed, every changed error row has a changed segmentation, and 728 of C's 732 changed prefixes hold an open transition. Validation recomputed: mode gap (+0.00577 [−0.00284, +0.01267]), S2 +0.63242, carried s3, shuffled −0.00158 [−0.00891, +0.00499] pass. Round-1 findings: median convention resolved; S3 vacuity answered (wording drift below); S1 answered; first run resolved. Re-scoring seed 315: legitimate as the correction of a measurement error (panel-mandated, confined to open-transition prefixes, nothing else changed, identical verdicts, r1 kept), not a new look; a fresh seed would itself amend the decision's bound test seed after results. Conditions: say so in the README, do not present r2 as independent confirmation of r1, Gate 2 takes a fresh seed.
+- [minor] Physics-layer errors differ between CI runners: the two r2 validation scorings at the same commit differ (one leg 8,673 of 11,802 values, 12 rows flip finiteness, median 0.581251 vs 0.580468; C-gap gap 0.8914 vs 0.8912); the l run matches round 1's local runs exactly. No rule affected (paired within a run). Record the CPU model; state that byte reproducibility holds only on one CPU family.
+- [minor] The algorithm note defines false split as "any transition on a scenario with no target change"; the code counts prefixes with no change begun by k.
+- [minor] S1 with no rows raises (`finite_stat` → bootstrap ValueError); only `paired()` returns NaN.
+- [minor] The second look at seed 315 is not justified in writing.
+
+**Reproducibility: approve-with-findings.** Round-1 findings resolved: every input fetched from its results branch matches `manifest.json` (C e33a1cd1…, L 02d6807a…, GLR + confirm 66 files → 38bd1f04… as `_input_digests` computes, naive split e8150cb0… = seed 314 validation, truth 1a8d55fe…, decision, plan, carried.json, seed315-digests); the record is byte-identical to `results/score-r2-gate-42068715251`; `score.yml` regenerates the data at its commit, checks the digest and scores from a clean checkout; between 7fe8874 and 9957471 only `cli/gs.py` and `segment/score.py` changed (not used by tma2-segment); 5541e54 and 9957471 have the same `src` tree; the first run's manifest is committed. Headers: C 60e6ee63… = params digest, L a187379e… = expected_l_sha for 1b243020…, both 7fe8874 clean. Validation c/ and l/ byte-identical to their branches; carried and shuffled numbers match. Re-runs of C and L on test ordinals 7 and 25 (six of seven prefixes inside an open transition): all 14 C prefixes and 6 of 7 L prefixes reproduce exactly.
+- [minor] L's intervals depend on which scenarios share its physics-layer batch: ordinal 25 alone accepts an extra transition at prefix 245; re-run as 25–26 (CI's padding, r_max 683) all 8 prefixes reproduce. Padding (`r_max` over the chunk, `segmenter.py:145`) changes last bits that flip a near-threshold acceptance. The gate is unaffected (segmentations reproduce from a plan's ordinals and shards with CHUNK = 16), but a subset re-run can differ. State it, or pad to a fixed length.
+- [minor] Validation C's segmenter digest (2e05b4b6…, mode chord in the T021 plan) differs from the gate's; `confirm.py` never reads `mode`, so the intervals are the same segmenter's. Say so in the r2-val README.
+- [minor] Non-gate scorings write no input digests (bound only by run.json and plan.json branch names).
+- [note] `segment.yml`'s run.json has no CPU model; the chunk layout matters more than the CPU for segmentations.
+
+**Red team: approve-with-findings.** R1 resolved: between e648f8b and 9957471 only `Transition.accepted_start`/`start_at` and segmenter.py:103 touch segmentation; r1 vs r2 on all 19,921 test prefixes: C changed on 732 (727 only the start of the final open transition), L on 583 (582); r2's C has exactly 1,148 open-final prefixes; an independent causality check at HEAD (bearings after k masked, 10 prefixes in 6 test scenarios, 9 with the last interval open) gave full = cut = stored r2 on every one. R5 resolved in substance (S2 uses the registered GLR + confirm, not the diagnostic); R6 mostly resolved; median convention, "mostly GLR", empty set, S1 answered. Process clean: decision, plan and carried.json untouched; same digests; ordering 7fe8874 segmentations → 5541e54 validation → 9957471 test; no unrecorded test scoring; the only post-r1 changes reaching the gate statistics are the fix, the registered median convention and NaN for empty criteria, none of which can favour a pass; follow-on matches FR-072.
+- [minor] "S2's margin is segmentation, not hand-over" holds on all rows only; on the 14,142 rows every estimator answers the gap hand-over helps GLR + confirm (0.276 vs 0.263). It explains at most ~0.02 of a ~0.57 margin.
+- [minor] The decision not to take constitution IV's re-score is not in the README or blog.
+- [minor] The 0.90 headline's dependence on failed one-leg rows is not quantified (≈0.84 on rows every estimator answers; 0.839 with naive as the baseline).
+- [minor] Slices incomplete: no zig angle or time since zig; the "changes" stratum is uninformative (19,849 of 19,921 rows in "1-5").
+- [minor] 4 prefixes changed between r1 and r2 away from open transitions (scenario 3445, a closed transition [18,39] → [18,36]): a polish choice flipped on last-bit cost differences.
+- [minor] `segmenter_sha256` binds parameters only, so stale (leaky) segmentations would pass the preflight; Gate 2 should bind the segmenter code commit.
+- [minor] S3's result row should say "underpowered".
+
+### Responses
+
+- **Geometry N1**: *accepted.* R2's sentence is corrected above; the write-up and AGENTS.md
+  record the open-transition hand-over as the main lever for Gate 2 (C 0.66 on open rows against
+  0.91 elsewhere).
+- **Geometry N2**: *fixed.* Both invariance tests now cut the scenario to rows 0 … k (`_cut`);
+  with `start_at` patched to the old behaviour the equality assertion alone fails (start 538
+  against 541), and it passes on the fixed code.
+- **Geometry N3**: *recorded* in the algorithm note and AGENTS.md, to fix with the search defect
+  before Gate 2.
+- **Geometry N4, reproducibility note**: *fixed:* `segment.yml` and `score.yml` runs record the
+  CPU model.
+- **Numerics**: *fixed:* `_q` on an all-failed cell returns +inf; unit tests for `bounds`,
+  `efficiency_of`, `naive_errors`, `strata` and `_q`; the README states how failed rows count in
+  efficiency and "Range > 50%", what the bound assumes, and C against the oracle (1.8×) and the
+  naive baseline (0.30×). The cost-table fix is a Gate 2 prerequisite, with a monotonicity check
+  on the validation tables (AGENTS.md).
+- **Statistics**: *fixed:* S1 with no rows is inconclusive; the algorithm note's false-split
+  definition is the measure as built; runs record the CPU model and the r2-val README says that
+  part of the round-1 → round-2 differences is runner noise; the r2 README says why the same seed
+  was re-scored, that r2 is not an independent confirmation of r1, and that Gate 2 takes a fresh
+  seed.
+- **Reproducibility**: *fixed:* the batch-padding dependence is in AGENTS.md's gotchas and the
+  algorithm note; the r2-val README explains validation C's different digest (confirmation does
+  not read the mode); every scoring writes `inputs.json` with its input digests.
+- **Red team**: *fixed:* the hand-over wording ("at most about 0.02"); the finite-row headline
+  (0.838 on the 14,142 rows every estimator answers; 0.839 from the naive baseline) in the
+  write-up, README and AGENTS.md; the re-score not taken, with its reason, in the README and
+  write-up; zig-angle and time-since-zig slices (`slices-extra.json`,
+  `scripts/research/gs_slices_extra.py`); the 4 non-fix prefix changes; the segmenter digest
+  binding parameters only, with "bind the code commit" as a Gate 2 prerequisite; S3's row marked
+  underpowered in the write-up.
+
+No reviewer rejects and no blocker or major finding is open. The verdict stands as decided above.

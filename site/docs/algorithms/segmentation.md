@@ -81,6 +81,13 @@ speed prior is applied across every transition, speed changes included.
 
 The mode is fixed on validation: gap had the lower median range error, 0.120 against 0.123.
 
+**Known defect (Gate S panel round 2).** An open transition reserves only [s, s + 1] when later
+nominations are checked for overlap, so a second transition can be accepted inside the first's
+eventual span, and the close picks its length without an overlap check: the two then merge into
+one interval (21 of C's 1,148 open test intervals are older than the 35-row close; one reaches 60
+rows). Polish checks only T_min, so polished transitions reach 42 rows. Rare, the same for C and
+L, and fixed with the search defect before Gate 2.
+
 **Known defect (Gate S panel round 1).** The search's cost table warm-starts each leg's fit from
 the shorter leg's and takes a fresh grid start only every fourth step, so some entries are failed
 fits: a longer leg costs less than a nested shorter one (by more than 100 χ² for 3,191 pairs in

@@ -119,18 +119,28 @@ def test_noise_free_after_zig(man2_noise_free_pack: Path, layer: PhysicsLayer) -
     assert checked >= 1
 
 
+def _cut(d: BearingData, k: int) -> BearingData:
+    """The scenario truncated to rows 0 … k. Masking the later bearings is not enough: a close
+    scheduled after k would still run on the masked data (Gate S panel round 2)."""
+    return BearingData(
+        t=d.t[: k + 1].copy(),
+        ox=d.ox[: k + 1].copy(),
+        oy=d.oy[: k + 1].copy(),
+        z=d.z[: k + 1].copy(),
+        valid=d.valid[: k + 1].copy(),
+        zig_index=d.zig_index,
+        sigma=d.sigma,
+        index=d.index,
+    )
+
+
 def test_prefix_invariance(man2_noise_free_pack: Path, layer: PhysicsLayer) -> None:
     """C's segmentation at row k does not change when the bearings after k are removed."""
     m, d = _short(man2_noise_free_pack, count=1)[0]
     k = int(m["zig_index"]) + 60
     rows = [k, k + 30] if k + 30 < d.n else [k]
     full = segment(layer, [d], [m], [rows], P)[0][0]
-    cut = BearingData(**{**d.__dict__})
-    cut.valid = d.valid.copy()
-    cut.valid[k + 1 :] = 0
-    cut.z = d.z.copy()
-    cut.z[k + 1 :] = 0.0
-    alone = segment(layer, [cut], [m], [[k]], P)[0][0]
+    alone = segment(layer, [_cut(d, k)], [m], [[k]], P)[0][0]
     assert full.intervals == alone.intervals
     assert full.cost == pytest.approx(alone.cost, rel=1e-12)
 
@@ -151,11 +161,6 @@ def test_prefix_invariance_open_transition(man2_pack: Path, layer: PhysicsLayer)
     k = 574
     rows = [int(m["zig_index"]), k]  # the search grid is anchored on the first scored row
     full = segment(layer, [d], [m], [rows], pg)[0][1]
-    cut = BearingData(**{**d.__dict__})
-    cut.valid = d.valid.copy()
-    cut.valid[k + 1 :] = 0
-    cut.z = d.z.copy()
-    cut.z[k + 1 :] = 0.0
-    alone = segment(layer, [cut], [m], [rows], pg)[0][1]
+    alone = segment(layer, [_cut(d, k)], [m], [rows], pg)[0][1]
+    assert full.intervals == alone.intervals  # fails on the old code (start 538 against 541)
     assert full.intervals[-1].open and full.intervals[-1].start == 541
-    assert full.intervals == alone.intervals

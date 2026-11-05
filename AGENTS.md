@@ -53,7 +53,7 @@ run `.github/workflows/tune.yml` (results to `results/man2-tune-<run id>`); froz
 test segmentations on CI (`segment.yml` plans `configs/segment/gs-test-*.json`;
 `glr-confirm/**` for the reference), scoring `tma2-gs ... --decision --plan --split test`.
 **Gate S scored** (record r2 `experiments/20261105-gs-r2/`, after panel round 1 rejected r1 for a
-causality bug in C's open-transition start, fixed in 7fe8874; panel round 2 pending): S1–S3 pass,
+causality bug in C's open-transition start, fixed in 7fe8874; decided by panel round 2): S1–S3 pass,
 S4 inconclusive (L − C gap recovered +0.0012 [−0.0031, +0.0049]); C recovers 0.898 of the
 one-leg-to-oracle gap (0.838 on the rows every estimator answers: one leg and the IMM fail on a
 quarter), GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
@@ -61,7 +61,10 @@ passed): C is Gate 2's segmenter and control; learning recorded as not shown. Sc
 (`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Before Gate 2: fix the
 search's cost-table fit failures (`segment/search.py` warm starts; check monotonicity on the
 validation tables), bind the segmenter's code commit in segmentation headers (the digest binds
-parameters only), fix one open-transition hand-over convention, and take a fresh test seed. Write-up:
+parameters only), fix one open-transition hand-over convention (the main lever: C recovers 0.66 of the gap on
+rows open at k against 0.91 elsewhere, and S4's whole L − C difference sits on those rows), stop
+transitions overlapping through open ones (`_free` treats an open transition as [s, s + 1]), and
+take a fresh test seed. Write-up:
 `site/blog/2026-11-05-gate-s.md`.
 
 ## Stack (owner decisions, 2026-10-31)

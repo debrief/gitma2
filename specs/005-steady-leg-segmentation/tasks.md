@@ -197,7 +197,7 @@ before US3, because L uses O's labels as input (FR-043).
 
   Add `tests/unit/test_gs_gate.py`, covering the refusals and the pass, fail and inconclusive logic of FR-071.
 - [x] T038 Score Gate S on seed 315 at a clean commit: C, L (carried), GLR + confirm, the oracle, one leg, batch least squares and the frozen MAN2 IMM, all on the same rows. Write the results to `experiments/<date>-gs/` — done: `experiments/20261105-gs/` at e648f8b; S1–S3 pass, S4 inconclusive, reference C
-- [ ] T039 Convene the agent review panel: five or more read-only reviewers (geometry, numerics, statistics, reproducibility, red team), in rounds until no reviewer rejects and no blocker or major finding is open. Commit `experiments/<date>-gs/review.md` and set `decided_by`. Then apply the follow-on of FR-072
+- [x] T039 Convene the agent review panel: five or more read-only reviewers (geometry, numerics, statistics, reproducibility, red team), in rounds until no reviewer rejects and no blocker or major finding is open. Commit `experiments/<date>-gs/review.md` and set `decided_by`. Then apply the follow-on of FR-072 — done: round 1 rejected record r1 (causality bug, fixed in 7fe8874); round 2 approved record r2 (`experiments/20261105-gs-r2/`, `review.md`): S1–S3 pass, S4 inconclusive; C carries into Gate 2, learning recorded as not shown
 
 ## Phase 9: Polish
 
