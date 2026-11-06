@@ -96,10 +96,26 @@ class NearMiss:
 
 
 @dataclass
+class Decision:
+    """One confirmation decision on a nomination's best candidate (spec 007 research R2: E-s's
+    decision tables). ``threshold`` is the χ² point without evidence; the candidate is accepted
+    when ``drop`` exceeds it shifted by the evidence (C: no shift)."""
+
+    row: int  # a: the prefix the test ran on
+    start: int
+    length: int
+    source: str
+    drop: float  # base cost − the candidate's cost
+    threshold: float
+    accepted: bool
+
+
+@dataclass
 class Confirmed:
     transitions: list[Transition] = field(default_factory=list)
     near_misses: list[NearMiss] = field(default_factory=list)
     solves: int = 0
+    decisions: list[Decision] = field(default_factory=list)
 
 
 def glr_nominations(stat: np.ndarray, threshold: float, p: SegmentParameters) -> list[Nomination]:
@@ -255,6 +271,17 @@ def _confirm_one(
                 if s > best_score:
                     best_len, best_score, best_cost = ln, s, cst
         e = c + best_len - 1
+        res.decisions.append(
+            Decision(
+                a,
+                c,
+                best_len,
+                nom.source,
+                base - best_cost,
+                tau4 if e <= a else tau,
+                best_score > 0.0,
+            )
+        )
         if best_score <= 0.0:
             if best_score > -p.margin:
                 res.near_misses.append(NearMiss(c, min(e, a), a, best_score))
