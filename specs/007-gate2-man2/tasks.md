@@ -102,12 +102,12 @@ differs from the decision's.
   - a `models.gate1` encoder over features plus the C code channel;
   - a weight head (tanh × `weight_bound`) and an initial-state correction head, zero last layers;
   - `PhysicsLayer(knots=12)` with implicit differentiation, on `gate2.inputs`. — done: `gate2/model.py` (`EWeights`: the Gate 1 encoder with C's code channel, weight and init heads, `PhysicsLayer(knots=12)`; the start correction applied as a difference so zero heads are exact)
-- [ ] T014 [US2] Implement `src/tma2/gate2/loss.py` (research R4):
+- [x] T014 [US2] Implement `src/tma2/gate2/loss.py` (research R4):
   - the bound-normalised per-component error against the truth state (known-manoeuvres bound,
     `crb_known_manoeuvres_fast`);
   - each prefix clipped at the cap (100);
   - prefixes excluded whose physics-layer cost exceeds 20 × their valid bearings;
-  - the trimmed mean (10% tails) for validation.
+  - the trimmed mean (10% tails) for validation. — done: `gate2/loss.py` (`e_loss`: known-manoeuvres-bound-normalised (log range, vx, vy), cap, failed-fit exclusion at 20 × valid bearings, auxiliary initial-state term; `trimmed_mean`), `tests/unit/test_gate2_loss.py`
 - [ ] T015 [US2] Implement `src/tma2/gate2/train.py` and `src/tma2/cli/g2train.py` (`tma2-g2train
   train`):
   - examples are each scenario's G5 prefixes plus 2 seeded sampled prefixes per epoch;

@@ -33,6 +33,9 @@ class EOutput:
     state: Tensor  # [N, 4] (x, y, vx, vy) at the row
     cov: Tensor  # [N, 4, 4]
     plausible: Tensor  # [N] bool
+    cov_ok: Tensor  # [N] bool
+    cost: Tensor  # [N] the solve's weighted χ² cost
+    init_state: Tensor  # [N, 4] the corrected start's state at the row (auxiliary loss)
     log_weight: Tensor  # [N, R] the log-weights the solve used
 
 
@@ -72,7 +75,7 @@ class EWeights(nn.Module):
         delta = self.init_head(hk)
         # the correction as a difference from the zero correction, so zero heads give C's start
         # bit for bit (the round trip through the row's state is not exact in floating point)
-        moved, _ = Gate1Model._corrected_start(x.theta0, delta, tk, okx, oky)
+        moved, init_state = Gate1Model._corrected_start(x.theta0, delta, tk, okx, oky)
         still, _ = Gate1Model._corrected_start(x.theta0, torch.zeros_like(delta), tk, okx, oky)
         theta0 = x.theta0 + (moved - still)
         out = self.physics(
@@ -90,4 +93,4 @@ class EWeights(nn.Module):
                 speed_skip=x.speed_skip,
             )
         )
-        return EOutput(out.state, out.cov, out.plausible, log_w)
+        return EOutput(out.state, out.cov, out.plausible, out.cov_ok, out.cost, init_state, log_w)
