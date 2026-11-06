@@ -83,6 +83,7 @@ jobs:
           for k, v in p.get('set', {}).items(): out += ['--set', f'{k}={json.dumps(v)}']
           if p.get('params_from'): out += ['--params', '$RUNNER_TEMP/params.json']
           if p.get('glr_tune'): out += ['--glr-tune', p['glr_tune']]
+          if p.get('extra_nominations'): out += ['--extra-nominations', p['extra_nominations']]
           if p.get('weights'):
               out += ['--segmenter', 'L', '--weights', '$RUNNER_TEMP/weights.safetensors', '--plan', p['weights']['plan']]
           print(shlex.join(out))")
