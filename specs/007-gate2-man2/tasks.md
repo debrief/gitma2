@@ -108,14 +108,14 @@ differs from the decision's.
   - each prefix clipped at the cap (100);
   - prefixes excluded whose physics-layer cost exceeds 20 × their valid bearings;
   - the trimmed mean (10% tails) for validation. — done: `gate2/loss.py` (`e_loss`: known-manoeuvres-bound-normalised (log range, vx, vy), cap, failed-fit exclusion at 20 × valid bearings, auxiliary initial-state term; `trimmed_mean`), `tests/unit/test_gate2_loss.py`
-- [ ] T015 [US2] Implement `src/tma2/gate2/train.py` and `src/tma2/cli/g2train.py` (`tma2-g2train
+- [x] T015 [US2] Implement `src/tma2/gate2/train.py` and `src/tma2/cli/g2train.py` (`tma2-g2train
   train`):
   - examples are each scenario's G5 prefixes plus 2 seeded sampled prefixes per epoch;
   - 4 worker processes at 1 thread each;
   - checkpoints with Adam state and meta (`weights_sha256`, `cpu_model`, `git_dirty`) after every
     epoch; resume; the wall budget;
   - early stopping on the robust loss (patience 3, relative 1e-3);
-  - the shuffled control trains on another scenario's truth labels.
+  - the shuffled control trains on another scenario's truth labels. — done: `gate2/train.py` (prefix tables with C's hand-over, code channel, truth and known-manoeuvres bound; seeded batches; implicit differentiation; robust validation; checkpoints with SHA-256, CPU model and resume; the shuffled control moves another prefix's relative target onto this one), `cli/g2train.py` (`tables`, `train`), `tests/unit/test_gate2_train.py`. Training uses the G5 prefixes only (C segments G5 rows), not 2 extra sampled prefixes
 - [ ] T016 [US2] Measure the throughput on one runner **(CI)**: one epoch over 1,000 stream
   scenarios with `configs/gate2/throughput.json`. Record seconds per prefix and per epoch in
   research R4.
