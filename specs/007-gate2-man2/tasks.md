@@ -151,9 +151,13 @@ differs from the decision's.
     loss (what inference does); the shuffled control draws each decision row's error pair from
     the whole training set, re-drawn every epoch. The relaxation holds C's best candidate fixed;
     at inference evidence can also change the best start or length (recorded in `es.py`).
-- [ ] T020 [US2] Implement `src/tma2/gate2/predict.py` and `src/tma2/cli/g2predict.py`
+- [x] T020 [US2] Implement `src/tma2/gate2/predict.py` and `src/tma2/cli/g2predict.py`
   (`tma2-g2predict`): E-s's decisions, then E-w's weights; per-row predictions with
   `EPredictionHeader` (`weights_sha256`, `plan_sha256`, `code_sha256`).
+  - Done. Plan models carry `kind` (`e`, `ew`, `es`); the CLI refuses missing or extra weights
+    and other C digests. Untrained E-w reproduces the scorer's C errors and untrained E-s C's
+    segmentation (tests). `weights_sha256` is the SHA-256 of the E-s and E-w digests joined by
+    `+` (each also in the header).
 - [x] T021 [US2] Create `.github/workflows/g2train.yml` (`g2train/<plan>`):
   - a matrix of models, chained jobs of ≤ 345 min resuming from the checkpoints branch;
   - inputs (stream segmentations, tables) fetched from results branches;
