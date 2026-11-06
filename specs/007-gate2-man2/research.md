@@ -108,7 +108,8 @@ would then have to be recomputed each epoch.
 **Decision.**
 - **Open-transition hand-over:** chosen by `score/c3-val` (FR-002), the lowest median range over
   G5 rows among `knot_at_k`, `start_masked` and `start_chord`. Recorded in
-  `experiments/20261106-c3-val/` **(CI, running)**.
+  `experiments/20261106-c3-val/`: **`knot_at_k`** (it ties `start_masked` on median range,
+  0.120299, and is best on the 210 open-at-k rows, 0.695 against 0.653 and 0.680).
 - **Knot cap:** raised from 8 to 12 in every Gate 2 scoring and in E. Measured on validation: 7 of
   3,934 G5 prefixes need more than 8 knots, for the oracle and for C alike (maximum 10).
 - **Freezing:** C's parameter digest and code digest (`segment/codeid.py`) are frozen in the

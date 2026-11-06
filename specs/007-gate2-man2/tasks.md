@@ -15,7 +15,7 @@ of more than a few minutes (AGENTS.md).
 
 ## Phase 1: Setup (prerequisites from Gate S)
 
-- [ ] T001 **(CI)** Record the open-transition hand-over choice from `results/score-c3-val-*`
+- [x] T001 **(CI)** Record the open-transition hand-over choice from `results/score-c3-val-*`
   (`configs/score/c3-val.json`):
   - choose by the lowest median range error over σ = 1° G5 rows among `C-gap-knot_at_k`,
     `C-gap-start_masked` and `C-gap-start_chord`;
@@ -24,7 +24,7 @@ of more than a few minutes (AGENTS.md).
   - compare with `experiments/20261105-gs-r2-val/c` (C-gap 0.891; S2 +0.632);
   - commit `experiments/20261106-c3-val/` (metrics, report, plan, run, inputs, README with the
     choice and a one-line reason);
-  - update spec FR-002's note and research R5.
+  - update spec FR-002's note and research R5. — done: `experiments/20261106-c3-val/` — `knot_at_k` (ties `start_masked` on median range 0.120299; best on the 210 open-at-k rows, 0.695; spec 005's default, parameter digest unchanged). C re-validated: gap recovered 0.891, S2 +0.632
 - [x] T002 Raise the physics layer's knot cap to 12 for Gate 2. Construct `PhysicsLayer(knots=12)`
   in the new `tma2.gate2` code and in `tma2-g2`, leaving Gate S's code paths unchanged. Test in
   `tests/unit/test_gate2_knots.py` that 10 knots on a fixture prefix are all active, and that an
