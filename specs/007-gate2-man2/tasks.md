@@ -29,13 +29,13 @@ of more than a few minutes (AGENTS.md).
   in the new `tma2.gate2` code and in `tma2-g2`, leaving Gate S's code paths unchanged. Test in
   `tests/unit/test_gate2_knots.py` that 10 knots on a fixture prefix are all active, and that an
   8-knot input gives the same state at caps 8 and 12. — done: `tma2.gate2.KNOTS = 12`; `tests/unit/test_gate2_knots.py` (all ten knots used at cap 12, two dropped at cap 8, equal states with eight)
-- [ ] T003 **(CI)** Nominator ceiling (research R1):
+- [x] T003 **(CI)** Nominator ceiling (research R1):
   - add `--extra-nominations truth` to `tma2-segment` (`src/tma2/cli/segment.py`): extra
     nominations at the true change starts, a diagnostic that refuses any test split;
   - segment validation ordinals 500–1499 on CI with plan `configs/segment/c3-val-truthnom.json`;
   - score it beside C (`configs/score/c3-val-truthnom.json`);
   - record the gain in `experiments/20261106-nominator-ceiling/README.md`. Form (a) is built only
-    if the gain is ≥ +0.02 in gap recovered.
+    if the gain is ≥ +0.02 in gap recovered. — done: `experiments/20261106-nominator-ceiling/` — ceiling − C +0.0164 [+0.0071, +0.0277] in range, below the +0.02 rule: form (a) not built
 
 ## Phase 2: Foundational
 

@@ -25,6 +25,9 @@ condition is a ceiling gain of at least +0.02 over C on the scoring ordinals.
 - **Cost.** Form (b) costs nothing extra at inference: one threshold shift per candidate. Form (a)
   costs physics solves per extra candidate.
 
+**Measured (T003, `experiments/20261106-nominator-ceiling/`).** The ceiling gains +0.0164
+[+0.0071, +0.0277] in gap recovered (range), below the +0.02 rule, so form (a) is not built.
+
 **Alternatives considered.**
 - Form (a) first: rejected unless the ceiling shows recall gains.
 - Gate S's L design (evidence through the additive search's lattice): rejected, because Gate S

@@ -1,0 +1,45 @@
+{
+  "description": "Spec 007 research R1 (T003): the nominator ceiling (C with the true change starts nominated) beside C on seed 314 validation ordinals 500-1499, gap mode, knot_at_k. A diagnostic.",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "start": 500,
+  "count": 1000,
+  "segmentations": {
+    "C": {
+      "branch": "results/segment-c3-val-42228602685",
+      "path": "experiments/segment-runs/c3-val-42228602685/segmentations.ndjson"
+    },
+    "Ctruth": {
+      "branch": "results/segment-c3-val-truthnom-42242668707",
+      "path": "experiments/segment-runs/c3-val-truthnom-42242668707/segmentations.ndjson"
+    }
+  },
+  "modes": [
+    "gap"
+  ],
+  "detectability": false,
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125"
+}
