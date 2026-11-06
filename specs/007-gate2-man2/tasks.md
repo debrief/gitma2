@@ -25,10 +25,10 @@ of more than a few minutes (AGENTS.md).
   - commit `experiments/20261106-c3-val/` (metrics, report, plan, run, inputs, README with the
     choice and a one-line reason);
   - update spec FR-002's note and research R5.
-- [ ] T002 Raise the physics layer's knot cap to 12 for Gate 2. Construct `PhysicsLayer(knots=12)`
+- [x] T002 Raise the physics layer's knot cap to 12 for Gate 2. Construct `PhysicsLayer(knots=12)`
   in the new `tma2.gate2` code and in `tma2-g2`, leaving Gate S's code paths unchanged. Test in
   `tests/unit/test_gate2_knots.py` that 10 knots on a fixture prefix are all active, and that an
-  8-knot input gives the same state at caps 8 and 12.
+  8-knot input gives the same state at caps 8 and 12. — done: `tma2.gate2.KNOTS = 12`; `tests/unit/test_gate2_knots.py` (all ten knots used at cap 12, two dropped at cap 8, equal states with eight)
 - [ ] T003 **(CI)** Nominator ceiling (research R1):
   - add `--extra-nominations truth` to `tma2-segment` (`src/tma2/cli/segment.py`): extra
     nominations at the true change starts, a diagnostic that refuses any test split;
@@ -39,7 +39,7 @@ of more than a few minutes (AGENTS.md).
 
 ## Phase 2: Foundational
 
-- [ ] T004 Add the LinkML types (data-model.md) to `schema/tma.yaml` and regenerate (schema
+- [x] T004 Add the LinkML types (data-model.md) to `schema/tma.yaml` and regenerate (schema
   0.25.0; update `tests/unit/test_types.py`'s version pin):
   - `EModelConfig` (encoder, `extra_channels`, `weight_bound`, `knots`, `evidence_network`,
     `temperature`, `components`);
@@ -47,10 +47,10 @@ of more than a few minutes (AGENTS.md).
   - `DecisionTableHeader`;
   - `EPredictionHeader`;
   - `Gate2Decision`;
-  - `Gate2Record` and `Gate2Verdict`.
-- [ ] T005 [P] Create the package skeleton `src/tma2/gate2/__init__.py` with module docstrings for
+  - `Gate2Record` and `Gate2Verdict`. — done: schema 0.25.0 (`EComponent`, `EModelConfig`, `DecisionTableHeader`, `EPredictionHeader`, `Gate2Decision`, `Gate2Verdicts`, `Gate2Record`); the training plan stays a plan file with typed `EModelConfig` entries, as Gate S's
+- [x] T005 [P] Create the package skeleton `src/tma2/gate2/__init__.py` with module docstrings for
   `model.py`, `inputs.py`, `tables.py`, `loss.py`, `train.py`, `predict.py` and `gate.py` (plan,
-  Source Code).
+  Source Code). — done: `src/tma2/gate2/__init__.py`; modules added as each task implements them
 - [ ] T006 Implement `src/tma2/gate2/inputs.py`: per-prefix physics inputs from a C segmentation,
   using `segment.inputs.segmentation_inputs` with the chosen `open_handover`. Learned
   log-weights are added to C's hand-over mask. Also C's per-row code channel at prefix k,

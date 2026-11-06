@@ -638,6 +638,58 @@
             "title": "DatasetRef",
             "type": "object"
         },
+        "DecisionTableHeader": {
+            "additionalProperties": false,
+            "description": "Header of an E-s decision table file (spec 007 research R2): C's confirmation decisions with the downstream errors with and without each.",
+            "properties": {
+                "code_sha256": {
+                    "description": "C's code digest.",
+                    "type": "string"
+                },
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "decisions": {
+                    "type": "integer"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "ordinals": {
+                    "description": "[first, last].",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "type": "array"
+                },
+                "parameters_sha256": {
+                    "description": "C's parameter digest.",
+                    "type": "string"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "dataset_digest",
+                "parameters_sha256",
+                "code_sha256",
+                "ordinals",
+                "decisions",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "DecisionTableHeader",
+            "type": "object"
+        },
         "DetectionRecord": {
             "additionalProperties": false,
             "description": "One scenario's detections by one detector (spec 004 R8).",
@@ -921,6 +973,130 @@
             ],
             "title": "DetectorVariant",
             "type": "string"
+        },
+        "EComponent": {
+            "description": "A learned part of Gate 2's model E (spec 007 research R2).",
+            "enum": [
+                "weights",
+                "evidence"
+            ],
+            "title": "EComponent",
+            "type": "string"
+        },
+        "EModelConfig": {
+            "additionalProperties": false,
+            "description": "Gate 2's model E (spec 007 data-model.md): the encoder and heads of E-w and the evidence network of E-s; untrained, E equals C (FR-022).",
+            "properties": {
+                "components": {
+                    "items": {
+                        "$ref": "#/$defs/EComponent"
+                    },
+                    "type": "array"
+                },
+                "encoder": {
+                    "$ref": "#/$defs/PhysicsModelConfig",
+                    "description": "The Gate 1 encoder's hyperparameters (smooth heads, zero last layers)."
+                },
+                "evidence_network_json": {
+                    "description": "E-s: the evidence network's configuration (spec 005's), as JSON.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "extra_channels": {
+                    "description": "Per-row inputs beyond spec 003's features: c_code (C's code at prefix k).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "id": {
+                    "description": "Model id in predictions, e.g. e-s1, ew-s2, e-shuffled.",
+                    "type": "string"
+                },
+                "knots": {
+                    "description": "Physics-layer knot cap (12; research R5).",
+                    "type": "integer"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "shuffled": {
+                    "description": "Trained on another scenario's truth labels (the shuffled-label control).",
+                    "type": "boolean"
+                },
+                "temperature": {
+                    "description": "E-s: T of the relaxed acceptance.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "seed",
+                "components",
+                "encoder",
+                "extra_channels",
+                "knots",
+                "shuffled"
+            ],
+            "title": "EModelConfig",
+            "type": "object"
+        },
+        "EPredictionHeader": {
+            "additionalProperties": false,
+            "description": "First record of a tma2-g2predict file (spec 007 contracts/cli.md).",
+            "properties": {
+                "code_sha256": {
+                    "description": "The code that made the prediction (C's and E's).",
+                    "type": "string"
+                },
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "parameters_sha256": {
+                    "description": "C's parameter digest.",
+                    "type": "string"
+                },
+                "plan_sha256": {
+                    "type": "string"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "weights_sha256": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "model",
+                "weights_sha256",
+                "plan_sha256",
+                "dataset_digest",
+                "parameters_sha256",
+                "code_sha256",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "EPredictionHeader",
+            "type": "object"
         },
         "EpochRecord": {
             "additionalProperties": false,
@@ -1236,6 +1412,207 @@
                 "validation_rule"
             ],
             "title": "Gate1Decision",
+            "type": "object"
+        },
+        "Gate2Decision": {
+            "additionalProperties": false,
+            "description": "The Gate 2 decision record (spec 007 FR-050, contracts/decision-record.md), committed before any E training.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "c_code_sha256": {
+                    "type": "string"
+                },
+                "c_parameters": {
+                    "$ref": "#/$defs/SegmentParameters"
+                },
+                "c_parameters_sha256": {
+                    "type": "string"
+                },
+                "carried_rule": {
+                    "type": "string"
+                },
+                "criterion": {
+                    "type": "string"
+                },
+                "ekf": {
+                    "type": "string"
+                },
+                "follow_on": {
+                    "type": "string"
+                },
+                "forecast": {
+                    "type": "string"
+                },
+                "g2a_limit": {
+                    "description": "E / IMM, median range and course, wholly below.",
+                    "type": "number"
+                },
+                "g2b_limit": {
+                    "description": "Settled rows, E / one leg, wholly below.",
+                    "type": "number"
+                },
+                "g2c_limit": {
+                    "description": "E's gap recovered, wholly above.",
+                    "type": "number"
+                },
+                "glr_confirm": {
+                    "type": "string"
+                },
+                "imm": {
+                    "type": "string"
+                },
+                "knots": {
+                    "type": "integer"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "rescore": {
+                    "type": "string"
+                },
+                "shuffled_rule": {
+                    "type": "string"
+                },
+                "test_count": {
+                    "type": "integer"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "train_seed": {
+                    "type": "integer"
+                },
+                "validation_digest": {
+                    "type": "string"
+                },
+                "validation_rule": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "validation_seed",
+                "validation_digest",
+                "train_seed",
+                "test_seed",
+                "test_count",
+                "c_parameters",
+                "c_parameters_sha256",
+                "c_code_sha256",
+                "knots",
+                "imm",
+                "ekf",
+                "glr_confirm",
+                "g2a_limit",
+                "g2b_limit",
+                "g2c_limit",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "carried_rule",
+                "shuffled_rule",
+                "validation_rule",
+                "rescore",
+                "criterion",
+                "follow_on",
+                "forecast"
+            ],
+            "title": "Gate2Decision",
+            "type": "object"
+        },
+        "Gate2Record": {
+            "additionalProperties": false,
+            "description": "The Gate 2 scoring record (spec 007 data-model.md); metrics live in metrics.json beside it.",
+            "properties": {
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "decided_by": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "decision_sha256": {
+                    "type": "string"
+                },
+                "metrics_sha256": {
+                    "type": "string"
+                },
+                "model": {
+                    "description": "The carried E.",
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "shuffled_rule": {
+                    "type": "string"
+                },
+                "split": {
+                    "$ref": "#/$defs/Split"
+                },
+                "verdicts": {
+                    "$ref": "#/$defs/Gate2Verdicts"
+                },
+                "weights_sha256": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "decision_sha256",
+                "split",
+                "seed",
+                "dataset_digest",
+                "model",
+                "weights_sha256",
+                "metrics_sha256",
+                "shuffled_rule",
+                "verdicts"
+            ],
+            "title": "Gate2Record",
+            "type": "object"
+        },
+        "Gate2Verdicts": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "g2a": {
+                    "description": "pass | fail | inconclusive.",
+                    "type": "string"
+                },
+                "g2b": {
+                    "type": "string"
+                },
+                "g2c": {
+                    "type": "string"
+                },
+                "g2d": {
+                    "type": "string"
+                },
+                "overall": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "g2a",
+                "g2b",
+                "g2c",
+                "g2d",
+                "overall"
+            ],
+            "title": "Gate2Verdicts",
             "type": "object"
         },
         "GateCheck": {
@@ -4229,6 +4606,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.24.0"
+    "version": "0.25.0"
 }
 

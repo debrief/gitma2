@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.24.0
+version: 0.25.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -211,6 +211,11 @@ enums:
     permissible_values:
       gap: { description: "Knots at both ends of each transition; its bearings excluded." }
       chord: { description: "Knots at both ends; bearings kept; the speed prior across course-only transitions." }
+  EComponent:
+    description: A learned part of Gate 2's model E (spec 007 research R2).
+    permissible_values:
+      weights: { description: "E-w: per-bearing log-weights and an initial-state correction on C's segmentation." }
+      evidence: { description: "E-s: evidence that shifts C's confirmation threshold, trained over decision tables." }
   OpenHandover:
     description: >-
       How a transition still open at the scored row k is handed to the physics layer (Gate S
@@ -1675,4 +1680,102 @@ classes:
       segmenters: { range: string, multivalued: true, required: true }
       metrics_sha256: { range: string, required: true }
       verdicts: { range: GateSVerdicts, required: true }
+      decided_by: { range: string }
+
+  EModelConfig:
+    description: >-
+      Gate 2's model E (spec 007 data-model.md): the encoder and heads of E-w and the evidence
+      network of E-s; untrained, E equals C (FR-022).
+    attributes:
+      id: { range: string, required: true, description: "Model id in predictions, e.g. e-s1, ew-s2, e-shuffled." }
+      seed: { range: integer, required: true }
+      components: { range: EComponent, multivalued: true, required: true }
+      encoder: { range: PhysicsModelConfig, required: true, description: "The Gate 1 encoder's hyperparameters (smooth heads, zero last layers)." }
+      extra_channels: { range: string, multivalued: true, required: true, description: "Per-row inputs beyond spec 003's features: c_code (C's code at prefix k)." }
+      knots: { range: integer, required: true, description: "Physics-layer knot cap (12; research R5)." }
+      temperature: { range: float, description: "E-s: T of the relaxed acceptance." }
+      evidence_network_json: { range: string, description: "E-s: the evidence network's configuration (spec 005's), as JSON." }
+      shuffled: { range: boolean, required: true, description: "Trained on another scenario's truth labels (the shuffled-label control)." }
+
+  DecisionTableHeader:
+    description: >-
+      Header of an E-s decision table file (spec 007 research R2): C's confirmation decisions with
+      the downstream errors with and without each.
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      dataset_digest: { range: string, required: true }
+      parameters_sha256: { range: string, required: true, description: "C's parameter digest." }
+      code_sha256: { range: string, required: true, description: "C's code digest." }
+      ordinals: { range: integer, multivalued: true, required: true, description: "[first, last]." }
+      decisions: { range: integer, required: true }
+      git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, required: true }
+
+  EPredictionHeader:
+    description: First record of a tma2-g2predict file (spec 007 contracts/cli.md).
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      model: { range: string, required: true }
+      weights_sha256: { range: string, required: true }
+      plan_sha256: { range: string, required: true }
+      dataset_digest: { range: string, required: true }
+      parameters_sha256: { range: string, required: true, description: "C's parameter digest." }
+      code_sha256: { range: string, required: true, description: "The code that made the prediction (C's and E's)." }
+      git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, required: true }
+
+  Gate2Decision:
+    description: >-
+      The Gate 2 decision record (spec 007 FR-050, contracts/decision-record.md), committed before
+      any E training.
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      validation_seed: { range: integer, required: true }
+      validation_digest: { range: string, required: true }
+      train_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true }
+      test_count: { range: integer, required: true }
+      c_parameters: { range: SegmentParameters, required: true }
+      c_parameters_sha256: { range: string, required: true }
+      c_code_sha256: { range: string, required: true }
+      knots: { range: integer, required: true }
+      imm: { range: string, required: true }
+      ekf: { range: string, required: true }
+      glr_confirm: { range: string, required: true }
+      g2a_limit: { range: float, required: true, description: "E / IMM, median range and course, wholly below." }
+      g2b_limit: { range: float, required: true, description: "Settled rows, E / one leg, wholly below." }
+      g2c_limit: { range: float, required: true, description: "E's gap recovered, wholly above." }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      carried_rule: { range: string, required: true }
+      shuffled_rule: { range: string, required: true }
+      validation_rule: { range: string, required: true }
+      rescore: { range: string, required: true }
+      criterion: { range: string, required: true }
+      follow_on: { range: string, required: true }
+      forecast: { range: string, required: true }
+
+  Gate2Verdicts:
+    attributes:
+      g2a: { range: string, required: true, description: "pass | fail | inconclusive." }
+      g2b: { range: string, required: true }
+      g2c: { range: string, required: true }
+      g2d: { range: string, required: true }
+      overall: { range: string, required: true }
+
+  Gate2Record:
+    description: The Gate 2 scoring record (spec 007 data-model.md); metrics live in metrics.json beside it.
+    attributes:
+      decision_sha256: { range: string, required: true }
+      split: { range: Split, required: true }
+      seed: { range: integer, required: true }
+      dataset_digest: { range: string, required: true }
+      model: { range: string, required: true, description: "The carried E." }
+      weights_sha256: { range: string, required: true }
+      metrics_sha256: { range: string, required: true }
+      shuffled_rule: { range: string, required: true }
+      verdicts: { range: Gate2Verdicts, required: true }
       decided_by: { range: string }
