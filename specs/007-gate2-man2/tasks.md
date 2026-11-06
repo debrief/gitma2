@@ -1,0 +1,237 @@
+# Tasks: Gate 2 on MAN2
+
+**Input**: `specs/007-gate2-man2/` (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md)
+
+**Tests**: requested by the spec (FR-022, FR-023, SC-002) and by the plan. They are written
+before the code they test, wherever marked.
+
+**CI**: tasks marked **(CI)** run on GitHub runners, because container restarts kill local jobs
+of more than a few minutes (AGENTS.md).
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: can run in parallel (different files, no dependency on an incomplete task)
+- **[USn]**: user story from spec.md
+
+## Phase 1: Setup (prerequisites from Gate S)
+
+- [ ] T001 **(CI)** Record the open-transition hand-over choice from `results/score-c3-val-*`
+  (`configs/score/c3-val.json`):
+  - choose by the lowest median range error over σ = 1° G5 rows among `C-gap-knot_at_k`,
+    `C-gap-start_masked` and `C-gap-start_chord`;
+  - report `by_open_at_k`, gap recovered, gross rates, efficiency and the paired `gap_minus`
+    between the three;
+  - compare with `experiments/20261105-gs-r2-val/c` (C-gap 0.891; S2 +0.632);
+  - commit `experiments/20261106-c3-val/` (metrics, report, plan, run, inputs, README with the
+    choice and a one-line reason);
+  - update spec FR-002's note and research R5.
+- [ ] T002 Raise the physics layer's knot cap to 12 for Gate 2. Construct `PhysicsLayer(knots=12)`
+  in the new `tma2.gate2` code and in `tma2-g2`, leaving Gate S's code paths unchanged. Test in
+  `tests/unit/test_gate2_knots.py` that 10 knots on a fixture prefix are all active, and that an
+  8-knot input gives the same state at caps 8 and 12.
+- [ ] T003 **(CI)** Nominator ceiling (research R1):
+  - add `--extra-nominations truth` to `tma2-segment` (`src/tma2/cli/segment.py`): extra
+    nominations at the true change starts, a diagnostic that refuses any test split;
+  - segment validation ordinals 500–1499 on CI with plan `configs/segment/c3-val-truthnom.json`;
+  - score it beside C (`configs/score/c3-val-truthnom.json`);
+  - record the gain in `experiments/20261106-nominator-ceiling/README.md`. Form (a) is built only
+    if the gain is ≥ +0.02 in gap recovered.
+
+## Phase 2: Foundational
+
+- [ ] T004 Add the LinkML types (data-model.md) to `schema/tma.yaml` and regenerate (schema
+  0.25.0; update `tests/unit/test_types.py`'s version pin):
+  - `EModelConfig` (encoder, `extra_channels`, `weight_bound`, `knots`, `evidence_network`,
+    `temperature`, `components`);
+  - `ETrainingPlan`;
+  - `DecisionTableHeader`;
+  - `EPredictionHeader`;
+  - `Gate2Decision`;
+  - `Gate2Record` and `Gate2Verdict`.
+- [ ] T005 [P] Create the package skeleton `src/tma2/gate2/__init__.py` with module docstrings for
+  `model.py`, `inputs.py`, `tables.py`, `loss.py`, `train.py`, `predict.py` and `gate.py` (plan,
+  Source Code).
+- [ ] T006 Implement `src/tma2/gate2/inputs.py`: per-prefix physics inputs from a C segmentation,
+  using `segment.inputs.segmentation_inputs` with the chosen `open_handover`. Learned
+  log-weights are added to C's hand-over mask. Also C's per-row code channel at prefix k,
+  computed causally.
+
+## Phase 3: User Story 1, a classical control that is fixed before learning starts (P1)
+
+**Goal**: C frozen by parameter and code digest; refusals.
+
+**Independent Test**: the gate refuses a segmentation whose `segmenter_sha256` or `code_sha256`
+differs from the decision's.
+
+- [ ] T007 [US1] Write the test first (`tests/unit/test_gate2_refusals.py`): `tma2.gate2.gate`'s
+  input check refuses a segmentation header with another parameter digest, another code digest,
+  another dataset digest or `git_dirty: true`.
+- [ ] T008 [US1] Implement the input checks in `src/tma2/gate2/gate.py` (as
+  `segment/gate.py: check_inputs`, adding `code_sha256` and `weights_sha256` for E).
+- [ ] T009 [US1] **(CI)** Segment the training stream with C at the frozen code:
+  - generate seed 318 (`--count 12500`, MAN2 ranges) at a clean commit;
+  - commit its digests to `experiments/<date>-g2-stream/seed318-digests.json`;
+  - plan `configs/segment/g2-stream-c.json` (all σ = 1° train-split scenarios, 16 shards,
+    `params_from` the Gate 2 plan, the chosen `open_handover`);
+  - push `segment/g2-stream-c`.
+
+## Phase 4: User Story 2, a learned model trained end to end where C makes its decisions (P1)
+
+**Goal**: E-w, then E-s, untrained equal to C, trained on CI.
+
+**Independent Test**: untrained E reproduces C (SC-002); the causal cut test; finite gradients.
+
+### Tests first
+
+- [ ] T010 [P] [US2] `tests/unit/test_gate2_model.py`:
+  - untrained E-w on C's segmentation gives the same state as `segment.score.layer_errors`'s
+    input path for C, to 1e-12, on 3 fixture scenarios;
+  - gradients of the loss to every parameter are finite.
+- [ ] T011 [P] [US2] `tests/unit/test_gate2_causal.py`: E's output at row k is unchanged when the
+  scenario is cut to rows 0…k (arrays truncated, not masked), on a fixture scenario with an open
+  transition at k.
+- [ ] T012 [P] [US2] `tests/unit/test_gate2_tables.py`:
+  - for a decision C accepted, the table's "with" error equals the error of C's own segmentation
+    at those rows;
+  - for a rejected decision, the "without" error equals it;
+  - the relaxed loss at evidence 0 and T → 0 equals C's error.
+
+### E-w
+
+- [ ] T013 [US2] Implement `src/tma2/gate2/model.py` E-w:
+  - a `models.gate1` encoder over features plus the C code channel;
+  - a weight head (tanh × `weight_bound`) and an initial-state correction head, zero last layers;
+  - `PhysicsLayer(knots=12)` with implicit differentiation, on `gate2.inputs`.
+- [ ] T014 [US2] Implement `src/tma2/gate2/loss.py` (research R4):
+  - the bound-normalised per-component error against the truth state (known-manoeuvres bound,
+    `crb_known_manoeuvres_fast`);
+  - each prefix clipped at the cap (100);
+  - prefixes excluded whose physics-layer cost exceeds 20 × their valid bearings;
+  - the trimmed mean (10% tails) for validation.
+- [ ] T015 [US2] Implement `src/tma2/gate2/train.py` and `src/tma2/cli/g2train.py` (`tma2-g2train
+  train`):
+  - examples are each scenario's G5 prefixes plus 2 seeded sampled prefixes per epoch;
+  - 4 worker processes at 1 thread each;
+  - checkpoints with Adam state and meta (`weights_sha256`, `cpu_model`, `git_dirty`) after every
+    epoch; resume; the wall budget;
+  - early stopping on the robust loss (patience 3, relative 1e-3);
+  - the shuffled control trains on another scenario's truth labels.
+- [ ] T016 [US2] Measure the throughput on one runner **(CI)**: one epoch over 1,000 stream
+  scenarios with `configs/gate2/throughput.json`. Record seconds per prefix and per epoch in
+  research R4.
+
+### E-s
+
+- [ ] T017 [US2] Implement `src/tma2/gate2/tables.py` and `src/tma2/cli/dtables.py`
+  (`tma2-dtables`, contracts/cli.md):
+  - re-run C's confirmation per scenario and record each decision (row a, start, length, source,
+    drop Δ, threshold τ′, affected scored rows);
+  - record the bound-normalised error with and without the transition, holding C's other
+    decisions fixed;
+  - write npz with `DecisionTableHeader`;
+  - refuse segmentations with other digests.
+- [ ] T018 [US2] **(CI)** Build decision tables for the stream (`segment.yml`-style workflow
+  `.github/workflows/dtables.yml`, `dtables/<plan>`) and for validation ordinals 0–499 and
+  500–1499.
+- [ ] T019 [US2] Implement E-s in `src/tma2/gate2/model.py` and `train.py`:
+  - the evidence network as spec 005's (zero head), on features plus the C code channel;
+  - the relaxed acceptance p = σ((Δ − τ′ + 2Σe)/T), Σe over the candidate's rows capped at ±τ/2;
+  - the loss Σ p·e_with + (1 − p)·e_without;
+  - at inference, the hard decision Δ > τ′ − 2Σe, applied through C's confirmation
+    (`segment.confirm`'s evidence path).
+- [ ] T020 [US2] Implement `src/tma2/gate2/predict.py` and `src/tma2/cli/g2predict.py`
+  (`tma2-g2predict`): E-s's decisions, then E-w's weights; per-row predictions with
+  `EPredictionHeader` (`weights_sha256`, `plan_sha256`, `code_sha256`).
+- [ ] T021 [US2] Create `.github/workflows/g2train.yml` (`g2train/<plan>`):
+  - a matrix of models, chained jobs of ≤ 345 min resuming from the checkpoints branch;
+  - inputs (stream segmentations, tables) fetched from results branches;
+  - results to `results/g2-<plan>-<run id>`;
+  - tables and checkpoints in `RUNNER_TEMP`.
+
+## Phase 5: User Story 3, Gate 2 judged on a fresh seed with all references on the same rows (P1)
+
+**Goal**: `tma2-g2` and the gate.
+
+**Independent Test**: the gate reproduces its verdict from committed per-row errors, and refuses
+mismatches.
+
+- [ ] T022 [P] [US3] `tests/unit/test_gate2_gate.py`:
+  - G2-a…G2-d logic (pass, fail, inconclusive, no rows → inconclusive);
+  - the shuffled rule voids a G2-d pass;
+  - the validation rule.
+- [ ] T023 [US3] Implement `src/tma2/cli/g2.py` (`tma2-g2`, contracts/cli.md) on `segment.score`'s
+  machinery:
+  - E enters as prediction files;
+  - C, one leg, the oracle, GLR + confirm, IMM, EKF and naive enter as in `tma2-gs`, with
+    `PhysicsLayer(knots=12)`;
+  - `metrics.json`, `report.md`, `inputs.json` and `errors.npz`;
+  - gate mode adds `verdict.json` and `manifest.json` (provenance first), and exits 3 unless all
+    pass.
+- [ ] T024 [US3] Add a `g2` plan kind to `.github/workflows/score.yml`: it runs `tma2-g2` with E's
+  prediction files fetched from results branches.
+- [ ] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
+  by the owner before T026 (FR-034).
+- [ ] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as
+  `Gate2Decision`, README; contracts/decision-record.md), with the forecast refined by the T016
+  and T001 numbers. Commit it before any E training.
+- [ ] T027 [US3] **(CI)** Train E (three seeds plus the shuffled control) and E-w alone (three
+  seeds) with plan `configs/gate2/g2-a.json`; push `g2train/g2-a`.
+- [ ] T028 [US3] **(CI)** Validation:
+  - predict on ordinals 500–1499 and score with `tma2-g2` on CI;
+  - apply the carried-seed rule (median by gap recovered), the shuffled rule and the validation
+    rule;
+  - commit `experiments/<date>-g2-val/` and the amendment `carried.json`.
+- [ ] T029 [US3] **(CI)** If a configuration is carried:
+  - generate seed 319 (`--count 100000`) at a clean commit and commit its digests (an amendment);
+  - segment and predict the test split on CI;
+  - run the gate (`configs/score/g2-gate.json`);
+  - commit `experiments/<date>-g2/`.
+- [ ] T030 [US3] Convene the agent review panel (five specialities, read-only, in rounds until no
+  reject and no open blocker or major). Commit `review.md` and set `decided_by` (FR-051).
+
+## Phase 6: User Story 4, an honest record of what was and was not shown (P2)
+
+- [ ] T031 [P] [US4] Site pages:
+  - the algorithm note `site/docs/algorithms/gate2-model.md` (E-w, E-s, decision tables);
+  - glossary terms (decision table, relaxed acceptance);
+  - the Gate 2 write-up `site/blog/<date>-gate-2.md`, with C's figures beside E's, E-w's ablation,
+    the open-at-k stratum, and the follow-on with a recommended default.
+
+  Then `(cd site && npm ci && npm run build)`.
+- [ ] T032 [P] [US4] Update `AGENTS.md`: spec 007's status, the seeds used (318, 319) and new
+  gotchas.
+
+## Phase 7: Polish
+
+- [ ] T033 Export E (E-w on C's segmentation as an input, E-s's evidence network) to ONNX, with
+  three-runtime conformance to 1e-5 (constitution VI), as spec 005's evidence export.
+- [ ] T034 Run `quickstart.md` end to end and fix any drift.
+
+## Dependencies
+
+- **T001 → T009, T026.** The hand-over must be chosen first.
+- **T003 → T026.** Form (a) is decided before the decision record.
+- **T004 → T006 → T007–T024.**
+- **US1 (T007–T009) → US2.** The stream segmentation feeds training and the tables.
+- **Within US2:**
+  - T010–T012 before T013–T020;
+  - T013–T015 before T016;
+  - T017 before T018 and T019;
+  - T020 and T021 before T027.
+- **US3:** T022 → T023 → T024; T025 → T026 → T027 → T028 → T029 → T030.
+- **US4:** after T030 (the write-up) or in parallel (the algorithm note).
+
+## Parallel opportunities
+
+- T005 with T004.
+- T010, T011 and T012 (different test files).
+- T022 with the US2 implementation.
+- T031 (algorithm note) and T032 with the gate run.
+- The CI tasks T003, T009, T016 and T018 run concurrently within the 20-job runner limit.
+
+## Implementation strategy
+
+1. **MVP:** T001–T016 give E-w trained on C's segmentation, the SRD's end-to-end model. Its
+   validation numbers decide whether E-s adds anything worth the tables.
+2. **Then:** E-s (T017–T021).
+3. **Then:** the decision record, training, validation, test and panel.
