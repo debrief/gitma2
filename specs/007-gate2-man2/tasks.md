@@ -68,12 +68,18 @@ differs from the decision's.
   another dataset digest or `git_dirty: true`. — done: `tests/unit/test_gate2_refusals.py`
 - [x] T008 [US1] Implement the input checks in `src/tma2/gate2/gate.py` (as
   `segment/gate.py: check_inputs`, adding `code_sha256` and `weights_sha256` for E). — done: `gate2/gate.py` (`check_segmentation`, `check_prediction`, `RefusedError`)
-- [ ] T009 [US1] **(CI)** Segment the training stream with C at the frozen code:
+- [x] T009 [US1] **(CI)** Segment the training stream with C at the frozen code:
   - generate seed 318 (`--count 12500`, MAN2 ranges) at a clean commit;
   - commit its digests to `experiments/<date>-g2-stream/seed318-digests.json`;
   - plan `configs/segment/g2-stream-c.json` (all σ = 1° train-split scenarios, 16 shards,
     `params_from` the Gate 2 plan, the chosen `open_handover`);
   - push `segment/g2-stream-c`.
+  - Done at C's final code (2a5cf1c, code `4d2c084f…`): `results/segment-g2-stream-c-42268365081`,
+    9,930 scenarios, 39,054 G5 prefixes, clean tree (count 25,000; the stream at 12,500 had too
+    few σ = 1° scenarios). Validation at the same code: tuning 0–499
+    `results/segment-c3-val-tune-42268374366`, scoring 500–1499 `results/segment-c3-val-42268379557`.
+    C's baseline there with 12 knots (`results/score-g2-val-c-42288140230`): gap recovered 0.890
+    [0.869, 0.909] (Gate S, 8 knots: 0.891), range/IMM 0.223 [0.200, 0.247], no estimate on 0.6%.
 
 ## Phase 4: User Story 2, a learned model trained end to end where C makes its decisions (P1)
 
@@ -140,6 +146,10 @@ differs from the decision's.
   500–1499.
   - Workflow written (`configs/dtables/<name>.json`: `segmentation` {plan, branch, path},
     `gate2_plan`; shards from the segmentation plan). Runs once C's code and the plan are final.
+  - Validation tuning 0–499 (`results/dtables-g2-val-tune-42288137249`): C reproduced exactly
+    (0 of 1,971 rows differ); 14,351 decisions, 1,299 within τ/2 (9%), 2,396 decision rows;
+    accepting lowers the error on 27% of rows; about 14 s per scenario. Stream: `dtables/g2-stream`
+    launched (about 2.4 h). Scoring ordinals need no tables.
 - [x] T019 [US2] Implement E-s in `src/tma2/gate2/model.py` and `train.py`:
   - the evidence network as spec 005's (zero head), on features plus the C code channel;
   - the relaxed acceptance p = σ((Δ − τ′ + 2Σe)/T), Σe over the candidate's rows capped at ±τ/2;
