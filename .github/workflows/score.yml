@@ -11,6 +11,9 @@ name: Segmentation scoring
 #                   training split (regenerated and digest-checked the same way)
 #   modes, detectability, imm, ekf   as tma2-gs
 #   gate            optional {decision, plan, split}: gate mode
+#   kind            "g2" (spec 007) runs tma2-g2 instead: "c" {branch, path} is C's segmentation,
+#                   "e" {NAME: {branch, path}} E's prediction files, "knots" the cap (default
+#                   12), and gate gains "model" (the carried E) for the test split
 # The record goes to results/score-<name>-<run id> (errors.npz included). Nothing merges.
 
 on:
@@ -64,7 +67,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/in"
           python3 -c "
           import json; p = json.load(open('$PLAN'))
-          for n, s in p['segmentations'].items(): print(n, s['branch'], s['path'])" | while read -r N B P; do
+          files = dict(p.get('segmentations', {})) | dict(p.get('e', {}))
+          if p.get('c'): files['C'] = p['c']
+          for n, s in files.items(): print(n, s['branch'], s['path'])" | while read -r N B P; do
             git fetch -q origin "$B"
             git show "FETCH_HEAD:$P" > "$RUNNER_TEMP/in/$N.ndjson"
             sha256sum "$RUNNER_TEMP/in/$N.ndjson"
@@ -86,9 +91,13 @@ jobs:
           OUT="experiments/score-runs/$NAME-${{ github.run_id }}"
           echo "OUT=$OUT" >> "$GITHUB_ENV"
           ARGS=$(python3 -c "
-          import json, shlex; p = json.load(open('$PLAN'))
+          import json, shlex; p = json.load(open('$PLAN')); g2 = p.get('kind') == 'g2'
           out = ['--start', str(p['start']), '--count', str(p['count']), '--imm', p['imm']]
-          out += ['--segmentations'] + [f'{n}=$RUNNER_TEMP/in/{n}.ndjson' for n in p['segmentations']]
+          if g2:
+              out += ['--c', '$RUNNER_TEMP/in/C.ndjson', '--knots', str(p.get('knots', 12))]
+              out += ['--e'] + [f'{n}=$RUNNER_TEMP/in/{n}.ndjson' for n in p.get('e', {})]
+          else:
+              out += ['--segmentations'] + [f'{n}=$RUNNER_TEMP/in/{n}.ndjson' for n in p['segmentations']]
           if p.get('modes'): out += ['--modes'] + p['modes']
           if p.get('open_handovers'): out += ['--open-handovers'] + p['open_handovers']
           if p.get('ekf'): out += ['--ekf', p['ekf']]
@@ -98,12 +107,14 @@ jobs:
               a, c = p['naive']['ordinals']; out += ['--naive-train', f'$NAIVE:{a}:{c}']
           if p.get('gate'):
               g = p['gate']; out += ['--decision', g['decision'], '--plan', g['plan'], '--split', g['split']]
+              if g.get('model'): out += ['--model', g['model']]
           print(shlex.join(out))")
+          CLI=$(python3 -c "import json; print('tma2-g2' if json.load(open('$PLAN')).get('kind') == 'g2' else 'tma2-gs')")
           set +e
-          eval uv run tma2-gs --truth "$TRUTH" --experiment "$RUNNER_TEMP/out" $ARGS
+          eval uv run "$CLI" --truth "$TRUTH" --experiment "$RUNNER_TEMP/out" $ARGS
           rc=$?
           set -e
-          echo "tma2-gs exit $rc"
+          echo "$CLI exit $rc"
           [ "$rc" = 0 ] || [ "$rc" = 3 ]
           mkdir -p "$OUT"
           cp -r "$RUNNER_TEMP/out/." "$OUT/"

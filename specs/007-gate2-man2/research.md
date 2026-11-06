@@ -47,8 +47,17 @@ condition is a ceiling gain of at least +0.02 over C on the scoring ordinals.
   the candidate's rows, capped at ±τ/2 as in spec 005, and T is a declared temperature.
   - At e = 0 the hard decisions are C's, so an untrained E-s is C.
   - At inference the decision is hard: accept if Δ > τ′ − 2Σe.
-- **Joint model:** E = E-s's segmentation, then E-w's weights. They are trained in that order:
-  E-s first on the tables, then E-w on E-s's segmentation. Each is a separate training job.
+- **Joint model:** E = E-s's segmentation, then E-w's weights. Each is a separate training job.
+  - **Amended before the decision record (2026-11-06, implementation):** E-w trains on C's
+    segmentation, not E-s's, and the two train in parallel; E seed s pairs E-s seed s with E-w
+    seed s (the shuffled E pairs the two shuffled controls). Reason: E-s's segmentation of the
+    stream costs a full C re-run (about C's own stream run) per E-s seed, while E-s changes only
+    decisions within τ/2 of their threshold, a small share of rows. The cost is a distribution
+    shift for E-w on the rows E-s flips. E-w alone is scored on C's segmentation as before.
+    Alternative (the original order) kept open if validation shows E worse than E-w alone.
+- **E-s inputs:** spec 005's causal features; C's per-row code is not an input (at a decision
+  it would encode the decision being shifted). The relaxation holds C's best candidate fixed;
+  at inference the evidence can also move the best start or length.
 
 **Rationale.**
 - Back-propagating through confirmation's argmax over candidates is not defined. Score-function

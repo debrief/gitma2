@@ -188,8 +188,11 @@ mismatches.
     refusals, then `tma2-gs`'s scoring, then the verdicts (`--split validation` writes
     `validation.json` with the validation and shuffled rules; `--split test` the gate). E's rows
     are written in double, so untrained E − C is 0 to 1e-9 end to end (`test_gate2_cli.py`).
-- [ ] T024 [US3] Add a `g2` plan kind to `.github/workflows/score.yml`: it runs `tma2-g2` with E's
+- [x] T024 [US3] Add a `g2` plan kind to `.github/workflows/score.yml`: it runs `tma2-g2` with E's
   prediction files fetched from results branches.
+  - Done (`kind: "g2"`: `c`, `e`, `knots`, `gate.model`). Also `g2predict.yml`
+    (`g2predict/<name>`, shards × models, results merged per model) and `g2train.yml` trains
+    E-s (`kind: "es"`, decision tables from `dtables` results); `scripts/ci/regen_split.sh`.
 - [ ] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
   by the owner before T026 (FR-034).
 - [ ] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as

@@ -173,9 +173,12 @@ def _es_examples(
 
 
 def es(a: argparse.Namespace) -> int:
+    import time
+
     from tma2.gate2.es import ESSettings, train_es
     from tma2.types.generated.tma import SegmentParameters
 
+    t_start = time.time()
     gp = read_git_provenance()
     plan, plan_sha = _plan(a.plan)
     m = plan["models"].get(a.model)
@@ -202,7 +205,8 @@ def es(a: argparse.Namespace) -> int:
             "plan_sha256": plan_sha,
         },
         a.epochs,
-        a.max_wall_s,
+        # the job's budget includes the feature pre-pass
+        None if a.max_wall_s is None else a.max_wall_s - (time.time() - t_start),
     )
     print(json.dumps({"model": a.model, "epoch": meta["epoch"], "complete": meta["complete"]}))
     return 0

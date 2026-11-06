@@ -1,11 +1,14 @@
-name: Train E-w (Gate 2)
+name: Train E-w and E-s (Gate 2)
 
 # Spec 007 T021. Push `g2train/<name>`: the plan configs/gate2/<name>.json names
 #   c           C's parameter and code digests, mode and open-transition hand-over;
 #   stream      the training stream (data block as segment.yml's plans, sigma = 1 deg ordinals,
 #               shards) and C's segmentation of it ({branch, path} on a results branch);
 #   validation  the validation data, its tuning ordinals and C's segmentation of them;
-#   encoder, training, models   as tma2-g2train.
+#   encoder, training, es, models   as tma2-g2train. A model's kind is "ew" (default: E-w on
+#               C's segmentation), "es" (E-s on decision tables: plan key "dtables" {stream,
+#               validation}: {branch, dir} of tma2-dtables runs) or "e" (a pair of trained
+#               models, {es, ew}: nothing to train, so not in the matrix).
 # 1. tables: regenerate each split at its commit (digest checked), fetch C's segmentation, write
 #    the prefix tables (tma2-g2train tables; artefacts, in RUNNER_TEMP).
 # 2. train-1, train-2: each model on one runner, resumed by the second job if the first stops at
@@ -34,7 +37,7 @@ jobs:
           test -f "$PLAN"
           echo "plan=$PLAN" >> "$GITHUB_OUTPUT"
           echo "shards=$(python3 -c "import json; n = json.load(open('$PLAN'))['stream']['shards']; print(json.dumps([str(i) for i in range(n)] + ['val']))")" >> "$GITHUB_OUTPUT"
-          echo "models=$(python3 -c "import json; print(json.dumps(sorted(json.load(open('$PLAN'))['models'])))")" >> "$GITHUB_OUTPUT"
+          echo "models=$(python3 -c "import json; m = json.load(open('$PLAN'))['models']; print(json.dumps(sorted(k for k, v in m.items() if v.get('kind', 'ew') in ('ew', 'es'))))")" >> "$GITHUB_OUTPUT"
 
   tables:
     needs: plan
@@ -104,6 +107,8 @@ jobs:
       PLAN: ${{ needs.plan.outputs.plan }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -113,13 +118,34 @@ jobs:
           pattern: tables-*
           path: ${{ runner.temp }}/tables
           merge-multiple: true
+      - name: Kind
+        run: echo "KIND=$(python3 -c "import json; print(json.load(open('$PLAN'))['models']['${{ matrix.model }}'].get('kind', 'ew'))")" >> "$GITHUB_ENV"
+      - name: E-s inputs (the splits and their decision tables)
+        if: env.KIND == 'es'
+        run: |
+          echo "STREAM=$(scripts/ci/regen_split.sh "$PLAN" "p['stream']['data']" "$RUNNER_TEMP/stream" | tail -1)" >> "$GITHUB_ENV"
+          echo "VAL=$(scripts/ci/regen_split.sh "$PLAN" "p['validation']['data']" "$RUNNER_TEMP/val" | tail -1)" >> "$GITHUB_ENV"
+          for k in stream validation; do
+            read -r B D <<< "$(python3 -c "import json; t = json.load(open('$PLAN'))['dtables']['$k']; print(t['branch'], t['dir'])")"
+            git fetch -q origin "$B"
+            mkdir -p "$RUNNER_TEMP/dt/$k"
+            git archive FETCH_HEAD "$D" | tar -x -C "$RUNNER_TEMP/dt/$k" --strip-components=$(echo "$D" | tr -cd / | wc -c | awk '{print $1 + 1}')
+            (cd "$RUNNER_TEMP/dt/$k" && sha256sum -c SHA256SUMS)
+          done
       - name: Train (stops before an epoch would pass the cap)
         run: |
           mkdir -p "$RUNNER_TEMP/ck"
           W=$(python3 -c "import json; print(json.load(open('$PLAN')).get('max_wall_s', 19200))")
-          uv run tma2-g2train train --plan "$PLAN" --model "${{ matrix.model }}" \
-            --train $(ls "$RUNNER_TEMP"/tables/shard-*.npz | sort -V) --val "$RUNNER_TEMP/tables/val.npz" \
-            --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s "$W" 2>&1 | tee "$RUNNER_TEMP/ck/${{ matrix.model }}.log" || true
+          if [ "$KIND" = es ]; then
+            uv run tma2-g2train es --plan "$PLAN" --model "${{ matrix.model }}" --data "$STREAM" \
+              --tables $(ls "$RUNNER_TEMP"/dt/stream/*.npz | sort -V) --val-data "$VAL" \
+              --val-tables $(ls "$RUNNER_TEMP"/dt/validation/*.npz | sort -V) \
+              --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s "$W" 2>&1 | tee "$RUNNER_TEMP/ck/${{ matrix.model }}.log" || true
+          else
+            uv run tma2-g2train train --plan "$PLAN" --model "${{ matrix.model }}" \
+              --train $(ls "$RUNNER_TEMP"/tables/shard-*.npz | sort -V) --val "$RUNNER_TEMP/tables/val.npz" \
+              --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s "$W" 2>&1 | tee "$RUNNER_TEMP/ck/${{ matrix.model }}.log" || true
+          fi
           test -f "$RUNNER_TEMP/ck/${{ matrix.model }}/meta.json"
       - uses: actions/upload-artifact@v4
         with:
@@ -138,6 +164,8 @@ jobs:
       PLAN: ${{ needs.plan.outputs.plan }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -152,18 +180,38 @@ jobs:
             echo "complete after the first job"; exit 0
           fi
           echo "RESUME=1" >> "$GITHUB_ENV"
+          echo "KIND=$(python3 -c "import json; print(json.load(open('$PLAN'))['models']['${{ matrix.model }}'].get('kind', 'ew'))")" >> "$GITHUB_ENV"
       - uses: actions/download-artifact@v4
-        if: env.RESUME == '1'
+        if: env.RESUME == '1' && env.KIND != 'es'
         with:
           pattern: tables-*
           path: ${{ runner.temp }}/tables
           merge-multiple: true
+      - name: E-s inputs (the splits and their decision tables)
+        if: env.RESUME == '1' && env.KIND == 'es'
+        run: |
+          echo "STREAM=$(scripts/ci/regen_split.sh "$PLAN" "p['stream']['data']" "$RUNNER_TEMP/stream" | tail -1)" >> "$GITHUB_ENV"
+          echo "VAL=$(scripts/ci/regen_split.sh "$PLAN" "p['validation']['data']" "$RUNNER_TEMP/val" | tail -1)" >> "$GITHUB_ENV"
+          for k in stream validation; do
+            read -r B D <<< "$(python3 -c "import json; t = json.load(open('$PLAN'))['dtables']['$k']; print(t['branch'], t['dir'])")"
+            git fetch -q origin "$B"
+            mkdir -p "$RUNNER_TEMP/dt/$k"
+            git archive FETCH_HEAD "$D" | tar -x -C "$RUNNER_TEMP/dt/$k" --strip-components=$(echo "$D" | tr -cd / | wc -c | awk '{print $1 + 1}')
+            (cd "$RUNNER_TEMP/dt/$k" && sha256sum -c SHA256SUMS)
+          done
       - if: env.RESUME == '1'
         run: |
           W=$(python3 -c "import json; print(json.load(open('$PLAN')).get('max_wall_s', 19200))")
-          uv run tma2-g2train train --plan "$PLAN" --model "${{ matrix.model }}" \
-            --train $(ls "$RUNNER_TEMP"/tables/shard-*.npz | sort -V) --val "$RUNNER_TEMP/tables/val.npz" \
-            --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s "$W" 2>&1 | tee -a "$RUNNER_TEMP/ck/${{ matrix.model }}.log"
+          if [ "$KIND" = es ]; then
+            uv run tma2-g2train es --plan "$PLAN" --model "${{ matrix.model }}" --data "$STREAM" \
+              --tables $(ls "$RUNNER_TEMP"/dt/stream/*.npz | sort -V) --val-data "$VAL" \
+              --val-tables $(ls "$RUNNER_TEMP"/dt/validation/*.npz | sort -V) \
+              --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s "$W" 2>&1 | tee -a "$RUNNER_TEMP/ck/${{ matrix.model }}.log"
+          else
+            uv run tma2-g2train train --plan "$PLAN" --model "${{ matrix.model }}" \
+              --train $(ls "$RUNNER_TEMP"/tables/shard-*.npz | sort -V) --val "$RUNNER_TEMP/tables/val.npz" \
+              --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s "$W" 2>&1 | tee -a "$RUNNER_TEMP/ck/${{ matrix.model }}.log"
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: ck2-${{ matrix.model }}
@@ -205,5 +253,5 @@ jobs:
           BR="results/g2-$NAME-${{ github.run_id }}"
           git checkout -b "$BR"
           git add -f "$OUT"
-          git commit -qm "experiments: E-w training $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git commit -qm "experiments: Gate 2 training $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
           git push origin "$BR"
