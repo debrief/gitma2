@@ -140,12 +140,17 @@ differs from the decision's.
   500–1499.
   - Workflow written (`configs/dtables/<name>.json`: `segmentation` {plan, branch, path},
     `gate2_plan`; shards from the segmentation plan). Runs once C's code and the plan are final.
-- [ ] T019 [US2] Implement E-s in `src/tma2/gate2/model.py` and `train.py`:
+- [x] T019 [US2] Implement E-s in `src/tma2/gate2/model.py` and `train.py`:
   - the evidence network as spec 005's (zero head), on features plus the C code channel;
   - the relaxed acceptance p = σ((Δ − τ′ + 2Σe)/T), Σe over the candidate's rows capped at ±τ/2;
   - the loss Σ p·e_with + (1 − p)·e_without;
   - at inference, the hard decision Δ > τ′ − 2Σe, applied through C's confirmation
     (`segment.confirm`'s evidence path).
+  - Done (`gate2/es.py`, `tma2-g2train es`). Deviations, with reasons: C's code channel is not an
+    input (at a decision it would encode the decision being shifted); validation uses the hard
+    loss (what inference does); the shuffled control draws each decision row's error pair from
+    the whole training set, re-drawn every epoch. The relaxation holds C's best candidate fixed;
+    at inference evidence can also change the best start or length (recorded in `es.py`).
 - [ ] T020 [US2] Implement `src/tma2/gate2/predict.py` and `src/tma2/cli/g2predict.py`
   (`tma2-g2predict`): E-s's decisions, then E-w's weights; per-row predictions with
   `EPredictionHeader` (`weights_sha256`, `plan_sha256`, `code_sha256`).
