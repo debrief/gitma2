@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.22.0"
+version = "0.23.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -112,6 +112,10 @@ class RecordKind(str, Enum):
     detector = "detector"
     """
     One DetectorRecord (gitma2, schema 0.21.0).
+    """
+    segmentation = "segmentation"
+    """
+    One Segmentation (gitma2, schema 0.23.0, spec 005).
     """
 
 
@@ -384,6 +388,38 @@ class GateResult(str, Enum):
     """
 
 
+class SegmentKind(str, Enum):
+    """
+    An interval of a segmentation (spec 005, SRD Annex B).
+    """
+    steady = "steady"
+    """
+    A steady leg: course within ± C and speed within ± S of the leg mean, at least L_min.
+    """
+    transition = "transition"
+    """
+    Between two steady legs; no motion model assumed; at least T_min unless open.
+    """
+    unknown = "unknown"
+    """
+    Not classified (too little history, or the cost margin is below the declared value).
+    """
+
+
+class SegmentMode(str, Enum):
+    """
+    How a segmentation is handed to the physics layer (spec 005 FR-030).
+    """
+    gap = "gap"
+    """
+    Knots at both ends of each transition; its bearings excluded.
+    """
+    chord = "chord"
+    """
+    Knots at both ends; bearings kept; the speed prior across course-only transitions.
+    """
+
+
 
 class FloatRange(ConfiguredBaseModel):
     """
@@ -462,7 +498,8 @@ class OwnshipWander(ConfiguredBaseModel):
                        'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
-                       'SpanDetection']} })
+                       'SpanDetection',
+                       'SegmentInterval']} })
     sd_rad: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'],
          'unit': {'ucum_code': 'rad'}} })
     tau_s: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['HelmWanderRanges', 'OwnshipWander'], 'unit': {'ucum_code': 's'}} })
@@ -520,7 +557,8 @@ class TargetManoeuvre(ConfiguredBaseModel):
                        'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
-                       'SpanDetection']} })
+                       'SpanDetection',
+                       'SegmentInterval']} })
     start_time_s: float = Field(default=..., description="""Time the manoeuvre starts, a whole number of samples.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre'], 'unit': {'ucum_code': 's'}} })
     change: float = Field(default=..., description="""Signed change: course in rad (positive clockwise) or speed in m/s (positive faster).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre', 'ChangeDecision']} })
     rate: float = Field(default=..., description="""Magnitude of the rate of change, rad/s (course) or m/s² (speed).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TargetManoeuvre']} })
@@ -616,9 +654,12 @@ class ScenarioMetadata(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    seed: str = Field(default=..., description="""Scenario seed as a decimal uint64 string.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'PhysicsModelConfig', 'DetectorConfig']} })
+    seed: str = Field(default=..., description="""Scenario seed as a decimal uint64 string.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'GateSRecord']} })
     index: int = Field(default=..., description="""Scenario index within the dataset.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
-    parameters: ScenarioParameters = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
+    parameters: ScenarioParameters = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'SegmentationHeader', 'GateSDecision']} })
     samples: int = Field(default=..., description="""Number of timesteps (60–240).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
     zig_index: int = Field(default=..., description="""First timestep on leg 2 (with a rate-limited turn, the first after it completes).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
     turn_start_index: Optional[int] = Field(default=None, description="""First timestep after the turn starts (absent for an instantaneous zig).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
@@ -645,9 +686,10 @@ class ManoeuvreSpan(ConfiguredBaseModel):
                        'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
-                       'SpanDetection']} })
-    start_index: int = Field(default=..., description="""First timestep after it starts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection']} })
-    end_index: int = Field(default=..., description="""First timestep after it completes; at or beyond `samples` when the change is still in progress at the window's end (generator 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection']} })
+                       'SpanDetection',
+                       'SegmentInterval']} })
+    start_index: int = Field(default=..., description="""First timestep after it starts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection', 'SegmentInterval']} })
+    end_index: int = Field(default=..., description="""First timestep after it completes; at or beyond `samples` when the change is still in progress at the window's end (generator 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection', 'SegmentInterval']} })
 
 
 class Scenario(ConfiguredBaseModel):
@@ -664,7 +706,9 @@ class Scenario(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
     metadata: ScenarioMetadata = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
     ownship: Track = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
     target: Track = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
@@ -684,7 +728,9 @@ class DatasetHeader(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'CrbHeader',
@@ -692,13 +738,14 @@ class DatasetHeader(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
                        'PhysicsModelManifest']} })
     dataset_seed: str = Field(default=..., description="""Decimal uint64 string.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
-    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
+    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader', 'GateSRecord']} })
     scenario_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
     index_start: int = Field(default=..., description="""First scenario index (inclusive).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
     index_end: int = Field(default=..., description="""Last scenario index (exclusive).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
@@ -770,14 +817,21 @@ class Prediction(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
+                       'CrbRecord',
+                       'DetectorRecord',
+                       'DetectionRecord',
+                       'Segmentation',
+                       'TruthLabels']} })
     estimator: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
                        'MetricsRecord',
                        'CurvePoint',
                        'PairedComparison']} })
-    mode: PredictionMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader']} })
+    mode: PredictionMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader', 'SegmentParameters']} })
     rows: list[PredictionRow] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['FeatureLayout', 'Prediction']} })
 
 
@@ -794,7 +848,9 @@ class PredictionHeader(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'CrbHeader',
@@ -802,14 +858,19 @@ class PredictionHeader(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     estimator: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
                        'MetricsRecord',
                        'CurvePoint',
                        'PairedComparison']} })
-    mode: PredictionMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader']} })
-    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader', 'DetectorHeader']} })
+    mode: PredictionMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader', 'SegmentParameters']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
+                       'CrbHeader',
+                       'DetectorHeader',
+                       'SegmentationHeader',
+                       'GateSRecord']} })
     weights_digest: Optional[str] = Field(default=None, description="""SHA-256 of the learned estimator's weights file (schema 0.20.0; required by gate commands for learned estimators).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'Continuation',
                        'ModelManifest',
@@ -831,7 +892,9 @@ class CrbHeader(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'CrbHeader',
@@ -839,9 +902,14 @@ class CrbHeader(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     model: CrbModel = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CrbHeader', 'ModelDigest']} })
-    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader', 'DetectorHeader']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
+                       'CrbHeader',
+                       'DetectorHeader',
+                       'SegmentationHeader',
+                       'GateSRecord']} })
 
 
 class CrbRecord(ConfiguredBaseModel):
@@ -857,8 +925,15 @@ class CrbRecord(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
+                       'CrbRecord',
+                       'DetectorRecord',
+                       'DetectionRecord',
+                       'Segmentation',
+                       'TruthLabels']} })
     first_row: int = Field(default=..., description="""Row index of the first entry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
     sd_range_rel: Optional[list[float]] = Field(default=None, description="""Bound on range error ÷ range.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
     sd_course_deg: Optional[list[float]] = Field(default=None, description="""Bound on course error (degrees).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbRecord']} })
@@ -965,8 +1040,12 @@ class ExperimentManifest(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'JobRecord',
-                       'ChangeDecision']} })
-    git_dirty: Optional[bool] = Field(default=None, description="""True when the working tree had uncommitted changes (absent before schema 0.4.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest', 'JobRecord']} })
+                       'ChangeDecision',
+                       'SegmentationHeader']} })
+    git_dirty: Optional[bool] = Field(default=None, description="""True when the working tree had uncommitted changes (absent before schema 0.4.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
+                       'ModelManifest',
+                       'JobRecord',
+                       'SegmentationHeader']} })
     node_version: Optional[str] = Field(default=None, description="""Node.js version that ran the experiment (byte identity is promised per pinned Node).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest']} })
     python_version: Optional[str] = Field(default=None, description="""Python version that ran the experiment (gitma2, schema 0.17.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
     torch_version: Optional[str] = Field(default=None, description="""PyTorch version that ran the experiment, when a physics layer or model was used (gitma2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
@@ -977,7 +1056,8 @@ class ExperimentManifest(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
@@ -1014,7 +1094,7 @@ class GateVerdict(ConfiguredBaseModel):
     gate: GateId = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateVerdict']} })
     result: GateResult = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck', 'GateVerdict']} })
     checks: list[GateCheck] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateVerdict']} })
-    decided_by: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateVerdict']} })
+    decided_by: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateVerdict', 'GateSRecord']} })
 
 
 class NaiveMeans(ConfiguredBaseModel):
@@ -1044,7 +1124,8 @@ class NaiveModel(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     train_digest: str = Field(default=..., description="""SHA-256 of the train file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
     final: NaiveMeans = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
     per_timestep: NaiveMeans = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
@@ -1099,7 +1180,7 @@ class TrainingConfig(ConfiguredBaseModel):
     loss_weight_course: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
     loss_weight_speed: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
     loss_weight_manoeuvre: Optional[float] = Field(default=None, description="""Weight of the turn-probability cross-entropy term (velocity_two_hypothesis only; spec 011). Absent means 1.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
-    train_seed: str = Field(default=..., description="""Decimal uint64; derives initializer seeds and batch order.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'TrainingPlan']} })
+    train_seed: str = Field(default=..., description="""Decimal uint64; derives initializer seeds and batch order.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'TrainingPlan', 'GateSDecision']} })
     train_limit: Optional[int] = Field(default=None, description="""Use only the first N training scenarios (tests and smoke runs).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
     shuffle_labels: bool = Field(default=..., description="""Permute targets across scenarios (leakage check).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig']} })
     feature_set: Optional[FeatureSet] = Field(default=None, description="""Input channel set; absent means raw. Must match the features files.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FeatureLayout', 'TrainingConfig']} })
@@ -1141,7 +1222,8 @@ class Continuation(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'JobRecord',
-                       'ChangeDecision']} })
+                       'ChangeDecision',
+                       'SegmentationHeader']} })
 
 
 class ModelManifest(ConfiguredBaseModel):
@@ -1165,7 +1247,8 @@ class ModelManifest(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
@@ -1199,8 +1282,12 @@ class ModelManifest(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'JobRecord',
-                       'ChangeDecision']} })
-    git_dirty: Optional[bool] = Field(default=None, description="""True when the working tree had uncommitted changes when training started (absent before schema 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest', 'JobRecord']} })
+                       'ChangeDecision',
+                       'SegmentationHeader']} })
+    git_dirty: Optional[bool] = Field(default=None, description="""True when the working tree had uncommitted changes when training started (absent before schema 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
+                       'ModelManifest',
+                       'JobRecord',
+                       'SegmentationHeader']} })
     source_dataset_header: Optional[DatasetHeader] = Field(default=None, description="""Header of the dataset the train features came from (lineage; absent before schema 0.8.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
     g0_experiment: Optional[str] = Field(default=None, description="""Id of the G0 experiment whose verdict the training guard accepted.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
 
@@ -1270,7 +1357,10 @@ class PhysicsModelConfig(ConfiguredBaseModel):
     weight_decay: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     epochs: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest', 'PhysicsModelConfig', 'DetectorConfig']} })
     patience: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
-    seed: int = Field(default=..., description="""Initialisation and row-sampling seed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'PhysicsModelConfig', 'DetectorConfig']} })
+    seed: int = Field(default=..., description="""Initialisation and row-sampling seed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'GateSRecord']} })
     shuffle_labels: bool = Field(default=..., description="""Control (c).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig']} })
     threads: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'JobRecord', 'DetectorConfig']} })
 
@@ -1289,7 +1379,7 @@ class TrainingPlan(ConfiguredBaseModel):
                        'TrainingPlan',
                        'DetectorConfig']} })
     ranges: ParameterRanges = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingPlan']} })
-    train_seed: int = Field(default=..., description="""Generator seed of the on-the-fly training stream.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'TrainingPlan']} })
+    train_seed: int = Field(default=..., description="""Generator seed of the on-the-fly training stream.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'TrainingPlan', 'GateSDecision']} })
     scenarios_per_epoch: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingPlan']} })
     validation: DatasetRef = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingPlan']} })
     validation_scenarios: int = Field(default=..., description="""Validation scenarios scored each epoch.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingPlan']} })
@@ -1312,8 +1402,12 @@ class JobRecord(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'JobRecord',
-                       'ChangeDecision']} })
-    git_dirty: Optional[bool] = Field(default=None, description="""The job's working tree had uncommitted changes (schema 0.20.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest', 'JobRecord']} })
+                       'ChangeDecision',
+                       'SegmentationHeader']} })
+    git_dirty: Optional[bool] = Field(default=None, description="""The job's working tree had uncommitted changes (schema 0.20.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
+                       'ModelManifest',
+                       'JobRecord',
+                       'SegmentationHeader']} })
 
 
 class CheckpointMeta(ConfiguredBaseModel):
@@ -1326,11 +1420,13 @@ class CheckpointMeta(ConfiguredBaseModel):
     plan_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     plan_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     epoch: int = Field(default=..., description="""Last completed epoch (0 = none).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EpochRecord', 'CheckpointMeta']} })
     best_epoch: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Continuation',
                        'ModelManifest',
@@ -1376,7 +1472,8 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
@@ -1384,11 +1481,13 @@ class PhysicsModelManifest(ConfiguredBaseModel):
     plan_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     plan_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     training_commit: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest']} })
     best_epoch: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Continuation',
                        'ModelManifest',
@@ -1401,7 +1500,7 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'PhysicsModelManifest',
                        'DetectorHeader']} })
     onnx_digest: Optional[str] = Field(default=None, description="""SHA-256 of the exported graph.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest']} })
-    window_rows: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest']} })
+    window_rows: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest', 'SegmentParameters']} })
 
 
 class Gate1Decision(ConfiguredBaseModel):
@@ -1413,23 +1512,31 @@ class Gate1Decision(ConfiguredBaseModel):
     plan_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     plan_digest: str = Field(default=..., description="""SHA-256 of the plan file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     carried_models: list[str] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ChangeDecision']} })
     control_models: list[str] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    carried_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    test_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ChangeDecision', 'GateDDecision']} })
-    test_count: int = Field(default=..., description="""Scenarios generated (the test split is 10%).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    carried_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    test_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ChangeDecision',
+                       'GateDDecision',
+                       'GateSDecision']} })
+    test_count: int = Field(default=..., description="""Scenarios generated (the test split is 10%).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
     gate_rows: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision']} })
-    criterion: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    imm: str = Field(default=..., description="""Frozen IMM settings (JSON).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
+    criterion: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    imm: str = Field(default=..., description="""Frozen IMM settings (JSON).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ControlSettings',
+                       'GateDDecision',
+                       'GateSDecision']} })
     ekf: str = Field(default=..., description="""Frozen EKF settings (JSON).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
-    forecast: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    forecast: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
     if_failed: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision']} })
     validation_rule: str = Field(default=..., description="""When validation stops the phase before test.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
 
@@ -1450,9 +1557,13 @@ class ChangeDecision(ConfiguredBaseModel):
                        'Continuation',
                        'ModelManifest',
                        'JobRecord',
-                       'ChangeDecision']} })
+                       'ChangeDecision',
+                       'SegmentationHeader']} })
     plan: Optional[str] = Field(default=None, description="""The plan this decision pre-registers (configs/<…>/plan.json). Required from iteration 3 (spec 007): tma-g2 scores a test split only with the decision that names its plan.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeDecision']} })
-    test_seed: Optional[str] = Field(default=None, description="""Dataset seed of the test split the decision commits to (the plan's fresh_test seed, or its dataset seed); tma-g2 checks it against the plan.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ChangeDecision', 'GateDDecision']} })
+    test_seed: Optional[str] = Field(default=None, description="""Dataset seed of the test split the decision commits to (the plan's fresh_test seed, or its dataset seed); tma-g2 checks it against the plan.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ChangeDecision',
+                       'GateDDecision',
+                       'GateSDecision']} })
     rescore_of: Optional[str] = Field(default=None, description="""The experiment directory of the inconclusive gate this decision re-scores (SRD §7: one re-score on a larger fresh-seed test set; e.g. experiments/20261024-i4-g2). When present, tma-g2 runs in re-score mode (--rescore-of): the frozen carried models are bound by model_digests instead of by training ancestry, the re-scored gate must be inconclusive and not itself a re-score, and the fresh test seed must differ from its test seed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeDecision']} })
     model_digests: Optional[list[ModelDigest]] = Field(default=None, description="""The frozen carried models a re-score scores, by manifest id, with the SHA-256 of each one's weights.bin, manifest.json and model.json; tma-g2 refuses a re-score whose carried set or any of those files differs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeDecision']} })
     fresh_test_count: Optional[int] = Field(default=None, description="""The dataset count whose test split a re-score scores (the plan's dataset.fresh_test.count; schema 0.11.1); tma-g2 refuses a plan with another count.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeDecision']} })
@@ -1511,7 +1622,10 @@ class DetectorConfig(ConfiguredBaseModel):
     epochs: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest', 'PhysicsModelConfig', 'DetectorConfig']} })
     patience: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
     min_improvement: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
-    seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'PhysicsModelConfig', 'DetectorConfig']} })
+    seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'GateSRecord']} })
     threads: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'JobRecord', 'DetectorConfig']} })
 
 
@@ -1525,11 +1639,15 @@ class ControlSettings(ConfiguredBaseModel):
                        'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
-                       'SpanDetection']} })
+                       'SpanDetection',
+                       'SegmentInterval']} })
     threshold: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck', 'ControlSettings', 'GateDDecision']} })
     cusum_drift: Optional[float] = Field(default=None, description="""CUSUM drift δ.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
-    glr_window: Optional[int] = Field(default=None, description="""GLR window in samples.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
-    imm: Optional[str] = Field(default=None, description="""Frozen IMM setting name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
+    glr_window: Optional[int] = Field(default=None, description="""GLR window in samples.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings', 'SegmentParameters']} })
+    imm: Optional[str] = Field(default=None, description="""Frozen IMM setting name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ControlSettings',
+                       'GateDDecision',
+                       'GateSDecision']} })
     ekf: Optional[str] = Field(default=None, description="""Frozen EKF setting name (cusum_ekf).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
     tuned_on: Optional[str] = Field(default=None, description="""SHA-256 of the validation file the threshold was tuned on.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
     target_false_alarm: Optional[float] = Field(default=None, description="""Held-leg G5 false-alarm fraction the threshold was tuned to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
@@ -1549,7 +1667,9 @@ class DetectorHeader(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
                        'CrbHeader',
@@ -1557,11 +1677,16 @@ class DetectorHeader(ConfiguredBaseModel):
                        'NaiveModel',
                        'ModelManifest',
                        'PhysicsModelManifest',
-                       'DetectorHeader']} })
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
     detector: str = Field(default=..., description="""Detector id or control name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'DetectionRecord']} })
     variant: Optional[DetectorVariant] = Field(default=None, description="""Learned detectors only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'DetectorHeader']} })
     control: Optional[ControlSettings] = Field(default=None, description="""Controls only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader']} })
-    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader', 'CrbHeader', 'DetectorHeader']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
+                       'CrbHeader',
+                       'DetectorHeader',
+                       'SegmentationHeader',
+                       'GateSRecord']} })
     weights_digest: Optional[str] = Field(default=None, description="""SHA-256 of best.safetensors (learned detectors).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'Continuation',
                        'ModelManifest',
@@ -1606,8 +1731,15 @@ class DetectorRecord(ConfiguredBaseModel):
                        'CrbHeader',
                        'CrbRecord',
                        'DetectorHeader',
-                       'DetectorRecord']} })
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
+                       'CrbRecord',
+                       'DetectorRecord',
+                       'DetectionRecord',
+                       'Segmentation',
+                       'TruthLabels']} })
     p_change: list[float] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorRecord']} })
     p_kind_last: Optional[list[float]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorRecord']} })
     knot_sets: Optional[list[KnotSet]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorRecord']} })
@@ -1620,9 +1752,10 @@ class SpanDetection(ConfiguredBaseModel):
                        'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',
-                       'SpanDetection']} })
-    start_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection']} })
-    end_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection']} })
+                       'SpanDetection',
+                       'SegmentInterval']} })
+    start_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection', 'SegmentInterval']} })
+    end_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection', 'SegmentInterval']} })
     outcome: str = Field(default=..., description="""detected | missed | unresolved.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SpanDetection']} })
     alarm_index: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpanDetection']} })
     delay_s: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpanDetection']} })
@@ -1635,7 +1768,12 @@ class DetectionRecord(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'CrbRecord', 'DetectorRecord', 'DetectionRecord']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
+                       'CrbRecord',
+                       'DetectorRecord',
+                       'DetectionRecord',
+                       'Segmentation',
+                       'TruthLabels']} })
     detector: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'DetectionRecord']} })
     spans: Optional[list[SpanDetection]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DetectionRecord']} })
     held_leg_seconds: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectionRecord']} })
@@ -1653,33 +1791,254 @@ class GateDDecision(ConfiguredBaseModel):
     plan_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     plan_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
                        'PhysicsModelManifest',
                        'Gate1Decision',
-                       'GateDDecision']} })
+                       'GateDDecision',
+                       'GateSDecision']} })
     carried_variants: list[str] = Field(default=..., description="""Detector ids per carried variant (three seeds each).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
     control_models: list[str] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    carried_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    carried_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
     threshold: float = Field(default=..., description="""D1 operating threshold on p_change.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck', 'ControlSettings', 'GateDDecision']} })
     tolerance_s: float = Field(default=..., description="""D1 tolerance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'GateDDecision']} })
     knot_threshold: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'GateDDecision']} })
-    bootstrap_level: float = Field(default=..., description="""D2.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    bootstrap_level: float = Field(default=..., description="""D2.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
     false_alarm_limit_rule: str = Field(default=..., description="""D3.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
     false_alarm_limit: float = Field(default=..., description="""D3's limit as a number: 0.05, or the frozen IMM's validation rate at μ_CT > 0.5 if lower.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
-    validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
-    test_seed: int = Field(default=..., description="""D4.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ChangeDecision', 'GateDDecision']} })
-    test_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision', 'GateSDecision']} })
+    test_seed: int = Field(default=..., description="""D4.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ChangeDecision',
+                       'GateDDecision',
+                       'GateSDecision']} })
+    test_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
     held_leg_weight: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'GateDDecision']} })
     controls_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
-    imm: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
+    imm: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ControlSettings',
+                       'GateDDecision',
+                       'GateSDecision']} })
     ekf: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'ControlSettings', 'GateDDecision']} })
-    criterion: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    criterion: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
     validation_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
-    follow_on: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
-    forecast: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision']} })
+    follow_on: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision', 'GateSDecision']} })
+    forecast: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
     architecture_check: str = Field(default=..., description="""FR-035: each registered check reviewed against the detector's architecture.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
+
+
+class SegmentInterval(ConfiguredBaseModel):
+    """
+    One interval of a Segmentation; rows are inclusive sample indices.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    kind: SegmentKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
+                       'TargetManoeuvre',
+                       'ManoeuvreSpan',
+                       'ControlSettings',
+                       'SpanDetection',
+                       'SegmentInterval']} })
+    start_index: int = Field(default=..., ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection', 'SegmentInterval']} })
+    end_index: int = Field(default=..., description="""Inclusive; ≥ start_index.""", ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['ManoeuvreSpan', 'SpanDetection', 'SegmentInterval']} })
+    open: bool = Field(default=..., description="""True only for the last interval when a transition is still in progress at the prefix end.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentInterval']} })
+
+
+class SegmentParameters(ConfiguredBaseModel):
+    """
+    A segmenter's fixed parameters (spec 005 data-model.md; defaults from SRD Annex B and the MAN2 re-plan). Copied into each segmentation file's header.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    course_tol_deg: float = Field(default=..., description="""C: half-width of a steady leg's course band.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    speed_tol_kt: float = Field(default=..., description="""S: half-width of a steady leg's speed band.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    course_change_deg: float = Field(default=..., description="""D: a deliberate course change (ownship coarse pass).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    speed_change_kt: float = Field(default=..., description="""D_S: a deliberate speed change (ownship coarse pass).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    l_min_rows: int = Field(default=..., description="""L_min in rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    t_min_rows: int = Field(default=..., description="""T_min in rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    t_lengths_rows: list[int] = Field(default=..., description="""Transition lengths searched, in rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    search_penalty: float = Field(default=..., description="""Per-leg penalty of the additive search (decision record).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    nominator_far: float = Field(default=..., description="""GLR nominator's held-leg false-alarm fraction.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    retest_rows: int = Field(default=..., description="""Re-test interval of a raised alarm episode.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    tau: float = Field(default=..., description="""Confirmation threshold (χ², 4 dof, before scaling).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    margin: float = Field(default=..., description="""Cost margin below which differing intervals are unknown (FR-023).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters', 'Segmentation']} })
+    mode: SegmentMode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction', 'PredictionHeader', 'SegmentParameters']} })
+    glr_threshold: float = Field(default=..., description="""GLR alarm threshold, tuned on the tuning scenarios' held-leg rows to nominator_far.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    glr_window: int = Field(default=..., description="""GLR window in rows (spec 004).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings', 'SegmentParameters']} })
+    window_rows: int = Field(default=..., description="""W: a nomination's candidates start in its last W rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelManifest', 'SegmentParameters']} })
+    candidate_step_rows: int = Field(default=..., description="""Spacing of candidate transition starts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    search_every_rows: int = Field(default=..., description="""The search nominates from prefixes this many rows apart on its grid.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    search_step_rows: int = Field(default=..., description="""The search's grid step.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    search_horizon_rows: int = Field(default=..., description="""A search transition is tested on the prefix this many rows after its end.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    polish_rows: int = Field(default=..., description="""Each accepted boundary is re-optimised within ± this many rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+
+
+class SegmentationHeader(ConfiguredBaseModel):
+    """
+    First record of a tma2-segment file.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
+    schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'ExperimentManifest',
+                       'NaiveModel',
+                       'ModelManifest',
+                       'PhysicsModelManifest',
+                       'DetectorHeader',
+                       'SegmentationHeader']} })
+    segmenter: str = Field(default=..., description="""C, L-s<seed>, oracle, one-leg or glr-confirm.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentationHeader']} })
+    segmenter_sha256: str = Field(default=..., description="""Configuration digest (C) or weights digest (L).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentationHeader']} })
+    dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
+                       'CrbHeader',
+                       'DetectorHeader',
+                       'SegmentationHeader',
+                       'GateSRecord']} })
+    parameters: SegmentParameters = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'SegmentationHeader', 'GateSDecision']} })
+    git_commit: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
+                       'Continuation',
+                       'ModelManifest',
+                       'JobRecord',
+                       'ChangeDecision',
+                       'SegmentationHeader']} })
+    git_dirty: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
+                       'ModelManifest',
+                       'JobRecord',
+                       'SegmentationHeader']} })
+
+
+class Segmentation(ConfiguredBaseModel):
+    """
+    One vessel's segmentation of the prefix [0, prefix_row] of one scenario (spec 005 FR-001, FR-003). Intervals tile [0, prefix_row] in order without overlap.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation']} })
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
+                       'CrbRecord',
+                       'DetectorRecord',
+                       'DetectionRecord',
+                       'Segmentation',
+                       'TruthLabels']} })
+    vessel: TrackId = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Segmentation', 'TruthLabels']} })
+    prefix_row: int = Field(default=..., description="""k: only bearings at rows ≤ k were used.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Segmentation']} })
+    intervals: list[SegmentInterval] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Segmentation']} })
+    cost: Optional[float] = Field(default=None, description="""Physics-layer cost of the accepted segmentation on [0, k]; null for O.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Segmentation']} })
+    margin: Optional[float] = Field(default=None, description="""Smallest cost drop among accepted transitions minus its threshold; null for O.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters', 'Segmentation']} })
+
+
+class TruthLabels(ConfiguredBaseModel):
+    """
+    Per-row truth labels for one vessel of one scenario (spec 005 FR-051, R4).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
+                       'CrbRecord',
+                       'DetectorRecord',
+                       'DetectionRecord',
+                       'Segmentation',
+                       'TruthLabels']} })
+    vessel: TrackId = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Segmentation', 'TruthLabels']} })
+    labels: list[SegmentKind] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TruthLabels']} })
+
+
+class GateSDecision(ConfiguredBaseModel):
+    """
+    The Gate S decision record (spec 005 FR-070, contracts/decision-record.md), committed before any L training.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    plan_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
+                       'PhysicsModelManifest',
+                       'Gate1Decision',
+                       'GateDDecision',
+                       'GateSDecision']} })
+    plan_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
+                       'PhysicsModelManifest',
+                       'Gate1Decision',
+                       'GateDDecision',
+                       'GateSDecision']} })
+    validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision', 'GateSDecision']} })
+    validation_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    test_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ChangeDecision',
+                       'GateDDecision',
+                       'GateSDecision']} })
+    test_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    train_seed: int = Field(default=..., description="""L's training stream.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'TrainingPlan', 'GateSDecision']} })
+    parameters: SegmentParameters = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'SegmentationHeader', 'GateSDecision']} })
+    gap_normalisation: str = Field(default=..., description="""raw (R7).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    s1_limit: float = Field(default=..., description="""O's contamination P90 limit on ownship legs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    s3_contamination_limit: float = Field(default=..., description="""L's contamination may exceed the reference's by at most this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    s3_false_split_limit: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    s2_validation: str = Field(default=..., description="""C − GLR + confirm on validation and the S4 reference it implies.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    s4_reference: str = Field(default=..., description="""C or glr-confirm.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    imm: str = Field(default=..., description="""Frozen MAN2 IMM name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ControlSettings',
+                       'GateDDecision',
+                       'GateSDecision']} })
+    glr_confirm: str = Field(default=..., description="""GLR + confirm configuration.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    carried_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    shuffled_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision']} })
+    criterion: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+    follow_on: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision', 'GateSDecision']} })
+    forecast: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision', 'GateDDecision', 'GateSDecision']} })
+
+
+class GateSVerdicts(ConfiguredBaseModel):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    s1: str = Field(default=..., description="""pass | fail | inconclusive.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSVerdicts']} })
+    s2: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSVerdicts']} })
+    s3: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSVerdicts']} })
+    s4: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSVerdicts']} })
+
+
+class GateSRecord(ConfiguredBaseModel):
+    """
+    The Gate S scoring record (spec 005 data-model.md); metrics live in metrics.json beside it.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    decision_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSRecord']} })
+    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader', 'GateSRecord']} })
+    seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'GateSRecord']} })
+    dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
+                       'CrbHeader',
+                       'DetectorHeader',
+                       'SegmentationHeader',
+                       'GateSRecord']} })
+    segmenters: list[str] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSRecord']} })
+    metrics_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSRecord']} })
+    verdicts: GateSVerdicts = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSRecord']} })
+    decided_by: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GateVerdict', 'GateSRecord']} })
 
 
 # Model rebuild
@@ -1743,3 +2102,11 @@ DetectorRecord.model_rebuild()
 SpanDetection.model_rebuild()
 DetectionRecord.model_rebuild()
 GateDDecision.model_rebuild()
+SegmentInterval.model_rebuild()
+SegmentParameters.model_rebuild()
+SegmentationHeader.model_rebuild()
+Segmentation.model_rebuild()
+TruthLabels.model_rebuild()
+GateSDecision.model_rebuild()
+GateSVerdicts.model_rebuild()
+GateSRecord.model_rebuild()

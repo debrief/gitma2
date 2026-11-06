@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.22.0
+version: 0.23.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -26,6 +26,7 @@ enums:
       prediction: { description: One Prediction. }
       crb: { description: One CrbRecord (gitma2). }
       detector: { description: "One DetectorRecord (gitma2, schema 0.21.0)." }
+      segmentation: { description: "One Segmentation (gitma2, schema 0.23.0, spec 005)." }
   Split:
     description: Dataset split. Train/validation/test are 80/10/10 by scenario index.
     permissible_values:
@@ -199,6 +200,17 @@ enums:
         description: The 95% bootstrap interval straddles the threshold (G1 report, T033).
       reported: { description: "A figure reported beside the gate, not gated (schema 0.21.0)." }
 
+  SegmentKind:
+    description: An interval of a segmentation (spec 005, SRD Annex B).
+    permissible_values:
+      steady: { description: "A steady leg: course within ± C and speed within ± S of the leg mean, at least L_min." }
+      transition: { description: "Between two steady legs; no motion model assumed; at least T_min unless open." }
+      unknown: { description: "Not classified (too little history, or the cost margin is below the declared value)." }
+  SegmentMode:
+    description: How a segmentation is handed to the physics layer (spec 005 FR-030).
+    permissible_values:
+      gap: { description: "Knots at both ends of each transition; its bearings excluded." }
+      chord: { description: "Knots at both ends; bearings kept; the speed prior across course-only transitions." }
 classes:
   FloatRange:
     description: Closed interval [min, max].
@@ -1539,3 +1551,118 @@ classes:
       follow_on: { range: string, required: true }
       forecast: { range: string, required: true }
       architecture_check: { range: string, required: true, description: "FR-035: each registered check reviewed against the detector's architecture." }
+
+  SegmentInterval:
+    description: One interval of a Segmentation; rows are inclusive sample indices.
+    attributes:
+      kind: { range: SegmentKind, required: true }
+      start_index: { range: integer, required: true, minimum_value: 0 }
+      end_index: { range: integer, required: true, minimum_value: 0, description: "Inclusive; ≥ start_index." }
+      open: { range: boolean, required: true, description: "True only for the last interval when a transition is still in progress at the prefix end." }
+
+  SegmentParameters:
+    description: >-
+      A segmenter's fixed parameters (spec 005 data-model.md; defaults from SRD Annex B and the
+      MAN2 re-plan). Copied into each segmentation file's header.
+    attributes:
+      course_tol_deg: { range: float, required: true, description: "C: half-width of a steady leg's course band." }
+      speed_tol_kt: { range: float, required: true, description: "S: half-width of a steady leg's speed band." }
+      course_change_deg: { range: float, required: true, description: "D: a deliberate course change (ownship coarse pass)." }
+      speed_change_kt: { range: float, required: true, description: "D_S: a deliberate speed change (ownship coarse pass)." }
+      l_min_rows: { range: integer, required: true, description: "L_min in rows." }
+      t_min_rows: { range: integer, required: true, description: "T_min in rows." }
+      t_lengths_rows: { range: integer, multivalued: true, required: true, description: "Transition lengths searched, in rows." }
+      search_penalty: { range: float, required: true, description: "Per-leg penalty of the additive search (decision record)." }
+      nominator_far: { range: float, required: true, description: "GLR nominator's held-leg false-alarm fraction." }
+      retest_rows: { range: integer, required: true, description: "Re-test interval of a raised alarm episode." }
+      tau: { range: float, required: true, description: "Confirmation threshold (χ², 4 dof, before scaling)." }
+      margin: { range: float, required: true, description: "Cost margin below which differing intervals are unknown (FR-023)." }
+      mode: { range: SegmentMode, required: true }
+      glr_threshold: { range: float, required: true, description: "GLR alarm threshold, tuned on the tuning scenarios' held-leg rows to nominator_far." }
+      glr_window: { range: integer, required: true, description: "GLR window in rows (spec 004)." }
+      window_rows: { range: integer, required: true, description: "W: a nomination's candidates start in its last W rows." }
+      candidate_step_rows: { range: integer, required: true, description: "Spacing of candidate transition starts." }
+      search_every_rows: { range: integer, required: true, description: "The search nominates from prefixes this many rows apart on its grid." }
+      search_step_rows: { range: integer, required: true, description: "The search's grid step." }
+      search_horizon_rows: { range: integer, required: true, description: "A search transition is tested on the prefix this many rows after its end." }
+      polish_rows: { range: integer, required: true, description: "Each accepted boundary is re-optimised within ± this many rows." }
+
+  SegmentationHeader:
+    description: First record of a tma2-segment file.
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      segmenter: { range: string, required: true, description: "C, L-s<seed>, oracle, one-leg or glr-confirm." }
+      segmenter_sha256: { range: string, required: true, description: "Configuration digest (C) or weights digest (L)." }
+      dataset_digest: { range: string, required: true, description: "SHA-256 of the truth file." }
+      parameters: { range: SegmentParameters, required: true }
+      git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, required: true }
+
+  Segmentation:
+    description: >-
+      One vessel's segmentation of the prefix [0, prefix_row] of one scenario (spec 005 FR-001,
+      FR-003). Intervals tile [0, prefix_row] in order without overlap.
+    attributes:
+      record: { range: RecordKind, required: true }
+      scenario_index: { range: integer, required: true }
+      vessel: { range: TrackId, required: true }
+      prefix_row: { range: integer, required: true, description: "k: only bearings at rows ≤ k were used." }
+      intervals: { range: SegmentInterval, multivalued: true, inlined_as_list: true, required: true }
+      cost: { range: float, description: "Physics-layer cost of the accepted segmentation on [0, k]; null for O." }
+      margin: { range: float, description: "Smallest cost drop among accepted transitions minus its threshold; null for O." }
+
+  TruthLabels:
+    description: Per-row truth labels for one vessel of one scenario (spec 005 FR-051, R4).
+    attributes:
+      scenario_index: { range: integer, required: true }
+      vessel: { range: TrackId, required: true }
+      labels: { range: SegmentKind, multivalued: true, required: true }
+
+  GateSDecision:
+    description: >-
+      The Gate S decision record (spec 005 FR-070, contracts/decision-record.md), committed before
+      any L training.
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      validation_seed: { range: integer, required: true }
+      validation_digest: { range: string, required: true }
+      test_seed: { range: integer, required: true }
+      test_count: { range: integer, required: true }
+      train_seed: { range: integer, required: true, description: "L's training stream." }
+      parameters: { range: SegmentParameters, required: true }
+      gap_normalisation: { range: string, required: true, description: "raw (R7)." }
+      s1_limit: { range: float, required: true, description: "O's contamination P90 limit on ownship legs." }
+      s3_contamination_limit: { range: float, required: true, description: "L's contamination may exceed the reference's by at most this." }
+      s3_false_split_limit: { range: float, required: true }
+      s2_validation: { range: string, required: true, description: "C − GLR + confirm on validation and the S4 reference it implies." }
+      s4_reference: { range: string, required: true, description: "C or glr-confirm." }
+      imm: { range: string, required: true, description: "Frozen MAN2 IMM name." }
+      glr_confirm: { range: string, required: true, description: "GLR + confirm configuration." }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      carried_rule: { range: string, required: true }
+      shuffled_rule: { range: string, required: true }
+      criterion: { range: string, required: true }
+      follow_on: { range: string, required: true }
+      forecast: { range: string, required: true }
+
+  GateSVerdicts:
+    attributes:
+      s1: { range: string, required: true, description: "pass | fail | inconclusive." }
+      s2: { range: string, required: true }
+      s3: { range: string, required: true }
+      s4: { range: string, required: true }
+
+  GateSRecord:
+    description: The Gate S scoring record (spec 005 data-model.md); metrics live in metrics.json beside it.
+    attributes:
+      decision_sha256: { range: string, required: true }
+      split: { range: Split, required: true }
+      seed: { range: integer, required: true }
+      dataset_digest: { range: string, required: true }
+      segmenters: { range: string, multivalued: true, required: true }
+      metrics_sha256: { range: string, required: true }
+      verdicts: { range: GateSVerdicts, required: true }
+      decided_by: { range: string }

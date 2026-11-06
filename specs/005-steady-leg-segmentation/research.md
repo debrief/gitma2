@@ -173,7 +173,7 @@ At zero evidence, the gradient is the difference between the truth's expected fe
 the model's, which is generally non-zero, so the head learns from step one (SC-003). A unit test
 checks it against finite differences.
 
-**Training data.** Training is on a fresh stream (seed 313), regenerated per epoch from stored
+**Training data.** Training is on a fresh stream (seed 317, generator 0.6.0), regenerated per epoch from stored
 truth with fresh noise (spec 003's on-the-fly path).
 
 **Cost.**
@@ -211,9 +211,11 @@ equals C (SC-003).
 - **Intervals:** scenario-clustered paired bootstraps (2,000 resamples, 97.5%), using
   `bootstrap_clustered_quantile_ratio` and the paired difference for the S2 and S4 differences.
 - **Seeds**, each pinned by digest in the plan file:
-  - 312: Gate S test (10,000 scenarios);
-  - 313: L's training stream;
-  - 304: validation;
+  - 315: Gate S test (10,000 scenarios, generator 0.6.0), generated after the decision record;
+  - 317: L's training stream (generator 0.6.0);
+  - 314: validation (generator 0.6.0); 304 (0.5.0) was used for R1–R3;
+  - 312 and 313 were declared here for 0.5.0 and are left unused (re-planned for MAN2,
+    2026-11-04);
   - 305 stays reserved, and 311 was used by spec 004.
 
 ## R8. Export
@@ -232,3 +234,39 @@ the deployable graph (FR-045).
 | Re-test while raised | — | every 6 rows | note 08 §5 item 10 |
 | Gap normalisation (FR-061) | decision record | raw medians, efficiency beside | R7 |
 | L's loss (FR-042) | semi-Markov likelihood | the same, plus an auxiliary per-bearing term at 0.1 | R6 |
+
+## Addendum (MAN2 re-plan, 2026-11-04): the knot path at 720 rows (tasks T006)
+
+G0-MAN2 checked the physics layer at 720 rows on the trivial path only. With every truth knot:
+- **Equivalence** (`tests/unit/test_physics_knots_720.py`): on 16 MAN2 windows of ≥ 600 rows
+  (seed 316, k = the last row, chord and masked-turn modes, 4–16 knots), the tensor layer equals
+  the NumPy reference. Cost agrees to 1e-9, plausibility flags are exact, and the worst relative
+  state difference over determined rows is 2.0e-7 (limit 1e-4). Gradients through the implicit
+  step are finite in the log-weights and changepoints.
+- **Export** (`onnx_export --man2 --knots`, the physics layer alone fed truth knots, 16 knot
+  slots, eight windows with k 492–693, 4–10 knots each, alternately chord and masked): against
+  torch in double, Python onnxruntime 1.8e-10, WASM 2.8e-10, Java 1.8e-10 (covariance, the worst
+  output; limit 1e-5). The inputs digest binds both legs. CI runs it beside the 720-row toy
+  export.
+
+## Addendum (2026-11-04): R1 and R3 on MAN2, seed 314 (tasks T010, T021)
+
+Measured on validation seed 314 (`experiments/20261104-gs-val/README.md`), on a quiet machine.
+
+- **Cost table at 720 rows.** On a 6-row grid: median 3.0 s, 9.6 s at ≥ 600 rows, worst 12.0 s.
+  On a 3-row grid: 10.9 s, 36.7 s and 46.9 s. **The grid step is 6 rows**, equal to T_min.
+  `t_lengths_rows` stays [6, 9, 12, 18, 24, 36]: up to 6 min, which covers MAN2's transitions
+  (median 116 s).
+- **The 10 s budget.** Full C (GLR, cost table, confirmation, four prefixes) takes about 41 s per
+  scenario per core, so about 10 s per scenario on a 4-core runner. That meets SC-004's budget at
+  the margin. Large runs are sharded on CI (`segment.yml`).
+- **Search penalty.** 30, the smallest on the grid at or below 5% of prefixes with a false
+  transition: 3.5%, with recall 12.7% at ± 60 s. The search is a weak nominator on MAN2, as on
+  0.5.0, so GLR alarms are C's main nominator.
+- **Mode (R3).** Gap, with median range 0.120 against the chord's 0.123. The paired difference in
+  gap recovered is +0.006 [−0.002, 0.014].
+- **Margin (FR-023).** 0. Confirmation already requires a χ² cost drop (τ = 13.8), so an
+  accepted transition is not marginal. A positive margin would turn confirmed transitions into
+  unknown rows, which the hand-over then treats as steady.
+- **S2 on validation.** C − GLR + confirm in gap recovered (range) is +0.632 [0.558, 0.734], so C
+  is the implied S4 reference.

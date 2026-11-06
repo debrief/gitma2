@@ -78,6 +78,46 @@ G5_EKF_GRID = [
     (sa, 4.0, r)
     for sa, r in itertools.product((0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3), G5_R_SCALES)
 ]
+# MAN2 pass 2 (spec 006 T032): the first pass on seed 314 chose imm-cv0.03-ct0.1-w0.01-s0.0003-p4-r2
+# and ekf-sa0.0003-p4-r2, every axis but ω on an edge with the error still falling (cv 0.01 → 0.03:
+# 0.5913 → 0.5852; ct 0.03 → 0.1: 0.5876 → 0.5852; r 8 → 2: 0.601 → 0.585; switch 0.001 → 0.0003:
+# 0.5858 → 0.5852; sa 0.001 → 0.0003: 0.5886 → 0.5833). Each axis reaches past its edge (spec
+# 003's rule), with the first pass's choices included so the comparison is on the same rows.
+MAN2_PASS2_IMM_GRID = [
+    ImmParams(cv, ct, 0.01, sw, 4.0, r)
+    for cv, ct, sw, r in itertools.product(
+        (0.03, 0.1, 0.3), (0.1, 0.3, 1.0), (0.0003, 0.0001), (2.0, 1.0)
+    )
+]
+MAN2_PASS2_EKF_GRID = [
+    (sa, 4.0, r) for sa, r in itertools.product((0.0003, 0.0001, 0.00003), (2.0, 1.0))
+]
+# MAN2 pass 3: pass 2 chose imm-cv0.03-ct1-w0.01-s0.0003-p4-r2 (0.5502), interior in cv, switch
+# and r but on the ct edge with the error still falling (ct 0.3 → 1 at r 2: 0.5685 → 0.5502), and
+# ekf-sa0.00003-p4 (r 1; 0.5732), on a plateau in sa (1e-4: 0.5733) but on the r edge still
+# falling (r 2 → 1: 0.5824 → 0.5732). Pass 3 reaches past those two edges.
+MAN2_PASS3_IMM_GRID = [
+    ImmParams(0.03, ct, 0.01, 0.0003, 4.0, r)
+    for ct, r in itertools.product((1.0, 3.0, 10.0, 30.0), (2.0, 1.0))
+]
+MAN2_PASS3_EKF_GRID = [
+    (sa, 4.0, r) for sa, r in itertools.product((0.00003, 0.0001), (1.0, 0.5, 0.25))
+]
+# MAN2 pass 4: pass 3 put the IMM's ct inside (3, 10, 30 all worse than 1), so the IMM is
+# imm-cv0.03-ct1-w0.01-s0.0003-p4-r2 (0.5502); the EKF's r is still falling at its edge
+# (0.5 → 0.25: 0.5669 → 0.5581). Pass 4 reaches the EKF's r further (the IMM row repeats the
+# frozen choice so the record names it).
+MAN2_PASS4_IMM_GRID = [ImmParams(0.03, 1.0, 0.01, 0.0003, 4.0, 2.0)]
+MAN2_PASS4_EKF_GRID = [
+    (sa, 4.0, r) for sa, r in itertools.product((0.00003,), (0.25, 0.125, 0.0625, 0.03125))
+]
+GRIDS = {
+    "man2-pass4": (MAN2_PASS4_IMM_GRID, MAN2_PASS4_EKF_GRID),
+    "default": None,
+    "man2-pass2": (MAN2_PASS2_IMM_GRID, MAN2_PASS2_EKF_GRID),
+    "man2-pass3": (MAN2_PASS3_IMM_GRID, MAN2_PASS3_EKF_GRID),
+}
+
 CRITERIA = {
     "zig300": "median relative range error at zig + 5 min, σ = 1° validation rows",
     "g5": "median relative range error over all σ = 1° G5 rows (zig + 5/10/15/20 min), validation",
@@ -130,6 +170,25 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--allow-dirty", action="store_true", help="exploration only: not frozen")
     ap.add_argument("--criterion", choices=sorted(CRITERIA), default="zig300")
+    ap.add_argument(
+        "--grid",
+        choices=sorted(GRIDS),
+        default="default",
+        help="man2-pass2: the second pass past the MAN2 first pass's edges (g5 only)",
+    )
+    ap.add_argument(
+        "--shard",
+        metavar="I/N",
+        help="score only grid entries I, I + N, … and write grid-part-I.csv (no choice); "
+        "a long tune split over several runners",
+    )
+    ap.add_argument(
+        "--from-parts",
+        nargs="+",
+        metavar="CSV",
+        help="score nothing: read the shards' grid-part files and choose as the whole grid would "
+        "(the same order, so ties still go to the earlier entry)",
+    )
     a = ap.parse_args(argv)
     folder = Path(a.experiment)
     exp = Experiment(id=folder.name, folder=folder)
@@ -144,12 +203,43 @@ def main(argv: list[str] | None = None) -> int:
     imm_grid, ekf_grid = (
         (IMM_GRID, EKF_GRID) if a.criterion == "zig300" else (G5_IMM_GRID, G5_EKF_GRID)
     )
+    chosen = GRIDS[a.grid]
+    if chosen is not None:
+        if a.criterion != "g5":
+            print("tma2-tune: --grid man2-pass2 needs --criterion g5", file=sys.stderr)
+            return 2
+        imm_grid, ekf_grid = chosen
+        exp.command_lines.append(f"grid: {a.grid}")
     jobs: list[tuple[str, Any, str, int, str]] = [
         ("imm", p, a.validation, a.scenarios, a.criterion) for p in imm_grid
     ]
     jobs += [("ekf", p, a.validation, a.scenarios, a.criterion) for p in ekf_grid]
-    with ProcessPoolExecutor(max_workers=a.workers) as pool:
-        results = list(pool.map(_score, jobs))
+    if a.shard:
+        i, n = (int(x) for x in a.shard.split("/"))
+        with ProcessPoolExecutor(max_workers=a.workers) as pool:
+            part = list(pool.map(_score, jobs[i::n]))
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"grid-part-{i}.csv").write_text(
+            "".join(f"{pk},{pn},{pm!r}\n" for pk, pn, pm in part)
+        )
+        return 0
+    if a.from_parts:
+        scored: dict[tuple[str, str], float] = {}
+        for f in a.from_parts:
+            for line in Path(f).read_text().splitlines():
+                k_s, n_s, m_s = line.split(",")
+                scored[(k_s, n_s)] = float(m_s)
+        results: list[tuple[str, str, float]] = []
+        for job_kind, params, *_ in jobs:
+            nm = imm_name(params) if job_kind == "imm" else ekf_name(*params)
+            if (job_kind, nm) not in scored:
+                print(f"tma2-tune: {job_kind} {nm} missing from the parts", file=sys.stderr)
+                return 2
+            results.append((job_kind, nm, scored[(job_kind, nm)]))
+        exp.command_lines.append("parts: " + " ".join(a.from_parts))
+    else:
+        with ProcessPoolExecutor(max_workers=a.workers) as pool:
+            results = list(pool.map(_score, jobs))
     lines = [f"filter,name,median_range_rel_{a.criterion}"]
     best: dict[str, tuple[str, float, Any]] = {}
     for (kind, name, med), job in zip(results, jobs, strict=True):

@@ -34,3 +34,40 @@ def _warm_numba() -> None:
     from tma2.sim.generate import warm_up
 
     warm_up()
+
+
+def _man2(tmp: Path, ranges: str, heldout: str) -> Path:
+    import numpy as np
+
+    from tma2.data.dataset import GenerateOptions, generate_dataset
+
+    root = Path(__file__).resolve().parents[1] / "configs"
+    generate_dataset(
+        GenerateOptions(
+            seed=np.uint64(316),
+            count=60,
+            out_dir=tmp,
+            ranges=json.loads((root / ranges).read_text()),
+            heldout_ranges=json.loads((root / heldout).read_text()),
+            format="f32pack",
+            created_by="tests",
+            generator_git_commit=TEST_PROVENANCE[0],
+            generator_git_dirty=TEST_PROVENANCE[1],
+        )
+    )
+    return tmp / "train.f32pack"
+
+
+@pytest.fixture(scope="session")
+def man2_pack(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A small MAN2 split (generator 0.6.0, seed 316, 60 scenarios; the train split, 48 of them),
+    generated once per session so no binary fixture is committed."""
+    return _man2(tmp_path_factory.mktemp("man2"), "man2-ranges.json", "man2-heldout.json")
+
+
+@pytest.fixture(scope="session")
+def man2_noise_free_pack(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """As ``man2_pack``, noise-free (σ = 0, no dropouts)."""
+    return _man2(
+        tmp_path_factory.mktemp("man2nf"), "man2-noise-free.json", "man2-noise-free-heldout.json"
+    )

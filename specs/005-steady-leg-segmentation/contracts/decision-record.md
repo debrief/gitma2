@@ -7,7 +7,7 @@ by digest. A gate manifest names every amendment it applied.
 | Field | Content | Fixed by |
 | --- | --- | --- |
 | plan | path and SHA-256 of the training/scoring plan | — |
-| seeds | validation 304, test 312, L stream 313, each with its data digest | R7 |
+| seeds | validation 314, test 315, L stream 317 (generator 0.6.0), each with its data digest | R7 |
 | parameters | SegmentParameters (data-model.md), all final | validation measurements, phase 1 |
 | search_penalty | the value giving ≤ 5% false splits on the tuning scenarios | R1 |
 | mode | `gap` or `chord` (the lower median range error on validation G5 rows; ties go to the chord) | R3 |

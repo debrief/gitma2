@@ -31,15 +31,19 @@ One record per vessel, scenario and prefix.
 
 ## SegmentParameters
 
-These are fixed for a run and copied into each record header, not repeated per row.
+These are fixed for a run and copied into each record header, not repeated per row. Defaults
+follow Annex B (4 Nov 2026) and the MAN2 re-plan; the 0.5.0 research (R1–R2) used 2°, 12-row legs
+and 3-row transitions.
 
 | Field | Type | Default |
 | --- | --- | --- |
-| course_tol_deg | float | 2.0 |
-| speed_tol_kt | float | 0.5 |
-| l_min_rows | int | 12 |
-| t_min_rows | int | 3 |
-| t_lengths_rows | int[] | [0, 3, 6, 12, 18] |
+| course_tol_deg | float | 5.0 (C, Annex B) |
+| speed_tol_kt | float | 0.5 (S) |
+| course_change_deg | float | 10.0 (D) |
+| speed_change_kt | float | 1.0 (D_S) |
+| l_min_rows | int | 30 (L_min = 5 min) |
+| t_min_rows | int | 6 (T_min = 1 min) |
+| t_lengths_rows | int[] | initially [6, 9, 12, 18, 24, 36]; final from the MAN2 re-measurement (tasks T010) |
 | search_penalty | float | set by the decision record |
 | nominator_far | float | 0.2 |
 | retest_rows | int | 6 |

@@ -75,6 +75,20 @@ Reasons for the defaults:
 
 ## Clarifications
 
+### Session 2026-11-04 (MAN2 re-plan, after generator 0.6.0 passed G0-MAN2)
+
+- **Data and seeds.** Validation seed 314, Gate S test seed 315 (generated after the decision
+  record), L stream seed 317, all generator 0.6.0; 720-row windows. Seeds 312 and 313 stay unused.
+- **Parameters.** C = 5°, S = 0.5 kt, D = 10°, D_S = 1 kt, L_min = 5 min (30 rows), T_min = 1 min
+  (6 rows), per Annex B; transition lengths are re-measured on seed 314 (tasks T010).
+- **References.** FR-062's frozen IMM is the MAN2 re-tune (spec 006 T032), not the 0.5.0 setting.
+  US2 scenario 3 and SC-002 reproduce the MAN2 GLR + confirm record (spec 006 T033) instead of
+  note 08's seed-304 figures.
+- **Compute.** FR-024 and SC-004 apply to prefixes of up to 720 bearings; the 10 s budget is
+  re-confirmed, or revised before the decision record, by the MAN2 timing (tasks T010).
+- **Overlap.** A target change during an ownship turn now occurs in the data (13% of
+  engagements), so the edge case below is tested on data as well as on constructed engagements.
+
 ### Session 2026-11-04 (Annex B, the owner's matured requirements)
 
 - **L_min and T_min closed, and the generator changes.** Asked to choose between Annex B's

@@ -1,0 +1,11 @@
+{
+  "amendment": "T036: the carried L weights and the shuffled rule's outcome, fixed on validation before the test split is opened (changes no criterion)",
+  "model": "segL-s3",
+  "weights_sha256": "1b2430204933bfe3117f78a6597e13344bac42c28af93aaaeef8953c7471370a",
+  "weights": "experiments/20261105-segL-val/models/segL-s3/best.safetensors (also results/segL-41923847724)",
+  "training_run": "41923847724 at 4abab2a136ab8d55a0921a6e29c3fc139295d624",
+  "carried_rule": "median of the three seeds by validation gap recovered in range (seed 314, ordinals 500-1499, mode gap): s1 0.8868, s3 0.8877, s2 0.8910; median s3",
+  "shuffled_rule": "pass",
+  "shuffled_rule_evidence": "segL-shuffled minus C, gap recovered in range: -0.0020 [-0.0093, 0.0047] (97.5%, clustered): the interval includes zero",
+  "validation": "experiments/20261105-segL-val/"
+}

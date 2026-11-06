@@ -1,0 +1,42 @@
+{
+  "decision": "experiments/20261104-gs-decision/decision.json",
+  "decision_sha256": "668712538bd5b091f4511cc9407114e8882a9b853ed5aba123aae5cd6dbd5878",
+  "plan": "configs/segment/gs-plan.json",
+  "plan_sha256": "921c2bdb80199d1442b01c7ad7f64ca05ce153e97541f26bcd2a34bbd85418b6",
+  "truth": "data/gs-test/test.f32pack",
+  "truth_sha256": "1a8d55fe6c2c851c04edbf820a788dc99c6e741f53a2905b252e01f7078bb3bd",
+  "segmentations": {
+    "C": {
+      "segmenter_sha256": "60e6ee635d9390e2c959b408997e39e8c30859febcb2d86f199142ea66aa425f",
+      "git_commit": "90dcbc465ee85470797f0b665ad494fbc2f4abcd"
+    },
+    "L": {
+      "segmenter_sha256": "a187379e5640fe62de66f1107b56b2f2764fc9928e2d03ee9e90bf78cdc063ff",
+      "git_commit": "90dcbc465ee85470797f0b665ad494fbc2f4abcd"
+    }
+  },
+  "carried": {
+    "amendment": "T036: the carried L weights and the shuffled rule's outcome, fixed on validation before the test split is opened (changes no criterion)",
+    "model": "segL-s3",
+    "weights_sha256": "1b2430204933bfe3117f78a6597e13344bac42c28af93aaaeef8953c7471370a",
+    "weights": "experiments/20261105-segL-val/models/segL-s3/best.safetensors (also results/segL-41923847724)",
+    "training_run": "41923847724 at 4abab2a136ab8d55a0921a6e29c3fc139295d624",
+    "carried_rule": "median of the three seeds by validation gap recovered in range (seed 314, ordinals 500-1499, mode gap): s1 0.8868, s3 0.8877, s2 0.8910; median s3",
+    "shuffled_rule": "pass",
+    "shuffled_rule_evidence": "segL-shuffled minus C, gap recovered in range: -0.0020 [-0.0093, 0.0047] (97.5%, clustered): the interval includes zero",
+    "validation": "experiments/20261105-segL-val/"
+  },
+  "amendments": [
+    {
+      "file": "carried.json",
+      "sha256": "c3083fa153631afee96de44b5867687605c3e4651dbd84025b74fd3e59d16a2f"
+    },
+    {
+      "file": "seed315-digests.json",
+      "sha256": "741c123a14e5023a23034d6686d26c6d75ac06c60276c15c26f088492c015ce7"
+    }
+  ],
+  "metrics_sha256": "73437aa699b44657e28181f9f860f722d63a52866d03ad2907211ef41614a5ed",
+  "git_commit": "e648f8b097f6a41f8a90df901bd1afeb1ac084b5",
+  "git_dirty": false
+}

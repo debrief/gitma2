@@ -72,3 +72,37 @@ class ToyModel(nn.Module):
             PhysicsInputs(bearing, valid, own, t, sigma, k, cp, sw, lw, theta0, speed_skip=skip)
         )
         return out.state, out.cov, out.cost, out.plausible.to(bearing.dtype)
+
+
+class KnotModel(nn.Module):
+    """The physics layer alone, fed knots and weights as inputs (spec 005 T006): the export path a
+    classical segmenter's hand-over uses, with hard truth knots, the speed-continuity skip and
+    masked transition bearings, at MAN2's 720 rows."""
+
+    def __init__(
+        self, iterations: int = EXPORT_ITERATIONS, knots: int = 16, trials: int = TRIALS
+    ) -> None:
+        super().__init__()
+        self.physics = PhysicsLayer(iterations=iterations, knots=knots, trials=trials)
+
+    def forward(
+        self,
+        bearing: Tensor,
+        valid: Tensor,
+        own: Tensor,
+        t: Tensor,
+        sigma: Tensor,
+        k: Tensor,
+        theta0: Tensor,
+        changepoint: Tensor,
+        speed_weight: Tensor,
+        log_weight: Tensor,
+        speed_skip: Tensor,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+        out = self.physics(
+            PhysicsInputs(
+                bearing, valid, own, t, sigma, k, changepoint, speed_weight, log_weight, theta0,
+                speed_skip=speed_skip,
+            )
+        )  # fmt: skip
+        return out.state, out.cov, out.cost, out.plausible.to(bearing.dtype)

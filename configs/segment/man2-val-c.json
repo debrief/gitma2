@@ -1,0 +1,17 @@
+{
+  "description": "Spec 005 T021: segmenter C on seed 314 validation, scoring ordinals 500-1499 (note 08's split), GLR nominator tuned on ordinals 0-499, search penalty 30 (T021 calibration).",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "ordinals": [500, 1500],
+  "shards": 8,
+  "rows": "g5",
+  "set": {"search_penalty": 30.0},
+  "glr_tune": "0:500"
+}

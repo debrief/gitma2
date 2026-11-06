@@ -1,0 +1,639 @@
+"""tma2-gs: score segmentations (spec 005 contracts/cli.md; diagnostic mode).
+
+    uv run tma2-gs --truth <split.f32pack> --start S --count N
+        --segmentations NAME=<seg.ndjson> … [--glr-confirm WORK:CONFIG] --imm <frozen IMM>
+        [--modes gap chord] --experiment <dir>
+
+On the σ = 1° G5 rows of ordinals S … S + N − 1 (the rows a segmentation file covers must
+include them), every segmenter is scored beside one leg (batch least squares), the oracle and
+the frozen IMM, and GLR + confirm when given:
+* **downstream:** median and P90 range (relative), course (°), speed (kt) error, all rows and
+  settled rows; ratios to the IMM and to one leg with scenario-clustered paired 97.5% intervals;
+* **gap recovered** in range, course and speed, with intervals, and each segmenter's difference
+  from GLR + confirm (S2's measure);
+* **segmentation:** contamination (median, P90), coverage, false-split rate, leg-count accuracy,
+  boundary hits at ± 60 s and ± 3 min, from each segmentation's intervals.
+
+Writes ``metrics.json`` and ``report.md``. **Gate mode** (``--decision --plan --split``, T037)
+refuses inputs that do not match the decision (``segment/gate.py``), scores S1–S4 and writes
+``verdict.json`` and ``manifest.json``; exit 3 unless every criterion passes.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+
+LEVEL = 0.975
+RESAMPLES = 2000
+COLS = ("range", "course_deg", "speed_kt")
+
+
+def _q(v: np.ndarray, q: float) -> float:
+    """Quantile with the decision record's ``inverted_cdf`` convention; a missing or non-finite
+    value counts as +inf (above any finite one), so a cell where every row failed is +inf."""
+    if v.size == 0:
+        return math.nan
+    return float(np.quantile(np.where(np.isfinite(v), v, np.inf), q, method="inverted_cdf"))
+
+
+def read_segmentations(path: str) -> tuple[dict[str, Any], dict[tuple[int, int], list[Any]]]:
+    from tma2.segment import KIND_CODE, Interval
+    from tma2.types.generated.tma import SegmentKind
+
+    with open(path, encoding="utf-8") as f:
+        header = json.loads(f.readline())
+        segs = {}
+        for line in f:
+            r = json.loads(line)
+            segs[(int(r["ordinal"]), int(r["prefix_row"]))] = [
+                Interval(
+                    KIND_CODE[SegmentKind(iv["kind"])],
+                    int(iv["start_index"]),
+                    int(iv["end_index"]),
+                    bool(iv["open"]),
+                )
+                for iv in r["intervals"]
+            ]
+    return header, segs
+
+
+def _gate_preflight(a: argparse.Namespace) -> dict[str, Any] | None:
+    """Gate mode's refusals (T037): the decision, plan, split, segmentations and carried weights
+    must match. Returns what the gate needs, or None after printing every reason."""
+    from tma2.cli.segment import params_digest
+    from tma2.segment import gate
+    from tma2.types.generated.tma import GateSDecision
+
+    errs = []
+    if not (a.plan and a.split):
+        errs.append("gate mode needs --decision, --plan and --split")
+    if a.modes:
+        errs.append("gate mode scores the decision's mode: no --modes")
+    if not a.glr_confirm:
+        errs.append("gate mode needs --glr-confirm (S2's reference)")
+    if errs:
+        print("\n".join(f"refusing: {e}" for e in errs), file=sys.stderr)
+        return None
+    ddir = Path(a.decision).parent
+    raw = json.loads(Path(a.decision).read_text())
+    decision = GateSDecision.model_validate(raw)
+    plan = json.loads(Path(a.plan).read_text())
+    test_digest = None
+    dig = ddir / f"seed{decision.test_seed}-digests.json"
+    if dig.exists():
+        test_digest = json.loads(dig.read_text()).get("test.f32pack")
+    carried = (
+        json.loads((ddir / gate.CARRIED).read_text()) if (ddir / gate.CARRIED).exists() else None
+    )
+    headers = {}
+    for spec in a.segmentations:
+        name, _, path = spec.partition("=")
+        with open(path, encoding="utf-8") as f:
+            headers[name] = json.loads(f.readline())
+    truth_sha = gate.sha256_file(a.truth)
+    errs = gate.check_inputs(
+        raw,
+        gate.sha256_file(a.plan),
+        a.split,
+        truth_sha,
+        test_digest,
+        headers,
+        params_digest(decision.parameters),
+        carried,
+        plan,
+    )
+    if errs:
+        print("\n".join(f"refusing: {e}" for e in errs), file=sys.stderr)
+        return None
+    return {
+        "decision": decision,
+        "decision_sha256": gate.sha256_file(a.decision),
+        "parameters": decision.parameters,
+        "carried": carried,
+        "truth_sha256": truth_sha,
+        "plan_sha256": gate.sha256_file(a.plan),
+        "headers": headers,
+        "amendments": gate.amendments(ddir),
+    }
+
+
+def _input_digests(a: argparse.Namespace) -> dict[str, Any]:
+    from tma2.segment.gate import sha256_file as file_digest
+
+    out: dict[str, Any] = {
+        "segmentations": {
+            n: file_digest(p) for n, _, p in (x.partition("=") for x in a.segmentations)
+        }
+    }
+    if a.glr_confirm:
+        work, _, cfg = a.glr_confirm.partition(":")
+        files = sorted(p for p in Path(work).rglob("*") if p.is_file())
+        h = hashlib.sha256()
+        for f in files:
+            h.update(f"{f.relative_to(work)}:{file_digest(f)}\n".encode())
+        out["glr_confirm"] = {"config": cfg, "files": len(files), "sha256": h.hexdigest()}
+    if a.naive_train:
+        out["naive_train"] = file_digest(a.naive_train.split(":")[0])
+    return out
+
+
+def _gate(
+    a: argparse.Namespace,
+    gi: dict[str, Any],
+    result: dict[str, Any],
+    rows: list[Any],
+    cluster: np.ndarray,
+    prefix_by_name: dict[str, list[Any]],
+    own_cont: np.ndarray,
+    out: Path,
+) -> int:
+    """S1–S4 (FR-071) from the scored rows; writes verdict.json and manifest.json; exit 3 unless
+    every criterion passes."""
+    from tma2.eval.bootstrap import bootstrap_clustered_statistic
+    from tma2.segment import gate
+    from tma2.types.generated.tma import GateSRecord, GateSVerdicts, Split
+
+    d = gi["decision"]
+    segs = result["segmenters"]
+
+    def finite_stat(x: np.ndarray, cl: np.ndarray, q: float) -> gate.Interval:
+        ok = np.isfinite(x)
+        if not ok.any():  # no rows: neither pass nor fail (panel round 2)
+            return gate.Interval(math.nan, math.nan, math.nan)
+
+        def stat(c: dict[str, np.ndarray]) -> float:
+            return float(np.quantile(c["x"], q, method="inverted_cdf"))
+
+        si = bootstrap_clustered_statistic({"x": x[ok]}, cl[ok], stat, LEVEL, RESAMPLES)
+        return gate.Interval(si.value, si.lo, si.hi)
+
+    def paired(name: str, ref: str, field: str, q: float | None) -> gate.Interval:
+        a_ = np.array([getattr(x, field) for x in prefix_by_name[name]], dtype=object)
+        b_ = np.array([getattr(x, field) for x in prefix_by_name[ref]], dtype=object)
+        ok = np.array([x is not None and y is not None for x, y in zip(a_, b_, strict=True)])
+        av, bv = a_[ok].astype(float), b_[ok].astype(float)
+        ok2 = np.isfinite(av) & np.isfinite(bv)
+        cl = cluster[ok][ok2]
+        if not cl.size:  # no rows: nothing measured, so neither pass nor fail (panel round 1)
+            return gate.Interval(math.nan, math.nan, math.nan)
+
+        def stat(c: dict[str, np.ndarray]) -> float:
+            if q is None:
+                return float(np.mean(c["a"]) - np.mean(c["b"]))
+            return float(
+                np.quantile(c["a"], q, method="inverted_cdf")
+                - np.quantile(c["b"], q, method="inverted_cdf")
+            )
+
+        si = bootstrap_clustered_statistic({"a": av[ok2], "b": bv[ok2]}, cl, stat, LEVEL, RESAMPLES)
+        return gate.Interval(si.value, si.lo, si.hi)
+
+    s1_iv = finite_stat(own_cont, cluster, 0.9)
+    s1 = gate.within_limit(s1_iv, d.s1_limit)
+    s2_iv = gate.Interval.of(segs["C"]["gap_minus_glr_confirm"]["range"])
+    s2 = gate.above_zero(s2_iv)
+    ref = gate.reference(
+        s2,
+        segs["C"]["gap_recovered"]["range"]["value"],
+        segs["glr_confirm"]["gap_recovered"]["range"]["value"],
+    )
+    s3_ivs = {
+        "contamination_median": paired("L", ref, "contamination", 0.5),
+        "contamination_p90": paired("L", ref, "contamination", 0.9),
+        "false_split": paired("L", ref, "false_split", None),
+    }
+    s3 = gate.all_of(
+        [
+            gate.within_limit(s3_ivs["contamination_median"], d.s3_contamination_limit),
+            gate.within_limit(s3_ivs["contamination_p90"], d.s3_contamination_limit),
+            gate.within_limit(s3_ivs["false_split"], d.s3_false_split_limit),
+        ]
+    )
+    s4_key = "gap_minus_glr_confirm" if ref == "glr_confirm" else "gap_minus"
+    s4_raw = segs["L"][s4_key]["range"] if ref == "glr_confirm" else segs["L"][s4_key]["C"]["range"]
+    s4_iv = gate.Interval.of(s4_raw)
+    shuffled = str((gi["carried"] or {}).get("shuffled_rule", gate.FAIL))
+    s4 = gate.s4_verdict(s4_iv, shuffled)
+    (out / "metrics.json").write_text(json.dumps(result, indent=2) + "\n")
+    metrics_sha = gate.sha256_file(out / "metrics.json")
+    rec = GateSRecord(
+        decision_sha256=gi["decision_sha256"],
+        split=Split(a.split),
+        seed=d.test_seed if a.split == "test" else d.validation_seed,
+        dataset_digest=gi["truth_sha256"],
+        segmenters=sorted(prefix_by_name),
+        metrics_sha256=metrics_sha,
+        verdicts=GateSVerdicts(s1=s1, s2=s2, s3=s3, s4=s4),
+    )
+    detail = {
+        "record": json.loads(rec.model_dump_json(exclude_none=True)),
+        "reference": ref,
+        "s1": {"o_contamination_p90": s1_iv.__dict__, "limit": d.s1_limit},
+        "s2": {"c_minus_glr_confirm_gap_range": s2_iv.__dict__},
+        "s3": {k: v.__dict__ for k, v in s3_ivs.items()}
+        | {"limits": [d.s3_contamination_limit, d.s3_false_split_limit]},
+        "s4": {"l_minus_reference_gap_range": s4_iv.__dict__, "shuffled_rule": shuffled},
+    }
+    (out / "verdict.json").write_text(json.dumps(detail, indent=2) + "\n")
+    gp = gi["git"]
+    manifest = {
+        "decision": a.decision,
+        "decision_sha256": gi["decision_sha256"],
+        "plan": a.plan,
+        "plan_sha256": gi["plan_sha256"],
+        "truth": a.truth,
+        "truth_sha256": gi["truth_sha256"],
+        "segmentations": {
+            n: {"segmenter_sha256": h.get("segmenter_sha256"), "git_commit": h.get("git_commit")}
+            for n, h in gi["headers"].items()
+        },
+        "carried": gi["carried"],
+        "amendments": gi["amendments"],
+        # the files the scoring read, so the record binds its inputs (panel round 1)
+        "inputs": _input_digests(a),
+        "metrics_sha256": metrics_sha,
+        "git_commit": gp.commit,
+        "git_dirty": gp.dirty,
+    }
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(json.dumps({"S1": s1, "S2": s2, "S3": s3, "S4": s4, "reference": ref}))
+    return 0 if all(v == gate.PASS for v in (s1, s2, s3, s4)) else 3
+
+
+def main(argv: list[str] | None = None) -> int:
+    import torch
+
+    from tma2.eval.bootstrap import (
+        bootstrap_clustered_quantile_ratio,
+        bootstrap_clustered_statistic,
+    )
+    from tma2.eval.errors import Truth
+    from tma2.eval.rows import settled_row
+    from tma2.physics.layer import PhysicsLayer
+    from tma2.references.classical import bearing_data_from_arrays
+    from tma2.segment import TRANSITION, default_parameters
+    from tma2.segment import score as sc
+    from tma2.segment.inputs import segmentation_inputs
+    from tma2.segment.metrics import gap_recovered
+    from tma2.types.generated.tma import SegmentParameters
+
+    ap = argparse.ArgumentParser(prog="tma2-gs")
+    ap.add_argument("--truth", required=True)
+    ap.add_argument("--start", type=int, required=True)
+    ap.add_argument("--count", type=int, required=True)
+    ap.add_argument("--segmentations", nargs="*", default=[], metavar="NAME=PATH")
+    ap.add_argument(
+        "--modes",
+        nargs="*",
+        choices=["gap", "chord"],
+        help="score each segmentation in these hand-over modes (NAME-gap, NAME-chord) instead "
+        "of the mode its header names",
+    )
+    ap.add_argument("--glr-confirm", metavar="WORK:CONFIG")
+    ap.add_argument(
+        "--detectability",
+        action="store_true",
+        help="compute each change's detectability (two layer solves per change) and report "
+        "leg-count accuracy on detectable changes and every measure by detectability band",
+    )
+    ap.add_argument("--imm", required=True)
+    ap.add_argument("--ekf", help="the frozen EKF, scored as a further reference")
+    ap.add_argument(
+        "--naive-train",
+        metavar="PATH[:START:COUNT]",
+        help="fit the naive baseline (training-set means) on these sigma = 1 deg ordinals of a "
+        "split (default ordinals 0-499) and score it on the same rows (constitution IV)",
+    )
+    ap.add_argument("--experiment", required=True)
+    ap.add_argument("--decision", help="gate mode: the GateSDecision record (T037)")
+    ap.add_argument("--plan", help="gate mode: the plan the decision binds")
+    ap.add_argument("--split", choices=["validation", "test"], help="gate mode: the split scored")
+    a = ap.parse_args(argv)
+    gate_inputs: dict[str, Any] | None = None
+    if a.decision:
+        gate_inputs = _gate_preflight(a)
+        if gate_inputs is None:
+            return 2
+        from tma2.data.provenance import read_git_provenance
+
+        # Read before anything is written: the experiment folder's own outputs would make the
+        # tree dirty if the status were read at the end.
+        gate_inputs["git"] = read_git_provenance()
+    torch.set_default_dtype(torch.float64)
+    t0 = time.time()
+
+    data, metas, truths, owns = {}, {}, {}, {}
+    tgts: dict[int, np.ndarray] = {}
+    obss: dict[int, np.ndarray] = {}
+    for j, m, own, tgt, obs in sc.iter_selected(a.truth, a.start, a.count):
+        owns[j] = own
+        tgts[j] = tgt
+        obss[j] = obs
+        data[j] = bearing_data_from_arrays(m, own, obs)
+        metas[j] = m
+        truths[j] = Truth.from_block(m, own, tgt)
+    rows = [
+        sc.Row(j, k, settled_row(metas[j], k))
+        for j in sorted(data)
+        for k in sc.g5_rows(metas[j], data[j].n)
+    ]
+    cluster = np.array([r.ordinal for r in rows], dtype=np.int64)
+    settled = np.array([r.settled for r in rows])
+    layer = PhysicsLayer()
+    errs: dict[str, np.ndarray] = {
+        "one_leg": sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg),
+        "oracle": sc.layer_errors(layer, rows, data, metas, truths, sc.oracle),
+        "imm": sc.imm_errors(rows, data, truths, a.imm),
+    }
+    if a.ekf:
+        errs["ekf"] = sc.ekf_errors(rows, data, truths, a.ekf)
+    naive_src: dict[str, Any] | None = None
+    if a.naive_train:
+        from tma2.references.naive import fit_naive
+        from tma2.segment.gate import sha256_file as file_digest
+
+        path, *rng = a.naive_train.split(":")
+        n0, n1 = (int(rng[0]), int(rng[1])) if rng else (0, 500)
+        model = fit_naive(sc.iter_selected(path, n0, n1), file_digest(path))
+        naive_src = {"split": path, "sha256": file_digest(path), "ordinals": [n0, n0 + n1 - 1]}
+        errs["naive"] = sc.naive_errors(rows, owns, obss, truths, model)
+    sd = sc.bounds(rows, metas, owns, tgts, obss)
+    row_strata = [sc.strata(metas[r.ordinal], owns[r.ordinal], tgts[r.ordinal], r.k) for r in rows]
+    print(f"references [{time.time() - t0:.0f} s]", flush=True)
+    det: dict[int, list[float]] | None = None
+    row_bands = np.array(["all"] * len(rows))
+    if a.detectability:
+        det = sc.detectability(layer, data, metas)
+        row_bands = np.array([sc.row_band(metas[r.ordinal], r.k, det[r.ordinal]) for r in rows])
+        print(f"detectability [{time.time() - t0:.0f} s]", flush=True)
+    params: dict[str, SegmentParameters] = {}
+    seg_ivs: dict[str, dict[tuple[int, int], list[tuple[int, int]]]] = {}
+    for spec in a.segmentations:
+        name, _, path = spec.partition("=")
+        header, segs = read_segmentations(path)
+        p = SegmentParameters.model_validate(header["parameters"])
+        missing = [(r.ordinal, r.k) for r in rows if (r.ordinal, r.k) not in segs]
+        if missing:
+            print(
+                f"{name}: {len(missing)} scored rows missing, e.g. {missing[:3]}", file=sys.stderr
+            )
+            return 2
+        trs = {
+            key: [(iv.start, iv.end) for iv in ivs if iv.kind == TRANSITION]
+            for key, ivs in segs.items()
+        }
+        # each requested hand-over mode is scored as its own segmenter (R3, FR-031)
+        for mode in a.modes or [str(p.mode)]:
+            nm = name if not a.modes else f"{name}-{mode}"
+            params[nm] = p.model_copy(update={"mode": mode})
+            errs[nm] = sc.layer_errors(
+                layer, rows, data, metas, truths, sc.from_segmentations(segs, mode)
+            )
+            seg_ivs[nm] = trs
+            print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
+    if a.glr_confirm:
+        work, _, cfg = a.glr_confirm.partition(":")
+        acc = sc.load_confirmed(work, cfg)
+        errs["glr_confirm"] = sc.layer_errors(layer, rows, data, metas, truths, sc.glr_confirm(acc))
+        p0 = next(iter(params.values()), default_parameters())
+        seg_ivs["glr_confirm"] = {
+            (r.ordinal, r.k): sc.glr_confirm_intervals(acc.get(r.ordinal, []), r.k, p0.t_min_rows)
+            for r in rows
+        }
+        print(f"glr_confirm downstream [{time.time() - t0:.0f} s]", flush=True)
+        # Diagnostic (panel round 1, red team): GLR + confirm's knots handed over as C's are
+        # (gap mode, a point knot as T_min rows), separating the hand-over from the segmentation
+        # in S2's margin. Reported, not gated.
+        g_ivs = seg_ivs["glr_confirm"]
+
+        def glr_gap(j: int, _m: dict[str, Any], d: Any, k: int) -> Any:
+            return segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, g_ivs[(j, k)], "gap", True)
+
+        errs["glr_confirm_gap"] = sc.layer_errors(layer, rows, data, metas, truths, glr_gap)
+        seg_ivs["glr_confirm_gap"] = g_ivs
+        print(f"glr_confirm_gap downstream [{time.time() - t0:.0f} s]", flush=True)
+
+    def summary(e: np.ndarray, mask: np.ndarray) -> dict[str, float]:
+        out: dict[str, float] = {}
+        for c, name in enumerate(COLS):
+            v = e[mask, c]
+            out[f"{name}_median"] = _q(v, 0.5) if v.size else math.nan
+            out[f"{name}_p90"] = _q(v, 0.9) if v.size else math.nan
+        return out
+
+    def ratio(x: str, y: str, c: int, mask: np.ndarray) -> dict[str, float]:
+        ri = bootstrap_clustered_quantile_ratio(
+            errs[x][mask, c], errs[y][mask, c], cluster[mask], 0.5, LEVEL, RESAMPLES
+        )
+        return {"ratio": ri.ratio, "lo": ri.lo, "hi": ri.hi}
+
+    def gap(name: str, c: int, minus: str | None = None) -> dict[str, float]:
+        cols = {k: errs[k] for k in ("one_leg", "oracle", name)}
+        if minus:
+            cols[minus] = errs[minus]
+
+        def stat(cc: dict[str, np.ndarray]) -> float:
+            g = sc.gap_recovered_cols(cc, name, c)
+            return g - sc.gap_recovered_cols(cc, minus, c) if minus else g
+
+        si = bootstrap_clustered_statistic(cols, cluster, stat, LEVEL, RESAMPLES)
+        return {"value": si.value, "lo": si.lo, "hi": si.hi}
+
+    everyone = np.ones(len(rows), dtype=bool)
+    seg_names = [n for n in errs if n not in ("one_leg", "oracle", "imm", "ekf", "naive")]
+    prefix_by_name: dict[str, list[Any]] = {}
+    result: dict[str, Any] = {
+        "truth": a.truth,
+        "ordinals": [a.start, a.start + a.count - 1],
+        "scenarios": len(data),
+        "rows": len(rows),
+        "settled_rows": int(settled.sum()),
+        "imm": a.imm,
+        "ekf": a.ekf,
+        "level": LEVEL,
+        "resamples": RESAMPLES,
+        "naive": naive_src,
+        "bound": "known_manoeuvres",
+        "segmenters": {},
+    }
+    for name, e in errs.items():
+        rec: dict[str, Any] = {"all": summary(e, everyone), "settled": summary(e, settled)}
+        if name not in ("imm", "ekf"):
+            rec["vs_imm"] = {c: ratio(name, "imm", i, everyone) for i, c in enumerate(COLS)}
+        if name not in ("one_leg",):
+            rec["vs_one_leg_settled"] = {
+                c: ratio(name, "one_leg", i, settled) for i, c in enumerate(COLS)
+            }
+        rec["gross"] = {
+            "no_estimate": float(np.mean(~np.isfinite(e[:, 0]))),
+            "range_over_50pct": float(np.mean(~(e[:, 0] <= 0.5))),
+        }
+        fin = np.isfinite(e[:, 0])
+        rec["finite_rows"] = {"rows": int(fin.sum()), **summary(e, fin)}
+        rec["efficiency"] = {c: sc.efficiency_of(e[:, i], sd[:, i]) for i, c in enumerate(COLS)}
+        rec["strata"] = {}
+        for key in row_strata[0] if row_strata else []:
+            vals = np.array([st[key] for st in row_strata])
+            rec["strata"][key] = {}
+            for v in sorted(set(vals.tolist())):
+                mask = vals == v
+                cell = {
+                    "rows": int(mask.sum()),
+                    **{f"{c}_median": _q(e[mask, i], 0.5) for i, c in enumerate(COLS)},
+                    "gross_rate": float(np.mean(~(e[mask, 0] <= 0.5))),
+                    "efficiency_range": sc.efficiency_of(e[mask, 0], sd[mask, 0]),
+                }
+                if name not in ("one_leg", "oracle", "imm", "ekf", "naive"):
+                    one = _q(errs["one_leg"][mask, 0], 0.5)
+                    ora = _q(errs["oracle"][mask, 0], 0.5)
+                    cell["gap_recovered_range"] = gap_recovered(one, cell["range_median"], ora)
+                rec["strata"][key][v] = cell
+        if name not in ("one_leg", "oracle", "imm", "ekf", "naive"):
+            rec["gap_recovered"] = {c: gap(name, i) for i, c in enumerate(COLS)}
+            if "glr_confirm" in errs and name != "glr_confirm":
+                rec["gap_minus_glr_confirm"] = {
+                    c: gap(name, i, "glr_confirm") for i, c in enumerate(COLS)
+                }
+            # paired differences against every other segmentation scored here, e.g. C-gap
+            # minus C-chord (the FR-031 mode choice) with its interval
+            others = [o for o in seg_names if o not in (name, "glr_confirm")]
+            if others:
+                rec["gap_minus"] = {
+                    o: {c: gap(name, i, o) for i, c in enumerate(COLS)} for o in others
+                }
+        if name in seg_ivs:
+            p = params.get(name, next(iter(params.values()), default_parameters()))
+            pm = [
+                sc.prefix_metrics(
+                    seg_ivs[name][(r.ordinal, r.k)],
+                    metas[r.ordinal],
+                    r.k,
+                    p,
+                    None if det is None else [x >= sc.DETECTABLE for x in det[r.ordinal]],
+                )
+                for r in rows
+            ]
+            prefix_by_name[name] = pm
+            cont = np.array([x.contamination for x in pm])
+            cov = np.array([x.coverage for x in pm])
+            fs = [x.false_split for x in pm if x.false_split is not None]
+            lc = [x.leg_count_ok for x in pm if x.leg_count_ok is not None]
+            h60 = [h for x in pm for h in x.hits60]
+            h180 = [h for x in pm for h in x.hits180]
+            rec["segmentation"] = {
+                "contamination_median": float(np.nanquantile(cont, 0.5, method="inverted_cdf")),
+                "contamination_p90": float(np.nanquantile(cont, 0.9, method="inverted_cdf")),
+                "coverage_median": float(np.nanquantile(cov, 0.5, method="inverted_cdf")),
+                "false_split_rate": float(np.mean(fs)) if fs else math.nan,
+                "false_split_rows": len(fs),
+                "leg_count_accuracy": float(np.mean(lc)) if lc else math.nan,
+                "hits_60s": float(np.mean(h60)) if h60 else math.nan,
+                "hits_3min": float(np.mean(h180)) if h180 else math.nan,
+                "changes": len(h60),
+            }
+            if det is not None:
+                by: dict[str, list[tuple[bool, bool]]] = {}
+                for r, x in zip(rows, pm, strict=True):
+                    for i, (h1, h3) in enumerate(zip(x.hits60, x.hits180, strict=True)):
+                        by.setdefault(sc.band(det[r.ordinal][i]), []).append((h1, h3))
+                rec["segmentation"]["hits_by_detectability"] = {
+                    b_: {
+                        "hits_60s": float(np.mean([h[0] for h in v])),
+                        "hits_3min": float(np.mean([h[1] for h in v])),
+                        "changes": len(v),
+                    }
+                    for b_, v in sorted(by.items())
+                }
+        if det is not None:
+            rec["by_row_band"] = {}
+            for b_ in sorted(set(row_bands.tolist())):
+                mask = row_bands == b_
+                one = _q(errs["one_leg"][mask, 0], 0.5)
+                ora = _q(errs["oracle"][mask, 0], 0.5)
+                med = _q(e[mask, 0], 0.5)
+                rec["by_row_band"][b_] = {
+                    "rows": int(mask.sum()),
+                    "range_median": med,
+                    "gap_recovered_range": gap_recovered(one, med, ora),
+                }
+        result["segmenters"][name] = rec
+    out = Path(a.experiment)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "metrics.json").write_text(json.dumps(result, indent=2) + "\n")
+    # the files read, in every mode (gate mode also puts them in manifest.json; panel round 2)
+    (out / "inputs.json").write_text(json.dumps(_input_digests(a), indent=2) + "\n")
+    # per-row errors, so later paired comparisons need no re-solve (not committed: large)
+    arrays: dict[str, Any] = {
+        "ordinal": cluster,
+        "k": np.array([r.k for r in rows], dtype=np.int64),
+        "settled": settled,
+        "columns": np.array(COLS),
+    }
+    arrays.update({f"err_{n}": e for n, e in errs.items()})
+    np.savez_compressed(out / "errors.npz", **arrays)
+    lines = [
+        f"# Segmentation scoring: {a.truth}, ordinals {a.start}–{a.start + a.count - 1}",
+        "",
+        f"{len(data)} scenarios, {len(rows)} G5 rows ({int(settled.sum())} settled); "
+        f"frozen IMM `{a.imm}`; intervals {LEVEL:.1%}, {RESAMPLES} resamples, clustered.",
+        "",
+        "| Segmenter | Range | Course ° | Speed kt | Range vs IMM | Gap (range) "
+        "| Contam. P90 | False split |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for name, rec in result["segmenters"].items():
+        al = rec["all"]
+        vi = rec.get("vs_imm", {}).get("range")
+        gp = rec.get("gap_recovered", {}).get("range")
+        sg = rec.get("segmentation", {})
+        lines.append(
+            f"| {name} | {al['range_median']:.3f} | {al['course_deg_median']:.2f} | "
+            f"{al['speed_kt_median']:.2f} | "
+            + (f"{vi['ratio']:.3f} [{vi['lo']:.3f}, {vi['hi']:.3f}]" if vi else "—")
+            + " | "
+            + (f"{gp['value']:.3f} [{gp['lo']:.3f}, {gp['hi']:.3f}]" if gp else "—")
+            + " | "
+            + (f"{sg['contamination_p90']:.3f}" if sg else "—")
+            + " | "
+            + (f"{sg['false_split_rate']:.3f}" if sg else "—")
+            + " |"
+        )
+    lines += [
+        "",
+        "Gross rows (no plausible estimate; range error over 50%), medians over the rows each "
+        "estimator answers, and efficiency (median |e|/σ / 0.6745 against the known-manoeuvres "
+        "bound). Strata are in `metrics.json`.",
+        "",
+        "| Estimator | No estimate | Range > 50% | Finite rows | Range (finite) "
+        "| Eff. range | Eff. course | Eff. speed |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for name, rec in result["segmenters"].items():
+        g, f, ef = rec["gross"], rec["finite_rows"], rec["efficiency"]
+        lines.append(
+            f"| {name} | {g['no_estimate']:.3f} | {g['range_over_50pct']:.3f} | {f['rows']} | "
+            f"{f['range_median']:.3f} | {ef['range']:.2f} | {ef['course_deg']:.2f} | "
+            f"{ef['speed_kt']:.2f} |"
+        )
+    (out / "report.md").write_text("\n".join(lines) + "\n")
+    print(f"wrote {out} [{time.time() - t0:.0f} s]")
+    if gate_inputs is not None:
+        gp = gate_inputs["parameters"]
+        own_cont = np.array(
+            [sc.ownship_contamination(owns[r.ordinal], metas[r.ordinal], r.k, gp) for r in rows]
+        )
+        return _gate(a, gate_inputs, result, rows, cluster, prefix_by_name, own_cont, out)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

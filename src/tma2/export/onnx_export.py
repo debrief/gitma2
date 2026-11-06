@@ -22,7 +22,7 @@ from tma2.data.f32pack import iter_pack_raw
 from tma2.physics.segmentation import trivial_inputs
 from tma2.references.classical import bearing_data_from_arrays
 
-from .toy_model import ToyModel
+from .toy_model import KnotModel, ToyModel
 
 R_MAX = 360
 OPSET = 17
@@ -34,8 +34,16 @@ TOL = 1e-5
 MAN2_MIN_K = 480
 
 
+INPUTS = ("bearing", "valid", "own", "t", "sigma", "k", "theta0")
+KNOT_INPUTS = (*INPUTS, "changepoint", "speed_weight", "log_weight", "speed_skip")
+
+
 def golden_batch(
-    fixture_pack: Path, n: int = 8, rows: int = R_MAX, zig_leg_rows: bool = False
+    fixture_pack: Path,
+    n: int = 8,
+    rows: int = R_MAX,
+    zig_leg_rows: bool = False,
+    knots: bool = False,
 ) -> dict[str, np.ndarray]:
     """Eight rows for the conformance batch: ``zig + 30`` (the 0.5.0 fixtures), or, with
     ``zig_leg_rows`` (MAN2), the last row of the steady target leg containing the zig, with every
@@ -44,13 +52,35 @@ def golden_batch(
     ``MAN2_MIN_K`` or later are taken, so the batch exercises data rows past the old 360-row
     window. On MAN2 data ``zig + 30`` can fall after a target turn, where the one-leg fit runs
     away along a flat valley (range 1e11 m, covariance condition 1e19) and no two runtimes need
-    agree."""
-    from tma2.eval.rows import zig_leg
+    agree.
 
-    bearing, valid, own, t, sigma, k, theta0 = [], [], [], [], [], [], []
+    With ``knots`` (spec 005 T006) the batch is the truth segmentation's hand-over instead: the
+    last row of windows ending at row ``MAN2_MIN_K`` or later with at least one completed target
+    change, every truth knot (``oracle_inputs``), alternately chord and masked transitions, so
+    the export is checked on hard knots, the speed-continuity skip and masked bearings."""
+    from tma2.eval.rows import zig_leg
+    from tma2.physics.segmentation import oracle_inputs
+
+    bearing: list[np.ndarray] = []
+    valid: list[np.ndarray] = []
+    own: list[np.ndarray] = []
+    t: list[np.ndarray] = []
+    sigma: list[float] = []
+    k: list[int] = []
+    theta0: list[np.ndarray] = []
+    extra: dict[str, list[np.ndarray]] = {n_: [] for n_ in KNOT_INPUTS[len(INPUTS) :]}
     for _, meta, own_a, _tgt, obs in iter_pack_raw(fixture_pack):
         d = bearing_data_from_arrays(meta, own_a, obs)
-        if zig_leg_rows:
+        oi = None
+        if knots:
+            kk = d.n - 1
+            spans = meta.get("manoeuvres") or []
+            if kk < MAN2_MIN_K or not any(int(s["end_index"]) <= kk for s in spans):
+                continue
+            oi = oracle_inputs(d.t, d.ox, d.oy, d.z, d.valid, kk, spans, True, len(k) % 2 == 1)
+            if oi is None:
+                continue
+        elif zig_leg_rows:
             leg = zig_leg(meta)
             if leg is None or leg[1] < MAN2_MIN_K:
                 continue
@@ -74,12 +104,20 @@ def golden_batch(
         sigma.append(d.sigma)
         k.append(kk)
         theta0.append(inp.theta0)
+        if knots:
+            assert oi is not None and oi.speed_skip is not None
+            extra["changepoint"].append(pad(oi.changepoint))
+            extra["speed_weight"].append(pad(oi.speed_weight))
+            extra["log_weight"].append(pad(oi.log_weight))
+            extra["speed_skip"].append(pad(oi.speed_skip))
         if len(k) == n:
             break
-    if zig_leg_rows and len(k) < n:
-        raise ValueError(f"{fixture_pack}: only {len(k)} zig legs end at row {MAN2_MIN_K} or later")
+    if (zig_leg_rows or knots) and len(k) < n:
+        raise ValueError(
+            f"{fixture_pack}: only {len(k)} windows qualify (row {MAN2_MIN_K} or later)"
+        )
     f = np.float32
-    return {
+    out: dict[str, np.ndarray] = {
         "bearing": np.stack(bearing).astype(f),
         "valid": np.stack(valid).astype(f),
         "own": np.stack(own).astype(f),
@@ -88,6 +126,9 @@ def golden_batch(
         "k": np.array(k, dtype=np.int64),
         "theta0": np.stack(theta0).astype(f),
     }
+    if knots:
+        out.update({n_: np.stack(v).astype(f) for n_, v in extra.items()})
+    return out
 
 
 def man2_fixture(tmp: Path) -> tuple[Path, int]:
@@ -122,6 +163,7 @@ def export(
     dtype: str = "float64",
     rows: int = R_MAX,
     zig_leg_rows: bool = False,
+    knots: bool = False,
 ) -> dict[str, float]:
     """Export in ``dtype`` (float64 by default: the iterative solve amplifies float32 kernel
     differences between runtimes to ~1e-4, so the conformance proof is made in double).
@@ -132,51 +174,43 @@ def export(
     default = torch.get_default_dtype()
     torch.set_default_dtype(torch.float32)
     try:
-        return _export(out_dir, fixture_pack, seed, dtype, rows, zig_leg_rows)
+        return _export(out_dir, fixture_pack, seed, dtype, rows, zig_leg_rows, knots)
     finally:
         torch.set_default_dtype(default)
 
 
 def _export(
-    out_dir: Path, fixture_pack: Path, seed: int, dtype: str, rows: int, zig_leg_rows: bool
+    out_dir: Path,
+    fixture_pack: Path,
+    seed: int,
+    dtype: str,
+    rows: int,
+    zig_leg_rows: bool,
+    knots: bool,
 ) -> dict[str, float]:
     out_dir.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(seed)
-    model = ToyModel().eval()
-    batch = golden_batch(fixture_pack, rows=rows, zig_leg_rows=zig_leg_rows)
+    model: torch.nn.Module = (KnotModel() if knots else ToyModel()).eval()
+    names = KNOT_INPUTS if knots else INPUTS
+    batch = golden_batch(fixture_pack, rows=rows, zig_leg_rows=zig_leg_rows, knots=knots)
     np_dtype = np.float64 if dtype == "float64" else np.float32
     batch = {n: (a.astype(np_dtype) if a.dtype != np.int64 else a) for n, a in batch.items()}
     if dtype == "float64":
         model = model.double()
     tensors = {kk: torch.tensor(v) for kk, v in batch.items()}
     with torch.no_grad():
-        ref = model(*[tensors[n] for n in ("bearing", "valid", "own", "t", "sigma", "k", "theta0")])
+        ref = model(*[tensors[n] for n in names])
     onnx_path = out_dir / "toy.onnx"
     # Scalar constants inside the scripted physics Loop take the default dtype at export: it
     # must match the model's, or onnxruntime rejects mixed float/double products (spec 003).
     torch.set_default_dtype(torch.float64 if dtype == "float64" else torch.float32)
     torch.onnx.export(
         model,
-        tuple(tensors[n] for n in ("bearing", "valid", "own", "t", "sigma", "k", "theta0")),
+        tuple(tensors[n] for n in names),
         str(onnx_path),
-        input_names=["bearing", "valid", "own", "t", "sigma", "k", "theta0"],
+        input_names=list(names),
         output_names=["state", "cov", "cost", "plausible"],
-        dynamic_axes={
-            n: {0: "batch"}
-            for n in (
-                "bearing",
-                "valid",
-                "own",
-                "t",
-                "sigma",
-                "k",
-                "theta0",
-                "state",
-                "cov",
-                "cost",
-                "plausible",
-            )
-        },
+        dynamic_axes={n: {0: "batch"} for n in (*names, "state", "cov", "cost", "plausible")},
         opset_version=OPSET,
         dynamo=False,
     )
@@ -242,12 +276,20 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--fixture", default="tests/fixtures/gitma/phase4-seed777/test.f32pack")
     ap.add_argument(
+        "--knots",
+        action="store_true",
+        help="with --man2: export the physics layer alone, fed truth knots (chord and masked "
+        "transitions) at 720 rows (spec 005 T006)",
+    )
+    ap.add_argument(
         "--man2",
         action="store_true",
         help="720-row windows: the golden batch is generated from configs/man2-ranges.json, "
         "seed 316 (generator 0.6.0, spec 006), instead of read from --fixture",
     )
     a = ap.parse_args(argv)
+    if a.knots and not a.man2:
+        ap.error("--knots needs --man2")
     rows = R_MAX
     fixture = Path(a.fixture)
     tmp = None
@@ -255,8 +297,13 @@ def main(argv: list[str] | None = None) -> int:
         tmp = tempfile.TemporaryDirectory()
         fixture, rows = man2_fixture(Path(tmp.name))
     try:
-        d64 = export(Path(a.out) / "f64", fixture, dtype="float64", rows=rows, zig_leg_rows=a.man2)
-        d32 = export(Path(a.out) / "f32", fixture, dtype="float32", rows=rows, zig_leg_rows=a.man2)
+        zl = a.man2 and not a.knots
+        d64 = export(
+            Path(a.out) / "f64", fixture, dtype="float64", rows=rows, zig_leg_rows=zl, knots=a.knots
+        )
+        d32 = export(
+            Path(a.out) / "f32", fixture, dtype="float32", rows=rows, zig_leg_rows=zl, knots=a.knots
+        )
     finally:
         if tmp is not None:
             tmp.cleanup()

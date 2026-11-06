@@ -1,0 +1,205 @@
+name: Train L (segmenter evidence network)
+
+# Spec 005 T032 and T034. Push `segtrain/<name>` (or dispatch with a plan): the plan
+# (configs/segment/gs-plan.json by default) names L's training stream, the validation split and
+# the models. (`train/**` belongs to train.yml, so this workflow does not use it.)
+#
+# 1. tables (8 shards + validation): regenerate seed 317 at the plan's l_stream commit and seed
+#    314 at its generating commit (digest checked); write each shard's cost tables, truth codes
+#    and causal features (tma2-segtrain tables; workflow artefacts, not committed).
+# 2. train-1, train-2: each model (three seeds and the shuffled control) on one runner thread,
+#    resumed by the second job if the first stops at its wall-clock cap.
+#    Tables and checkpoints live in RUNNER_TEMP, outside the checkout: run 41923847724 kept them in
+#    the checkout, so every job recorded git_dirty (untracked tables/ and ck/, code unchanged).
+# 3. results: every model must be complete; meta.json, best.safetensors, logs and the tables'
+#    headers go to `results/segL-<run id>`. Nothing merges automatically. The test seed is never
+#    generated here.
+
+on:
+  push:
+    branches: ["segtrain/**"]
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: plan file
+        required: false
+        default: configs/segment/gs-plan.json
+
+permissions:
+  contents: write
+
+env:
+  PLAN: ${{ github.event.inputs.plan || 'configs/segment/gs-plan.json' }}
+
+jobs:
+  tables:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, val]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Regenerate the data at its generating commit
+        run: |
+          read -r KIND SEED COUNT GEN SPLIT DIGEST <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); s = '${{ matrix.shard }}'
+          d = p['validation'] if s == 'val' else p['l_stream']
+          assert d['commit'], 'the plan names no generating commit'
+          print('val' if s == 'val' else 'train', d['seed'], d['count'], d['commit'], d['split'], d.get('digest') or '-')")"
+          RANGES=$(python3 -c "import json; print(json.load(open('$PLAN'))['ranges'])")
+          HELDOUT=$(python3 -c "import json; print(json.load(open('$PLAN'))['heldout'])")
+          git worktree add "$RUNNER_TEMP/gen" "$GEN"
+          (cd "$RUNNER_TEMP/gen" && uv sync && uv run tma2-generate --seed "$SEED" --count "$COUNT" \
+            --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data")
+          got=$(sha256sum "$RUNNER_TEMP/data/$SPLIT.f32pack" | cut -d' ' -f1)
+          echo "$SPLIT.f32pack: $got (plan: $DIGEST)"
+          if [ "$DIGEST" != "-" ]; then [ "$got" = "$DIGEST" ]; fi
+          echo "SPLIT=$SPLIT" >> "$GITHUB_ENV"
+          echo "KIND=$KIND" >> "$GITHUB_ENV"
+      - run: uv sync
+      - name: Tables
+        run: |
+          mkdir -p "$RUNNER_TEMP/tables"
+          if [ "$KIND" = val ]; then
+            read -r S C <<< "$(python3 -c "import json; a, b = json.load(open('$PLAN'))['validation']['tuning_ordinals']; print(a, b - a)")"
+            uv run tma2-segtrain tables --in "$RUNNER_TEMP/data/$SPLIT.f32pack" --plan "$PLAN" \
+              --sigma1 --start "$S" --count "$C" --out "$RUNNER_TEMP/tables/val.npz" --workers 4
+          else
+            N=$(python3 -c "import json; print(json.load(open('$PLAN'))['l_stream']['scenarios_in_split'])")
+            PER=$(( (N + 7) / 8 )); S=$(( ${{ matrix.shard }} * PER ))
+            uv run tma2-segtrain tables --in "$RUNNER_TEMP/data/$SPLIT.f32pack" --plan "$PLAN" \
+              --start "$S" --count "$PER" --out "$RUNNER_TEMP/tables/shard-${{ matrix.shard }}.npz" --workers 4
+          fi
+          sha256sum "$RUNNER_TEMP"/tables/*.npz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tables-${{ matrix.shard }}
+          path: ${{ runner.temp }}/tables/*.npz
+          retention-days: 30
+
+  models:
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.m.outputs.models }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: |
+          echo "models=$(python3 -c "
+          import json; t = json.load(open('$PLAN'))['training']
+          print(json.dumps([f'segL-s{s}' for s in t['seeds']] + ['segL-shuffled']))")" >> "$GITHUB_OUTPUT"
+
+  train-1:
+    needs: [tables, models]
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.models.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tables-*
+          path: ${{ runner.temp }}/tables
+          merge-multiple: true
+      - name: Train (stops before an epoch would pass 320 min)
+        run: |
+          mkdir -p "$RUNNER_TEMP/ck"
+          uv run tma2-segtrain train --plan "$PLAN" --model "${{ matrix.model }}" \
+            --train $(ls "$RUNNER_TEMP"/tables/shard-*.npz | sort -V) --val "$RUNNER_TEMP/tables/val.npz" \
+            --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s 19200 2>&1 | tee "$RUNNER_TEMP/ck/${{ matrix.model }}.log" || true
+          test -f "$RUNNER_TEMP/ck/${{ matrix.model }}/meta.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ck1-${{ matrix.model }}
+          path: ${{ runner.temp }}/ck/
+
+  train-2:
+    needs: [train-1, models]
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.models.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - uses: actions/download-artifact@v4
+        with:
+          name: ck1-${{ matrix.model }}
+          path: ${{ runner.temp }}/ck
+      - name: Resume if not complete
+        run: |
+          if python3 -c "import json,sys; sys.exit(0 if json.load(open('$RUNNER_TEMP/ck/${{ matrix.model }}/meta.json'))['complete'] else 1)"; then
+            echo "complete after the first job"; exit 0
+          fi
+          echo "RESUME=1" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        if: env.RESUME == '1'
+        with:
+          pattern: tables-*
+          path: ${{ runner.temp }}/tables
+          merge-multiple: true
+      - if: env.RESUME == '1'
+        run: |
+          uv run tma2-segtrain train --plan "$PLAN" --model "${{ matrix.model }}" \
+            --train $(ls "$RUNNER_TEMP"/tables/shard-*.npz | sort -V) --val "$RUNNER_TEMP/tables/val.npz" \
+            --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" --max-wall-s 19200 2>&1 | tee -a "$RUNNER_TEMP/ck/${{ matrix.model }}.log"
+      - name: Must be complete
+        run: python3 -c "import json,sys; sys.exit(0 if json.load(open('$RUNNER_TEMP/ck/${{ matrix.model }}/meta.json'))['complete'] else 1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ck2-${{ matrix.model }}
+          path: ${{ runner.temp }}/ck/
+
+  results:
+    needs: train-2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ck2-*
+          path: ${{ runner.temp }}/ck
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tables-*
+          path: ${{ runner.temp }}/tables
+          merge-multiple: true
+      - name: Push the results branch
+        run: |
+          OUT="experiments/segL-runs/${{ github.run_id }}"
+          mkdir -p "$OUT"
+          for d in "$RUNNER_TEMP"/ck/segL-*/; do
+            m=$(basename "$d"); mkdir -p "$OUT/$m"
+            cp "$d/meta.json" "$d/best.safetensors" "$OUT/$m/"
+            cp "$RUNNER_TEMP/ck/$m.log" "$OUT/$m/train.log" 2>/dev/null || true
+          done
+          (cd "$RUNNER_TEMP/tables" && sha256sum *.npz) > "$OUT/tables.sha256"
+          cp "$PLAN" "$OUT/plan.json"
+          printf '{"run_id": "%s", "commit": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" > "$OUT/run.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/segL-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: L training (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"

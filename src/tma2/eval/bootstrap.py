@@ -8,6 +8,7 @@ variants resample clusters (scenarios) with all their rows.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -200,4 +201,56 @@ def bootstrap_clustered_rate_difference(
         seed=str(seed),
         level=level,
         clusters=g,
+    )
+
+
+@dataclass
+class StatisticInterval:
+    value: float
+    lo: float
+    hi: float
+    n: int
+    clusters: int
+    resamples: int
+    seed: str
+    level: float
+
+
+def bootstrap_clustered_statistic(
+    columns: dict[str, np.ndarray],
+    cluster: np.ndarray,
+    statistic: Callable[[dict[str, np.ndarray]], float],
+    level: float,
+    resamples: int = BOOTSTRAP_RESAMPLES,
+    seed: int = BOOTSTRAP_SEED,
+) -> StatisticInterval:
+    """Scenario-clustered paired percentile bootstrap of any statistic of paired columns (spec
+    005: gap recovered and its differences). Clusters are drawn as in
+    ``bootstrap_clustered_quantile_ratio`` (gitma's PRNG, first-appearance order); NaN becomes ∞
+    as there."""
+    cols = {k: _nan_to_inf(v) for k, v in columns.items()}
+    n = cluster.shape[0]
+    if n == 0 or any(v.shape[0] != n for v in cols.values()):
+        raise ValueError("bootstrap needs equal, non-empty columns and a cluster per row")
+    order: dict[int, list[int]] = {}
+    for i in range(n):
+        order.setdefault(int(cluster[i]), []).append(i)
+    groups = [np.array(m, dtype=np.int64) for m in order.values()]
+    g = len(groups)
+    rng = create_rng(np.uint64(seed))
+    vals = np.empty(resamples)
+    for r in range(resamples):
+        idx = np.concatenate([groups[uniform_int(rng, g)] for _ in range(g)])
+        vals[r] = statistic({k: v[idx] for k, v in cols.items()})
+    s = ascending(np.where(np.isnan(vals), np.inf, vals))
+    tail = (1 - level) / 2
+    return StatisticInterval(
+        value=float(statistic(cols)),
+        lo=percentile(s, tail),
+        hi=percentile(s, 1 - tail),
+        n=n,
+        clusters=g,
+        resamples=resamples,
+        seed=str(seed),
+        level=level,
     )

@@ -150,19 +150,16 @@ def _check_imm(work: Path) -> None:
         raise SystemExit(f"{work} predates --imm (made with {DEFAULT_IMM}); use a new --work")
 
 
-def cmd_stats(a: argparse.Namespace) -> int:
-    torch.set_default_dtype(torch.float64)
-    work = Path(a.work)
-    work.mkdir(parents=True, exist_ok=True)
-    out = work / "stats.pkl"
-    if out.exists():
-        print(f"{out} exists")
-        return 0
-    (work / "imm.txt").write_text(IMM + "\n")
-    imm = parse_imm_name(IMM)
+STATS_CHUNK = 25
+
+
+def _stats_task(args: tuple[str, int, int, int, str]) -> list[dict[str, Any]]:
+    """The per-row statistics of ordinals start … start + count − 1 (one worker, one thread)."""
+    path, start, count, tune, imm_name = args
+    torch.set_num_threads(1)
+    imm = parse_imm_name(imm_name)
     recs: list[dict[str, Any]] = []
-    t0 = time.time()
-    for j, meta, own, _tgt, obs in iter_selected(a.validation, 0, a.tune + a.score):
+    for j, meta, own, _tgt, obs in iter_selected(path, start, count):
         d = bearing_data_from_arrays(meta, own, obs)
         z0 = np.zeros(d.n, dtype=np.int64)
         st, ok, _mis = window_fits(d.t, d.ox, d.oy, d.z, d.valid, d.sigma, W, z0)
@@ -172,7 +169,7 @@ def cmd_stats(a: argparse.Namespace) -> int:
             {
                 "ordinal": j,
                 "index": int(meta["index"]),
-                "set": "tune" if j < a.tune else "score",
+                "set": "tune" if j < tune else "score",
                 "split": lam,
                 "split_row": where,
                 "sl_ok": ok,
@@ -183,7 +180,28 @@ def cmd_stats(a: argparse.Namespace) -> int:
                 "imm": imm_mode_stat(d, imm),
             }
         )
-        if len(recs) % 100 == 0:
+    return recs
+
+
+def cmd_stats(a: argparse.Namespace) -> int:
+    torch.set_default_dtype(torch.float64)
+    work = Path(a.work)
+    work.mkdir(parents=True, exist_ok=True)
+    out = work / "stats.pkl"
+    if out.exists():
+        print(f"{out} exists")
+        return 0
+    (work / "imm.txt").write_text(IMM + "\n")
+    total = a.tune + a.score
+    chunks = [
+        (a.validation, s, min(STATS_CHUNK, total - s), a.tune, IMM)
+        for s in range(0, total, STATS_CHUNK)
+    ]
+    recs: list[dict[str, Any]] = []
+    t0 = time.time()
+    with ProcessPoolExecutor(max_workers=a.workers) as ex:
+        for part in ex.map(_stats_task, chunks):
+            recs += part
             print(f"{len(recs)} scenarios [{time.time() - t0:.0f} s]", flush=True)
     detectability(a.validation, a.tune, a.score, recs)
     with open(out, "wb") as f:
@@ -331,12 +349,54 @@ def cmd_confirm(a: argparse.Namespace) -> int:
     metas = tune_metas(a.validation, a.tune)
     tasks = []
     for nom, q, tau, w in parse_configs(a.configs):
-        h = config_threshold(nom, q, recs, metas)
+        # Gate S's test split: the threshold tuned on validation, never re-tuned on test rows
+        h = a.threshold if a.threshold is not None else config_threshold(nom, q, recs, metas)
         for s in range(a.shards):
             tasks.append((a.validation, a.work, a.tune, a.score, nom, q, tau, w, h, s, a.shards))
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
         for msg in ex.map(confirm_task, tasks):
             print(msg, flush=True)
+    return 0
+
+
+def cmd_confirm_direct(a: argparse.Namespace) -> int:
+    """One confirm shard over the contiguous ordinals start … start + count − 1, the GLR
+    statistic computed inline (no stats stage): Gate S's test split on CI runners, at a fixed
+    threshold (``--threshold``, validation's). Writes the file ``confirm`` writes for that shard,
+    so ``load_confirmed`` and ``tma2-gs --glr-confirm`` read the shards as one configuration."""
+    torch.set_num_threads(1)
+    torch.set_default_dtype(torch.float64)
+    ((nom, q, tau, w),) = parse_configs(a.configs)
+    if nom != "glr" or a.threshold is None:
+        raise SystemExit("confirm-direct takes one glr configuration and --threshold")
+    out = Path(a.work) / "confirm" / f"{config_name(nom, q, tau, w)}-s{a.shard}of{a.shards}.json"
+    data: list[BearingData] = []
+    stats: list[np.ndarray] = []
+    ords: list[int] = []
+    for j, meta, own, _tgt, obs in iter_selected(a.validation, a.start, a.count):
+        d = bearing_data_from_arrays(meta, own, obs)
+        lst, lok = ls_states(d, classical_predict(d, "per_timestep")["rows"])
+        stats.append(glr_stat(d.t, d.ox, d.oy, d.z, d.valid, d.sigma, lst, lok, GLR_WINDOW))
+        data.append(d)
+        ords.append(j)
+    t0 = time.time()
+    acc = confirm_knots(
+        PhysicsLayer(), data, stats, a.threshold, tau, W, STEP, max(d.n for d in data),
+        turn_rows=w,
+    )  # fmt: skip
+    rec = {
+        "config": config_name(nom, q, tau, w),
+        "threshold": a.threshold,
+        "ordinals": [a.start, a.start + a.count - 1],
+        "seconds": time.time() - t0,
+        "knots": {
+            str(j): [[x.alarm, x.alarm_end, x.row, x.cost_drop, x.end] for x in kn]
+            for j, kn in zip(ords, acc, strict=True)
+        },
+    }
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(rec))
+    print(f"{out.name}: {len(ords)} scenarios [{rec['seconds']:.0f} s]")
     return 0
 
 
@@ -881,6 +941,16 @@ def main() -> int:
     global IMM
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
+    d = sub.add_parser("confirm-direct")
+    d.add_argument("--validation", required=True, help="the split file (any split)")
+    d.add_argument("--work", required=True)
+    d.add_argument("--start", type=int, required=True)
+    d.add_argument("--count", type=int, required=True)
+    d.add_argument("--configs", required=True)
+    d.add_argument("--threshold", type=float, required=True)
+    d.add_argument("--shard", type=int, required=True)
+    d.add_argument("--shards", type=int, required=True)
+    d.add_argument("--imm", default=IMM)
     for name in ("stats", "confirm", "report", "samples"):
         p = sub.add_parser(name)
         p.add_argument("--validation", required=True)
@@ -888,8 +958,16 @@ def main() -> int:
         p.add_argument("--tune", type=int, default=500)
         p.add_argument("--score", type=int, default=1000)
         p.add_argument("--imm", default=IMM, help="frozen IMM reference (spec 006: the MAN2 one)")
+        if name == "stats":
+            p.add_argument("--workers", type=int, default=4)
         if name == "confirm":
             p.add_argument("--configs", required=True)
+            p.add_argument(
+                "--threshold",
+                type=float,
+                help="use this nominator threshold (e.g. validation's, from its confirm shards) "
+                "instead of tuning one on the --tune scenarios; for a test split, with --tune 0",
+            )
             p.add_argument("--shards", type=int, default=8)
             p.add_argument("--workers", type=int, default=4)
         if name == "report":
@@ -902,7 +980,13 @@ def main() -> int:
     a = ap.parse_args()
     IMM = a.imm
     _check_imm(Path(a.work))
-    fn = {"stats": cmd_stats, "confirm": cmd_confirm, "report": cmd_report, "samples": cmd_samples}
+    fn = {
+        "stats": cmd_stats,
+        "confirm": cmd_confirm,
+        "confirm-direct": cmd_confirm_direct,
+        "report": cmd_report,
+        "samples": cmd_samples,
+    }
     return fn[a.cmd](a)
 
 

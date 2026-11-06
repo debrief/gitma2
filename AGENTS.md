@@ -31,7 +31,7 @@ publish, and Gate 2 uses the CUSUM/GLR segmenter at an operating point its spec 
 (recommended: GLR at a 5% held-leg false-alarm rate). Write-up: `site/blog/2026-11-02-gate-d.md`.
 Detector workflows: `train/gd-a`, `validate-gd/<run>`. Research note 08 (leg-detection spike,
 validation only) recommends GLR + physics-layer confirmation as the interim Gate 2 segmenter.
-005 (steady-leg segmentation, Gate S; Annex A §A.9, owner merges): specified. Components O
+005 (steady-leg segmentation, Gate S; Annex A §A.9, owner merges): implemented and scored. Components O
 (ownship), C (classical target segmenter, the reference) and L (learned, starts equal to C); fresh
 test seed from 312. Planned (`specs/005-steady-leg-segmentation/plan.md`): measured on validation,
 an additive leg search is far weaker than GLR + confirm (F1 0.65 vs 0.79), so C confirms
@@ -43,8 +43,30 @@ spec 006 (`specs/006-generator-man2/`) and precedes Gate S: implemented (PR 13);
 passed** (panel round 2, `experiments/20261104-g0-man2-r2/`, CLI `tma2-g0-man2`; two owner
 amendments after results: check-4 coverage and the throughput method). Seeds: 314 validation
 (`data/man2-val`, digests in `experiments/20261104-g0-man2/dataset-digests/`), 315 test (Gate S;
-not generated until its decision record), 316 noise-free; 312/313 unused. IMM/EKF re-tune on 314:
-`tune/**` branches run `.github/workflows/tune.yml` (results to `results/man2-tune-<run id>`).
+generated at a38f61b after the decision record; now used), 316 noise-free, 317 L's training
+stream; 312/313 unused; the next fresh seed is 318. IMM/EKF re-tune on 314: `tune/**` branches
+run `.github/workflows/tune.yml` (results to `results/man2-tune-<run id>`); frozen
+`imm-cv0.03-ct1-w0.01-s0.0003-p4-r2`, EKF `ekf-sa0.00003-p4-r0.03125`
+(`experiments/20261104-man2-refs/`). Gate S: decision `experiments/20261104-gs-decision/` (plan
+`configs/segment/gs-plan.json`; carried L = seed 3, `carried.json`), L training on CI
+(`segtrain/**` → `.github/workflows/segtrain.yml`, validation `experiments/20261105-segL-val/`),
+test segmentations on CI (`segment.yml` plans `configs/segment/gs-test-*.json`;
+`glr-confirm/**` for the reference), scoring `tma2-gs ... --decision --plan --split test`.
+**Gate S scored** (record r2 `experiments/20261105-gs-r2/`, after panel round 1 rejected r1 for a
+causality bug in C's open-transition start, fixed in 7fe8874; decided by panel round 2): S1–S3 pass,
+S4 inconclusive (L − C gap recovered +0.0012 [−0.0031, +0.0049]); C recovers 0.898 of the
+one-leg-to-oracle gap (0.838 on the rows every estimator answers: one leg and the IMM fail on a
+quarter), GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
+passed): C is Gate 2's segmenter and control; learning recorded as not shown. Scoring runs on CI
+(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Before Gate 2: fix the
+search's cost-table fit failures (`segment/search.py` warm starts; check monotonicity on the
+validation tables), bind the segmenter's code commit in segmentation headers (the digest binds
+parameters only), fix one open-transition hand-over convention (the main lever: C recovers 0.66 of the gap on
+rows open at k against 0.91 elsewhere, and S4's whole L − C difference sits on those rows), stop
+transitions overlapping through open ones (`_free` treats an open transition as [s, s + 1]), and
+take a fresh test seed. Owner decision 2026-11-05: a learned nominator, or evidence trained
+through confirmation, is tested within Gate 2, not as a separate gate. Write-up:
+`site/blog/2026-11-05-gate-s.md`.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -68,7 +90,10 @@ src/tma2/
   eval/                    errors, slices, stats, metrics (+ efficiency), bootstrap, rows (settled, G5), predictions, experiment
   export/                  toy model and ONNX export (f64 conformance artefact, f32 reported)
   models/                  Gate 1: rows, model (encoder, heads, physics layer), loss, train, predict, export
-  cli/                     tma2-generate, -solve, -track, -naive, -crb, -eval, -oracle, -p0, -train, -predict, -tune, -plan
+  detect/                  Gate D: CUSUM/GLR controls, confirmation, matching, downstream (spec 004)
+  segment/                 Gate S: O, C (nominate + confirm), L (evidence, crf, train, export), score, gate
+  cli/                     tma2-generate, -solve, -track, -naive, -crb, -eval, -oracle, -p0, -train, -predict, -tune, -plan,
+                           -gd, -g0-man2, -segment, -segtrain, -gs
 conformance/onnx/          browser (WASM, Playwright) and Java legs of the export check
 scripts/                   gen_types.py, data_dictionary.py, make_fixtures.sh, research/
 tests/                     unit, golden, conformance (gitma fixtures), perf; fixtures/gitma/<name>/
@@ -205,3 +230,25 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   cut the rows before it, or the one-leg solve runs away (range 1e11 m).
 - Docusaurus MDX: no `{...}` in prose (it is a JS expression); `scripts/data_dictionary.py`
   escapes `<` and braces outside code spans.
+- Provenance is read before any output is written: a CLI that checks `git status` after writing
+  into an untracked experiment folder always records `git_dirty: true` (`tma2-gs` did, fixed in
+  e648f8b). Workflows must keep downloaded tables and checkpoints outside the checkout
+  (`RUNNER_TEMP`), or every job records a dirty tree.
+- Container restarts kill local background jobs (several per hour on 5 Nov): run anything over a
+  few minutes on CI (`score.yml`, `segment.yml`, `glr-confirm.yml`), not in the session.
+- A segmentation is not a function of its scenario alone: the physics-layer batch is padded to
+  the longest scenario in the chunk (`r_max`, CHUNK = 16 in `cli/segment.py`), and last-bit cost
+  changes can flip a near-threshold acceptance (Gate S panel round 2: ordinal 25 alone differs
+  from 25–26). Reproduce a CI segmentation with the plan's ordinals and shards.
+- Never edit or commit in the checkout while a gate run reads it: provenance is read once at
+  launch and modules load lazily, so a mid-run change goes unrecorded. Run long scorings from a
+  `git worktree` at the commit (pass absolute data paths).
+- An open transition's state is decided at acceptance: anything a later close refines (C's
+  start polish) must not reach prefixes before the close (FR-002; `Transition.start_at`).
+- onnxruntime has no double `Conv`: the evidence network exports each convolution as a MatMul
+  per tap (`segment/evidence_export.py`, `MatMulNet`), checked against torch.
+- Training with torch on 4-core runners: `set_num_threads(1)` per worker is faster for L's
+  per-prefix CRF loss (24 ms per prefix) than 4 threads.
+- Semi-Markov truth paths: several lattice paths can agree equally with the truth codes; take the
+  lexicographic maximum on (agreement, zero-evidence score), or the CRF loss starts near 2,000
+  nats from an arbitrary path (`segment/crf.py`, `truth_path`).

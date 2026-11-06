@@ -1,0 +1,115 @@
+name: GLR + confirm runs
+
+# Spec 005 T038: GLR + confirm (note 08's reference, Gate S's S2) over a slice of a MAN2 split on
+# several 4-core runners. Push `glr-confirm/<name>` (plan configs/segment/<name>.json: data block as
+# segment.yml's, ordinals, shards, config, threshold). Each shard regenerates the split at its
+# generating commit, checks the committed digest and runs `leg_spike.py confirm-direct` on its
+# contiguous ordinals at the plan's fixed threshold (validation's; nothing is tuned here). The
+# merge job pushes every shard's confirm file to results/glr-confirm-<name>-<run id>, the layout
+# `tma2-gs --glr-confirm <dir>:<config>` reads.
+
+on:
+  push:
+    branches: ["glr-confirm/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.p.outputs.plan }}
+      shards: ${{ steps.p.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          PLAN="configs/segment/${GITHUB_REF_NAME#glr-confirm/}.json"
+          test -f "$PLAN"
+          echo "plan=$PLAN" >> "$GITHUB_OUTPUT"
+          echo "shards=$(python3 -c "import json; n=json.load(open('$PLAN'))['shards']; print(json.dumps(list(range(n))))")" >> "$GITHUB_OUTPUT"
+
+  confirm:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Regenerate the split at its generating commit and check its digest
+        run: |
+          read -r SEED COUNT RANGES HELDOUT GEN SPLIT DIGESTS <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); d = p['data']
+          print(d['seed'], d['count'], d['ranges'], d['heldout'], d['commit'], d['split'], d['digests'])")"
+          git worktree add "$RUNNER_TEMP/gen" "$GEN"
+          (cd "$RUNNER_TEMP/gen" && uv sync && uv run tma2-generate --seed "$SEED" --count "$COUNT" \
+            --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data")
+          want=$(python3 -c "import json; print(json.load(open('$DIGESTS'))['$SPLIT.f32pack'])")
+          got=$(sha256sum "$RUNNER_TEMP/data/$SPLIT.f32pack" | cut -d' ' -f1)
+          echo "$SPLIT.f32pack: $got (committed $want)"
+          [ "$got" = "$want" ]
+          echo "SPLIT=$SPLIT" >> "$GITHUB_ENV"
+      - run: uv sync
+      - name: Confirm this shard's ordinals (four processes, one torch thread each)
+        run: |
+          read -r A PER N CFG H <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); a, b = p['ordinals']; n = p['shards']
+          print(a, -(-(b - a) // n), b, p['config'], p['threshold'])")"
+          S=$(( A + ${{ matrix.shard }} * PER )); C=$(( PER < N - S ? PER : N - S ))
+          # four sub-shards in parallel; each writes its own confirm file
+          SUB=4; Q=$(( (C + SUB - 1) / SUB ))
+          for k in 0 1 2 3; do
+            SS=$(( S + k * Q )); CC=$(( Q < S + C - SS ? Q : S + C - SS ))
+            [ "$CC" -gt 0 ] || continue
+            I=$(( ${{ matrix.shard }} * SUB + k ))
+            uv run python scripts/research/leg_spike.py confirm-direct \
+              --validation "$RUNNER_TEMP/data/$SPLIT.f32pack" --work "$RUNNER_TEMP/work" \
+              --start "$SS" --count "$CC" --configs "$CFG" --threshold "$H" \
+              --shard "$I" --shards "$(python3 -c "import json; print(json.load(open('$PLAN'))['shards'] * 4)")" &
+          done
+          wait
+          ls "$RUNNER_TEMP/work/confirm"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: confirm-${{ matrix.shard }}
+          path: ${{ runner.temp }}/work/confirm/*.json
+
+  merge:
+    needs: [plan, confirm]
+    runs-on: ubuntu-latest
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: confirm-*
+          path: ${{ runner.temp }}/confirm
+          merge-multiple: true
+      - name: Push the results branch
+        run: |
+          NAME=$(basename "$PLAN" .json)
+          OUT="experiments/glr-confirm-runs/$NAME-${{ github.run_id }}"
+          mkdir -p "$OUT/confirm"
+          cp "$RUNNER_TEMP"/confirm/*.json "$OUT/confirm/"
+          ls "$OUT/confirm" | wc -l
+          cp "$PLAN" "$OUT/plan.json"
+          printf '{"run_id": "%s", "commit": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" > "$OUT/run.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/glr-confirm-$NAME-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: GLR + confirm run $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"

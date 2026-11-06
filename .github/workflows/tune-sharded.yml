@@ -1,0 +1,115 @@
+name: Reference tuning (sharded)
+
+# Spec 006 T032 split over eight 4-core runners: the single-runner tune (tune.yml) of 720-row MAN2
+# windows can exceed a job's time limit, and a timed-out job keeps nothing. Each shard scores grid
+# entries I, I + 8, … (tma2-tune --shard I/8); the merge job chooses from all parts in grid order
+# (tma2-tune --from-parts), so the choice equals the single run's, ties included. The data are
+# regenerated at the commit that made them and checked against the committed digest.
+
+on:
+  push:
+    branches: ["tune-sharded/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DATA: ${{ github.workspace }}/../man2-val
+  GEN_COMMIT: d72cb81d43297f34cad9dc06a76dc7b31c8fbea2
+  DIGESTS: experiments/20261104-g0-man2/dataset-digests/seed314-digests.json
+  SHARDS: 8
+
+jobs:
+  shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Grid from the branch name (tune-sharded/man2-passN → --grid man2-passN)
+        run: |
+          G="${GITHUB_REF_NAME#tune-sharded/}"
+          case "$G" in
+            man2-pass*) echo "GRID=$G" >> "$GITHUB_ENV"; echo "EXP=experiments/20261104-man2-tune-${G#man2-}" >> "$GITHUB_ENV" ;;
+            *) echo "GRID=default" >> "$GITHUB_ENV"; echo "EXP=experiments/20261104-man2-tune" >> "$GITHUB_ENV" ;;
+          esac
+      - name: Regenerate seed 314 at the generating commit and check its digest
+        run: |
+          git worktree add "$RUNNER_TEMP/gen" "$GEN_COMMIT"
+          (cd "$RUNNER_TEMP/gen" && uv sync && uv run tma2-generate --seed 314 --count 100000 \
+            --ranges configs/man2-ranges.json --heldout-ranges configs/man2-heldout.json \
+            --format f32pack --out "$DATA")
+          want=$(python3 -c "import json; print(json.load(open('$DIGESTS'))['validation.f32pack'])")
+          got=$(sha256sum "$DATA/validation.f32pack" | cut -d' ' -f1)
+          echo "validation.f32pack: $got (committed $want)"
+          [ "$got" = "$want" ]
+          rm -f "$DATA/train.f32pack"
+      - run: uv sync
+      - name: Tune this shard (spec 004's G5 grids, 2,000 σ = 1° scenarios)
+        run: |
+          uv run tma2-tune --criterion g5 --validation "$DATA/validation.f32pack" \
+            --experiment "$EXP" --scenarios 2000 --workers 4 --grid "$GRID" --shard "${{ matrix.shard }}/$SHARDS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: grid-part-${{ matrix.shard }}
+          path: ${{ env.EXP }}/grid-part-${{ matrix.shard }}.csv
+
+  merge:
+    needs: shard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Grid from the branch name (tune-sharded/man2-passN → --grid man2-passN)
+        run: |
+          G="${GITHUB_REF_NAME#tune-sharded/}"
+          case "$G" in
+            man2-pass*) echo "GRID=$G" >> "$GITHUB_ENV"; echo "EXP=experiments/20261104-man2-tune-${G#man2-}" >> "$GITHUB_ENV" ;;
+            *) echo "GRID=default" >> "$GITHUB_ENV"; echo "EXP=experiments/20261104-man2-tune" >> "$GITHUB_ENV" ;;
+          esac
+      - name: Regenerate seed 314 at the generating commit and check its digest
+        run: |
+          git worktree add "$RUNNER_TEMP/gen" "$GEN_COMMIT"
+          (cd "$RUNNER_TEMP/gen" && uv sync && uv run tma2-generate --seed 314 --count 100000 \
+            --ranges configs/man2-ranges.json --heldout-ranges configs/man2-heldout.json \
+            --format f32pack --out "$DATA")
+          want=$(python3 -c "import json; print(json.load(open('$DIGESTS'))['validation.f32pack'])")
+          got=$(sha256sum "$DATA/validation.f32pack" | cut -d' ' -f1)
+          echo "validation.f32pack: $got (committed $want)"
+          [ "$got" = "$want" ]
+          rm -f "$DATA/train.f32pack"
+      - run: uv sync
+      - uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/parts
+          merge-multiple: true
+      - name: Choose from all parts
+        run: |
+          uv run tma2-tune --criterion g5 --validation "$DATA/validation.f32pack" \
+            --experiment "$EXP" --scenarios 2000 --grid "$GRID" \
+            --from-parts $(ls "$RUNNER_TEMP"/parts/grid-part-*.csv | sort -V)
+          cp "$RUNNER_TEMP"/parts/grid-part-*.csv "$EXP/"
+          printf '{"run_id": "%s", "commit": "%s", "shards": %s}\n' "${{ github.run_id }}" \
+            "${{ github.sha }}" "$SHARDS" > "$EXP/run.json"
+      - name: Push the results branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/man2-tune-$GRID-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$EXP"
+          git commit -qm "experiments: MAN2 reference tuning, sharded (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"
