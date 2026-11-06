@@ -142,11 +142,11 @@ differs from the decision's.
 - [ ] T020 [US2] Implement `src/tma2/gate2/predict.py` and `src/tma2/cli/g2predict.py`
   (`tma2-g2predict`): E-s's decisions, then E-w's weights; per-row predictions with
   `EPredictionHeader` (`weights_sha256`, `plan_sha256`, `code_sha256`).
-- [ ] T021 [US2] Create `.github/workflows/g2train.yml` (`g2train/<plan>`):
+- [x] T021 [US2] Create `.github/workflows/g2train.yml` (`g2train/<plan>`):
   - a matrix of models, chained jobs of ≤ 345 min resuming from the checkpoints branch;
   - inputs (stream segmentations, tables) fetched from results branches;
   - results to `results/g2-<plan>-<run id>`;
-  - tables and checkpoints in `RUNNER_TEMP`.
+  - tables and checkpoints in `RUNNER_TEMP`. — done: `.github/workflows/g2train.yml` (tables per shard and validation with digest checks, two chained training jobs per model, results branch)
 
 ## Phase 5: User Story 3, Gate 2 judged on a fresh seed with all references on the same rows (P1)
 
