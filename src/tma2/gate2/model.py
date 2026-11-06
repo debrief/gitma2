@@ -37,6 +37,9 @@ class EOutput:
     cost: Tensor  # [N] the solve's weighted χ² cost
     init_state: Tensor  # [N, 4] the corrected start's state at the row (auxiliary loss)
     log_weight: Tensor  # [N, R] the log-weights the solve used
+    range: Tensor  # [N] the layer's range, course and speed at the row (as scored for C)
+    course: Tensor
+    speed: Tensor
 
 
 class EWeights(nn.Module):
@@ -93,4 +96,15 @@ class EWeights(nn.Module):
                 speed_skip=x.speed_skip,
             )
         )
-        return EOutput(out.state, out.cov, out.plausible, out.cov_ok, out.cost, init_state, log_w)
+        return EOutput(
+            out.state,
+            out.cov,
+            out.plausible,
+            out.cov_ok,
+            out.cost,
+            init_state,
+            log_w,
+            out.range,
+            out.course,
+            out.speed,
+        )

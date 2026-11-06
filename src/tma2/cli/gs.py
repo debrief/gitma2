@@ -147,6 +147,9 @@ def _input_digests(a: argparse.Namespace) -> dict[str, Any]:
         out["glr_confirm"] = {"config": cfg, "files": len(files), "sha256": h.hexdigest()}
     if a.naive_train:
         out["naive_train"] = file_digest(a.naive_train.split(":")[0])
+    preds = getattr(a, "predictions", None)
+    if preds:
+        out["predictions"] = {n: file_digest(p) for n, _, p in (x.partition("=") for x in preds)}
     return out
 
 
@@ -313,6 +316,20 @@ def main(argv: list[str] | None = None) -> int:
         help="score each segmentation with these hand-overs of a transition open at k "
         "(NAME[-mode]-<handover>) instead of its header's (Gate S panel round 2)",
     )
+    ap.add_argument(
+        "--predictions",
+        nargs="*",
+        default=[],
+        metavar="NAME=PATH",
+        help="score per-row prediction files (tma2-g2predict) as estimators beside the "
+        "segmenters, with gap recovered and paired differences against them (spec 007)",
+    )
+    ap.add_argument(
+        "--knots",
+        type=int,
+        default=8,
+        help="the physics layer's knot cap for every layer solve (Gate S 8; Gate 2 12)",
+    )
     ap.add_argument("--glr-confirm", metavar="WORK:CONFIG")
     ap.add_argument(
         "--detectability",
@@ -363,7 +380,7 @@ def main(argv: list[str] | None = None) -> int:
     ]
     cluster = np.array([r.ordinal for r in rows], dtype=np.int64)
     settled = np.array([r.settled for r in rows])
-    layer = PhysicsLayer()
+    layer = PhysicsLayer(knots=a.knots)
     errs: dict[str, np.ndarray] = {
         "one_leg": sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg),
         "oracle": sc.layer_errors(layer, rows, data, metas, truths, sc.oracle),
@@ -427,6 +444,10 @@ def main(argv: list[str] | None = None) -> int:
                     ]
                 )
                 print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
+    for spec in a.predictions:
+        name, _, path = spec.partition("=")
+        errs[name] = sc.prediction_errors(rows, data, truths, path)
+        print(f"{name} predictions [{time.time() - t0:.0f} s]", flush=True)
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
         acc = sc.load_confirmed(work, cfg)
@@ -490,6 +511,7 @@ def main(argv: list[str] | None = None) -> int:
         "resamples": RESAMPLES,
         "naive": naive_src,
         "bound": "known_manoeuvres",
+        "knots": a.knots,
         "segmenters": {},
     }
     for name, e in errs.items():

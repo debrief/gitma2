@@ -15,7 +15,6 @@ E-w, its covariance flag).
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
 import numpy as np
@@ -29,7 +28,7 @@ from tma2.segment import Interval
 from tma2.segment.confirm import confirm
 from tma2.segment.evidence import EvidenceNet, evidence_for, scenario_features
 from tma2.segment.segmenter import intervals_at, nominations_for
-from tma2.sim.geometry import f32, f32_angle
+from tma2.sim.geometry import f32
 from tma2.types.generated.tma import SegmentParameters
 
 from . import KNOTS
@@ -53,16 +52,18 @@ def es_segmentations(
     return [{k: intervals_at(c, k, p) for k in ks} for c, ks in zip(confs, rows, strict=True)]
 
 
-def _row(d: BearingData, k: int, state: np.ndarray, ok: bool) -> dict[str, Any]:
-    rx, ry = float(state[0]) - float(d.ox[k]), float(state[1]) - float(d.oy[k])
-    vx, vy = float(state[2]), float(state[3])
+def _row(
+    d: BearingData, k: int, state: np.ndarray, rcs: tuple[float, float, float], ok: bool
+) -> dict[str, Any]:
+    """In double, as ``segment.score.layer_errors`` scores C (float32 rows would give E and C a
+    last-bits difference in G2-d's paired comparison); the timestamp as the truth stores it."""
     return {
         "timestamp_s": f32(float(d.t[k])),
-        "range_m": f32(math.hypot(rx, ry)),
-        "course_rad": f32_angle(math.atan2(vx, vy) % (2.0 * math.pi)),
-        "speed_mps": f32(math.hypot(vx, vy)),
-        "x_m": f32(float(state[0])),
-        "y_m": f32(float(state[1])),
+        "range_m": rcs[0],
+        "course_rad": rcs[1],
+        "speed_mps": rcs[2],
+        "x_m": float(state[0]),
+        "y_m": float(state[1]),
         "converged": ok,
         "iterations": 0,
     }
@@ -109,13 +110,16 @@ def e_rows(
                 code = torch.tensor(np.stack(codes[s : s + batch]), dtype=torch.float64)
                 o = model(x, code)
                 state, ok = o.state, o.plausible & o.cov_ok
+                rng, crs, spd = o.range, o.course, o.speed
             else:
                 assert layer is not None
                 lo = layer(x)
                 state, ok = lo.state, lo.plausible
+                rng, crs, spd = lo.range, lo.course, lo.speed
         for b, (i, q) in enumerate(where[s : s + batch]):
             d, k, _ = items[s + b]
             st = state[b].numpy()
             if np.isfinite(st).all():  # an implausible solve is reported, unconverged
-                out[i][q] = _row(d, k, st, bool(ok[b]))
+                rcs = (float(rng[b]), float(crs[b]), float(spd[b]))
+                out[i][q] = _row(d, k, st, rcs, bool(ok[b]))
     return out

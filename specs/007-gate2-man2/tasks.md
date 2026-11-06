@@ -171,11 +171,12 @@ differs from the decision's.
 **Independent Test**: the gate reproduces its verdict from committed per-row errors, and refuses
 mismatches.
 
-- [ ] T022 [P] [US3] `tests/unit/test_gate2_gate.py`:
+- [x] T022 [P] [US3] `tests/unit/test_gate2_gate.py`:
   - G2-a…G2-d logic (pass, fail, inconclusive, no rows → inconclusive);
   - the shuffled rule voids a G2-d pass;
   - the validation rule.
-- [ ] T023 [US3] Implement `src/tma2/cli/g2.py` (`tma2-g2`, contracts/cli.md) on `segment.score`'s
+  - Done ("wholly below / above" strict, as the SRD words them).
+- [x] T023 [US3] Implement `src/tma2/cli/g2.py` (`tma2-g2`, contracts/cli.md) on `segment.score`'s
   machinery:
   - E enters as prediction files;
   - C, one leg, the oracle, GLR + confirm, IMM, EKF and naive enter as in `tma2-gs`, with
@@ -183,6 +184,10 @@ mismatches.
   - `metrics.json`, `report.md`, `inputs.json` and `errors.npz`;
   - gate mode adds `verdict.json` and `manifest.json` (provenance first), and exits 3 unless all
     pass.
+  - Done: `tma2-gs` gained `--predictions NAME=PATH` and `--knots`; `tma2-g2` runs the
+    refusals, then `tma2-gs`'s scoring, then the verdicts (`--split validation` writes
+    `validation.json` with the validation and shuffled rules; `--split test` the gate). E's rows
+    are written in double, so untrained E − C is 0 to 1e-9 end to end (`test_gate2_cli.py`).
 - [ ] T024 [US3] Add a `g2` plan kind to `.github/workflows/score.yml`: it runs `tma2-g2` with E's
   prediction files fetched from results branches.
 - [ ] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged

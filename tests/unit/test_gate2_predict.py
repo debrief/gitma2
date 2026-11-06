@@ -105,7 +105,7 @@ def test_untrained_ew_is_c(man2_pack: Path) -> None:
     assert e.shape == want.shape and np.isfinite(want).any()
     fin = np.isfinite(want)
     assert (np.isfinite(e) == fin).all()
-    np.testing.assert_allclose(e[fin], want[fin], rtol=1e-6, atol=1e-6)  # stored as float32
+    np.testing.assert_allclose(e[fin], want[fin], rtol=1e-9, atol=1e-9)
 
 
 def test_untrained_es_is_c(man2_pack: Path) -> None:

@@ -13,8 +13,18 @@ def _out(n: int, cost: list[float], state_off: float = 0.0) -> tuple[EOutput, to
     st = truth.clone()
     st[:, 0] += state_off
     ok = torch.ones(n, dtype=torch.bool)
+    z = torch.zeros(n)
     out = EOutput(
-        st, torch.eye(4).repeat(n, 1, 1), ok, ok, torch.tensor(cost), st.clone(), torch.zeros(n, 3)
+        st,
+        torch.eye(4).repeat(n, 1, 1),
+        ok,
+        ok,
+        torch.tensor(cost),
+        st.clone(),
+        torch.zeros(n, 3),
+        z,
+        z,
+        z,
     )
     return out, truth
 
