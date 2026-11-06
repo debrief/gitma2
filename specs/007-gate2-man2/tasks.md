@@ -87,9 +87,9 @@ differs from the decision's.
   - untrained E-w on C's segmentation gives the same state as `segment.score.layer_errors`'s
     input path for C, to 1e-12, on 3 fixture scenarios;
   - gradients of the loss to every parameter are finite. — done: `tests/unit/test_gate2_model.py` (untrained E-w equals the physics layer on C's inputs bit for bit; finite gradients; the init head has no gradient under implicit differentiation and is trained by the auxiliary initial-state loss)
-- [ ] T011 [P] [US2] `tests/unit/test_gate2_causal.py`: E's output at row k is unchanged when the
+- [x] T011 [P] [US2] `tests/unit/test_gate2_causal.py`: E's output at row k is unchanged when the
   scenario is cut to rows 0…k (arrays truncated, not masked), on a fixture scenario with an open
-  transition at k.
+  transition at k. — done: `tests/unit/test_gate2_causal.py` (random heads, a transition open at k: state identical with the arrays cut at k)
 - [ ] T012 [P] [US2] `tests/unit/test_gate2_tables.py`:
   - for a decision C accepted, the table's "with" error equals the error of C's own segmentation
     at those rows;
