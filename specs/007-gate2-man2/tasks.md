@@ -83,10 +83,10 @@ differs from the decision's.
 
 ### Tests first
 
-- [ ] T010 [P] [US2] `tests/unit/test_gate2_model.py`:
+- [x] T010 [P] [US2] `tests/unit/test_gate2_model.py`:
   - untrained E-w on C's segmentation gives the same state as `segment.score.layer_errors`'s
     input path for C, to 1e-12, on 3 fixture scenarios;
-  - gradients of the loss to every parameter are finite.
+  - gradients of the loss to every parameter are finite. — done: `tests/unit/test_gate2_model.py` (untrained E-w equals the physics layer on C's inputs bit for bit; finite gradients; the init head has no gradient under implicit differentiation and is trained by the auxiliary initial-state loss)
 - [ ] T011 [P] [US2] `tests/unit/test_gate2_causal.py`: E's output at row k is unchanged when the
   scenario is cut to rows 0…k (arrays truncated, not masked), on a fixture scenario with an open
   transition at k.
@@ -98,10 +98,10 @@ differs from the decision's.
 
 ### E-w
 
-- [ ] T013 [US2] Implement `src/tma2/gate2/model.py` E-w:
+- [x] T013 [US2] Implement `src/tma2/gate2/model.py` E-w:
   - a `models.gate1` encoder over features plus the C code channel;
   - a weight head (tanh × `weight_bound`) and an initial-state correction head, zero last layers;
-  - `PhysicsLayer(knots=12)` with implicit differentiation, on `gate2.inputs`.
+  - `PhysicsLayer(knots=12)` with implicit differentiation, on `gate2.inputs`. — done: `gate2/model.py` (`EWeights`: the Gate 1 encoder with C's code channel, weight and init heads, `PhysicsLayer(knots=12)`; the start correction applied as a difference so zero heads are exact)
 - [ ] T014 [US2] Implement `src/tma2/gate2/loss.py` (research R4):
   - the bound-normalised per-component error against the truth state (known-manoeuvres bound,
     `crb_known_manoeuvres_fast`);
