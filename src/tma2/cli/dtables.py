@@ -105,7 +105,9 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(bad), file=sys.stderr)
         return 2
     p = SegmentParameters.model_validate(header["parameters"])
-    cap = float(plan.get("training", {}).get("cap", 100.0))
+    from tma2.gate2.tables import CAP, c_block_sha256
+
+    cap = CAP
     chunks = [
         (
             a.inp,
@@ -142,7 +144,8 @@ def main(argv: list[str] | None = None) -> int:
         git_dirty=gp.dirty,
     ).model_dump(mode="json", exclude_none=True)
     h |= {
-        "plan_sha256": plan_sha,
+        "plan_c_sha256": c_block_sha256(plan),
+        "plan_sha256_at_build": plan_sha,  # informational: the plan names these tables
         "segmentations_sha256": sha256_file(a.segmentations),
         "decision_rows": sum(len(t.rows) for t in tables.values()),
         "c_checked_rows": checked,

@@ -19,6 +19,7 @@ decisions is ignored (exact for isolated changes; research R2).
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -203,6 +204,16 @@ def scenario_table(
         else:
             rows.append(DecisionRow(q, k, extra, c_error[k]))
     return ScenarioTable(conf.decisions, rows, c_error, p.tau)
+
+
+CAP = 100.0  # the per-row error cap (research R4), as gate2.loss's default
+
+
+def c_block_sha256(plan: dict[str, Any]) -> str:
+    """Digest of a Gate 2 plan's ``c`` block (C's digests, mode and hand-over): what decision
+    tables depend on. Tables bind it rather than the whole plan, which names the tables' own
+    results branch."""
+    return hashlib.sha256(json.dumps(plan["c"], sort_keys=True).encode()).hexdigest()
 
 
 def save_tables(path: str | Path, tables: dict[int, ScenarioTable], header: dict[str, Any]) -> None:

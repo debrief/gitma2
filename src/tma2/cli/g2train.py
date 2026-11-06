@@ -14,7 +14,7 @@ settings (``training``) and the models (``models``: id → seed, shuffled). ``ta
 segmentation file whose parameter or code digest differs from the plan's; ``train`` refuses
 tables made from another plan. ``es`` trains E-s (``gate2.es``; plan ``es``: ESSettings fields)
 on ``tma2-dtables`` tables, with spec 005's features computed from the split (refusing tables
-from another plan or another split).
+made for another C, by the digest of the plan's ``c`` block, or from another split).
 """
 
 from __future__ import annotations
@@ -142,7 +142,7 @@ def _feats_task(args: tuple[str, int, int, str]) -> dict[int, Any]:
 
 
 def _es_examples(
-    split: str, tables: list[str], plan_sha: str, params_json: str, workers: int
+    split: str, tables: list[str], c_sha: str, params_json: str, workers: int
 ) -> tuple[list[Any], str | None]:
     from concurrent.futures import ProcessPoolExecutor
 
@@ -154,8 +154,8 @@ def _es_examples(
     tabs: dict[int, Any] = {}
     for t in tables:
         h, part = load_tables(t)
-        if h.get("plan_sha256") != plan_sha:
-            return [], f"{t}: made from another plan"
+        if h.get("plan_c_sha256") != c_sha:
+            return [], f"{t}: made for another C (the plan's c block)"
         if h.get("dataset_digest") != digest:
             return [], f"{t}: made from another split than {split}"
         tabs.update(part)
@@ -187,8 +187,11 @@ def es(a: argparse.Namespace) -> int:
         return 2
     seg_plan = json.loads(Path(plan["c"]["parameters_from"]).read_text())
     p = SegmentParameters.model_validate(seg_plan["segmenter"]["parameters"])
-    train, err = _es_examples(a.data, a.tables, plan_sha, p.model_dump_json(), a.workers)
-    val, err2 = _es_examples(a.val_data, a.val_tables, plan_sha, p.model_dump_json(), a.workers)
+    from tma2.gate2.tables import c_block_sha256
+
+    c_sha = c_block_sha256(plan)
+    train, err = _es_examples(a.data, a.tables, c_sha, p.model_dump_json(), a.workers)
+    val, err2 = _es_examples(a.val_data, a.val_tables, c_sha, p.model_dump_json(), a.workers)
     if err or err2:
         print(err or err2, file=sys.stderr)
         return 2
