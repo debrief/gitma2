@@ -109,6 +109,13 @@ Gradients are finite.
   (a failed fit) is excluded. Early stopping uses the trimmed mean (10% each tail) of the
   validation loss, with patience 3 and a relative improvement of 1e-3 on that robust scale.
 
+**Measured (T016, `results/g2-throughput-42295011455`, one 4-core runner, Xeon 8370C).** One
+epoch of E-w over stream ordinals 0–999 (3,905 G5 prefixes, batch 32, 4 threads) took 254 s
+including the validation pass over tuning ordinals 0–499: about 65 ms per prefix, no failed fits
+excluded. The trimmed validation loss moved from 38.10 (untrained, C) to 37.86. A full epoch over
+the stream's 39,054 prefixes is therefore about 45 min, so `max_epochs` is 12 (about 9 h, within
+two chained jobs of 345 min) rather than 20; patience 3 usually stops earlier.
+
 **Rationale.** Gate S's L was stopped early by one 96,000-nat prefix. A trimmed statistic and a
 cap make one prefix unable to decide.
 

@@ -124,9 +124,11 @@ differs from the decision's.
     epoch; resume; the wall budget;
   - early stopping on the robust loss (patience 3, relative 1e-3);
   - the shuffled control trains on another scenario's truth labels. — done: `gate2/train.py` (prefix tables with C's hand-over, code channel, truth and known-manoeuvres bound; seeded batches; implicit differentiation; robust validation; checkpoints with SHA-256, CPU model and resume; the shuffled control moves another prefix's relative target onto this one), `cli/g2train.py` (`tables`, `train`), `tests/unit/test_gate2_train.py`. Training uses the G5 prefixes only (C segments G5 rows), not 2 extra sampled prefixes
-- [ ] T016 [US2] Measure the throughput on one runner **(CI)**: one epoch over 1,000 stream
+- [x] T016 [US2] Measure the throughput on one runner **(CI)**: one epoch over 1,000 stream
   scenarios with `configs/gate2/throughput.json`. Record seconds per prefix and per epoch in
   research R4.
+  - Done: 254 s for 3,905 prefixes with validation (about 65 ms per prefix); a full epoch is
+    about 45 min, so g2-a's `max_epochs` is 12.
 
 ### E-s
 

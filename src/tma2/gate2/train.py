@@ -321,7 +321,7 @@ def train_ew(
             opt.zero_grad()
             loss.total.backward()  # type: ignore[no-untyped-call]
             opt.step()
-            tot += float(loss.total) * int(loss.kept.sum())
+            tot += float(loss.total.detach()) * int(loss.kept.sum())
             n += int(loss.kept.sum())
         v = evaluate(model, val, st.batch, st.cap)
         meta["epoch"] = e
