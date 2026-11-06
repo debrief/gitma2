@@ -27,6 +27,7 @@ from typing import Any
 import numpy as np
 
 from tma2.data.provenance import read_git_provenance
+from tma2.segment.codeid import code_digest
 from tma2.types import SCHEMA_VERSION
 from tma2.types.generated.tma import (
     RecordKind,
@@ -39,7 +40,8 @@ CHUNK = 16
 
 def params_digest(p: SegmentParameters) -> str:
     return hashlib.sha256(
-        json.dumps(p.model_dump(mode="json"), sort_keys=True).encode()
+        # absent optional fields are left out, so adding one keeps every earlier digest
+        json.dumps(p.model_dump(mode="json", exclude_none=True), sort_keys=True).encode()
     ).hexdigest()
 
 
@@ -210,6 +212,7 @@ def main(argv: list[str] | None = None) -> int:
         parameters=p,
         git_commit=commit,
         git_dirty=dirty,
+        code_sha256=code_digest(),
     )
     chunks = [
         (a.inp, s, CHUNK, p.model_dump_json(), a.rows, a.weights or "", net_json)

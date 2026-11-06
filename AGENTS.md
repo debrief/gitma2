@@ -58,7 +58,9 @@ S4 inconclusive (L − C gap recovered +0.0012 [−0.0031, +0.0049]); C recovers
 one-leg-to-oracle gap (0.838 on the rows every estimator answers: one leg and the IMM fail on a
 quarter), GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
 passed): C is Gate 2's segmenter and control; learning recorded as not shown. Scoring runs on CI
-(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Before Gate 2: fix the
+(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Before Gate 2 (C fixes done on the branch after PR 15: monotone cost tables, no overlap
+through open transitions, `open_handover` parameter, `code_sha256` in headers; schema 0.24.0;
+the open-transition convention is chosen on validation): fix the
 search's cost-table fit failures (`segment/search.py` warm starts; check monotonicity on the
 validation tables), bind the segmenter's code commit in segmentation headers (the digest binds
 parameters only), fix one open-transition hand-over convention (the main lever: C recovers 0.66 of the gap on

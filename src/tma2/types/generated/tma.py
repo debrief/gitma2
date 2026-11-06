@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.23.0"
+version = "0.24.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -417,6 +417,24 @@ class SegmentMode(str, Enum):
     chord = "chord"
     """
     Knots at both ends; bearings kept; the speed prior across course-only transitions.
+    """
+
+
+class OpenHandover(str, Enum):
+    """
+    How a transition still open at the scored row k is handed to the physics layer (Gate S panel round 2: one convention for the oracle and the segmenters, fixed before Gate 2).
+    """
+    knot_at_k = "knot_at_k"
+    """
+    Spec 005's: knots at s and at k; in gap mode rows s … k − 1 excluded; the speed prior at k.
+    """
+    start_masked = "start_masked"
+    """
+    A knot at s only; rows s … k excluded (the oracle's mask_turns convention).
+    """
+    start_chord = "start_chord"
+    """
+    A knot at s only; the bearings kept (the oracle's default for a span in progress).
     """
 
 
@@ -1872,6 +1890,7 @@ class SegmentParameters(ConfiguredBaseModel):
     search_step_rows: int = Field(default=..., description="""The search's grid step.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
     search_horizon_rows: int = Field(default=..., description="""A search transition is tested on the prefix this many rows after its end.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
     polish_rows: int = Field(default=..., description="""Each accepted boundary is re-optimised within ± this many rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
+    open_handover: Optional[OpenHandover] = Field(default=None, description="""How a transition open at k is handed over; absent means knot_at_k (spec 005). Absent fields are left out of the parameter digest.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentParameters']} })
 
 
 class SegmentationHeader(ConfiguredBaseModel):
@@ -1917,6 +1936,7 @@ class SegmentationHeader(ConfiguredBaseModel):
                        'ModelManifest',
                        'JobRecord',
                        'SegmentationHeader']} })
+    code_sha256: Optional[str] = Field(default=None, description="""Digest of the segmenter's source files (segment.codeid), so a gate can refuse segmentations made by other code (Gate S panel round 2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentationHeader']} })
 
 
 class Segmentation(ConfiguredBaseModel):

@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.23.0
+version: 0.24.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -211,6 +211,14 @@ enums:
     permissible_values:
       gap: { description: "Knots at both ends of each transition; its bearings excluded." }
       chord: { description: "Knots at both ends; bearings kept; the speed prior across course-only transitions." }
+  OpenHandover:
+    description: >-
+      How a transition still open at the scored row k is handed to the physics layer (Gate S
+      panel round 2: one convention for the oracle and the segmenters, fixed before Gate 2).
+    permissible_values:
+      knot_at_k: { description: "Spec 005's: knots at s and at k; in gap mode rows s … k − 1 excluded; the speed prior at k." }
+      start_masked: { description: "A knot at s only; rows s … k excluded (the oracle's mask_turns convention)." }
+      start_chord: { description: "A knot at s only; the bearings kept (the oracle's default for a span in progress)." }
 classes:
   FloatRange:
     description: Closed interval [min, max].
@@ -1586,6 +1594,7 @@ classes:
       search_step_rows: { range: integer, required: true, description: "The search's grid step." }
       search_horizon_rows: { range: integer, required: true, description: "A search transition is tested on the prefix this many rows after its end." }
       polish_rows: { range: integer, required: true, description: "Each accepted boundary is re-optimised within ± this many rows." }
+      open_handover: { range: OpenHandover, description: "How a transition open at k is handed over; absent means knot_at_k (spec 005). Absent fields are left out of the parameter digest." }
 
   SegmentationHeader:
     description: First record of a tma2-segment file.
@@ -1598,6 +1607,7 @@ classes:
       parameters: { range: SegmentParameters, required: true }
       git_commit: { range: string, required: true }
       git_dirty: { range: boolean, required: true }
+      code_sha256: { range: string, description: "Digest of the segmenter's source files (segment.codeid), so a gate can refuse segmentations made by other code (Gate S panel round 2)." }
 
   Segmentation:
     description: >-

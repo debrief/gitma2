@@ -86,13 +86,29 @@ nominations are checked for overlap, so a second transition can be accepted insi
 eventual span, and the close picks its length without an overlap check: the two then merge into
 one interval (21 of C's 1,148 open test intervals are older than the 35-row close; one reaches 60
 rows). Polish checks only T_min, so polished transitions reach 42 rows. Rare, the same for C and
-L, and fixed with the search defect before Gate 2.
+L. *Fixed after Gate S:* an open transition now reserves its longest span, [s, s + l_max − 1];
+the close takes only lengths that keep clear of other transitions; polish keeps a transition
+within T_min … l_max rows (`test_segment_c_fixes.py`).
 
 **Known defect (Gate S panel round 1).** The search's cost table warm-starts each leg's fit from
 the shorter leg's and takes a fresh grid start only every fourth step, so some entries are failed
 fits: a longer leg costs less than a nested shorter one (by more than 100 χ² for 3,191 pairs in
-500 validation scenarios). It weakens the search nominator for C and L alike, and is fixed before
-Gate 2.
+500 validation scenarios). It weakens the search nominator for C and L alike. *Fixed after Gate S:* a
+warm-started fit whose cost jumps by more than 9 χ² per added bearing plus 30 is re-tried from a
+grid start, and a backward pass re-fits each shorter leg from its longer extension's solution
+where the order is broken, keeping the lower cost. On 40 validation scenarios the order
+violations above 1 χ² fell from 991 to 0 and 7,335 entries came down; 67 in 36,000 rose (by up
+to 40 χ²: the changed warm-start chain found a worse local minimum); the tables take about 1.6
+times as long.
+
+**Open-transition hand-over.** A parameter since Gate S (`open_handover`): `knot_at_k` (spec
+005's), `start_masked` (a start knot, the bearings from s to k excluded) or `start_chord` (a start
+knot, the bearings kept). It is chosen on validation before Gate 2. Absent optional parameters are
+left out of the parameter digest, so Gate S's digests are unchanged.
+
+**Code identity.** Each segmentation header records `code_sha256`, a digest of the source files
+`tma2-segment` runs (`segment/codeid.py`), so a gate can refuse segmentations made by other
+code.
 
 **Reproducing a segmentation.** The physics-layer solves are batched 16 scenarios at a time and
 padded to the longest; the padding changes the last bits of the costs, which can flip a

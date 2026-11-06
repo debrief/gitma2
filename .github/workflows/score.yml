@@ -90,6 +90,7 @@ jobs:
           out = ['--start', str(p['start']), '--count', str(p['count']), '--imm', p['imm']]
           out += ['--segmentations'] + [f'{n}=$RUNNER_TEMP/in/{n}.ndjson' for n in p['segmentations']]
           if p.get('modes'): out += ['--modes'] + p['modes']
+          if p.get('open_handovers'): out += ['--open-handovers'] + p['open_handovers']
           if p.get('ekf'): out += ['--ekf', p['ekf']]
           if p.get('detectability'): out += ['--detectability']
           if p.get('glr_confirm'): out += ['--glr-confirm', '$GLR:' + p['glr_confirm']['config']]

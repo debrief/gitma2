@@ -2333,6 +2333,16 @@
             "title": "Observation",
             "type": "object"
         },
+        "OpenHandover": {
+            "description": "How a transition still open at the scored row k is handed to the physics layer (Gate S panel round 2: one convention for the oracle and the segmenters, fixed before Gate 2).",
+            "enum": [
+                "knot_at_k",
+                "start_masked",
+                "start_chord"
+            ],
+            "title": "OpenHandover",
+            "type": "string"
+        },
         "OscillationRanges": {
             "additionalProperties": false,
             "description": "Autopilot oscillation (generator 0.6.0): a sinusoidal course error with amplitude and period drawn uniformly from these ranges and a uniform phase.",
@@ -3576,6 +3586,17 @@
                     "description": "GLR nominator's held-leg false-alarm fraction.",
                     "type": "number"
                 },
+                "open_handover": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/OpenHandover"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "How a transition open at k is handed over; absent means knot_at_k (spec 005). Absent fields are left out of the parameter digest."
+                },
                 "polish_rows": {
                     "description": "Each accepted boundary is re-optimised within \u00b1 this many rows.",
                     "type": "integer"
@@ -3706,6 +3727,13 @@
             "additionalProperties": false,
             "description": "First record of a tma2-segment file.",
             "properties": {
+                "code_sha256": {
+                    "description": "Digest of the segmenter's source files (segment.codeid), so a gate can refuse segmentations made by other code (Gate S panel round 2).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "dataset_digest": {
                     "description": "SHA-256 of the truth file.",
                     "type": "string"
@@ -4201,6 +4229,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.23.0"
+    "version": "0.24.0"
 }
 

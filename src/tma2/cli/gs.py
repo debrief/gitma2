@@ -78,6 +78,10 @@ def _gate_preflight(a: argparse.Namespace) -> dict[str, Any] | None:
         errs.append("gate mode needs --decision, --plan and --split")
     if a.modes:
         errs.append("gate mode scores the decision's mode: no --modes")
+    if a.open_handovers:
+        errs.append(
+            "gate mode scores the decision's open-transition hand-over: no --open-handovers"
+        )
     if not a.glr_confirm:
         errs.append("gate mode needs --glr-confirm (S2's reference)")
     if errs:
@@ -253,7 +257,11 @@ def _gate(
         "truth": a.truth,
         "truth_sha256": gi["truth_sha256"],
         "segmentations": {
-            n: {"segmenter_sha256": h.get("segmenter_sha256"), "git_commit": h.get("git_commit")}
+            n: {
+                "segmenter_sha256": h.get("segmenter_sha256"),
+                "git_commit": h.get("git_commit"),
+                "code_sha256": h.get("code_sha256"),
+            }
             for n, h in gi["headers"].items()
         },
         "carried": gi["carried"],
@@ -282,7 +290,7 @@ def main(argv: list[str] | None = None) -> int:
     from tma2.references.classical import bearing_data_from_arrays
     from tma2.segment import TRANSITION, default_parameters
     from tma2.segment import score as sc
-    from tma2.segment.inputs import segmentation_inputs
+    from tma2.segment.inputs import handover_of, segmentation_inputs
     from tma2.segment.metrics import gap_recovered
     from tma2.types.generated.tma import SegmentParameters
 
@@ -297,6 +305,13 @@ def main(argv: list[str] | None = None) -> int:
         choices=["gap", "chord"],
         help="score each segmentation in these hand-over modes (NAME-gap, NAME-chord) instead "
         "of the mode its header names",
+    )
+    ap.add_argument(
+        "--open-handovers",
+        nargs="*",
+        choices=["knot_at_k", "start_masked", "start_chord"],
+        help="score each segmentation with these hand-overs of a transition open at k "
+        "(NAME[-mode]-<handover>) instead of its header's (Gate S panel round 2)",
     )
     ap.add_argument("--glr-confirm", metavar="WORK:CONFIG")
     ap.add_argument(
@@ -377,6 +392,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"detectability [{time.time() - t0:.0f} s]", flush=True)
     params: dict[str, SegmentParameters] = {}
     seg_ivs: dict[str, dict[tuple[int, int], list[tuple[int, int]]]] = {}
+    open_at: dict[str, np.ndarray] = {}  # rows whose last interval is a transition open at k
     for spec in a.segmentations:
         name, _, path = spec.partition("=")
         header, segs = read_segmentations(path)
@@ -392,14 +408,25 @@ def main(argv: list[str] | None = None) -> int:
             for key, ivs in segs.items()
         }
         # each requested hand-over mode is scored as its own segmenter (R3, FR-031)
+        own_ho = handover_of(p)
         for mode in a.modes or [str(p.mode)]:
-            nm = name if not a.modes else f"{name}-{mode}"
-            params[nm] = p.model_copy(update={"mode": mode})
-            errs[nm] = sc.layer_errors(
-                layer, rows, data, metas, truths, sc.from_segmentations(segs, mode)
-            )
-            seg_ivs[nm] = trs
-            print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
+            for ho in a.open_handovers or [own_ho]:
+                nm = name if not a.modes else f"{name}-{mode}"
+                nm = nm if not a.open_handovers else f"{nm}-{ho}"
+                params[nm] = p.model_copy(update={"mode": mode, "open_handover": ho})
+                errs[nm] = sc.layer_errors(
+                    layer, rows, data, metas, truths, sc.from_segmentations(segs, mode, True, ho)
+                )
+                seg_ivs[nm] = trs
+                open_at[nm] = np.array(
+                    [
+                        bool(segs[(r.ordinal, r.k)])
+                        and segs[(r.ordinal, r.k)][-1].kind == TRANSITION
+                        and bool(segs[(r.ordinal, r.k)][-1].open)
+                        for r in rows
+                    ]
+                )
+                print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
         acc = sc.load_confirmed(work, cfg)
@@ -552,6 +579,20 @@ def main(argv: list[str] | None = None) -> int:
                         "changes": len(v),
                     }
                     for b_, v in sorted(by.items())
+                }
+        if name in open_at:
+            rec["by_open_at_k"] = {}
+            for flag, mask in (("open", open_at[name]), ("not_open", ~open_at[name])):
+                if not mask.any():
+                    continue
+                one = _q(errs["one_leg"][mask, 0], 0.5)
+                ora = _q(errs["oracle"][mask, 0], 0.5)
+                med = _q(e[mask, 0], 0.5)
+                rec["by_open_at_k"][flag] = {
+                    "rows": int(mask.sum()),
+                    "range_median": med,
+                    "gross_rate": float(np.mean(~(e[mask, 0] <= 0.5))),
+                    "gap_recovered_range": gap_recovered(one, med, ora),
                 }
         if det is not None:
             rec["by_row_band"] = {}

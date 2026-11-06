@@ -176,14 +176,31 @@ def oracle(_j: int, m: dict[str, Any], d: BearingData, k: int) -> LayerInputs | 
 
 
 def from_segmentations(
-    segs: dict[tuple[int, int], list[Interval]], mode: str, speed_prior: bool = True
+    segs: dict[tuple[int, int], list[Interval]],
+    mode: str,
+    speed_prior: bool = True,
+    open_handover: str | None = None,
 ) -> MakeInputs:
     def make(j: int, _m: dict[str, Any], d: BearingData, k: int) -> LayerInputs | None:
         ivs = segs.get((j, k))
         if ivs is None:
             return None
         trs = [(iv.start, iv.end) for iv in ivs if iv.kind == TRANSITION]
-        return segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, trs, mode, speed_prior)
+        open_last = bool(ivs) and ivs[-1].kind == TRANSITION and bool(ivs[-1].open)
+        return segmentation_inputs(
+            d.t,
+            d.ox,
+            d.oy,
+            d.z,
+            d.valid,
+            k,
+            trs,
+            mode,
+            speed_prior,
+            None,
+            open_last,
+            open_handover,
+        )
 
     return make
 

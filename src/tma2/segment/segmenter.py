@@ -31,7 +31,7 @@ from tma2.types.generated.tma import SegmentParameters
 
 from . import STEADY, TRANSITION, UNKNOWN, Interval, from_codes, validate
 from .confirm import Confirmed, Nomination, confirm, glr_nominations, search_nominations
-from .inputs import segmentation_inputs
+from .inputs import handover_of, segmentation_inputs
 from .search import anchored_grid, cost_table, run_search
 
 
@@ -154,7 +154,21 @@ def segment(
             trs = [(iv.start, iv.end) for iv in ivs if iv.kind == TRANSITION]
             scores = [x.score for x in conf.transitions if x.accepted_at <= k]
             out.append(PrefixSegmentation(k, ivs, math.nan, min(scores) if scores else None))
-            inp = segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, trs, p.mode, True)
+            open_last = bool(ivs) and ivs[-1].kind == TRANSITION and bool(ivs[-1].open)
+            inp = segmentation_inputs(
+                d.t,
+                d.ox,
+                d.oy,
+                d.z,
+                d.valid,
+                k,
+                trs,
+                p.mode,
+                True,
+                None,
+                open_last,
+                handover_of(p),
+            )
             if inp is not None:
                 items.append((d, k, inp))
                 owners.append((i, len(out) - 1))

@@ -149,10 +149,12 @@ def _in_use(acc: list[Transition], a: int) -> list[tuple[int, int]]:
     return out
 
 
-def _free(c: int, e: int, acc: list[Transition], gap: int) -> bool:
-    """[c, e] keeps ``gap`` rows clear of every accepted transition."""
+def _free(c: int, e: int, acc: list[Transition], gap: int, l_max: int) -> bool:
+    """[c, e] keeps ``gap`` rows clear of every accepted transition. An open transition reserves
+    its longest possible span, [start, start + l_max − 1], because its close may choose any length
+    (Gate S panel round 2: reserving only [start, start + 1] let transitions overlap)."""
     for x in acc:
-        xe = x.end if x.end is not None else x.start + 1
+        xe = x.end if x.end is not None else x.start + l_max - 1
         if c <= xe + gap and e >= x.start - gap:
             return False
     return True
@@ -194,9 +196,9 @@ def _confirm_one(
                 if dd == 0:
                     continue
                 cs, ce = (c + dd, e) if which == "start" else (c, e + dd)
-                if cs < 1 or ce > a or ce - cs + 1 < p.t_min_rows:
+                if cs < 1 or ce > a or not p.t_min_rows <= ce - cs + 1 <= l_max:
                     continue
-                if not _free(cs, ce, [x for x in acc if x.start != c], gap):
+                if not _free(cs, ce, [x for x in acc if x.start != c], gap, l_max):
                     continue
                 cands.append((cs, ce))
             if not cands:
@@ -215,7 +217,14 @@ def _confirm_one(
         if nom.source == "close":
             x = next(t for t in acc if t.start == nom.lo and t.end is None)
             others = [t for t in _in_use(acc, a) if t[0] != x.start]
-            lens = [ln for ln in lengths if x.start + ln - 1 <= a]
+            rest_acc = [t for t in acc if t is not x]
+            lens = [
+                ln
+                for ln in lengths
+                if x.start + ln - 1 <= a and _free(x.start, x.start + ln - 1, rest_acc, gap, l_max)
+            ]
+            if not lens:  # every length now overlaps a later transition: keep the shortest
+                lens = [lengths[0]]
             costs = yield [(a, [*others, (x.start, x.start + ln - 1)]) for ln in lens]
             res.solves += len(lens)
             j = int(np.argmin(costs))
@@ -226,7 +235,7 @@ def _confirm_one(
         starts = [
             c
             for c in range(nom.lo, nom.hi + 1, gap)
-            if c >= 1 and _free(c, c + l_mid - 1, acc, gap)
+            if c >= 1 and _free(c, c + l_mid - 1, acc, gap, l_max)
         ]
         if not starts:
             continue
@@ -236,7 +245,7 @@ def _confirm_one(
         sc = [base - costs[1 + q] - thr(c, l_mid, a) for q, c in enumerate(starts)]
         q = int(np.argmax(sc))
         c = starts[q]
-        rest = [ln for ln in lengths if ln != l_mid and _free(c, c + ln - 1, acc, gap)]
+        rest = [ln for ln in lengths if ln != l_mid and _free(c, c + ln - 1, acc, gap, l_max)]
         best_len, best_score, best_cost = l_mid, sc[q], costs[1 + q]
         if rest:
             costs2 = yield [(a, [*cur, (c, c + ln - 1)]) for ln in rest]
