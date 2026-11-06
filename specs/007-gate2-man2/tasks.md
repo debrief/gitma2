@@ -51,10 +51,10 @@ of more than a few minutes (AGENTS.md).
 - [x] T005 [P] Create the package skeleton `src/tma2/gate2/__init__.py` with module docstrings for
   `model.py`, `inputs.py`, `tables.py`, `loss.py`, `train.py`, `predict.py` and `gate.py` (plan,
   Source Code). — done: `src/tma2/gate2/__init__.py`; modules added as each task implements them
-- [ ] T006 Implement `src/tma2/gate2/inputs.py`: per-prefix physics inputs from a C segmentation,
+- [x] T006 Implement `src/tma2/gate2/inputs.py`: per-prefix physics inputs from a C segmentation,
   using `segment.inputs.segmentation_inputs` with the chosen `open_handover`. Learned
   log-weights are added to C's hand-over mask. Also C's per-row code channel at prefix k,
-  computed causally.
+  computed causally. — done: `gate2/inputs.py` (`prefix_inputs`, `code_channel`), `tests/unit/test_gate2_inputs.py`
 
 ## Phase 3: User Story 1, a classical control that is fixed before learning starts (P1)
 
@@ -63,11 +63,11 @@ of more than a few minutes (AGENTS.md).
 **Independent Test**: the gate refuses a segmentation whose `segmenter_sha256` or `code_sha256`
 differs from the decision's.
 
-- [ ] T007 [US1] Write the test first (`tests/unit/test_gate2_refusals.py`): `tma2.gate2.gate`'s
+- [x] T007 [US1] Write the test first (`tests/unit/test_gate2_refusals.py`): `tma2.gate2.gate`'s
   input check refuses a segmentation header with another parameter digest, another code digest,
-  another dataset digest or `git_dirty: true`.
-- [ ] T008 [US1] Implement the input checks in `src/tma2/gate2/gate.py` (as
-  `segment/gate.py: check_inputs`, adding `code_sha256` and `weights_sha256` for E).
+  another dataset digest or `git_dirty: true`. — done: `tests/unit/test_gate2_refusals.py`
+- [x] T008 [US1] Implement the input checks in `src/tma2/gate2/gate.py` (as
+  `segment/gate.py: check_inputs`, adding `code_sha256` and `weights_sha256` for E). — done: `gate2/gate.py` (`check_segmentation`, `check_prediction`, `RefusedError`)
 - [ ] T009 [US1] **(CI)** Segment the training stream with C at the frozen code:
   - generate seed 318 (`--count 12500`, MAN2 ranges) at a clean commit;
   - commit its digests to `experiments/<date>-g2-stream/seed318-digests.json`;
