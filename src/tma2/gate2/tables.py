@@ -19,7 +19,9 @@ decisions is ignored (exact for isolated changes; research R2).
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -112,12 +114,21 @@ def normalised_errors(
     return torch.where(ok, sq, torch.full_like(sq, cap))
 
 
+def c_confirmations(
+    layer: PhysicsLayer, data: list[BearingData], anchors: list[int], p: SegmentParameters
+) -> list[Confirmed]:
+    """C's confirmations with their decisions, scenarios batched and padded to the longest as
+    ``segmenter.segment`` (so a chunk equal to a segmentation run's chunk reproduces it).
+    ``anchors``: each scenario's first scored row, the search grid's anchor."""
+    noms = [nominations_for(d, a, p) for d, a in zip(data, anchors, strict=True)]
+    return confirm(layer, data, noms, p, max(d.n for d in data))
+
+
 def c_confirmation(
     layer: PhysicsLayer, d: BearingData, anchor: int, p: SegmentParameters
 ) -> Confirmed:
-    """C's confirmation of one scenario, with its decisions (``anchor``: C's first scored row,
-    the search grid's anchor as ``segmenter.segment``)."""
-    return confirm(layer, [d], [nominations_for(d, anchor, p)], p, d.n)[0]
+    """``c_confirmations`` of one scenario."""
+    return c_confirmations(layer, [d], [anchor], p)[0]
 
 
 def in_band(dd: Decision, tau: float) -> bool:
@@ -137,6 +148,8 @@ def scenario_table(
     mode: str,
     open_handover: str | None,
     cap: float = 100.0,
+    r_max: int | None = None,
+    batch: int = 64,
 ) -> ScenarioTable:
     """C's decisions on one scenario (``c_confirmation``) with the errors with and without each
     in-band decision, at rows ``ks``. Out-of-band decisions get no rows: they are C's under any
@@ -164,11 +177,12 @@ def scenario_table(
         if inp is not None:
             items.append((i, (d, k, inp)))
     errs = [cap] * len(jobs)
-    if items:
-        f64 = torch.float64
-        ks_ = [k for _, (_, k, _) in items]
+    f64 = torch.float64
+    for b0 in range(0, len(items), batch):
+        part = items[b0 : b0 + batch]
+        ks_ = [k for _, (_, k, _) in part]
         with torch.no_grad():
-            out = layer(inputs_for([it for _, it in items], d.n))
+            out = layer(inputs_for([it for _, it in part], r_max or d.n))
             sq = normalised_errors(
                 out,
                 torch.tensor(np.stack([truth[k] for k in ks_]), dtype=f64),
@@ -178,7 +192,7 @@ def scenario_table(
                 torch.tensor([int(d.valid[: k + 1].sum()) for k in ks_]),
                 cap,
             )
-        for n, (i, _) in enumerate(items):
+        for n, (i, _) in enumerate(part):
             errs[i] = float(sq[n])
     c_error = {k: errs[i] for i, k in enumerate(ks)}
     rows: list[DecisionRow] = []
@@ -189,6 +203,49 @@ def scenario_table(
         else:
             rows.append(DecisionRow(q, k, extra, c_error[k]))
     return ScenarioTable(conf.decisions, rows, c_error, p.tau)
+
+
+def save_tables(path: str | Path, tables: dict[int, ScenarioTable], header: dict[str, Any]) -> None:
+    """One npz: per ordinal, the decisions ([D, 6]: row, start, length, drop, threshold,
+    accepted), their sources, the decision rows ([R, 4]: decision, k, e_with, e_without) and C's
+    errors ([K, 2]: k, error)."""
+    arrays: dict[str, Any] = {"header": np.array(json.dumps(header, sort_keys=True))}
+    for j, t in sorted(tables.items()):
+        arrays[f"{j}/decisions"] = np.array(
+            [
+                [x.row, x.start, x.length, x.drop, x.threshold, float(x.accepted)]
+                for x in t.decisions
+            ],
+            dtype=np.float64,
+        ).reshape(-1, 6)
+        arrays[f"{j}/sources"] = np.array([x.source for x in t.decisions], dtype="U16")
+        arrays[f"{j}/rows"] = np.array(
+            [[r.decision, r.k, r.e_with, r.e_without] for r in t.rows], dtype=np.float64
+        ).reshape(-1, 4)
+        arrays[f"{j}/c_error"] = np.array(sorted(t.c_error.items()), dtype=np.float64).reshape(
+            -1, 2
+        )
+        arrays[f"{j}/tau"] = np.array(t.tau)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(path, **arrays)
+
+
+def load_tables(path: str | Path) -> tuple[dict[str, Any], dict[int, ScenarioTable]]:
+    z = np.load(path)
+    header = json.loads(str(z["header"]))
+    ords = sorted({int(k.split("/")[0]) for k in z.files if "/" in k})
+    out: dict[int, ScenarioTable] = {}
+    for j in ords:
+        dec = z[f"{j}/decisions"]
+        src = z[f"{j}/sources"]
+        decisions = [
+            Decision(int(r[0]), int(r[1]), int(r[2]), str(s_), float(r[3]), float(r[4]), bool(r[5]))
+            for r, s_ in zip(dec, src, strict=True)
+        ]
+        rows = [DecisionRow(int(r[0]), int(r[1]), float(r[2]), float(r[3])) for r in z[f"{j}/rows"]]
+        c_error = {int(r[0]): float(r[1]) for r in z[f"{j}/c_error"]}
+        out[j] = ScenarioTable(decisions, rows, c_error, float(z[f"{j}/tau"]))
+    return header, out
 
 
 def relaxed_loss(

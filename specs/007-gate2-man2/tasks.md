@@ -90,11 +90,13 @@ differs from the decision's.
 - [x] T011 [P] [US2] `tests/unit/test_gate2_causal.py`: E's output at row k is unchanged when the
   scenario is cut to rows 0…k (arrays truncated, not masked), on a fixture scenario with an open
   transition at k. — done: `tests/unit/test_gate2_causal.py` (random heads, a transition open at k: state identical with the arrays cut at k)
-- [ ] T012 [P] [US2] `tests/unit/test_gate2_tables.py`:
+- [x] T012 [P] [US2] `tests/unit/test_gate2_tables.py`:
   - for a decision C accepted, the table's "with" error equals the error of C's own segmentation
     at those rows;
   - for a rejected decision, the "without" error equals it;
   - the relaxed loss at evidence 0 and T → 0 equals C's error.
+  - Done: also the round trip and the refusals. Only decisions within τ/2 of their threshold get
+    rows (the shift cap means no evidence can flip the others; their rows are constants).
 
 ### E-w
 
@@ -122,7 +124,7 @@ differs from the decision's.
 
 ### E-s
 
-- [ ] T017 [US2] Implement `src/tma2/gate2/tables.py` and `src/tma2/cli/dtables.py`
+- [x] T017 [US2] Implement `src/tma2/gate2/tables.py` and `src/tma2/cli/dtables.py`
   (`tma2-dtables`, contracts/cli.md):
   - re-run C's confirmation per scenario and record each decision (row a, start, length, source,
     drop Δ, threshold τ′, affected scored rows);
@@ -130,9 +132,14 @@ differs from the decision's.
     decisions fixed;
   - write npz with `DecisionTableHeader`;
   - refuse segmentations with other digests.
+  - Done: C runs in `tma2-segment`'s chunks (16, padded to the longest), so a shard equal to
+    the segmentation run's reproduces it; `c_mismatch_rows` in the header records any difference.
+    It also refuses a checkout whose code digest is not the plan's C.
 - [ ] T018 [US2] **(CI)** Build decision tables for the stream (`segment.yml`-style workflow
   `.github/workflows/dtables.yml`, `dtables/<plan>`) and for validation ordinals 0–499 and
   500–1499.
+  - Workflow written (`configs/dtables/<name>.json`: `segmentation` {plan, branch, path},
+    `gate2_plan`; shards from the segmentation plan). Runs once C's code and the plan are final.
 - [ ] T019 [US2] Implement E-s in `src/tma2/gate2/model.py` and `train.py`:
   - the evidence network as spec 005's (zero head), on features plus the C code channel;
   - the relaxed acceptance p = σ((Δ − τ′ + 2Σe)/T), Σe over the candidate's rows capped at ±τ/2;

@@ -103,3 +103,33 @@ def test_relaxed_loss_at_zero_evidence_is_c(case) -> None:  # type: ignore[no-un
     warm = relaxed_loss(tab, zero, temperature=1.0)
     warm.backward()  # type: ignore[no-untyped-call]
     assert zero.grad is not None and torch.isfinite(zero.grad).all()
+
+
+def test_tables_round_trip(case, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
+    from tma2.gate2.tables import load_tables, save_tables
+
+    _conf, _d, _p, tab = case
+    save_tables(tmp_path / "t.npz", {2: tab}, {"plan_sha256": "x"})
+    h, got = load_tables(tmp_path / "t.npz")
+    assert h["plan_sha256"] == "x"
+    assert got[2].decisions == tab.decisions
+    assert got[2].rows == tab.rows and got[2].c_error == tab.c_error and got[2].tau == tab.tau
+
+
+def test_dtables_refuses_other_c(tmp_path: Path) -> None:
+    from tma2.cli.dtables import main
+    from tma2.segment.codeid import code_digest
+
+    seg = tmp_path / "c.ndjson"
+    seg.write_text(json.dumps({"segmenter_sha256": "a", "code_sha256": code_digest()}) + "\n")
+    plan = tmp_path / "plan.json"
+    plan.write_text(
+        json.dumps({"c": {"parameters_sha256": "b", "code_sha256": code_digest(), "mode": "gap"}})
+    )
+    args = ["--in", "x", "--segmentations", str(seg), "--plan", str(plan)]
+    assert main([*args, "--start", "0", "--count", "1", "--out", str(tmp_path / "t.npz")]) == 2
+    plan.write_text(
+        json.dumps({"c": {"parameters_sha256": "a", "code_sha256": "z", "mode": "gap"}})
+    )
+    assert main([*args, "--start", "0", "--count", "1", "--out", str(tmp_path / "t.npz")]) == 2
+    assert not (tmp_path / "t.npz").exists()
