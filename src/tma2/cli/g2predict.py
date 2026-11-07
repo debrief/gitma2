@@ -5,7 +5,9 @@
         --start S --count N --out <pred.ndjson> [--workers 4]
 
 ``--model`` names a plan model; its ``kind`` (``e``: E-s then E-w; ``ew``: E-w alone; ``es``:
-E-s alone, the physics layer on its segmentation) says which weights it needs. Untrained weights
+E-s alone, the physics layer on its segmentation; ``veto``: the classical control C′, C with
+candidates at the ownship zig ± ``window`` rows vetoed, then E-w if the model names one in
+``ew``) says which weights it needs. Untrained weights
 reproduce C. The header is an ``EPredictionHeader`` with the prediction file's ``estimator`` and
 ``mode``; ``weights_sha256`` is the SHA-256 of the weights files' digests joined by ``+`` in the
 order E-s, E-w (each also recorded alone).
@@ -34,7 +36,7 @@ def _task(args: tuple[Any, ...]) -> list[tuple[int, dict[str, Any], list[dict[st
 
     from tma2.gate2.es import ESSettings, make_net
     from tma2.gate2.model import EWeights
-    from tma2.gate2.predict import e_rows, es_segmentations
+    from tma2.gate2.predict import e_rows, es_segmentations, veto_segmentations
     from tma2.references.classical import bearing_data_from_arrays
     from tma2.segment.evidence import CHANNELS
     from tma2.segment.score import g5_rows, iter_selected
@@ -58,7 +60,10 @@ def _task(args: tuple[Any, ...]) -> list[tuple[int, dict[str, Any], list[dict[st
         return []
     from safetensors.torch import load_file
 
-    if es:
+    veto = plan["models"][model_id].get("kind") == "veto"
+    if veto:
+        sg = veto_segmentations(data, rows, p, int(plan["models"][model_id]["window"]))
+    elif es:
         net = make_net(ESSettings(**plan["es"]), CHANNELS)
         net.load_state_dict(load_file(es))
         net.eval()
@@ -110,7 +115,12 @@ def main(argv: list[str] | None = None) -> int:
         bad.append(f"{a.model} is not a plan model")
     else:
         kind = m.get("kind", "e")
-        need = {"e": ("es", "ew"), "ew": ("ew",), "es": ("es",)}[kind]
+        need = {
+            "e": ("es", "ew"),
+            "ew": ("ew",),
+            "es": ("es",),
+            "veto": ("ew",) if m.get("ew") else (),
+        }[kind]
         for w in ("es", "ew"):
             given = getattr(a, f"{w}_weights") is not None
             if given != (w in need):

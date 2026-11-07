@@ -7,7 +7,8 @@ name: E predictions (Gate 2)
 #   gate2_plan      the Gate 2 plan (C's digests, encoder, es, models and their kinds)
 #   segmentations   {branch, path}: C's segmentation of these ordinals
 #   training        {branch, dir}: a g2train results branch with <model>/best.safetensors
-#   models          plan model ids; kind "e" takes its {es, ew} components' weights
+#   models          plan model ids; kind "e" takes its {es, ew} components' weights; kind "veto"
+#                   (the classical control C′) takes none, or its "ew" model's weights
 # Each (shard, model) job writes its predictions; the last job merges each model's shards in
 # ordinal order and pushes results/g2predict-<name>-<run id>. Nothing merges automatically.
 
@@ -65,7 +66,7 @@ jobs:
           git fetch -q origin "$TB"
           WARGS=$(python3 -c "
           import json; m = json.load(open('$G2'))['models']['${{ matrix.model }}']; k = m.get('kind', 'e')
-          parts = {'e': [('es', m.get('es')), ('ew', m.get('ew'))], 'es': [('es', '${{ matrix.model }}')], 'ew': [('ew', '${{ matrix.model }}')]}[k]
+          parts = {'e': [('es', m.get('es')), ('ew', m.get('ew'))], 'es': [('es', '${{ matrix.model }}')], 'ew': [('ew', '${{ matrix.model }}')], 'veto': [('ew', m['ew'])] if m.get('ew') else []}[k]
           print(' '.join(f'{w}:{i}' for w, i in parts))")
           ARGS=""
           for x in $WARGS; do
