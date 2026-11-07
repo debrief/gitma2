@@ -210,11 +210,13 @@ mismatches.
   - Done (`kind: "g2"`: `c`, `e`, `knots`, `gate.model`). Also `g2predict.yml`
     (`g2predict/<name>`, shards × models, results merged per model) and `g2train.yml` trains
     E-s (`kind: "es"`, decision tables from `dtables` results); `scripts/ci/regen_split.sh`.
-- [ ] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
+- [x] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
   by the owner before T026 (FR-034).
-- [ ] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as
+- [x] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as
   `Gate2Decision`, README; contracts/decision-record.md), with the forecast refined by the T016
   and T001 numbers. Commit it before any E training.
+  - Done: PR 16 merged by the owner (2026-11-07); `experiments/20261107-g2-decision/` binds
+    plan `6092c364…`.
 - [ ] T027 [US3] **(CI)** Train E (three seeds plus the shuffled control) and E-w alone (three
   seeds) with plan `configs/gate2/g2-a.json`; push `g2train/g2-a`.
 - [ ] T028 [US3] **(CI)** Validation:
