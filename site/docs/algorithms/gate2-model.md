@@ -29,8 +29,9 @@ knots at the transitions, masked transition bearings and a grid start. E-w adds 
   C's start bit for bit.
 
 The encoder is Gate 1's causal transformer ([Gate 1 model](gate1-model.md)) with one extra input
-channel: C's code at prefix k (steady 0, transition 1, unknown 0.5, and 0 after k). Rows after k
-are cut, so nothing after the prefix reaches it.
+channel: C's code at prefix k (steady 0, transition 1, unknown 0.5, and 0 after k). Inputs after
+row k are zeroed and attention is causal, and the physics layer masks rows after k, so nothing
+after the prefix reaches the estimate (tested by perturbing every later row).
 
 **Training.** The loss is the [CRB](crb.md)-normalised squared error of (log range, vx, vy) at
 the row, for each prefix:
