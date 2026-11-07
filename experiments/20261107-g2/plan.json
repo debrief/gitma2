@@ -1,0 +1,59 @@
+{
+  "description": "Spec 007 T029: Gate 2 on seed 319's test split (all 4,983 sigma = 1 deg scenarios): the carried E (e-s3) and C (code 4d2c084f, knot_at_k, 12 knots) against one leg, the oracle, the frozen IMM (gated) and EKF, GLR + confirm and naive; E-w alone (ew-s3) reported. Gate mode, split test, model e-s3.",
+  "kind": "g2",
+  "data": {
+    "seed": 319,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "4a0cc63153c8e5bedd370d39dbab2e74137f8a11",
+    "split": "test",
+    "digests": "experiments/20261107-g2-decision/seed319-digests.json"
+  },
+  "start": 0,
+  "count": 4983,
+  "c": {
+    "branch": "results/segment-g2-test-c-42399020222",
+    "path": "experiments/segment-runs/g2-test-c-42399020222/segmentations.ndjson"
+  },
+  "e": {
+    "e-s3": {
+      "branch": "results/g2predict-g2-a-test-42406326175",
+      "path": "experiments/g2predict-runs/g2-a-test-42406326175/e-s3.ndjson"
+    },
+    "ew-s3": {
+      "branch": "results/g2predict-g2-a-test-42406326175",
+      "path": "experiments/g2predict-runs/g2-a-test-42406326175/ew-s3.ndjson"
+    }
+  },
+  "knots": 12,
+  "detectability": true,
+  "glr_confirm": {
+    "branch": "results/glr-confirm-g2-test-glr-42399055842",
+    "dir": "experiments/glr-confirm-runs/g2-test-glr-42399055842",
+    "config": "glr-q0.2-t13.8"
+  },
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125",
+  "gate": {
+    "decision": "experiments/20261107-g2-decision/decision.json",
+    "plan": "configs/gate2/g2-a.json",
+    "split": "test",
+    "model": "e-s3"
+  }
+}
