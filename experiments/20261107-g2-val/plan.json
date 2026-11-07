@@ -1,0 +1,78 @@
+{
+  "description": "Spec 007 T028: E (e-s1..3, e-shuffled) and E-w alone (ew-s1..3), trained in g2train run 42352638177 and predicted in g2predict run 42385722106, with the frozen C (code 4d2c084f, knot_at_k, 12 knots) on seed 314 validation scoring ordinals 500-1499, against one leg, the oracle, GLR + confirm, the frozen IMM and EKF and naive. Gate mode, split validation: the carried-seed, shuffled and validation rules of experiments/20261107-g2-decision/.",
+  "kind": "g2",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "start": 500,
+  "count": 1000,
+  "c": {
+    "branch": "results/segment-c3-val-42268379557",
+    "path": "experiments/segment-runs/c3-val-42268379557/segmentations.ndjson"
+  },
+  "e": {
+    "e-s1": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/e-s1.ndjson"
+    },
+    "e-s2": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/e-s2.ndjson"
+    },
+    "e-s3": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/e-s3.ndjson"
+    },
+    "e-shuffled": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/e-shuffled.ndjson"
+    },
+    "ew-s1": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/ew-s1.ndjson"
+    },
+    "ew-s2": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/ew-s2.ndjson"
+    },
+    "ew-s3": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/ew-s3.ndjson"
+    }
+  },
+  "knots": 12,
+  "detectability": true,
+  "glr_confirm": {
+    "branch": "results/glr-confirm-man2-val-glr-42045836931",
+    "dir": "experiments/glr-confirm-runs/man2-val-glr-42045836931",
+    "config": "glr-q0.2-t13.8"
+  },
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125",
+  "gate": {
+    "decision": "experiments/20261107-g2-decision/decision.json",
+    "plan": "configs/gate2/g2-a.json",
+    "split": "validation"
+  }
+}

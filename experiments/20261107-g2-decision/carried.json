@@ -1,0 +1,14 @@
+{
+  "amendment": "T028: the carried E and the shuffled rule's outcome, fixed on validation before test seed 319 is generated (changes no criterion)",
+  "model": "e-s3",
+  "weights_sha256": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+  "es_weights_sha256": "2b3b9c7348874da06e6b9fb4e62f01955c1b92496bb4a5ff91cb6eb2c83d7d29",
+  "ew_weights_sha256": "58b51d10d30f5aaf56f7bfb606f35031574c4101fea3bcfed60b8d363de6883a",
+  "weights": "experiments/20261107-g2-val/models/{es-s3,ew-s3}/best.safetensors (also results/g2-g2-a-42352638177)",
+  "training_run": "42352638177 at 36bfab80983b6375f35f5df4a636b1bcdfbf1803",
+  "carried_rule": "median of e-s1..3 by validation gap recovered in range (seed 314, ordinals 500-1499, 12 knots): e-s2 0.9095, e-s3 0.9181, e-s1 0.9207; median e-s3",
+  "shuffled_rule": "pass",
+  "shuffled_rule_evidence": "e-shuffled minus C, gap recovered in range: -5e-10 [-3e-08, +2e-08] (97.5%, clustered): the interval includes zero. Both shuffled components kept their untrained weights (best epoch 0), so e-shuffled reproduces C",
+  "validation_rule": "pass (e-s3: every gated point meets its limit)",
+  "validation": "experiments/20261107-g2-val/ (score run 42392768062 at bc2593ac)"
+}
