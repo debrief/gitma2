@@ -47,13 +47,24 @@ rows (es-s1 is 0.5 better; es-s2 and es-s3 are within 0.07). Halving τ everywhe
 
 ## How it is read (fixed now)
 
-Paired, scenario-clustered bootstrap (97.5%, 2,000 resamples), gap recovered in range:
+Paired, scenario-clustered bootstrap (97.5%, 2,000 resamples, the gate's resamples), gap
+recovered in range, reported side by side:
 
-1. **C′ − C**: what the zig veto alone buys.
-2. **E − C′** (e-s3 against C′ + ew-s3, and against C′): what learning adds beyond the rule.
-   If E − C′ + E-w is wholly above zero, the learned evidence adds something beyond the zig veto.
-   If it contains zero, the write-up states that G2-d's gain is reproduced by a classical rule
-   plus E-w, and that learning beyond the rule is not shown.
+1. **C′ − C**: what the zig veto alone buys; **(C′ + ew-s3) − C** beside **e-s3 − C** and
+   **ew-s3 − C**.
+2. **E − (C′ + ew-s3)** (the carried e-s3 against C′ followed by the same E-w): what E-s's learned
+   evidence adds beyond the rule. Both arms carry the same E-w, trained on C's segmentation, so the
+   E-w mismatch is symmetric.
+   - Wholly above zero: the learned evidence adds something beyond the zig veto.
+   - Contains zero: **learning beyond the zig veto is not shown.** This is not a claim that the
+     rule reproduces E: no equivalence margin is declared, and the comparison has limited power
+     (E-s's own increment over E-w, e-s3 − ew-s3, is about +0.01).
+   - Wholly below zero: the classical rule plus E-w beats E.
+
+**Amended before any C′ result existed** (Gate 2 panel round 1, statistics reviewer, minor): the
+first version read an interval containing zero as "G2-d's gain is reproduced by a classical rule
+plus E-w" (absence of evidence as equivalence) and had no branch for an interval wholly below
+zero.
 
 The test-split reading is reported whatever it says. The gate's verdict (G2-a to G2-d) is not
 changed by it; the panel weighs it in reading G2-d.
