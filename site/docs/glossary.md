@@ -21,6 +21,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
   full window, known manoeuvres, per leg (see [CRB](algorithms/crb.md)).
 - **CUSUM** — cumulative-sum change detector: S(k) = max(0, S(k − 1) + ν(k)² − 1 − δ) on normalised innovations, an alarm while S exceeds a tuned threshold; a Gate D control (see [detector](algorithms/detector.md)).
+- **Decision table** — E-s's training data (spec 007): for each of C's confirmation decisions within τ/2 of its threshold, the bound-normalised error at every later scored row with the transition and without it, C's other decisions held; see [Gate 2 model](algorithms/gate2-model.md).
 - **Detectability** — a change's oracle cost drop: the physics layer's cost on the prefix with every true knot, against the same without this change's (χ² with 4 degrees of freedom); note 08's bands are below 13.3, 13.3–50, 50–200 and at least 200.
 - **Efficiency** — the median over a slice's rows of error ÷ that row's CRB, divided by 0.6745,
   so an unbiased estimator at the bound scores 1; a flat efficiency across geometry slices is the
@@ -66,6 +67,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Ownship** — the observing platform, whose track is known exactly.
 - **Physics layer** — see [the algorithm note](algorithms/physics-layer.md); the declared, differentiable piecewise-constant-velocity batch solve that
   produces every gitma2 estimate; with trivial inputs it equals batch least squares.
+- **Relaxed acceptance** — E-s's differentiable stand-in for C's accept rule: p = σ((Δ − τ′ − s)/T), with s the evidence's capped threshold shift and T a declared temperature; the loss weights each decision's two errors by p and 1 − p.
 - **Ridge prior** — the physics layer's prior that a new leg's velocity stays near the old one
   (√c · Δv / 3 m/s per knot), which keeps a leg a few samples old finite.
 - **Scenario** — one ownship-versus-target run: metadata, two truth tracks and a bearing series.

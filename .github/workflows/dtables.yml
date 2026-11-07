@@ -1,0 +1,127 @@
+name: Decision tables
+
+# Spec 007 T018: E-s's decision tables (tma2-dtables) over a segmentation run's ordinals, with
+# the same shards and chunks as that run, so C's re-run reproduces it (c_mismatch_rows in each
+# header says whether it did). A plan file (configs/dtables/<name>.json) names the segmentation
+# plan (data, ordinals, shards), the results branch and path of its segmentations, and the Gate 2
+# plan whose C the tables must be (tma2-dtables refuses other digests). Each shard regenerates
+# the split at its generating commit, checks its digest and writes its npz; the last job pushes
+# results/dtables-<plan>-<run id>. Nothing merges automatically.
+
+on:
+  push:
+    branches: ["dtables/**"]
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: plan file under configs/dtables/
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.p.outputs.plan }}
+      seg_plan: ${{ steps.p.outputs.seg_plan }}
+      shards: ${{ steps.p.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          if [ -n "${{ github.event.inputs.plan }}" ]; then
+            PLAN="${{ github.event.inputs.plan }}"
+          else
+            PLAN="configs/dtables/${GITHUB_REF_NAME#dtables/}.json"
+          fi
+          test -f "$PLAN"
+          SEG=$(python3 -c "import json; print(json.load(open('$PLAN'))['segmentation']['plan'])")
+          test -f "$SEG"
+          echo "plan=$PLAN" >> "$GITHUB_OUTPUT"
+          echo "seg_plan=$SEG" >> "$GITHUB_OUTPUT"
+          echo "shards=$(python3 -c "import json; n=json.load(open('$SEG'))['shards']; print(json.dumps(list(range(n))))")" >> "$GITHUB_OUTPUT"
+
+  tables:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    env:
+      PLAN: ${{ needs.plan.outputs.seg_plan }}
+      DPLAN: ${{ needs.plan.outputs.plan }}
+      DATA: ${{ github.workspace }}/../data
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Regenerate the split at its generating commit and check its digest
+        run: |
+          read -r SEED COUNT RANGES HELDOUT GEN SPLIT DIGESTS <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); d = p['data']
+          print(d['seed'], d['count'], d['ranges'], d['heldout'], d['commit'], d['split'], d['digests'])")"
+          git worktree add "$RUNNER_TEMP/gen" "$GEN"
+          (cd "$RUNNER_TEMP/gen" && uv sync && uv run tma2-generate --seed "$SEED" --count "$COUNT" \
+            --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$DATA")
+          want=$(python3 -c "import json; print(json.load(open('$DIGESTS'))['$SPLIT.f32pack'])")
+          got=$(sha256sum "$DATA/$SPLIT.f32pack" | cut -d' ' -f1)
+          echo "$SPLIT.f32pack: $got (committed $want)"
+          [ "$got" = "$want" ]
+          echo "SPLIT=$SPLIT" >> "$GITHUB_ENV"
+      - run: uv sync
+      - name: Fetch the segmentations (outside the checkout)
+        run: |
+          read -r BR P <<< "$(python3 -c "
+          import json; s = json.load(open('$DPLAN'))['segmentation']; print(s['branch'], s['path'])")"
+          git fetch -q origin "$BR"
+          git show "FETCH_HEAD:$P" > "$RUNNER_TEMP/segmentations.ndjson"
+          sha256sum "$RUNNER_TEMP/segmentations.ndjson"
+      - name: Decision tables for this shard's ordinals
+        run: |
+          read -r START COUNT G2 <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); s = ${{ matrix.shard }}
+          a, b = p['ordinals']; n = p['shards']; per = -(-(b - a) // n)
+          start = a + s * per; count = max(0, min(per, b - start))
+          print(start, count, json.load(open('$DPLAN'))['gate2_plan'])")"
+          uv run tma2-dtables --in "$DATA/$SPLIT.f32pack" --segmentations "$RUNNER_TEMP/segmentations.ndjson" \
+            --plan "$G2" --start "$START" --count "$COUNT" --out "$RUNNER_TEMP/tab/shard-${{ matrix.shard }}.npz" --workers 4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/tab/shard-${{ matrix.shard }}.npz
+
+  results:
+    needs: [plan, tables]
+    runs-on: ubuntu-latest
+    env:
+      DPLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: shards
+          merge-multiple: true
+      - name: Push the results branch
+        run: |
+          NAME=$(basename "$DPLAN" .json)
+          OUT="experiments/dtables-runs/$NAME-${{ github.run_id }}"
+          mkdir -p "$OUT"
+          cp shards/*.npz "$OUT/"
+          cp "$DPLAN" "$OUT/plan.json"
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "cpu_model": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" "$CPU" > "$OUT/run.json"
+          (cd "$OUT" && sha256sum *.npz > SHA256SUMS)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/dtables-$NAME-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: decision tables $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"

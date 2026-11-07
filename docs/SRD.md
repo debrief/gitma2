@@ -112,7 +112,7 @@ configuration; the carried weights chosen by a rule named in the decision record
 | **P0 pipeline** | Generator reproduces gitma's files; Python batch LS, EKF and IMM reproduce gitma's prediction files on the same data to float32; the physics layer with trivial inputs equals batch LS and recovers noise-free truth; the oracle ceiling on a 10^5 MAN validation split is within the interval measured in `docs/research/05` | Fix before any training |
 | **Gate 1 CV** | On a fresh CV test seed, σ = 1°, at zig + 5 min (range, course) and zig + 10 min (speed): model median within 1.1 × batch least squares on every metric with intervals wholly below, gross-error rate at or below batch LS's, and efficiency (error ÷ bound, 1 at the bound) ≤ 1.25 on the settled slices | One pre-registered iteration, then stop and publish: the physics layer is not learnable end to end as built |
 | **Gate D detector** | [Annex A](SRD-annex-A.md) §A.5 | Annex A §A.6 |
-| **Gate 2 MAN** | On a fresh MAN test seed, σ = 1°, G5 rows (zig + 5/10/15/20 min): median range and course over all rows wholly below the re-tuned IMM's; on settled rows range, course and speed within 1.1 × batch least squares; and at least half of the gap in median range between plain batch LS and the oracle ceiling recovered (interval wholly above 0.5) | The write-up proposes the follow-on with a recommended default; adopted if the owner has not objected by the next spec (`AGENTS.md`, Autonomy) |
+| **Gate 2 MAN** | On a fresh MAN test seed, σ = 1°, G5 rows (zig + 5/10/15/20 min): median range and course over all rows wholly below the re-tuned IMM's; on settled rows range, course and speed within 1.1 × batch least squares; at least half of the gap in median range between plain batch LS and the oracle ceiling recovered (interval wholly above 0.5); and (owner, 2026-11-06) more of that gap recovered than Gate S's carried classical segmenter C fed to the physics layer with no learned weights (paired difference wholly above zero; void if a shuffled-label control also beats C on validation). On MAN2 C alone meets the first three, so the last is the learning claim | The write-up proposes the follow-on with a recommended default; adopted if the owner has not objected by the next spec (`AGENTS.md`, Autonomy) |
 
 ## 6. Architecture and tooling
 
@@ -131,8 +131,10 @@ configuration; the carried weights chosen by a rule named in the decision record
    segmentation; pre-registered; three seeds.
 3. **Annex A** detector: specified, trained and gated on MAN data; its segmentation feeds the
    physics layer without end-to-end training first (Gate D).
-4. **Gate 2** on MAN: the detector and physics layer fine-tuned end to end against the re-tuned
-   IMM, batch LS and the oracle ceiling; the Gate D detector as the carried-forward control.
+4. **Gate 2** on MAN2: the learned model and physics layer trained end to end against the re-tuned
+   IMM, batch LS, the oracle ceiling and Gate S's carried segmenter C, which is the carried-forward
+   control (Annex A §A.9 supersedes the Gate D detector here). Learned segmentation is tested
+   within Gate 2 (owner, 2026-11-05); spec 007.
 5. Afterwards, pre-registered, in this default order unless the owner reorders: uncertainty
    calibration, realistic bearing error, the browser viewer on the exported artefact.
 

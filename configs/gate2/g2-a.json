@@ -1,0 +1,174 @@
+{
+  "description": "Spec 007 Gate 2 training plan (DRAFT until the decision record: results branches are filled in when C's segmentations and the decision tables exist; the c block is final). E = E-s (evidence shifting C's confirmation threshold, trained on decision tables) then E-w (per-bearing weights and start correction on C's hand-over, trained on C's segmentation); E-w alone is reported.",
+  "c": {
+    "parameters_sha256": "60e6ee635d9390e2c959b408997e39e8c30859febcb2d86f199142ea66aa425f",
+    "code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+    "mode": "gap",
+    "open_handover": "knot_at_k",
+    "parameters_from": "configs/segment/gs-plan.json"
+  },
+  "stream": {
+    "data": {
+      "seed": 318,
+      "count": 25000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "ed428a0df343da4083d145b4685a20671085e2cf",
+      "split": "train",
+      "digests": "experiments/20261106-g2-stream/seed318-digests.json"
+    },
+    "ordinals": [
+      0,
+      9930
+    ],
+    "shards": 16,
+    "segmentations": {
+      "branch": "results/segment-g2-stream-c-42268365081",
+      "path": "experiments/segment-runs/g2-stream-c-42268365081/segmentations.ndjson"
+    }
+  },
+  "validation": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ],
+    "segmentations": {
+      "branch": "results/segment-c3-val-tune-42268374366",
+      "path": "experiments/segment-runs/c3-val-tune-42268374366/segmentations.ndjson"
+    }
+  },
+  "dtables": {
+    "stream": {
+      "branch": "results/dtables-g2-stream-42295008170",
+      "dir": "experiments/dtables-runs/g2-stream-42295008170"
+    },
+    "validation": {
+      "branch": "results/dtables-g2-val-tune-42288137249",
+      "dir": "experiments/dtables-runs/g2-val-tune-42288137249"
+    }
+  },
+  "encoder": {
+    "head": "physics",
+    "causal": true,
+    "width": 64,
+    "layers": 2,
+    "heads": 4,
+    "feedforward": 128,
+    "weight_bound": 2.0,
+    "scale_bound": 2.0,
+    "iterations": 100,
+    "head_activation": "tanh",
+    "loss_init_weight": 0.1,
+    "loss_nll_weight": 0.0,
+    "nll_beta": 0.5,
+    "loss_cap": 100.0,
+    "rows_per_scenario": 4,
+    "noise_draws": 1,
+    "batch_scenarios": 32,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0,
+    "epochs": 20,
+    "patience": 3,
+    "shuffle_labels": false,
+    "threads": 4
+  },
+  "training": {
+    "learning_rate": 0.001,
+    "batch": 32,
+    "max_epochs": 12,
+    "patience": 3,
+    "min_improvement": 0.001,
+    "trim": 0.1,
+    "cap": 100.0,
+    "init_weight": 0.1,
+    "threads": 4
+  },
+  "es": {
+    "width": 32,
+    "kernel": 5,
+    "dilations": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "temperature": 1.0,
+    "learning_rate": 0.001,
+    "batch": 16,
+    "max_epochs": 20,
+    "patience": 3,
+    "min_improvement": 0.001,
+    "threads": 4
+  },
+  "models": {
+    "ew-s1": {
+      "kind": "ew",
+      "seed": 1
+    },
+    "es-s1": {
+      "kind": "es",
+      "seed": 1
+    },
+    "e-s1": {
+      "kind": "e",
+      "es": "es-s1",
+      "ew": "ew-s1",
+      "seed": 1
+    },
+    "ew-s2": {
+      "kind": "ew",
+      "seed": 2
+    },
+    "es-s2": {
+      "kind": "es",
+      "seed": 2
+    },
+    "e-s2": {
+      "kind": "e",
+      "es": "es-s2",
+      "ew": "ew-s2",
+      "seed": 2
+    },
+    "ew-s3": {
+      "kind": "ew",
+      "seed": 3
+    },
+    "es-s3": {
+      "kind": "es",
+      "seed": 3
+    },
+    "e-s3": {
+      "kind": "e",
+      "es": "es-s3",
+      "ew": "ew-s3",
+      "seed": 3
+    },
+    "ew-shuffled": {
+      "kind": "ew",
+      "seed": 4,
+      "shuffled": true
+    },
+    "es-shuffled": {
+      "kind": "es",
+      "seed": 4,
+      "shuffled": true
+    },
+    "e-shuffled": {
+      "kind": "e",
+      "es": "es-shuffled",
+      "ew": "ew-shuffled",
+      "seed": 4,
+      "shuffled": true
+    }
+  },
+  "max_wall_s": 19200
+}

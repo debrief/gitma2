@@ -27,6 +27,7 @@ from typing import Any
 import numpy as np
 
 from tma2.data.provenance import read_git_provenance
+from tma2.segment.codeid import code_digest
 from tma2.types import SCHEMA_VERSION
 from tma2.types.generated.tma import (
     RecordKind,
@@ -39,7 +40,8 @@ CHUNK = 16
 
 def params_digest(p: SegmentParameters) -> str:
     return hashlib.sha256(
-        json.dumps(p.model_dump(mode="json"), sort_keys=True).encode()
+        # absent optional fields are left out, so adding one keeps every earlier digest
+        json.dumps(p.model_dump(mode="json", exclude_none=True), sort_keys=True).encode()
     ).hexdigest()
 
 
@@ -82,7 +84,7 @@ def tune_glr(path: str, start: int, count: int, p: SegmentParameters, workers: i
     return float(h)
 
 
-def _segment_task(args: tuple[str, int, int, str, str, str, str]) -> list[dict[str, Any]]:
+def _segment_task(args: tuple[str, int, int, str, str, str, str, str]) -> list[dict[str, Any]]:
     import torch
 
     from tma2.physics.layer import PhysicsLayer
@@ -91,7 +93,7 @@ def _segment_task(args: tuple[str, int, int, str, str, str, str]) -> list[dict[s
     from tma2.segment.score import g5_rows, iter_selected
     from tma2.segment.segmenter import segment
 
-    path, start, count, params_json, rows_mode, weights, net_json = args
+    path, start, count, params_json, rows_mode, weights, net_json, extra = args
     torch.set_num_threads(1)
     torch.set_default_dtype(torch.float64)
     p = SegmentParameters.model_validate_json(params_json)
@@ -122,7 +124,12 @@ def _segment_task(args: tuple[str, int, int, str, str, str, str]) -> list[dict[s
         net.eval()
         feats = [scenario_features(d, own, p) for d, own in zip(data, owns, strict=True)]
         evidence = evidence_for(net, feats)
-    segs = segment(PhysicsLayer(), data, metas, rows, p, evidence=evidence)
+    extra_noms = None
+    if extra == "truth":
+        from tma2.segment.segmenter import truth_nominations
+
+        extra_noms = [truth_nominations(m, d.n, p) for m, d in zip(metas, data, strict=True)]
+    segs = segment(PhysicsLayer(), data, metas, rows, p, evidence=evidence, extra=extra_noms)
     out = []
     for j, m, sg in zip(ords, metas, segs, strict=True):
         for ps in sg:
@@ -166,6 +173,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--rows", choices=["g5", "last"], default="g5")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--allow-dirty", action="store_true")
+    ap.add_argument(
+        "--extra-nominations",
+        choices=["truth"],
+        help="diagnostic (spec 007 research R1): also nominate each true change start for C's "
+        "confirmation, the nominator ceiling; refused on a test split",
+    )
     a = ap.parse_args(argv)
     gp = read_git_provenance()
     commit, dirty = gp.commit, gp.dirty
@@ -201,18 +214,28 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"GLR threshold {h:.4f} at nominator_far {p.nominator_far} [{time.time() - t0:.0f} s]"
         )
+    extra = a.extra_nominations or ""
+    if extra and Path(a.inp).name.startswith("test"):
+        print(
+            "--extra-nominations is a validation diagnostic: refused on a test split",
+            file=sys.stderr,
+        )
+        return 2
     header = SegmentationHeader(
         record=RecordKind.header,
         schema_version=SCHEMA_VERSION,
-        segmenter=a.segmenter,
-        segmenter_sha256=sha if a.weights else params_digest(p),
+        segmenter=a.segmenter if not extra else f"{a.segmenter}-{extra}nom",
+        segmenter_sha256=(sha if a.weights else params_digest(p))
+        if not extra
+        else hashlib.sha256(f"{params_digest(p)}:{extra}-nominations".encode()).hexdigest(),
         dataset_digest=file_digest(a.inp),
         parameters=p,
         git_commit=commit,
         git_dirty=dirty,
+        code_sha256=code_digest(),
     )
     chunks = [
-        (a.inp, s, CHUNK, p.model_dump_json(), a.rows, a.weights or "", net_json)
+        (a.inp, s, CHUNK, p.model_dump_json(), a.rows, a.weights or "", net_json, extra)
         for s in range(a.start, a.start + min(a.count, 1 << 20), CHUNK)
         if s < a.start + a.count
     ]

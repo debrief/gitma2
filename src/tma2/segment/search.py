@@ -36,6 +36,10 @@ from tma2.references.classical import BearingData
 
 RESTART = 4
 MAX_ITER = 20
+# A warm-started fit whose cost rises by more than JUMP_PER_ROW per added valid bearing plus
+# JUMP_BASE (in χ² units) is re-tried from a fresh grid start (Gate S panel round 1, R4).
+JUMP_PER_ROW = 9.0
+JUMP_BASE = 30.0
 MIN_VALID = 6
 TRANS_COST = 1.0
 
@@ -69,15 +73,25 @@ def segment_costs(
     l_min: int,
 ) -> np.ndarray:
     """cost[i, j]: the χ² cost of one constant-velocity leg on rows grid[i] … grid[j] (inf where
-    the leg is shorter than ``l_min`` rows or has fewer than ``MIN_VALID`` valid bearings)."""
+    the leg is shorter than ``l_min`` rows or has fewer than ``MIN_VALID`` valid bearings).
+
+    A longer leg nested in a shorter one's start cannot have a lower best-fit cost, so a table
+    where cost[i, j − 1] > cost[i, j] holds a failed fit (Gate S panel round 1, R4: warm starts
+    landing in a bad minimum). Two repairs: a warm-started fit that jumps by more than
+    ``JUMP_PER_ROW`` per added bearing plus ``JUMP_BASE`` is re-tried from a grid start, and a
+    backward pass re-fits each shorter leg from the longer leg's solution where the order is
+    broken, keeping the lower cost."""
     g = grid.shape[0]
     cost = np.full((g, g), np.inf)
+    theta = np.full((g, g, 4), np.nan)
     s2 = sigma * sigma
     for i in range(g):
         a = grid[i]
         have = False
         prev = np.zeros(4)
         tprev = 0.0
+        cprev = 0.0
+        nvprev = 0
         steps = 0
         for j in range(i + 1, g):
             b = grid[j]
@@ -103,7 +117,8 @@ def segment_costs(
                 st[0] += prev[2] * (t[b] - tprev)
                 st[1] += prev[3] * (t[b] - tprev)
                 th, c = _lm(tt, oxs, oys, zs, vs, st, m)
-            if not have or steps % RESTART == 0:
+            jump = have and c > cprev + s2 * (JUMP_PER_ROW * (nv - nvprev) + JUMP_BASE)
+            if not have or steps % RESTART == 0 or jump or not math.isfinite(c):
                 found, st = lsq.grid_start(tt, oxs, oys, zs, vs, m)
                 if found:
                     th2, c2 = _lm(tt, oxs, oys, zs, vs, st, m)
@@ -112,9 +127,30 @@ def segment_costs(
             steps += 1
             if math.isfinite(c):
                 cost[i, j] = c / s2
+                theta[i, j] = th
                 prev = th
                 tprev = t[b]
+                cprev = c
+                nvprev = nv
                 have = True
+        # backward repair: a shorter leg costing more than its longer extension failed its fit
+        for j in range(g - 1, i + 1, -1):
+            if not (math.isfinite(cost[i, j]) and math.isfinite(cost[i, j - 1])):
+                continue
+            if cost[i, j - 1] <= cost[i, j]:
+                continue
+            b = grid[j - 1]
+            m = b - a + 1
+            tt = np.empty(m)
+            for r in range(m):
+                tt[r] = t[a + r] - t[b]
+            st = theta[i, j].copy()
+            st[0] -= st[2] * (t[grid[j]] - t[b])
+            st[1] -= st[3] * (t[grid[j]] - t[b])
+            th, c = _lm(tt, ox[a : b + 1], oy[a : b + 1], z[a : b + 1], valid[a : b + 1], st, m)
+            if math.isfinite(c) and c / s2 < cost[i, j - 1]:
+                cost[i, j - 1] = c / s2
+                theta[i, j - 1] = th
     return cost
 
 

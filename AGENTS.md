@@ -58,7 +58,9 @@ S4 inconclusive (L − C gap recovered +0.0012 [−0.0031, +0.0049]); C recovers
 one-leg-to-oracle gap (0.838 on the rows every estimator answers: one leg and the IMM fail on a
 quarter), GLR + confirm 0.143. Follow-on (FR-072; inconclusive counts as not
 passed): C is Gate 2's segmenter and control; learning recorded as not shown. Scoring runs on CI
-(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Before Gate 2: fix the
+(`score/**` → `.github/workflows/score.yml`, plans `configs/score/`). Before Gate 2 (C fixes done on the branch after PR 15: monotone cost tables, no overlap
+through open transitions, `open_handover` parameter, `code_sha256` in headers; schema 0.24.0;
+the open-transition convention is chosen on validation): fix the
 search's cost-table fit failures (`segment/search.py` warm starts; check monotonicity on the
 validation tables), bind the segmenter's code commit in segmentation headers (the digest binds
 parameters only), fix one open-transition hand-over convention (the main lever: C recovers 0.66 of the gap on
@@ -67,6 +69,16 @@ transitions overlapping through open ones (`_free` treats an open transition as 
 take a fresh test seed. Owner decision 2026-11-05: a learned nominator, or evidence trained
 through confirmation, is tested within Gate 2, not as a separate gate. Write-up:
 `site/blog/2026-11-05-gate-s.md`.
+007 (Gate 2 on MAN2, `specs/007-gate2-man2/`; SRD amendment G2-d in PR 16, owner merges):
+pipeline built. E = E-s (spec 005's evidence shifting C's confirmation threshold, trained on
+decision tables, `tma2-dtables`) then E-w (per-bearing weights and a start correction on C's
+hand-over, physics layer with 12 knots); `tma2-g2train {tables,train,es}`, `tma2-g2predict`,
+`tma2-g2` (tma2-gs scoring with `--predictions`, `--knots 12`). Workflows: `segment/**`,
+`dtables/**`, `g2train/**`, `g2predict/**`, `score/**` (kind `g2`). C frozen at code digest
+`4d2c084f…` (parameters `60e6ee63…`, hand-over `knot_at_k`); plan `configs/gate2/g2-a.json`
+(draft until the decision record). Nominator ceiling +0.016 (< +0.02): no learned nominator.
+Seeds: 318 training stream (train split, 9,930 at σ = 1°), 319 test (after the decision record);
+the next fresh seed is 320.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -252,3 +264,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Semi-Markov truth paths: several lattice paths can agree equally with the truth codes; take the
   lexicographic maximum on (agreement, zero-evidence score), or the CRF loss starts near 2,000
   nats from an arbitrary path (`segment/crf.py`, `truth_path`).
+- Gate 2 (spec 007): untrained E must equal C end to end. Write E's prediction rows in double:
+  float32 rows put a 1e-7 bias into G2-d's paired E − C comparison.
+- Decision tables bind a digest of the Gate 2 plan's `c` block, not the whole plan, because the
+  plan names the tables' results branch (a circular digest otherwise).
+- `tma2-dtables` and `tma2-g2predict` re-run C in `tma2-segment`'s chunks (16, padded to the
+  longest) so they reproduce its segmentation file; `c_mismatch_rows` in the tables' header
+  records any difference.
+- C's GLR nominations divide by σ: noise-free (σ = 0) data needs search-only parameters.
+- The full test suite takes about 10 minutes (C on fixture scenarios in the Gate 2 tests).

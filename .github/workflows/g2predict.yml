@@ -1,0 +1,138 @@
+name: E predictions (Gate 2)
+
+# Spec 007 T028/T029: tma2-g2predict over a split's ordinals for several trained models. Push
+# `g2predict/<name>` with configs/g2predict/<name>.json:
+#   data            the split (as segment.yml's plans), regenerated at its commit, digest checked
+#   ordinals, shards   sigma = 1 deg ordinals [a, b) and how many runners share them
+#   gate2_plan      the Gate 2 plan (C's digests, encoder, es, models and their kinds)
+#   segmentations   {branch, path}: C's segmentation of these ordinals
+#   training        {branch, dir}: a g2train results branch with <model>/best.safetensors
+#   models          plan model ids; kind "e" takes its {es, ew} components' weights
+# Each (shard, model) job writes its predictions; the last job merges each model's shards in
+# ordinal order and pushes results/g2predict-<name>-<run id>. Nothing merges automatically.
+
+on:
+  push:
+    branches: ["g2predict/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.p.outputs.plan }}
+      shards: ${{ steps.p.outputs.shards }}
+      models: ${{ steps.p.outputs.models }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          PLAN="configs/g2predict/${GITHUB_REF_NAME#g2predict/}.json"
+          test -f "$PLAN"
+          echo "plan=$PLAN" >> "$GITHUB_OUTPUT"
+          echo "shards=$(python3 -c "import json; n=json.load(open('$PLAN'))['shards']; print(json.dumps(list(range(n))))")" >> "$GITHUB_OUTPUT"
+          echo "models=$(python3 -c "import json; print(json.dumps(json.load(open('$PLAN'))['models']))")" >> "$GITHUB_OUTPUT"
+
+  predict:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Inputs (split, C's segmentation, weights; outside the checkout)
+        run: |
+          echo "SPLIT=$(scripts/ci/regen_split.sh "$PLAN" "p['data']" "$RUNNER_TEMP/data" | tail -1)" >> "$GITHUB_ENV"
+          read -r B P <<< "$(python3 -c "import json; s = json.load(open('$PLAN'))['segmentations']; print(s['branch'], s['path'])")"
+          git fetch -q origin "$B"
+          git show "FETCH_HEAD:$P" > "$RUNNER_TEMP/c.ndjson"
+          read -r TB TD G2 <<< "$(python3 -c "import json; p = json.load(open('$PLAN')); t = p['training']; print(t['branch'], t['dir'], p['gate2_plan'])")"
+          echo "G2=$G2" >> "$GITHUB_ENV"
+          git fetch -q origin "$TB"
+          WARGS=$(python3 -c "
+          import json; m = json.load(open('$G2'))['models']['${{ matrix.model }}']; k = m.get('kind', 'e')
+          parts = {'e': [('es', m.get('es')), ('ew', m.get('ew'))], 'es': [('es', '${{ matrix.model }}')], 'ew': [('ew', '${{ matrix.model }}')]}[k]
+          print(' '.join(f'{w}:{i}' for w, i in parts))")
+          ARGS=""
+          for x in $WARGS; do
+            w=${x%%:*}; i=${x#*:}
+            git show "FETCH_HEAD:$TD/$i/best.safetensors" > "$RUNNER_TEMP/$w.safetensors"
+            sha256sum "$RUNNER_TEMP/$w.safetensors"
+            ARGS="$ARGS --$w-weights $RUNNER_TEMP/$w.safetensors"
+          done
+          echo "WEIGHTS=$ARGS" >> "$GITHUB_ENV"
+      - name: Predict this shard
+        run: |
+          read -r START COUNT <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); s = ${{ matrix.shard }}
+          a, b = p['ordinals']; n = p['shards']; per = -(-(b - a) // n)
+          start = a + s * per; print(start, max(0, min(per, b - start)))")"
+          mkdir -p "$RUNNER_TEMP/pred"
+          uv run tma2-g2predict --in "$SPLIT" --segmentations "$RUNNER_TEMP/c.ndjson" --plan "$G2" \
+            --model "${{ matrix.model }}" $WEIGHTS --start "$START" --count "$COUNT" \
+            --out "$RUNNER_TEMP/pred/${{ matrix.model }}-shard-${{ matrix.shard }}.ndjson" --workers 4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pred-${{ matrix.model }}-${{ matrix.shard }}
+          path: ${{ runner.temp }}/pred/*.ndjson
+
+  results:
+    needs: [plan, predict]
+    runs-on: ubuntu-latest
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pred-*
+          path: shards
+          merge-multiple: true
+      - name: Merge each model's shards and push the results branch
+        run: |
+          NAME=$(basename "$PLAN" .json)
+          OUT="experiments/g2predict-runs/$NAME-${{ github.run_id }}"
+          mkdir -p "$OUT"
+          python3 - "$OUT" shards "$PLAN" <<'PY'
+          import glob, json, sys
+          out, d, plan = sys.argv[1], sys.argv[2], json.load(open(sys.argv[3]))
+          for m in plan["models"]:
+              files = sorted(glob.glob(f"{d}/{m}-shard-*.ndjson"), key=lambda f: int(f.rsplit("-", 1)[1].split(".")[0]))
+              assert len(files) == plan["shards"], (m, files)
+              heads, recs = [], []
+              for f in files:
+                  lines = open(f, encoding="utf-8").read().splitlines()
+                  heads.append(json.loads(lines[0]))
+                  recs += lines[1:]
+              assert all(h == heads[0] for h in heads), f"{m}: shard headers differ"
+              recs.sort(key=lambda x: json.loads(x)["ordinal"])
+              with open(f"{out}/{m}.ndjson", "w", encoding="utf-8") as fh:
+                  fh.write(json.dumps(heads[0], sort_keys=True) + "\n")
+                  for r in recs:
+                      fh.write(r + "\n")
+              print(m, len(recs), "scenarios")
+          PY
+          cp "$PLAN" "$OUT/plan.json"
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "cpu_model": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" "$CPU" > "$OUT/run.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/g2predict-$NAME-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: E predictions $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"

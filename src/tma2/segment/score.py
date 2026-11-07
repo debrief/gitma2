@@ -125,6 +125,28 @@ def layer_errors(
     return out
 
 
+def prediction_errors(
+    rows: list[Row], data: dict[int, BearingData], truths: dict[int, Truth], path: str | Path
+) -> Errors:
+    """Errors of a per-row prediction file (``tma2-g2predict``: records carry ``ordinal``),
+    matched to each scored row by its float32 timestamp; a missing row is an infinite error."""
+    from tma2.sim.geometry import f32
+
+    by: dict[int, dict[float, dict[str, Any]]] = {}
+    with open(path, encoding="utf-8") as fh:
+        fh.readline()
+        for line in fh:
+            rec = json.loads(line)
+            by[int(rec["ordinal"])] = {float(x["timestamp_s"]): x for x in rec["rows"]}
+    out = np.full((len(rows), 3), np.inf)
+    for q, r in enumerate(rows):
+        x = by.get(r.ordinal, {}).get(f32(float(data[r.ordinal].t[r.k])))
+        if x is not None:
+            e = row_error(truths[r.ordinal], x, "plausible")
+            out[q] = (e.range_rel, e.course_deg, e.speed_kt)
+    return out
+
+
 def parse_ekf_name(name: str) -> tuple[float, float, float]:
     """(σ_a, P0 scale, R scale) from ``ekf-sa<a>[-p<p>][-r<r>]`` (``ekf_name``'s format)."""
     m = re.fullmatch(r"ekf-sa([0-9.e+-]+?)(?:-p([0-9.e+-]+?))?(?:-r([0-9.e+-]+))?", name)
@@ -176,14 +198,31 @@ def oracle(_j: int, m: dict[str, Any], d: BearingData, k: int) -> LayerInputs | 
 
 
 def from_segmentations(
-    segs: dict[tuple[int, int], list[Interval]], mode: str, speed_prior: bool = True
+    segs: dict[tuple[int, int], list[Interval]],
+    mode: str,
+    speed_prior: bool = True,
+    open_handover: str | None = None,
 ) -> MakeInputs:
     def make(j: int, _m: dict[str, Any], d: BearingData, k: int) -> LayerInputs | None:
         ivs = segs.get((j, k))
         if ivs is None:
             return None
         trs = [(iv.start, iv.end) for iv in ivs if iv.kind == TRANSITION]
-        return segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, trs, mode, speed_prior)
+        open_last = bool(ivs) and ivs[-1].kind == TRANSITION and bool(ivs[-1].open)
+        return segmentation_inputs(
+            d.t,
+            d.ox,
+            d.oy,
+            d.z,
+            d.valid,
+            k,
+            trs,
+            mode,
+            speed_prior,
+            None,
+            open_last,
+            open_handover,
+        )
 
     return make
 

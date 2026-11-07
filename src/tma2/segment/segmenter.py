@@ -31,7 +31,7 @@ from tma2.types.generated.tma import SegmentParameters
 
 from . import STEADY, TRANSITION, UNKNOWN, Interval, from_codes, validate
 from .confirm import Confirmed, Nomination, confirm, glr_nominations, search_nominations
-from .inputs import segmentation_inputs
+from .inputs import handover_of, segmentation_inputs
 from .search import anchored_grid, cost_table, run_search
 
 
@@ -89,6 +89,21 @@ def nominations_for(
     return sorted(noms, key=lambda x: (x.row, x.source, x.lo))
 
 
+def truth_nominations(meta: dict[str, Any], n: int, p: SegmentParameters) -> list[Nomination]:
+    """A nomination at each true target change start s, tested on the prefix a search
+    nomination of the middle length would be (s + l_mid − 1 + horizon): the nominator ceiling
+    (spec 007 research R1). Confirmation still decides; a diagnostic, never a gate input."""
+    lengths = sorted(set(p.t_lengths_rows))
+    l_mid = lengths[len(lengths) // 2]
+    out = []
+    for sp in meta.get("manoeuvres") or []:
+        s = int(sp["start_index"])
+        a = s + l_mid - 1 + p.search_horizon_rows
+        if 1 <= s and a < n:
+            out.append(Nomination(a, s, s, "truth"))
+    return out
+
+
 def intervals_at(conf: Confirmed, k: int, p: SegmentParameters) -> list[Interval]:
     """The segmentation of [0, k] from what was decided by row k."""
     codes = np.full(k + 1, STEADY, dtype=np.int8)
@@ -127,9 +142,11 @@ def segment(
     p: SegmentParameters,
     stats: list[np.ndarray] | None = None,
     evidence: list[np.ndarray] | None = None,
+    extra: list[list[Nomination]] | None = None,
 ) -> list[list[PrefixSegmentation]]:
     """C (or L, with ``evidence``) on each scenario's scored rows, scenarios batched. The search
-    grid is anchored on each scenario's first scored row (G5 rows are 30 rows apart)."""
+    grid is anchored on each scenario's first scored row (G5 rows are 30 rows apart). ``extra``
+    adds nominations per scenario (the nominator-ceiling diagnostic, ``truth_nominations``)."""
     noms = []
     for i, d in enumerate(data):
         anchor = rows[i][0] if rows[i] else int(metas[i]["zig_index"])
@@ -142,6 +159,11 @@ def segment(
                 None if evidence is None else evidence[i],
             )
         )
+    if extra is not None:
+        noms = [
+            sorted(n + x, key=lambda y: (y.row, y.source, y.lo))
+            for n, x in zip(noms, extra, strict=True)
+        ]
     r_max = max(d.n for d in data)
     confs = confirm(layer, data, noms, p, r_max, evidence=evidence)
     items: list[tuple[BearingData, int, LayerInputs]] = []
@@ -154,7 +176,21 @@ def segment(
             trs = [(iv.start, iv.end) for iv in ivs if iv.kind == TRANSITION]
             scores = [x.score for x in conf.transitions if x.accepted_at <= k]
             out.append(PrefixSegmentation(k, ivs, math.nan, min(scores) if scores else None))
-            inp = segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, trs, p.mode, True)
+            open_last = bool(ivs) and ivs[-1].kind == TRANSITION and bool(ivs[-1].open)
+            inp = segmentation_inputs(
+                d.t,
+                d.ox,
+                d.oy,
+                d.z,
+                d.valid,
+                k,
+                trs,
+                p.mode,
+                True,
+                None,
+                open_last,
+                handover_of(p),
+            )
             if inp is not None:
                 items.append((d, k, inp))
                 owners.append((i, len(out) - 1))
