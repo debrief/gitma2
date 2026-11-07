@@ -143,15 +143,20 @@ differs from the decision's.
   - Done: C runs in `tma2-segment`'s chunks (16, padded to the longest), so a shard equal to
     the segmentation run's reproduces it; `c_mismatch_rows` in the header records any difference.
     It also refuses a checkout whose code digest is not the plan's C.
-- [ ] T018 [US2] **(CI)** Build decision tables for the stream (`segment.yml`-style workflow
+- [x] T018 [US2] **(CI)** Build decision tables for the stream (`segment.yml`-style workflow
   `.github/workflows/dtables.yml`, `dtables/<plan>`) and for validation ordinals 0–499 and
   500–1499.
   - Workflow written (`configs/dtables/<name>.json`: `segmentation` {plan, branch, path},
     `gate2_plan`; shards from the segmentation plan). Runs once C's code and the plan are final.
   - Validation tuning 0–499 (`results/dtables-g2-val-tune-42288137249`): C reproduced exactly
     (0 of 1,971 rows differ); 14,351 decisions, 1,299 within τ/2 (9%), 2,396 decision rows;
-    accepting lowers the error on 27% of rows; about 14 s per scenario. Stream: `dtables/g2-stream`
-    launched (about 2.4 h). Scoring ordinals need no tables.
+    accepting lowers the error on 27% of rows; about 14 s per scenario. Scoring ordinals need no
+    tables.
+  - Stream (`results/dtables-g2-stream-42295008170`): 9,930 scenarios, 282,429 decisions, 26,352
+    within τ/2, 51,003 decision rows; 4 of 39,054 rows differ from the segmentation file (a
+    near-threshold flip on another CPU family, as Gate S panel round 2 found). Ceiling: choosing
+    each decision's better side lowers the mean decision-row error from 51.0 (C) to 44.4 (median
+    39.9 to 25.9); the share of rows where accepting is better is 28%.
 - [x] T019 [US2] Implement E-s in `src/tma2/gate2/model.py` and `train.py`:
   - the evidence network as spec 005's (zero head), on features plus the C code channel;
   - the relaxed acceptance p = σ((Δ − τ′ + 2Σe)/T), Σe over the candidate's rows capped at ±τ/2;
