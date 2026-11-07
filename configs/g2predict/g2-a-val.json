@@ -1,0 +1,24 @@
+{
+  "description": "Spec 007 T028: E (e-s1..3, e-shuffled) and E-w alone (ew-s1..3) from g2train run 42352638177 on seed 314 validation scoring ordinals 500-1499, over C's frozen segmentation (code 4d2c084f, knot_at_k, 12 knots). Scored by configs/score/g2-a-val.json for the carried-seed, shuffled and validation rules.",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "ordinals": [500, 1500],
+  "shards": 8,
+  "gate2_plan": "configs/gate2/g2-a.json",
+  "segmentations": {
+    "branch": "results/segment-c3-val-42268379557",
+    "path": "experiments/segment-runs/c3-val-42268379557/segmentations.ndjson"
+  },
+  "training": {
+    "branch": "results/g2-g2-a-42352638177",
+    "dir": "experiments/g2-runs/g2-a-42352638177"
+  },
+  "models": ["e-s1", "e-s2", "e-s3", "e-shuffled", "ew-s1", "ew-s2", "ew-s3"]
+}
