@@ -210,11 +210,13 @@ mismatches.
   - Done (`kind: "g2"`: `c`, `e`, `knots`, `gate.model`). Also `g2predict.yml`
     (`g2predict/<name>`, shards × models, results merged per model) and `g2train.yml` trains
     E-s (`kind: "es"`, decision tables from `dtables` results); `scripts/ci/regen_split.sh`.
-- [ ] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
+- [x] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
   by the owner before T026 (FR-034).
-- [ ] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as
+- [x] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as
   `Gate2Decision`, README; contracts/decision-record.md), with the forecast refined by the T016
   and T001 numbers. Commit it before any E training.
+  - Done: PR 16 merged by the owner (2026-11-07); `experiments/20261107-g2-decision/` binds
+    plan `6092c364…`.
 - [ ] T027 [US3] **(CI)** Train E (three seeds plus the shuffled control) and E-w alone (three
   seeds) with plan `configs/gate2/g2-a.json`; push `g2train/g2-a`.
 - [ ] T028 [US3] **(CI)** Validation:
@@ -247,6 +249,36 @@ mismatches.
 - [ ] T033 Export E (E-w on C's segmentation as an input, E-s's evidence network) to ONNX, with
   three-runtime conformance to 1e-5 (constitution VI), as spec 005's evidence export.
 - [ ] T034 Run `quickstart.md` end to end and fix any drift.
+
+## Handoff (2026-11-07, for the next session)
+
+State: everything up to T026 is done and on `main` or in PR 17 (`claude/inspiring-curie-j192v9`,
+the decision record `experiments/20261107-g2-decision/`, plan `configs/gate2/g2-a.json`
+`6092c364…`). Do not edit `configs/gate2/g2-a.json`: its digest is bound by the decision; a
+change needs an amendment file beside the decision.
+
+**Running (T027):** `g2train/g2-a`, run 42352638177 (started 07:46 UTC). Tables jobs done; eight
+`train-1` jobs (ew-s1..3, ew-shuffled, es-s1..3, es-shuffled) running, then `train-2` resumes any
+incomplete model (12 epochs at most, about 45 min per E-w epoch); results to
+`results/g2-g2-a-<run id>` (`<model>/meta.json`, `best.safetensors`, `train.log`).
+1. When it finishes: read each `meta.json` (`untrained_val` vs `best_val`, epochs, excluded
+   failed fits; E-s's val is the hard decision-row loss, E-w's the trimmed prefix loss). If a
+   job failed, fix code or workflow and re-push `g2train/g2-a`.
+2. **T028 validation:** write `configs/g2predict/g2-a-val.json` (data: seed 314 validation as
+   `configs/segment/c3-val.json`; ordinals [500, 1500], shards 8; `gate2_plan`
+   `configs/gate2/g2-a.json`; `segmentations` `results/segment-c3-val-42268379557`;
+   `training` the results branch and dir; models e-s1..3, e-shuffled, ew-s1..3) and push
+   `g2predict/g2-a-val`. Then a `kind: g2` score plan (as `configs/score/g2-val-c.json`, adding
+   `e` for each model's merged file and `gate` {decision, plan, split: validation}) on
+   `score/<name>`. Apply the carried-seed rule (median gap recovered of e-s1..3), the shuffled
+   rule (`validation.json`) and the validation rule; commit `experiments/<date>-g2-val/` and,
+   beside the decision, `carried.json` {model, weights_sha256, shuffled_rule}.
+3. **T029:** only if the validation rule passes: generate seed 319 (`--count 100000`), commit
+   `test-digest.json` {dataset_digest} beside the decision, segment its test split with C
+   (`segment.yml`), predict the carried E, score with `--split test --model <carried>`.
+   Otherwise record that the test split was not generated.
+4. **T030:** review panel (five specialities, rounds until approval), `review.md`, then the
+   write-up (T031), T032–T034.
 
 ## Dependencies
 
