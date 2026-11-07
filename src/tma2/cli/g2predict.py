@@ -5,9 +5,10 @@
         --start S --count N --out <pred.ndjson> [--workers 4]
 
 ``--model`` names a plan model; its ``kind`` (``e``: E-s then E-w; ``ew``: E-w alone; ``es``:
-E-s alone, the physics layer on its segmentation; ``veto``: the classical control C′, C with
-candidates at the ownship zig ± ``window`` rows vetoed, then E-w if the model names one in
-``ew``) says which weights it needs. Untrained weights
+E-s alone, the physics layer on its segmentation; ``veto``: the classical controls, C with
+candidates at the ownship zig ± ``window`` rows vetoed (``window`` −1: no veto), then E-w if the
+model names one in ``ew`` or a fixed fading memory if it gives ``fade`` [a, b]) says which weights
+it needs. Untrained weights
 reproduce C. The header is an ``EPredictionHeader`` with the prediction file's ``estimator`` and
 ``mode``; ``weights_sha256`` is the SHA-256 of the weights files' digests joined by ``+`` in the
 order E-s, E-w (each also recorded alone).
@@ -81,7 +82,9 @@ def _task(args: tuple[Any, ...]) -> list[tuple[int, dict[str, Any], list[dict[st
         model = EWeights(cfg).double()
         model.load_state_dict(load_file(ew))
     c = plan["c"]
-    out = e_rows(model, data, rows, sg, c["mode"], c.get("open_handover"))
+    f = plan["models"][model_id].get("fade")
+    fade = (float(f[0]), float(f[1])) if f else None
+    out = e_rows(model, data, rows, sg, c["mode"], c.get("open_handover"), fade=fade)
     return [(j, m, r) for j, m, r in zip(ords, metas, out, strict=True)]
 
 

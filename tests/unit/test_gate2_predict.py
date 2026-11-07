@@ -164,3 +164,21 @@ def test_zig_veto_control(man2_pack: Path) -> None:
     got = veto_segmentations([d], [ks], p, -1)[0]
     assert [got[s.k] for s in want] == [s.intervals for s in want]
     assert set(veto_segmentations([d], [ks], p, 6)[0]) == set(ks)
+
+
+def test_fixed_fade_control(man2_pack: Path) -> None:
+    """The fading-memory control (Gate 2 panel, round 1): fade (0, 0) is C's hand-over; a fade
+    changes the estimate."""
+    p = _params()
+    _, m, own, _tgt, obs = next(
+        x for x in iter_pack_raw(man2_pack) if int(x[1]["samples"]) <= 420 and x[1]["manoeuvres"]
+    )
+    d = bearing_data_from_arrays(m, own, obs)
+    ks = g5_rows(m, d.n)[:2]
+    assert ks
+    sg = [{k: [Interval(STEADY, 0, k)] for k in ks}]
+    base = e_rows(None, [d], [ks], sg, p.mode, p.open_handover)[0]
+    zero = e_rows(None, [d], [ks], sg, p.mode, p.open_handover, fade=(0.0, 0.0))[0]
+    faded = e_rows(None, [d], [ks], sg, p.mode, p.open_handover, fade=(0.73, 0.0079))[0]
+    assert zero == base
+    assert any(f.get("range_m") != b.get("range_m") for f, b in zip(faded, base, strict=True))

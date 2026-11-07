@@ -68,3 +68,29 @@ zero.
 
 The test-split reading is reported whatever it says. The gate's verdict (G2-a to G2-d) is not
 changed by it; the panel weighs it in reading G2-d.
+
+## Addendum: C″, fully classical (panel round 1, red team; registered before any C″ result)
+
+The red team found that E-w's learned weights are mostly a recency profile: Δ log-weight about
++0.73 on the newest bearings, falling linearly to about −0.70 at 180 rows. C′ + ew-s3 still uses
+the learned E-w, so no control above is classical end to end. Added:
+
+- **fade**: C with a fixed fading memory, clip(0.73 − 0.0079·age, ±2) added to C's log-weights
+  (age = k − row). Its two numbers were read off ew-s3's mean log-weight profile on validation
+  ordinals 500–559 (239 prefixes) by the red team; no score was used to choose them. The red team
+  has already scored this rule on test (fade − C +0.0107 [+0.0068, +0.0140]; E − fade +0.0143
+  [+0.0094, +0.0199]), so on test it is not a fresh look; it is re-run here on CI for the record.
+- **C″ = veto-w6-fade**: C′ (the zig veto above) followed by the same fixed fading memory. No
+  learned component. Not yet scored anywhere.
+
+Plan `configs/gate2/g2-a-fade.json`; predictions `configs/g2predict/g2-fade-{val,test}.json`;
+scored with the C′ files on the same rows.
+
+**Reading (fixed now):** E − C″ (e-s3 against C″), paired as above.
+- Wholly above zero: learning adds something beyond both classical rules.
+- Contains zero: learning beyond the two classical rules (zig veto, fading memory) is not shown.
+- Wholly below zero: the two classical rules beat E.
+
+Reported beside it: fade − C, C″ − C, E − fade and E-w − fade. Caveat (red team): the veto uses
+the ownship's planned zig row, which E-s does not see (it sees online ownship codes); this favours
+the controls, so a positive E − C″ is conservative.

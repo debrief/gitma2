@@ -101,9 +101,12 @@ def e_rows(
     mode: str,
     open_handover: str | None,
     batch: int = 32,
+    fade: tuple[float, float] | None = None,
 ) -> list[list[dict[str, Any]]]:
     """Per scenario, a prediction row at each scored row (an empty row where C's hand-over has
-    no input or the solve is implausible)."""
+    no input or the solve is implausible). ``fade`` (a, b), with no model: the classical control's
+    fixed fading memory (Gate 2 panel, round 1), clip(a − b·age, ±2) added to C's log-weights,
+    age = k − row (rows after k are masked by the layer)."""
     from tma2.cli.oracle import empty_row
 
     r_max = max(d.n for d in data)
@@ -121,6 +124,11 @@ def e_rows(
             inp = prefix_inputs(d, k, ivs, mode, open_handover)
             if inp is None:
                 continue
+            if fade is not None and model is None:
+                age = k - np.arange(len(inp.log_weight))
+                add = np.clip(fade[0] - fade[1] * age, -2.0, 2.0)
+                add[age < 0] = 0.0
+                inp.log_weight = inp.log_weight + add
             items.append((d, k, inp))
             codes.append(np.pad(code_channel(ivs, k, d.n), (0, r_max - d.n)))
             where.append((i, q))
