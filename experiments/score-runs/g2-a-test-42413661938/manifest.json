@@ -1,0 +1,76 @@
+{
+  "decision": "experiments/20261107-g2-decision/decision.json",
+  "decision_sha256": "cd01b154469fb69a58856999e2fe014d9eea25a72e2027e4d1def5f42ec36ad0",
+  "plan": "configs/gate2/g2-a.json",
+  "plan_sha256": "6092c364cc2a9ae51312d9ecd3f9d52eabb705e560dac1b20c4059020946175e",
+  "truth": "/home/runner/work/_temp/data/test.f32pack",
+  "truth_sha256": "ceee1a18123db7ff92cb7cf1f9c9ef273a5cb19efa5a3664379ce1710e26b3c7",
+  "c": {
+    "segmenter_sha256": "60e6ee635d9390e2c959b408997e39e8c30859febcb2d86f199142ea66aa425f",
+    "code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+    "git_commit": "495adf87a9b45202c6268bc4bd2a43758e1568b2",
+    "dataset_digest": "ceee1a18123db7ff92cb7cf1f9c9ef273a5cb19efa5a3664379ce1710e26b3c7"
+  },
+  "predictions": {
+    "e-s3": {
+      "model": "e-s3",
+      "weights_sha256": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+      "plan_sha256": "6092c364cc2a9ae51312d9ecd3f9d52eabb705e560dac1b20c4059020946175e",
+      "code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+      "git_commit": "e7e76a23a6e14afedb245d86f0cc1f6dd438cc2d"
+    },
+    "ew-s3": {
+      "model": "ew-s3",
+      "weights_sha256": "29ff3721fa8e391b0bbebfb9a5cf6ef73c9c266f3e2bf8ee888647c0e4d2a92e",
+      "plan_sha256": "6092c364cc2a9ae51312d9ecd3f9d52eabb705e560dac1b20c4059020946175e",
+      "code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+      "git_commit": "e7e76a23a6e14afedb245d86f0cc1f6dd438cc2d"
+    }
+  },
+  "carried": {
+    "amendment": "T028: the carried E and the shuffled rule's outcome, fixed on validation before test seed 319 is generated (changes no criterion)",
+    "model": "e-s3",
+    "weights_sha256": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+    "es_weights_sha256": "2b3b9c7348874da06e6b9fb4e62f01955c1b92496bb4a5ff91cb6eb2c83d7d29",
+    "ew_weights_sha256": "58b51d10d30f5aaf56f7bfb606f35031574c4101fea3bcfed60b8d363de6883a",
+    "weights": "experiments/20261107-g2-val/models/{es-s3,ew-s3}/best.safetensors (also results/g2-g2-a-42352638177)",
+    "training_run": "42352638177 at 36bfab80983b6375f35f5df4a636b1bcdfbf1803",
+    "carried_rule": "median of e-s1..3 by validation gap recovered in range (seed 314, ordinals 500-1499, 12 knots): e-s2 0.9095, e-s3 0.9181, e-s1 0.9207; median e-s3",
+    "shuffled_rule": "pass",
+    "shuffled_rule_evidence": "e-shuffled minus C, gap recovered in range: -5e-10 [-3e-08, +2e-08] (97.5%, clustered): the interval includes zero. Both shuffled components kept their untrained weights (best epoch 0), so e-shuffled reproduces C",
+    "validation_rule": "pass (e-s3: every gated point meets its limit)",
+    "validation": "experiments/20261107-g2-val/ (score run 42392768062 at bc2593ac)"
+  },
+  "amendments": [
+    {
+      "file": "carried.json",
+      "sha256": "78fd146c11aeb96c9c90597cd089e444b7fb3b6fda5526d15b79880c18fe0ff2"
+    },
+    {
+      "file": "seed319-digests.json",
+      "sha256": "11919ff700ecd4e7a323c1cbbcfb7bbb97f8831e28070ca85b5909672eb8d584"
+    },
+    {
+      "file": "test-digest.json",
+      "sha256": "30cd3837b365c4c03d88a26eabcd497d1292417c3178c060e33ec9b55210473f"
+    }
+  ],
+  "inputs": {
+    "segmentations": {
+      "C": "0b746193c830757e6b4d8154074a0238be1fbea8da5449e25c968a2f9c84c337"
+    },
+    "glr_confirm": {
+      "config": "glr-q0.2-t13.8",
+      "files": 66,
+      "sha256": "fd892932e5d7786269363e9ce28a60e22b1c3267b5e86831429d9f3ea9078e9c"
+    },
+    "naive_train": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "predictions": {
+      "e-s3": "46ee22cc2224a77c3d24f4a43da5d64570887a756bffa39d18c279f3c4c89c5d",
+      "ew-s3": "ac1c43b1d3d5fbac2eceb62406b9f9e0b0ca3b9a7dabb405e92895818a0dbf3d"
+    }
+  },
+  "metrics_sha256": "9401ac2f2c14e931a3d7db0760d3b0d04eb1fa11261773b96eaf2ac310b27172",
+  "git_commit": "237c87b366c79772c322d8739c6b2299c01cb717",
+  "git_dirty": false
+}
