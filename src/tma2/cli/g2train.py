@@ -94,12 +94,13 @@ def train(a: argparse.Namespace) -> int:
         return 2
     xs: list[Any] = []
     val: list[Any] = []
-    for p in [*a.train, a.val]:
-        h, part = load_prefixes(p)
-        if h["plan_sha256"] != plan_sha:
-            print(f"{p}: made from another plan", file=sys.stderr)
-            return 2
-        (val if p == a.val else xs).extend(part)
+    for dest, paths in ((xs, a.train), (val, [a.val])):  # by role, not by path equality
+        for p in paths:
+            h, part = load_prefixes(p)
+            if h["plan_sha256"] != plan_sha:
+                print(f"{p}: made from another plan", file=sys.stderr)
+                return 2
+            dest.extend(part)
     m = plan["models"][a.model]
     cfg = PhysicsModelConfig.model_validate({**plan["encoder"], "id": a.model, "seed": m["seed"]})
     st = TrainSettings(

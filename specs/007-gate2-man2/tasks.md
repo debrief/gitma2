@@ -234,21 +234,21 @@ mismatches.
 
 ## Phase 6: User Story 4, an honest record of what was and was not shown (P2)
 
-- [ ] T031 [P] [US4] Site pages:
+- [x] T031 [P] [US4] Site pages:
   - the algorithm note `site/docs/algorithms/gate2-model.md` (E-w, E-s, decision tables);
   - glossary terms (decision table, relaxed acceptance);
   - the Gate 2 write-up `site/blog/<date>-gate-2.md`, with C's figures beside E's, E-w's ablation,
     the open-at-k stratum, and the follow-on with a recommended default.
 
   Then `(cd site && npm ci && npm run build)`.
-- [ ] T032 [P] [US4] Update `AGENTS.md`: spec 007's status, the seeds used (318, 319) and new
+- [x] T032 [P] [US4] Update `AGENTS.md`: spec 007's status, the seeds used (318, 319) and new
   gotchas.
 
 ## Phase 7: Polish
 
 - [x] T033 Export E (E-w on C's segmentation as an input, E-s's evidence network) to ONNX, with
   three-runtime conformance to 1e-5 (constitution VI), as spec 005's evidence export.
-- [ ] T034 Run `quickstart.md` end to end and fix any drift.
+- [x] T034 Run `quickstart.md` end to end and fix any drift.
 
 ## Handoff (2026-11-08, for the next session)
 
@@ -263,17 +263,20 @@ E-s adds nothing shown beyond the veto; on test E-w − fade +0.004 [+0.001, +0.
 validation negative).
 
 Remaining:
-1. **T031** write-up `site/blog/2026-11-08-gate-2.md` with the panel's reading (review.md
+1. **T031** done (`site/blog/2026-11-08-gate-2.md`, controls in the algorithm note, glossary).
+   Was: write-up `site/blog/2026-11-08-gate-2.md` with the panel's reading (review.md
    "Decision"; the red team's accepted wording in round 2): C's figures beside E's, E-w's
    ablation, the controls table, the open-at-k stratum (+0.139 on 5.8% of rows), gain by range
    band, the shuffled evidence from training logs, the follow-on with a recommended default.
    The algorithm note and glossary exist (`site/docs/algorithms/gate2-model.md`); add a section
    on the controls. Then `(cd site && npm ci && npm run build)`.
-2. **T032** AGENTS.md is updated (status, controls, gotchas); add the final verdict line.
+2. **T032** done (AGENTS.md: verdict, write-up, follow-on, gotchas).
 3. **T033** done: `segment.evidence_export --plan configs/gate2/g2-a.json` (E-s) and
    `gate2.export` (E-w on C's hand-over, 100 iterations as one Loop, 12 knots), carried weights,
    three legs in `ci.yml` (Python leg: E-s 6e-16, E-w 3.4e-8).
-4. **T034** quickstart.
+4. **T034** done: quickstart run end to end (unit tests 47 passed; smoke E-w training and
+   prediction; long steps name their CI records). Fixed on the way: `tma2-g2train train` put a
+   training file into validation when its path equalled `--val` (now loaded by role).
 5. Follow-ons for the next plan: time-late variant (G7); score last-epoch shuffled weights (G4);
    coverage assertion in `tma2-g2` and merge-step counts (G10, G11); bind GLR files and E's C file
    (G12); read the shuffled rule from `validation.json` (G9); store C's scored errors (R2-6);
