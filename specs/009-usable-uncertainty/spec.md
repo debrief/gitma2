@@ -7,12 +7,13 @@
 **Status**: Draft
 
 **Input**: User description: Spec 009, usable uncertainty: the Gate 3 follow-on, adopted by default
-(`site/blog/2026-11-08-gate-3.md`; the owner has not objected). Every scored row of the carried
-estimator E states an uncertainty an operator can act on: course as a circular statement or as
-explicitly undetermined, the statement gated on observability by a causal test, the joint
-statement honest on the rows it covers, trained on the errors the gate scores; controls, three
-seeds, the references on the same rows; a new gate proposed as an SRD amendment and scored on
-fresh seed 320; spec 008's carried minors.
+(`site/blog/2026-11-08-gate-3.md`; the owner has not objected), **re-scoped by the owner on
+2026-11-08 to a probabilistic course statement** after the tuning rows showed that E's gross course
+errors cannot be flagged causally (see Background). Every scored row of the carried estimator E
+states: course within ±X° with probability p (otherwise unknown), with X and p calibrated; and
+calibrated intervals for log range and speed; trained on the errors the gate scores; controls,
+three seeds, the references on the same rows; a new gate proposed as an SRD amendment and scored
+on fresh seed 320; spec 008's carried minors.
 
 **SRD traceability**:
 - §7 step 5, first item (uncertainty calibration), second attempt after Gate 3 stopped at
@@ -24,6 +25,9 @@ fresh seed 320; spec 008's carried minors.
 **Owner decisions this spec implements**:
 - 2026-11-08: Gate 3's G3-b is a tail measure (share within the χ²₄ 95% point), not the median.
 - 2026-11-08 (reporting, constitution 1.3.0): a kickoff post now and a slides post before the PR.
+- 2026-11-08 (scope): course is stated probabilistically ("within ±X° with probability p,
+  otherwise unknown"); the gate checks the reliability of p and the coverage of the range and
+  speed intervals; the 4-state χ² share is reported, not gated.
 - The Gate 3 write-up's follow-on, adopted because the owner has not objected.
 
 ## Background from Gate 3 (`experiments/20261108-g3-val/`)
@@ -43,90 +47,78 @@ fresh seed 320; spec 008's carried minors.
   and the honest statement is "undetermined", not a wide Gaussian.
 - **Process lessons**: choose every design setting on tuning ordinals 0–499 only; train on the
   errors the gate scores; test any learned part against the classical rule it might be.
+- **Gross course errors are not causally predictable** (spec 009 scoping, validation tuning
+  ordinals 0–499, 1,971 rows): 35% of E's course errors exceed 30° and 10% exceed 90°. The best
+  single causal signal (E's own stated course sd) separates them with AUC 0.61; a logistic model on
+  E's encoder state, its stated sds and C's code reaches 0.62 on held-out tuning rows. Declaring
+  half the rows "undetermined" still leaves 28–29% of the others over 30° off. An honest course
+  statement must therefore carry the probability that it is wrong, rather than a determined /
+  undetermined split.
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Each row says whether its course is determined (Priority: P1)
+### User Story 1 - Course stated with the probability that it holds (Priority: P1)
 
-An operator reading E's estimate at a row sees one of two states. **Determined**: the stated
-uncertainty (range, course, speed and their joint statement) can be trusted at its stated level.
-**Undetermined** ("manoeuvre suspected or course not yet determined"): the course is not stated as
-an interval; range and speed still carry intervals. The state is decided only from what E knew at
-the row (causal), never from the truth.
+An operator reading E's estimate at a row sees its course as "within ±X° of the estimate with
+probability p; otherwise unknown". X and p are stated per row; when they say 70% within ±15°,
+about 70% of such rows are within ±15°. The statement never claims more than it can keep, and
+never uses a Gaussian standard deviation that wraps past ±180°.
 
-**Why this priority**: Gate 3 showed that half the rows cannot carry a meaningful course interval.
-Saying so is the first thing an operator needs, and every later measurement depends on it.
+**Why this priority**: a third of E's courses are badly wrong and cannot be told apart in advance;
+the only honest statement carries that probability. Gate 3's vacuous intervals are what this
+replaces.
 
-**Independent Test**: on validation, the state is computed for every scored row from causal inputs
-only (changing anything after the row changes nothing), and the share of rows declared
-undetermined is reported with the course errors on each side.
-
-**Acceptance Scenarios**:
-
-1. **Given** a row in a long steady leg after the zig, **When** E reports it, **Then** it is
-   declared determined and carries course, range and speed intervals.
-2. **Given** a row inside a transition C holds open, or shortly after a detected change, **When**
-   E reports it, **Then** it may be declared undetermined, and the course interval is absent.
-3. **Given** any row, **When** its future bearings are replaced by noise, **Then** its declared
-   state and stated uncertainty are unchanged.
-
-### User Story 2 - Course stated on the circle (Priority: P1)
-
-On determined rows, the course uncertainty is a statement on the circle (a concentration or an
-arc), never a Gaussian standard deviation that wraps past ±180°. Its coverage and score are
-computed on wrapped errors.
-
-**Why this priority**: a Gaussian course sd above ~90° was Gate 3's vacuous statement; a circular
-statement makes coverage mean something.
-
-**Independent Test**: the stated course arc never exceeds the declared maximum on a determined
-row; coverage on wrapped errors matches the stated level on synthetic von-Mises data.
+**Independent Test**: on validation, rows grouped by stated p have hit rates (true course within
+the stated arc) equal to their stated p, within binomial error; the statement is computed from
+causal inputs only.
 
 **Acceptance Scenarios**:
 
-1. **Given** a determined row, **When** its course statement is read, **Then** the 95% arc is
-   below the declared maximum width.
-2. **Given** synthetic rows with known circular errors, **When** coverage is measured, **Then** it
-   equals the stated level within binomial error.
+1. **Given** the validation rows, **When** they are binned by stated p, **Then** each bin's hit rate
+   is within its interval of the bin's mean p.
+2. **Given** any row, **When** its future bearings are replaced by noise, **Then** its stated X and
+   p are unchanged.
+3. **Given** a row, **When** its course statement is read, **Then** the arc half-width X is at most
+   the declared maximum (for example 45°).
 
-### User Story 3 - An honest joint statement on determined rows (Priority: P1)
+### User Story 2 - Range and speed intervals that hold (Priority: P1)
 
-On determined rows, the 4-state uncertainty (position and velocity) passes the joint consistency
-test: about 95% of rows within the χ²₄ 95% point. The correction may reshape the solve's
-covariance (shrink its correlations or replace it in local coordinates), not only rescale it.
+Each row states 95% intervals for range (as a ratio) and speed, calibrated on the exact errors the
+gate scores, so that about 95% of rows fall inside, and no wider than they need to be.
 
-**Why this priority**: the joint statement is what a downstream user combines with other sensors;
-Gate 3 failed it through the kept correlations.
+**Why this priority**: range and speed are what an operator acts on next; Gate 3 reached their
+coverage only by over-widening range.
 
-**Independent Test**: on validation, the share within the χ²₄ 95% point on determined rows is
-reported with its interval, for the calibration, the temperature and the raw covariance.
+**Independent Test**: coverage of each on validation is reported with its interval, and the
+interval score against the raw covariance and the temperature.
 
 **Acceptance Scenarios**:
 
-1. **Given** the calibrated determined rows, **When** the joint share is measured, **Then** it is
-   reported with its 97.5% clustered interval.
+1. **Given** the calibrated validation rows, **When** coverage is measured, **Then** it is reported
+   per quantity with its 97.5% clustered interval.
 2. **Given** any row, **When** it is calibrated, **Then** its point estimate is unchanged.
 
-### User Story 4 - Learning tested against a rule, on the errors the gate scores (Priority: P2)
+### User Story 3 - Learning tested against a rule (Priority: P2)
 
-The learned calibration is trained on the exact errors the gate scores (wrapped course, log
-range ratio, speed), with every design setting chosen on tuning ordinals 0–499. Its claim to have
-learned something is tested against a classical temperature in the same form and a shuffled-label
-control (best and last epoch), three seeds.
+The learned statement (p, X and the range and speed scales per row) is trained on the exact errors,
+with every design setting chosen on tuning ordinals 0–499, and tested against a classical
+temperature (the same statement fitted per slice of time since the zig × open transition) and a
+shuffled-label control at best and last epoch, three seeds.
 
-**Why this priority**: Gate 3 showed no learning; a claim without these controls is not a claim.
+**Why this priority**: Gate 3 showed no learning; the scoping above suggests little per-row signal,
+so the claim must be tested, not assumed.
 
-**Independent Test**: the decision record names every setting and the tuning rows it was chosen
-on before any training; the controls are scored beside the head on the same rows.
+**Independent Test**: the decision record names every setting and its tuning evidence before any
+training; the controls are scored beside the head on the same rows.
 
 **Acceptance Scenarios**:
 
-1. **Given** the plan, **When** the decision record is committed, **Then** no training and no
-   scoring of ordinals 500–1499 by a calibrated estimator exists yet.
+1. **Given** the plan, **When** the decision record is committed, **Then** no calibrated estimator
+   has been scored on ordinals 500–1499.
 2. **Given** the shuffled control beats the temperature on validation, **When** the gate is
    decided, **Then** a learning pass is void.
 
-### User Story 5 - A pre-registered gate on a fresh seed (Priority: P2)
+### User Story 4 - A pre-registered gate on a fresh seed (Priority: P2)
 
 Gate 4 (usable uncertainty) is proposed as an SRD amendment (the owner merges), fixed by a decision
 record before training, applied on validation by a validation rule, and scored on fresh test seed
@@ -144,13 +136,13 @@ record before training, applied on validation by a validation rule, and scored o
 2. **Given** a test scoring, **When** it covers fewer than every σ = 1° scenario, **Then** it is
    refused.
 
-### User Story 6 - Spec 008's carried minors (Priority: P3)
+### User Story 5 - Spec 008's carried minors (Priority: P3)
 
 Calibrated prediction files record the commit and dirty flag of the run that made them; best- and
-last-epoch shuffled files carry distinct model names; the gate's validation record names its
-producing commit and CPU; the SRD Gate 3 row describes the registered (local) form.
+last-epoch control files carry distinct model names; the gate's records name their producing
+commit and CPU; the SRD Gate 3 row describes the registered (local) form.
 
-**Why this priority**: none changes a number; each removes a provenance gap the Gate 3 panel found.
+**Why this priority**: none changes a number; each closes a provenance gap the Gate 3 panel found.
 
 **Independent Test**: each has a unit test or a check that fails on the old behaviour.
 
@@ -162,16 +154,14 @@ producing commit and CPU; the SRD Gate 3 row describes the registered (local) fo
 
 ### Edge Cases
 
-- A row with no usable covariance (no plausible estimate): declared undetermined; counted as not
-  covered wherever coverage is measured over all rows.
-- A row before the zig: not scored (G5 rows start at zig + 5 min), as in Gates 2 and 3.
-- Zero target speed: course is undefined; the row is declared undetermined.
-- Every row declared undetermined: the gate's bound on the undetermined share fails it, so the
-  trivial answer cannot pass.
-- The oracle's own state: computed by the same causal rule from the oracle's inputs, so the
-  undetermined share can be compared with what perfect segmentation leaves undetermined.
-- Heavy tails in range and speed on undetermined rows: their intervals may come from a
-  heavy-tailed component; their coverage is still measured.
+- A row with no usable covariance: stated p = 0 (course unknown) and the widest declared range and
+  speed intervals; counted as not covered where coverage is measured.
+- Zero target speed: course undefined; stated p = 0.
+- A statement that always says p = 0 ("course unknown"): perfectly reliable but useless; the
+  informativeness check (G4-c) fails it.
+- Rows before the zig: not scored (G5 rows start at zig + 5 min).
+- The oracle and the references: given the same per-slice statement form (the temperature fitted
+  to their own errors) where they state a covariance, so their informativeness is comparable.
 
 ## Requirements *(mandatory)*
 
@@ -179,49 +169,48 @@ producing commit and CPU; the SRD Gate 3 row describes the registered (local) fo
 
 **Reported uncertainty**
 
-- **FR-001**: Every scored row of E MUST carry a state, determined or undetermined, computed from
-  causal inputs only (E's own stated information, time since the last detected change, C's code
-  at the row); never from the truth.
-- **FR-002**: Determined rows MUST carry calibrated intervals for log range, speed and course and a
-  4-state covariance; course MUST be stated on the circle with a 95% arc below a declared maximum.
-- **FR-003**: Undetermined rows MUST carry calibrated intervals for log range and speed and MUST
-  NOT carry a course interval; they MAY carry a heavy-tailed range and speed statement.
-- **FR-004**: Calibration MUST NOT change any point field (range, course, speed, position).
+- **FR-001**: Every scored row of E MUST state a course arc half-width X (at most a declared
+  maximum) and a probability p that the true course lies within it; computed from causal inputs
+  only.
+- **FR-002**: Every scored row MUST state 95% intervals for range (as a ratio) and speed.
+- **FR-003**: Calibration MUST NOT change any point field.
+- **FR-004**: The 4-state covariance MAY be kept for downstream use; its χ² share is reported, not
+  gated.
 
 **Measurement**
 
-- **FR-010**: The scorer MUST report, per estimator, on all rows and on determined rows: 95%
-  coverage of log range and speed; circular 95% coverage of course on determined rows; the share
-  within the χ²₄ 95% point; the undetermined share; a proper score for each quantity (the interval
-  score for log range and speed, a proper circular score for course); sharpness.
-- **FR-011**: The same causal state rule MUST be applied to the oracle and the references, so the
-  undetermined share is comparable across estimators.
-- **FR-012**: Every measurement MUST use the scenario-clustered paired bootstrap (97.5%, 2,000
+- **FR-010**: The scorer MUST report, per estimator: the course statement's reliability (hit rate
+  against stated p, overall and in bins of p), its sharpness (mean X, mean p), and a proper score
+  for it (the log score of the stated course density, a mixture of a peaked part within X and a
+  uniform part); 95% coverage, sharpness and the interval score for range and speed; the 4-state
+  χ² share for reference.
+- **FR-011**: Every measurement MUST use the scenario-clustered paired bootstrap (97.5%, 2,000
   resamples) on one scoring run's stored arrays.
 
 **Calibration and controls**
 
-- **FR-020**: The calibration MUST be trained on the exact errors the gate scores.
-- **FR-021**: Every design setting (thresholds of the state rule, form, bounds, caps) MUST be
+- **FR-020**: The calibration MUST be trained on the exact errors the gate scores (wrapped course,
+  log range ratio, speed).
+- **FR-021**: Every design setting (the maximum X, the statement's form, bounds, caps) MUST be
   chosen on validation tuning ordinals 0–499 only, and recorded with the evidence before the
   decision record.
-- **FR-022**: Three seeds and a shuffled-label control (scored at best and last epoch) MUST be
-  trained; a classical temperature in the same form MUST be fitted on the tuning ordinals.
+- **FR-022**: Three seeds and a shuffled-label control (best and last epoch) MUST be trained; a
+  classical temperature in the same form MUST be fitted per slice on the tuning ordinals.
 - **FR-023**: The carried seed MUST be chosen by a rule named in the decision record.
 
 **Decision and gate**
 
 - **FR-030**: Gate 4's criteria MUST be proposed as an SRD amendment, merged by the owner, before
   the decision record. The proposed defaults:
-  - **G4-a (coverage)**: 95% coverage of log range and speed on all rows, and circular 95%
-    coverage of course on determined rows, each interval wholly within [0.92, 0.98];
-  - **G4-b (joint consistency)**: on determined rows, the share within the χ²₄ 95% point wholly
+  - **G4-a (range and speed)**: 95% coverage of range and speed on all rows, each interval wholly
     within [0.92, 0.98];
-  - **G4-c (the state is not a dodge)**: the undetermined share at most the oracle's undetermined
-    share under the same rule plus 0.10, and the median course error on undetermined rows at
-    least twice that on determined rows;
-  - **G4-d (learning)**: the head's summed proper score below the temperature's (paired, wholly
-    below zero), void if the shuffled control also beats the temperature on validation;
+  - **G4-b (course reliability)**: the hit rate minus the mean stated p wholly within ±0.03, and in
+    each of five bins of p the same within ±0.05 (point);
+  - **G4-c (course informativeness)**: the course log score above the uninformative statement's
+    (uniform on the circle), paired, wholly above zero, with mean p at least 0.5;
+  - **G4-d (learning)**: the head's summed proper score (course log score and the range and speed
+    interval scores, each standardised by the temperature's) better than the temperature's, wholly;
+    void if the shuffled control also beats the temperature on validation;
   - **G4-e (no regression)**: points identical to E's.
 - **FR-031**: A decision record MUST bind the plan, the criteria, the seeds, the rules and a
   forecast before any calibration training.
@@ -239,26 +228,27 @@ producing commit and CPU; the SRD Gate 3 row describes the registered (local) fo
 **Reporting**
 
 - **FR-050**: A kickoff post before implementation and a slides post before the PR (constitution
-  1.3.0), with track plots showing determined and undetermined rows.
+  1.3.0), with track plots showing each row's course arc and stated probability.
 
 ### Key Entities
 
-- **Row state**: determined or undetermined, with the causal inputs that decided it.
-- **Calibrated row**: the point fields (unchanged); log-range and speed intervals; on determined
-  rows a circular course statement and a 4-state covariance; the calibration's settings digest.
-- **Calibration record**: per estimator and slice (all rows, determined rows), coverage, joint
-  share, undetermined share, proper scores, sharpness, with intervals.
-- **Gate 4 decision and record**: as Gate 3's, with the state rule and its settings bound.
+- **Course statement**: arc half-width X, probability p, and the peaked part's shape inside the arc.
+- **Calibrated row**: the point fields (unchanged), the course statement, range and speed 95%
+  intervals, the calibration's settings digest.
+- **Calibration record**: per estimator, reliability (overall and binned), sharpness, proper
+  scores, coverage, with intervals.
+- **Gate 4 decision and record**: as Gate 3's, with the statement form and settings bound.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: On validation, no determined row states a course 95% arc wider than the declared
-  maximum, and the course coverage on determined rows is reported with its interval.
-- **SC-002**: On validation determined rows, the calibrated share within the χ²₄ 95% point is
-  reported with its interval beside the raw covariance's and the temperature's.
-- **SC-003**: The undetermined share of E and of the oracle are reported under the same rule.
+- **SC-001**: On validation, rows that state probability p have hit rates within ±0.05 of p in every
+  bin, or the failure is reported with its intervals.
+- **SC-002**: On validation, range and speed 95% coverage are reported with intervals beside the raw
+  covariance's and the temperature's.
+- **SC-003**: The course statement's log score is reported against the uninformative statement and
+  the temperature's.
 - **SC-004**: The gate is decided by the panel within the pre-registered rules; if the validation
   rule is not met, seed 320 stays unused.
 - **SC-005**: Every figure in the slides post reproduces from its sidecar.
@@ -266,10 +256,11 @@ producing commit and CPU; the SRD Gate 3 row describes the registered (local) fo
 ## Assumptions
 
 - E (e-s3), C, the frozen IMM/EKF and the oracle are as Gate 2; E's points are not retrained.
-- The feature caches of spec 008 (stream 318, validation 0–1499) are reused if their contents
-  suffice; otherwise they are re-made by the same workflow.
-- Validation seed 314: tuning ordinals 0–499, scoring ordinals 500–1499. Test seed 320 (fresh);
-  the next fresh seed after it is 321.
-- The default bands follow Gate 3's ([0.92, 0.98]); the undetermined-share margin (0.10) and the
-  course-error ratio (2) are proposals the owner may change in the amendment.
-- Free 4-core CI runners suffice (Gate 3's training took minutes per seed from caches).
+- The feature caches of spec 008 (stream 318, validation 0–1499) are reused; they hold the state,
+  the truth and E's encoder state at each row, which is enough for exact errors.
+- Validation seed 314: tuning ordinals 0–499, scoring ordinals 500–1499. Test seed 320 (fresh); the
+  next fresh seed after it is 321.
+- The scoping evidence (AUC ≈ 0.62) suggests a learned p will add little over the per-slice
+  temperature; G4-d is expected to be hard, and that is acceptable: the classical statement is
+  carried if only G4-d fails.
+- Free 4-core CI runners suffice.
