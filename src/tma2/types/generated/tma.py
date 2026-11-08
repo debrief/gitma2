@@ -692,6 +692,7 @@ class ScenarioMetadata(ConfiguredBaseModel):
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
+                       'CalibrationHeadConfig',
                        'Gate2Record']} })
     index: int = Field(default=..., description="""Scenario index within the dataset.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata']} })
     parameters: ScenarioParameters = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'SegmentationHeader', 'GateSDecision']} })
@@ -1245,10 +1246,16 @@ class TrainingConfig(ConfiguredBaseModel):
     units: int = Field(default=..., description="""LSTM units (per direction), conv filters or dense width.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
     kernel_size: Optional[int] = Field(default=None, description="""Causal CNN kernel size.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
     layers: Optional[int] = Field(default=None, description="""Stacked layers: causal CNN conv layers (no dilation; default 3), or recurrent layers for instantaneous and time_late (default 1; each returns sequences; spec 003 R20).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
-    learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
+    learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
     batch_size: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
-    max_epochs: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
-    patience: int = Field(default=..., description="""Epochs without validation improvement before stopping.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
+    max_epochs: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'CalibrationHeadConfig']} })
+    patience: int = Field(default=..., description="""Epochs without validation improvement before stopping.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
     max_wall_s: float = Field(default=..., description="""Wall-clock cap in seconds.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
     loss_weight_range: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
     loss_weight_course: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig']} })
@@ -1423,7 +1430,7 @@ class PhysicsModelConfig(ConfiguredBaseModel):
                        'EModelConfig']} })
     head: PhysicsHead = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'HeadLiveness']} })
     causal: bool = Field(default=..., description="""Causal encoder and physics layer up to the row (instantaneous); false is the time-late control.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
-    width: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
+    width: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig', 'CalibrationHeadConfig']} })
     layers: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
     heads: int = Field(default=..., description="""Attention heads.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     feedforward: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
@@ -1432,7 +1439,7 @@ class PhysicsModelConfig(ConfiguredBaseModel):
     iterations: int = Field(default=..., description="""Physics-layer iterations K.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow', 'PhysicsModelConfig', 'DetectorConfig']} })
     train_iterations: Optional[int] = Field(default=None, description="""Iterations of the tape-free solve during training, before the implicit Newton step (schema 0.19.0; absent = iterations). Prediction, validation and the export use iterations.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     head_activation: Optional[HeadActivation] = Field(default=None, description="""Absent = relu (Gate 1's weights); tanh from spec 004.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
-    min_improvement: Optional[float] = Field(default=None, description="""Relative fall of the validation loss that counts as an improvement (absent = 0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
+    min_improvement: Optional[float] = Field(default=None, description="""Relative fall of the validation loss that counts as an improvement (absent = 0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig', 'CalibrationHeadConfig']} })
     loss_init_weight: float = Field(default=..., description="""Weight of the auxiliary initial-state loss.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     loss_nll_weight: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     nll_beta: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
@@ -1440,15 +1447,22 @@ class PhysicsModelConfig(ConfiguredBaseModel):
     rows_per_scenario: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig']} })
     noise_draws: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     batch_scenarios: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
-    learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
+    learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
     weight_decay: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     epochs: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest', 'PhysicsModelConfig', 'DetectorConfig']} })
-    patience: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
+    patience: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
     seed: int = Field(default=..., description="""Initialisation and row-sampling seed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
                        'PhysicsModelConfig',
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
+                       'CalibrationHeadConfig',
                        'Gate2Record']} })
     shuffle_labels: bool = Field(default=..., description="""Control (c).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig']} })
     threads: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'JobRecord', 'DetectorConfig']} })
@@ -1731,7 +1745,7 @@ class DetectorConfig(ConfiguredBaseModel):
                        'DetectorConfig',
                        'EModelConfig']} })
     variant: DetectorVariant = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'DetectorHeader']} })
-    width: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
+    width: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig', 'CalibrationHeadConfig']} })
     layers: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
     heads: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     feedforward: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
@@ -1749,16 +1763,23 @@ class DetectorConfig(ConfiguredBaseModel):
     downstream_rows: int = Field(default=..., description="""Rows per scenario scored by the downstream loss.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig']} })
     noise_draws: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     batch_scenarios: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
-    learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
+    learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
     weight_decay: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
     epochs: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest', 'PhysicsModelConfig', 'DetectorConfig']} })
-    patience: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'PhysicsModelConfig', 'DetectorConfig']} })
-    min_improvement: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig']} })
+    patience: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
+    min_improvement: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig', 'CalibrationHeadConfig']} })
     seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
                        'PhysicsModelConfig',
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
+                       'CalibrationHeadConfig',
                        'Gate2Record']} })
     threads: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'JobRecord', 'DetectorConfig']} })
 
@@ -2245,6 +2266,7 @@ class GateSRecord(ConfiguredBaseModel):
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
+                       'CalibrationHeadConfig',
                        'Gate2Record']} })
     dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'CrbHeader',
@@ -2279,6 +2301,7 @@ class EModelConfig(ConfiguredBaseModel):
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
+                       'CalibrationHeadConfig',
                        'Gate2Record']} })
     components: list[EComponent] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig']} })
     encoder: PhysicsModelConfig = Field(default=..., description="""The Gate 1 encoder's hyperparameters (smooth heads, zero last layers).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig']} })
@@ -2286,7 +2309,7 @@ class EModelConfig(ConfiguredBaseModel):
     knots: int = Field(default=..., description="""Physics-layer knot cap (12; research R5).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'KnotSet', 'EModelConfig', 'Gate2Decision']} })
     temperature: Optional[float] = Field(default=None, description="""E-s: T of the relaxed acceptance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig']} })
     evidence_network_json: Optional[str] = Field(default=None, description="""E-s: the evidence network's configuration (spec 005's), as JSON.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig']} })
-    shuffled: bool = Field(default=..., description="""Trained on another scenario's truth labels (the shuffled-label control).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig']} })
+    shuffled: bool = Field(default=..., description="""Trained on another scenario's truth labels (the shuffled-label control).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig', 'CalibrationHeadConfig']} })
 
 
 class DecisionTableHeader(ConfiguredBaseModel):
@@ -2410,6 +2433,48 @@ class EPredictionHeader(ConfiguredBaseModel):
     segmentation_sha256: Optional[str] = Field(default=None, description="""SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader']} })
 
 
+class CalibrationHeadConfig(ConfiguredBaseModel):
+    """
+    Spec 008 (research R5, R6): the learned calibration, a log-scale s = bound * tanh(MLP) on E-w's encoder state at the row, its raw log standard deviations and C's code; trained by beta-NLL from the feature cache with E frozen.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    width: int = Field(default=..., description="""Hidden width of the MLP.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig', 'CalibrationHeadConfig']} })
+    bound: float = Field(default=..., description="""Bound on |s| (the covariance scale e^(2s)).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig']} })
+    beta: float = Field(default=..., description="""beta of beta-NLL.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
+    cap: float = Field(default=..., description="""Cap on each row's NLL term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
+    learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
+    batch_rows: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig']} })
+    max_epochs: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig', 'CalibrationHeadConfig']} })
+    patience: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'CalibrationHeadConfig']} })
+    min_improvement: float = Field(default=..., description="""Relative improvement that resets patience.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig', 'CalibrationHeadConfig']} })
+    seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'GateSRecord',
+                       'EModelConfig',
+                       'CalibrationHeadConfig',
+                       'Gate2Record']} })
+    shuffled: Optional[bool] = Field(default=None, description="""Shuffled-label control: rows' NEES permuted each epoch.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig', 'CalibrationHeadConfig']} })
+
+
+class TemperatureConfig(ConfiguredBaseModel):
+    """
+    Spec 008 (research R8): the classical calibration control, one log-scale per slice, fitted by the same loss on validation tuning ordinals.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    slices: Optional[list[str]] = Field(default=None, description="""Slice keys crossed to form the cells: from {minute, open}.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TemperatureConfig']} })
+    beta: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
+    cap: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
+
+
 class Gate2Decision(ConfiguredBaseModel):
     """
     The Gate 2 decision record (spec 007 FR-050, contracts/decision-record.md), committed before any E training.
@@ -2509,6 +2574,7 @@ class Gate2Record(ConfiguredBaseModel):
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
+                       'CalibrationHeadConfig',
                        'Gate2Record']} })
     dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'CrbHeader',
@@ -2598,6 +2664,8 @@ GateSRecord.model_rebuild()
 EModelConfig.model_rebuild()
 DecisionTableHeader.model_rebuild()
 EPredictionHeader.model_rebuild()
+CalibrationHeadConfig.model_rebuild()
+TemperatureConfig.model_rebuild()
 Gate2Decision.model_rebuild()
 Gate2Verdicts.model_rebuild()
 Gate2Record.model_rebuild()

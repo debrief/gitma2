@@ -1759,6 +1759,36 @@ classes:
         range: string
         description: SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).
 
+  CalibrationHeadConfig:
+    description: >-
+      Spec 008 (research R5, R6): the learned calibration, a log-scale s = bound * tanh(MLP) on
+      E-w's encoder state at the row, its raw log standard deviations and C's code; trained by
+      beta-NLL from the feature cache with E frozen.
+    attributes:
+      width: { range: integer, required: true, description: Hidden width of the MLP. }
+      bound: { range: float, required: true, description: "Bound on |s| (the covariance scale e^(2s))." }
+      beta: { range: float, required: true, description: beta of beta-NLL. }
+      cap: { range: float, required: true, description: Cap on each row's NLL term. }
+      learning_rate: { range: float, required: true }
+      batch_rows: { range: integer, required: true }
+      max_epochs: { range: integer, required: true }
+      patience: { range: integer, required: true }
+      min_improvement: { range: float, required: true, description: Relative improvement that resets patience. }
+      seed: { range: integer, required: true }
+      shuffled: { range: boolean, description: "Shuffled-label control: rows' NEES permuted each epoch." }
+
+  TemperatureConfig:
+    description: >-
+      Spec 008 (research R8): the classical calibration control, one log-scale per slice, fitted
+      by the same loss on validation tuning ordinals.
+    attributes:
+      slices:
+        range: string
+        multivalued: true
+        description: "Slice keys crossed to form the cells: from {minute, open}."
+      beta: { range: float, required: true }
+      cap: { range: float, required: true }
+
   Gate2Decision:
     description: >-
       The Gate 2 decision record (spec 007 FR-050, contracts/decision-record.md), committed before

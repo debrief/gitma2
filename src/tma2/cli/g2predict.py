@@ -45,6 +45,7 @@ def _task(args: tuple[Any, ...]) -> list[Task]:
     from tma2.segment import TRANSITION
     from tma2.segment.evidence import CHANNELS
     from tma2.segment.score import g5_rows, iter_selected
+    from tma2.sim.geometry import f32
     from tma2.types.generated.tma import PhysicsModelConfig, SegmentParameters
 
     path, start, count, params_json, plan, model_id, ew, es, segs, want_feats = args
@@ -103,6 +104,7 @@ def _task(args: tuple[Any, ...]) -> list[Task]:
                 {
                     "ordinal": j,
                     "k": k,
+                    "t": f32(float(data[i].t[k])),
                     **f,
                     "truth": _truth_state(tgts[i], k),
                     "own": (float(data[i].ox[k]), float(data[i].oy[k])),
@@ -138,6 +140,7 @@ def write_features(path: Path, frows: list[dict[str, Any]], header: dict[str, An
         header=np.array(json.dumps(header, sort_keys=True)),
         ordinal=np.array([f["ordinal"] for f in frows], dtype=np.int64),
         k=np.array([f["k"] for f in frows], dtype=np.int64),
+        t=np.array([f["t"] for f in frows], dtype=np.float64),
         h=np.array([f["h"] for f in frows], dtype=np.float64),
         cov=np.array([pack_cov(f["cov"]) for f in frows], dtype=np.float64),
         state=np.array([f["state"] for f in frows], dtype=np.float64),

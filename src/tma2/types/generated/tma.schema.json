@@ -26,6 +26,68 @@
             "title": "ArtefactRef",
             "type": "object"
         },
+        "CalibrationHeadConfig": {
+            "additionalProperties": false,
+            "description": "Spec 008 (research R5, R6): the learned calibration, a log-scale s = bound * tanh(MLP) on E-w's encoder state at the row, its raw log standard deviations and C's code; trained by beta-NLL from the feature cache with E frozen.",
+            "properties": {
+                "batch_rows": {
+                    "type": "integer"
+                },
+                "beta": {
+                    "description": "beta of beta-NLL.",
+                    "type": "number"
+                },
+                "bound": {
+                    "description": "Bound on |s| (the covariance scale e^(2s)).",
+                    "type": "number"
+                },
+                "cap": {
+                    "description": "Cap on each row's NLL term.",
+                    "type": "number"
+                },
+                "learning_rate": {
+                    "type": "number"
+                },
+                "max_epochs": {
+                    "type": "integer"
+                },
+                "min_improvement": {
+                    "description": "Relative improvement that resets patience.",
+                    "type": "number"
+                },
+                "patience": {
+                    "type": "integer"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "shuffled": {
+                    "description": "Shuffled-label control: rows' NEES permuted each epoch.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "width": {
+                    "description": "Hidden width of the MLP.",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "width",
+                "bound",
+                "beta",
+                "cap",
+                "learning_rate",
+                "batch_rows",
+                "max_epochs",
+                "patience",
+                "min_improvement",
+                "seed"
+            ],
+            "title": "CalibrationHeadConfig",
+            "type": "object"
+        },
         "ChangeDecision": {
             "additionalProperties": false,
             "description": "The single change of the iteration's change round, fixed from validation evidence and committed before phase B trains (spec 003 R5).",
@@ -4312,6 +4374,34 @@
                 "rate"
             ],
             "title": "TargetManoeuvre",
+            "type": "object"
+        },
+        "TemperatureConfig": {
+            "additionalProperties": false,
+            "description": "Spec 008 (research R8): the classical calibration control, one log-scale per slice, fitted by the same loss on validation tuning ordinals.",
+            "properties": {
+                "beta": {
+                    "type": "number"
+                },
+                "cap": {
+                    "type": "number"
+                },
+                "slices": {
+                    "description": "Slice keys crossed to form the cells: from {minute, open}.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "beta",
+                "cap"
+            ],
+            "title": "TemperatureConfig",
             "type": "object"
         },
         "Track": {
