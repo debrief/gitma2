@@ -1,0 +1,61 @@
+{
+  "description": "Spec 008 T032: the time-late E-w (ewtl-s1) beside the causal E-w (ew-s1, same seed; ew-s3, carried in Gate 2) on seed 314 validation ordinals 500-1499; references reused from the baseline scoring.",
+  "kind": "g2",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "start": 500,
+  "count": 1000,
+  "c": {
+    "branch": "results/segment-c3-val-42268379557",
+    "path": "experiments/segment-runs/c3-val-42268379557/segmentations.ndjson"
+  },
+  "e": {
+    "ew-s1": {
+      "branch": "results/g2predict-g2-a-val-42385722106",
+      "path": "experiments/g2predict-runs/g2-a-val-42385722106/ew-s1.ndjson"
+    },
+    "ew-s3": {
+      "branch": "results/g2predict-g3-base-val-42471500526",
+      "path": "experiments/g2predict-runs/g3-base-val-42471500526/ew-s3.ndjson"
+    },
+    "ewtl-s1": {
+      "branch": "results/g2predict-g3-timelate-val-42521425376",
+      "path": "experiments/g2predict-runs/g3-timelate-val-42521425376/ewtl-s1.ndjson"
+    }
+  },
+  "knots": 12,
+  "detectability": true,
+  "glr_confirm": {
+    "branch": "results/glr-confirm-man2-val-glr-42045836931",
+    "dir": "experiments/glr-confirm-runs/man2-val-glr-42045836931",
+    "config": "glr-q0.2-t13.8"
+  },
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125",
+  "reuse": {
+    "branch": "results/score-g3-base-val-42480880386",
+    "path": "experiments/score-runs/g3-base-val-42480880386/errors.npz"
+  }
+}

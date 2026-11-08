@@ -11,14 +11,16 @@ code commit) so a post's figure can be regenerated. Exit 2 on a usage or data er
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Any
 
 from tma2.data.io import file_digest
 from tma2.data.provenance import read_git_provenance
+from tma2.data.versions import check_versions
 from tma2.eval.errors import Truth
-from tma2.eval.predictions import check_bound, iter_predictions_raw
+from tma2.eval.predictions import iter_predictions_raw
 from tma2.report.plots import (
     ESTIMATORS,
     EstimatorRows,
@@ -40,14 +42,41 @@ def load_truth(split: str, index: int) -> Truth:
     raise ValueError(f"scenario {index} is not in {split}")
 
 
+def allowed_digests(truth_path: str, bound_to: str | None) -> set[str]:
+    """Digests a prediction file may be bound to: the truth file's, and with ``bound_to`` the
+    parent split it was cut from, which the truth file's header must name
+    (``scripts/research/g3_demo_split.py`` writes ``created_by`` with the parent's digest)."""
+    ok = {file_digest(truth_path)}
+    if bound_to:
+        parent = file_digest(bound_to)
+        header, _ = open_split(truth_path)
+        if parent not in str(header.created_by):
+            raise ValueError(
+                f"{truth_path} does not name {bound_to} ({parent[:12]}…) as its parent"
+            )
+        ok.add(parent)
+    return ok
+
+
 def load_rows(
-    path: str, truth_path: str, index: int, label: str | None, colour: str
+    path: str, index: int, label: str | None, colour: str, allowed: set[str]
 ) -> EstimatorRows:
-    header = check_bound(path, truth_path)
-    mode = str(getattr(header.mode, "value", header.mode))
+    """The rows for one scenario. The file must be bound (``dataset_digest``) to one of
+    ``allowed``. Gate 2's E files carry their own header type (``EPredictionHeader``): the header
+    is read as JSON and must name a compatible schema version, a mode and an estimator."""
+    with open(path, encoding="utf-8") as fh:
+        h = json.loads(fh.readline())
+    if h.get("dataset_digest") not in allowed:
+        raise RecordError(path, 1, "dataset_digest is not the truth file's (or --bound-to's)")
+    check_versions(path, str(h.get("schema_version", "")), None)
+    for key in ("mode", "estimator"):
+        if not h.get(key):
+            raise RecordError(path, 1, f"the header has no {key}")
     for _, p in iter_predictions_raw(path):
         if int(p["scenario_index"]) == index:
-            return EstimatorRows(label or header.estimator, list(p["rows"]), mode, colour)
+            return EstimatorRows(
+                label or str(h["estimator"]), list(p["rows"]), str(h["mode"]), colour
+            )
     raise ValueError(f"{path}: no prediction for scenario {index}")
 
 
@@ -62,6 +91,9 @@ def sidecar(a: argparse.Namespace, argv: list[str]) -> dict[str, Any]:
         "truth": {"path": a.truth, "sha256": file_digest(a.truth)},
         "predictions": [{"path": p, "sha256": file_digest(p)} for p in a.predictions],
         "scenario_index": a.scenario,
+        "bound_to": (
+            {"path": a.bound_to, "sha256": file_digest(a.bound_to)} if a.bound_to else None
+        ),
         "code_git_commit": g.commit,
         "code_git_dirty": g.dirty,
     }
@@ -83,14 +115,19 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--title")
         p.add_argument("--note", action="append", default=[])
         p.add_argument("--out", required=True, help=".svg (recommended) or .png")
+        p.add_argument(
+            "--bound-to",
+            help="the split a demo split was cut from: predictions bound to it are accepted",
+        )
     a = ap.parse_args(argv)
     try:
         labels = a.labels.split(",") if a.labels else [None] * len(a.predictions)
         if len(labels) != len(a.predictions):
             raise ValueError("--labels must name one label per prediction file")
         truth = load_truth(a.truth, a.scenario)
+        allowed = allowed_digests(a.truth, a.bound_to)
         ests = [
-            load_rows(p, a.truth, a.scenario, lab, ESTIMATORS[i % len(ESTIMATORS)])
+            load_rows(p, a.scenario, lab, ESTIMATORS[i % len(ESTIMATORS)], allowed)
             for i, (p, lab) in enumerate(zip(a.predictions, labels, strict=True))
         ]
         opts = TrackPlotOptions(

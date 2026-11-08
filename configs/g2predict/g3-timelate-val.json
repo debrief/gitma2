@@ -1,0 +1,29 @@
+{
+  "description": "Spec 008 T032 (research R9 as amended): the time-late E-w (ewtl-s1, non-causal encoder, C's solve at k) on seed 314 validation scoring ordinals 500-1499, to be scored beside the causal ew-s1/ew-s3.",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "ordinals": [
+    500,
+    1500
+  ],
+  "shards": 8,
+  "gate2_plan": "configs/gate2/g3-timelate.json",
+  "segmentations": {
+    "branch": "results/segment-c3-val-42268379557",
+    "path": "experiments/segment-runs/c3-val-42268379557/segmentations.ndjson"
+  },
+  "training": {
+    "branch": "results/g2-g3-timelate-42472497159",
+    "dir": "experiments/g2-runs/g3-timelate-42472497159"
+  },
+  "models": [
+    "ewtl-s1"
+  ]
+}

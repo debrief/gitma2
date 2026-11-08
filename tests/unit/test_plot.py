@@ -115,3 +115,46 @@ def test_at_picks_nearest_row() -> None:
     assert e.at(12.0, 5.0) == rows[1]
     assert e.at(16.0, 5.0) == rows[2]
     assert e.at(40.0, 5.0) is None
+
+
+def test_demo_split_bound_to_parent(man2_pack: Path, tmp_path: Path) -> None:
+    """Predictions bound to a parent split plot on a demo split cut from it only with --bound-to
+    naming that parent (recorded in the sidecar); an E-style header (extra fields) is read too."""
+    truth = _first_truth(man2_pack)
+    a = _write_predictions(man2_pack, tmp_path / "a.ndjson", truth, 300.0, cov=True)
+    lines = a.read_text().splitlines()
+    h = json.loads(lines[0])
+    h["code_sha256"] = "x"  # an EPredictionHeader-only field
+    a.write_text("\n".join([json.dumps(h), *lines[1:]]) + "\n")
+    import runpy
+    import sys
+
+    script = Path(__file__).resolve().parents[2] / "scripts/research/g3_demo_split.py"
+    from tma2.segment.score import iter_selected
+
+    j = next(j for j, m, *_ in iter_selected(man2_pack, 0, 10**6) if int(m["index"]) == truth.index)
+    argv = sys.argv
+    sys.argv = [
+        "g3_demo_split",
+        "--pack",
+        str(man2_pack),
+        "--ordinals",
+        str(j),
+        "--out",
+        str(tmp_path),
+    ]
+    try:
+        runpy.run_path(str(script), run_name="__main__")
+    except SystemExit as e:
+        assert e.code == 0
+    finally:
+        sys.argv = argv
+    demo = tmp_path / "demo.f32pack"
+    base = ["track", "--truth", str(demo), "--predictions", str(a), "--scenario", str(truth.index)]
+    assert cli.main([*base, "--out", str(tmp_path / "x.svg")]) == 2
+    # --bound-to must be the split the demo split names as its parent
+    assert cli.main([*base, "--bound-to", str(demo), "--out", str(tmp_path / "z.svg")]) == 2
+    out = tmp_path / "y.svg"
+    assert cli.main([*base, "--bound-to", str(man2_pack), "--out", str(out)]) == 0
+    side = json.loads(out.with_suffix(".svg.json").read_text())
+    assert side["bound_to"]["path"] == str(man2_pack)
