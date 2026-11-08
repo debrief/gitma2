@@ -381,13 +381,20 @@ def main(argv: list[str] | None = None) -> int:
     cluster = np.array([r.ordinal for r in rows], dtype=np.int64)
     settled = np.array([r.settled for r in rows])
     layer = PhysicsLayer(knots=a.knots)
+    # per-row calibration of every estimator's stated covariance (spec 008), in errors.npz
+    cals: dict[str, np.ndarray] = {}
+
+    def cal(name: str) -> np.ndarray:
+        cals[name] = np.zeros((len(rows), 9))
+        return cals[name]
+
     errs: dict[str, np.ndarray] = {
-        "one_leg": sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg),
-        "oracle": sc.layer_errors(layer, rows, data, metas, truths, sc.oracle),
-        "imm": sc.imm_errors(rows, data, truths, a.imm),
+        "one_leg": sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg, cal("one_leg")),
+        "oracle": sc.layer_errors(layer, rows, data, metas, truths, sc.oracle, cal("oracle")),
+        "imm": sc.imm_errors(rows, data, truths, a.imm, cal("imm")),
     }
     if a.ekf:
-        errs["ekf"] = sc.ekf_errors(rows, data, truths, a.ekf)
+        errs["ekf"] = sc.ekf_errors(rows, data, truths, a.ekf, cal("ekf"))
     naive_src: dict[str, Any] | None = None
     if a.naive_train:
         from tma2.references.naive import fit_naive
@@ -432,7 +439,13 @@ def main(argv: list[str] | None = None) -> int:
                 nm = nm if not a.open_handovers else f"{nm}-{ho}"
                 params[nm] = p.model_copy(update={"mode": mode, "open_handover": ho})
                 errs[nm] = sc.layer_errors(
-                    layer, rows, data, metas, truths, sc.from_segmentations(segs, mode, True, ho)
+                    layer,
+                    rows,
+                    data,
+                    metas,
+                    truths,
+                    sc.from_segmentations(segs, mode, True, ho),
+                    cal(nm),
                 )
                 seg_ivs[nm] = trs
                 open_at[nm] = np.array(
@@ -446,12 +459,14 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
     for spec in a.predictions:
         name, _, path = spec.partition("=")
-        errs[name] = sc.prediction_errors(rows, data, truths, path)
+        errs[name] = sc.prediction_errors(rows, data, truths, path, cal(name))
         print(f"{name} predictions [{time.time() - t0:.0f} s]", flush=True)
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
         acc = sc.load_confirmed(work, cfg)
-        errs["glr_confirm"] = sc.layer_errors(layer, rows, data, metas, truths, sc.glr_confirm(acc))
+        errs["glr_confirm"] = sc.layer_errors(
+            layer, rows, data, metas, truths, sc.glr_confirm(acc), cal("glr_confirm")
+        )
         p0 = next(iter(params.values()), default_parameters())
         seg_ivs["glr_confirm"] = {
             (r.ordinal, r.k): sc.glr_confirm_intervals(acc.get(r.ordinal, []), r.k, p0.t_min_rows)
@@ -466,7 +481,9 @@ def main(argv: list[str] | None = None) -> int:
         def glr_gap(j: int, _m: dict[str, Any], d: Any, k: int) -> Any:
             return segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, g_ivs[(j, k)], "gap", True)
 
-        errs["glr_confirm_gap"] = sc.layer_errors(layer, rows, data, metas, truths, glr_gap)
+        errs["glr_confirm_gap"] = sc.layer_errors(
+            layer, rows, data, metas, truths, glr_gap, cal("glr_confirm_gap")
+        )
         seg_ivs["glr_confirm_gap"] = g_ivs
         print(f"glr_confirm_gap downstream [{time.time() - t0:.0f} s]", flush=True)
 
@@ -642,6 +659,7 @@ def main(argv: list[str] | None = None) -> int:
         "columns": np.array(COLS),
     }
     arrays.update({f"err_{n}": e for n, e in errs.items()})
+    arrays.update({f"cal_{n}": c for n, c in cals.items()})
     np.savez_compressed(out / "errors.npz", **arrays)
     lines = [
         f"# Segmentation scoring: {a.truth}, ordinals {a.start}–{a.start + a.count - 1}",

@@ -292,8 +292,12 @@ def imm_predict(
     params: ImmParams,
     nis_out: list[float] | None = None,
     mu_ct_out: list[float] | None = None,
+    cov: bool = False,
 ) -> dict[str, Any]:
     """gitma ``immPredict``: one row per sample from zig_index + 1.
+
+    ``cov`` (spec 008) adds the mixed covariance's (x, y, vx, vy) block to each plausible row
+    (``physics.uncertainty.row_fields``); the point fields are unchanged.
 
     ``mu_ct_out`` (spec 004 FR-024) receives the coordinated-turn mode probability after each
     row's update, one value per row (NaN where the filter is not running: before initialisation
@@ -352,6 +356,12 @@ def imm_predict(
             est = imm_estimate(xcv, pcv, xct, pct, mu0, mu1)
             if _plausible5(float(d.ox[i]), float(d.oy[i]), est):
                 rows.append(_row(d, est, i, True))
+                if cov:
+                    from tma2.physics.uncertainty import row_fields
+
+                    xm, pm = _mix(xcv, pcv, xct, pct, mu0, mu1)
+                    own_i = (float(d.ox[i]), float(d.oy[i]))
+                    rows[-1].update(row_fields(xm[:4].copy(), pm[:4, :4].copy(), own_i))
                 if mu_ct_out is not None:
                     mu_ct_out.append(float(mu1))
                 continue

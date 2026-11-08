@@ -243,12 +243,15 @@ def ekf_predict(
     p0_scale: float = 1.0,
     r_scale: float = 1.0,
     nis_out: list[float] | None = None,
+    cov: bool = False,
 ) -> dict[str, Any]:
     """gitma ``ekfPredict``: one row per sample from zig_index + 1.
 
     ``nis_out`` (spec 004) receives, per row, the normalised innovation squared of its bearing
     against the predicted state with the measurement's own σ² (not the tuned R); NaN where the
-    row has no bearing or the filter is not running. Collecting it changes no estimate."""
+    row has no bearing or the filter is not running. Collecting it changes no estimate.
+    ``cov`` (spec 008) adds the filter's covariance to each plausible row
+    (``physics.uncertainty.row_fields``); the point fields are unchanged."""
     if not sigma_a >= 0:
         raise ValueError(f"EKF process noise must be ≥ 0, got {sigma_a}")
     if not (p0_scale > 0 and r_scale > 0):
@@ -281,6 +284,12 @@ def ekf_predict(
                 x, p = ekf_update(x, p, float(d.z[i]), float(d.ox[i]), float(d.oy[i]), r2)
             if plausible_state4(float(d.ox[i]), float(d.oy[i]), x):
                 rows.append(_state_row(d, x, i, True))
+                if cov:
+                    from tma2.physics.uncertainty import row_fields
+
+                    rows[-1].update(
+                        row_fields(x.copy(), p.copy(), (float(d.ox[i]), float(d.oy[i])))
+                    )
                 continue
             rows.append(_state_row(d, x, i, False))
             have = False
