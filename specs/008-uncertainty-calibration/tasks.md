@@ -125,7 +125,7 @@ errors.
   - finite gradients;
   - resume determinism in a fresh interpreter;
   - the shuffled control saves its last epoch.
-- [ ] T026 [US3] (CI) Run the feature caches (stream 318, validation 0–1499), the training
+- [x] T026 [US3] (CI) Run the feature caches (stream 318, validation 0–1499), the training
   (cal-s1..3, cal-shuffled), the temperature, `g3predict` on validation, and the validation
   scoring in gate mode. Apply the carried-seed, shuffled and validation rules. Record
   `experiments/<date>-g3-val/` and `carried.json` beside the decision (the shuffled outcome is

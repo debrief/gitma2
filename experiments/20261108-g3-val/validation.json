@@ -1,0 +1,88 @@
+{
+  "split": "validation",
+  "decision_sha256": "da18c2453c9ae830c4324dfa793da5a764f743127e815a0ff042e370f1468470",
+  "scoring_inputs": {
+    "truth": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "segmentations": {
+      "C": "8df52ac63d51e1285e1dc14917029d5f2b93d7be9ef84a50ee2037d5fe1ea50f"
+    },
+    "glr_confirm": {
+      "config": "glr-q0.2-t13.8",
+      "files": 34,
+      "sha256": "7b2a42743202eee149c74a2ed4b88963a83ac4d9391ea6e2706854fa2c9f716e"
+    },
+    "naive_train": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "predictions": {
+      "e-s3": "fd1706d451ab5b5eb87fcd292d674c9afbeecde440a0c271818d2e3956c96990",
+      "cal-s1": "b79eac4ea195e1d03c43ae3492e7437188c3e3609848c7ff454e51eef7150e45",
+      "cal-s2": "2190acee502f8fef30c1d02677cc607611e7b7294cdd2fdb4284fdf19aa83404",
+      "cal-s3": "b06a4be3abc476dbb108f370b8f6117f625063868f3737563eb4d53d2544ca0f",
+      "cal-shuffled": "08b79fcee37f5d8d023f99b30fa75f26db825db4b8b041413f4132f82d30949a",
+      "cal-shuffled-last": "c3bb6e24167df06729a19828ae5ab25ace3fa229261158bdae222a344a8c6fd2",
+      "temp": "e7242aed4e75e246e4397a11f9cd69d056260577dc372ecd63b01202ebd3abee"
+    }
+  },
+  "rows": 3934,
+  "scenarios": 1000,
+  "roles": {
+    "head": "cal-s3",
+    "temperature": "temp",
+    "raw": "e-s3",
+    "shuffled": [
+      "cal-shuffled",
+      "cal-shuffled-last"
+    ]
+  },
+  "g3a": "inconclusive",
+  "g3a_by_quantity": {
+    "log_range": "inconclusive",
+    "course": "inconclusive",
+    "speed": "inconclusive"
+  },
+  "g3b": "fail",
+  "g3c": "fail",
+  "g3d": "pass",
+  "intervals": {
+    "g3a": {
+      "log_range": {
+        "value": 0.9862735129639044,
+        "lo": 0.9799594114662608,
+        "hi": 0.991123510017753
+      },
+      "course": {
+        "value": 0.9227249618708694,
+        "lo": 0.9112244897959184,
+        "hi": 0.9337579617834395
+      },
+      "speed": {
+        "value": 0.983731570920183,
+        "lo": 0.9773306164034641,
+        "hi": 0.9890724269377382
+      }
+    },
+    "g3b": {
+      "value": 0.8345195729537367,
+      "lo": 0.818943626206196,
+      "hi": 0.8488696977393955
+    },
+    "g3c": {
+      "value": 1.0677378900361694,
+      "lo": 0.978622596234648,
+      "hi": 1.1667669404727476
+    }
+  },
+  "shuffled_rule": "pass",
+  "overall": "fail",
+  "shuffled_minus_temperature": {
+    "cal-shuffled": {
+      "value": 2.145103834368154,
+      "lo": 1.9859040323977037,
+      "hi": 2.3423409161612323
+    },
+    "cal-shuffled-last": {
+      "value": 2.3735906112478142,
+      "lo": 2.1979019758638234,
+      "hi": 2.5900291869617194
+    }
+  }
+}
