@@ -61,7 +61,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   helm wander or autopilot oscillation.
 - **Manoeuvre span** — the sample interval of one target course or speed change, from the first
   sample after it starts to the first sample after it ends.
-- **NEES** — normalised estimation error squared, eᵀP⁻¹e for the 4-state error e and stated covariance P; χ² with 4 degrees of freedom when P is right (median 3.357, 95% point 9.488). Gate 3's G3-b uses the median over the χ²₄ median.
+- **NEES** — normalised estimation error squared, eᵀP⁻¹e for the 4-state error e and stated covariance P; χ² with 4 degrees of freedom when P is right (median 3.357, 95% point 9.488). Gate 3's G3-b uses the share of rows within the χ²₄ 95% point (owner, 2026-11-08); the median over the χ²₄ median is reported, not gated.
 - **Nomination** — a candidate transition put to confirmation: a raised GLR alarm (re-tested while raised) or a transition of the additive leg search.
 - **Oracle ceiling** — the physics layer fed with the true manoeuvre times and kinds (knots at
   each manoeuvre's start and end, the chord of a turn, ridge τ_r = 3 m/s): the reference for any

@@ -3,7 +3,8 @@
 Reads an E prediction file and its feature cache (the same rows) and writes a copy in which each
 row's covariance is rescaled (``calibrate_row``), with ``cov_scale_log`` set to the scales.
 Every other field, the point estimate included, is copied unchanged. Rows absent from the cache
-(no estimate) are copied as they are. A cache row with no matching prediction row is refused.
+(no estimate) are copied as they are. A scale with no matching prediction row is refused (the CLI
+passes only the file's scenarios: ``cli.g3predict``).
 """
 
 from __future__ import annotations
