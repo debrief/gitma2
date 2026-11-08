@@ -2,9 +2,9 @@
 
 Adam on β-NLL over usable training rows, in seeded mini-batches; early stopping on the
 validation tuning rows' score (``loss.score``), with patience. Each epoch saves the current
-weights (``last.safetensors``) and the best so far (``best.safetensors``); a shuffled control
-permutes the rows' NEES each epoch, and its last epoch is kept as well as its best (panel G4).
-Resumes from ``meta.json``.
+weights (``last.safetensors``) and the best so far (``best.safetensors``). A shuffled control
+gives each row another row's error and information each epoch; its last epoch is kept as well
+as its best (panel G4). Resumes from ``meta.json``.
 """
 
 from __future__ import annotations
@@ -31,9 +31,9 @@ def predict_s(head: CalHead, x: np.ndarray) -> np.ndarray:
 
 
 def evaluate(head: CalHead, d: CalData, cap: float) -> float:
-    u = d.usable
-    s = torch.tensor(predict_s(head, d.x[u]))
-    return score(s, torch.tensor(d.q[u]), cap)
+    m = d.usable
+    s = torch.tensor(predict_s(head, d.x[m]))
+    return score(s, torch.tensor(d.u[m]), torch.tensor(d.w[m]), cap)
 
 
 def train_head(
@@ -70,19 +70,23 @@ def train_head(
         save_file(head.state_dict(), str(ck / "best.safetensors"))
     tr = train.select(train.usable)
     x_all = torch.tensor(tr.x)
-    q_all = torch.tensor(tr.q)
+    u_all, w_all = torch.tensor(tr.u), torch.tensor(tr.w)
     t_job, done = time.time(), 0
     while not meta["complete"] and meta["epoch"] < cfg.max_epochs:
         if epochs is not None and done >= epochs:
             break
         e = meta["epoch"] + 1
         rng = np.random.default_rng(cfg.seed * 1000 + e)
-        q_e = q_all[torch.tensor(rng.permutation(len(tr)))] if cfg.shuffled else q_all
+        if cfg.shuffled:  # each row's error and information from another row
+            perm = torch.tensor(rng.permutation(len(tr)))
+            u_e, w_e = u_all[perm], w_all[perm]
+        else:
+            u_e, w_e = u_all, w_all
         order = rng.permutation(len(tr))
         t0, tot = time.time(), 0.0
         for s0 in range(0, len(order), cfg.batch_rows):
             idx = torch.tensor(order[s0 : s0 + cfg.batch_rows])
-            loss = beta_nll(head(x_all[idx]), q_e[idx], cfg.beta, cfg.cap)
+            loss = beta_nll(head(x_all[idx]), u_e[idx], w_e[idx], cfg.beta, cfg.cap)
             opt.zero_grad()
             loss.backward()  # type: ignore[no-untyped-call]
             opt.step()

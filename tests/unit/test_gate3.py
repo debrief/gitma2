@@ -11,7 +11,7 @@ import numpy as np
 
 from tma2.calib.gate import FAIL, INCONCLUSIVE, PASS, all_of, below, criteria, inside, shuffled_rule
 
-BANDS = {"coverage95": [0.92, 0.98], "nees_median_ratio": [0.8, 1.25]}
+BANDS = {"coverage95": [0.92, 0.98], "nees_within95": [0.92, 0.98]}
 
 
 def _cal(n: int, scale: float, seed: int) -> np.ndarray:
@@ -120,7 +120,12 @@ def test_g3_cli_validation_then_test(tmp_path: Path) -> None:
     base = ["--scoring", str(s["dir"]), "--decision", str(s["decision"]), *roles]
     vout = tmp_path / "val"
     args = [*base, "--split", "validation", "--shuffled", f"shuf={f['shuf']}"]
+    args += ["--shuffled", f"head={f['head']}"]  # a second version that does beat the temperature
     assert main([*args, "--out", str(vout)]) == 0
+    v = json.loads((vout / "validation.json").read_text())
+    assert v["shuffled_rule"] == FAIL  # any shuffled version beating the temperature fails it
+    one = [*base, "--split", "validation", "--shuffled", f"shuf={f['shuf']}"]
+    assert main([*one, "--out", str(vout)]) == 0
     v = json.loads((vout / "validation.json").read_text())
     assert v["shuffled_rule"] == PASS and v["overall"] == PASS
     # test: refused without the test digest and carried.json, then passes with them

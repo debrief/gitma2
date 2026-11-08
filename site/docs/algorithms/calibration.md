@@ -67,13 +67,12 @@ so the head must beat it (G3-c) before any calibration is credited to learning.
 
 ## Gate 3
 
-The criteria are fixed by the SRD amendment and the decision record before any training result.
-The proposed defaults:
+The criteria are fixed by the SRD (§5) and the decision record before any training result:
 
 | Criterion | Test |
 | --- | --- |
 | G3-a | 95% coverage of log range, course and speed: interval wholly in [0.92, 0.98] |
-| G3-b | NEES ratio: interval wholly in [0.8, 1.25] |
+| G3-b | share of rows with NEES within the χ²₄ 95% point (missing rows outside): interval wholly in [0.92, 0.98] (owner, 2026-11-08) |
 | G3-c | head − temperature, mean interval score in log range: wholly below 0; void if the shuffled control also beats the temperature on validation |
 | G3-d | the calibrated E's point errors equal E's on every row |
 

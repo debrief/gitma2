@@ -80,6 +80,20 @@ Each item gives the decision, the reason, and the alternatives considered.
 - **Alternative:** a diagonal correction in (log range, course, speed). This is deferred: it needs
   a non-linear map back to (x, y, vx, vy). It becomes a candidate if a scalar fails coverage on
   one quantity only.
+- **Amended before the decision record (2026-11-08), on the validation baseline:** the form is
+  *local*: four log-scales, for the standard deviations of log range, bearing, speed and course,
+  applied as A P Aᵀ with A = T⁻¹ diag(e^s) T, T the Jacobian of those coordinates in
+  (x, y, vx, vy) (block diagonal, inverted in closed form; correlations kept). The bound is 4
+  (sd × 55), and the cap moves from the NLL term to each row's raw NEES (the error shrunk to it,
+  cap 10⁴), so a gross row keeps a gradient. Evidence (`experiments/20261108-g3-base-val/`,
+  E's scoring rows): 95% coverage needs the log-range sd × 5.2 and the speed sd × 5.5 but the
+  course sd × 31, so one scale must over-widen range to cover course; even a perfect per-row
+  scalar capped at e² covers only 0.82 of course errors (0.95 at e⁴). Scalar remains available
+  (`form: scalar`).
+- **Heavy tails and G3-b (owner, 2026-11-08):** a temperature fitted on the tuning rows reaches
+  95% coverage of 0.93–0.97 only with a median NEES ratio of 0.04–0.18, and a median ratio of
+  0.6–0.8 only with coverage of 0.79–0.89. The owner moved G3-b to a tail measure (share of
+  rows within the χ²₄ 95% NEES point in [0.92, 0.98]); see the SRD §9.
 
 ## R6. Training loss
 

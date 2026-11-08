@@ -6,7 +6,9 @@ the scorer's scenario-clustered paired bootstrap:
 * **G3-a (coverage):** for each of log range, course and speed, the carried calibrated E's 95%
   coverage over all rows (missing = not covered), interval wholly inside the band → pass; wholly
   outside → fail; otherwise inconclusive. The quantity verdicts combine by ``all_of``.
-* **G3-b (consistency):** the median NEES over the χ²₄ median, interval wholly inside its band.
+* **G3-b (consistency):** the share of rows whose 4-state NEES is within the χ²₄ 95% point
+  (missing = outside), interval wholly inside its band (owner, 2026-11-08: a tail measure, since
+  E's errors are heavy-tailed and the median NEES cannot be 1 when 95% statements are honest).
 * **G3-c (learning):** the head's mean 95% interval score in log range minus the temperature
   control's, paired, wholly below zero; a pass is void (not passed) if the shuffled rule failed
   on validation.
@@ -93,8 +95,8 @@ def criteria(
     }
     lo, hi = bands["coverage95"]
     a = {q: inside(iv, lo, hi) for q, iv in a_iv.items()}
-    b_iv = _interval(meas["nees_median_ratio"].stat, {"c": cal_e}, cluster, level, resamples)
-    b = inside(b_iv, *bands["nees_median_ratio"])
+    b_iv = _interval(meas["nees_within95"].stat, {"c": cal_e}, cluster, level, resamples)
+    b = inside(b_iv, *bands["nees_within95"])
     c_iv = score_difference(cal_e, cal_temp, cluster, level, resamples)
     c = below(c_iv, 0.0)
     if c == PASS and shuffled_rule != PASS:

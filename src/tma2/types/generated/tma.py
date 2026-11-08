@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.27.0"
+version = "0.29.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -88,6 +88,20 @@ linkml_meta = LinkMLMeta({'default_prefix': 'tma',
                           'prefix_reference': 'https://github.com/debrief/gitma/schema/tma/'}},
      'source_file': 'schema/tma.yaml',
      'title': 'TMA via ML data types'} )
+
+class CalibrationForm(str, Enum):
+    """
+    Spec 008 research R5 (as amended) - how the calibration rescales a covariance.
+    """
+    scalar = "scalar"
+    """
+    One log-scale s: e^(2s) times the covariance.
+    """
+    local = "local"
+    """
+    Four log-scales in local coordinates (log range, bearing, speed, course).
+    """
+
 
 class RecordKind(str, Enum):
     """
@@ -846,7 +860,7 @@ class PredictionRow(ConfiguredBaseModel):
     speed_sd_mps: Optional[float] = Field(default=None, description="""First-order standard deviation of speed from the row's covariance (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow'], 'unit': {'ucum_code': 'm/s'}} })
     cov_xyvv: Optional[list[float]] = Field(default=None, description="""Upper triangle, row-major, of the 4 x 4 covariance of (x, y, vx, vy) at the row (10 values; m², m²/s, m²/s²), as the estimator states it (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
     cov_ok: Optional[bool] = Field(default=None, description="""The covariance is usable: finite, positive definite, and the target not on ownship (range > 1 m) (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
-    cov_scale_log: Optional[float] = Field(default=None, description="""Calibrated rows only: the calibration's log-scale s; the stated covariance is e^(2s) times the solve's (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
+    cov_scale_log: Optional[list[float]] = Field(default=None, description="""Calibrated rows only: the calibration's log-scales s in local coordinates (log range, bearing, speed, course; one value when scalar): the stated covariance is the solve's with those coordinates' standard deviations multiplied by e^s, correlations kept (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
     vx_sd_mps: Optional[float] = Field(default=None, description="""Standard deviation of the estimated east velocity (velocity_gaussian only).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow'], 'unit': {'ucum_code': 'm/s'}} })
     vy_sd_mps: Optional[float] = Field(default=None, description="""Standard deviation of the estimated north velocity (velocity_gaussian only).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow'], 'unit': {'ucum_code': 'm/s'}} })
 
@@ -2492,7 +2506,8 @@ class CalibrationHeadConfig(ConfiguredBaseModel):
     width: int = Field(default=..., description="""Hidden width of the MLP.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PhysicsModelConfig', 'DetectorConfig', 'CalibrationHeadConfig']} })
     bound: float = Field(default=..., description="""Bound on |s| (the covariance scale e^(2s)).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig']} })
     beta: float = Field(default=..., description="""beta of beta-NLL.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
-    cap: float = Field(default=..., description="""Cap on each row's NLL term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
+    cap: float = Field(default=..., description="""Cap on each row's raw NEES: a row above it has its error shrunk to it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
+    form: Optional[CalibrationForm] = Field(default=None, description="""scalar (one s) or local (four s, log range, bearing, speed, course); default scalar.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
     learning_rate: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TrainingConfig',
                        'PhysicsModelConfig',
                        'DetectorConfig',
@@ -2523,6 +2538,7 @@ class TemperatureConfig(ConfiguredBaseModel):
     slices: Optional[list[str]] = Field(default=None, description="""Slice keys crossed to form the cells: from {minute, open}.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TemperatureConfig']} })
     beta: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
     cap: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
+    form: Optional[CalibrationForm] = Field(default=None, description="""As CalibrationHeadConfig.form.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CalibrationHeadConfig', 'TemperatureConfig']} })
 
 
 class Gate2Decision(ConfiguredBaseModel):
@@ -2628,7 +2644,7 @@ class Gate3Criteria(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     coverage95: list[float] = Field(default=..., description="""G3-a: [lo, hi] for each of log range, course and speed; the interval wholly inside.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate3Criteria']} })
-    nees_median_ratio: list[float] = Field(default=..., description="""G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate3Criteria']} })
+    nees_within95: list[float] = Field(default=..., description="""G3-b: [lo, hi] for the share of rows with 4-state NEES within the chi-squared(4) 95% point (missing rows outside); wholly inside.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate3Criteria']} })
 
 
 class Gate3Decision(ConfiguredBaseModel):

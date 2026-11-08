@@ -26,6 +26,15 @@
             "title": "ArtefactRef",
             "type": "object"
         },
+        "CalibrationForm": {
+            "description": "Spec 008 research R5 (as amended) - how the calibration rescales a covariance.",
+            "enum": [
+                "scalar",
+                "local"
+            ],
+            "title": "CalibrationForm",
+            "type": "string"
+        },
         "CalibrationHeadConfig": {
             "additionalProperties": false,
             "description": "Spec 008 (research R5, R6): the learned calibration, a log-scale s = bound * tanh(MLP) on E-w's encoder state at the row, its raw log standard deviations and C's code; trained by beta-NLL from the feature cache with E frozen.",
@@ -42,8 +51,19 @@
                     "type": "number"
                 },
                 "cap": {
-                    "description": "Cap on each row's NLL term.",
+                    "description": "Cap on each row's raw NEES: a row above it has its error shrunk to it.",
                     "type": "number"
+                },
+                "form": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CalibrationForm"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "scalar (one s) or local (four s, log range, bearing, speed, course); default scalar."
                 },
                 "learning_rate": {
                     "type": "number"
@@ -1702,8 +1722,8 @@
                     },
                     "type": "array"
                 },
-                "nees_median_ratio": {
-                    "description": "G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside.",
+                "nees_within95": {
+                    "description": "G3-b: [lo, hi] for the share of rows with 4-state NEES within the chi-squared(4) 95% point (missing rows outside); wholly inside.",
                     "items": {
                         "type": "number"
                     },
@@ -1712,7 +1732,7 @@
             },
             "required": [
                 "coverage95",
-                "nees_median_ratio"
+                "nees_within95"
             ],
             "title": "Gate3Criteria",
             "type": "object"
@@ -3690,9 +3710,12 @@
                     ]
                 },
                 "cov_scale_log": {
-                    "description": "Calibrated rows only: the calibration's log-scale s; the stated covariance is e^(2s) times the solve's (spec 008).",
+                    "description": "Calibrated rows only: the calibration's log-scales s in local coordinates (log range, bearing, speed, course; one value when scalar): the stated covariance is the solve's with those coordinates' standard deviations multiplied by e^s, correlations kept (spec 008).",
+                    "items": {
+                        "type": "number"
+                    },
                     "type": [
-                        "number",
+                        "array",
                         "null"
                     ]
                 },
@@ -4497,6 +4520,17 @@
                 "cap": {
                     "type": "number"
                 },
+                "form": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CalibrationForm"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "As CalibrationHeadConfig.form."
+                },
                 "slices": {
                     "description": "Slice keys crossed to form the cells: from {minute, open}.",
                     "items": {
@@ -4859,6 +4893,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.27.0"
+    "version": "0.29.0"
 }
 

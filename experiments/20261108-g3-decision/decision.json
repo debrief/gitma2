@@ -1,0 +1,37 @@
+{
+  "plan_id": "g3-a",
+  "plan_digest": "fdf7987e5a15ac84e73b51a5b90e1ec2ec8427157313df79ea469f8b44ef07c7",
+  "validation_seed": 314,
+  "validation_digest": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+  "train_seed": 318,
+  "test_seed": 320,
+  "carried_e": "e-s3",
+  "carried_e_weights": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+  "criteria": {
+    "coverage95": [
+      0.92,
+      0.98
+    ],
+    "nees_within95": [
+      0.92,
+      0.98
+    ]
+  },
+  "score_of_record": "Mean 95% interval score (Gneiting-Raftery) in log range over all sigma = 1 deg G5 rows, a row without a usable covariance charged the 99th percentile (eval.calibration).",
+  "temperature": {
+    "slices": [
+      "minute",
+      "open"
+    ],
+    "beta": 0.5,
+    "cap": 10000.0,
+    "form": "local"
+  },
+  "bootstrap_level": 0.975,
+  "bootstrap_resamples": 2000,
+  "carried_rule": "Of the head's three seeds (cal-s1..cal-s3, best epoch), the carried head is the one with the median validation interval score in log range (seed 314 scoring ordinals 500-1499; tma2-g3 on the validation scoring run's errors.npz).",
+  "shuffled_rule": "The shuffled head (cal-shuffled) is scored on validation at its best and at its last epoch. If either one's interval score in log range minus the temperature's (paired, clustered, 97.5%) lies wholly below zero, a G3-c pass is void (recorded as not passed). The test gate reads the outcome from validation.json by the digest in carried.json.",
+  "validation_rule": "The carried head goes to test only if every check's point meets its band or limit on validation (G3-a, G3-b inside [0.92, 0.98]; G3-c below 0; G3-d exact). Otherwise seed 320 is not generated and the record says so; the follow-on is decided as SRD section 5.",
+  "follow_on": "SRD section 5: proposed in the write-up with a recommended default, adopted if the owner has not objected by the next spec. If only G3-c fails, the temperature is carried as the calibration. If G3-a or G3-b fails, the expected default is a heavy-tailed predictive (Student-t or a gross-error mixture) as a new spec, since E's errors are heavy-tailed.",
+  "forecast": "Validation baseline: E's 95% coverage 0.60 (log range), 0.53 (course), 0.65 (speed); 0.33 of rows within the chi2_4 95% NEES point. The local temperature fitted on the tuning rows (0-499, in sample) reaches 0.965 / 0.926 / 0.960 coverage (log range / course / speed) but only 0.79 of rows within the NEES point. Forecast: G3-a pass 0.4 (course the binding quantity), G3-b pass 0.15 (heavy joint tails), G3-c pass 0.5 (the head reads range and E's state, which the temperature cannot), G3-d pass 1.0 (points are copied). Overall pass about 0.1; the most likely outcome is G3-b failed on validation, so seed 320 is not generated."
+}

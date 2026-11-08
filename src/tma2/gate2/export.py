@@ -90,6 +90,35 @@ def log_sds(state: Tensor, cov: Tensor, own_k: Tensor) -> tuple[Tensor, Tensor]:
     return lsd, ok.all(dim=1)
 
 
+def local_rescale_t(state: Tensor, cov: Tensor, own_k: Tensor, s: Tensor) -> Tensor:
+    """[N, 4, 4] ``physics.uncertainty.local_rescale`` in torch: A P Aᵀ, A = T⁻¹ diag(e^s) T, with
+    T's 2 × 2 blocks inverted in closed form (no ``Inverse`` op). ``s`` is [N, 1] or [N, 4]."""
+    dx, dy = state[:, 0] - own_k[:, 0], state[:, 1] - own_k[:, 1]
+    vx, vy = state[:, 2], state[:, 3]
+    one = torch.ones_like(dx)
+    r2 = torch.where(dx * dx + dy * dy > 0, dx * dx + dy * dy, one)
+    s2 = torch.where(vx * vx + vy * vy > 0, vx * vx + vy * vy, one)
+    sp = torch.sqrt(s2)
+    z = torch.zeros_like(dx)
+
+    def mat(rows: list[list[Tensor]]) -> Tensor:
+        return torch.stack([torch.stack(r, dim=1) for r in rows], dim=1)
+
+    t = mat(
+        [
+            [dx / r2, dy / r2, z, z],
+            [dy / r2, -dx / r2, z, z],
+            [z, z, vx / sp, vy / sp],
+            [z, z, vy / s2, -vx / s2],
+        ]
+    )
+    t_inv = mat([[dx, dy, z, z], [dy, -dx, z, z], [z, z, vx / sp, vy], [z, z, vy / sp, -vx]])
+    e = torch.exp(s.expand(-1, 4))
+    a = t_inv @ (e.unsqueeze(2) * t)
+    out: Tensor = a @ cov @ a.transpose(1, 2)
+    return 0.5 * (out + out.transpose(1, 2))
+
+
 class EWExport(nn.Module):
     """C's hand-over of one prefix per window and C's code channel in; E-w's state at the row,
     its covariance and the plausible and cov_ok flags (0/1 doubles) out."""
@@ -138,9 +167,13 @@ class EWExport(nn.Module):
         lsd, sd_ok = log_sds(o.state, o.cov, own[rows, k])
         assert o.h_k is not None
         feats = torch.cat([o.h_k, lsd, code[rows, k].unsqueeze(1)], dim=1)
-        usable = o.plausible & o.cov_ok & sd_ok
-        s = torch.where(usable, self.head(feats), torch.zeros_like(feats[:, 0]))
-        cal = torch.exp(2 * s).unsqueeze(1).unsqueeze(2) * o.cov
+        usable = (o.plausible & o.cov_ok & sd_ok).unsqueeze(1)
+        raw = self.head(feats)  # [N, m]
+        s = torch.where(usable, raw, torch.zeros_like(raw))
+        if raw.shape[1] == 1:
+            cal = torch.exp(2 * s).unsqueeze(2) * o.cov
+        else:  # local form: log range, bearing, speed, course (research R5 as amended)
+            cal = local_rescale_t(o.state, o.cov, own[rows, k], s)
         return o.state, o.cov, *flags, cal, s
 
 
