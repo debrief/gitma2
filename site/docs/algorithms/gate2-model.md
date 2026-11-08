@@ -95,6 +95,13 @@ in for them (`gate2.predict`, model kind `veto` in `tma2-g2predict`):
 On Gate 2's test seed C″ recovers +0.018 of E's +0.025 over C; E − C″ is +0.007 [+0.001,
 +0.012] (`experiments/20261107-g2-veto/`). Later gates keep C″ as a standing control.
 
+## Export
+
+E exports as two ONNX graphs (constitution VI, three runtimes to 1e-5 in CI): E-s's evidence
+network (`segment.evidence_export --plan configs/gate2/g2-a.json`) and E-w on C's hand-over of one
+prefix (`gate2.export`: the encoder, heads and 12-knot physics layer, its 100 iterations one ONNX
+`Loop`). C's nomination and confirmation stay host code between them.
+
 ## The gate
 
 `tma2-g2` scores E's prediction files beside C, one leg, the oracle, GLR + confirm, the frozen

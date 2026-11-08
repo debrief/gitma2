@@ -186,11 +186,17 @@ def export(net: EvidenceNet, out_dir: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", required=True)
-    ap.add_argument("--plan", default="configs/segment/gs-plan.json")
+    ap.add_argument(
+        "--plan",
+        default="configs/segment/gs-plan.json",
+        help="a Gate S plan (L) or a Gate 2 plan (E-s: its 'es' block)",
+    )
     ap.add_argument("--weights", help="best.safetensors of a trained L (default: seeded random)")
     ap.add_argument("--seed", type=int, default=1)
     a = ap.parse_args(argv)
-    cfg = json.loads(Path(a.plan).read_text())["evidence_network"]
+    plan = json.loads(Path(a.plan).read_text())
+    # a Gate S plan's ``evidence_network``, or a Gate 2 plan's ``es`` block (E-s; spec 007 T033)
+    cfg = plan["evidence_network"] if "evidence_network" in plan else plan["es"]
     default = torch.get_default_dtype()
     torch.set_default_dtype(torch.float64)
     try:

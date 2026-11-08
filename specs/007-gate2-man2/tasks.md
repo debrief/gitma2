@@ -246,7 +246,7 @@ mismatches.
 
 ## Phase 7: Polish
 
-- [ ] T033 Export E (E-w on C's segmentation as an input, E-s's evidence network) to ONNX, with
+- [x] T033 Export E (E-w on C's segmentation as an input, E-s's evidence network) to ONNX, with
   three-runtime conformance to 1e-5 (constitution VI), as spec 005's evidence export.
 - [ ] T034 Run `quickstart.md` end to end and fix any drift.
 
@@ -270,8 +270,9 @@ Remaining:
    The algorithm note and glossary exist (`site/docs/algorithms/gate2-model.md`); add a section
    on the controls. Then `(cd site && npm ci && npm run build)`.
 2. **T032** AGENTS.md is updated (status, controls, gotchas); add the final verdict line.
-3. **T033** ONNX export of E (E-s's evidence network as `segment/evidence_export.py`; E-w as
-   `models/export.py`'s physics-model export plus C's code channel), three legs in `ci.yml`.
+3. **T033** done: `segment.evidence_export --plan configs/gate2/g2-a.json` (E-s) and
+   `gate2.export` (E-w on C's hand-over, 100 iterations as one Loop, 12 knots), carried weights,
+   three legs in `ci.yml` (Python leg: E-s 6e-16, E-w 3.4e-8).
 4. **T034** quickstart.
 5. Follow-ons for the next plan: time-late variant (G7); score last-epoch shuffled weights (G4);
    coverage assertion in `tma2-g2` and merge-step counts (G10, G11); bind GLR files and E's C file
