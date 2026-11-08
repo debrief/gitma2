@@ -95,7 +95,7 @@ errors.
   - the feature caches by branch;
   - the carried E (e-s3, `a5485318…`);
   - the score of record.
-- [ ] T018 Commit the decision record `experiments/<date>-g3-decision/decision.json` (Gate3Decision)
+- [x] T018 Commit the decision record `experiments/<date>-g3-decision/decision.json` (Gate3Decision)
   and README, binding the plan digest, criteria, rules, seed 320 and the forecast, after the
   amendment is merged.
 
