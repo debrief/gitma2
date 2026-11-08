@@ -6,7 +6,8 @@ at the row, C's code there, the plausible and ``cov_ok`` flags, and the slice ke
 open-at-k). This module loads shards into one ``CalData`` and derives what the head and the loss
 need: the input features, and each row's error and information in local coordinates
 (``physics.uncertainty.LOCAL``: log range, bearing, speed, course), u = T e and W = (T P Tᵀ)⁻¹,
-so that the NEES under the covariance rescaled by e^s in those coordinates is
+(spec 009) the exact errors (ln range ratio, wrapped course, speed) and the stated sds, so that
+the NEES under the covariance rescaled by e^s in those coordinates is
 Σ_ij u_i u_j W_ij e^(−s_i − s_j) (research R5 as amended). ``q`` is the raw NEES (s = 0).
 """
 
@@ -37,6 +38,8 @@ class CalData:
     minute: np.ndarray  # [N]
     open: np.ndarray  # [N] bool
     header: dict[str, Any]
+    sd: np.ndarray | None = None  # [N, 3] stated sds: log range, course (rad), speed (spec 009)
+    err: np.ndarray | None = None  # [N, 3] exact errors: ln range ratio, wrapped course, speed
 
     def select(self, mask: np.ndarray) -> CalData:
         return CalData(
@@ -53,6 +56,8 @@ class CalData:
             self.minute[mask],
             self.open[mask],
             self.header,
+            None if self.sd is None else self.sd[mask],
+            None if self.err is None else self.err[mask],
         )
 
     def __len__(self) -> int:
@@ -101,6 +106,19 @@ def load(paths: list[str | Path]) -> CalData:
     scalable = cat["plausible"] & cat["cov_ok"] & np.isfinite(log_sd).all(axis=1)
     usable = scalable & np.isfinite(q)
     x = np.concatenate([cat["h"], np.nan_to_num(log_sd), cat["code_k"][:, None]], axis=1)
+    st, tr, ow = cat["state"], cat["truth"], cat["own"]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r_est = np.hypot(st[:, 0] - ow[:, 0], st[:, 1] - ow[:, 1])
+        r_true = np.hypot(tr[:, 0] - ow[:, 0], tr[:, 1] - ow[:, 1])
+        dc = np.arctan2(st[:, 2], st[:, 3]) - np.arctan2(tr[:, 2], tr[:, 3])
+        err = np.stack(
+            [
+                np.log(r_est / r_true),
+                np.arctan2(np.sin(dc), np.cos(dc)),
+                np.hypot(st[:, 2], st[:, 3]) - np.hypot(tr[:, 2], tr[:, 3]),
+            ],
+            axis=1,
+        )
     return CalData(
         ordinal=cat["ordinal"],
         k=cat["k"],
@@ -115,4 +133,6 @@ def load(paths: list[str | Path]) -> CalData:
         minute=cat["minute"],
         open=cat["open"].astype(bool),
         header=head,
+        sd=np.exp(log_sd),
+        err=err,
     )
