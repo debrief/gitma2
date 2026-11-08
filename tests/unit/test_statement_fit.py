@@ -83,3 +83,36 @@ def test_head_learns_course_reliability(tmp_path: Path) -> None:
     knots = fit_isotonic(s, va, cfg.xmax_rad, 10)
     assert np.all(np.diff(knots[1]) >= -1e-12)
     assert evaluate(h, va, loss_scale(meta["global"], tr)) == meta["best_val"]
+
+
+def test_g4predict_writes_the_statement(tmp_path: Path, capsys: object) -> None:
+    """Statement fields on every covered row, points unchanged, header names its own commit; a
+    file scenario without cache rows is refused."""
+    import json
+
+    from tma2.cli.g4predict import main
+
+    from .test_calib import _g3_inputs
+
+    args = _g3_inputs(tmp_path, [1, 2], [1, 2])
+    plan = {"head": {"xmax_rad": math.radians(45), "width": 8, "bound": 2.0}, "models": {}}
+    (tmp_path / "plan.json").write_text(json.dumps(plan))
+    t = {
+        "slices": ["minute"],
+        "global": {"a": 1.2, "p": 0.6, "c_r": 2.5, "c_s": 2.5},
+        "cells": {},
+        "isotonic": {"x": [0.0, 1.0], "y": [0.0, 1.0]},
+    }
+    (tmp_path / "t.json").write_text(json.dumps(t))
+    out = tmp_path / "o.ndjson"
+    assert main([*args, "--out", str(out)]) == 0
+    lines = out.read_text().splitlines()
+    h = json.loads(lines[0])["calibration"]
+    assert h["kind"] == "temperature" and "git_commit" in h and "git_dirty" in h
+    src = json.loads((tmp_path / "e.ndjson").read_text().splitlines()[1])["rows"][0]
+    row = json.loads(lines[1])["rows"][0]
+    assert all(row[k] == src[k] for k in ("range_m", "course_rad", "speed_mps", "x_m", "y_m"))
+    assert 0 < row["course_arc_rad"] <= math.radians(45) and 0 <= row["course_arc_prob"] <= 1
+    assert row["range_ratio_q95"] > 0 and row["speed_q95_mps"] > 0
+    args = _g3_inputs(tmp_path, [1], [1, 2])
+    assert main([*args, "--out", str(tmp_path / "o2.ndjson")]) == 2
