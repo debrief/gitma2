@@ -3,13 +3,12 @@
     uv run tma2-g3predict --in <E prediction.ndjson> --features <cache.npz>… --plan <g3 plan>
         (--model <id> --weights <head.safetensors> | --temperature <temperature.json>) --out <file>
 
-Each row of the file's scenarios gets its covariance rescaled (``calib.predict``); every point
-field is copied unchanged (FR-020). The cache may span more scenarios than the file (a validation
-cache holds the tuning ordinals too): those rows are left out and counted. A scenario of the file
-with no cache rows is refused, as is a cache row of one of its scenarios with no matching row.
-The header gains ``calibration``: the kind, the weights' or temperatures' digest and the plan's. Refuses a cache made from other E weights than
-the prediction file's.
-"""
+Each row of the file's scenarios gets its covariance rescaled (``calib.predict``); every point field
+is copied unchanged (FR-020). The cache may span more scenarios than the file (a validation cache
+holds the tuning ordinals too): those rows are left out and counted. A scenario of the file with no
+cache rows is refused, as is a cache row of one of its scenarios with no matching row. The header
+gains ``calibration``: the kind, the weights' or temperatures' digest and the plan's. Refuses a
+cache made from other E weights than the prediction file's."""
 
 from __future__ import annotations
 
