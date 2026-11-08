@@ -59,15 +59,45 @@ INPUTS = (
     "code",
 )
 OUTPUTS = ("state", "cov", "plausible", "cov_ok")
+CAL_OUTPUTS = ("cov_calibrated", "scale_log")
+
+
+def log_sds(state: Tensor, cov: Tensor, own_k: Tensor) -> tuple[Tensor, Tensor]:
+    """[N, 3] log first-order sds of log range, course and speed (``physics.uncertainty``), as
+    the calibration head's features (``calib.data``): 0 where a variance is not finite and
+    positive; and [N] whether all three are (``calib.data``'s usable rows need it). Matmuls and
+    ``where`` only, so it exports."""
+    dt = state.dtype
+    dx, dy = state[:, 0] - own_k[:, 0], state[:, 1] - own_k[:, 1]
+    vx, vy = state[:, 2], state[:, 3]
+    r2, s2 = dx * dx + dy * dy, vx * vx + vy * vy
+    one = torch.ones_like(r2)
+    rs = torch.where(r2 > 0, r2, one)
+    ss = torch.where(s2 > 0, s2, one)
+    sp = torch.sqrt(ss)
+    z = torch.zeros_like(r2)
+    g = torch.stack(
+        [
+            torch.stack([dx / rs, dy / rs, z, z], dim=1) * (r2 > 0).to(dt).unsqueeze(1),
+            torch.stack([z, z, vy / ss, -vx / ss], dim=1) * (s2 > 0).to(dt).unsqueeze(1),
+            torch.stack([z, z, vx / sp, vy / sp], dim=1) * (s2 > 0).to(dt).unsqueeze(1),
+        ],
+        dim=1,
+    )  # [N, 3, 4]
+    var = ((g @ cov) * g).sum(dim=2)
+    ok = torch.isfinite(var) & (var > 0)
+    lsd = torch.where(ok, 0.5 * torch.log(torch.where(ok, var, torch.ones_like(var))), 0 * var)
+    return lsd, ok.all(dim=1)
 
 
 class EWExport(nn.Module):
     """C's hand-over of one prefix per window and C's code channel in; E-w's state at the row,
     its covariance and the plausible and cov_ok flags (0/1 doubles) out."""
 
-    def __init__(self, model: EWeights) -> None:
+    def __init__(self, model: EWeights, head: nn.Module | None = None) -> None:
         super().__init__()
         self.model = model
+        self.head = head
 
     def forward(
         self,
@@ -83,7 +113,7 @@ class EWExport(nn.Module):
         log_weight: Tensor,
         speed_skip: Tensor,
         code: Tensor,
-    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+    ) -> tuple[Tensor, ...]:
         x = PhysicsInputs(
             bearing=bearing,
             valid=valid,
@@ -99,7 +129,19 @@ class EWExport(nn.Module):
         )
         o = self.model(x, code)
         dt = bearing.dtype
-        return o.state, o.cov, o.plausible.to(dt), o.cov_ok.to(dt)
+        flags = (o.plausible.to(dt), o.cov_ok.to(dt))
+        if self.head is None:
+            return o.state, o.cov, *flags
+        # spec 008 T034: the calibration head on the row's features, e^(2s) on the covariance;
+        # s = 0 where the raw covariance is not usable (as tma2-g3predict)
+        rows = torch.arange(k.shape[0])
+        lsd, sd_ok = log_sds(o.state, o.cov, own[rows, k])
+        assert o.h_k is not None
+        feats = torch.cat([o.h_k, lsd, code[rows, k].unsqueeze(1)], dim=1)
+        usable = o.plausible & o.cov_ok & sd_ok
+        s = torch.where(usable, self.head(feats), torch.zeros_like(feats[:, 0]))
+        cal = torch.exp(2 * s).unsqueeze(1).unsqueeze(2) * o.cov
+        return o.state, o.cov, *flags, cal, s
 
 
 def model_config(plan: dict[str, Any], seed: int = 1) -> PhysicsModelConfig:
@@ -118,6 +160,29 @@ def seeded_model(cfg: PhysicsModelConfig, seed: int) -> EWeights:
             last.weight.copy_(0.05 * torch.randn(last.weight.shape, generator=g))
             last.bias.copy_(0.02 * torch.randn(last.bias.shape, generator=g))
     return model
+
+
+def calibration_head(
+    plan_path: str, width: int, weights: str | None, seed: int
+) -> tuple[nn.Module, str]:
+    """The calibration head for E-w's encoder width (h, 3 log sds, code): trained weights, or
+    seeded random ones in both layers (its zero output layer perturbed, so the check exercises
+    it)."""
+    from tma2.calib.head import CalHead
+    from tma2.types.generated.tma import CalibrationHeadConfig
+
+    plan = json.loads(Path(plan_path).read_text())
+    cfg = CalibrationHeadConfig.model_validate({**plan["head"], "seed": seed})
+    torch.manual_seed(seed + 10)
+    head = CalHead(cfg, width + 4).double()
+    if weights:
+        head.load_state_dict(load_file(weights))
+        return head, weights
+    g = torch.Generator().manual_seed(seed + 11)
+    with torch.no_grad():
+        head.out.weight.copy_(0.3 * torch.randn(head.out.weight.shape, generator=g))
+        head.out.bias.copy_(0.1 * torch.randn(head.out.bias.shape, generator=g))
+    return head, f"seeded random (seed {seed}, output layer perturbed)"
 
 
 def golden_batch(n: int = 6) -> dict[str, np.ndarray]:
@@ -177,12 +242,14 @@ def golden_batch(n: int = 6) -> dict[str, np.ndarray]:
     return out
 
 
-def export(model: EWeights, out_dir: Path) -> dict[str, Any]:
-    """Export ``model`` (double) and run the Python leg; returns the leg's record."""
+def export(model: EWeights, out_dir: Path, head: nn.Module | None = None) -> dict[str, Any]:
+    """Export ``model`` (double), with the calibration head if given, and run the Python leg;
+    returns the leg's record."""
     out_dir.mkdir(parents=True, exist_ok=True)
     model = model.double().eval()
     model.set_implicit(False)
-    wrapper = EWExport(model).eval()
+    outputs = OUTPUTS if head is None else (*OUTPUTS, *CAL_OUTPUTS)
+    wrapper = EWExport(model, None if head is None else head.double().eval()).eval()
     batch = golden_batch()
     tensors = tuple(torch.from_numpy(batch[name]) for name in INPUTS)
     with torch.no_grad():
@@ -194,17 +261,18 @@ def export(model: EWeights, out_dir: Path) -> dict[str, Any]:
             tensors,
             str(onnx_path),
             input_names=list(INPUTS),
-            output_names=list(OUTPUTS),
-            dynamic_axes={name: {0: "batch"} for name in (*INPUTS, *OUTPUTS)},
+            output_names=list(outputs),
+            dynamic_axes={name: {0: "batch"} for name in (*INPUTS, *outputs)},
             opset_version=OPSET,
             dynamo=False,
         )
     save_file(
-        {k: v.contiguous() for k, v in model.state_dict().items()}, out_dir / "weights.safetensors"
+        {k: v.contiguous() for k, v in wrapper.state_dict().items()},
+        out_dir / "weights.safetensors",
     )
     for name, arr in batch.items():
         (out_dir / f"in_{name}.bin").write_bytes(np.ascontiguousarray(arr).tobytes())
-    for name, arr in zip(OUTPUTS, ref, strict=True):
+    for name, arr in zip(outputs, ref, strict=True):
         (out_dir / f"out_{name}.bin").write_bytes(np.ascontiguousarray(arr).tobytes())
     (out_dir / "shapes.json").write_text(json.dumps({n: list(a.shape) for n, a in batch.items()}))
     (out_dir / "manifest.json").write_text(
@@ -216,7 +284,7 @@ def export(model: EWeights, out_dir: Path) -> dict[str, Any]:
                 },
                 "outputs": {
                     n: {"shape": list(a.shape), "dtype": str(a.dtype)}
-                    for n, a in zip(OUTPUTS, ref, strict=True)
+                    for n, a in zip(outputs, ref, strict=True)
                 },
             },
             indent=2,
@@ -234,11 +302,11 @@ def export(model: EWeights, out_dir: Path) -> dict[str, Any]:
     t0 = time.perf_counter()
     got = sess.run(None, {name: batch[name] for name in INPUTS})
     run_s = time.perf_counter() - t0
-    for name, a in zip(OUTPUTS, got, strict=True):
+    for name, a in zip(outputs, got, strict=True):
         (out_dir / f"ort_{name}.bin").write_bytes(np.ascontiguousarray(a).tobytes())
     diffs = {
         name: float(np.max(np.abs(a - b) / np.maximum(np.abs(b), 1.0)))
-        for name, a, b in zip(OUTPUTS, got, ref, strict=True)
+        for name, a, b in zip(outputs, got, ref, strict=True)
     }
     ins = b"".join((out_dir / f"in_{n}.bin").read_bytes() for n in sorted(batch))
     record = {
@@ -267,6 +335,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--plan", default="configs/gate2/g2-a.json")
     ap.add_argument("--weights", help="E-w's best.safetensors (default: seeded random)")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument(
+        "--calibration",
+        metavar="G3_PLAN",
+        help="spec 008: add the calibration head (its settings from this Gate 3 plan)",
+    )
+    ap.add_argument("--head-weights", help="the head's best.safetensors (default: seeded random)")
     a = ap.parse_args(argv)
     plan = json.loads(Path(a.plan).read_text())
     default = torch.get_default_dtype()
@@ -278,7 +352,12 @@ def main(argv: list[str] | None = None) -> int:
         if a.weights:
             model.load_state_dict(load_file(a.weights))
             source = a.weights
-        record = export(model, Path(a.out))
+        head = None
+        if a.calibration:
+            head, hsource = calibration_head(a.calibration, cfg.width, a.head_weights, a.seed)
+        record = export(model, Path(a.out), head)
+        if head is not None:
+            record["calibration_head"] = hsource
     finally:
         torch.set_default_dtype(default)
     record["weights"] = source

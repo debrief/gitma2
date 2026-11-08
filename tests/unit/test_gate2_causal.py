@@ -96,3 +96,31 @@ def test_e_end_to_end_ignores_later_rows(man2_pack: Path) -> None:
         sg1, r1 = run(own2, obs2, ks)
         assert sg1[k] == sg0[k]
         assert r1[q] == r0[q]
+
+
+def test_time_late_reads_later_rows_and_starts_as_c(man2_pack: Path) -> None:
+    """The time-late variant (spec 008 FR-024): untrained it is C's solve, as the causal E-w;
+    with non-zero weights its output at k moves when bearings after k change."""
+    torch.set_default_dtype(torch.float64)
+    _, m, own, _tgt, obs = next(iter(iter_pack_raw(man2_pack)))
+    d = bearing_data_from_arrays(m, own, obs)
+    k = min(d.n - 50, int(m["zig_index"]) + 60)
+    ivs = [Interval(STEADY, 0, k)]
+    inp = prefix_inputs(d, k, ivs, "gap", None)
+    assert inp is not None
+    code = torch.tensor(code_channel(ivs, k, d.n))[None]
+    late = _cfg().model_copy(update={"causal": False})
+    torch.manual_seed(3)
+    causal, tl = EWeights(_cfg()).double(), EWeights(late).double()
+    with torch.no_grad():
+        a = causal(inputs_for([(d, k, inp)], d.n), code).state.numpy()
+        b = tl(inputs_for([(d, k, inp)], d.n), code).state.numpy()
+    np.testing.assert_array_equal(a, b)
+    for p in tl.parameters():
+        torch.nn.init.normal_(p, std=0.05)
+    d2 = bearing_data_from_arrays(m, own, obs)
+    d2.z[k + 1 :] = np.random.default_rng(1).uniform(0, 2 * np.pi, d.n - k - 1)
+    with torch.no_grad():
+        x1 = tl(inputs_for([(d, k, inp)], d.n), code).state.numpy()
+        x2 = tl(inputs_for([(d2, k, inp)], d.n), code).state.numpy()
+    assert np.abs(x1 - x2).max() > 0

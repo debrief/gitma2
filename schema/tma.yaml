@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.25.0
+version: 0.27.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -711,7 +711,32 @@ classes:
         range: float
         description: >-
           Standard deviation of the estimator's log range (natural log; about the relative range
-          error), from a velocity_gaussian network (spec 012). Absent for other estimators.
+          error): from a velocity_gaussian network (spec 012), or by first-order propagation of
+          the row's covariance (physics-layer and tracker rows; spec 008).
+      course_sd_rad:
+        range: float
+        unit: { ucum_code: rad }
+        description: First-order standard deviation of course from the row's covariance (spec 008).
+      speed_sd_mps:
+        range: float
+        unit: { ucum_code: m/s }
+        description: First-order standard deviation of speed from the row's covariance (spec 008).
+      cov_xyvv:
+        range: float
+        multivalued: true
+        description: >-
+          Upper triangle, row-major, of the 4 x 4 covariance of (x, y, vx, vy) at the row (10
+          values; m², m²/s, m²/s²), as the estimator states it (spec 008).
+      cov_ok:
+        range: boolean
+        description: >-
+          The covariance is usable: finite, positive definite, and the target not on ownship
+          (range > 1 m) (spec 008).
+      cov_scale_log:
+        range: float
+        description: >-
+          Calibrated rows only: the calibration's log-scale s; the stated covariance is e^(2s)
+          times the solve's (spec 008).
       vx_sd_mps:
         range: float
         unit: { ucum_code: m/s }
@@ -1725,6 +1750,44 @@ classes:
       code_sha256: { range: string, required: true, description: "The code that made the prediction (C's and E's)." }
       git_commit: { range: string, required: true }
       git_dirty: { range: boolean, required: true }
+      model_settings:
+        range: string
+        description: >-
+          The plan entry of the model that made the file, as canonical JSON (veto window, fade,
+          kind, seed); binds a classical control's settings (spec 008, Gate 2 panel R2-7).
+      segmentation_sha256:
+        range: string
+        description: SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).
+
+  CalibrationHeadConfig:
+    description: >-
+      Spec 008 (research R5, R6): the learned calibration, a log-scale s = bound * tanh(MLP) on
+      E-w's encoder state at the row, its raw log standard deviations and C's code; trained by
+      beta-NLL from the feature cache with E frozen.
+    attributes:
+      width: { range: integer, required: true, description: Hidden width of the MLP. }
+      bound: { range: float, required: true, description: "Bound on |s| (the covariance scale e^(2s))." }
+      beta: { range: float, required: true, description: beta of beta-NLL. }
+      cap: { range: float, required: true, description: Cap on each row's NLL term. }
+      learning_rate: { range: float, required: true }
+      batch_rows: { range: integer, required: true }
+      max_epochs: { range: integer, required: true }
+      patience: { range: integer, required: true }
+      min_improvement: { range: float, required: true, description: Relative improvement that resets patience. }
+      seed: { range: integer, required: true }
+      shuffled: { range: boolean, description: "Shuffled-label control: rows' NEES permuted each epoch." }
+
+  TemperatureConfig:
+    description: >-
+      Spec 008 (research R8): the classical calibration control, one log-scale per slice, fitted
+      by the same loss on validation tuning ordinals.
+    attributes:
+      slices:
+        range: string
+        multivalued: true
+        description: "Slice keys crossed to form the cells: from {minute, open}."
+      beta: { range: float, required: true }
+      cap: { range: float, required: true }
 
   Gate2Decision:
     description: >-
@@ -1755,6 +1818,43 @@ classes:
       validation_rule: { range: string, required: true }
       rescore: { range: string, required: true }
       criterion: { range: string, required: true }
+      follow_on: { range: string, required: true }
+      forecast: { range: string, required: true }
+
+  Gate3Criteria:
+    description: Gate 3's bands (spec 008 FR-030; fixed by the SRD amendment and the decision).
+    attributes:
+      coverage95:
+        range: float
+        multivalued: true
+        required: true
+        description: "G3-a: [lo, hi] for each of log range, course and speed; the interval wholly inside."
+      nees_median_ratio:
+        range: float
+        multivalued: true
+        required: true
+        description: "G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside."
+
+  Gate3Decision:
+    description: >-
+      The Gate 3 decision record (spec 008 FR-031), committed before any calibration training.
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      validation_seed: { range: integer, required: true }
+      validation_digest: { range: string, required: true }
+      train_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true }
+      carried_e: { range: string, required: true, description: "The carried Gate 2 estimator (model id)." }
+      carried_e_weights: { range: string, required: true, description: "Its weights' SHA-256 (prediction headers' weights_sha256)." }
+      criteria: { range: Gate3Criteria, required: true }
+      score_of_record: { range: string, required: true, description: "G3-c's score: mean 95% interval score in log range, missing rows charged." }
+      temperature: { range: TemperatureConfig, required: true }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      carried_rule: { range: string, required: true }
+      shuffled_rule: { range: string, required: true }
+      validation_rule: { range: string, required: true }
       follow_on: { range: string, required: true }
       forecast: { range: string, required: true }
 

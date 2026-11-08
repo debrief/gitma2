@@ -5,7 +5,14 @@ from __future__ import annotations
 from tma2.sim.version import GENERATOR_VERSION
 from tma2.types import SCHEMA_VERSION, RecordError
 
-READABLE_GENERATOR_VERSIONS: tuple[str, ...] = ("0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0", "0.6.0")
+READABLE_GENERATOR_VERSIONS: tuple[str, ...] = (
+    "0.1.0",
+    "0.2.0",
+    "0.3.0",
+    "0.4.0",
+    "0.5.0",
+    "0.6.0",
+)
 """Generator versions whose files this build reads. Each later version reproduces the earlier
 ones byte for byte when the ranges lack the newer parameters (gitma's record), so earlier
 datasets stay readable; 0.4.0 is included because gitma's phase-3 datasets exist as files."""

@@ -23,6 +23,7 @@ import torch
 from tma2.cli.oracle import inputs_for
 from tma2.physics.layer import PhysicsLayer
 from tma2.physics.segmentation import LayerInputs
+from tma2.physics.uncertainty import row_fields
 from tma2.references.classical import BearingData
 from tma2.segment import Interval
 from tma2.segment.confirm import confirm
@@ -77,11 +78,17 @@ def veto_segmentations(
 
 
 def _row(
-    d: BearingData, k: int, state: np.ndarray, rcs: tuple[float, float, float], ok: bool
+    d: BearingData,
+    k: int,
+    state: np.ndarray,
+    rcs: tuple[float, float, float],
+    ok: bool,
+    cov: np.ndarray | None = None,
 ) -> dict[str, Any]:
     """In double, as ``segment.score.layer_errors`` scores C (float32 rows would give E and C a
-    last-bits difference in G2-d's paired comparison); the timestamp as the truth stores it."""
-    return {
+    last-bits difference in G2-d's paired comparison); the timestamp as the truth stores it.
+    With ``cov``, the solve's covariance and its derived standard deviations (spec 008)."""
+    row: dict[str, Any] = {
         "timestamp_s": f32(float(d.t[k])),
         "range_m": rcs[0],
         "course_rad": rcs[1],
@@ -91,6 +98,9 @@ def _row(
         "converged": ok,
         "iterations": 0,
     }
+    if cov is not None:
+        row.update(row_fields(state, cov, (float(d.ox[k]), float(d.oy[k]))))
+    return row
 
 
 def e_rows(
@@ -102,11 +112,14 @@ def e_rows(
     open_handover: str | None,
     batch: int = 32,
     fade: tuple[float, float] | None = None,
+    feats: dict[tuple[int, int], dict[str, Any]] | None = None,
 ) -> list[list[dict[str, Any]]]:
     """Per scenario, a prediction row at each scored row (an empty row where C's hand-over has
     no input or the solve is implausible). ``fade`` (a, b), with no model: the classical control's
     fixed fading memory (Gate 2 panel, round 1), clip(a − b·age, ±2) added to C's log-weights,
-    age = k − row (rows after k are masked by the layer)."""
+    age = k − row (rows after k are masked by the layer). ``feats`` (spec 008), keyed by (scenario
+    position, row position), receives E-w's encoder state at the row (``h``), C's code there and
+    the raw covariance, for the calibration head's cache."""
     from tma2.cli.oracle import empty_row
 
     r_max = max(d.n for d in data)
@@ -141,17 +154,26 @@ def e_rows(
             if model is not None:
                 code = torch.tensor(np.stack(codes[s : s + batch]), dtype=torch.float64)
                 o = model(x, code)
-                state, ok = o.state, o.plausible & o.cov_ok
+                state, ok, cov = o.state, o.plausible & o.cov_ok, o.cov
                 rng, crs, spd = o.range, o.course, o.speed
+                hks = o.h_k
             else:
                 assert layer is not None
                 lo = layer(x)
-                state, ok = lo.state, lo.plausible
+                state, ok, cov = lo.state, lo.plausible, lo.cov
                 rng, crs, spd = lo.range, lo.course, lo.speed
+                hks = None
         for b, (i, q) in enumerate(where[s : s + batch]):
             d, k, _ = items[s + b]
             st = state[b].numpy()
             if np.isfinite(st).all():  # an implausible solve is reported, unconverged
                 rcs = (float(rng[b]), float(crs[b]), float(spd[b]))
-                out[i][q] = _row(d, k, st, rcs, bool(ok[b]))
+                out[i][q] = _row(d, k, st, rcs, bool(ok[b]), cov[b].numpy())
+            if feats is not None and hks is not None:
+                feats[(i, q)] = {
+                    "h": hks[b].numpy().copy(),
+                    "code_k": float(codes[s + b][k]),
+                    "cov": cov[b].numpy().copy(),
+                    "state": st.copy(),
+                }
     return out

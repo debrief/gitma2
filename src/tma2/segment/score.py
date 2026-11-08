@@ -28,10 +28,12 @@ import numpy as np
 from tma2.data.f32pack import iter_pack_raw
 from tma2.detect.confirm import Accepted, window_inputs
 from tma2.detect.controls import parse_imm_name
+from tma2.eval.calibration import row_cal
 from tma2.eval.errors import Truth, row_error
 from tma2.eval.rows import G5_GATE_MIN
 from tma2.physics.layer import PhysicsLayer
 from tma2.physics.segmentation import LayerInputs, oracle_inputs
+from tma2.physics.uncertainty import row_fields
 from tma2.references.classical import BearingData
 from tma2.references.ekf import ekf_predict
 from tma2.references.imm import imm_predict
@@ -91,12 +93,16 @@ def layer_errors(
     metas: dict[int, dict[str, Any]],
     truths: dict[int, Truth],
     make: MakeInputs,
+    cal_out: np.ndarray | None = None,
 ) -> Errors:
     """Errors of the physics layer's estimate at each row; a row without inputs or with an
-    implausible solution is an infinite error (note 08's rule)."""
+    implausible solution is an infinite error (note 08's rule). With ``cal_out`` [N, 9], each
+    row's calibration (``eval.calibration.row_cal``) from the solve's covariance (spec 008)."""
     from tma2.cli.oracle import run_layer
 
     out = np.full((len(rows), 3), np.inf)
+    if cal_out is not None:
+        cal_out[:] = row_cal(None, np.zeros(4), (0.0, 0.0))  # every row missing until answered
     items: list[tuple[BearingData, int, LayerInputs]] = []
     where: list[int] = []
     for q, r in enumerate(rows):
@@ -111,7 +117,7 @@ def layer_errors(
         for b, q in enumerate(where[s : s + LAYER_BATCH]):
             d, k, _ = items[s + b]
             x = res.state[b].numpy()
-            row = {
+            row: dict[str, Any] = {
                 "timestamp_s": float(d.t[k]),
                 "range_m": float(res.range[b]),
                 "course_rad": float(res.course[b]),
@@ -122,11 +128,25 @@ def layer_errors(
             }
             e = row_error(truths[rows[q].ordinal], row, "plausible")
             out[q] = (e.range_rel, e.course_deg, e.speed_kt)
+            if cal_out is not None:
+                own_k = (float(d.ox[k]), float(d.oy[k]))
+                row.update(row_fields(x, res.cov[b].numpy(), own_k))
+                cal_out[q] = row_cal(row, truth_state(truths[rows[q].ordinal], k), own_k)
     return out
 
 
+def truth_state(t: Truth, k: int) -> np.ndarray:
+    """The target's (x, y, vx, vy) at sample k."""
+    _, x, y, c, sp = (float(v) for v in t.tgt[k])
+    return np.array([x, y, sp * math.sin(c), sp * math.cos(c)])
+
+
 def prediction_errors(
-    rows: list[Row], data: dict[int, BearingData], truths: dict[int, Truth], path: str | Path
+    rows: list[Row],
+    data: dict[int, BearingData],
+    truths: dict[int, Truth],
+    path: str | Path,
+    cal_out: np.ndarray | None = None,
 ) -> Errors:
     """Errors of a per-row prediction file (``tma2-g2predict``: records carry ``ordinal``),
     matched to each scored row by its float32 timestamp; a missing row is an infinite error."""
@@ -144,6 +164,10 @@ def prediction_errors(
         if x is not None:
             e = row_error(truths[r.ordinal], x, "plausible")
             out[q] = (e.range_rel, e.course_deg, e.speed_kt)
+        if cal_out is not None:
+            d = data[r.ordinal]
+            own_k = (float(d.ox[r.k]), float(d.oy[r.k]))
+            cal_out[q] = row_cal(x, truth_state(truths[r.ordinal], r.k), own_k)
     return out
 
 
@@ -156,17 +180,29 @@ def parse_ekf_name(name: str) -> tuple[float, float, float]:
 
 
 def imm_errors(
-    rows: list[Row], data: dict[int, BearingData], truths: dict[int, Truth], imm: str
+    rows: list[Row],
+    data: dict[int, BearingData],
+    truths: dict[int, Truth],
+    imm: str,
+    cal_out: np.ndarray | None = None,
 ) -> Errors:
     params = parse_imm_name(imm)
-    return tracker_errors(rows, data, truths, lambda d: imm_predict(d, params))
+    return tracker_errors(
+        rows, data, truths, lambda d: imm_predict(d, params, cov=cal_out is not None), cal_out
+    )
 
 
 def ekf_errors(
-    rows: list[Row], data: dict[int, BearingData], truths: dict[int, Truth], ekf: str
+    rows: list[Row],
+    data: dict[int, BearingData],
+    truths: dict[int, Truth],
+    ekf: str,
+    cal_out: np.ndarray | None = None,
 ) -> Errors:
     sa, p0, r = parse_ekf_name(ekf)
-    return tracker_errors(rows, data, truths, lambda d: ekf_predict(d, sa, p0, r))
+    return tracker_errors(
+        rows, data, truths, lambda d: ekf_predict(d, sa, p0, r, cov=cal_out is not None), cal_out
+    )
 
 
 def tracker_errors(
@@ -174,8 +210,11 @@ def tracker_errors(
     data: dict[int, BearingData],
     truths: dict[int, Truth],
     predict: Callable[[BearingData], dict[str, Any]],
+    cal_out: np.ndarray | None = None,
 ) -> Errors:
-    """A per-timestep tracker's errors at each row (rows it does not report: ∞)."""
+    """A per-timestep tracker's errors at each row (rows it does not report: ∞). With
+    ``cal_out``, each row's calibration from the tracker's covariance fields, when its rows
+    carry them (spec 008)."""
     out = np.full((len(rows), 3), np.inf)
     cache: dict[int, dict[float, dict[str, Any]]] = {}
     for q, r in enumerate(rows):
@@ -186,6 +225,9 @@ def tracker_errors(
         if row is not None:
             e = row_error(truths[r.ordinal], row, "plausible")
             out[q] = (e.range_rel, e.course_deg, e.speed_kt)
+        if cal_out is not None:
+            own_k = (float(d.ox[r.k]), float(d.oy[r.k]))
+            cal_out[q] = row_cal(row, truth_state(truths[r.ordinal], r.k), own_k)
     return out
 
 

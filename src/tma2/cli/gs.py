@@ -134,9 +134,10 @@ def _input_digests(a: argparse.Namespace) -> dict[str, Any]:
     from tma2.segment.gate import sha256_file as file_digest
 
     out: dict[str, Any] = {
+        "truth": file_digest(a.truth),
         "segmentations": {
             n: file_digest(p) for n, _, p in (x.partition("=") for x in a.segmentations)
-        }
+        },
     }
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
@@ -345,6 +346,13 @@ def main(argv: list[str] | None = None) -> int:
         help="fit the naive baseline (training-set means) on these sigma = 1 deg ordinals of a "
         "split (default ordinals 0-499) and score it on the same rows (constitution IV)",
     )
+    ap.add_argument(
+        "--reuse",
+        help=(
+            "spec 008 FR-062: an errors.npz from an earlier scoring of the same rows; the "
+            "estimators it holds (references, C, GLR) are read from it, not re-solved"
+        ),
+    )
     ap.add_argument("--experiment", required=True)
     ap.add_argument("--decision", help="gate mode: the GateSDecision record (T037)")
     ap.add_argument("--plan", help="gate mode: the plan the decision binds")
@@ -381,13 +389,44 @@ def main(argv: list[str] | None = None) -> int:
     cluster = np.array([r.ordinal for r in rows], dtype=np.int64)
     settled = np.array([r.settled for r in rows])
     layer = PhysicsLayer(knots=a.knots)
+    # per-row calibration of every estimator's stated covariance (spec 008), in errors.npz
+    cals: dict[str, np.ndarray] = {}
+
+    def cal(name: str) -> np.ndarray:
+        cals[name] = np.zeros((len(rows), 9))
+        return cals[name]
+
+    stored: dict[str, np.ndarray] = {}
+    if a.reuse:
+        z = np.load(a.reuse)
+        ks = np.array([r.k for r in rows], dtype=np.int64)
+        if not (np.array_equal(z["ordinal"], cluster) and np.array_equal(z["k"], ks)):
+            print(f"{a.reuse}: its rows are not these rows", file=sys.stderr)
+            return 2
+        stored = {f: z[f] for f in z.files}
+
+    def solved(name: str, solve: Any) -> np.ndarray:
+        """The estimator's errors, from ``--reuse`` when it holds them (errors and calibration
+        both), else solved now."""
+        if f"err_{name}" in stored and f"cal_{name}" in stored:
+            cals[name] = stored[f"cal_{name}"]
+            print(f"{name}: reused from {a.reuse}", flush=True)
+            out: np.ndarray = stored[f"err_{name}"]
+            return out
+        res: np.ndarray = solve(cal(name))
+        return res
+
     errs: dict[str, np.ndarray] = {
-        "one_leg": sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg),
-        "oracle": sc.layer_errors(layer, rows, data, metas, truths, sc.oracle),
-        "imm": sc.imm_errors(rows, data, truths, a.imm),
+        "one_leg": solved(
+            "one_leg", lambda c: sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg, c)
+        ),
+        "oracle": solved(
+            "oracle", lambda c: sc.layer_errors(layer, rows, data, metas, truths, sc.oracle, c)
+        ),
+        "imm": solved("imm", lambda c: sc.imm_errors(rows, data, truths, a.imm, c)),
     }
     if a.ekf:
-        errs["ekf"] = sc.ekf_errors(rows, data, truths, a.ekf)
+        errs["ekf"] = solved("ekf", lambda c: sc.ekf_errors(rows, data, truths, a.ekf, c))
     naive_src: dict[str, Any] | None = None
     if a.naive_train:
         from tma2.references.naive import fit_naive
@@ -431,8 +470,10 @@ def main(argv: list[str] | None = None) -> int:
                 nm = name if not a.modes else f"{name}-{mode}"
                 nm = nm if not a.open_handovers else f"{nm}-{ho}"
                 params[nm] = p.model_copy(update={"mode": mode, "open_handover": ho})
-                errs[nm] = sc.layer_errors(
-                    layer, rows, data, metas, truths, sc.from_segmentations(segs, mode, True, ho)
+                make = sc.from_segmentations(segs, mode, True, ho)
+                errs[nm] = solved(
+                    nm,
+                    lambda c, make=make: sc.layer_errors(layer, rows, data, metas, truths, make, c),
                 )
                 seg_ivs[nm] = trs
                 open_at[nm] = np.array(
@@ -446,12 +487,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{nm} downstream [{time.time() - t0:.0f} s]", flush=True)
     for spec in a.predictions:
         name, _, path = spec.partition("=")
-        errs[name] = sc.prediction_errors(rows, data, truths, path)
+        errs[name] = sc.prediction_errors(rows, data, truths, path, cal(name))
         print(f"{name} predictions [{time.time() - t0:.0f} s]", flush=True)
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
         acc = sc.load_confirmed(work, cfg)
-        errs["glr_confirm"] = sc.layer_errors(layer, rows, data, metas, truths, sc.glr_confirm(acc))
+        errs["glr_confirm"] = solved(
+            "glr_confirm",
+            lambda c: sc.layer_errors(layer, rows, data, metas, truths, sc.glr_confirm(acc), c),
+        )
         p0 = next(iter(params.values()), default_parameters())
         seg_ivs["glr_confirm"] = {
             (r.ordinal, r.k): sc.glr_confirm_intervals(acc.get(r.ordinal, []), r.k, p0.t_min_rows)
@@ -466,7 +510,10 @@ def main(argv: list[str] | None = None) -> int:
         def glr_gap(j: int, _m: dict[str, Any], d: Any, k: int) -> Any:
             return segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, g_ivs[(j, k)], "gap", True)
 
-        errs["glr_confirm_gap"] = sc.layer_errors(layer, rows, data, metas, truths, glr_gap)
+        errs["glr_confirm_gap"] = solved(
+            "glr_confirm_gap",
+            lambda c: sc.layer_errors(layer, rows, data, metas, truths, glr_gap, c),
+        )
         seg_ivs["glr_confirm_gap"] = g_ivs
         print(f"glr_confirm_gap downstream [{time.time() - t0:.0f} s]", flush=True)
 
@@ -632,6 +679,31 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(a.experiment)
     out.mkdir(parents=True, exist_ok=True)
     (out / "metrics.json").write_text(json.dumps(result, indent=2) + "\n")
+    if cals:
+        from tma2.eval import calibration as ec
+
+        t_min = np.array(
+            [
+                int(round((r.k - metas[r.ordinal]["zig_index"]) * truths[r.ordinal].dt / 60.0))
+                for r in rows
+            ]
+        )
+        slices: dict[str, dict[str, np.ndarray]] = {
+            "g5_minutes": {str(m): t_min == m for m in sorted(set(t_min.tolist()))},
+            "settled": {"settled": settled, "not_settled": ~settled},
+        }
+        ref = "C" if "C" in open_at else next(iter(open_at), None)
+        if ref is not None:
+            slices["open_at_k"] = {"open": open_at[ref], "not_open": ~open_at[ref]}
+        if row_strata:
+            rb = np.array([st["range_band"] for st in row_strata])
+            slices["range_band"] = {v: rb == v for v in sorted(set(rb.tolist()))}
+        if det is not None:
+            slices["row_band"] = {b_: row_bands == b_ for b_ in sorted(set(row_bands.tolist()))}
+        gross = {n: ~(errs[n][:, 0] <= 0.5) for n in cals}
+        cal_rec = ec.report(cals, cluster, slices, LEVEL, RESAMPLES, gross)
+        (out / "calibration.json").write_text(json.dumps(cal_rec, indent=2) + "\n")
+        print(f"calibration [{time.time() - t0:.0f} s]", flush=True)
     # the files read, in every mode (gate mode also puts them in manifest.json; panel round 2)
     (out / "inputs.json").write_text(json.dumps(_input_digests(a), indent=2) + "\n")
     # per-row errors, so later paired comparisons need no re-solve (not committed: large)
@@ -642,6 +714,7 @@ def main(argv: list[str] | None = None) -> int:
         "columns": np.array(COLS),
     }
     arrays.update({f"err_{n}": e for n, e in errs.items()})
+    arrays.update({f"cal_{n}": c for n, c in cals.items()})
     np.savez_compressed(out / "errors.npz", **arrays)
     lines = [
         f"# Segmentation scoring: {a.truth}, ordinals {a.start}–{a.start + a.count - 1}",

@@ -120,10 +120,13 @@ jobs:
           NAME=$(basename "$PLAN" .json)
           OUT="experiments/segment-runs/$NAME-${{ github.run_id }}"
           mkdir -p "$OUT"
-          python3 - "$OUT" shards <<'EOF'
+          python3 - "$OUT" shards "$PLAN" <<'EOF'
           import glob, json, sys
           out, d = sys.argv[1], sys.argv[2]
           files = sorted(glob.glob(f"{d}/shard-*.ndjson"), key=lambda f: int(f.split("-")[-1].split(".")[0]))
+          # spec 008 FR-061 (Gate 2 panel G11): every shard present, no prefix twice
+          want = json.load(open(sys.argv[3]))["shards"]
+          assert len(files) == want, f"{len(files)} shard files, the plan has {want}"
           headers, recs = [], []
           for f in files:
               lines = open(f, encoding="utf-8").read().splitlines()
@@ -133,6 +136,8 @@ jobs:
           for h in headers[1:]:
               assert all(h[k] == headers[0][k] for k in keys), "shard headers differ"
           recs.sort(key=lambda r: (r["ordinal"], r["prefix_row"]))
+          keyset = {(r["ordinal"], r["prefix_row"]) for r in recs}
+          assert len(keyset) == len(recs), "a prefix is segmented twice"
           with open(f"{out}/segmentations.ndjson", "w", encoding="utf-8") as f:
               f.write(json.dumps(headers[0]) + "\n")
               for r in recs:

@@ -11,6 +11,8 @@ name: Segmentation scoring
 #                   training split (regenerated and digest-checked the same way)
 #   modes, detectability, imm, ekf   as tma2-gs
 #   gate            optional {decision, plan, split}: gate mode
+#   reuse           optional {branch, path} (spec 008): an earlier scoring's errors.npz of the
+#                   same rows; the estimators it holds are read, not re-solved
 #   kind            "g2" (spec 007) runs tma2-g2 instead: "c" {branch, path} is C's segmentation,
 #                   "e" {NAME: {branch, path}} E's prediction files, "knots" the cap (default
 #                   12), and gate gains "model" (the carried E) for the test split
@@ -74,6 +76,15 @@ jobs:
             git show "FETCH_HEAD:$P" > "$RUNNER_TEMP/in/$N.ndjson"
             sha256sum "$RUNNER_TEMP/in/$N.ndjson"
           done
+          R=$(python3 -c "
+          import json; r = json.load(open('$PLAN')).get('reuse')
+          print(f\"{r['branch']} {r['path']}\" if r else '')")
+          if [ -n "$R" ]; then
+            set -- $R
+            git fetch -q origin "$1"
+            git show "FETCH_HEAD:$2" > "$RUNNER_TEMP/in/reuse.npz"
+            sha256sum "$RUNNER_TEMP/in/reuse.npz"
+          fi
           G=$(python3 -c "
           import json; g = json.load(open('$PLAN')).get('glr_confirm')
           print(f\"{g['branch']} {g['dir']}\" if g else '')")
@@ -105,6 +116,8 @@ jobs:
           if p.get('glr_confirm'): out += ['--glr-confirm', '$GLR:' + p['glr_confirm']['config']]
           if p.get('naive'):
               a, c = p['naive']['ordinals']; out += ['--naive-train', f'$NAIVE:{a}:{c}']
+          if p.get('reuse'):
+              out += ['--reuse', '$RUNNER_TEMP/in/reuse.npz']
           if p.get('gate'):
               g = p['gate']; out += ['--decision', g['decision'], '--plan', g['plan'], '--split', g['split']]
               if g.get('model'): out += ['--model', g['model']]

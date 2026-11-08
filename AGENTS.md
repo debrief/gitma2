@@ -88,6 +88,15 @@ Write-up `site/blog/2026-11-08-gate-2.md`; recommended follow-on: carry E, keep 
 control, spec 008 uncertainty calibration with the panel's follow-ons (`specs/007-gate2-man2/tasks.md`).
 `scripts/research/g2_paired_gaps.py` gives paired gap differences between any two scored
 estimators. Seeds: 318 training stream, 319 test (used); the next fresh seed is 320.
+008 (uncertainty calibration, Gate 3, `specs/008-uncertainty-calibration/`; in progress): every
+prediction row states its covariance (`cov_xyvv`, `cov_ok`, sds of log range, course and speed;
+schema 0.27.0), the scorer measures coverage, NEES, interval score and sharpness
+(`calibration.json`, `cal_<name>` in `errors.npz`), and `--reuse <errors.npz>` skips re-solving.
+A calibration head (`src/tma2/calib/`, `tma2-g3train`, `tma2-g3predict`) scales E's covariance by
+e^(2s) on cached features (`tma2-g2predict --features`); control: a per-slice temperature. Gate 3
+criteria in `tma2-g3` (proposed in an SRD amendment; plan `configs/gate3/g3-a.json`, draft until
+the decision binds it). Time-late E-w: `configs/gate2/g3-timelate.json`. Test seed 320 is
+reserved for Gate 3; the next fresh seed is 321.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -293,5 +302,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   re-score on another CPU family is not byte-identical (Gate 2: C up to 6e-4 relative, 21 one-leg
   rows switch finite/runaway; G2-d moved 1.4e-5). Compare estimators within one scoring run's
   `errors.npz` (`scripts/research/g2_paired_gaps.py`), or re-score on the gate's CPU family.
+- Calibration (spec 008): what gets scaled must not read the truth. The feature cache's `usable`
+  rows need a finite NEES (truth) for training; `tma2-g3predict` and the export scale by
+  `scalable` (plausible, `cov_ok`, finite sds) instead.
+- `setup-uv` downloads uv from GitHub releases on every job; a wide matrix can hit 504s. Re-run
+  the failed jobs (`rerun_failed_jobs`) once the run completes; nothing in the code is wrong.
+- `.gitignore`'s `data/` also matched `src/tma2/data/` (now excepted): after adding a file, check
+  `git status --ignored` before trusting a green local run.
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.

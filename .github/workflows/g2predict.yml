@@ -7,6 +7,8 @@ name: E predictions (Gate 2)
 #   gate2_plan      the Gate 2 plan (C's digests, encoder, es, models and their kinds)
 #   segmentations   {branch, path}: C's segmentation of these ordinals
 #   training        {branch, dir}: a g2train results branch with <model>/best.safetensors
+#   features        optional (spec 008): also write each shard's calibration feature cache
+#                   (tma2-g2predict --features), kept beside the merged predictions
 #   models          plan model ids; kind "e" takes its {es, ew} components' weights; kind "veto"
 #                   (the classical control C′) takes none, or its "ew" model's weights
 # Each (shard, model) job writes its predictions; the last job merges each model's shards in
@@ -85,11 +87,15 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pred"
           uv run tma2-g2predict --in "$SPLIT" --segmentations "$RUNNER_TEMP/c.ndjson" --plan "$G2" \
             --model "${{ matrix.model }}" $WEIGHTS --start "$START" --count "$COUNT" \
-            --out "$RUNNER_TEMP/pred/${{ matrix.model }}-shard-${{ matrix.shard }}.ndjson" --workers 4
+            --out "$RUNNER_TEMP/pred/${{ matrix.model }}-shard-${{ matrix.shard }}.ndjson" --workers 4 \
+            $(python3 -c "import json; print('--features $RUNNER_TEMP/pred/${{ matrix.model }}-shard-${{ matrix.shard }}.npz' if json.load(open('$PLAN')).get('features') else '')")
       - uses: actions/upload-artifact@v4
         with:
           name: pred-${{ matrix.model }}-${{ matrix.shard }}
-          path: ${{ runner.temp }}/pred/*.ndjson
+          path: |
+            ${{ runner.temp }}/pred/*.ndjson
+            ${{ runner.temp }}/pred/*.npz
+          if-no-files-found: error
 
   results:
     needs: [plan, predict]
@@ -108,7 +114,7 @@ jobs:
           NAME=$(basename "$PLAN" .json)
           OUT="experiments/g2predict-runs/$NAME-${{ github.run_id }}"
           mkdir -p "$OUT"
-          python3 - "$OUT" shards "$PLAN" <<'PY'
+          PYTHONPATH=src python3 - "$OUT" shards "$PLAN" <<'PY'
           import glob, json, sys
           out, d, plan = sys.argv[1], sys.argv[2], json.load(open(sys.argv[3]))
           for m in plan["models"]:
@@ -121,6 +127,14 @@ jobs:
                   recs += lines[1:]
               assert all(h == heads[0] for h in heads), f"{m}: shard headers differ"
               recs.sort(key=lambda x: json.loads(x)["ordinal"])
+              # spec 008 FR-061 (Gate 2 panel G11): every ordinal in [a, b) once
+              from tma2.data.merge import ordinal_errors
+              errs = ordinal_errors(m, [json.loads(x)["ordinal"] for x in recs], *plan["ordinals"])
+              assert not errs, "; ".join(errs)
+              if plan.get("features"):
+                  import shutil
+                  for f in sorted(glob.glob(f"{d}/{m}-shard-*.npz")):
+                      shutil.copy(f, out)
               with open(f"{out}/{m}.ndjson", "w", encoding="utf-8") as fh:
                   fh.write(json.dumps(heads[0], sort_keys=True) + "\n")
                   for r in recs:

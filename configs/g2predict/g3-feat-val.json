@@ -1,0 +1,30 @@
+{
+  "description": "Spec 008 T026: feature caches of the carried E (e-s3) on seed 314 validation ordinals 0-1499 (tuning 0-499 for early stopping and the temperature; scoring 500-1499 for calibrated predictions). E re-runs C internally; the segmentation file is read for its digests only.",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "ordinals": [
+    0,
+    1500
+  ],
+  "shards": 12,
+  "gate2_plan": "configs/gate2/g2-a.json",
+  "segmentations": {
+    "branch": "results/segment-c3-val-tune-42268374366",
+    "path": "experiments/segment-runs/c3-val-tune-42268374366/segmentations.ndjson"
+  },
+  "training": {
+    "branch": "results/g2-g2-a-42352638177",
+    "dir": "experiments/g2-runs/g2-a-42352638177"
+  },
+  "models": [
+    "e-s3"
+  ],
+  "features": true
+}

@@ -16,6 +16,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Confirmation** — C's decision step: a nominated transition is accepted only if the physics-layer solve on its own prefix, with knots at both its ends, lowers the cost by more than τ = 13.8 (χ² with 4 degrees of freedom); see [segmentation](algorithms/segmentation.md).
 - **Contamination** — the share of a reported steady leg's rows that the truth labels as transition; Gate S's primary segmentation measure (median and P90 over prefixes).
 - **Control (model)** — a variant trained only to test the pipeline, never carried: direct regression head, shuffled labels (must score no better than the design without learning: naive for a regressor, batch least squares for a physics-layer model), time-late (must score at least as well as the causal model).
+- **Coverage (interval)** — the share of rows whose error lies inside the stated interval (z·sd); a calibrated 95% interval covers 95% of rows. Spec 008; see [calibration](algorithms/calibration.md). Not to be confused with *Coverage* (segmentation).
 - **Coverage** — the share of truth-steady rows that lie inside reported steady legs.
 - **Cramér–Rao bound (CRB)** — the lowest variance any unbiased estimator can reach given the
   bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
@@ -27,6 +28,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Efficiency** — the median over a slice's rows of error ÷ that row's CRB, divided by 0.6745,
   so an unbiased estimator at the bound scores 1; a flat efficiency across geometry slices is the
   signature of an approximation floor.
+- **Interval score** — Gneiting and Raftery's score for a central (1 − α) interval: its width plus 2/α times the distance by which the truth falls outside it; lower is better, and it rewards calibration and sharpness together. Gate 3's score of record (G3-c).
 - **Fisher information** — the curvature of the bearings' log-likelihood in the target state; its
   inverse is the Cramér–Rao bound. See [CRB](algorithms/crb.md).
 - **G5 rows** — σ = 1° scenarios scored at zig + 5, 10, 15 and 20 min where the window reaches
@@ -59,6 +61,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   helm wander or autopilot oscillation.
 - **Manoeuvre span** — the sample interval of one target course or speed change, from the first
   sample after it starts to the first sample after it ends.
+- **NEES** — normalised estimation error squared, eᵀP⁻¹e for the 4-state error e and stated covariance P; χ² with 4 degrees of freedom when P is right (median 3.357, 95% point 9.488). Gate 3's G3-b uses the median over the χ²₄ median.
 - **Nomination** — a candidate transition put to confirmation: a raised GLR alarm (re-tested while raised) or a transition of the additive leg search.
 - **Oracle ceiling** — the physics layer fed with the true manoeuvre times and kinds (knots at
   each manoeuvre's start and end, the chord of a turn, ridge τ_r = 3 m/s): the reference for any
@@ -77,6 +80,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   same seed gives the same scenario in gitma and gitma2.
 - **Semi-Markov likelihood** — L's training loss: the negative log-likelihood of the truth segmentation over every segmentation of the search's lattice (legs and transitions with their own lengths), normalised by a log-sum-exp forward recursion.
 - **Settled row** — a scored row on a held leg (gitma Annex C §C.5's definition).
+- **Sharpness** — how narrow an estimator's stated uncertainty is (median stated sd), reported beside coverage: a calibrated estimator should be as sharp as it can while still covering.
 - **Speed-continuity prior** — the physics layer's prior that speed carries through a course
   change (‖v_after‖ − ‖v_before‖)/1 m/s, skipping the chord leg inside the turn.
 - **Steady-leg detector** — the first learned component (SRD Annex A): per-timestep manoeuvre

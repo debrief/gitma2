@@ -143,6 +143,12 @@ jobs:
           uv run python -m tma2.gate2.export --out conformance/onnx/gate2-ew --plan configs/gate2/g2-a.json --weights $W/ew-s3/best.safetensors
           (cd conformance/onnx && node wasm_leg.mjs --dir gate2-ew --out gate2-ew/results.json)
           uv run python conformance/onnx/java_leg.py conformance/onnx/gate2-ew conformance/onnx/gate2-ew/results.json
+      - name: Gate 3's calibrated E-w (carried E-w, seeded calibration head until one is carried; spec 008 T034), three legs
+        run: |
+          W=experiments/20261107-g2-val/models
+          uv run python -m tma2.gate2.export --out conformance/onnx/gate3-ew --plan configs/gate2/g2-a.json --weights $W/ew-s3/best.safetensors --calibration configs/gate3/g3-a.json
+          (cd conformance/onnx && node wasm_leg.mjs --dir gate3-ew --out gate3-ew/results.json)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/gate3-ew conformance/onnx/gate3-ew/results.json
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
@@ -156,6 +162,8 @@ jobs:
             conformance/onnx/detector-*/results.json
             conformance/onnx/gate2-*/results.json
             conformance/onnx/gate2-*/python_leg.json
+            conformance/onnx/gate3-*/results.json
+            conformance/onnx/gate3-*/python_leg.json
 
   p0:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'p0')
