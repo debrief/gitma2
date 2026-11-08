@@ -43,6 +43,8 @@ def main(argv: list[str] | None = None) -> int:
     d = data.load(a.features)
     with open(a.inp, encoding="utf-8") as fh:
         ph = json.loads(fh.readline())
+        ords = {int(json.loads(line)["ordinal"]) for line in fh}
+    d = d.select(np.isin(d.ordinal, sorted(ords)))  # a cache may span more scenarios than the file
     if ph.get("weights_sha256") != d.header.get("weights_sha256"):
         print(f"{a.inp}: the cache was made from other E weights", file=sys.stderr)
         return 2
