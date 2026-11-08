@@ -155,7 +155,7 @@ errors.
 - [ ] T032 [P] [US5] Add a time-late E-w (research R9, as amended): `causal: false` in a plan; the encoder
   reads every row, the solve stays C's at k. Train one seed on CI (`g2train/<plan>`), score it on validation beside ew-s3,
   and record it in `experiments/<date>-g3-timelate/`.
-- [ ] T033 [P] [US5] Add `tests/unit/test_followons.py`: the coverage assertion, merge-count
+- [x] T033 [P] [US5] Add `tests/unit/test_followons.py`: the coverage assertion, merge-count
   failure, shuffled-rule source and header settings.
 
 ## Phase 9: Polish

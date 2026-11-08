@@ -83,6 +83,20 @@ def criteria(rec: dict[str, Any], decision: Any, shuffled: str) -> dict[str, Any
     return out
 
 
+def coverage_errors(test_digest: dict[str, Any], start: int, count: int) -> list[str]:
+    """A test scoring covers every σ = 1° scenario (spec 008 FR-032, Gate 2 panel G10): start 0
+    and count equal to the test digest's ``sigma1_scenarios``."""
+    errs = []
+    n = test_digest.get("sigma1_scenarios")
+    if start != 0:
+        errs.append(f"--start {start}: a test scoring starts at 0")
+    if n is None:
+        errs.append("test-digest.json records no sigma1_scenarios")
+    elif count != n:
+        errs.append(f"--count {count}: the test split has {n} sigma = 1 deg scenarios")
+    return errs
+
+
 def _preflight(a: argparse.Namespace) -> dict[str, Any] | None:
     """Every refusal at once (FR-033); None after printing them."""
     from tma2.cli import gs
@@ -104,9 +118,12 @@ def _preflight(a: argparse.Namespace) -> dict[str, Any] | None:
     want = decision.validation_digest
     if a.split == "test":
         td = dpath.parent / "test-digest.json"
-        want = json.loads(td.read_text())["dataset_digest"] if td.exists() else ""
+        tdj = json.loads(td.read_text()) if td.exists() else {}
+        want = tdj.get("dataset_digest", "")
         if not want:
             bad.append("test-digest.json (the test split's digest) is not beside the decision")
+        else:
+            bad.extend(coverage_errors(tdj, a.start, a.count))
     if truth_sha != want:
         bad.append(f"{a.truth}: not the decision's {a.split} split")
     c_header, _ = gs.read_segmentations(a.c)

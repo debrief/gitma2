@@ -114,7 +114,7 @@ jobs:
           NAME=$(basename "$PLAN" .json)
           OUT="experiments/g2predict-runs/$NAME-${{ github.run_id }}"
           mkdir -p "$OUT"
-          python3 - "$OUT" shards "$PLAN" <<'PY'
+          PYTHONPATH=src python3 - "$OUT" shards "$PLAN" <<'PY'
           import glob, json, sys
           out, d, plan = sys.argv[1], sys.argv[2], json.load(open(sys.argv[3]))
           for m in plan["models"]:
@@ -128,11 +128,9 @@ jobs:
               assert all(h == heads[0] for h in heads), f"{m}: shard headers differ"
               recs.sort(key=lambda x: json.loads(x)["ordinal"])
               # spec 008 FR-061 (Gate 2 panel G11): every ordinal in [a, b) once
-              ords = [json.loads(x)["ordinal"] for x in recs]
-              a, b = plan["ordinals"]
-              assert len(ords) == len(set(ords)), f"{m}: duplicate ordinals"
-              miss = sorted(set(range(a, b)) - set(ords))
-              assert not miss, f"{m}: {len(miss)} ordinals missing, e.g. {miss[:5]}"
+              from tma2.data.merge import ordinal_errors
+              errs = ordinal_errors(m, [json.loads(x)["ordinal"] for x in recs], *plan["ordinals"])
+              assert not errs, "; ".join(errs)
               if plan.get("features"):
                   import shutil
                   for f in sorted(glob.glob(f"{d}/{m}-shard-*.npz")):

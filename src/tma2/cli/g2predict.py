@@ -154,6 +154,18 @@ def write_features(path: Path, frows: list[dict[str, Any]], header: dict[str, An
     )
 
 
+def bound_settings(entry: dict[str, Any], segmentations: str | Path) -> dict[str, str]:
+    """What a prediction header binds besides the weights (spec 008, Gate 2 panel R2-4): the
+    plan's model entry as canonical JSON (a control's rule settings live there) and the
+    segmentation file's digest."""
+    from tma2.segment.gate import sha256_file
+
+    return {
+        "model_settings": json.dumps(entry, sort_keys=True, separators=(",", ":")),
+        "segmentation_sha256": sha256_file(segmentations),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-g2predict", description=__doc__)
     ap.add_argument("--in", dest="inp", required=True)
@@ -227,8 +239,7 @@ def main(argv: list[str] | None = None) -> int:
         code_sha256=c["code_sha256"],
         git_commit=gp.commit,
         git_dirty=gp.dirty,
-        model_settings=json.dumps(m, sort_keys=True, separators=(",", ":")),
-        segmentation_sha256=sha256_file(a.segmentations),
+        **bound_settings(m, a.segmentations),
     ).model_dump(mode="json", exclude_none=True)
     h |= {f"{w}_weights_sha256": v for w, v in digests.items()}
     h |= {"estimator": f"E-{a.model}", "mode": "per_timestep"}

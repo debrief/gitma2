@@ -16,6 +16,9 @@ the scorer's scenario-clustered paired bootstrap:
 
 from __future__ import annotations
 
+import hashlib
+import json
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -115,3 +118,16 @@ def shuffled_rule(shuffled_minus_temp: dict[str, float]) -> str:
     """Validation: the shuffled head must not beat the temperature (its interval-score
     difference wholly below zero) for a G3-c pass to stand."""
     return FAIL if below(shuffled_minus_temp, 0.0) == PASS else PASS
+
+
+def shuffled_rule_from(validation: str | Path, want_sha256: str) -> str:
+    """The test gate's shuffled rule, read from the validation record's ``validation.json``
+    (spec 008 FR-063, Gate 2 panel G9): its SHA-256 must be the one ``carried.json`` records."""
+    raw = Path(validation).read_bytes()
+    got = hashlib.sha256(raw).hexdigest()
+    if got != want_sha256:
+        raise ValueError(f"{validation}: SHA-256 {got} is not carried.json's {want_sha256}")
+    rule = json.loads(raw)["shuffled_rule"]
+    if rule not in (PASS, FAIL):
+        raise ValueError(f"{validation}: shuffled_rule {rule!r} is not pass or fail")
+    return str(rule)
