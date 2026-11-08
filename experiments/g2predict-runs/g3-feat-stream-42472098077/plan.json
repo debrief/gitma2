@@ -1,0 +1,30 @@
+{
+  "description": "Spec 008 T026: feature caches of the carried E (e-s3) over the Gate 2 training stream (seed 318 train split, all 9,930 sigma = 1 deg scenarios), for the calibration head. Predictions carry covariances; caches hold E-w's encoder state at each G5 row.",
+  "data": {
+    "seed": 318,
+    "count": 25000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "ed428a0df343da4083d145b4685a20671085e2cf",
+    "split": "train",
+    "digests": "experiments/20261106-g2-stream/seed318-digests.json"
+  },
+  "ordinals": [
+    0,
+    9930
+  ],
+  "shards": 16,
+  "gate2_plan": "configs/gate2/g2-a.json",
+  "segmentations": {
+    "branch": "results/segment-g2-stream-c-42268365081",
+    "path": "experiments/segment-runs/g2-stream-c-42268365081/segmentations.ndjson"
+  },
+  "training": {
+    "branch": "results/g2-g2-a-42352638177",
+    "dir": "experiments/g2-runs/g2-a-42352638177"
+  },
+  "models": [
+    "e-s3"
+  ],
+  "features": true
+}
