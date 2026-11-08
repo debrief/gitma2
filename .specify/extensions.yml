@@ -1,0 +1,15 @@
+# Spec Kit extension hooks (read by the speckit-* skills' Mandatory Post-Execution Hooks).
+# Reporting practice: constitution 1.3.0, AGENTS.md (Reporting), site/docs/process/reporting.md.
+hooks:
+  after_specify:
+    - extension: reporting
+      command: speckit.report.kickoff
+      description: Write the task's kickoff blog post from the new spec.
+      optional: false
+      enabled: true
+  after_implement:
+    - extension: reporting
+      command: speckit.report.slides
+      description: Build the task's slides post (reveal.js deck, figures) before the PR is opened.
+      optional: false
+      enabled: true
