@@ -1691,6 +1691,117 @@
             "title": "Gate2Verdicts",
             "type": "object"
         },
+        "Gate3Criteria": {
+            "additionalProperties": false,
+            "description": "Gate 3's bands (spec 008 FR-030; fixed by the SRD amendment and the decision).",
+            "properties": {
+                "coverage95": {
+                    "description": "G3-a: [lo, hi] for each of log range, course and speed; the interval wholly inside.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "nees_median_ratio": {
+                    "description": "G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "coverage95",
+                "nees_median_ratio"
+            ],
+            "title": "Gate3Criteria",
+            "type": "object"
+        },
+        "Gate3Decision": {
+            "additionalProperties": false,
+            "description": "The Gate 3 decision record (spec 008 FR-031), committed before any calibration training.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "carried_e": {
+                    "description": "The carried Gate 2 estimator (model id).",
+                    "type": "string"
+                },
+                "carried_e_weights": {
+                    "description": "Its weights' SHA-256 (prediction headers' weights_sha256).",
+                    "type": "string"
+                },
+                "carried_rule": {
+                    "type": "string"
+                },
+                "criteria": {
+                    "$ref": "#/$defs/Gate3Criteria"
+                },
+                "follow_on": {
+                    "type": "string"
+                },
+                "forecast": {
+                    "type": "string"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "score_of_record": {
+                    "description": "G3-c's score: mean 95% interval score in log range, missing rows charged.",
+                    "type": "string"
+                },
+                "shuffled_rule": {
+                    "type": "string"
+                },
+                "temperature": {
+                    "$ref": "#/$defs/TemperatureConfig"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "train_seed": {
+                    "type": "integer"
+                },
+                "validation_digest": {
+                    "type": "string"
+                },
+                "validation_rule": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "validation_seed",
+                "validation_digest",
+                "train_seed",
+                "test_seed",
+                "carried_e",
+                "carried_e_weights",
+                "criteria",
+                "score_of_record",
+                "temperature",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "carried_rule",
+                "shuffled_rule",
+                "validation_rule",
+                "follow_on",
+                "forecast"
+            ],
+            "title": "Gate3Decision",
+            "type": "object"
+        },
         "GateCheck": {
             "additionalProperties": false,
             "description": "",
@@ -4748,6 +4859,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.26.0"
+    "version": "0.27.0"
 }
 

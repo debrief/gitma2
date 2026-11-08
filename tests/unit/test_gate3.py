@@ -85,11 +85,21 @@ def _scoring(tmp_path: Path, n: int, ordinals: np.ndarray) -> dict[str, Any]:
     dec.write_text(
         json.dumps(
             {
+                "plan_id": "g3-a",
+                "plan_digest": "P",
+                "validation_seed": 314,
                 "validation_digest": "T",
+                "train_seed": 318,
+                "test_seed": 320,
+                "carried_e": "e-s3",
+                "carried_e_weights": "E",
                 "criteria": BANDS,
+                "score_of_record": "interval score, log range",
+                "temperature": {"slices": ["minute", "open"], "beta": 0.5, "cap": 100.0},
                 "bootstrap_level": 0.975,
                 "bootstrap_resamples": 200,
-                "carried_e_weights": "E",
+                **{k: "-" for k in ("carried_rule", "shuffled_rule", "validation_rule")},
+                **{k: "-" for k in ("follow_on", "forecast")},
             }
         )
     )

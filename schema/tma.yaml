@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.26.0
+version: 0.27.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -1818,6 +1818,43 @@ classes:
       validation_rule: { range: string, required: true }
       rescore: { range: string, required: true }
       criterion: { range: string, required: true }
+      follow_on: { range: string, required: true }
+      forecast: { range: string, required: true }
+
+  Gate3Criteria:
+    description: Gate 3's bands (spec 008 FR-030; fixed by the SRD amendment and the decision).
+    attributes:
+      coverage95:
+        range: float
+        multivalued: true
+        required: true
+        description: "G3-a: [lo, hi] for each of log range, course and speed; the interval wholly inside."
+      nees_median_ratio:
+        range: float
+        multivalued: true
+        required: true
+        description: "G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside."
+
+  Gate3Decision:
+    description: >-
+      The Gate 3 decision record (spec 008 FR-031), committed before any calibration training.
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      validation_seed: { range: integer, required: true }
+      validation_digest: { range: string, required: true }
+      train_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true }
+      carried_e: { range: string, required: true, description: "The carried Gate 2 estimator (model id)." }
+      carried_e_weights: { range: string, required: true, description: "Its weights' SHA-256 (prediction headers' weights_sha256)." }
+      criteria: { range: Gate3Criteria, required: true }
+      score_of_record: { range: string, required: true, description: "G3-c's score: mean 95% interval score in log range, missing rows charged." }
+      temperature: { range: TemperatureConfig, required: true }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      carried_rule: { range: string, required: true }
+      shuffled_rule: { range: string, required: true }
+      validation_rule: { range: string, required: true }
       follow_on: { range: string, required: true }
       forecast: { range: string, required: true }
 

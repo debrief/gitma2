@@ -102,9 +102,10 @@ def main(argv: list[str] | None = None) -> int:
 
     from tma2.calib import gate
     from tma2.segment.gate import sha256_file
+    from tma2.types.generated.tma import Gate3Decision
 
     sdir = Path(a.scoring)
-    decision = json.loads(Path(a.decision).read_text())
+    decision = Gate3Decision.model_validate_json(Path(a.decision).read_text()).model_dump()
     inputs = json.loads((sdir / "inputs.json").read_text())
     z = dict(np.load(sdir / "errors.npz"))
     if a.split == "validation" and a.shuffled is None:
