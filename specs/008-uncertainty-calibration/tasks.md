@@ -169,7 +169,7 @@ errors.
   (NEES, coverage, interval score, sharpness) and the write-up `site/blog/<date>-gate-3.md`.
 - [x] T036 [P] Update `AGENTS.md`: spec 008 status, seeds (320 unused: the gate stopped at
   validation; it stays the next fresh seed), gotchas.
-- [ ] T037 Run `quickstart.md` end to end.
+- [x] T037 Run `quickstart.md` end to end.
 
 ## Dependencies
 

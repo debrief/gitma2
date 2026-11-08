@@ -89,8 +89,8 @@ Write-up `site/blog/2026-11-08-gate-2.md`; recommended follow-on: carry E, keep 
 control, spec 008 uncertainty calibration with the panel's follow-ons (`specs/007-gate2-man2/tasks.md`).
 `scripts/research/g2_paired_gaps.py` gives paired gap differences between any two scored
 estimators. Seeds: 318 training stream, 319 test (used); the next fresh seed is 320.
-008 (uncertainty calibration, Gate 3, `specs/008-uncertainty-calibration/`; gate decided, open:
-T037 quickstart run; time-late E-w: no gain over causal, `experiments/20261108-g3-timelate/`): every
+008 (uncertainty calibration, Gate 3, `specs/008-uncertainty-calibration/`; done; time-late E-w:
+no gain over causal, `experiments/20261108-g3-timelate/`): every
 prediction row states its covariance (`cov_xyvv`, `cov_ok`, sds of log range, course and speed;
 schema 0.27.0), the scorer measures coverage, NEES, interval score and sharpness
 (`calibration.json`, `cal_<name>` in `errors.npz`), and `--reuse <errors.npz>` skips re-solving.
