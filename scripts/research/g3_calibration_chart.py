@@ -48,6 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     from tma2.data.provenance import read_git_provenance
     from tma2.report.plots import ESTIMATORS, STYLE
 
+    g = read_git_provenance()  # before writing anything (AGENTS.md: provenance is read first)
     data = {f: json.loads((ROOT / f).read_text()) for f in (VAL, BASE)}
     with plt.rc_context(STYLE):
         fig, ax = plt.subplots(figsize=(8.0, 3.8))
@@ -70,7 +71,6 @@ def main(argv: list[str] | None = None) -> int:
         out.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(out)
         plt.close(fig)
-    g = read_git_provenance()
     side = {
         "command": "uv run python scripts/research/g3_calibration_chart.py --out " + a.out,
         "inputs": {
