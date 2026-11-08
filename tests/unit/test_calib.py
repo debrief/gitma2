@@ -47,6 +47,7 @@ def _synthetic(n: int, seed: int) -> CalData:
         x=x,
         q=q,
         usable=np.ones(n, dtype=bool),
+        scalable=np.ones(n, dtype=bool),
         minute=rng.choice([5, 10, 15, 20], n),
         open=rng.random(n) < 0.1,
         header={"weights_sha256": "w"},
@@ -158,3 +159,21 @@ train_head(cfg, tr, va, Path(sys.argv[1]), {{}}, epochs=int(sys.argv[2]), log=la
     a = (tmp_path / "a" / "last.safetensors").read_bytes()
     b = (tmp_path / "b" / "last.safetensors").read_bytes()
     assert a == b
+
+
+def test_export_features_match_the_cache() -> None:
+    """The exported graph's head features (``gate2.export.log_sds``) are the cache's log sds
+    (``physics.uncertainty.derived_sds``), so the exported head sees what it was trained on."""
+    from tma2.gate2.export import log_sds
+    from tma2.physics.uncertainty import derived_sds
+
+    rng = np.random.default_rng(3)
+    st = rng.normal(0, [5000, 5000, 4, 4], size=(20, 4))
+    a = rng.normal(size=(20, 4, 4))
+    cov = a @ a.transpose(0, 2, 1) + 0.1 * np.eye(4)
+    own = rng.normal(0, 1000, size=(20, 2))
+    lsd, ok = log_sds(torch.tensor(st), torch.tensor(cov), torch.tensor(own))
+    got = lsd.numpy()
+    assert bool(ok.all())
+    want = np.log([derived_sds(st[i], cov[i], (own[i, 0], own[i, 1])) for i in range(20)])
+    np.testing.assert_allclose(got, want, rtol=1e-12, atol=1e-14)

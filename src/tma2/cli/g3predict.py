@@ -68,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
         s = apply(trec["temperatures"], d, list(trec["slices"]))
         cal = {"kind": "temperature", "weights_sha256": sha256_file(a.temperature)}
     cal["plan_sha256"] = plan_sha
-    s = np.where(d.usable, s, 0.0)
+    s = np.where(d.scalable, s, 0.0)  # truth-free, as the exported graph
     scales = {(int(j), float(t)): float(v) for j, t, v in zip(d.ordinal, d.t, s, strict=True)}
     n = write_calibrated(Path(a.inp), Path(a.out), scales, cal)
     print(json.dumps({"rows_scaled": n, "out": a.out, **cal}))

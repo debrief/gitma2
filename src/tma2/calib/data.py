@@ -26,7 +26,8 @@ class CalData:
     t: np.ndarray  # [N] the row's float32 timestamp, as prediction rows carry it
     x: np.ndarray  # [N, F] head inputs: h, log raw sds (3), code_k
     q: np.ndarray  # [N] NEES of the estimate under the raw covariance
-    usable: np.ndarray  # [N] bool: plausible, cov_ok and q finite
+    usable: np.ndarray  # [N] bool: plausible, cov_ok and q finite (training and fitting)
+    scalable: np.ndarray  # [N] bool: plausible, cov_ok, sds finite (no truth: what gets scaled)
     minute: np.ndarray  # [N]
     open: np.ndarray  # [N] bool
     header: dict[str, Any]
@@ -39,6 +40,7 @@ class CalData:
             self.x[mask],
             self.q[mask],
             self.usable[mask],
+            self.scalable[mask],
             self.minute[mask],
             self.open[mask],
             self.header,
@@ -82,7 +84,8 @@ def load(paths: list[str | Path]) -> CalData:
             q[i] = float(e @ np.linalg.solve(p_, e))
         except np.linalg.LinAlgError:
             q[i] = np.inf
-    usable = cat["plausible"] & cat["cov_ok"] & np.isfinite(q) & np.isfinite(log_sd).all(axis=1)
+    scalable = cat["plausible"] & cat["cov_ok"] & np.isfinite(log_sd).all(axis=1)
+    usable = scalable & np.isfinite(q)
     x = np.concatenate([cat["h"], np.nan_to_num(log_sd), cat["code_k"][:, None]], axis=1)
     return CalData(
         ordinal=cat["ordinal"],
@@ -91,6 +94,7 @@ def load(paths: list[str | Path]) -> CalData:
         x=x,
         q=q,
         usable=usable,
+        scalable=scalable,
         minute=cat["minute"],
         open=cat["open"].astype(bool),
         header=head,

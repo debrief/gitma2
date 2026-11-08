@@ -89,7 +89,7 @@ errors.
 - [ ] T016 Open the SRD amendment PR adding the Gate 3 row (docs/SRD.md §5) with the proposed
   bands from spec FR-030, informed by T015. The owner merges it. If two working days pass
   without objection, the agent merges and says so in the next write-up (AGENTS.md).
-- [ ] T017 Write the head plan `configs/gate3/g3-a.json`:
+- [x] T017 Write the head plan `configs/gate3/g3-a.json`:
   - head config and temperature slices;
   - models `cal-s1..s3` and `cal-shuffled`;
   - the feature caches by branch;
@@ -160,7 +160,7 @@ errors.
 
 ## Phase 9: Polish
 
-- [ ] T034 [P] Export: E-w's graph gains the head's calibrated covariance output
+- [x] T034 [P] Export: E-w's graph gains the head's calibrated covariance output
   (`src/tma2/gate2/export.py`), with three-runtime conformance in `ci.yml`.
 - [ ] T035 [P] Site: an algorithm note `site/docs/algorithms/calibration.md`, glossary entries
   (NEES, coverage, interval score, sharpness) and the write-up `site/blog/<date>-gate-3.md`.
