@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pytest
 import torch
 
@@ -185,3 +186,20 @@ def test_validation_mode_and_refusals(files: dict[str, Any]) -> None:
     assert g2_main([*_args(files, "r"), *bad, "--split", "validation"]) == 2
     assert g2_main([*_args(files, "r2"), *gate, "--split", "test", "--model", "ew-s1"]) == 2
     assert not (t / "r").exists() and not (t / "r2").exists()
+
+
+def test_reuse_stored_errors(files: dict[str, Any]) -> None:
+    """--reuse (spec 008 FR-062): a second scoring that loads the first run's re-solved
+    estimators gives the same arrays; a stored file for other rows is refused."""
+    t = files["tmp"]
+    assert g2_main(_args(files, "a")) == 0
+    stored = t / "a" / "errors.npz"
+    assert g2_main([*_args(files, "b"), "--reuse", str(stored)]) == 0
+    za, zb = np.load(stored), np.load(t / "b" / "errors.npz")
+    assert sorted(za.files) == sorted(zb.files)
+    for k in za.files:
+        np.testing.assert_array_equal(za[k], zb[k], err_msg=k)
+    other = t / "other.npz"
+    np.savez(other, **{k: za[k] for k in za.files if k not in ("ordinal", "k")},
+             ordinal=za["ordinal"] + 1, k=za["k"])  # fmt: skip
+    assert g2_main([*_args(files, "c"), "--reuse", str(other)]) == 2

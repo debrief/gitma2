@@ -147,7 +147,7 @@ errors.
 
 ## Phase 8: User Story 5 — the Gate 2 panel's follow-ons (P3)
 
-- [ ] T030 [P] [US5] `--reuse <errors.npz>` in `src/tma2/cli/gs.py`: load the re-solved
+- [x] T030 [P] [US5] `--reuse <errors.npz>` in `src/tma2/cli/gs.py`: load the re-solved
   estimators when (ordinal, k) match exactly, and refuse otherwise (FR-062). Add
   `tests/unit/test_score_reuse.py`.
 - [ ] T031 [P] [US5] Make the merge steps in `.github/workflows/g2predict.yml` and `segment.yml`
