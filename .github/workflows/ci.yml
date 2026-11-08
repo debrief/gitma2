@@ -134,6 +134,15 @@ jobs:
           uv run python -m tma2.segment.evidence_export --out conformance/onnx/evidence
           (cd conformance/onnx && node wasm_leg.mjs --dir evidence --out evidence/results.json)
           uv run python conformance/onnx/java_leg.py conformance/onnx/evidence conformance/onnx/evidence/results.json
+      - name: Gate 2's carried E (e-s3), three legs - E-s's evidence network and E-w on C's hand-over (spec 007 T033)
+        run: |
+          W=experiments/20261107-g2-val/models
+          uv run python -m tma2.segment.evidence_export --out conformance/onnx/gate2-es --plan configs/gate2/g2-a.json --weights $W/es-s3/best.safetensors
+          (cd conformance/onnx && node wasm_leg.mjs --dir gate2-es --out gate2-es/results.json)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/gate2-es conformance/onnx/gate2-es/results.json
+          uv run python -m tma2.gate2.export --out conformance/onnx/gate2-ew --plan configs/gate2/g2-a.json --weights $W/ew-s3/best.safetensors
+          (cd conformance/onnx && node wasm_leg.mjs --dir gate2-ew --out gate2-ew/results.json)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/gate2-ew conformance/onnx/gate2-ew/results.json
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
@@ -145,6 +154,8 @@ jobs:
             conformance/onnx/gate1/results.json
             conformance/onnx/gate1/python_leg.json
             conformance/onnx/detector-*/results.json
+            conformance/onnx/gate2-*/results.json
+            conformance/onnx/gate2-*/python_leg.json
 
   p0:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'p0')

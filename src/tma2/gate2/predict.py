@@ -52,6 +52,30 @@ def es_segmentations(
     return [{k: intervals_at(c, k, p) for k in ks} for c, ks in zip(confs, rows, strict=True)]
 
 
+def zig_veto_evidence(d: BearingData, window: int) -> np.ndarray:
+    """The classical control C′ (Gate 2 panel, round 1): evidence that saturates C's threshold
+    shift at +τ/2 for any candidate whose evidence rows touch the ownship zig ± ``window`` rows,
+    and leaves every other decision as C's. Uses only the ownship's own zig row, which C's
+    scenario data already carry."""
+    e = np.zeros(d.n)
+    z = int(d.zig_index)
+    e[max(0, z - window) : min(d.n, z + window + 1)] = 1.0e3
+    return e
+
+
+def veto_segmentations(
+    data: list[BearingData],
+    rows: list[list[int]],
+    p: SegmentParameters,
+    window: int,
+) -> list[dict[int, list[Interval]]]:
+    """C′'s segmentation of each scenario at its rows: C's confirmation with the zig veto."""
+    ev = [zig_veto_evidence(d, window) for d in data]
+    noms = [nominations_for(d, ks[0], p) for d, ks in zip(data, rows, strict=True)]
+    confs = confirm(PhysicsLayer(), data, noms, p, max(d.n for d in data), evidence=ev)
+    return [{k: intervals_at(c, k, p) for k in ks} for c, ks in zip(confs, rows, strict=True)]
+
+
 def _row(
     d: BearingData, k: int, state: np.ndarray, rcs: tuple[float, float, float], ok: bool
 ) -> dict[str, Any]:
@@ -77,9 +101,12 @@ def e_rows(
     mode: str,
     open_handover: str | None,
     batch: int = 32,
+    fade: tuple[float, float] | None = None,
 ) -> list[list[dict[str, Any]]]:
     """Per scenario, a prediction row at each scored row (an empty row where C's hand-over has
-    no input or the solve is implausible)."""
+    no input or the solve is implausible). ``fade`` (a, b), with no model: the classical control's
+    fixed fading memory (Gate 2 panel, round 1), clip(a − b·age, ±2) added to C's log-weights,
+    age = k − row (rows after k are masked by the layer)."""
     from tma2.cli.oracle import empty_row
 
     r_max = max(d.n for d in data)
@@ -97,6 +124,11 @@ def e_rows(
             inp = prefix_inputs(d, k, ivs, mode, open_handover)
             if inp is None:
                 continue
+            if fade is not None and model is None:
+                age = k - np.arange(len(inp.log_weight))
+                add = np.clip(fade[0] - fade[1] * age, -2.0, 2.0)
+                add[age < 0] = 0.0
+                inp.log_weight = inp.log_weight + add
             items.append((d, k, inp))
             codes.append(np.pad(code_channel(ivs, k, d.n), (0, r_max - d.n)))
             where.append((i, q))

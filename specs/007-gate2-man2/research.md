@@ -43,10 +43,12 @@ condition is a ceiling gain of at least +0.02 over C on the scoring ordinals.
   training scenario (the candidate, its row a, cost drop Δ and threshold τ′), the table stores
   the bound-normalised downstream error at the scored rows the decision affects, with and without
   the transition, holding C's other decisions fixed. The loss is
-  Σ [p·e_with + (1 − p)·e_without], with p = σ((Δ − τ′ + 2Σe)/T). The evidence e is summed over
+  Σ [p·e_with + (1 − p)·e_without], with p = σ((Δ − τ′ − s)/T), s = clamp(2Σe, ±τ/2): positive
+  evidence (steady) raises the threshold. The evidence e is summed over
   the candidate's rows, capped at ±τ/2 as in spec 005, and T is a declared temperature.
   - At e = 0 the hard decisions are C's, so an untrained E-s is C.
-  - At inference the decision is hard: accept if Δ > τ′ − 2Σe.
+  - At inference the decision is hard: accept if Δ − τ′ − s > 0. (Corrected after the Gate 2
+    panel, round 1: an earlier draft had the opposite sign; the code always subtracted s.)
 - **Joint model:** E = E-s's segmentation, then E-w's weights. Each is a separate training job.
   - **Amended before the decision record (2026-11-06, implementation):** E-w trains on C's
     segmentation, not E-s's, and the two train in parallel; E seed s pairs E-s seed s with E-w

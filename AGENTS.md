@@ -69,16 +69,25 @@ transitions overlapping through open ones (`_free` treats an open transition as 
 take a fresh test seed. Owner decision 2026-11-05: a learned nominator, or evidence trained
 through confirmation, is tested within Gate 2, not as a separate gate. Write-up:
 `site/blog/2026-11-05-gate-s.md`.
-007 (Gate 2 on MAN2, `specs/007-gate2-man2/`; SRD amendment G2-d in PR 16, owner merges):
-pipeline built. E = E-s (spec 005's evidence shifting C's confirmation threshold, trained on
-decision tables, `tma2-dtables`) then E-w (per-bearing weights and a start correction on C's
-hand-over, physics layer with 12 knots); `tma2-g2train {tables,train,es}`, `tma2-g2predict`,
-`tma2-g2` (tma2-gs scoring with `--predictions`, `--knots 12`). Workflows: `segment/**`,
-`dtables/**`, `g2train/**`, `g2predict/**`, `score/**` (kind `g2`). C frozen at code digest
-`4d2c084f…` (parameters `60e6ee63…`, hand-over `knot_at_k`); plan `configs/gate2/g2-a.json`
-(draft until the decision record). Nominator ceiling +0.016 (< +0.02): no learned nominator.
-Seeds: 318 training stream (train split, 9,930 at σ = 1°), 319 test (after the decision record);
-the next fresh seed is 320.
+007 (Gate 2 on MAN2, `specs/007-gate2-man2/`; SRD amendment G2-d in PR 16, merged by the owner):
+E = E-s (spec 005's evidence shifting C's confirmation threshold, trained on decision tables,
+`tma2-dtables`) then E-w (per-bearing weights and a start correction on C's hand-over, physics
+layer with 12 knots); `tma2-g2train {tables,train,es}`, `tma2-g2predict`, `tma2-g2` (tma2-gs
+scoring with `--predictions`, `--knots 12`). Workflows: `segment/**`, `dtables/**`, `g2train/**`,
+`g2predict/**`, `score/**` (kind `g2`). C frozen at code `4d2c084f…` (parameters `60e6ee63…`,
+hand-over `knot_at_k`); decision `experiments/20261107-g2-decision/` (plan `configs/gate2/g2-a.json`
+`6092c364…`, never edited). Training run 42352638177; validation `experiments/20261107-g2-val/`
+(carried e-s3, `carried.json`); **test record `experiments/20261107-g2/`: G2-a to G2-d pass, E − C
++0.025 [+0.018, +0.031]** (seed 319, 4,983 scenarios). Panel round 1: two majors (E-s ≈ a zig veto,
+E-w ≈ a fading memory), answered by pre-registered classical controls C′, fade and C″
+(`experiments/20261107-g2-veto/`, model kind `veto` in `tma2-g2predict`, plans
+`configs/gate2/g2-a-{veto,fade}.json`). **Decided by the panel, round 2: G2-a to G2-d pass**;
+on test the classical C″ (zig veto + fixed fade, nothing learned) − C is +0.018 and E − C″ +0.007
+[+0.001, +0.012] (learning beyond the rules, small; E-s adds nothing shown beyond the veto).
+Write-up `site/blog/2026-11-08-gate-2.md`; recommended follow-on: carry E, keep C″ as a standing
+control, spec 008 uncertainty calibration with the panel's follow-ons (`specs/007-gate2-man2/tasks.md`).
+`scripts/research/g2_paired_gaps.py` gives paired gap differences between any two scored
+estimators. Seeds: 318 training stream, 319 test (used); the next fresh seed is 320.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -273,3 +282,16 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   records any difference.
 - C's GLR nominations divide by σ: noise-free (σ = 0) data needs search-only parameters.
 - The full test suite takes about 10 minutes (C on fixture scenarios in the Gate 2 tests).
+- Run `uv run ruff check .` (the whole repo, as CI does), not just `src tests`: `scripts/research`
+  is linted too.
+- E-s's learned evidence is mostly a veto at the ownship zig and E-w's weights mostly a recency
+  profile (Gate 2 panel): test any learned component against the classical rule it might be
+  before claiming learning, and register that control before its result exists.
+- Early stopping that keeps epoch 0 makes a shuffled control equal to the untrained model, so its
+  rule cannot fail: score the last-epoch shuffled weights too (Gate 2 panel).
+- The scorer (`tma2-gs`/`tma2-g2`) re-solves C, one leg, the oracle and GLR + confirm, so a
+  re-score on another CPU family is not byte-identical (Gate 2: C up to 6e-4 relative, 21 one-leg
+  rows switch finite/runaway; G2-d moved 1.4e-5). Compare estimators within one scoring run's
+  `errors.npz` (`scripts/research/g2_paired_gaps.py`), or re-score on the gate's CPU family.
+- 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
+  it drains; queue long runs one at a time when a result is waited on.

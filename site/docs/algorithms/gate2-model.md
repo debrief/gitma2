@@ -29,8 +29,9 @@ knots at the transitions, masked transition bearings and a grid start. E-w adds 
   C's start bit for bit.
 
 The encoder is Gate 1's causal transformer ([Gate 1 model](gate1-model.md)) with one extra input
-channel: C's code at prefix k (steady 0, transition 1, unknown 0.5, and 0 after k). Rows after k
-are cut, so nothing after the prefix reaches it.
+channel: C's code at prefix k (steady 0, transition 1, unknown 0.5, and 0 after k). Inputs after
+row k are zeroed and attention is causal, and the physics layer masks rows after k, so nothing
+after the prefix reaches the estimate (tested by perturbing every later row).
 
 **Training.** The loss is the [CRB](crb.md)-normalised squared error of (log range, vx, vy) at
 the row, for each prefix:
@@ -76,6 +77,30 @@ At inference, E-s's evidence goes into C's confirmation, and E-w then weights th
 the resulting segmentation. E-w is trained on C's segmentation rather than E-s's. Training it on
 E-s's would cost a full re-segmentation of the training stream per E-s seed, and E-s changes
 only near-threshold decisions. E-w alone, on C's segmentation, is reported as an ablation.
+
+## What E learned, and the classical controls
+
+On Gate 2's records E-s's evidence sits almost entirely within a few rows of the ownship zig: it
+learned not to accept a target transition at the ownship's own manoeuvre (a *zig veto*). E-w's
+log-weights are mostly a recency profile (a *fading memory*). Two rules with nothing learned stand
+in for them (`gate2.predict`, model kind `veto` in `tma2-g2predict`):
+
+- **C′**: C's confirmation with fixed evidence of 1e3 on rows zig − W … zig + W (W = 6), so any
+  candidate whose evidence rows touch the window gets the largest shift, +τ/2, and every other
+  decision is C's exactly. A threshold of 1.5τ there, not a ban.
+- **fade**: clip(a − b·age, ±2) added to C's log-weights, age = k − row (a = 0.73, b = 0.0079,
+  read off E-w's mean profile); masked bearings stay masked.
+- **C″**: both.
+
+On Gate 2's test seed C″ recovers +0.018 of E's +0.025 over C; E − C″ is +0.007 [+0.001,
++0.012] (`experiments/20261107-g2-veto/`). Later gates keep C″ as a standing control.
+
+## Export
+
+E exports as two ONNX graphs (constitution VI, three runtimes to 1e-5 in CI): E-s's evidence
+network (`segment.evidence_export --plan configs/gate2/g2-a.json`) and E-w on C's hand-over of one
+prefix (`gate2.export`: the encoder, heads and 12-knot physics layer, its 100 iterations one ONNX
+`Loop`). C's nomination and confirmation stay host code between them.
 
 ## The gate
 

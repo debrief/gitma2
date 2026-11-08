@@ -210,43 +210,77 @@ mismatches.
   - Done (`kind: "g2"`: `c`, `e`, `knots`, `gate.model`). Also `g2predict.yml`
     (`g2predict/<name>`, shards × models, results merged per model) and `g2train.yml` trains
     E-s (`kind: "es"`, decision tables from `dtables` results); `scripts/ci/regen_split.sh`.
-- [ ] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
+- [x] T025 [US3] Write the SRD amendment record: confirm `docs/SRD.md` §5 and §7 (PR 16) is merged
   by the owner before T026 (FR-034).
-- [ ] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as
+- [x] T026 [US3] Write the decision record `experiments/<date>-g2-decision/` (`decision.json` as
   `Gate2Decision`, README; contracts/decision-record.md), with the forecast refined by the T016
   and T001 numbers. Commit it before any E training.
-- [ ] T027 [US3] **(CI)** Train E (three seeds plus the shuffled control) and E-w alone (three
+  - Done: PR 16 merged by the owner (2026-11-07); `experiments/20261107-g2-decision/` binds
+    plan `6092c364…`.
+- [x] T027 [US3] **(CI)** Train E (three seeds plus the shuffled control) and E-w alone (three
   seeds) with plan `configs/gate2/g2-a.json`; push `g2train/g2-a`.
-- [ ] T028 [US3] **(CI)** Validation:
+- [x] T028 [US3] **(CI)** Validation:
   - predict on ordinals 500–1499 and score with `tma2-g2` on CI;
   - apply the carried-seed rule (median by gap recovered), the shuffled rule and the validation
     rule;
   - commit `experiments/<date>-g2-val/` and the amendment `carried.json`.
-- [ ] T029 [US3] **(CI)** If a configuration is carried:
+- [x] T029 [US3] **(CI)** If a configuration is carried:
   - generate seed 319 (`--count 100000`) at a clean commit and commit its digests (an amendment);
   - segment and predict the test split on CI;
   - run the gate (`configs/score/g2-gate.json`);
   - commit `experiments/<date>-g2/`.
-- [ ] T030 [US3] Convene the agent review panel (five specialities, read-only, in rounds until no
+- [x] T030 [US3] Convene the agent review panel (five specialities, read-only, in rounds until no
   reject and no open blocker or major). Commit `review.md` and set `decided_by` (FR-051).
 
 ## Phase 6: User Story 4, an honest record of what was and was not shown (P2)
 
-- [ ] T031 [P] [US4] Site pages:
+- [x] T031 [P] [US4] Site pages:
   - the algorithm note `site/docs/algorithms/gate2-model.md` (E-w, E-s, decision tables);
   - glossary terms (decision table, relaxed acceptance);
   - the Gate 2 write-up `site/blog/<date>-gate-2.md`, with C's figures beside E's, E-w's ablation,
     the open-at-k stratum, and the follow-on with a recommended default.
 
   Then `(cd site && npm ci && npm run build)`.
-- [ ] T032 [P] [US4] Update `AGENTS.md`: spec 007's status, the seeds used (318, 319) and new
+- [x] T032 [P] [US4] Update `AGENTS.md`: spec 007's status, the seeds used (318, 319) and new
   gotchas.
 
 ## Phase 7: Polish
 
-- [ ] T033 Export E (E-w on C's segmentation as an input, E-s's evidence network) to ONNX, with
+- [x] T033 Export E (E-w on C's segmentation as an input, E-s's evidence network) to ONNX, with
   three-runtime conformance to 1e-5 (constitution VI), as spec 005's evidence export.
-- [ ] T034 Run `quickstart.md` end to end and fix any drift.
+- [x] T034 Run `quickstart.md` end to end and fix any drift.
+
+## Handoff (2026-11-08, for the next session)
+
+State: **Gate 2 decided by the panel, round 2: G2-a to G2-d pass** (record
+`experiments/20261107-g2/`, `review.md`, `verdict.json` `decided_by`). T027–T030 done in PR 17
+(`claude/inspiring-curie-j192v9`). Training run 42352638177; validation
+`experiments/20261107-g2-val/` (carried e-s3); test seed 319; E − C +0.025 [+0.018, +0.031].
+Panel round 1 raised two majors (E-s ≈ a zig veto; E-w ≈ a fading memory), answered by
+pre-registered classical controls (`experiments/20261107-g2-veto/`): C″ (veto + fixed fade,
+nothing learned) − C +0.018; E − C″ +0.007 [+0.001, +0.012] on test (validation inconclusive);
+E-s adds nothing shown beyond the veto; on test E-w − fade +0.004 [+0.001, +0.007] (descriptive,
+validation negative).
+
+Remaining:
+1. **T031** done (`site/blog/2026-11-08-gate-2.md`, controls in the algorithm note, glossary).
+   Was: write-up `site/blog/2026-11-08-gate-2.md` with the panel's reading (review.md
+   "Decision"; the red team's accepted wording in round 2): C's figures beside E's, E-w's
+   ablation, the controls table, the open-at-k stratum (+0.139 on 5.8% of rows), gain by range
+   band, the shuffled evidence from training logs, the follow-on with a recommended default.
+   The algorithm note and glossary exist (`site/docs/algorithms/gate2-model.md`); add a section
+   on the controls. Then `(cd site && npm ci && npm run build)`.
+2. **T032** done (AGENTS.md: verdict, write-up, follow-on, gotchas).
+3. **T033** done: `segment.evidence_export --plan configs/gate2/g2-a.json` (E-s) and
+   `gate2.export` (E-w on C's hand-over, 100 iterations as one Loop, 12 knots), carried weights,
+   three legs in `ci.yml` (Python leg: E-s 6e-16, E-w 3.4e-8).
+4. **T034** done: quickstart run end to end (unit tests 47 passed; smoke E-w training and
+   prediction; long steps name their CI records). Fixed on the way: `tma2-g2train train` put a
+   training file into validation when its path equalled `--val` (now loaded by role).
+5. Follow-ons for the next plan: time-late variant (G7); score last-epoch shuffled weights (G4);
+   coverage assertion in `tma2-g2` and merge-step counts (G10, G11); bind GLR files and E's C file
+   (G12); read the shuffled rule from `validation.json` (G9); store C's scored errors (R2-6);
+   controls' headers carry their settings (R2-7).
 
 ## Dependencies
 

@@ -20,6 +20,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Cramér–Rao bound (CRB)** — the lowest variance any unbiased estimator can reach given the
   bearings' Fisher information; batch least squares sits at it on a straight leg. Three models:
   full window, known manoeuvres, per leg (see [CRB](algorithms/crb.md)).
+- **Classical control (C′, C″)** — Gate 2's rules that stand in for what E learned (panel round 1): C′ raises C's confirmation threshold by τ/2 for target transitions at the ownship zig ± 6 rows (the *zig veto*); C″ adds a fixed *fading memory*, clip(0.73 − 0.0079 × age, ±2) on C's log-weights. Nothing in them is learned; see [Gate 2 model](algorithms/gate2-model.md).
 - **CUSUM** — cumulative-sum change detector: S(k) = max(0, S(k − 1) + ν(k)² − 1 − δ) on normalised innovations, an alarm while S exceeds a tuned threshold; a Gate D control (see [detector](algorithms/detector.md)).
 - **Decision table** — E-s's training data (spec 007): for each of C's confirmation decisions within τ/2 of its threshold, the bound-normalised error at every later scored row with the transition and without it, C's other decisions held; see [Gate 2 model](algorithms/gate2-model.md).
 - **Detectability** — a change's oracle cost drop: the physics layer's cost on the prefix with every true knot, against the same without this change's (χ² with 4 degrees of freedom); note 08's bands are below 13.3, 13.3–50, 50–200 and at least 200.
@@ -30,6 +31,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   inverse is the Cramér–Rao bound. See [CRB](algorithms/crb.md).
 - **G5 rows** — σ = 1° scenarios scored at zig + 5, 10, 15 and 20 min where the window reaches
   them (gitma Annex C); one scenario contributes several rows, so bootstraps resample scenarios.
+- **Fading memory** — a fixed recency profile on the bearings' log-weights (newer bearings weigh more); the classical stand-in for what E-w learned. See *Classical control*.
 - **Gap recovered** — (median one-leg error − median segmentation error) ÷ (median one-leg error − median oracle error) on σ = 1° G5 rows: one leg scores 0, the oracle 1; S2 and S4 compare it between segmenters.
 - **Gate** — a pre-registered go/no-go check (P0, Gate 1, Gate D, Gate 2), judged by the agent
   review panel on a fresh test seed.
@@ -81,6 +83,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   probability, changepoint weights and manoeuvre kind, feeding the physics layer.
 - **Transition** — the interval of a target change between two steady legs, from its first
   changed row to the row where the new course and speed hold (a manoeuvre span).
+- **Zig veto** — raising C's threshold for a target transition at the ownship's own manoeuvre, where a target knot would absorb the bearing-rate change and make range unobservable; what E-s mostly learned. See *Classical control*.
 - **Zig** — ownship's deliberate course change that makes range observable; gate times count
   from the first sample after the first turn completes.
 - **Zig leg** — the steady target leg that contains the ownship zig. On MAN2 data the target can

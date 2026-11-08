@@ -1,0 +1,30 @@
+{
+  "description": "Gate 2 panel round 1: the classical control C\u2032 (veto-w6) and C\u2032 + ew-s3 on the same rows as configs/g2predict/g2-a-test.json (diagnostic).",
+  "data": {
+    "seed": 319,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "4a0cc63153c8e5bedd370d39dbab2e74137f8a11",
+    "split": "test",
+    "digests": "experiments/20261107-g2-decision/seed319-digests.json"
+  },
+  "ordinals": [
+    0,
+    4983
+  ],
+  "shards": 16,
+  "gate2_plan": "configs/gate2/g2-a-veto.json",
+  "segmentations": {
+    "branch": "results/segment-g2-test-c-42399020222",
+    "path": "experiments/segment-runs/g2-test-c-42399020222/segmentations.ndjson"
+  },
+  "training": {
+    "branch": "results/g2-g2-a-42352638177",
+    "dir": "experiments/g2-runs/g2-a-42352638177"
+  },
+  "models": [
+    "veto-w6",
+    "veto-w6-ew3"
+  ]
+}
