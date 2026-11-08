@@ -135,7 +135,12 @@ Gap recovered in range, 97.5% scenario-clustered paired intervals:
 - **On test the increment is consistent with E-w doing more than a fixed fading memory**
   (E-w − fade +0.004 [+0.001, +0.007]); **validation's point is negative** (−0.003 [−0.009,
   +0.007]), so this attribution rests on test alone.
-- The control uses the ownship's planned zig row, which E-s does not see; this favours the control.
+- The veto is anchored on `zig_index`, the first row after the ownship's first turn. It uses the
+  ownship's known turn row, at most 6 rows ahead of the end of the turn, and only once the
+  decision row reaches zig − 6, when the ownship is usually already turning (median turn 8 rows).
+  It covers neither the start of long turns (about 10% are 18 rows or more) nor the second
+  ownship turn (21–54 rows later). Both make C′ weaker than it could be, so E − C′ and E − C″
+  are, if anything, overstated for E (geometry, round 2).
 
 *Corrected after panel round 2 (red team N1–N4): an earlier version of this section said that
 validation agreed in direction for E-w − fade (it does not), called the increment "attributable
