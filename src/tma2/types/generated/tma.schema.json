@@ -1822,6 +1822,121 @@
             "title": "Gate3Decision",
             "type": "object"
         },
+        "Gate4Criteria": {
+            "additionalProperties": false,
+            "description": "Gate 4 bands (spec 009 FR-030; fixed by the SRD amendment and the decision).",
+            "properties": {
+                "bins": {
+                    "type": "integer"
+                },
+                "coverage95": {
+                    "description": "G4-a: [lo, hi] for range and speed.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "min_mean_prob": {
+                    "description": "G4-c: minimum mean stated P.",
+                    "type": "number"
+                },
+                "reliability_bin": {
+                    "description": "G4-b: per-bin |hit - P| bound (point).",
+                    "type": "number"
+                },
+                "reliability_overall": {
+                    "description": "G4-b: |hit rate - mean P| bound (interval wholly within).",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "coverage95",
+                "reliability_overall",
+                "reliability_bin",
+                "bins",
+                "min_mean_prob"
+            ],
+            "title": "Gate4Criteria",
+            "type": "object"
+        },
+        "Gate4Decision": {
+            "additionalProperties": false,
+            "description": "The Gate 4 decision record (spec 009 FR-031), committed before any training.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "carried_e": {
+                    "type": "string"
+                },
+                "carried_e_weights": {
+                    "type": "string"
+                },
+                "carried_rule": {
+                    "type": "string"
+                },
+                "criteria": {
+                    "$ref": "#/$defs/Gate4Criteria"
+                },
+                "follow_on": {
+                    "type": "string"
+                },
+                "forecast": {
+                    "type": "string"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "shuffled_rule": {
+                    "type": "string"
+                },
+                "temperature": {
+                    "$ref": "#/$defs/StatementTemperatureConfig"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "train_seed": {
+                    "type": "integer"
+                },
+                "validation_digest": {
+                    "type": "string"
+                },
+                "validation_rule": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "validation_seed",
+                "validation_digest",
+                "train_seed",
+                "test_seed",
+                "carried_e",
+                "carried_e_weights",
+                "criteria",
+                "temperature",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "carried_rule",
+                "shuffled_rule",
+                "validation_rule",
+                "follow_on",
+                "forecast"
+            ],
+            "title": "Gate4Decision",
+            "type": "object"
+        },
         "GateCheck": {
             "additionalProperties": false,
             "description": "",
@@ -3692,6 +3807,34 @@
                 "converged": {
                     "type": "boolean"
                 },
+                "course_arc_prob": {
+                    "description": "Spec 009: P, the stated probability that the true course lies within +-X of course_rad.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "course_arc_rad": {
+                    "description": "Spec 009: X, the stated course arc half-width (at most the plan's maximum), radians.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "course_conc": {
+                    "description": "Spec 009: the von Mises concentration of the statement's peaked part.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "course_mix_p": {
+                    "description": "Spec 009: the peaked part's weight; the rest is uniform on the circle.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
                 "course_rad": {
                     "type": "number"
                 },
@@ -3752,8 +3895,22 @@
                 "range_m": {
                     "type": "number"
                 },
+                "range_ratio_q95": {
+                    "description": "Spec 009: the stated 95% half-width of ln(estimated range / true range).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
                 "speed_mps": {
                     "type": "number"
+                },
+                "speed_q95_mps": {
+                    "description": "Spec 009: the stated 95% half-width of the speed error, m/s.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
                 },
                 "speed_sd_mps": {
                     "description": "First-order standard deviation of speed from the row's covariance (spec 008).",
@@ -4456,6 +4613,88 @@
             "title": "Split",
             "type": "string"
         },
+        "StatementHeadConfig": {
+            "additionalProperties": false,
+            "description": "Spec 009 (research R2, R3, R6): the learned uncertainty statement. Outputs, bounded by tanh: the course spread scale a, the peaked weight p (logit), and the range and speed interval scales; trained on the exact errors by the standardised sum of the course log score and the two 95% interval scores.",
+            "properties": {
+                "batch_rows": {
+                    "type": "integer"
+                },
+                "bound": {
+                    "description": "Bound on each log-scale output.",
+                    "type": "number"
+                },
+                "learning_rate": {
+                    "type": "number"
+                },
+                "max_epochs": {
+                    "type": "integer"
+                },
+                "min_improvement": {
+                    "type": "number"
+                },
+                "patience": {
+                    "type": "integer"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "shuffled": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "width": {
+                    "type": "integer"
+                },
+                "xmax_rad": {
+                    "description": "Maximum stated course arc half-width.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "width",
+                "bound",
+                "xmax_rad",
+                "learning_rate",
+                "batch_rows",
+                "max_epochs",
+                "patience",
+                "min_improvement",
+                "seed"
+            ],
+            "title": "StatementHeadConfig",
+            "type": "object"
+        },
+        "StatementTemperatureConfig": {
+            "additionalProperties": false,
+            "description": "Spec 009 (R2, R3): the classical control, the same statement fitted per slice.",
+            "properties": {
+                "isotonic_bins": {
+                    "description": "Knots of the shared isotonic map for P.",
+                    "type": "integer"
+                },
+                "slices": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "xmax_rad": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "xmax_rad",
+                "isotonic_bins"
+            ],
+            "title": "StatementTemperatureConfig",
+            "type": "object"
+        },
         "StopReason": {
             "description": "",
             "enum": [
@@ -4893,6 +5132,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.29.0"
+    "version": "0.30.0"
 }
 

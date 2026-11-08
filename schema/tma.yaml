@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.29.0
+version: 0.30.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -737,6 +737,24 @@ classes:
         description: >-
           The covariance is usable: finite, positive definite, and the target not on ownship
           (range > 1 m) (spec 008).
+      course_arc_rad:
+        range: float
+        description: "Spec 009: X, the stated course arc half-width (at most the plan's maximum), radians."
+      course_arc_prob:
+        range: float
+        description: "Spec 009: P, the stated probability that the true course lies within +-X of course_rad."
+      course_conc:
+        range: float
+        description: "Spec 009: the von Mises concentration of the statement's peaked part."
+      course_mix_p:
+        range: float
+        description: "Spec 009: the peaked part's weight; the rest is uniform on the circle."
+      range_ratio_q95:
+        range: float
+        description: "Spec 009: the stated 95% half-width of ln(estimated range / true range)."
+      speed_q95_mps:
+        range: float
+        description: "Spec 009: the stated 95% half-width of the speed error, m/s."
       cov_scale_log:
         range: float
         multivalued: true
@@ -1797,6 +1815,61 @@ classes:
       beta: { range: float, required: true }
       cap: { range: float, required: true }
       form: { range: CalibrationForm, description: "As CalibrationHeadConfig.form." }
+
+  StatementHeadConfig:
+    description: >-
+      Spec 009 (research R2, R3, R6): the learned uncertainty statement. Outputs, bounded by tanh:
+      the course spread scale a, the peaked weight p (logit), and the range and speed interval
+      scales; trained on the exact errors by the standardised sum of the course log score and the
+      two 95% interval scores.
+    attributes:
+      width: { range: integer, required: true }
+      bound: { range: float, required: true, description: "Bound on each log-scale output." }
+      xmax_rad: { range: float, required: true, description: "Maximum stated course arc half-width." }
+      learning_rate: { range: float, required: true }
+      batch_rows: { range: integer, required: true }
+      max_epochs: { range: integer, required: true }
+      patience: { range: integer, required: true }
+      min_improvement: { range: float, required: true }
+      seed: { range: integer, required: true }
+      shuffled: { range: boolean }
+
+  StatementTemperatureConfig:
+    description: "Spec 009 (R2, R3): the classical control, the same statement fitted per slice."
+    attributes:
+      slices: { range: string, multivalued: true }
+      xmax_rad: { range: float, required: true }
+      isotonic_bins: { range: integer, required: true, description: "Knots of the shared isotonic map for P." }
+
+  Gate4Criteria:
+    description: "Gate 4 bands (spec 009 FR-030; fixed by the SRD amendment and the decision)."
+    attributes:
+      coverage95: { range: float, multivalued: true, required: true, description: "G4-a: [lo, hi] for range and speed." }
+      reliability_overall: { range: float, required: true, description: "G4-b: |hit rate - mean P| bound (interval wholly within)." }
+      reliability_bin: { range: float, required: true, description: "G4-b: per-bin |hit - P| bound (point)." }
+      bins: { range: integer, required: true }
+      min_mean_prob: { range: float, required: true, description: "G4-c: minimum mean stated P." }
+
+  Gate4Decision:
+    description: "The Gate 4 decision record (spec 009 FR-031), committed before any training."
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      validation_seed: { range: integer, required: true }
+      validation_digest: { range: string, required: true }
+      train_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true }
+      carried_e: { range: string, required: true }
+      carried_e_weights: { range: string, required: true }
+      criteria: { range: Gate4Criteria, required: true }
+      temperature: { range: StatementTemperatureConfig, required: true }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      carried_rule: { range: string, required: true }
+      shuffled_rule: { range: string, required: true }
+      validation_rule: { range: string, required: true }
+      follow_on: { range: string, required: true }
+      forecast: { range: string, required: true }
 
   Gate2Decision:
     description: >-

@@ -6,7 +6,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Add the statement fields to `PredictionRow` and the configs `StatementHeadConfig`,
+- [x] T001 Add the statement fields to `PredictionRow` and the configs `StatementHeadConfig`,
   `StatementTemperatureConfig`, `Gate4Criteria`, `Gate4Decision` in `schema/tma.yaml` (schema
   0.30.0; all row fields optional); regenerate types (`scripts/gen_types.py`); bump
   `tests/unit/test_types.py`.
@@ -15,7 +15,7 @@
 
 ## Phase 2: Foundational
 
-- [ ] T003 Add `src/tma2/calib/statement.py`: the course mixture (von Mises κ = 1/(a·sd)², weight p,
+- [x] T003 Add `src/tma2/calib/statement.py`: the course mixture (von Mises κ = 1/(a·sd)², weight p,
   uniform remainder), the arc X = min(Xmax, 1.96·a·sd), its probability P, the circular log score,
   the interval half-widths q = c·sd and the interval score, and a monotone isotonic map (pool
   adjacent violators) for P. Unit tests in `tests/unit/test_statement.py`: P equals the numerical
