@@ -13,6 +13,7 @@ dependencies = [
   "onnx>=1.23.2",
   "onnxruntime>=1.31.1",
   "safetensors>=0.4",
+  "matplotlib>=3.11.2",
 ]
 
 [project.scripts]
@@ -45,6 +46,7 @@ tma2-g3predict = "tma2.cli.g3predict:main"
 tma2-g3 = "tma2.cli.g3:main"
 tma2-g2 = "tma2.cli.g2:main"
 tma2-segtrain = "tma2.cli.segtrain:main"
+tma2-plot = "tma2.cli.plot:main"
 
 [dependency-groups]
 dev = [

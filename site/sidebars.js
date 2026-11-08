@@ -3,6 +3,7 @@ module.exports = {
     { type: "doc", id: "index", label: "Welcome" },
     { type: "doc", id: "glossary", label: "Glossary" },
     { type: "doc", id: "data-dictionary", label: "Data dictionary" },
+    { type: "category", label: "Process", items: ["process/reporting"] },
     {
       type: "category",
       label: "Algorithms",

@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- Slides post deck template (site/docs/process/reporting.md).
+     Copy this folder to site/static/slides/<date-slug>/, replace the TODOs, keep the four parts.
+     Figures live in site/static/img/<date-slug>/ and are referenced with the ../../img/ path so
+     the deck works at any baseUrl. reveal.js is loaded from cdnjs, pinned. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TODO deck title</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">TODO title</h1>
+          <p class="small">TODO date · spec NNN or gate X · gitma2</p>
+        </section>
+
+        <!-- Part 1: overview, one idea per slide, illustrated -->
+        <section>
+          <h2>Overview: TODO the idea in one line</h2>
+          <div class="two">
+            <ul>
+              <li>TODO what it is</li>
+              <li>TODO why now</li>
+            </ul>
+            <img src="../../img/TODO-slug/TODO-figure.svg" alt="TODO" />
+          </div>
+        </section>
+
+        <!-- Part 2: demonstration of progress -->
+        <section>
+          <h2>Where our TMA thought the target was</h2>
+          <img src="../../img/TODO-slug/track-N.svg" alt="Track plot: ownship (blue), target (red), estimates" />
+          <p class="small">Scenario N of the demo split (seed S, ranges F). Marks and 1-σ ellipses at the named times.</p>
+        </section>
+        <section>
+          <h2>Errors against time</h2>
+          <img src="../../img/TODO-slug/errors-N.svg" alt="Range, course and speed errors against time" />
+        </section>
+
+        <!-- Part 3: what was not achieved -->
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>TODO</li>
+          </ul>
+        </section>
+
+        <!-- Part 4: next -->
+        <section>
+          <h2>Next</h2>
+          <ul>
+            <li>TODO</li>
+          </ul>
+          <p class="small">Write-up: TODO link · Figures: tma2-plot, sidecars next to each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

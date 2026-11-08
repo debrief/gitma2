@@ -8,7 +8,7 @@ Guidance for AI coding agents working in this repository.
 bearing geometry, match batch least squares wherever the constant-velocity model holds and beat a
 tuned IMM wherever it does not? It starts from [debrief/Gitma](https://github.com/debrief/Gitma).
 
-- Principles: `.specify/memory/constitution.md` (v1.2.0). Plans MUST pass its checks.
+- Principles: `.specify/memory/constitution.md` (v1.3.0). Plans MUST pass its checks.
 - Research and the owner's decisions: `docs/research/` (notes 01–05; decisions in 04 §6).
 - Requirements: `docs/SRD.md` (draft), `docs/SRD-annex-A.md` (steady-leg detector, Gate D; §A.9 Gate S) and `docs/SRD-annex-B.md` (the owner's requirements for ownship and target manoeuvres and steady-leg segmentation, 2026-11-04). Read them before planning any feature; where this file and the SRD disagree, the SRD wins.
 
@@ -16,8 +16,9 @@ tuned IMM wherever it does not? It starts from [debrief/Gitma](https://github.co
 
 Spec Kit is installed (`.specify/`, skills in `.claude/skills/speckit-*`). Feature work follows
 `/speckit-constitution` → `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` →
-`/speckit-tasks` → `/speckit-analyze` → `/speckit-implement`. Specs live under
-`specs/<NNN-feature>/` and cite the SRD section(s) they implement. Done: 001 (types and
+`/speckit-tasks` → `/speckit-analyze` → `/speckit-implement` → `/speckit-report-slides` → PR.
+`/speckit-specify` ends with `/speckit-report-kickoff` (hooks in `.specify/extensions.yml`; see
+Reporting below). Specs live under `specs/<NNN-feature>/` and cite the SRD section(s) they implement. Done: 001 (types and
 generator), 002 (references, physics layer, ONNX harness, P0; **P0 passed**, panel round 3,
 `experiments/20261101-p0-r4/`). 003 (Gate 1, constant velocity): **Gate 1 passed** (panel round 2,
 `experiments/20261101-g1-a-g1/`), but only because the model reduces to batch least squares: the
@@ -122,14 +123,17 @@ src/tma2/
   models/                  Gate 1: rows, model (encoder, heads, physics layer), loss, train, predict, export
   detect/                  Gate D: CUSUM/GLR controls, confirmation, matching, downstream (spec 004)
   segment/                 Gate S: O, C (nominate + confirm), L (evidence, crf, train, export), score, gate
+  report/                  progress figures: track plots and error curves with provenance sidecars (tma2-plot)
   cli/                     tma2-generate, -solve, -track, -naive, -crb, -eval, -oracle, -p0, -train, -predict, -tune, -plan,
-                           -gd, -g0-man2, -segment, -segtrain, -gs
+                           -gd, -g0-man2, -segment, -segtrain, -gs, -plot
 conformance/onnx/          browser (WASM, Playwright) and Java legs of the export check
 scripts/                   gen_types.py, data_dictionary.py, make_fixtures.sh, research/
 tests/                     unit, golden, conformance (gitma fixtures), perf; fixtures/gitma/<name>/
 specs/                     Spec Kit features
 docs/                      SRD, Annex A, research notes
-site/                      Docusaurus (welcome, glossary, generated data dictionary, blog)
+site/                      Docusaurus (welcome, glossary, generated data dictionary, process page, blog;
+                           blog/_templates: kickoff and slides posts; static/slides/<post>/: reveal.js decks;
+                           static/img/<post>/: committed figures with .json sidecars)
 ```
 
 ## Commands
@@ -146,6 +150,7 @@ uv run tma2-track --in <split> --out <pred.ndjson> --filter imm --sigma-cv 0.01 
 uv run tma2-crb --in <split> --out <crb.ndjson> [--model full_window|known_manoeuvres|per_leg]
 uv run tma2-eval --truth <split> --predictions <pred>... [--crb <crb.ndjson>] [--points 300,600] --out <dir>
 uv run tma2-oracle --truth <split> --out <pred.ndjson> [--speed-prior] [--trivial] [--mask-turns]
+uv run tma2-plot track --truth <split> --predictions <pred>... --labels a,b --scenario <i> --at 3600,5400 --out fig.svg   # also: errors
 uv run tma2-p0 --experiment experiments/<id> [--oracle-data <dir with validation.f32pack>] [--gitma-imm <gitma tma-track output>]   # exit 3: gate not passed
 uv run python -m tma2.export.onnx_export --out conformance/onnx/export
 (cd conformance/onnx && npm ci && node wasm_leg.mjs --dir export/f64) ; uv run python conformance/onnx/java_leg.py conformance/onnx/export/f64
@@ -180,6 +185,35 @@ where the documents say the decision is the owner's.
 - **Ask well.** When input is needed, ask one multiple-choice question at a time with a
   recommended option first, do everything that does not depend on the answer beforehand, and
   never stop with nothing delivered.
+
+## Reporting (constitution 1.3.0, owner decision 2026-11-08)
+
+Two blog posts per task, where a task is a Spec Kit feature or a gate run. The practice page is
+`site/docs/process/reporting.md`; templates are `site/blog/_templates/{kickoff,slides}.md` and
+`site/static/slides/_template/index.html`.
+
+- **Kickoff post** (`/speckit-report-kickoff`, run by `/speckit-specify`'s after-hook): written
+  before implementation, from the spec. Where we are (the last gate's verdict, what is carried,
+  what is open), where this task moves to (the SRD section, the criteria or acceptance, the plan
+  in a few steps, the risks and what would make us stop) and how progress will be shown (which
+  figures the slides post will carry). Smaller changes between tasks (fixes, CI repairs) append
+  a dated paragraph to the current kickoff post rather than a post of their own.
+- **Slides post** (`/speckit-report-slides`, run by `/speckit-implement`'s after-hook; a gate run
+  does it after the panel decides): built *before the PR is opened*, so the PR carries it. A
+  reveal.js deck at `site/static/slides/<date-slug>/index.html` (copy the template; reveal.js is
+  loaded from cdnjs, pinned) embedded in the post with `<Slides slug="..." />`. Contents: an
+  overview of the capability or fix, illustrated (a diagram or a figure per idea); a demonstration
+  of progress with charts and track plots; what was not achieved; what comes next. A gate's
+  slides post is the illustrated companion of its critical write-up and links to it.
+- **Figures** are SVG under `site/static/img/<date-slug>/`, each next to the `.json` sidecar that
+  `tma2-plot` writes (truth and prediction digests, scenario, command, code commit). A figure made
+  by a script instead names the script and its commit in the post. Track plots: ownship blue,
+  target red, each estimator's trail from the zig with its marker and 1-σ ellipse at the named
+  times; rows before the zig are hidden because the layer's pre-zig states are undetermined.
+  Keep each figure under about 200 KB; no raster images.
+- **Data for figures** is seeded and regenerable: the demo split in a post names its seed, count
+  and ranges file, or the committed experiment it came from. Never hand-edit a figure.
+- A PR for a task without its slides post is not ready for review.
 
 ## Hard rules
 
