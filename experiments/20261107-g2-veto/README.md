@@ -155,6 +155,6 @@ not depend on the scorer's CPU; those against the scorer's re-solved C carry abo
 noise, and `metrics.json` and `errors.npz` digests reproduce only on the same CPU family
 (`run.json` records it). The scorer re-solves C, one leg, the oracle and GLR + confirm. This run (Intel
 Xeon 8573C) and the gate run (AMD EPYC 9V45) differ in those errors by up to 6e-4 relative for C
-(21 one-leg rows change between finite and runaway); E's errors, read from its prediction files,
+and 2.5e-3 for the oracle (21 one-leg and 9 GLR + confirm rows change between finite and runaway); E's errors, read from its prediction files,
 are identical. G2-d here is +0.024994 [+0.018462, +0.030509] against the gate's +0.025008
 [+0.018467, +0.030531].

@@ -285,5 +285,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   before claiming learning, and register that control before its result exists.
 - Early stopping that keeps epoch 0 makes a shuffled control equal to the untrained model, so its
   rule cannot fail: score the last-epoch shuffled weights too (Gate 2 panel).
+- The scorer (`tma2-gs`/`tma2-g2`) re-solves C, one leg, the oracle and GLR + confirm, so a
+  re-score on another CPU family is not byte-identical (Gate 2: C up to 6e-4 relative, 21 one-leg
+  rows switch finite/runaway; G2-d moved 1.4e-5). Compare estimators within one scoring run's
+  `errors.npz` (`scripts/research/g2_paired_gaps.py`), or re-score on the gate's CPU family.
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.

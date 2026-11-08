@@ -1,6 +1,13 @@
 # Gate 2 agent review panel
 
-**Status: round 1 complete; round 2 pending the classical controls** (`experiments/20261107-g2-veto/`).
+**Decided: G2-a pass, G2-b pass, G2-c pass, G2-d pass; panel round 2, on the record
+`experiments/20261107-g2/`** (`verdict.json` `decided_by`). No reviewer rejects and no blocker or
+major finding is open. What the pass shows is qualified by the classical controls
+(`experiments/20261107-g2-veto/`): a zig veto and a fixed fading memory, with nothing learned
+(their settings read off the learned models), reproduce about 72% of E's margin over C; learning
+adds a small increment beyond them, E − C″ +0.007 [+0.001, +0.012] on test (validation
+inconclusive), on test consistent with E-w doing more than a fixed fading memory; E-s adds nothing
+shown beyond the zig veto.
 
 Gate 2 (spec 007, SRD §5 as amended with G2-d), pre-registered in
 `experiments/20261107-g2-decision/`, judged on seed 319 (record `experiments/20261107-g2/`,
@@ -75,7 +82,8 @@ before G2-d is read as learning.
   6, chosen there, scores 51.08 against es-s1..3 50.60 / 51.11 / 51.01 and C 52.31; halving τ
   everywhere scores 60.56, so E-s is not a re-tuned threshold. C′ and C′ + ew-s3 are scored
   end to end on validation and test beside E. Reading amended before any C′ result after the
-  statistics reviewer's G6. *Result: pending (round 2).*
+  statistics reviewer's G6. *Result (test):* C′ − C +0.008 [+0.004, +0.011]; E − (C′ + E-w) +0.003 [−0.002, +0.008]:
+  E-s adds nothing shown beyond the veto. Closed by the reviewer in round 2.
 
 **G2 [major, red team] E-w learned mostly a fading memory.** Its log-weight changes are a recency
 profile (+0.73 on the newest bearings, about −0.70 at 180 rows); a fixed rule
@@ -84,7 +92,8 @@ clip(0.73 − 0.0079·age, ±2), read off that profile without any score, gives 
 E-w − fade +0.0039 [+0.0007, +0.0072], both wholly above zero.
 - *Response: C″ (zig veto + fixed fading memory, no learned part) pre-registered and run*
   (README addendum, c6e5390, before any C″ result). Learning beyond classical rules is claimed only
-  if E − C″ is wholly above zero. *Result: pending (round 2).*
+  if E − C″ is wholly above zero. *Result (test):* C″ − C +0.018 [+0.013, +0.022]; E − C″ +0.007
+  [+0.001, +0.012], wholly above zero. Closed by the reviewer in round 2.
 
 **G3 [minor, red team; minor, geometry] The validation record's "two thirds of E's gain from E-s"
 does not hold on test.** On test E − E-w (E-s's marginal, by subtraction) is +0.0105 [+0.005,
@@ -152,3 +161,87 @@ test's docstring said "truncated" for padded arrays.
   with non-zero E-s and E-w weights and requires identical output at k. **G22** "untrained E = C"
   is not tested through `tma2-g2predict` on C's own file: the reviewer traced identical chunking;
   e-shuffled (untrained) equals C to 5e-10 on validation through exactly that path.
+
+## Round 2 (8 November 2026)
+
+The same five reviewers, given the test record, the controls' results
+(`experiments/20261107-g2-veto/`, validation run 42434645201, test run 42440631371) and the
+round-1 responses.
+
+| Reviewer | Verdict | Blocker | Major | Minor (new) |
+| --- | --- | --- | --- | --- |
+| TMA geometry | approve-with-findings | 0 | 0 (G1 closed) | 2 |
+| Estimation and numerics | approve-with-findings | 0 | 0 | 3 |
+| Evaluation statistics | approve-with-findings | 0 | 0 | 2 |
+| Reproducibility | approve-with-findings | 0 | 0 | 2 |
+| Red team | approve-with-findings | 0 | 0 (G2 closed) | 4 |
+
+### What the reviewers confirmed
+
+- **Statistics** recomputed E − C″ (+0.006906 [+0.001406, +0.012160]), E − (C′ + E-w) and
+  E-w − fade from the controls' `errors.npz` with the repo's bootstrap (bit for bit with
+  `paired.json`) and an independent one (E − C″ [+0.0016, +0.0121], 0.15% of resamples at or below
+  zero). E − C″ survives a Bonferroni correction over all six E-against-control comparisons
+  (99.75% lower bound +0.0005). Both registrations (ee69c34, c6e5390) precede every C′ and C″
+  result.
+- **Reproducibility.** Every control prediction file: clean tree, the gate's dataset, code and
+  parameter digests, all ordinals once; copies match their results branches byte for byte;
+  `paired.json` reproduces; nothing gated changed after the decision; source changes after the
+  gate commit are additive (a new `veto` model kind and an optional fade).
+- **Numerics.** The veto's 1e3 evidence gives exactly +τ/2 inside the window and exactly C's
+  threshold outside it (exact sums in double); masked bearings stay masked under the fade; every
+  control answers the same rows as C (19,501–19,513 against 19,509); the story is consistent from
+  training through validation and test to the controls (C″ − C plus E − C″ ≈ E − C).
+- **Geometry.** Veto semantics (a threshold of 1.5τ, not a ban; only rows up to the decision row
+  count) and the fade (masking preserved, same frame and bound as E-w) are as registered; C′ uses
+  C's nominations and confirmation, so only the threshold differs.
+- **Red team.** The CI fade − C reproduces its round-1 probe (+0.0107); the registered reading
+  holds; registration timing accepted (the fade's test value was known before C″ was registered,
+  disclosed; C″ itself is a fresh look).
+
+### Findings and responses
+
+**R2-1 [minor-to-major, red team N1] The controls' README said validation agreed in direction for
+E-w − fade** (validation: −0.0025 [−0.0085, +0.0073]). *Fixed* (968837d): the attribution to E-w
+"rests on test alone"; validation's point is negative.
+
+**R2-2 [minor, red team N2–N4; statistics N-a, N-b] Wording.** No equivalence claim ("E-s adds
+nothing shown beyond the zig veto", not "is a zig veto"); the rules' settings came from the
+learned models, so E − C″ is conservative and the rules' 72% is an upper bound on what a designer
+gets without E; the increment is small, one test look, validation inconclusive; E-w − fade is
+descriptive and was not a blind look. *Fixed* in the controls' README (968837d, and the commit
+after it); the write-up uses the red team's accepted wording.
+
+**R2-3 [minor, geometry] The veto covers only the end of the first ownship turn** (`zig_index` is
+the first row after the turn; turn starts a median 8 rows earlier, up to 33; the second turn,
+21–54 rows later, is not covered). This weakens C′, so E − C′ and E − C″ are if anything
+overstated for E; no reading changes. **R2-4 [minor, geometry]** the look-ahead caveat overstated
+the control's advantage (at most 6 rows, and only once the decision row reaches zig − 6). *Both
+stated* in the controls' README.
+
+**R2-5 [minor, numerics N1] Fade and E-w rescale the bearing weights**, so their covariances are not
+on C's scale. No scored point estimate is affected; any later covariance gating or efficiency
+claim for them needs recalibration. *Recorded* as a limit.
+
+**R2-6 [minor, numerics N2; reproducibility R2-1; statistics] CPU-family dependence.** The scorer
+re-solves C, one leg, the oracle and GLR + confirm: between the gate run (AMD EPYC 9V45) and the
+controls' test run (Intel Xeon 8573C), C differs by up to 6e-4 relative, the oracle 2.5e-3, and 21
+one-leg and 9 GLR rows switch between finite and runaway; E's errors are identical. G2-d moves
+1.4e-5. *Stated* in the record's README, the controls' README and AGENTS.md; follow-on: store C's
+scored errors rather than re-solving them.
+
+**R2-7 [minor, reproducibility R2-2] Control prediction headers** carry the empty-string weights
+digest and not the window or fade; both are bound through `plan_sha256`. *Follow-on* (cosmetic).
+
+**Still open as follow-ons (agreed in round 1):** G7 (time-late variant), G9–G12 (shuffled-rule
+source, coverage assertions, input binding of GLR files and E's C file), G4's last-epoch shuffled
+scoring.
+
+## Decision
+
+Gate 2 **passes** on seed 319 as registered: G2-a, G2-b, G2-c and G2-d, each with its whole 97.5%
+interval on the passing side, for the carried E (e-s3), the shuffled rule passed. The panel's
+reading of G2-d, which the write-up must carry: E beats C by +0.025 [+0.018, +0.031] in gap
+recovered; two classical rules with nothing learned reproduce about 72% of that; learning adds
++0.007 [+0.001, +0.012] beyond them on test (validation inconclusive), on test consistent with E-w
+doing more than a fixed fading memory; E-s adds nothing shown beyond a zig veto.

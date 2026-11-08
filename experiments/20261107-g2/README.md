@@ -2,7 +2,10 @@
 
 Machine verdict: **G2-a pass, G2-b pass, G2-c pass, G2-d pass** for the carried E (e-s3), on all
 4,983 σ = 1° scenarios of seed 319's test split (19,609 G5 rows, 14,403 settled), every
-physics-layer solve at 12 knots. The panel's verdict is in `review.md`.
+physics-layer solve at 12 knots. **Decided by the agent review panel, round 2** (`review.md`):
+G2-a to G2-d pass. What the pass means is qualified by the classical controls
+(`experiments/20261107-g2-veto/`): two rules with nothing learned reproduce about 72% of E's
+margin over C, and learning adds a small increment beyond them (E − C″ +0.007 [+0.001, +0.012]).
 
 | Check | Measure | Point [97.5% interval] | Limit | Outcome |
 | --- | --- | --- | --- | --- |
@@ -45,3 +48,9 @@ E-w alone − C: +0.015 [+0.010, +0.019]. The forecast (decision record) was E �
 **A diagnostic beside the gate** (panel round 1, geometry): the classical control C′ (C with a
 zig veto) is pre-registered in `experiments/20261107-g2-veto/` and run on the same rows; it does
 not change this verdict.
+
+**Reproducing the scores.** `metrics.json` reproduces byte for byte only on the same CPU family
+(AMD EPYC 9V45, `run.json`). On another family the scorer's re-solved C, one-leg, oracle and
+GLR + confirm errors move (C by up to 6e-4 relative, the oracle 2.5e-3; 21 one-leg and 9 GLR rows
+switch between finite and runaway); E's errors, read from its prediction file, do not, and the
+verdicts are unchanged (G2-d +0.024994 against +0.025008 on an Intel Xeon 8573C re-score).
