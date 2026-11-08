@@ -345,6 +345,13 @@ def main(argv: list[str] | None = None) -> int:
         help="fit the naive baseline (training-set means) on these sigma = 1 deg ordinals of a "
         "split (default ordinals 0-499) and score it on the same rows (constitution IV)",
     )
+    ap.add_argument(
+        "--reuse",
+        help=(
+            "spec 008 FR-062: an errors.npz from an earlier scoring of the same rows; the "
+            "estimators it holds (references, C, GLR) are read from it, not re-solved"
+        ),
+    )
     ap.add_argument("--experiment", required=True)
     ap.add_argument("--decision", help="gate mode: the GateSDecision record (T037)")
     ap.add_argument("--plan", help="gate mode: the plan the decision binds")
@@ -388,13 +395,37 @@ def main(argv: list[str] | None = None) -> int:
         cals[name] = np.zeros((len(rows), 9))
         return cals[name]
 
+    stored: dict[str, np.ndarray] = {}
+    if a.reuse:
+        z = np.load(a.reuse)
+        ks = np.array([r.k for r in rows], dtype=np.int64)
+        if not (np.array_equal(z["ordinal"], cluster) and np.array_equal(z["k"], ks)):
+            print(f"{a.reuse}: its rows are not these rows", file=sys.stderr)
+            return 2
+        stored = {f: z[f] for f in z.files}
+
+    def solved(name: str, solve: Any) -> np.ndarray:
+        """The estimator's errors, from ``--reuse`` when it holds them (errors and calibration
+        both), else solved now."""
+        if f"err_{name}" in stored and f"cal_{name}" in stored:
+            cals[name] = stored[f"cal_{name}"]
+            print(f"{name}: reused from {a.reuse}", flush=True)
+            out: np.ndarray = stored[f"err_{name}"]
+            return out
+        res: np.ndarray = solve(cal(name))
+        return res
+
     errs: dict[str, np.ndarray] = {
-        "one_leg": sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg, cal("one_leg")),
-        "oracle": sc.layer_errors(layer, rows, data, metas, truths, sc.oracle, cal("oracle")),
-        "imm": sc.imm_errors(rows, data, truths, a.imm, cal("imm")),
+        "one_leg": solved(
+            "one_leg", lambda c: sc.layer_errors(layer, rows, data, metas, truths, sc.one_leg, c)
+        ),
+        "oracle": solved(
+            "oracle", lambda c: sc.layer_errors(layer, rows, data, metas, truths, sc.oracle, c)
+        ),
+        "imm": solved("imm", lambda c: sc.imm_errors(rows, data, truths, a.imm, c)),
     }
     if a.ekf:
-        errs["ekf"] = sc.ekf_errors(rows, data, truths, a.ekf, cal("ekf"))
+        errs["ekf"] = solved("ekf", lambda c: sc.ekf_errors(rows, data, truths, a.ekf, c))
     naive_src: dict[str, Any] | None = None
     if a.naive_train:
         from tma2.references.naive import fit_naive
@@ -438,14 +469,10 @@ def main(argv: list[str] | None = None) -> int:
                 nm = name if not a.modes else f"{name}-{mode}"
                 nm = nm if not a.open_handovers else f"{nm}-{ho}"
                 params[nm] = p.model_copy(update={"mode": mode, "open_handover": ho})
-                errs[nm] = sc.layer_errors(
-                    layer,
-                    rows,
-                    data,
-                    metas,
-                    truths,
-                    sc.from_segmentations(segs, mode, True, ho),
-                    cal(nm),
+                make = sc.from_segmentations(segs, mode, True, ho)
+                errs[nm] = solved(
+                    nm,
+                    lambda c, make=make: sc.layer_errors(layer, rows, data, metas, truths, make, c),
                 )
                 seg_ivs[nm] = trs
                 open_at[nm] = np.array(
@@ -464,8 +491,9 @@ def main(argv: list[str] | None = None) -> int:
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
         acc = sc.load_confirmed(work, cfg)
-        errs["glr_confirm"] = sc.layer_errors(
-            layer, rows, data, metas, truths, sc.glr_confirm(acc), cal("glr_confirm")
+        errs["glr_confirm"] = solved(
+            "glr_confirm",
+            lambda c: sc.layer_errors(layer, rows, data, metas, truths, sc.glr_confirm(acc), c),
         )
         p0 = next(iter(params.values()), default_parameters())
         seg_ivs["glr_confirm"] = {
@@ -481,8 +509,9 @@ def main(argv: list[str] | None = None) -> int:
         def glr_gap(j: int, _m: dict[str, Any], d: Any, k: int) -> Any:
             return segmentation_inputs(d.t, d.ox, d.oy, d.z, d.valid, k, g_ivs[(j, k)], "gap", True)
 
-        errs["glr_confirm_gap"] = sc.layer_errors(
-            layer, rows, data, metas, truths, glr_gap, cal("glr_confirm_gap")
+        errs["glr_confirm_gap"] = solved(
+            "glr_confirm_gap",
+            lambda c: sc.layer_errors(layer, rows, data, metas, truths, glr_gap, c),
         )
         seg_ivs["glr_confirm_gap"] = g_ivs
         print(f"glr_confirm_gap downstream [{time.time() - t0:.0f} s]", flush=True)

@@ -175,6 +175,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--naive-train", metavar="PATH[:START:COUNT]")
     ap.add_argument("--detectability", action="store_true")
     ap.add_argument("--knots", type=int, default=12)
+    ap.add_argument("--reuse", help="spec 008: an earlier scoring's errors.npz (tma2-gs --reuse)")
     ap.add_argument("--experiment", required=True)
     ap.add_argument("--decision")
     ap.add_argument("--plan")
@@ -205,6 +206,8 @@ def main(argv: list[str] | None = None) -> int:
         args += ["--naive-train", a.naive_train]
     if a.detectability:
         args.append("--detectability")
+    if a.reuse:
+        args += ["--reuse", a.reuse]
     rc = gs.main(args)
     if rc != 0 or gi is None:
         return rc
