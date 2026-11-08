@@ -152,8 +152,8 @@ errors.
   `tests/unit/test_score_reuse.py`.
 - [ ] T031 [P] [US5] Make the merge steps in `.github/workflows/g2predict.yml` and `segment.yml`
   assert every ordinal in [a, b) appears once (FR-061).
-- [ ] T032 [P] [US5] Add a time-late E-w (research R9): `causal: false` in a plan entry; the layer
-  reports `k_state`. Train one seed on CI (`g2train/<plan>`), score it on validation beside ew-s3,
+- [ ] T032 [P] [US5] Add a time-late E-w (research R9, as amended): `causal: false` in a plan; the encoder
+  reads every row, the solve stays C's at k. Train one seed on CI (`g2train/<plan>`), score it on validation beside ew-s3,
   and record it in `experiments/<date>-g3-timelate/`.
 - [ ] T033 [P] [US5] Add `tests/unit/test_followons.py`: the coverage assertion, merge-count
   failure, shuffled-rule source and header settings.

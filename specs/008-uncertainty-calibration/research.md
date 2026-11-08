@@ -114,10 +114,16 @@ Each item gives the decision, the reason, and the alternatives considered.
 
 ## R9. Time-late variant (constitution IV; panel G7)
 
-- **Decision:** E-w with the encoder's causal mask removed and the window cut at the scenario end.
-  It reports row k from a solve over all rows, so it uses `k_state` as spec 003. It is trained as
-  ew-s1 was (one seed, as spec 003's control d), on CI, and scored on validation only, beside the
-  causal E-w.
+- **Decision:** E-w with the encoder's causal mask removed: it reads every row of the scenario
+  (only padding is masked), so its per-bearing weights at rows ≤ k and its start correction may use
+  bearings after k. It is trained as ew-s1 was (one seed, as spec 003's control d; plan
+  `configs/gate2/g3-timelate.json`), on CI, and scored on validation only, beside the causal E-w.
+- **Amended at implementation:** the solve stays C's at prefix k, not a whole-window solve with
+  `k_state`. C's knots exist only up to k in the prefix tables, so a solve across later
+  manoeuvres would be biased by missing knots, and C's whole-window segmentation would need a
+  new segmentation and table run. The variant therefore measures what the *learned* part leaves
+  unused, which is the question the panel asked (G7); the classical part's future information is
+  not tested.
 - **Rule:** it must score at least as well as the causal E-w in gap recovered (paired), or the
   shortfall is reported in the write-up.
 - **Why:** it is the constitution's check that the causal model is not leaving information unused

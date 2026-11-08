@@ -11,6 +11,11 @@ differentiated implicitly. With zero heads E-w is C's physics-layer solve exactl
 
 Rows after k are cut from the encoder's input (valid = 0, code 0), so nothing after the prefix
 reaches it (FR-023).
+
+**Time-late variant** (``causal: false``; spec 008 FR-024, research R9): the encoder reads every
+row of the scenario with no causal mask (only padding is masked), so the per-bearing weights at
+rows ≤ k and the start correction may use bearings after k. The solve stays C's at prefix k
+(its knots exist only up to k), so the variant measures what the learned part leaves unused.
 """
 
 from __future__ import annotations
@@ -46,8 +51,6 @@ class EOutput:
 class EWeights(nn.Module):
     def __init__(self, cfg: PhysicsModelConfig, knots: int = KNOTS) -> None:
         super().__init__()
-        if not cfg.causal:
-            raise ValueError("E-w is causal (FR-023)")
         self.cfg = cfg
         self.encoder = Encoder(cfg)
         self.encoder.embed = nn.Linear(FEATURES + 1, cfg.width)  # + C's code channel
@@ -64,13 +67,17 @@ class EWeights(nn.Module):
         C's code channel at each prefix."""
         r = x.bearing.shape[1]
         idx = torch.arange(r, device=x.bearing.device).unsqueeze(0)
-        upto = (idx <= x.k.unsqueeze(1)).to(x.bearing.dtype)
-        valid = x.valid * upto
         ox, oy = x.own[..., 0], x.own[..., 1]
+        if self.cfg.causal:
+            upto = (idx <= x.k.unsqueeze(1)).to(x.bearing.dtype)
+            pad = idx > x.k.unsqueeze(1)
+        else:  # time-late: every real row; padding has t = 0 after row 0 (``train.batch_of``)
+            pad = (idx > 0) & (x.t == 0)
+            upto = (~pad).to(x.bearing.dtype)
+        valid = x.valid * upto
         f = features(x.bearing * upto, valid, ox * upto, oy * upto, x.t * upto, x.sigma)
         f = torch.cat([f, (code * upto).unsqueeze(2)], dim=2)
-        pad = idx > x.k.unsqueeze(1)
-        h = self.encoder(f, pad)  # [N, R, W], causal
+        h = self.encoder(f, pad)  # [N, R, W]
         rows = torch.arange(x.k.shape[0], device=h.device)
         hk = h[rows, x.k]
         log_w = x.log_weight + self.cfg.weight_bound * torch.tanh(self.weight_head(h)[..., 0])
