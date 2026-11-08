@@ -140,10 +140,12 @@ errors.
   - read the shuffled rule from the validation record (FR-063).
 
   Add `tests/unit/test_gate3.py`.
-- [ ] T028 [US4] (CI) Generate seed 320 after `carried.json` (`seed320-digests.json`,
+- [x] T028 [US4] **Not run: the validation rule was not met (2026-11-08), so seed 320 is not
+  generated (`experiments/20261108-g3-val/`).** (CI) Generate seed 320 after `carried.json` (`seed320-digests.json`,
   `test-digest.json`). Then run C's segmentation, the E predictions with features, `g3predict`
   (carried head and temperature) and the gate scoring. Record `experiments/<date>-g3/`.
-- [ ] T029 [US4] Panel: five specialities, in rounds, `review.md`, `decided_by`.
+- [x] T029 [US4] Panel: five specialities, in rounds, `review.md`, `decided_by` (the validation
+  stop, decided in round 2: `experiments/20261108-g3-val/review.md`).
 
 ## Phase 8: User Story 5 — the Gate 2 panel's follow-ons (P3)
 
@@ -162,7 +164,7 @@ errors.
 
 - [x] T034 [P] Export: E-w's graph gains the head's calibrated covariance output
   (`src/tma2/gate2/export.py`), with three-runtime conformance in `ci.yml`.
-- [ ] T035 [P] Site: an algorithm note `site/docs/algorithms/calibration.md`, glossary entries
+- [x] T035 [P] Site: an algorithm note `site/docs/algorithms/calibration.md`, glossary entries
   (NEES, coverage, interval score, sharpness) and the write-up `site/blog/<date>-gate-3.md`.
 - [ ] T036 [P] Update `AGENTS.md`: spec 008 status, seeds (320 used; next 321), gotchas.
 - [ ] T037 Run `quickstart.md` end to end.

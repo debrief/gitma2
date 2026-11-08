@@ -74,11 +74,13 @@ none raised a blocker. The majors concern the record's explanations and claims, 
   (weights digest distinguishes it); `validation.json` has no producing commit or CPU.
 - [minor, methodology] An in-sample temperature was fitted on tuning ordinals 0–499 before the
   decision (disclosed as forecast evidence), and the form change and the G3-b amendment followed
-  it. Scoring ordinals were not touched.
+  it. No *fitting* touched the scoring ordinals; design choices (the form and bound) did use their
+  baseline (see the README's process notes).
 
 ## Red team: approve-with-findings
 - The failure is real: cal-s3 rebuilt exactly from cache and weights on all 3,934 rows; cache and
-  prediction keys unique and fully matched; no tuning on scoring rows; under the original G3-b
+  prediction keys unique and fully matched; no fitting on scoring rows (training and the
+  temperature used ordinals 0–499; design choices used their baseline); under the original G3-b
   (median NEES ratio) the head fails worse (0.15).
 - [major] "Learned something per row" is not supported: with each estimator's log-range sd shifted
   by its best global factor, IS95 is 2.264 (head), 2.271 (shuffled), 2.335 (temperature); the
@@ -103,3 +105,32 @@ bound disclosed); research R5/R6 are made current; the follow-on is re-proposed 
 numerics and TMA findings (correlation shrinkage, exact-error training, circular course,
 observability gating) instead of a heavy-tailed predictive. The minors on file headers and the
 SRD wording are carried as follow-ons (spec 009), listed in the write-up.
+
+# Round 2
+
+The four reviewers with majors were asked whether commit 1b96939 closes them. **No reviewer
+rejects; no blocker or major is open. The stop at validation is decided by the panel.**
+
+- **Statistics: approve.** All four findings closed (the README's mechanism now matches the
+  arrays; the per-row learning claim is withdrawn; missing-row charge disclosed). New [minor]: the
+  best-global-factor comparison is fitted in sample on the scoring rows; label it a diagnostic
+  (done).
+- **Numerics: approve-with-findings.** All five closed. New [minor]: the β-weight docstring in
+  `calib/loss.py` still said the opposite of the code (corrected).
+- **TMA geometry: approve-with-findings.** All five closed. New [minor]: the follow-on lives only
+  here, while `decision.json` and the SRD §5 row still name a heavy-tailed predictive as the
+  default; the write-up and spec 009 must state the replacement (done in the write-up: circular
+  or undetermined course, never a Gaussian sd above 90°; a causal proxy for the settled slice).
+- **Red team: approve.** All three majors closed; SRD wording carried to spec 009. New [minor]:
+  "scoring ordinals were not touched" contradicted the disclosure that design choices used their
+  baseline (qualified above).
+- **Reproducibility** (minors only in round 1): carried to spec 009 (g3predict headers carry
+  their own commit; distinct model names for best and last; producing commit in validation.json).
+
+## Decision
+
+Gate 3 stops at validation; seed 320 is not generated. The carried estimator stays E with its
+points unchanged; its raw covariance is not to be presented as an uncertainty. The follow-on is
+re-proposed (`site/blog/2026-11-08-gate-3.md`) and replaces the decision record's heavy-tailed
+default: circular or undetermined course, observability gating by a causal proxy, correlation
+shrinkage and training on exact errors; a heavy-tailed component only for manoeuvres.

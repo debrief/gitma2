@@ -7,7 +7,8 @@ negative log-likelihood (constants dropped) is ½ q(s) + Σ_i s_i. A scalar s (t
 four) gives ½ e^(−2s) q + 4s, minimised at s = ½ log(q / 4).
 
 β-NLL (Seitzer et al. 2022) weights each row by the stop-gradient of its variance scale to the
-power β, here e^(2β·mean(s)), so rows stated as very uncertain do not dominate.
+power β, here e^(2β·mean(s)). This *up*-weights the rows the head widens (Gate 3 panel; at most
+1.1× in the registered training, so immaterial).
 
 ``cap`` bounds each row's raw NEES: a row whose q(0) exceeds it has its error shrunk to it
 (q multiplied by cap / q(0)). A gross row can then pull its own scale up but cannot, alone, set

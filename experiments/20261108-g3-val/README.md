@@ -83,8 +83,9 @@ above 0.98, G3-b and G3-c fail. **Not carried; seed 320 not generated.**
    score of record (IS95 log range) the head is worse (+1.07). The miss penalty is about zero for
    both; the head's intervals are wider on 93% of rows (width ratio quartiles 1.16, 1.32, 1.59).
    The head is nearly a constant (log-range s between 2.36 and 2.94 for 90% of rows). With each
-   estimator's log-range sd moved by its best single global factor, IS95 is 2.264 (head), 2.271
-   (shuffled) and 2.335 (temperature); the shuffled head also beats the temperature on the NLL. So
+   estimator's log-range sd moved by its best single global factor (fitted in sample on these
+   scoring rows, a diagnostic only), IS95 is 2.264 (head), 2.271 (shuffled) and 2.335
+   (temperature); the shuffled head also beats the temperature on the NLL. So
    the head's apparent gain over its shuffled control (1.1 in IS95) is a level, not
    discrimination (AUC for the rows with the largest raw errors: 0.60 head, 0.56 shuffled, 0.53
    temperature).
