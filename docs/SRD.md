@@ -113,6 +113,7 @@ configuration; the carried weights chosen by a rule named in the decision record
 | **Gate 1 CV** | On a fresh CV test seed, σ = 1°, at zig + 5 min (range, course) and zig + 10 min (speed): model median within 1.1 × batch least squares on every metric with intervals wholly below, gross-error rate at or below batch LS's, and efficiency (error ÷ bound, 1 at the bound) ≤ 1.25 on the settled slices | One pre-registered iteration, then stop and publish: the physics layer is not learnable end to end as built |
 | **Gate D detector** | [Annex A](SRD-annex-A.md) §A.5 | Annex A §A.6 |
 | **Gate 2 MAN** | On a fresh MAN test seed, σ = 1°, G5 rows (zig + 5/10/15/20 min): median range and course over all rows wholly below the re-tuned IMM's; on settled rows range, course and speed within 1.1 × batch least squares; at least half of the gap in median range between plain batch LS and the oracle ceiling recovered (interval wholly above 0.5); and (owner, 2026-11-06) more of that gap recovered than Gate S's carried classical segmenter C fed to the physics layer with no learned weights (paired difference wholly above zero; void if a shuffled-label control also beats C on validation). On MAN2 C alone meets the first three, so the last is the learning claim | The write-up proposes the follow-on with a recommended default; adopted if the owner has not objected by the next spec (`AGENTS.md`, Autonomy) |
+| **Gate 3 calibration** | (agent, proposed 2026-11-08; owner to merge) On a fresh MAN2 test seed, σ = 1°, G5 rows, the carried E with its calibration (a learned scale e^(2s) on its covariance; points unchanged): **G3-a** 95% coverage of log range, course and speed (a row without a usable covariance counts as not covered), each interval wholly within [0.92, 0.98]; **G3-b** median NEES of the 4-state over the χ²₄ median, interval wholly within [0.8, 1.25]; **G3-c** mean 95% interval score in log range below a per-slice temperature fitted on validation (classical control; paired difference wholly below zero; void if a shuffled-label head also beats the temperature on validation), the learning claim; **G3-d** point errors identical to the uncalibrated E's on every row, so Gate 2's result carries over | As Gate 2: the write-up proposes the follow-on with a recommended default; if only G3-c fails, the temperature is carried as the calibration |
 
 ## 6. Architecture and tooling
 
@@ -136,7 +137,8 @@ configuration; the carried weights chosen by a rule named in the decision record
    control (Annex A §A.9 supersedes the Gate D detector here). Learned segmentation is tested
    within Gate 2 (owner, 2026-11-05); spec 007.
 5. Afterwards, pre-registered, in this default order unless the owner reorders: uncertainty
-   calibration, realistic bearing error, the browser viewer on the exported artefact.
+   calibration (spec 008, Gate 3), realistic bearing error, the browser viewer on the exported
+   artefact.
 
 Agents run this plan without waiting on the owner except for the owner-only items in
 `AGENTS.md` (Autonomy and owner input). Defaults stated in this SRD and its annexes are adopted
@@ -172,6 +174,11 @@ and recorded, not asked.
   written ("efficiency ≥ 0.8") it pointed the wrong way for an error-over-bound ratio, so every
   inefficient model passed (P0 panel round 2, statistics). Now ≤ 1.25 on the settled slices,
   1.25 being the reciprocal of the intended 0.8; no result on Gate 1 exists.
+- **2026-11-08 (agent, proposed; owner to merge):** Gate 3 (uncertainty calibration, spec 008)
+  added to §5. The bands are absolute calibration targets (95% coverage within ±3 points, NEES
+  within 0.8–1.25 of its χ²₄ median), not tuned to any result; no Gate 3 result exists. The
+  learning claim (G3-c) is against a classical per-slice temperature, following Gate 2's lesson
+  that a rule can match a learned component.
 
 ## Annexes
 

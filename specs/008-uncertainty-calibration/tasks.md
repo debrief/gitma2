@@ -86,7 +86,7 @@ errors.
 
 ## Phase 5: Gate 3 amendment and decision (before any calibration training)
 
-- [ ] T016 Open the SRD amendment PR adding the Gate 3 row (docs/SRD.md §5) with the proposed
+- [x] T016 Open the SRD amendment PR adding the Gate 3 row (docs/SRD.md §5) with the proposed
   bands from spec FR-030, informed by T015. The owner merges it. If two working days pass
   without objection, the agent merges and says so in the next write-up (AGENTS.md).
 - [x] T017 Write the head plan `configs/gate3/g3-a.json`:
