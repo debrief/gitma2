@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.25.0"
+version = "0.26.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -840,7 +840,12 @@ class PredictionRow(ConfiguredBaseModel):
     converged: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
     iterations: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow', 'PhysicsModelConfig', 'DetectorConfig']} })
     p_manoeuvre: Optional[float] = Field(default=None, description="""The estimator's probability that the target's turn has started by this timestep (velocity_two_hypothesis networks only; spec 011). Absent for other estimators.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
-    log_range_sd: Optional[float] = Field(default=None, description="""Standard deviation of the estimator's log range (natural log; about the relative range error), from a velocity_gaussian network (spec 012). Absent for other estimators.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
+    log_range_sd: Optional[float] = Field(default=None, description="""Standard deviation of the estimator's log range (natural log; about the relative range error): from a velocity_gaussian network (spec 012), or by first-order propagation of the row's covariance (physics-layer and tracker rows; spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
+    course_sd_rad: Optional[float] = Field(default=None, description="""First-order standard deviation of course from the row's covariance (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow'], 'unit': {'ucum_code': 'rad'}} })
+    speed_sd_mps: Optional[float] = Field(default=None, description="""First-order standard deviation of speed from the row's covariance (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow'], 'unit': {'ucum_code': 'm/s'}} })
+    cov_xyvv: Optional[list[float]] = Field(default=None, description="""Upper triangle, row-major, of the 4 x 4 covariance of (x, y, vx, vy) at the row (10 values; m², m²/s, m²/s²), as the estimator states it (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
+    cov_ok: Optional[bool] = Field(default=None, description="""The covariance is usable: finite, positive definite, and the target not on ownship (range > 1 m) (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
+    cov_scale_log: Optional[float] = Field(default=None, description="""Calibrated rows only: the calibration's log-scale s; the stated covariance is e^(2s) times the solve's (spec 008).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow']} })
     vx_sd_mps: Optional[float] = Field(default=None, description="""Standard deviation of the estimated east velocity (velocity_gaussian only).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow'], 'unit': {'ucum_code': 'm/s'}} })
     vy_sd_mps: Optional[float] = Field(default=None, description="""Standard deviation of the estimated north velocity (velocity_gaussian only).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionRow'], 'unit': {'ucum_code': 'm/s'}} })
 
@@ -2401,6 +2406,8 @@ class EPredictionHeader(ConfiguredBaseModel):
                        'SegmentationHeader',
                        'DecisionTableHeader',
                        'EPredictionHeader']} })
+    model_settings: Optional[str] = Field(default=None, description="""The plan entry of the model that made the file, as canonical JSON (veto window, fade, kind, seed); binds a classical control's settings (spec 008, Gate 2 panel R2-7).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader']} })
+    segmentation_sha256: Optional[str] = Field(default=None, description="""SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader']} })
 
 
 class Gate2Decision(ConfiguredBaseModel):

@@ -1066,6 +1066,13 @@
                 "model": {
                     "type": "string"
                 },
+                "model_settings": {
+                    "description": "The plan entry of the model that made the file, as canonical JSON (veto window, fade, kind, seed); binds a classical control's settings (spec 008, Gate 2 panel R2-7).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "parameters_sha256": {
                     "description": "C's parameter digest.",
                     "type": "string"
@@ -1078,6 +1085,13 @@
                 },
                 "schema_version": {
                     "type": "string"
+                },
+                "segmentation_sha256": {
+                    "description": "SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "weights_sha256": {
                     "type": "string"
@@ -3488,6 +3502,37 @@
                 "course_rad": {
                     "type": "number"
                 },
+                "course_sd_rad": {
+                    "description": "First-order standard deviation of course from the row's covariance (spec 008).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "cov_ok": {
+                    "description": "The covariance is usable: finite, positive definite, and the target not on ownship (range > 1 m) (spec 008).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "cov_scale_log": {
+                    "description": "Calibrated rows only: the calibration's log-scale s; the stated covariance is e^(2s) times the solve's (spec 008).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "cov_xyvv": {
+                    "description": "Upper triangle, row-major, of the 4 x 4 covariance of (x, y, vx, vy) at the row (10 values; m\u00b2, m\u00b2/s, m\u00b2/s\u00b2), as the estimator states it (spec 008).",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "iterations": {
                     "type": [
                         "integer",
@@ -3495,7 +3540,7 @@
                     ]
                 },
                 "log_range_sd": {
-                    "description": "Standard deviation of the estimator's log range (natural log; about the relative range error), from a velocity_gaussian network (spec 012). Absent for other estimators.",
+                    "description": "Standard deviation of the estimator's log range (natural log; about the relative range error): from a velocity_gaussian network (spec 012), or by first-order propagation of the row's covariance (physics-layer and tracker rows; spec 008).",
                     "type": [
                         "number",
                         "null"
@@ -3513,6 +3558,13 @@
                 },
                 "speed_mps": {
                     "type": "number"
+                },
+                "speed_sd_mps": {
+                    "description": "First-order standard deviation of speed from the row's covariance (spec 008).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
                 },
                 "timestamp_s": {
                     "type": "number"
@@ -4606,6 +4658,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.25.0"
+    "version": "0.26.0"
 }
 

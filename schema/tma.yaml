@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.25.0
+version: 0.26.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -711,7 +711,32 @@ classes:
         range: float
         description: >-
           Standard deviation of the estimator's log range (natural log; about the relative range
-          error), from a velocity_gaussian network (spec 012). Absent for other estimators.
+          error): from a velocity_gaussian network (spec 012), or by first-order propagation of
+          the row's covariance (physics-layer and tracker rows; spec 008).
+      course_sd_rad:
+        range: float
+        unit: { ucum_code: rad }
+        description: First-order standard deviation of course from the row's covariance (spec 008).
+      speed_sd_mps:
+        range: float
+        unit: { ucum_code: m/s }
+        description: First-order standard deviation of speed from the row's covariance (spec 008).
+      cov_xyvv:
+        range: float
+        multivalued: true
+        description: >-
+          Upper triangle, row-major, of the 4 x 4 covariance of (x, y, vx, vy) at the row (10
+          values; m², m²/s, m²/s²), as the estimator states it (spec 008).
+      cov_ok:
+        range: boolean
+        description: >-
+          The covariance is usable: finite, positive definite, and the target not on ownship
+          (range > 1 m) (spec 008).
+      cov_scale_log:
+        range: float
+        description: >-
+          Calibrated rows only: the calibration's log-scale s; the stated covariance is e^(2s)
+          times the solve's (spec 008).
       vx_sd_mps:
         range: float
         unit: { ucum_code: m/s }
@@ -1725,6 +1750,14 @@ classes:
       code_sha256: { range: string, required: true, description: "The code that made the prediction (C's and E's)." }
       git_commit: { range: string, required: true }
       git_dirty: { range: boolean, required: true }
+      model_settings:
+        range: string
+        description: >-
+          The plan entry of the model that made the file, as canonical JSON (veto window, fade,
+          kind, seed); binds a classical control's settings (spec 008, Gate 2 panel R2-7).
+      segmentation_sha256:
+        range: string
+        description: SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).
 
   Gate2Decision:
     description: >-
