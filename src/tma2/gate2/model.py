@@ -40,6 +40,7 @@ class EOutput:
     range: Tensor  # [N] the layer's range, course and speed at the row (as scored for C)
     course: Tensor
     speed: Tensor
+    h_k: Tensor | None = None  # [N, W] the encoder state at the row (spec 008's head reads it)
 
 
 class EWeights(nn.Module):
@@ -107,4 +108,5 @@ class EWeights(nn.Module):
             out.range,
             out.course,
             out.speed,
+            hk,
         )

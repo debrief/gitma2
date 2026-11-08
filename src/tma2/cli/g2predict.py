@@ -32,23 +32,27 @@ from tma2.data.provenance import read_git_provenance
 CHUNK = 16  # as cli.segment
 
 
-def _task(args: tuple[Any, ...]) -> list[tuple[int, dict[str, Any], list[dict[str, Any]]]]:
+Task = tuple[int, dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]
+
+
+def _task(args: tuple[Any, ...]) -> list[Task]:
     import torch
 
     from tma2.gate2.es import ESSettings, make_net
     from tma2.gate2.model import EWeights
     from tma2.gate2.predict import e_rows, es_segmentations, veto_segmentations
     from tma2.references.classical import bearing_data_from_arrays
+    from tma2.segment import TRANSITION
     from tma2.segment.evidence import CHANNELS
     from tma2.segment.score import g5_rows, iter_selected
     from tma2.types.generated.tma import PhysicsModelConfig, SegmentParameters
 
-    path, start, count, params_json, plan, model_id, ew, es, segs = args
+    path, start, count, params_json, plan, model_id, ew, es, segs, want_feats = args
     torch.set_num_threads(1)
     torch.set_default_dtype(torch.float64)
     p = SegmentParameters.model_validate_json(params_json)
-    data, metas, owns, rows, ords = [], [], [], [], []
-    for j, m, own, _tgt, obs in iter_selected(path, start, count):
+    data, metas, owns, rows, ords, tgts = [], [], [], [], [], []
+    for j, m, own, tgt, obs in iter_selected(path, start, count):
         d = bearing_data_from_arrays(m, own, obs)
         ks = g5_rows(m, d.n)
         if ks:
@@ -57,6 +61,7 @@ def _task(args: tuple[Any, ...]) -> list[tuple[int, dict[str, Any], list[dict[st
             owns.append(own)
             rows.append(ks)
             ords.append(j)
+            tgts.append(tgt)
     if not data:
         return []
     from safetensors.torch import load_file
@@ -84,8 +89,66 @@ def _task(args: tuple[Any, ...]) -> list[tuple[int, dict[str, Any], list[dict[st
     c = plan["c"]
     f = plan["models"][model_id].get("fade")
     fade = (float(f[0]), float(f[1])) if f else None
-    out = e_rows(model, data, rows, sg, c["mode"], c.get("open_handover"), fade=fade)
-    return [(j, m, r) for j, m, r in zip(ords, metas, out, strict=True)]
+    feats: dict[tuple[int, int], dict[str, Any]] | None = {} if want_feats else None
+    out = e_rows(model, data, rows, sg, c["mode"], c.get("open_handover"), fade=fade, feats=feats)
+    res: list[Task] = []
+    for i, (j, m, r) in enumerate(zip(ords, metas, out, strict=True)):
+        frows = []
+        for q, k in enumerate(rows[i]):
+            if feats is None or (i, q) not in feats:
+                continue
+            f = feats[(i, q)]
+            ivs = sg[i].get(k) or []
+            frows.append(
+                {
+                    "ordinal": j,
+                    "k": k,
+                    **f,
+                    "truth": _truth_state(tgts[i], k),
+                    "own": (float(data[i].ox[k]), float(data[i].oy[k])),
+                    "plausible": bool(r[q]["converged"]),
+                    "cov_ok": bool(r[q].get("cov_ok", False)),
+                    "minute": int(
+                        round((k - int(m["zig_index"])) * float(data[i].t[1] - data[i].t[0]) / 60.0)
+                    ),
+                    "open": bool(ivs) and ivs[-1].kind == TRANSITION and bool(ivs[-1].open),
+                }
+            )
+        res.append((j, m, r, frows))
+    return res
+
+
+def _truth_state(tgt: Any, k: int) -> tuple[float, float, float, float]:
+    import math
+
+    _, x, y, c, sp = (float(v) for v in tgt[k])
+    return (x, y, sp * math.sin(c), sp * math.cos(c))
+
+
+def write_features(path: Path, frows: list[dict[str, Any]], header: dict[str, Any]) -> None:
+    """The calibration head's feature cache (spec 008 data-model): one entry per scored row with
+    E-w's encoder state; the header binds the prediction header's digests."""
+    import numpy as np
+
+    from tma2.physics.uncertainty import pack_cov
+
+    frows = sorted(frows, key=lambda f: (f["ordinal"], f["k"]))
+    np.savez_compressed(
+        path,
+        header=np.array(json.dumps(header, sort_keys=True)),
+        ordinal=np.array([f["ordinal"] for f in frows], dtype=np.int64),
+        k=np.array([f["k"] for f in frows], dtype=np.int64),
+        h=np.array([f["h"] for f in frows], dtype=np.float64),
+        cov=np.array([pack_cov(f["cov"]) for f in frows], dtype=np.float64),
+        state=np.array([f["state"] for f in frows], dtype=np.float64),
+        truth=np.array([f["truth"] for f in frows], dtype=np.float64),
+        own=np.array([f["own"] for f in frows], dtype=np.float64),
+        code_k=np.array([f["code_k"] for f in frows], dtype=np.float64),
+        plausible=np.array([f["plausible"] for f in frows]),
+        cov_ok=np.array([f["cov_ok"] for f in frows]),
+        minute=np.array([f["minute"] for f in frows], dtype=np.int64),
+        open=np.array([f["open"] for f in frows]),
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -100,6 +163,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--features", help="spec 008: the calibration head's feature cache (.npz)")
     a = ap.parse_args(argv)
 
     from tma2.cli.gs import read_segmentations
@@ -176,15 +240,19 @@ def main(argv: list[str] | None = None) -> int:
             a.ew_weights,
             a.es_weights,
             {key: v for key, v in segs.items() if s <= key[0] < s + CHUNK},
+            a.features is not None,
         )
         for s in range(a.start, a.start + a.count, CHUNK)
     ]
     from tma2.data.canonical import canonical_json
 
     recs: list[tuple[int, dict[str, Any], list[dict[str, Any]]]] = []
+    frows: list[dict[str, Any]] = []
     with ProcessPoolExecutor(max_workers=a.workers) as ex:
         for part in ex.map(_task, chunks):
-            recs += part
+            for j, meta, rws, fr in part:
+                recs.append((j, meta, rws))
+                frows += fr
             print(f"{len(recs)} scenarios [{time.time() - t0:.0f} s]", flush=True)
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -204,6 +272,8 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 + "\n"
             )
+    if a.features:
+        write_features(Path(a.features), frows, h)
     print(f"wrote {out}: {len(recs)} scenarios [{time.time() - t0:.0f} s]")
     return 0
 

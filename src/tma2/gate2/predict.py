@@ -112,11 +112,14 @@ def e_rows(
     open_handover: str | None,
     batch: int = 32,
     fade: tuple[float, float] | None = None,
+    feats: dict[tuple[int, int], dict[str, Any]] | None = None,
 ) -> list[list[dict[str, Any]]]:
     """Per scenario, a prediction row at each scored row (an empty row where C's hand-over has
     no input or the solve is implausible). ``fade`` (a, b), with no model: the classical control's
     fixed fading memory (Gate 2 panel, round 1), clip(a − b·age, ±2) added to C's log-weights,
-    age = k − row (rows after k are masked by the layer)."""
+    age = k − row (rows after k are masked by the layer). ``feats`` (spec 008), keyed by (scenario
+    position, row position), receives E-w's encoder state at the row (``h``), C's code there and
+    the raw covariance, for the calibration head's cache."""
     from tma2.cli.oracle import empty_row
 
     r_max = max(d.n for d in data)
@@ -153,15 +156,24 @@ def e_rows(
                 o = model(x, code)
                 state, ok, cov = o.state, o.plausible & o.cov_ok, o.cov
                 rng, crs, spd = o.range, o.course, o.speed
+                hks = o.h_k
             else:
                 assert layer is not None
                 lo = layer(x)
                 state, ok, cov = lo.state, lo.plausible, lo.cov
                 rng, crs, spd = lo.range, lo.course, lo.speed
+                hks = None
         for b, (i, q) in enumerate(where[s : s + batch]):
             d, k, _ = items[s + b]
             st = state[b].numpy()
             if np.isfinite(st).all():  # an implausible solve is reported, unconverged
                 rcs = (float(rng[b]), float(crs[b]), float(spd[b]))
                 out[i][q] = _row(d, k, st, rcs, bool(ok[b]), cov[b].numpy())
+            if feats is not None and hks is not None:
+                feats[(i, q)] = {
+                    "h": hks[b].numpy().copy(),
+                    "code_k": float(codes[s + b][k]),
+                    "cov": cov[b].numpy().copy(),
+                    "state": st.copy(),
+                }
     return out
