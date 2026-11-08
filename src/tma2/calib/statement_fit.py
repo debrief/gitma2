@@ -5,8 +5,9 @@ Four quantities per row: the course spread scale a and peaked weight p (the cour
 c · sd). Rows are the cache's usable rows (plausible, a usable covariance, finite exact errors).
 
 **Temperature** (the classical control): one (a, p, c_r, c_s) per slice cell (G5 minute × open at
-k). (a, p) minimise the course negative log score in the cell; c_r and c_s are the cell's 95%
-quantiles of |e| / sd, which minimise the interval score.
+k), stated on sd^β with β per quantity picked from the plan's grid on the tuning rows (β = 1
+is the plain temperature). (a, p) minimise the course negative log score in the cell; c_r and
+c_s are the cell's 95% quantiles of |e| / sd^β, which minimise the interval score.
 
 **Head**: a small MLP on the cache's features with four outputs, each moving its quantity from the
 global temperature value by at most e^(±bound) (p on the logit scale); zero-initialised, so the
@@ -80,34 +81,76 @@ def cells(d: CalData, keys: list[str]) -> np.ndarray:
     return np.array(["|".join(f"{k}={cols[k][i]}" for k in keys) for i in range(len(d))])
 
 
-def fit_temperature(d: CalData, keys: list[str], min_rows: int = 20) -> dict[str, Any]:
-    """{cell: {a, p, c_r, c_s}}; a cell with too few rows takes the global statement."""
+def _cell_fit(
+    d: CalData, lab: np.ndarray, m: np.ndarray, beta: np.ndarray, min_rows: int
+) -> dict[str, dict[str, float]]:
     assert d.sd is not None and d.err is not None
-    g = fit_global(d)
-    lab, m = cells(d, keys), rows(d)
-    out: dict[str, Any] = {"global": g, "cells": {}}
+    s = d.sd ** beta[None, :]
+    out: dict[str, dict[str, float]] = {}
     for c in sorted(set(lab.tolist())):
         i = m & (lab == c)
         if i.sum() < min_rows:
-            out["cells"][c] = dict(g)
-            continue
-        a, p = _fit_course(d.err[i, 1], d.sd[i, 1])
-        out["cells"][c] = {
+            i = m
+        a, p = _fit_course(d.err[i, 1], s[i, 1])
+        out[c] = {
             "a": a,
             "p": p,
-            "c_r": float(np.quantile(np.abs(d.err[i, 0]) / d.sd[i, 0], 0.95)),
-            "c_s": float(np.quantile(np.abs(d.err[i, 2]) / d.sd[i, 2], 0.95)),
+            "c_r": float(np.quantile(np.abs(d.err[i, 0]) / s[i, 0], 0.95)),
+            "c_s": float(np.quantile(np.abs(d.err[i, 2]) / s[i, 2], 0.95)),
         }
     return out
 
 
+def _component_scores(st_: Statement, d: CalData) -> np.ndarray:
+    """Mean course negative log score and the two mean interval scores on the usable rows."""
+    assert d.sd is not None and d.err is not None
+    m = rows(d)
+    e, sd = d.err[m], d.sd[m]
+    nll = -st.course_log_score(e[:, 1], st_.a[m], st_.p[m], sd[:, 1])
+    r = st.interval_score(np.abs(e[:, 0]), st_.c_r[m] * sd[:, 0])
+    q = st.interval_score(np.abs(e[:, 2]), st_.c_s[m] * sd[:, 2])
+    return np.array([r.mean(), nll.mean(), q.mean()])
+
+
+def fit_temperature(
+    d: CalData, keys: list[str], beta_grid: list[float] | None = None, min_rows: int = 20
+) -> dict[str, Any]:
+    """{"global", "cells": {cell: {a, p, c_r, c_s}}, "beta": [log range, course, speed]}.
+
+    Each cell's statement is stated on sd^β (β < 1 tempers the spread of E's sds; research R3a).
+    β is chosen per quantity from ``beta_grid`` by the cell fits' mean score on these rows (the
+    three quantities' scores are separable). A cell with too few rows takes the fit on all rows.
+    ``apply_temperature`` converts back to per-row multiples of sd."""
+    g = fit_global(d)
+    lab, m = cells(d, keys), rows(d)
+    grid = [1.0] if not beta_grid else [float(b) for b in beta_grid]
+    trials = []
+    for b in grid:
+        t = {"global": g, "cells": _cell_fit(d, lab, m, np.full(3, b), min_rows), "beta": [b] * 3}
+        trials.append(_component_scores(apply_temperature(t, d, keys), d))
+    sc = np.array(trials)  # [grid, 3]
+    beta = np.array([grid[int(np.argmin(sc[:, j]))] for j in range(3)])
+    out: dict[str, Any] = {
+        "global": g,
+        "cells": _cell_fit(d, lab, m, beta, min_rows),
+        "beta": [float(b) for b in beta],
+        "beta_scores": {str(b): [float(x) for x in sc[k]] for k, b in enumerate(grid)},
+    }
+    return out
+
+
 def apply_temperature(t: dict[str, Any], d: CalData, keys: list[str]) -> Statement:
+    """Per-row (a, p, c_r, c_s) as multiples of the row's own sd: x_cell · sd^(β − 1)."""
+    assert d.sd is not None
     lab = cells(d, keys)
     g = t["global"]
+    beta = np.asarray(t.get("beta", [1.0, 1.0, 1.0]), dtype=np.float64)
     v = [t["cells"].get(c, g) for c in lab]
-    return Statement(
-        *(np.array([x[k] for x in v], dtype=np.float64) for k in ("a", "p", "c_r", "c_s"))
+    a, p, c_r, c_s = (
+        np.array([x[k] for x in v], dtype=np.float64) for k in ("a", "p", "c_r", "c_s")
     )
+    f = d.sd ** (beta[None, :] - 1.0)
+    return Statement(a * f[:, 1], p, c_r * f[:, 0], c_s * f[:, 2])
 
 
 def stated(s: Statement, d: CalData, xmax: float) -> dict[str, np.ndarray]:

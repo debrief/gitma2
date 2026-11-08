@@ -1,0 +1,124 @@
+name: Train the uncertainty statement (Gate 4)
+
+# Spec 009 T014. Push `g4train/<name>`: the plan configs/gate4/<name>.json names
+#   head, temperature   StatementHeadConfig (without seed) and StatementTemperatureConfig
+#   models              {id: {seed, shuffled}}
+#   tuning_ordinals     [a, b): the validation rows for early stopping and the temperature fit
+#   caches              {train: {branch, dir}, val: {branch, dir}}: g2predict results branches
+#                       whose dirs hold the feature caches (*.npz) of the carried E
+# Jobs: one per model (tma2-g3train statement), one temperature (tma2-g3train
+# statement-temperature), then
+# results to `results/g4-<name>-<run id>` (best and last weights, meta.json, logs,
+# temperature.json). Nothing merges automatically.
+
+on:
+  push:
+    branches: ["g4train/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.p.outputs.plan }}
+      models: ${{ steps.p.outputs.models }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          PLAN="configs/gate4/${GITHUB_REF_NAME#g4train/}.json"
+          test -f "$PLAN"
+          echo "plan=$PLAN" >> "$GITHUB_OUTPUT"
+          echo "models=$(python3 -c "import json; print(json.dumps(sorted(json.load(open('$PLAN'))['models'])))")" >> "$GITHUB_OUTPUT"
+
+  train:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Feature caches (outside the checkout)
+        run: scripts/ci/fetch_caches.sh "$PLAN" "$RUNNER_TEMP/caches"
+      - name: Train
+        run: |
+          mkdir -p "$RUNNER_TEMP/ck"
+          uv run tma2-g3train statement --plan "$PLAN" --model "${{ matrix.model }}" \
+            --train "$RUNNER_TEMP"/caches/train/*.npz --val "$RUNNER_TEMP"/caches/val/*.npz \
+            --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" \
+            2>&1 | tee "$RUNNER_TEMP/ck/${{ matrix.model }}.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: g4-${{ matrix.model }}
+          path: ${{ runner.temp }}/ck/
+
+  temperature:
+    needs: plan
+    runs-on: ubuntu-latest
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Feature caches (outside the checkout)
+        run: scripts/ci/fetch_caches.sh "$PLAN" "$RUNNER_TEMP/caches"
+      - run: |
+          mkdir -p "$RUNNER_TEMP/ck"
+          uv run tma2-g3train statement-temperature --plan "$PLAN" --val "$RUNNER_TEMP"/caches/val/*.npz \
+            --out "$RUNNER_TEMP/ck/temperature.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: g4-temperature
+          path: ${{ runner.temp }}/ck/
+
+  results:
+    needs: [plan, train, temperature]
+    runs-on: ubuntu-latest
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: g4-*
+          path: ${{ runner.temp }}/ck
+          merge-multiple: true
+      - name: Push the results branch
+        run: |
+          NAME=$(basename "$PLAN" .json)
+          OUT="experiments/g4-runs/$NAME-${{ github.run_id }}"
+          mkdir -p "$OUT"
+          for d in "$RUNNER_TEMP"/ck/*/; do
+            m=$(basename "$d"); mkdir -p "$OUT/$m"
+            cp "$d/meta.json" "$d/best.safetensors" "$d/last.safetensors" "$OUT/$m/"
+            cp "$RUNNER_TEMP/ck/$m.log" "$OUT/$m/train.log" 2>/dev/null || true
+          done
+          cp "$RUNNER_TEMP/ck/temperature.json" "$OUT/"
+          cp "$PLAN" "$OUT/plan.json"
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "cpu_model": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" "$CPU" > "$OUT/run.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/g4-$NAME-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: Gate 4 statement training $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"

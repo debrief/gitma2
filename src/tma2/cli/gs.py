@@ -390,10 +390,13 @@ def main(argv: list[str] | None = None) -> int:
     settled = np.array([r.settled for r in rows])
     layer = PhysicsLayer(knots=a.knots)
     # per-row calibration of every estimator's stated covariance (spec 008), in errors.npz
+    from tma2.eval.calibration import WIDTH as EC_WIDTH
+    from tma2.eval.calibration import widen as ec_widen
+
     cals: dict[str, np.ndarray] = {}
 
     def cal(name: str) -> np.ndarray:
-        cals[name] = np.zeros((len(rows), 9))
+        cals[name] = np.zeros((len(rows), EC_WIDTH))
         return cals[name]
 
     stored: dict[str, np.ndarray] = {}
@@ -409,7 +412,7 @@ def main(argv: list[str] | None = None) -> int:
         """The estimator's errors, from ``--reuse`` when it holds them (errors and calibration
         both), else solved now."""
         if f"err_{name}" in stored and f"cal_{name}" in stored:
-            cals[name] = stored[f"cal_{name}"]
+            cals[name] = ec_widen(stored[f"cal_{name}"])
             print(f"{name}: reused from {a.reuse}", flush=True)
             out: np.ndarray = stored[f"err_{name}"]
             return out

@@ -21,9 +21,9 @@
   adjacent violators) for P. Unit tests in `tests/unit/test_statement.py`: P equals the numerical
   integral of the mixture over ±X; p = 0 gives P = X/π; the interval-score loss is minimised at the
   95% quantile; the isotonic map is monotone and identity on calibrated data.
-- [ ] T004 Extend `src/tma2/calib/data.py` with the exact errors per row (wrapped course, log range
+- [x] T004 Extend `src/tma2/calib/data.py` with the exact errors per row (wrapped course, log range
   ratio, speed) and the raw sds; no linearised error in this path.
-- [ ] T005 Extend `src/tma2/eval/calibration.py`: per-row statement columns and the measures:
+- [x] T005 Extend `src/tma2/eval/calibration.py`: per-row statement columns and the measures:
   reliability (hit − P overall, and in five bins of P), mean P, mean X, the course log score and its
   difference from the uniform's, range and speed coverage95 and interval scores. Tests in
   `tests/unit/test_calibration_metrics.py`.
@@ -35,12 +35,12 @@
 **Independent test**: on synthetic rows with known errors the statement is reliable; on 4 validation
 scenarios the fields are present and the points equal Gate 2's.
 
-- [ ] T006 [US1] Temperature form: `statement-temperature` in `src/tma2/cli/g3train.py` fits (a, p,
+- [x] T006 [US1] Temperature form: `statement-temperature` in `src/tma2/cli/g3train.py` fits (a, p,
   c_range, c_speed) per slice (G5 minute × open) by the summed proper loss on tuning ordinals, then
   the isotonic map for P; writes `temperature.json`.
-- [ ] T007 [US1] `tma2-g3predict` writes the statement fields (`calib/predict.py`); the header records
+- [x] T007 [US1] `tma2-g3predict` writes the statement fields (`calib/predict.py`); the header records
   its own commit and dirty flag, read before writing (FR-040).
-- [ ] T008 [US2] The scorer (`cli/gs.py`) computes the statement measures for every estimator with
+- [x] T008 [US2] The scorer (`cli/gs.py`) computes the statement measures for every estimator with
   statement fields, and for the raw E from its Gaussian sds (arc capped at Xmax).
 - [ ] T009 [US1] Baseline record `experiments/<date>-g4-base-val/`: E raw and references on scoring
   ordinals 500–1499 (`--reuse` the Gate 3 baseline's `errors.npz`); no calibrated estimator scored.
@@ -56,7 +56,7 @@ scenarios the fields are present and the points equal Gate 2's.
 
 ## Phase 5: User Story 3 - Learning against a rule (P2)
 
-- [ ] T013 [US3] The statement head (`calib/head.py`, `calib/loss.py`, `calib/train.py`): outputs
+- [x] T013 [US3] The statement head (`calib/statement_fit.py`): outputs
   (a, logit p, c_range, c_speed), zero-initialised to the temperature's global values; loss the
   standardised sum of the course log score and the two interval scores; early stopping on tuning
   ordinals; shuffled control writes distinct model ids for best and last (FR-041). Tests in

@@ -2672,6 +2672,7 @@ class StatementTemperatureConfig(ConfiguredBaseModel):
     slices: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TemperatureConfig', 'StatementTemperatureConfig']} })
     xmax_rad: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['StatementHeadConfig', 'StatementTemperatureConfig']} })
     isotonic_bins: int = Field(default=..., description="""Knots of the shared isotonic map for P.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StatementTemperatureConfig']} })
+    beta_grid: Optional[list[float]] = Field(default=None, description="""Powers on E's sds tried for the cell statement (default [1]); the fit picks, per quantity (log range, course, speed), the one with the best summed cell score on the tuning rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StatementTemperatureConfig']} })
 
 
 class Gate4Criteria(ConfiguredBaseModel):

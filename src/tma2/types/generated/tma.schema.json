@@ -4671,6 +4671,16 @@
             "additionalProperties": false,
             "description": "Spec 009 (R2, R3): the classical control, the same statement fitted per slice.",
             "properties": {
+                "beta_grid": {
+                    "description": "Powers on E's sds tried for the cell statement (default [1]); the fit picks, per quantity (log range, course, speed), the one with the best summed cell score on the tuning rows.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "isotonic_bins": {
                     "description": "Knots of the shared isotonic map for P.",
                     "type": "integer"

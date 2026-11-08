@@ -1,0 +1,65 @@
+{
+  "description": "Spec 009 Gate 4 statement plan, bound by the decision record experiments/<date>-g4-decision/ (never edited after it). The carried Gate 2 E (e-s3) frozen, points unchanged; its uncertainty statement (course arc +/-X with probability P, X at most 45 degrees; range and speed 95% intervals; research R2-R4) from a head trained on its cached features over stream seed 318 on the exact errors, early-stopped on validation ordinals 0-499; three seeds and a shuffled control (scored at best and last epoch); the classical control a per-slice temperature (G5 minute x open at k) fitted on the same validation ordinals; P recalibrated by an isotonic map fitted on those ordinals.",
+  "carried_e": {
+    "model": "e-s3",
+    "weights_sha256": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+    "gate2_plan": "configs/gate2/g2-a.json"
+  },
+  "head": {
+    "width": 32,
+    "bound": 2.0,
+    "xmax_rad": 0.7853981633974483,
+    "learning_rate": 0.001,
+    "batch_rows": 1024,
+    "max_epochs": 50,
+    "patience": 5,
+    "min_improvement": 0.001
+  },
+  "temperature": {
+    "slices": [
+      "minute",
+      "open"
+    ],
+    "xmax_rad": 0.7853981633974483,
+    "isotonic_bins": 10,
+    "beta_grid": [
+      1.0,
+      0.9,
+      0.8,
+      0.7,
+      0.6,
+      0.5,
+      0.4,
+      0.3
+    ]
+  },
+  "models": {
+    "st-s1": {
+      "seed": 1
+    },
+    "st-s2": {
+      "seed": 2
+    },
+    "st-s3": {
+      "seed": 3
+    },
+    "st-shuffled": {
+      "seed": 4,
+      "shuffled": true
+    }
+  },
+  "tuning_ordinals": [
+    0,
+    500
+  ],
+  "caches": {
+    "train": {
+      "branch": "results/g2predict-g3-feat-stream-42472098077",
+      "dir": "experiments/g2predict-runs/g3-feat-stream-42472098077"
+    },
+    "val": {
+      "branch": "results/g2predict-g3-feat-val-42472096319",
+      "dir": "experiments/g2predict-runs/g3-feat-val-42472096319"
+    }
+  }
+}

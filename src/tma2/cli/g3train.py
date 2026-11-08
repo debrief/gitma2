@@ -145,7 +145,7 @@ def statement_temperature(a: argparse.Namespace) -> int:
     cfg = StatementTemperatureConfig.model_validate(plan["temperature"])
     val = _tuning(plan, data.load(a.val))
     keys = list(cfg.slices or [])
-    t = fit_temperature(val, keys)
+    t = fit_temperature(val, keys, list(cfg.beta_grid or []))
     knots = fit_isotonic(apply_temperature(t, val, keys), val, cfg.xmax_rad, cfg.isotonic_bins)
     rec = {
         "slices": keys,

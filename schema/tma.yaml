@@ -1840,6 +1840,7 @@ classes:
       slices: { range: string, multivalued: true }
       xmax_rad: { range: float, required: true }
       isotonic_bins: { range: integer, required: true, description: "Knots of the shared isotonic map for P." }
+      beta_grid: { range: float, multivalued: true, description: "Powers on E's sds tried for the cell statement (default [1]); the fit picks, per quantity (log range, course, speed), the one with the best summed cell score on the tuning rows." }
 
   Gate4Criteria:
     description: "Gate 4 bands (spec 009 FR-030; fixed by the SRD amendment and the decision)."
