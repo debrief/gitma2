@@ -133,7 +133,7 @@ errors.
 
 ## Phase 7: User Story 4 — the gate on a fresh seed (P2)
 
-- [ ] T027 [US4] Implement `tma2-g3` gate mode in `src/tma2/calib/gate.py`:
+- [x] T027 [US4] Implement `tma2-g3` gate mode in `src/tma2/calib/gate.py`:
   - G3-a…G3-d per the decision;
   - `verdict.json`, `manifest.json`;
   - refuse `start ≠ 0` or `count ≠ sigma1_scenarios` on test (FR-032);

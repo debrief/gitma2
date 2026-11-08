@@ -134,9 +134,10 @@ def _input_digests(a: argparse.Namespace) -> dict[str, Any]:
     from tma2.segment.gate import sha256_file as file_digest
 
     out: dict[str, Any] = {
+        "truth": file_digest(a.truth),
         "segmentations": {
             n: file_digest(p) for n, _, p in (x.partition("=") for x in a.segmentations)
-        }
+        },
     }
     if a.glr_confirm:
         work, _, cfg = a.glr_confirm.partition(":")
