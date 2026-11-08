@@ -1722,8 +1722,8 @@
                     },
                     "type": "array"
                 },
-                "nees_median_ratio": {
-                    "description": "G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside.",
+                "nees_within95": {
+                    "description": "G3-b: [lo, hi] for the share of rows with 4-state NEES within the chi-squared(4) 95% point (missing rows outside); wholly inside.",
                     "items": {
                         "type": "number"
                     },
@@ -1732,7 +1732,7 @@
             },
             "required": [
                 "coverage95",
-                "nees_median_ratio"
+                "nees_within95"
             ],
             "title": "Gate3Criteria",
             "type": "object"
@@ -4893,6 +4893,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.28.0"
+    "version": "0.29.0"
 }
 

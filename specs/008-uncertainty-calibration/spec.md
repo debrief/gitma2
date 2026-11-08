@@ -258,7 +258,9 @@ could go wrong.
   result:
   - **G3-a (coverage):** 95% intervals in log range, course and speed each cover between 0.92
     and 0.98 of all test rows, interval wholly inside;
-  - **G3-b (consistency):** the median NEES over χ²₄'s median, interval wholly inside [0.8, 1.25];
+  - **G3-b (consistency; owner 2026-11-08, before any result):** the share of rows whose NEES is
+    within the χ²₄ 95% point (missing rows outside), interval wholly inside [0.92, 0.98]; the
+    median NEES ratio is reported, not gated (heavy tails: `experiments/20261108-g3-base-val/`);
   - **G3-c (learning):** the carried calibration beats the classical temperature on the proper
     score, paired difference wholly favourable, void if the shuffled control also beats it;
   - **G3-d (no regression):** G2-a to G2-d hold for the calibrated E (automatic under FR-020,

@@ -224,6 +224,7 @@ SLICE_INTERVALS = {
     "coverage95_course",
     "coverage95_speed",
     "nees_median_ratio",
+    "nees_within95",
 }
 
 

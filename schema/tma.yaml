@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.28.0
+version: 0.29.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -1838,11 +1838,11 @@ classes:
         multivalued: true
         required: true
         description: "G3-a: [lo, hi] for each of log range, course and speed; the interval wholly inside."
-      nees_median_ratio:
+      nees_within95:
         range: float
         multivalued: true
         required: true
-        description: "G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside."
+        description: "G3-b: [lo, hi] for the share of rows with 4-state NEES within the chi-squared(4) 95% point (missing rows outside); wholly inside."
 
   Gate3Decision:
     description: >-

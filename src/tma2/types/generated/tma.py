@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.28.0"
+version = "0.29.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -2644,7 +2644,7 @@ class Gate3Criteria(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     coverage95: list[float] = Field(default=..., description="""G3-a: [lo, hi] for each of log range, course and speed; the interval wholly inside.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate3Criteria']} })
-    nees_median_ratio: list[float] = Field(default=..., description="""G3-b: [lo, hi] for the median NEES over the chi-squared(4) median; wholly inside.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate3Criteria']} })
+    nees_within95: list[float] = Field(default=..., description="""G3-b: [lo, hi] for the share of rows with 4-state NEES within the chi-squared(4) 95% point (missing rows outside); wholly inside.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate3Criteria']} })
 
 
 class Gate3Decision(ConfiguredBaseModel):

@@ -11,7 +11,7 @@ import numpy as np
 
 from tma2.calib.gate import FAIL, INCONCLUSIVE, PASS, all_of, below, criteria, inside, shuffled_rule
 
-BANDS = {"coverage95": [0.92, 0.98], "nees_median_ratio": [0.8, 1.25]}
+BANDS = {"coverage95": [0.92, 0.98], "nees_within95": [0.92, 0.98]}
 
 
 def _cal(n: int, scale: float, seed: int) -> np.ndarray:
