@@ -182,3 +182,29 @@ def test_fixed_fade_control(man2_pack: Path) -> None:
     faded = e_rows(None, [d], [ks], sg, p.mode, p.open_handover, fade=(0.73, 0.0079))[0]
     assert zero == base
     assert any(f.get("range_m") != b.get("range_m") for f, b in zip(faded, base, strict=True))
+
+
+def test_rows_carry_covariance(man2_pack: Path) -> None:
+    """Spec 008 T007: every plausible E row states its covariance and the standard deviations
+    derived from it; the point fields are as before (the same code path)."""
+    from tma2.physics.uncertainty import derived_sds, unpack_cov
+
+    p = _params()
+    _, m, own, _tgt, obs = next(
+        x for x in iter_pack_raw(man2_pack) if int(x[1]["samples"]) <= 420 and x[1]["manoeuvres"]
+    )
+    d = bearing_data_from_arrays(m, own, obs)
+    ks = g5_rows(m, d.n)[:2]
+    assert ks
+    sg = [{k: [Interval(STEADY, 0, k)] for k in ks}]
+    rows = e_rows(None, [d], [ks], sg, p.mode, p.open_handover)[0]
+    assert any(r["converged"] for r in rows)
+    for k, r in zip(ks, rows, strict=True):
+        if not r["converged"]:
+            continue
+        assert r["cov_ok"] is True and len(r["cov_xyvv"]) == 10
+        c, s = r["course_rad"], r["speed_mps"]
+        st = np.array([r["x_m"], r["y_m"], s * np.sin(c), s * np.cos(c)])
+        want = derived_sds(st, unpack_cov(r["cov_xyvv"]), (float(d.ox[k]), float(d.oy[k])))
+        got = (r["log_range_sd"], r["course_sd_rad"], r["speed_sd_mps"])
+        np.testing.assert_allclose(got, want, rtol=1e-6)

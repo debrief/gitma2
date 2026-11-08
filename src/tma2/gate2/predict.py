@@ -23,6 +23,7 @@ import torch
 from tma2.cli.oracle import inputs_for
 from tma2.physics.layer import PhysicsLayer
 from tma2.physics.segmentation import LayerInputs
+from tma2.physics.uncertainty import row_fields
 from tma2.references.classical import BearingData
 from tma2.segment import Interval
 from tma2.segment.confirm import confirm
@@ -77,11 +78,17 @@ def veto_segmentations(
 
 
 def _row(
-    d: BearingData, k: int, state: np.ndarray, rcs: tuple[float, float, float], ok: bool
+    d: BearingData,
+    k: int,
+    state: np.ndarray,
+    rcs: tuple[float, float, float],
+    ok: bool,
+    cov: np.ndarray | None = None,
 ) -> dict[str, Any]:
     """In double, as ``segment.score.layer_errors`` scores C (float32 rows would give E and C a
-    last-bits difference in G2-d's paired comparison); the timestamp as the truth stores it."""
-    return {
+    last-bits difference in G2-d's paired comparison); the timestamp as the truth stores it.
+    With ``cov``, the solve's covariance and its derived standard deviations (spec 008)."""
+    row: dict[str, Any] = {
         "timestamp_s": f32(float(d.t[k])),
         "range_m": rcs[0],
         "course_rad": rcs[1],
@@ -91,6 +98,9 @@ def _row(
         "converged": ok,
         "iterations": 0,
     }
+    if cov is not None:
+        row.update(row_fields(state, cov, (float(d.ox[k]), float(d.oy[k]))))
+    return row
 
 
 def e_rows(
@@ -141,17 +151,17 @@ def e_rows(
             if model is not None:
                 code = torch.tensor(np.stack(codes[s : s + batch]), dtype=torch.float64)
                 o = model(x, code)
-                state, ok = o.state, o.plausible & o.cov_ok
+                state, ok, cov = o.state, o.plausible & o.cov_ok, o.cov
                 rng, crs, spd = o.range, o.course, o.speed
             else:
                 assert layer is not None
                 lo = layer(x)
-                state, ok = lo.state, lo.plausible
+                state, ok, cov = lo.state, lo.plausible, lo.cov
                 rng, crs, spd = lo.range, lo.course, lo.speed
         for b, (i, q) in enumerate(where[s : s + batch]):
             d, k, _ = items[s + b]
             st = state[b].numpy()
             if np.isfinite(st).all():  # an implausible solve is reported, unconverged
                 rcs = (float(rng[b]), float(crs[b]), float(spd[b]))
-                out[i][q] = _row(d, k, st, rcs, bool(ok[b]))
+                out[i][q] = _row(d, k, st, rcs, bool(ok[b]), cov[b].numpy())
     return out

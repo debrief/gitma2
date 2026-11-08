@@ -160,6 +160,8 @@ def main(argv: list[str] | None = None) -> int:
         code_sha256=c["code_sha256"],
         git_commit=gp.commit,
         git_dirty=gp.dirty,
+        model_settings=json.dumps(m, sort_keys=True, separators=(",", ":")),
+        segmentation_sha256=sha256_file(a.segmentations),
     ).model_dump(mode="json", exclude_none=True)
     h |= {f"{w}_weights_sha256": v for w, v in digests.items()}
     h |= {"estimator": f"E-{a.model}", "mode": "per_timestep"}
