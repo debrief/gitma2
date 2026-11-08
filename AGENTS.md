@@ -81,7 +81,11 @@ hand-over `knot_at_k`); decision `experiments/20261107-g2-decision/` (plan `conf
 +0.025 [+0.018, +0.031]** (seed 319, 4,983 scenarios). Panel round 1: two majors (E-s ≈ a zig veto,
 E-w ≈ a fading memory), answered by pre-registered classical controls C′, fade and C″
 (`experiments/20261107-g2-veto/`, model kind `veto` in `tma2-g2predict`, plans
-`configs/gate2/g2-a-{veto,fade}.json`); on validation E − C″ +0.008 [−0.004, +0.017].
+`configs/gate2/g2-a-{veto,fade}.json`). **Decided by the panel, round 2: G2-a to G2-d pass**;
+on test the classical C″ (zig veto + fixed fade, nothing learned) − C is +0.018 and E − C″ +0.007
+[+0.001, +0.012] (learning beyond the rules, small; E-s adds nothing shown beyond the veto).
+Write-up `site/blog/2026-11-08-gate-2.md`; recommended follow-on: carry E, keep C″ as a standing
+control, spec 008 uncertainty calibration with the panel's follow-ons (`specs/007-gate2-man2/tasks.md`).
 `scripts/research/g2_paired_gaps.py` gives paired gap differences between any two scored
 estimators. Seeds: 318 training stream, 319 test (used); the next fresh seed is 320.
 
