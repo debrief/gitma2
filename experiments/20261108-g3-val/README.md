@@ -61,36 +61,59 @@ above 0.98, G3-b and G3-c fail. **Not carried; seed 320 not generated.**
 | settled=settled | 0.988 | 0.959 | 0.924 | 6.06 | 0.940 | 0.896 | 4.94 |
 | settled=not_settled | 0.980 | 0.815 | 0.572 | 5.62 | 0.737 | 0.490 | 4.72 |
 
-## What the record shows
+## What the record shows (amended after panel round 1, `review.md`)
 
-1. **The calibration can reach 95% marginal coverage; it cannot make the joint statement honest.**
-   Every head covers log range, course and speed at 0.92–0.99, from 0.53–0.65 raw. But only 0.835
-   of rows fall within the 4-state χ²₄ 95% point. On settled rows the head meets G3-b (0.924); on
-   unsettled rows it reaches 0.572. The failures are rows where the segmentation is wrong mid-
-   manoeuvre: their errors are not Gaussian around the estimate at any scale the head can learn
-   from these features.
-2. **The head is worse than the classical temperature on the score of record** (+1.07 in IS95 log
-   range) and worse than raw E (5.95 against 4.54). It widens log range more than needed (sharpness
-   4.21 against the temperature's 3.08; coverage 0.986 against 0.983) because the β-NLL, with the
-   raw NEES capped at 10⁴, is dominated by the gross rows. The loss is not the score: β-NLL rewards
-   covering the tail of the 4-state NEES, the interval score charges every unit of width in log
-   range. The head did learn something per row (it beats its shuffled control by about 1.1 in
-   IS95), but in the direction the loss asked, not the one the gate measures.
-3. **Course is the binding marginal:** 0.923 for the head, 0.888 for the temperature; a third of
-   course errors exceed 30°.
-4. **Points unchanged** (G3-d exact on all 3,934 rows).
+1. **Marginal coverage is reached largely by giving up on course.** Every calibration covers log
+   range and speed at 0.98–0.99 (from 0.60 and 0.65 raw), above the 0.95 target. Course is 0.92 for
+   the heads, but for 53% of the carried head's rows (42% of the temperature's) the 95% course
+   interval covers the whole circle (median stated course sd 101°, raw 5.5°); on the remaining rows
+   course coverage is 0.857 (head) and 0.826 (temperature). Course binds because it is the least
+   observable state on short or low-bearing-rate legs and just after a zig.
+2. **G3-b fails mainly because the stated correlations are kept.** The local covariance's
+   correlations are near-singular (median |ρ| 0.81 log range–speed, 0.77 speed–course; 15% of rows
+   have some |ρ| > 0.99). The registered form rescales the standard deviations and keeps those
+   correlations, so errors off the stated near-singular directions fall outside the χ²₄ 95% point.
+   With the same scales and the correlations dropped, the share within it would be 0.957 (head)
+   and 0.937 (temperature) (numerics reviewer, on the cache). The registered family cannot reach
+   G3-b. Unsettled rows are worst (0.572 against 0.924 settled), but that slice is defined from the
+   truth (a manoeuvre in progress or within 300 s): the oracle, with the true segmentation, also
+   fails there (0.635). Much of it is manoeuvre lag (the bearings have not yet determined the new
+   leg), only part E's segmentation.
+3. **The head is not better than the temperature, and little per-row learning is shown.** On the
+   score of record (IS95 log range) the head is worse (+1.07). The miss penalty is about zero for
+   both; the head's intervals are wider on 93% of rows (width ratio quartiles 1.16, 1.32, 1.59).
+   The head is nearly a constant (log-range s between 2.36 and 2.94 for 90% of rows). With each
+   estimator's log-range sd moved by its best single global factor, IS95 is 2.264 (head), 2.271
+   (shuffled) and 2.335 (temperature); the shuffled head also beats the temperature on the NLL. So
+   the head's apparent gain over its shuffled control (1.1 in IS95) is a level, not
+   discrimination (AUC for the rows with the largest raw errors: 0.60 head, 0.56 shuffled, 0.53
+   temperature).
+4. **Why the head is wider than the temperature:** the loss is the joint 4-state NLL, so log range
+   is inflated everywhere to absorb tails that course drives; and training used the linearised
+   local error (u = T e) while the score uses exact errors. A course flip has a small linearised
+   course error (on rows with course error over 90°: median 47° linearised, 123° exact), so the
+   head under-widens course and over-widens log range (log-range coverage 0.987 linearised, 0.996
+   exact). The β-weight up-weights the rows the head widens (the R6 text said the opposite); its
+   effect is at most 1.1× and immaterial.
+5. **Points unchanged** (G3-d exact on all 3,934 rows).
 
-## Critical notes on the design (for the panel)
+## Process notes
 
-- The cap (10⁴) and bound (4) were chosen before training from the tuning rows; a lower cap
-  trades coverage for sharpness (tuning-row temperature: cap 10³ gave course coverage 0.89). No
-  re-tune is allowed after this result without a new plan and decision.
-- The head trained to the epoch cap; a longer run would lower the NLL a little but cannot change
-  the failure mode (finding 1).
-- The interval score favours raw E over every calibration here because raw E's intervals are
-  narrow and its misses are charged in log range only. This is a property of the score of record
-  chosen in the decision (log range only), not evidence that raw E's uncertainty is usable (its
-  coverage is 0.60).
+- **Data used before the decision.** The local form and bound 4 were chosen from E's validation
+  *scoring* rows (ordinals 500–1499, the baseline, `research.md` R5 as amended), the cap from an
+  in-sample temperature on the tuning rows (0–499); both before the decision record and before
+  any training. The bias runs toward passing; the gate failed, so the outcome is unaffected. A
+  later gate should choose such settings on tuning rows only.
+- **The score of record charges log range only;** raw E's intervals are about 12× narrower than
+  the calibrations', so its miss penalty (it covers 0.60) costs less than their widths. IS95 log
+  range alone is not a measure of usable uncertainty.
+- **Missing rows** (39 per estimator, 1%) are not covered, outside χ²₄, and charged the
+  estimator's own 99th-percentile interval score.
+- **Inputs.** The feature cache and the prediction file come from different g2predict runs of the
+  same E (segmentation digests 38cdafc… and 8df52ac…); their rows agree to 1e-6 (5 runaway rows
+  apart). The calibrated files' headers keep E's commit; the g3predict commit (d9962b7) is in
+  `results/g3predict-g3-a-val`'s `run.json`; the files rebuild byte for byte there.
+- The cap (10⁴) and bound (4) are not re-tuned after this result; any change is a new plan.
 
 ## Files
 
