@@ -78,6 +78,23 @@ the resulting segmentation. E-w is trained on C's segmentation rather than E-s's
 E-s's would cost a full re-segmentation of the training stream per E-s seed, and E-s changes
 only near-threshold decisions. E-w alone, on C's segmentation, is reported as an ablation.
 
+## What E learned, and the classical controls
+
+On Gate 2's records E-s's evidence sits almost entirely within a few rows of the ownship zig: it
+learned not to accept a target transition at the ownship's own manoeuvre (a *zig veto*). E-w's
+log-weights are mostly a recency profile (a *fading memory*). Two rules with nothing learned stand
+in for them (`gate2.predict`, model kind `veto` in `tma2-g2predict`):
+
+- **C′**: C's confirmation with fixed evidence of 1e3 on rows zig − W … zig + W (W = 6), so any
+  candidate whose evidence rows touch the window gets the largest shift, +τ/2, and every other
+  decision is C's exactly. A threshold of 1.5τ there, not a ban.
+- **fade**: clip(a − b·age, ±2) added to C's log-weights, age = k − row (a = 0.73, b = 0.0079,
+  read off E-w's mean profile); masked bearings stay masked.
+- **C″**: both.
+
+On Gate 2's test seed C″ recovers +0.018 of E's +0.025 over C; E − C″ is +0.007 [+0.001,
++0.012] (`experiments/20261107-g2-veto/`). Later gates keep C″ as a standing control.
+
 ## The gate
 
 `tma2-g2` scores E's prediction files beside C, one leg, the oracle, GLR + confirm, the frozen
