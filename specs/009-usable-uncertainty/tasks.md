@@ -42,16 +42,16 @@ scenarios the fields are present and the points equal Gate 2's.
   its own commit and dirty flag, read before writing (FR-040).
 - [x] T008 [US2] The scorer (`cli/gs.py`) computes the statement measures for every estimator with
   statement fields, and for the raw E from its Gaussian sds (arc capped at Xmax).
-- [ ] T009 [US1] Baseline record `experiments/<date>-g4-base-val/`: E raw and references on scoring
+- [x] T009 [US1] Baseline record `experiments/<date>-g4-base-val/`: E raw and references on scoring
   ordinals 500–1499 (`--reuse` the Gate 3 baseline's `errors.npz`); no calibrated estimator scored.
 
 ## Phase 4: User Story 4 - The gate (P2)
 
-- [ ] T010 [US4] SRD amendment: §5 Gate 4 row (R7 defaults), §9 record, and the Gate 3 row's form
+- [x] T010 [US4] SRD amendment: §5 Gate 4 row (R7 defaults), §9 record, and the Gate 3 row's form
   corrected (FR-043). The owner merges.
-- [ ] T011 [US4] `src/tma2/calib/gate.py` Gate 4 criteria and `src/tma2/cli/g4.py` (records name the
+- [x] T011 [US4] `src/tma2/calib/gate.py` Gate 4 criteria and `src/tma2/cli/g4.py` (records name the
   producing commit and CPU, FR-042); tests in `tests/unit/test_gate4.py`.
-- [ ] T012 [US4] Plan `configs/gate4/g4-a.json` and decision record `experiments/<date>-g4-decision/`
+- [x] T012 [US4] Plan `configs/gate4/g4-a.json` and decision record `experiments/<date>-g4-decision/`
   (binds the plan, the settings and their tuning evidence, the forecast) before any training.
 
 ## Phase 5: User Story 3 - Learning against a rule (P2)
