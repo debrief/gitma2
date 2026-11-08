@@ -307,5 +307,7 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   `scalable` (plausible, `cov_ok`, finite sds) instead.
 - `setup-uv` downloads uv from GitHub releases on every job; a wide matrix can hit 504s. Re-run
   the failed jobs (`rerun_failed_jobs`) once the run completes; nothing in the code is wrong.
+- `.gitignore`'s `data/` also matched `src/tma2/data/` (now excepted): after adding a file, check
+  `git status --ignored` before trusting a green local run.
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.
