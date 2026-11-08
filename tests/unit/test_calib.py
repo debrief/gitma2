@@ -7,6 +7,7 @@ import math
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
@@ -250,3 +251,61 @@ def test_export_local_rescale_matches_numpy() -> None:
     for i in range(10):
         want = local_rescale(st[i], cov[i], (own[i, 0], own[i, 1]), s[i])
         np.testing.assert_allclose(got[i], want, rtol=1e-9, atol=1e-9 * np.abs(want).max())
+
+
+def _g3_inputs(tmp_path: Path, cache_ords: list[int], file_ords: list[int]) -> list[str]:
+    """A feature cache over ``cache_ords`` and an E prediction file over ``file_ords`` (one row
+    each, the same state), a plan and a temperature; returns tma2-g3predict's common args."""
+    from tma2.cli.g2predict import write_features
+    from tma2.physics.uncertainty import pack_cov, row_fields
+
+    st = np.array([8000.0, 3000.0, 3.0, -2.0])
+    cov = np.diag([1e4, 2e4, 0.1, 0.2])
+    own = (0.0, 0.0)
+    fr = [
+        {
+            "ordinal": j, "k": 60, "t": 600.0, "h": np.zeros(3), "cov": cov, "state": st,
+            "truth": st + 1, "own": own, "code_k": 0.0, "plausible": True, "cov_ok": True,
+            "minute": 5, "open": False,
+        }
+        for j in cache_ords
+    ]  # fmt: skip
+    write_features(tmp_path / "c.npz", fr, {"weights_sha256": "w"})
+    sp, cr = float(np.hypot(st[2], st[3])), float(np.arctan2(st[2], st[3]))
+    row = {"timestamp_s": 600.0, "x_m": st[0], "y_m": st[1], "speed_mps": sp, "course_rad": cr}
+    row |= {"range_m": 8544.0, **row_fields(st, cov, own)}
+    assert row["cov_xyvv"] == pack_cov(cov)
+    lines = [json.dumps({"record": "header", "weights_sha256": "w"})]
+    lines += [json.dumps({"record": "prediction", "ordinal": j, "rows": [row]}) for j in file_ords]
+    (tmp_path / "e.ndjson").write_text("\n".join(lines) + "\n")
+    (tmp_path / "plan.json").write_text(json.dumps({"head": CFG, "models": {}}))
+    temps = {"slices": ["minute"], "temperatures": {"minute=5": [0.5, 0.0, 0.2, 1.0]}}
+    (tmp_path / "t.json").write_text(json.dumps(temps))
+    args = ["--in", str(tmp_path / "e.ndjson"), "--features", str(tmp_path / "c.npz")]
+    return [*args, "--plan", str(tmp_path / "plan.json"), "--temperature", str(tmp_path / "t.json")]
+
+
+def test_g3predict_scenario_coverage(tmp_path: Path, capsys: Any) -> None:
+    """A cache wider than the file is narrowed (counted); a file scenario without cache rows is
+    refused, so no row passes through raw under a calibrated header."""
+    from tma2.cli.g3predict import main
+
+    args = _g3_inputs(tmp_path, [1, 2, 3], [2, 3])
+    assert main([*args, "--out", str(tmp_path / "o.ndjson")]) == 0
+    out = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert out["rows_scaled"] == 2 and out["cache_rows_outside_file"] == 1
+    r = json.loads((tmp_path / "o.ndjson").read_text().splitlines()[1])["rows"][0]
+    assert r["cov_scale_log"] == [0.5, 0.0, 0.2, 1.0]
+    assert (
+        abs(
+            r["course_sd_rad"]
+            / json.loads((tmp_path / "e.ndjson").read_text().splitlines()[1])["rows"][0][
+                "course_sd_rad"
+            ]
+            - math.exp(1.0)
+        )
+        < 1e-9
+    )
+    args = _g3_inputs(tmp_path, [1, 2], [2, 3])
+    assert main([*args, "--out", str(tmp_path / "o2.ndjson")]) == 2
+    assert not (tmp_path / "o2.ndjson").exists()

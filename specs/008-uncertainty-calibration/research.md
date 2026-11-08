@@ -66,7 +66,8 @@ Each item gives the decision, the reason, and the alternatives considered.
 
 ## R5. Calibration head
 
-- **Form.** One scalar log-scale s per row; the calibrated covariance is e^{2s} · P.
+- **Form (as first planned; superseded by the amendment below, which is the registered form).**
+  One scalar log-scale s per row; the calibrated covariance is e^{2s} · P.
   - s = b · tanh(head(h_k ⊕ log sd_raw ⊕ code_k)), with b = 2 (the Gate 1 `scale_bound`);
   - h_k is E-w's frozen encoder state at the row (64-d);
   - sd_raw is the raw log-range, course and speed standard deviations;
@@ -97,11 +98,17 @@ Each item gives the decision, the reason, and the alternatives considered.
 
 ## R6. Training loss
 
-- **Decision:** β-NLL (Seitzer et al. 2022) on the 4-state Gaussian:
-  L = stopgrad(e^{2sβ}) · [½ eᵀ(e^{2s}P)⁻¹e + 4s]. Per-row terms are capped as E-w's (100); rows
-  with `cov_ok` false are excluded and counted. β = 0.5 is declared in the plan.
-- **Why:** SRD §4 names β-NLL. With P fixed, only s learns, so β only reweights rows; it keeps the
-  rows with large raw variance from dominating.
+- **Registered (decision record 20261108):** the Gaussian NLL in local coordinates,
+  ½ q(s) + Σ_i s_i with q(s) = Σ_ij u_i u_j W_ij e^(−s_i − s_j), u = T e the *linearised* local
+  error and W the raw local information; each row's raw NEES capped at 10⁴ (its error shrunk to
+  the cap, so a gross row keeps a gradient); rows weighted by the stop-gradient of
+  e^(2β·mean(s)), β = 0.5, which *up*-weights the rows the head widens (Gate 3 panel round 1: the
+  effect is at most 1.1× and immaterial; the first text here said the opposite).
+- **As first planned:** β-NLL on the scalar form, the per-row term capped at 100.
+- **Lessons (Gate 3 panel):** the loss is not the score of record (the head wins on the NLL and
+  loses on IS95 log range), and the linearised course error cannot see a course flip, so the
+  head under-widens course and over-widens log range. A follow-on should train on the exact
+  errors the scorer uses, or score what it trains.
 
 ## R7. Features and data
 

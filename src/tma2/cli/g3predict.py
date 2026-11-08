@@ -3,11 +3,12 @@
     uv run tma2-g3predict --in <E prediction.ndjson> --features <cache.npz>… --plan <g3 plan>
         (--model <id> --weights <head.safetensors> | --temperature <temperature.json>) --out <file>
 
-Each row named in the cache gets its covariance scaled by e^(2s) (``calib.predict``); every
-point field is copied unchanged (FR-020). The header gains ``calibration``: the kind, the
-weights' or temperatures' digest and the plan's. Refuses a cache made from other E weights than
-the prediction file's.
-"""
+Each row of the file's scenarios gets its covariance rescaled (``calib.predict``); every point field
+is copied unchanged (FR-020). The cache may span more scenarios than the file (a validation cache
+holds the tuning ordinals too): those rows are left out and counted. A scenario of the file with no
+cache rows is refused, as is a cache row of one of its scenarios with no matching row. The header
+gains ``calibration``: the kind, the weights' or temperatures' digest and the plan's. Refuses a
+cache made from other E weights than the prediction file's."""
 
 from __future__ import annotations
 
@@ -43,6 +44,18 @@ def main(argv: list[str] | None = None) -> int:
     d = data.load(a.features)
     with open(a.inp, encoding="utf-8") as fh:
         ph = json.loads(fh.readline())
+        ords = {int(json.loads(line)["ordinal"]) for line in fh}
+    cached = set(d.ordinal.tolist())
+    uncovered = sorted(ords - cached)
+    if uncovered:  # those rows would pass through raw under a "calibrated" header
+        print(
+            f"{a.inp}: {len(uncovered)} scenarios have no cache rows, e.g. {uncovered[:5]}",
+            file=sys.stderr,
+        )
+        return 2
+    keep = np.isin(d.ordinal, sorted(ords))  # a cache may span more scenarios than the file
+    dropped = int((~keep).sum())
+    d = d.select(keep)
     if ph.get("weights_sha256") != d.header.get("weights_sha256"):
         print(f"{a.inp}: the cache was made from other E weights", file=sys.stderr)
         return 2
@@ -74,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         for j, t, v, o in zip(d.ordinal, d.t, s, d.own, strict=True)
     }
     n = write_calibrated(Path(a.inp), Path(a.out), scales, cal)
-    print(json.dumps({"rows_scaled": n, "out": a.out, **cal}))
+    print(json.dumps({"rows_scaled": n, "cache_rows_outside_file": dropped, "out": a.out, **cal}))
     return 0
 
 

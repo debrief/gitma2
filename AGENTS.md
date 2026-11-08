@@ -89,15 +89,23 @@ Write-up `site/blog/2026-11-08-gate-2.md`; recommended follow-on: carry E, keep 
 control, spec 008 uncertainty calibration with the panel's follow-ons (`specs/007-gate2-man2/tasks.md`).
 `scripts/research/g2_paired_gaps.py` gives paired gap differences between any two scored
 estimators. Seeds: 318 training stream, 319 test (used); the next fresh seed is 320.
-008 (uncertainty calibration, Gate 3, `specs/008-uncertainty-calibration/`; in progress): every
+008 (uncertainty calibration, Gate 3, `specs/008-uncertainty-calibration/`; gate decided, open:
+T031 workflow merge checks, T032 time-late scoring, T037 quickstart run): every
 prediction row states its covariance (`cov_xyvv`, `cov_ok`, sds of log range, course and speed;
 schema 0.27.0), the scorer measures coverage, NEES, interval score and sharpness
 (`calibration.json`, `cal_<name>` in `errors.npz`), and `--reuse <errors.npz>` skips re-solving.
 A calibration head (`src/tma2/calib/`, `tma2-g3train`, `tma2-g3predict`) scales E's covariance by
 e^(2s) on cached features (`tma2-g2predict --features`); control: a per-slice temperature. Gate 3
 criteria in `tma2-g3` (proposed in an SRD amendment; plan `configs/gate3/g3-a.json`, draft until
-the decision binds it). Time-late E-w: `configs/gate2/g3-timelate.json`. Test seed 320 is
-reserved for Gate 3; the next fresh seed is 321.
+the decision binds it). Time-late E-w: `configs/gate2/g3-timelate.json`. **Gate 3 stopped at
+validation** (decision `experiments/20261108-g3-decision/`, plan `fdf7987e…`; record and panel
+round 2 `experiments/20261108-g3-val/`): G3-a inconclusive (course coverage largely vacuous: the
+95% course interval is the whole circle on half the rows), G3-b 0.835 against 0.92 (kept
+near-singular correlations; linearised training errors), G3-c head worse than the temperature,
+no per-row learning shown; seed 320 not generated (still unused). E's raw covariance is
+overconfident (95% coverage 0.60) and must not be shown as an uncertainty. Follow-on (write-up
+`site/blog/2026-11-08-gate-3.md`, spec 009): circular or undetermined course, observability gating
+by a causal proxy, correlation shrinkage, training on exact errors. The next fresh seed is 320.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -343,5 +351,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   the failed jobs (`rerun_failed_jobs`) once the run completes; nothing in the code is wrong.
 - `.gitignore`'s `data/` also matched `src/tma2/data/` (now excepted): after adding a file, check
   `git status --ignored` before trusting a green local run.
+- Calibration lessons (Gate 3 panel): choose design settings on tuning ordinals only, never on
+  scoring rows; train on the errors the gate scores (a linearised course error cannot see a
+  course flip); a scale-only calibration keeps the solve's near-singular correlations; a Gaussian
+  sd for course above ~90° is a vacuous statement; the `settled` slice is defined from the truth.
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.
