@@ -94,3 +94,48 @@ scored with the C′ files on the same rows.
 Reported beside it: fade − C, C″ − C, E − fade and E-w − fade. Caveat (red team): the veto uses
 the ownship's planned zig row, which E-s does not see (it sees online ownship codes); this favours
 the controls, so a positive E − C″ is conservative.
+
+## Results
+
+Scored on CI (`score.yml`, not gate mode): validation run 42434645201 at ba95b91
+(`results/score-g2-veto-val-42434645201`), test run 42440631371 at 21aff2d
+(`results/score-g2-veto-test-42440631371`); `report.md`, `metrics.json`, `inputs.json`,
+`run.json` copied to `validation/` and `test/`, the paired differences
+(`scripts/research/g2_paired_gaps.py` on each run's `errors.npz`, the scorer's resamples) in
+`paired.json`. Predictions: `results/g2predict-g2-veto-{val-42417465155,test-42417467154}` and
+`results/g2predict-g2-fade-{val-42426461205,test-42426463015}` (all from clean trees, all
+ordinals, dataset digests as the gate's).
+
+Gap recovered in range, 97.5% scenario-clustered paired intervals:
+
+| Comparison | Validation (1,000 scenarios) | **Test (4,983 scenarios)** |
+| --- | --- | --- |
+| E (e-s3) − C | +0.028 [+0.013, +0.041] | +0.025 [+0.018, +0.031] |
+| E-w alone (ew-s3) − C | +0.012 [+0.004, +0.023] | +0.015 [+0.010, +0.019] |
+| C′ (zig veto) − C | +0.007 [+0.002, +0.017] | +0.008 [+0.004, +0.011] |
+| fade − C | +0.014 [+0.005, +0.022] | +0.011 [+0.007, +0.014] |
+| C″ (veto + fade, no learning) − C | +0.020 [+0.011, +0.032] | +0.018 [+0.013, +0.022] |
+| C′ + E-w − C | +0.022 [+0.011, +0.035] | +0.022 [+0.017, +0.027] |
+| **E − C″** | +0.008 [−0.004, +0.017] | **+0.007 [+0.001, +0.012]** |
+| E − (C′ + E-w) | +0.006 [−0.005, +0.016] | +0.003 [−0.002, +0.008] |
+| E − C′ | +0.021 [+0.005, +0.031] | +0.017 [+0.010, +0.023] |
+| E − fade | +0.014 [+0.003, +0.025] | +0.014 [+0.009, +0.019] |
+| E-w − fade | −0.003 [−0.009, +0.007] | +0.004 [+0.001, +0.007] |
+
+**Reading, as registered (test):**
+
+- **E − C″ is wholly above zero: learning adds something beyond both classical rules.** It is
+  small: the two rules, with nothing learned, recover +0.018 of E's +0.025 over C (about 72%);
+  learning adds +0.007 [+0.001, +0.012] beyond them.
+- **E − (C′ + E-w) contains zero: E-s's learned evidence adds nothing shown beyond the zig veto**
+  (with the same E-w on both sides). The learned increment is E-w's: E-w − fade +0.004 [+0.001,
+  +0.007], wholly above zero.
+- Validation (five times fewer scenarios) agrees in direction; its intervals contain zero for
+  E − C″ and E-w − fade.
+- The control uses the ownship's planned zig row, which E-s does not see; this favours the control.
+
+**Cross-CPU note.** The scorer re-solves C, one leg, the oracle and GLR + confirm. This run (Intel
+Xeon 8573C) and the gate run (AMD EPYC 9V45) differ in those errors by up to 6e-4 relative for C
+(21 one-leg rows change between finite and runaway); E's errors, read from its prediction files,
+are identical. G2-d here is +0.024994 [+0.018462, +0.030509] against the gate's +0.025008
+[+0.018467, +0.030531].
