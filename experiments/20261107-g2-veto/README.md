@@ -128,13 +128,17 @@ Gap recovered in range, 97.5% scenario-clustered paired intervals:
   small and rests on one test look: +0.007 [+0.001, +0.012] at 97.5%, with validation
   inconclusive (+0.008 [−0.004, +0.017]). The two rules, with nothing learned, reproduce +0.018 of
   E's +0.025 over C (about 72%). Their settings were taken from the learned models (W chosen on
-  E-s's own tuning loss; the fade read off E-w's mean profile), which makes the learning claim more
-  modest, not less.
+  E-s's own tuning loss; the fade read off E-w's mean profile, both on validation rows). That
+  makes E − C″ conservative (it biases the test of learning toward zero), and makes the rules'
+  72% an upper bound on what a designer would get without the learned models. E − C″ survives
+  a Bonferroni correction over all six E-against-control comparisons (99.75% lower bound
+  +0.0005; statistics, round 2).
 - **E − (C′ + E-w) contains zero: E-s adds nothing shown beyond the zig veto** (with the same E-w
   on both sides). This is not a claim that E-s *is* a zig veto: no equivalence margin is declared.
 - **On test the increment is consistent with E-w doing more than a fixed fading memory**
   (E-w − fade +0.004 [+0.001, +0.007]); **validation's point is negative** (−0.003 [−0.009,
-  +0.007]), so this attribution rests on test alone.
+  +0.007]), so this attribution rests on test alone. It is descriptive, not registered, and not
+  a blind look: the red team computed it on test in round 1, before C″ was registered.
 - The veto is anchored on `zig_index`, the first row after the ownship's first turn. It uses the
   ownship's known turn row, at most 6 rows ahead of the end of the turn, and only once the
   decision row reaches zig − 6, when the ownship is usually already turning (median turn 8 rows).
@@ -146,7 +150,10 @@ Gap recovered in range, 97.5% scenario-clustered paired intervals:
 validation agreed in direction for E-w − fade (it does not), called the increment "attributable
 to E-w" and E-s's content "the zig veto", and did not say where the rules' settings came from.*
 
-**Cross-CPU note.** The scorer re-solves C, one leg, the oracle and GLR + confirm. This run (Intel
+**Cross-CPU note.** Comparisons between E and the controls (all read from prediction files) do
+not depend on the scorer's CPU; those against the scorer's re-solved C carry about 1e-4 of CPU
+noise, and `metrics.json` and `errors.npz` digests reproduce only on the same CPU family
+(`run.json` records it). The scorer re-solves C, one leg, the oracle and GLR + confirm. This run (Intel
 Xeon 8573C) and the gate run (AMD EPYC 9V45) differ in those errors by up to 6e-4 relative for C
 (21 one-leg rows change between finite and runaway); E's errors, read from its prediction files,
 are identical. G2-d here is +0.024994 [+0.018462, +0.030509] against the gate's +0.025008
