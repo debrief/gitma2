@@ -125,14 +125,21 @@ Gap recovered in range, 97.5% scenario-clustered paired intervals:
 **Reading, as registered (test):**
 
 - **E − C″ is wholly above zero: learning adds something beyond both classical rules.** It is
-  small: the two rules, with nothing learned, recover +0.018 of E's +0.025 over C (about 72%);
-  learning adds +0.007 [+0.001, +0.012] beyond them.
-- **E − (C′ + E-w) contains zero: E-s's learned evidence adds nothing shown beyond the zig veto**
-  (with the same E-w on both sides). The learned increment is E-w's: E-w − fade +0.004 [+0.001,
-  +0.007], wholly above zero.
-- Validation (five times fewer scenarios) agrees in direction; its intervals contain zero for
-  E − C″ and E-w − fade.
+  small and rests on one test look: +0.007 [+0.001, +0.012] at 97.5%, with validation
+  inconclusive (+0.008 [−0.004, +0.017]). The two rules, with nothing learned, reproduce +0.018 of
+  E's +0.025 over C (about 72%). Their settings were taken from the learned models (W chosen on
+  E-s's own tuning loss; the fade read off E-w's mean profile), which makes the learning claim more
+  modest, not less.
+- **E − (C′ + E-w) contains zero: E-s adds nothing shown beyond the zig veto** (with the same E-w
+  on both sides). This is not a claim that E-s *is* a zig veto: no equivalence margin is declared.
+- **On test the increment is consistent with E-w doing more than a fixed fading memory**
+  (E-w − fade +0.004 [+0.001, +0.007]); **validation's point is negative** (−0.003 [−0.009,
+  +0.007]), so this attribution rests on test alone.
 - The control uses the ownship's planned zig row, which E-s does not see; this favours the control.
+
+*Corrected after panel round 2 (red team N1–N4): an earlier version of this section said that
+validation agreed in direction for E-w − fade (it does not), called the increment "attributable
+to E-w" and E-s's content "the zig veto", and did not say where the rules' settings came from.*
 
 **Cross-CPU note.** The scorer re-solves C, one leg, the oracle and GLR + confirm. This run (Intel
 Xeon 8573C) and the gate run (AMD EPYC 9V45) differ in those errors by up to 6e-4 relative for C
