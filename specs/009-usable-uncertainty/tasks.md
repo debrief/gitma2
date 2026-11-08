@@ -10,7 +10,7 @@
   `StatementTemperatureConfig`, `Gate4Criteria`, `Gate4Decision` in `schema/tma.yaml` (schema
   0.30.0; all row fields optional); regenerate types (`scripts/gen_types.py`); bump
   `tests/unit/test_types.py`.
-- [ ] T002 [P] Add `scripts/research/g4_tuning.py` reproducing research R1–R3 on tuning ordinals
+- [x] T002 [P] Add `scripts/research/g4_tuning.py` reproducing research R1–R3 on tuning ordinals
   0–499 of a validation feature cache (no SciPy).
 
 ## Phase 2: Foundational

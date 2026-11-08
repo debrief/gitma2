@@ -45,6 +45,19 @@ they set the design, not a result.
   ∞); the interval score targets the 95% quantile directly.
 - **Alternative**: Student-t with a fixed ν (kept as a diagnostic, not the statement).
 
+## R3a. The temperature's sd power (added during implementation, tuning rows only)
+
+- **Finding**: with the plain temperature (cells on E's sd), the shuffled head beat the
+  temperature on the tuning rows (standardised summed score 2.85 against 3.08; the head 2.46), so
+  the learning control was a strawman. Stating each cell on sd^β fixes that: by quantity the best β
+  on the tuning rows is 0.7 (log range), 0.9 (course) and 0.4 (speed), and the tempered temperature
+  scores 2.66. An absolute rule (β = 0) is worse than either (3.48).
+- **Decision**: the temperature picks β per quantity from the plan's grid
+  (1.0, 0.9, …, 0.3) on the tuning rows inside its own fit (`calib.statement_fit.fit_temperature`);
+  the head sees the raw log sds among its inputs and can learn the same tempering.
+- **Reproduce**: `scripts/research/g4_tuning.py` (R1, R2, R3a; R1's AUCs there are single
+  signals, 0.51–0.60, on the 1,951 usable rows).
+
 ## R4. Errors used for training (Gate 3 panel)
 
 - Exact: wrapped course error (atan2 of the sine and cosine of the difference), log range ratio
@@ -73,7 +86,8 @@ they set the design, not a result.
   void if the shuffled control also beats the temperature; G4-e points identical.
 - **Forecast basis**: the per-slice temperature already passes G4-c and, after isotonic
   recalibration, should pass G4-b; G4-a should pass for an interval-score-trained scale; G4-d is
-  unlikely given R1 (AUC 0.62).
+  unlikely given R1 (AUC 0.62); but on the tuning rows (in sample) the head scores 2.46 against
+  the tempered temperature's 2.66 (R3a), so G4-d is open.
 
 ## R8. Spec 008's carried minors
 
