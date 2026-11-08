@@ -152,6 +152,8 @@ def test_demo_split_bound_to_parent(man2_pack: Path, tmp_path: Path) -> None:
     demo = tmp_path / "demo.f32pack"
     base = ["track", "--truth", str(demo), "--predictions", str(a), "--scenario", str(truth.index)]
     assert cli.main([*base, "--out", str(tmp_path / "x.svg")]) == 2
+    # --bound-to must be the split the demo split names as its parent
+    assert cli.main([*base, "--bound-to", str(demo), "--out", str(tmp_path / "z.svg")]) == 2
     out = tmp_path / "y.svg"
     assert cli.main([*base, "--bound-to", str(man2_pack), "--out", str(out)]) == 0
     side = json.loads(out.with_suffix(".svg.json").read_text())

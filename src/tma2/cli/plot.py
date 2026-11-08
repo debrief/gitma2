@@ -18,6 +18,7 @@ from typing import Any
 
 from tma2.data.io import file_digest
 from tma2.data.provenance import read_git_provenance
+from tma2.data.versions import check_versions
 from tma2.eval.errors import Truth
 from tma2.eval.predictions import iter_predictions_raw
 from tma2.report.plots import (
@@ -41,26 +42,41 @@ def load_truth(split: str, index: int) -> Truth:
     raise ValueError(f"scenario {index} is not in {split}")
 
 
+def allowed_digests(truth_path: str, bound_to: str | None) -> set[str]:
+    """Digests a prediction file may be bound to: the truth file's, and with ``bound_to`` the
+    parent split it was cut from, which the truth file's header must name
+    (``scripts/research/g3_demo_split.py`` writes ``created_by`` with the parent's digest)."""
+    ok = {file_digest(truth_path)}
+    if bound_to:
+        parent = file_digest(bound_to)
+        header, _ = open_split(truth_path)
+        if parent not in str(header.created_by):
+            raise ValueError(
+                f"{truth_path} does not name {bound_to} ({parent[:12]}…) as its parent"
+            )
+        ok.add(parent)
+    return ok
+
+
 def load_rows(
-    path: str,
-    truth_path: str,
-    index: int,
-    label: str | None,
-    colour: str,
-    bound_to: str | None = None,
+    path: str, index: int, label: str | None, colour: str, allowed: set[str]
 ) -> EstimatorRows:
-    """The rows for one scenario. The file must be bound (``dataset_digest``) to the truth file,
-    or to ``bound_to``: the split a demo split was cut from (``scripts/research/g3_demo_split.py``).
-    Gate 2's E files carry their own header type (``EPredictionHeader``), read as JSON here."""
+    """The rows for one scenario. The file must be bound (``dataset_digest``) to one of
+    ``allowed``. Gate 2's E files carry their own header type (``EPredictionHeader``): the header
+    is read as JSON and must name a compatible schema version, a mode and an estimator."""
     with open(path, encoding="utf-8") as fh:
         h = json.loads(fh.readline())
-    ok = {file_digest(truth_path)} | ({file_digest(bound_to)} if bound_to else set())
-    if h.get("dataset_digest") not in ok:
-        raise RecordError(path, 1, f"dataset_digest is not {truth_path}'s (or --bound-to's)")
-    mode = str(h.get("mode", "per_timestep"))
+    if h.get("dataset_digest") not in allowed:
+        raise RecordError(path, 1, "dataset_digest is not the truth file's (or --bound-to's)")
+    check_versions(path, str(h.get("schema_version", "")), None)
+    for key in ("mode", "estimator"):
+        if not h.get(key):
+            raise RecordError(path, 1, f"the header has no {key}")
     for _, p in iter_predictions_raw(path):
         if int(p["scenario_index"]) == index:
-            return EstimatorRows(label or str(h.get("estimator")), list(p["rows"]), mode, colour)
+            return EstimatorRows(
+                label or str(h["estimator"]), list(p["rows"]), str(h["mode"]), colour
+            )
     raise ValueError(f"{path}: no prediction for scenario {index}")
 
 
@@ -109,8 +125,9 @@ def main(argv: list[str] | None = None) -> int:
         if len(labels) != len(a.predictions):
             raise ValueError("--labels must name one label per prediction file")
         truth = load_truth(a.truth, a.scenario)
+        allowed = allowed_digests(a.truth, a.bound_to)
         ests = [
-            load_rows(p, a.truth, a.scenario, lab, ESTIMATORS[i % len(ESTIMATORS)], a.bound_to)
+            load_rows(p, a.scenario, lab, ESTIMATORS[i % len(ESTIMATORS)], allowed)
             for i, (p, lab) in enumerate(zip(a.predictions, labels, strict=True))
         ]
         opts = TrackPlotOptions(

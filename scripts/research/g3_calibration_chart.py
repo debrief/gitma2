@@ -16,7 +16,8 @@ import hashlib
 import json
 from pathlib import Path
 
-VAL = Path("experiments/20261108-g3-val/calibration.json")
+ROOT = Path(__file__).resolve().parents[2]
+VAL = Path("experiments/20261108-g3-val/calibration.json")  # relative to the repository root
 BASE = Path("experiments/20261108-g3-base-val/calibration.json")
 ROWS = [  # (label, file, estimator)
     ("oracle", BASE, "oracle"),
@@ -47,19 +48,19 @@ def main(argv: list[str] | None = None) -> int:
     from tma2.data.provenance import read_git_provenance
     from tma2.report.plots import ESTIMATORS, STYLE
 
-    data = {f: json.loads(f.read_text()) for f in (VAL, BASE)}
+    data = {f: json.loads((ROOT / f).read_text()) for f in (VAL, BASE)}
     with plt.rc_context(STYLE):
         fig, ax = plt.subplots(figsize=(8.0, 3.8))
         x = np.arange(len(MEASURES))
         w = 0.8 / len(ROWS)
-        ax.axhspan(0.92, 0.98, color="#2a9d8f", alpha=0.12, label="Gate 3 band")
+        ax.axhspan(0.92, 0.98, color="#bbbbbb", alpha=0.35, label="Gate 3 band")
         for i, (label, f, name) in enumerate(ROWS):
             o = data[f][name]["overall"]
             v = [o[m]["value"] for m, _ in MEASURES]
             ax.bar(x + (i - (len(ROWS) - 1) / 2) * w, v, w, label=label, color=ESTIMATORS[i])
         ax.set_xticks(x, [t for _, t in MEASURES])
         ax.set_ylim(0, 1.02)
-        ax.set_ylabel("share of rows (3,934)")
+        ax.set_ylabel("share of scored rows")
         ax.set_title(
             "Validation 314: stated uncertainty against the errors (missing rows count out)"
         )
@@ -72,7 +73,9 @@ def main(argv: list[str] | None = None) -> int:
     g = read_git_provenance()
     side = {
         "command": "uv run python scripts/research/g3_calibration_chart.py --out " + a.out,
-        "inputs": {str(f): hashlib.sha256(f.read_bytes()).hexdigest() for f in (VAL, BASE)},
+        "inputs": {
+            str(f): hashlib.sha256((ROOT / f).read_bytes()).hexdigest() for f in (VAL, BASE)
+        },
         "code_git_commit": g.commit,
         "code_git_dirty": g.dirty,
     }
