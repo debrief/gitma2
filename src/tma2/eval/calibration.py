@@ -217,3 +217,41 @@ def summarise(
         else:
             out[m.name] = {"value": m.stat({"c": cal}), "lo": math.nan, "hi": math.nan}
     return out
+
+
+SLICE_INTERVALS = {
+    "coverage95_log_range",
+    "coverage95_course",
+    "coverage95_speed",
+    "nees_median_ratio",
+}
+
+
+def report(
+    cals: dict[str, np.ndarray],
+    cluster: np.ndarray,
+    slices: dict[str, dict[str, np.ndarray]],
+    level: float,
+    resamples: int,
+    gross: dict[str, np.ndarray],
+) -> dict[str, Any]:
+    """{estimator: {"overall": measures, "by_<slice>": {value: measures}, "by_gross": …}}.
+
+    ``slices`` maps a slice name to {label: row mask}, shared by every estimator. Each
+    estimator also gets ``by_gross`` from its own rows (``gross[name]``: the scorer's relative
+    range error over 0.5, or no estimate, as Gate 2's gross rate). Overall measures all carry
+    intervals; per-slice ones only ``SLICE_INTERVALS``."""
+    out: dict[str, Any] = {}
+    for name, cal in cals.items():
+        rec: dict[str, Any] = {"overall": summarise(cal, cluster, level, resamples)}
+        g = gross[name]
+        own = {"gross": {"gross": g, "not_gross": ~g}}
+        for sname, labels in {**slices, **own}.items():
+            rec[f"by_{sname}"] = {
+                lab: {"n_rows": int(mask.sum())}
+                | summarise(cal[mask], cluster[mask], level, resamples, SLICE_INTERVALS)
+                for lab, mask in labels.items()
+                if mask.sum() > 0
+            }
+        out[name] = rec
+    return out

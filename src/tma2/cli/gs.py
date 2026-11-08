@@ -649,6 +649,31 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(a.experiment)
     out.mkdir(parents=True, exist_ok=True)
     (out / "metrics.json").write_text(json.dumps(result, indent=2) + "\n")
+    if cals:
+        from tma2.eval import calibration as ec
+
+        t_min = np.array(
+            [
+                int(round((r.k - metas[r.ordinal]["zig_index"]) * truths[r.ordinal].dt / 60.0))
+                for r in rows
+            ]
+        )
+        slices: dict[str, dict[str, np.ndarray]] = {
+            "g5_minutes": {str(m): t_min == m for m in sorted(set(t_min.tolist()))},
+            "settled": {"settled": settled, "not_settled": ~settled},
+        }
+        ref = "C" if "C" in open_at else next(iter(open_at), None)
+        if ref is not None:
+            slices["open_at_k"] = {"open": open_at[ref], "not_open": ~open_at[ref]}
+        if row_strata:
+            rb = np.array([st["range_band"] for st in row_strata])
+            slices["range_band"] = {v: rb == v for v in sorted(set(rb.tolist()))}
+        if det is not None:
+            slices["row_band"] = {b_: row_bands == b_ for b_ in sorted(set(row_bands.tolist()))}
+        gross = {n: ~(errs[n][:, 0] <= 0.5) for n in cals}
+        cal_rec = ec.report(cals, cluster, slices, LEVEL, RESAMPLES, gross)
+        (out / "calibration.json").write_text(json.dumps(cal_rec, indent=2) + "\n")
+        print(f"calibration [{time.time() - t0:.0f} s]", flush=True)
     # the files read, in every mode (gate mode also puts them in manifest.json; panel round 2)
     (out / "inputs.json").write_text(json.dumps(_input_digests(a), indent=2) + "\n")
     # per-row errors, so later paired comparisons need no re-solve (not committed: large)

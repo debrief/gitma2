@@ -4,10 +4,11 @@ plausible row and changes no other field."""
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from tma2.data.f32pack import iter_pack_raw
 from tma2.detect.controls import parse_imm_name
-from tma2.references.classical import bearing_data_from_arrays
+from tma2.references.classical import BearingData, bearing_data_from_arrays
 from tma2.references.ekf import ekf_predict
 from tma2.references.imm import imm_predict
 
@@ -21,10 +22,14 @@ def test_tracker_points_unchanged_with_covariance(man2_pack: Path) -> None:
         if i >= 4:
             break
         d = bearing_data_from_arrays(m, own, obs)
-        for f in (
-            lambda c: imm_predict(d, parse_imm_name(IMM), cov=c),
-            lambda c: ekf_predict(d, 0.00003, 4.0, 0.03125, cov=c),
-        ):
+
+        def imm(c: bool, d: BearingData = d) -> dict[str, Any]:
+            return imm_predict(d, parse_imm_name(IMM), cov=c)
+
+        def ekf(c: bool, d: BearingData = d) -> dict[str, Any]:
+            return ekf_predict(d, 0.00003, 4.0, 0.03125, cov=c)
+
+        for f in (imm, ekf):
             plain, rich = f(False)["rows"], f(True)["rows"]
             assert len(plain) == len(rich)
             for a, b in zip(plain, rich, strict=True):
