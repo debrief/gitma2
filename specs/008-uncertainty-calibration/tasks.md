@@ -80,7 +80,7 @@ errors.
   until their tasks.
 - [ ] T014 [US2] In `.github/workflows/score.yml`, add kind `g3` (as `g2`: `c`, `e`, `knots`,
   `gate`).
-- [ ] T015 [US2] (CI) Run the baseline: `configs/score/g3-base-val.json` on seed 314 scoring
+- [x] T015 [US2] (CI) Run the baseline: `configs/score/g3-base-val.json` on seed 314 scoring
   ordinals 500–1499. Record `experiments/<date>-g3-base-val/` (README with the coverage, NEES,
   interval score and sharpness tables, overall and per slice).
 
