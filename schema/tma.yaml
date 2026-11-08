@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.27.0
+version: 0.28.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -18,6 +18,11 @@ imports:
   - linkml:types
 
 enums:
+  CalibrationForm:
+    description: Spec 008 research R5 (as amended) - how the calibration rescales a covariance.
+    permissible_values:
+      scalar: { description: "One log-scale s: e^(2s) times the covariance." }
+      local: { description: "Four log-scales in local coordinates (log range, bearing, speed, course)." }
   RecordKind:
     description: Discriminator for records in NDJSON files.
     permissible_values:
@@ -734,9 +739,11 @@ classes:
           (range > 1 m) (spec 008).
       cov_scale_log:
         range: float
+        multivalued: true
         description: >-
-          Calibrated rows only: the calibration's log-scale s; the stated covariance is e^(2s)
-          times the solve's (spec 008).
+          Calibrated rows only: the calibration's log-scales s in local coordinates (log range,
+          bearing, speed, course; one value when scalar): the stated covariance is the solve's with
+          those coordinates' standard deviations multiplied by e^s, correlations kept (spec 008).
       vx_sd_mps:
         range: float
         unit: { ucum_code: m/s }
@@ -1768,7 +1775,8 @@ classes:
       width: { range: integer, required: true, description: Hidden width of the MLP. }
       bound: { range: float, required: true, description: "Bound on |s| (the covariance scale e^(2s))." }
       beta: { range: float, required: true, description: beta of beta-NLL. }
-      cap: { range: float, required: true, description: Cap on each row's NLL term. }
+      cap: { range: float, required: true, description: "Cap on each row's raw NEES: a row above it has its error shrunk to it." }
+      form: { range: CalibrationForm, description: "scalar (one s) or local (four s, log range, bearing, speed, course); default scalar." }
       learning_rate: { range: float, required: true }
       batch_rows: { range: integer, required: true }
       max_epochs: { range: integer, required: true }
@@ -1788,6 +1796,7 @@ classes:
         description: "Slice keys crossed to form the cells: from {minute, open}."
       beta: { range: float, required: true }
       cap: { range: float, required: true }
+      form: { range: CalibrationForm, description: "As CalibrationHeadConfig.form." }
 
   Gate2Decision:
     description: >-

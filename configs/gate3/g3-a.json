@@ -1,5 +1,5 @@
 {
-  "description": "Spec 008 Gate 3 calibration plan (draft until the decision record binds its digest). The carried Gate 2 E (e-s3) frozen; a calibration head (research R5, R6) trained on its cached features over stream seed 318, early-stopped on validation ordinals 0-499; three seeds and a shuffled control; the classical control a per-slice temperature (R8) fitted on the same validation ordinals.",
+  "description": "Spec 008 Gate 3 calibration plan, bound by the decision record experiments/20261108-g3-decision/ (never edited after it). The carried Gate 2 E (e-s3) frozen; a calibration head (research R5, R6) trained on its cached features over stream seed 318, early-stopped on validation ordinals 0-499; three seeds and a shuffled control (scored at best and last epoch); the classical control a per-slice temperature (R8) fitted on the same validation ordinals.",
   "carried_e": {
     "model": "e-s3",
     "weights_sha256": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
@@ -7,27 +7,44 @@
   },
   "head": {
     "width": 32,
-    "bound": 2.0,
+    "bound": 4.0,
     "beta": 0.5,
-    "cap": 100.0,
+    "cap": 10000.0,
     "learning_rate": 0.001,
     "batch_rows": 1024,
     "max_epochs": 50,
     "patience": 5,
-    "min_improvement": 0.001
+    "min_improvement": 0.001,
+    "form": "local"
   },
   "temperature": {
-    "slices": ["minute", "open"],
+    "slices": [
+      "minute",
+      "open"
+    ],
     "beta": 0.5,
-    "cap": 100.0
+    "cap": 10000.0,
+    "form": "local"
   },
   "models": {
-    "cal-s1": {"seed": 1},
-    "cal-s2": {"seed": 2},
-    "cal-s3": {"seed": 3},
-    "cal-shuffled": {"seed": 4, "shuffled": true}
+    "cal-s1": {
+      "seed": 1
+    },
+    "cal-s2": {
+      "seed": 2
+    },
+    "cal-s3": {
+      "seed": 3
+    },
+    "cal-shuffled": {
+      "seed": 4,
+      "shuffled": true
+    }
   },
-  "tuning_ordinals": [0, 500],
+  "tuning_ordinals": [
+    0,
+    500
+  ],
   "caches": {
     "train": {
       "branch": "results/g2predict-g3-feat-stream-42472098077",

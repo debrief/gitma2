@@ -1,7 +1,7 @@
 """tma2-g3: Gate 3's verdict from one scoring run (spec 008 FR-030…FR-033, FR-063; T027).
 
     uv run tma2-g3 --scoring <tma2-g2 output dir> --decision <decision.json> --split validation|test
-        --head NAME=PATH --temperature NAME=PATH --raw NAME=PATH [--shuffled NAME=PATH] --out <dir>
+        --head NAME=PATH --temperature NAME=PATH --raw NAME=PATH [--shuffled NAME=PATH…] --out <dir>
 
 The scoring run (``tma2-g2``/``tma2-gs`` with the calibrated prediction files as ``--e``) has
 already written per-row errors and calibration arrays (``errors.npz``) and the inputs' digests
@@ -11,8 +11,9 @@ scored: its digest must be the one in ``inputs.json``.
 * ``--head``: the carried calibrated E (calibration head); ``--temperature``: the classical
   control (E with the per-slice temperature); ``--raw``: E uncalibrated (G3-d).
 * **Validation:** writes ``validation.json`` with the criteria on validation and the shuffled rule
-  (``--shuffled``: the shuffled head's interval score minus the temperature's, wholly below zero →
-  the rule fails and a G3-c pass on test would be void).
+  (``--shuffled``, one or more: the shuffled head at its best and at its last epoch, Gate 2
+  panel G4; if any one's interval score minus the temperature's is wholly below zero, the rule
+  fails and a G3-c pass on test would be void).
 * **Test:** refuses unless the truth is the test digest beside the decision, the rows cover the
   whole σ = 1° split (FR-032), and the head and raw files carry the carried weights; reads the
   shuffled rule from the validation record by the digest in ``carried.json`` (FR-063); writes
@@ -52,9 +53,10 @@ def preflight(
     dpath = Path(a.decision)
     preds = inputs.get("predictions", {})
     roles = {"head": a.head, "temperature": a.temperature, "raw": a.raw}
-    if a.shuffled:
-        roles["shuffled"] = a.shuffled
+    for i, sh in enumerate(a.shuffled or []):
+        roles[f"shuffled{i}"] = sh
     for role, (name, path) in roles.items():
+        role = role.rstrip("0123456789")
         if preds.get(name) != sha256_file(path):
             bad.append(f"--{role} {name}: {path} is not the file the scoring run read")
         if f"cal_{name}" not in z or f"err_{name}" not in z:
@@ -96,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--head", type=_pair, required=True)
     ap.add_argument("--temperature", type=_pair, required=True)
     ap.add_argument("--raw", type=_pair, required=True)
-    ap.add_argument("--shuffled", type=_pair)
+    ap.add_argument("--shuffled", type=_pair, action="append")
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
 
@@ -118,10 +120,14 @@ def main(argv: list[str] | None = None) -> int:
     level, n = float(decision["bootstrap_level"]), int(decision["bootstrap_resamples"])
     cluster = z["ordinal"]
     if a.split == "validation":
-        sh = gate.score_difference(
-            z[f"cal_{a.shuffled[0]}"], z[f"cal_{a.temperature[0]}"], cluster, level, n
-        )
-        rule = gate.shuffled_rule(sh)
+        sh = {
+            name: gate.score_difference(
+                z[f"cal_{name}"], z[f"cal_{a.temperature[0]}"], cluster, level, n
+            )
+            for name, _ in a.shuffled
+        }
+        rules = [gate.shuffled_rule(v) for v in sh.values()]
+        rule = gate.FAIL if gate.FAIL in rules else gate.PASS
     else:
         assert carried is not None
         vpath = Path(a.decision).parent / carried["validation_record"]
@@ -150,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
         **res,
     }
     if a.split == "validation":
-        rec["roles"]["shuffled"] = a.shuffled[0]
+        rec["roles"]["shuffled"] = [n for n, _ in a.shuffled]
         rec["shuffled_minus_temperature"] = sh
         (out / "validation.json").write_text(json.dumps(rec, indent=2) + "\n")
         print(json.dumps({"shuffled_rule": rule, "overall_on_validation": res["overall"]}))

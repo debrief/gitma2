@@ -87,3 +87,36 @@ def row_fields(state: np.ndarray, p: np.ndarray, own_xy: tuple[float, float]) ->
     if ok:
         out.update({"log_range_sd": lr, "course_sd_rad": cr, "speed_sd_mps": sp})
     return out
+
+
+# Spec 008 research R5 (as amended): the calibration rescales the covariance in local
+# coordinates. ``LOCAL`` orders them; the head's or temperature's scales follow it.
+LOCAL = ("log_range", "bearing", "speed", "course")
+
+
+def local_jacobian(state: np.ndarray, own_xy: tuple[float, float]) -> np.ndarray:
+    """[4, 4] T: d(log range, bearing, speed, course) / d(x, y, vx, vy) at the state. Block
+    diagonal (position, velocity); invertible while the target is off ownship and moving."""
+    x, y, vx, vy = (float(v) for v in state)
+    dx, dy = x - own_xy[0], y - own_xy[1]
+    r2, s2 = dx * dx + dy * dy, vx * vx + vy * vy
+    s = math.sqrt(s2)
+    t = np.zeros((4, 4))
+    t[0, 0], t[0, 1] = dx / r2, dy / r2
+    t[1, 0], t[1, 1] = dy / r2, -dx / r2
+    t[2, 2], t[2, 3] = vx / s, vy / s
+    t[3, 2], t[3, 3] = vy / s2, -vx / s2
+    return t
+
+
+def local_rescale(
+    state: np.ndarray, p: np.ndarray, own_xy: tuple[float, float], s: np.ndarray
+) -> np.ndarray:
+    """The covariance with its local-coordinate standard deviations scaled by e^s (``LOCAL``
+    order; correlations kept): A P Aᵀ with A = T⁻¹ diag(e^s) T. A scalar s (all four equal)
+    gives e^(2s) P exactly."""
+    t = local_jacobian(state, own_xy)
+    a = np.linalg.solve(t, np.diag(np.exp(np.asarray(s, dtype=np.float64))) @ t)
+    q: np.ndarray = a @ np.asarray(p, dtype=np.float64) @ a.T
+    out: np.ndarray = 0.5 * (q + q.T)
+    return out
