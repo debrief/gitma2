@@ -124,7 +124,9 @@ Write-up `site/blog/2026-11-09-gate-4.md`; follow-on spec 010 (one self-consiste
 probability, slice-gated reliability with a causal unsettled proxy, interval-based bin checks,
 cross-sd and encoder-only controls registered first). Seed 320 still unused.
 010 (headroom under bearing-error mismatch, Gate H, `specs/010-headroom-mismatch/`; owner decision
-2026-11-09, `docs/research/10-reflection-headroom.md`; specified, not planned): no learned model.
+2026-11-09, `docs/research/10-reflection-headroom.md`; planned and tasked, not implemented; owner
+fixed the 10% materiality threshold and accepted the severity grid, `research.md` R2; headroom is
+gated with both sides on the true segmentation, R6): no learned model.
 Generator gains correlated, biased, unknown-σ and outlier bearing errors (mismatch off must
 reproduce 0.6.0 byte for byte); C″, a classical robust control and the references are scored
 against an attainable ceiling (true segmentation and error model, not its realisation). Material

@@ -31,8 +31,8 @@ Bearing error at sample i: e_i = w_i + c_i + β_i + o_i, with σ_true = σ_nomin
   probability; untold or mis-stated σ and bearing-mean mismatch are studied as model uncertainty.
   Quoting real figures would in any case be outside the classification rule (FR-006).
 - **Consequence**: the spec's wording "from open literature" is corrected to "model forms from
-  open literature; severities a declared grid". The owner knows the domain and is asked to
-  confirm or change the grid before the decision record.
+  open literature; severities a declared grid".
+- **Owner, 2026-11-09**: the grid is accepted as it stands, before any scoring.
 - **Sources**: Le Cadre and Jauffret, convergence of iterative methods for bearings-only TMA
   (IEEE); US Navy TMA patent with a prewhitener for time-correlated noise (DTIC ADD020092);
   Student-t and glint-mixture filtering (arXiv 1703.05189, 1704.00040); EUSIPCO 2023 paper 2038 on

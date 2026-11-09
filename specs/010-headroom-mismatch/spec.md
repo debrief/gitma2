@@ -342,8 +342,7 @@ and every figure in it cites a committed record.
 - The engagement model is MAN2 (generator 0.6.0) unchanged; only the bearing errors differ. σ's
   nominal value stays 1°.
 - Severities are a declared grid (plan research R2): a search found the model forms in open
-  sources but no authoritative open figures. The owner, who knows the domain, is asked to confirm
-  or change the grid before the decision record. Each kind is run at three severities.
+  sources but no authoritative open figures. The owner accepted the grid on 2026-11-09, before any scoring. Each kind is run at three severities.
 - C″ (C with the zig veto and the fixed fade, `experiments/20261107-g2-veto/`) is the standing
   classical estimator, as the Gate 2 write-up recommended; C is frozen at its Gate 2 code and
   parameters.
