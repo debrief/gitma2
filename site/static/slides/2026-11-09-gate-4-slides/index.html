@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- Gate 4 slides post deck (site/docs/process/reporting.md). Figures in
+     site/static/img/2026-11-08-gate-3-slides/, each with its .json sidecar. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gate 4: uncertainty calibration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.6em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Gate 4: a course statement an operator can act on?</h1>
+          <p class="small">2026-11-09 · spec 009, Gate 4 · gitma2 · stopped at validation (panel round 2)</p>
+        </section>
+
+        <section>
+          <h2>The statement</h2>
+          <ul>
+            <li><b>Course:</b> "within ±X (at most 45°) with probability P, otherwise unknown": a von Mises around E's course mixed with a uniform</li>
+            <li><b>Range and speed:</b> 95% intervals, trained on the interval score of the exact errors</li>
+            <li>A learned head on E's features against a classical per-slice temperature on sd^β</li>
+            <li>E's points never change</li>
+          </ul>
+          <p class="small">Gate 3's lesson: an honest Gaussian course interval covers the whole circle on half the rows.</p>
+        </section>
+
+        <section>
+          <h2>Raw sds overclaim; the fitted statements sit on the diagonal on average</h2>
+          <img src="../../img/2026-11-09-gate-4-slides/reliability.svg" alt="Reliability diagram: stated P against hit rate" style="max-height: 480px" />
+          <p class="small">E's raw sds claim P 0.95 and hit about 0.47. The head and the temperature track the diagonal, but P spans only 0.46–0.68, and the head's top bin (0.675 stated, 0.729 hit) misses the ±0.05 band.</p>
+        </section>
+
+        <section>
+          <h2>Honest on average, not after a manoeuvre</h2>
+          <img src="../../img/2026-11-09-gate-4-slides/slices.svg" alt="Stated P and hit rate by slice" />
+          <p class="small">On rows still settling after a target manoeuvre (a quarter of rows) both statements say about 0.6 and are right 0.3 of the time; on settled rows they are under-confident.</p>
+        </section>
+
+        <section>
+          <h2>The validation verdict (carried st-s3)</h2>
+          <table>
+            <tr><th>Check</th><th>Value</th><th>Outcome</th></tr>
+            <tr><td>G4-a range / speed coverage</td><td>0.940 / 0.929 [0.915, 0.941]</td><td>pass / inconclusive</td></tr>
+            <tr><td>G4-b reliability overall / top bin</td><td>−0.002 / +0.054</td><td>pass / <b>fail</b></td></tr>
+            <tr><td>G4-c log gain, mean P</td><td>+1.01, 0.62</td><td>pass</td></tr>
+            <tr><td>G4-d head − temperature</td><td>−0.235 [−0.355, −0.137]</td><td>pass</td></tr>
+            <tr><td>G4-e points</td><td>identical</td><td>pass</td></tr>
+          </table>
+          <p class="small">The rule needs every point inside its band: stopped at validation, seed 320 not generated.</p>
+        </section>
+
+        <section>
+          <h2>What the panel found</h2>
+          <ul>
+            <li>The top-bin miss is the isotonic map's cap at 0.677, not the head; the per-bin band is only about 2.5 sampling sd wide</li>
+            <li>72% of the head's margin is reproducible by a quadratic rule in E's three log sds fitted on tuning rows</li>
+            <li>The shuffled control kept the sds, so it could not show per-row information</li>
+            <li>The recalibrated P and the scored density disagree by up to 0.2 on a row</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>Reliability where it matters: unsettled rows, minute 5, beyond 30 km</li>
+            <li>A learning claim beyond a classical function of the sds</li>
+            <li>One self-consistent course probability</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (spec 010, recommended)</h2>
+          <ul>
+            <li>One probability: exact von Mises mass, the density recalibrated with P, a smoother map</li>
+            <li>Reliability gated by slice, with a causal "unsettled" proxy that lowers P</li>
+            <li>Interval-based per-bin checks</li>
+            <li>Register a cross-sd classical control and an encoder-only shuffle before any result</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

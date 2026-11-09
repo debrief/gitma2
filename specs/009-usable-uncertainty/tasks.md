@@ -67,16 +67,16 @@ scenarios the fields are present and the points equal Gate 2's.
 
 ## Phase 6: Test and panel (P2)
 
-- [ ] T016 [US4] (only if validation passes) seed 320 and the test scoring; `tma2-g4 --split test`.
-- [ ] T017 [US4] Panel: five specialities, in rounds; `review.md`.
+- [x] T016 [US4] (not run: validation rule not met; seed 320 unused) (only if validation passes) seed 320 and the test scoring; `tma2-g4 --split test`.
+- [x] T017 [US4] Panel: five specialities, in rounds; `review.md`.
 
 ## Phase 7: Polish
 
-- [ ] T018 [P] Slides post (reliability diagram, coverage charts, track plots with course arcs) and
+- [x] T018 [P] Slides post (reliability diagram, coverage charts, track plots with course arcs) and
   the gate write-up.
-- [ ] T019 [P] AGENTS.md: spec 009 status, seeds, gotchas; site glossary (circular log score,
+- [x] T019 [P] AGENTS.md: spec 009 status, seeds, gotchas; site glossary (circular log score,
   reliability).
-- [ ] T020 Run `quickstart.md` end to end.
+- [x] T020 Run `quickstart.md` end to end.
 
 ## Dependencies
 

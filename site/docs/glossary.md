@@ -28,6 +28,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Efficiency** — the median over a slice's rows of error ÷ that row's CRB, divided by 0.6745,
   so an unbiased estimator at the bound scores 1; a flat efficiency across geometry slices is the
   signature of an approximation floor.
+- **Circular log score** — the log density of a stated course distribution at the true course (on the circle); a proper score, higher is better. Gate 4's G4-c compares it with the uniform's (−log 2π), the score of saying "course unknown".
 - **Interval score** — Gneiting and Raftery's score for a central (1 − α) interval: its width plus 2/α times the distance by which the truth falls outside it; lower is better, and it rewards calibration and sharpness together. Gate 3's score of record (G3-c).
 - **Fisher information** — the curvature of the bearings' log-likelihood in the target state; its
   inverse is the Cramér–Rao bound. See [CRB](algorithms/crb.md).
@@ -61,6 +62,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
   helm wander or autopilot oscillation.
 - **Manoeuvre span** — the sample interval of one target course or speed change, from the first
   sample after it starts to the first sample after it ends.
+- **Reliability** — for a stated probability P that an event happens (Gate 4: the course lies within ±X), the hit rate minus the mean P; 0 when P is honest. Checked overall and in equal-count bins of P (a reliability diagram).
 - **NEES** — normalised estimation error squared, eᵀP⁻¹e for the 4-state error e and stated covariance P; χ² with 4 degrees of freedom when P is right (median 3.357, 95% point 9.488). Gate 3's G3-b uses the share of rows within the χ²₄ 95% point (owner, 2026-11-08); the median over the χ²₄ median is reported, not gated.
 - **Nomination** — a candidate transition put to confirmation: a raised GLR alarm (re-tested while raised) or a transition of the additive leg search.
 - **Oracle ceiling** — the physics layer fed with the true manoeuvre times and kinds (knots at

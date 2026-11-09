@@ -106,6 +106,23 @@ no per-row learning shown; seed 320 not generated (still unused). E's raw covari
 overconfident (95% coverage 0.60) and must not be shown as an uncertainty. Follow-on (write-up
 `site/blog/2026-11-08-gate-3.md`, spec 009): circular or undetermined course, observability gating
 by a causal proxy, correlation shrinkage, training on exact errors. The next fresh seed is 320.
+009 (usable uncertainty, Gate 4, `specs/009-usable-uncertainty/`; owner chose the probabilistic
+course): E's rows state course as an arc ±X (≤ 45°) with probability P (von Mises + uniform
+mixture, P through an isotonic map) and range/speed 95% half-widths (schema 0.30.0 fields
+`course_arc_rad`, `course_arc_prob`, `course_conc`, `course_mix_p`, `range_ratio_q95`,
+`speed_q95_mps`). Code: `calib/statement.py`, `calib/statement_fit.py` (head and the sd^β
+temperature, β per quantity from a grid), `tma2-g3train statement|statement-temperature` (CI
+`g4train/**`), `tma2-g4predict`, scorer statement columns 9–14 in `eval/calibration.py` (9-wide
+arrays widened on `--reuse`), criteria `calib/gate4.py` and `tma2-g4`. Baseline
+`experiments/20261108-g4-base-val/`; decision `experiments/20261108-g4-decision/` (plan
+`configs/gate4/g4-a.json` `e357f8a7…`). **Gate 4 stopped at validation**
+(`experiments/20261109-g4-val/`, panel round 2): carried st-s3 missed G4-b's top bin (+0.054
+against 0.05; the isotonic map caps P at 0.677); G4-c, G4-d (head − temperature −0.235) and G4-e
+pass, G4-a speed inconclusive. P is honest on average but not on unsettled rows (stated 0.62, hit
+0.30), and 72% of the head's margin is reproducible by a quadratic rule in E's three log sds.
+Write-up `site/blog/2026-11-09-gate-4.md`; follow-on spec 010 (one self-consistent course
+probability, slice-gated reliability with a causal unsettled proxy, interval-based bin checks,
+cross-sd and encoder-only controls registered first). Seed 320 still unused.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -355,5 +372,11 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   scoring rows; train on the errors the gate scores (a linearised course error cannot see a
   course flip); a scale-only calibration keeps the solve's near-singular correlations; a Gaussian
   sd for course above ~90° is a vacuous statement; the `settled` slice is defined from the truth.
+- Gate 4 panel: a shuffled control that permutes errors but keeps the sds tests a null the
+  temperature already rejects; register a richer classical rule (a function of all the sds) and an
+  encoder-only shuffle before claiming learning. A per-bin reliability point band of ±0.05 on
+  about 800 rows is about 2.5 sampling sd: use an interval or a slope test. A 10-knot PAV map on
+  2,000 rows caps P by noise at its top knot. Recalibrating P but not the density makes the
+  statement contradict itself.
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.
