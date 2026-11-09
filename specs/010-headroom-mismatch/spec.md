@@ -223,8 +223,9 @@ and every figure in it cites a committed record.
   components (correlated part, bias, outlier flag).
 - **FR-005**: Estimators other than the ceilings MUST receive only the bearings, the times, the
   ownship track and the nominal σ. A test MUST show that the mismatch truth cannot reach them.
-- **FR-006**: Severities MUST be chosen from open literature and stated with their sources before
-  any scoring; nothing above OFFICIAL and no real sensor's figures may be used (constitution).
+- **FR-006**: The model forms MUST come from open literature and be cited; the severities are a
+  declared design grid that brackets plausible behaviour, fixed before any scoring. Nothing above
+  OFFICIAL and no real sensor's figures may be used (constitution).
 - **FR-007**: Seeds MUST be fresh and distinct for tuning, validation and test (320, 321, 322;
   the next fresh seed is then 323). Seed 314 MUST NOT be used for any choice in this spec.
 
@@ -262,8 +263,8 @@ and every figure in it cites a committed record.
   condition, and per slice (time since the zig, time since the last manoeuvre, range band, open
   transition).
 - **FR-032**: Every gap MUST also be reported in operational units: metres, degrees, knots, and
-  minutes from the zig until the estimate is settled by a definition stated in the plan and
-  computed without the truth where the operator could not have it.
+  the share of engagements with a settled solution by each scored time after the zig (settled as
+  defined in the plan; a score, so it uses the truth).
 - **FR-033**: Where C″'s loss under mismatch comes from segmentation (false or missed
   transitions) and not from estimation, the report MUST separate the two by also scoring C″'s
   solve on the true segmentation.
@@ -277,10 +278,13 @@ and every figure in it cites a committed record.
   validation or test rows.
 - **FR-041**: The decision record MUST name the primary condition, the severities, the
   materiality threshold, the validation rule, the seeds and forecasts.
-- **FR-042**: Materiality (owner, 2026-11-09, before any result): on the primary condition (all four kinds at their central severities), G5 rows, the
-  robust control's median range error exceeds the attainable ceiling's by at least 10% of the
-  ceiling's, with the paired interval wholly above 10%; **not material** if the interval is wholly
-  below 10%; otherwise inconclusive.
+- **FR-042**: Materiality (owner, 2026-11-09, before any result): on the primary condition (all
+  four kinds at their central severities), G5 rows, the robust control's median range error
+  exceeds the attainable ceiling's by at least 10% of the ceiling's, with the paired interval
+  wholly above 10%; **not material** if the interval is wholly below 10%; otherwise inconclusive.
+  Refined in planning (research R6; flagged for the owner in the SRD row): both sides are given
+  the true segmentation, so that the segmentation shortfall already measured at Gates S and 2 is
+  not counted as error-model headroom. The comparison on C's segmentation is reported beside it.
 - **FR-043**: The validation rule MUST stop the gate before the test seed is generated only if
   the pipeline is unsound (a ceiling far from its bound, a control worse than C″ on mismatch-off
   data beyond tolerance). A small headroom on validation is a result to confirm on test, not a
@@ -337,9 +341,9 @@ and every figure in it cites a committed record.
   passed). Proposing Gate H's row is an SRD amendment, which the owner merges.
 - The engagement model is MAN2 (generator 0.6.0) unchanged; only the bearing errors differ. σ's
   nominal value stays 1°.
-- Default severities come from open literature on passive sonar bearing error and are fixed in
-  the plan's research note with sources; the owner, who knows the domain, can overrule them on
-  review of the plan. Each kind is run at three severities (mild, central, harsh).
+- Severities are a declared grid (plan research R2): a search found the model forms in open
+  sources but no authoritative open figures. The owner, who knows the domain, is asked to confirm
+  or change the grid before the decision record. Each kind is run at three severities.
 - C″ (C with the zig veto and the fixed fade, `experiments/20261107-g2-veto/`) is the standing
   classical estimator, as the Gate 2 write-up recommended; C is frozen at its Gate 2 code and
   parameters.
