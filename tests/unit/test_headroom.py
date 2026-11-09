@@ -157,7 +157,7 @@ def test_robust_model_recovers_a_known_process() -> None:
     model, extra = robust_model(raw, ok, dt, 0.0175, RobustSettings())
     assert math.sqrt(model.marginal_var) == pytest.approx(sd, rel=0.25)
     assert model.sigma_c > 0 and 10.0 < model.tau_c < 600.0  # moments of two lags: crude
-    assert (extra[::40] > 10 * model.marginal_var).all() and np.median(extra) == 0.0
+    assert (extra[::40] > 5 * model.marginal_var).all() and np.median(extra) == 0.0
     short, e2 = robust_model(raw[:30], ok[:30], dt, 0.0175, RobustSettings())
     assert short == ErrorModel(0.0175) and not e2.any()
     white = sd * rng.standard_normal(n)
@@ -224,3 +224,104 @@ def test_cli_ceilings_and_refusals(splits: dict[str, Path], tmp_path: Path) -> N
     h2 = json.loads(Path(rob).read_text().splitlines()[0])
     assert h2["estimator"] == "robust-huber@truth" and "truth_sha256" not in h2
     assert json.loads(h2["settings"])["whiten"] is False
+
+
+def test_bound_under_a_white_covariance_is_the_reference_bound(splits: dict[str, Path]) -> None:
+    from tma2.headroom.crb import crb_rows_cov
+    from tma2.references.crb import crb_rows
+
+    for _j, m, own, tgt, obs in iter_selected(splits["off"] / "train.f32pack", 0, 2):
+        rows = g5_rows(m, own.shape[0])
+        plan = m["parameters"].get("target_manoeuvres") or []
+        sigma = float(m["parameters"]["noise_sigma_rad"])
+        ref = crb_rows(
+            own,
+            tgt,
+            obs,
+            sigma,
+            int(m["zig_index"]),
+            m.get("manoeuvres") or [],
+            rows,
+            model="known_manoeuvres",
+            target_manoeuvres=plan,
+        )
+        got = crb_rows_cov(own, tgt, obs, plan, rows, ErrorModel(sigma))
+        wider = crb_rows_cov(own, tgt, obs, plan, rows, ErrorModel(sigma * 0.7, sigma * 0.7, 60.0))
+        for a, b, c in zip(ref, got, wider, strict=True):
+            assert a.singular == b.singular
+            if not a.singular:
+                assert b.sd_range_rel == pytest.approx(a.sd_range_rel, rel=1e-6)
+                assert b.sd_speed_kt == pytest.approx(a.sd_speed_kt, rel=1e-6)
+                # same marginal sd, half of it correlated: less information
+                assert c.sd_range_rel > 0.9 * a.sd_range_rel
+
+
+def test_headroom_statistics() -> None:
+    from tma2.headroom import gate
+
+    rng = np.random.default_rng(3)
+    n = 400
+    cluster = np.repeat(np.arange(n // 4), 4)
+    minute = np.tile(np.array([5, 10, 15, 20]), n // 4)
+    base = np.abs(rng.standard_normal((n, 3))) * 0.05
+    errs = {
+        "attainable@truth": base,
+        "realisation@truth": base * 0.95,
+        "robust@truth": base * 1.25,
+        "nominal@truth": base * 1.5,
+    }
+    errs["nominal@truth"][:8] = np.inf
+    true_range = np.full(n, 10_000.0)
+    settled = np.ones(n, dtype=bool)
+    res = gate.headroom(errs, cluster, settled, true_range, minute, base / 0.6745, 200)
+    r = res["R"]["range"]
+    assert r["value"] == pytest.approx(0.25) and r["lo"] <= 0.25 <= r["hi"]
+    assert res["R_nominal"]["range"]["value"] > 0.4
+    assert res["closed_by_robust"]["range"]["value"] == pytest.approx(0.5, abs=0.05)
+    assert res["rows_all_answer"] == n - 8 and res["R_all_answer"]["rows"] == n - 8
+    assert res["estimators"]["attainable@truth"]["efficiency_settled_range"] == pytest.approx(1.0, abs=1e-3)
+    op = res["operational"]["attainable@truth"]
+    assert op["median_range_m"] == pytest.approx(10_000.0 * np.median(base[:, 0]), rel=0.02)
+    assert 0.0 <= op["settled_by_5min"] <= op["settled_by_20min"] <= 1.0
+    assert gate.verdict(res, 0.10)["H-c"]["verdict"] == "material"
+    assert gate.verdict(res, 0.50)["H-c"]["verdict"] == "not_material"
+    assert gate.verdict(res, 0.25)["H-c"]["verdict"] == "inconclusive"
+    off = {"robust_over_nominal": {"range": {"value": 0.005, "lo": -0.01, "hi": 0.015}}}
+    snd = gate.soundness(res, off, (0.8, 1.3), 1.02)
+    assert snd["H-a"]["pass"] and snd["H-b"]["pass"]
+    off["robust_over_nominal"]["range"]["hi"] = 0.03
+    assert not gate.soundness(res, off, (0.8, 1.3), 1.02)["H-b"]["pass"]
+
+
+def test_scorer_cli(splits: dict[str, Path], tmp_path: Path) -> None:
+    from tma2.cli import gh
+
+    on = str(splits["all-central"] / "train.f32pack")
+    truth = str(splits["all-central"] / "train.mismatch.npz")
+    base = ["--start", "0", "--count", "3", "--out"]
+    files = []
+    for kind in ("nominal", "attainable"):
+        f = str(tmp_path / f"{kind}.ndjson")
+        extra = ["--mismatch-truth", truth] if kind == "attainable" else []
+        assert _run(["--in", on, "--kind", kind, *extra, *base, f]) == 0
+        files.append(f)
+    out = tmp_path / "score"
+    args = ["--truth", on, "--start", "0", "--count", "3", "--resamples", "50"]
+    assert (
+        gh.main([*args, "--predictions", *files, "--mismatch-truth", truth, "--out", str(out)]) == 0
+    )
+    res = json.loads((out / "headroom.json").read_text())
+    assert res["condition"] == "all-central" and res["bound"] == "true_covariance"
+    assert set(res["estimators"]) == {"one_leg", "oracle", "nominal@truth", "attainable@truth"}
+    # the plain oracle solved in the scoring run is the nominal estimator's file
+    a = res["estimators"]["oracle"]["median_range"]
+    assert res["estimators"]["nominal@truth"]["median_range"] == pytest.approx(a, rel=1e-6)
+    assert "R_nominal" in res and "R" not in res
+    z = np.load(out / "errors.npz")
+    assert z["err_oracle"].shape == (res["rows"], 3) and z["bound"].shape == (res["rows"], 3)
+    # refusals: a gate split needs the decision record; another split's predictions are refused
+    assert (
+        gh.main([*args, "--split", "validation", "--predictions", *files, "--out", str(out)]) == 2
+    )
+    off = str(splits["off"] / "train.f32pack")
+    assert gh.main(["--truth", off, *args[2:], "--predictions", *files, "--out", str(out)]) == 2

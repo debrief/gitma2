@@ -1,0 +1,144 @@
+name: Headroom (Gate H)
+
+# Spec 010: generate one seed under each mismatch condition, run tma2-hpredict for each listed
+# estimator and score with tma2-gh, one 4-core job per (condition, variant). Push
+# `headroom/<name>` with a plan configs/headroom/<name>.json:
+#   plan          the Gate H plan (robust settings, C'' block)
+#   split         tuning | validation | test (tma2-gh --split); "gate" {decision} for the last two
+#   seed, count   tma2-generate arguments; data_split the split file scored (train, ...)
+#   start, ordinals   sigma = 1 deg ordinals scored
+#   conditions    ids from the plan's conditions file
+#   runs          [{kind, segmentation?, only?}]: the estimators (ceilings get the truth file on
+#                 a mismatch split; nothing else is given it)
+#   variants      optional [{name, set: {key: value}}]: robust settings over the plan's, one job
+#                 each (the tuning grid); default one variant with the plan's settings
+#   digests       optional path to committed digests {"<condition>/<file>": sha256}: checked
+#   imm, ekf      frozen reference names
+# Each job's record goes to results/headroom-<name>-<condition>[-<variant>]-<run id>.
+
+on:
+  push:
+    branches: ["headroom/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+      name: ${{ steps.m.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: |
+          NAME="${GITHUB_REF_NAME#headroom/}"
+          PLAN="configs/headroom/$NAME.json"
+          test -f "$PLAN"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          python3 -c "
+          import json
+          p = json.load(open('$PLAN'))
+          vs = [v['name'] for v in p.get('variants', [])] or ['plan']
+          print('matrix=' + json.dumps({'include': [{'condition': c, 'variant': v} for c in p['conditions'] for v in vs]}))" >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    env:
+      NAME: ${{ needs.setup.outputs.name }}
+      COND: ${{ matrix.condition }}
+      VARIANT: ${{ matrix.variant }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Generate the split under the condition
+        run: |
+          PLAN="configs/headroom/$NAME.json"
+          echo "PLAN=$PLAN" >> "$GITHUB_ENV"
+          read -r GH SEED COUNT DSPLIT <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); print(p['plan'], p['seed'], p['count'], p['data_split'])")"
+          read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
+          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
+            --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data" \
+            --mismatch "$CONDS#$COND"
+          sha256sum "$RUNNER_TEMP/data/$DSPLIT.f32pack"
+          DIG=$(python3 -c "import json; print(json.load(open('$PLAN')).get('digests') or '')")
+          if [ -n "$DIG" ]; then
+            want=$(python3 -c "import json; print(json.load(open('$DIG'))['$COND/$DSPLIT.f32pack'])")
+            got=$(sha256sum "$RUNNER_TEMP/data/$DSPLIT.f32pack" | cut -d' ' -f1)
+            echo "$got (committed $want)"; [ "$got" = "$want" ]
+          fi
+          echo "GH=$GH" >> "$GITHUB_ENV"
+          echo "TRUTH=$RUNNER_TEMP/data/$DSPLIT.f32pack" >> "$GITHUB_ENV"
+          echo "SIDE=$RUNNER_TEMP/data/$DSPLIT.mismatch.npz" >> "$GITHUB_ENV"
+      - name: Predict
+        run: |
+          mkdir -p "$RUNNER_TEMP/pred"
+          python3 -c "
+          import json, shlex, os
+          p = json.load(open('$PLAN')); cond = '$COND'; variant = '$VARIANT'
+          sets = next((v.get('set', {}) for v in p.get('variants', []) if v['name'] == variant), {})
+          for i, r in enumerate(p['runs']):
+              kind = r['kind']; seg = r.get('segmentation', 'truth')
+              a = ['--in', '$TRUTH', '--kind', kind, '--segmentation', seg,
+                   '--start', str(p['start']), '--count', str(p['ordinals']),
+                   '--out', f'$RUNNER_TEMP/pred/{i}.ndjson']
+              if kind == 'robust' or seg == 'c2': a += ['--plan', '$GH']
+              if kind == 'robust':
+                  if r.get('only'): a += ['--only', r['only']]
+                  for k, v in sets.items(): a += ['--set', f'{k}={json.dumps(v)}']
+              if kind in ('attainable', 'realisation') and cond != 'off':
+                  a += ['--mismatch-truth', '$SIDE']
+              print(shlex.join(a))" > "$RUNNER_TEMP/cmds"
+          while read -r ARGS; do
+            echo "tma2-hpredict $ARGS"
+            eval uv run tma2-hpredict $ARGS
+          done < "$RUNNER_TEMP/cmds"
+      - name: Score
+        run: |
+          OUT="experiments/headroom-runs/$NAME-${{ github.run_id }}/$COND/$VARIANT"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          ARGS=$(python3 -c "
+          import json, shlex, glob
+          p = json.load(open('$PLAN'))
+          a = ['--start', str(p['start']), '--count', str(p['ordinals']), '--split', p['split']]
+          if p.get('imm'): a += ['--imm', p['imm']]
+          if p.get('ekf'): a += ['--ekf', p['ekf']]
+          if p.get('gate'): a += ['--decision', p['gate']['decision'], '--plan', '$GH']
+          if '$COND' != 'off': a += ['--mismatch-truth', '$SIDE']
+          a += ['--predictions'] + sorted(glob.glob('$RUNNER_TEMP/pred/*.ndjson'))
+          print(shlex.join(a))")
+          set +e
+          eval uv run tma2-gh --truth "$TRUTH" --out "$RUNNER_TEMP/out" $ARGS
+          rc=$?
+          set -e
+          echo "tma2-gh exit $rc"
+          [ "$rc" = 0 ] || [ "$rc" = 3 ]
+          mkdir -p "$OUT/predictions"
+          cp -r "$RUNNER_TEMP/out/." "$OUT/"
+          cp "$RUNNER_TEMP"/pred/*.ndjson "$OUT/predictions/"
+          cp "$PLAN" "$OUT/plan.json"
+          cp "$RUNNER_TEMP/data/digests.json" "$OUT/data-digests.json"
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "exit": %s, "cpu_model": "%s", "condition": "%s", "variant": "%s"}\n' \
+            "${{ github.run_id }}" "${{ github.sha }}" "$rc" "$CPU" "$COND" "$VARIANT" > "$OUT/run.json"
+      - name: Push the results branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/headroom-$NAME-$COND-$VARIANT-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: headroom run $NAME, $COND, $VARIANT (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"
