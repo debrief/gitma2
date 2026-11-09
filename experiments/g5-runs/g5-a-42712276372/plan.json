@@ -1,0 +1,94 @@
+{
+  "description": "Spec 010 Gate 5 plan (bound by the decision record experiments/20261109-g5-decision/; never edited after). The carried Gate 2 E (e-s3) frozen, points unchanged; its course stated in the truncated form (research R2: arc +/-X at most 45 degrees, P exactly the arc mass, a von Mises shape inside), P a logistic function of causal features (E's log sds, the recent-bearing-residual proxy and C's open flag, the minute; R1, R3) with a Platt map fitted on validation tuning ordinals 0-499; range and speed 95% intervals. Controls registered here (R6): the sd^beta temperature per cell (tuning rows), the classical rule (quadratics in the three log sds plus linear proxy terms, fitted on the training stream), and the encoder-only shuffled head (best and last epoch). The head is the classical rule plus a bounded residual on E-w's encoder state, the sds, C's code and the proxy design; three seeds.",
+  "carried_e": {
+    "model": "e-s3",
+    "weights_sha256": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+    "gate2_plan": "configs/gate2/g2-a.json"
+  },
+  "head": {
+    "width": 32,
+    "bound": 1.0,
+    "xmax_rad": 0.7853981633974483,
+    "learning_rate": 0.001,
+    "batch_rows": 1024,
+    "max_epochs": 50,
+    "patience": 5,
+    "min_improvement": 0.001
+  },
+  "classical": {
+    "xmax_rad": 0.7853981633974483,
+    "l2": 0.001,
+    "steps": 600
+  },
+  "temperature": {
+    "slices": [
+      "minute",
+      "open"
+    ],
+    "beta_grid": [
+      1.0,
+      0.9,
+      0.8,
+      0.7,
+      0.6,
+      0.5,
+      0.4,
+      0.3
+    ],
+    "xmax_rad": 0.7853981633974483
+  },
+  "models": {
+    "st5-s1": {
+      "seed": 1
+    },
+    "st5-s2": {
+      "seed": 2
+    },
+    "st5-s3": {
+      "seed": 3
+    },
+    "st5-encshuf": {
+      "seed": 4,
+      "shuffle": "encoder"
+    }
+  },
+  "tuning_ordinals": [
+    0,
+    500
+  ],
+  "caches": {
+    "train": {
+      "branch": "results/g2predict-g3-feat-stream-42472098077",
+      "dir": "experiments/g2predict-runs/g3-feat-stream-42472098077"
+    },
+    "val": {
+      "branch": "results/g2predict-g3-feat-val-42472096319",
+      "dir": "experiments/g2predict-runs/g3-feat-val-42472096319"
+    }
+  },
+  "proxy_caches": {
+    "train": {
+      "branch": "results/g5proxy-stream",
+      "dir": "experiments/g5proxy-runs/stream"
+    },
+    "val": {
+      "branch": "results/g5proxy-val",
+      "dir": "experiments/g5proxy-runs/val"
+    }
+  },
+  "data": {
+    "val": {
+      "seed": 314,
+      "split": "validation",
+      "digest": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8"
+    },
+    "train": {
+      "seed": 318,
+      "count": 25000,
+      "split": "train",
+      "commit": "ed428a0df343da4083d145b4685a20671085e2cf",
+      "digest": "5dab8d70abab8abad8e917de4668571b31905a13835753ea66c89b142a30224d"
+    }
+  },
+  "proxy_def": "experiments/20261109-g5-decision/proxy.json"
+}
