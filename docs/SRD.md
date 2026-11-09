@@ -138,7 +138,7 @@ configuration; the carried weights chosen by a rule named in the decision record
    control (Annex A §A.9 supersedes the Gate D detector here). Learned segmentation is tested
    within Gate 2 (owner, 2026-11-05); spec 007.
 5. Afterwards, pre-registered, in this default order unless the owner reorders: uncertainty
-   calibration (spec 008, Gate 3), realistic bearing error, the browser viewer on the exported
+   calibration (spec 008, Gate 3), realistic bearing error (spec 010, Gate H: headroom first), the browser viewer on the exported
    artefact.
 
 Agents run this plan without waiting on the owner except for the owner-only items in
@@ -201,6 +201,18 @@ and recorded, not asked.
   pass largely reproducible by a classical function of E's three sds (72% of the margin by a
   quadratic rule fitted on tuning rows), so a G4-d pass does not by itself show learning. Criteria
   unchanged; the wording of the Gate 4 row's control corrected to what the plan registered.
+- **2026-11-09 (owner):** direction after Gate 4. Every learned component so far has reduced to
+  a classical rule under its control, most likely because the generator's bearing errors are
+  exactly the estimator's model (`docs/research/10-reflection-headroom.md`). Next is a **headroom
+  gate under bearing-error mismatch with no learned model** (spec 010, Gate H; §7 step 5's
+  realistic bearing error): correlated, slowly biased, unknown-σ and outlier errors; the standing
+  classical estimator C″ and a classical robust control against an oracle that knows the error
+  model. Material headroom: a learned component is trained under mismatch with those controls;
+  none: the learning track stops and the null result is published. The Gate 4 follow-on
+  (course-probability fixes) is set aside. After Gate H, whatever its result, the scaled
+  end-to-end regressor control (`docs/research/04-proposal.md` §3, option B) runs on Modal within
+  its free credit; the owner sets up the account and secret. Gate H's §5 row is proposed with
+  spec 010's plan, before any result.
 
 ## Annexes
 

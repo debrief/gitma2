@@ -9,7 +9,7 @@ bearing geometry, match batch least squares wherever the constant-velocity model
 tuned IMM wherever it does not? It starts from [debrief/Gitma](https://github.com/debrief/Gitma).
 
 - Principles: `.specify/memory/constitution.md` (v1.3.0). Plans MUST pass its checks.
-- Research and the owner's decisions: `docs/research/` (notes 01–05; decisions in 04 §6).
+- Research and the owner's decisions: `docs/research/` (notes 01–10; decisions in 04 §6 and 10 §6).
 - Requirements: `docs/SRD.md` (draft), `docs/SRD-annex-A.md` (steady-leg detector, Gate D; §A.9 Gate S) and `docs/SRD-annex-B.md` (the owner's requirements for ownship and target manoeuvres and steady-leg segmentation, 2026-11-04). Read them before planning any feature; where this file and the SRD disagree, the SRD wins.
 
 ## Spec-driven workflow (GitHub Spec Kit)
@@ -123,6 +123,17 @@ pass, G4-a speed inconclusive. P is honest on average but not on unsettled rows 
 Write-up `site/blog/2026-11-09-gate-4.md`; follow-on spec 010 (one self-consistent course
 probability, slice-gated reliability with a causal unsettled proxy, interval-based bin checks,
 cross-sd and encoder-only controls registered first). Seed 320 still unused.
+010 (headroom under bearing-error mismatch, Gate H, `specs/010-headroom-mismatch/`; owner decision
+2026-11-09, `docs/research/10-reflection-headroom.md`; planned and tasked, not implemented; owner
+fixed the 10% materiality threshold and accepted the severity grid, `research.md` R2; headroom is
+gated with both sides on the true segmentation, R6): no learned model.
+Generator gains correlated, biased, unknown-σ and outlier bearing errors (mismatch off must
+reproduce 0.6.0 byte for byte); C″, a classical robust control and the references are scored
+against an attainable ceiling (true segmentation and error model, not its realisation). Material
+headroom after the robust control: train under mismatch; none: stop the learning track and
+publish. The Gate 4 follow-on is set aside. Seeds: 320 tuning, 321 validation, 322 test; seed 314
+is retired from tuning. After Gate H: the scaled end-to-end regressor control (note 04 option B)
+on Modal's free credit, once the owner has set up the account and secret.
 
 ## Stack (owner decisions, 2026-10-31)
 
