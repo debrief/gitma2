@@ -54,31 +54,31 @@
   - In `src/tma2/calib/statement_fit.py`.
 - [x] T009 [US1] Extend `tma2-g4predict` for the truncated form: the classical rule, the
   temperature and the head, with the proxy fields. The header records the digests and provenance.
-- [ ] T010 [US3] Extend the scorer (`cli/gs.py`) to read the new columns and report the per-slice
+- [x] T010 [US3] Extend the scorer (`cli/gs.py`) to read the new columns and report the per-slice
   table, the slope, the AUC, and the proxy-state and truth-settled splits.
 
 ## Phase 4: User Story 3 - the gate (P1)
 
 - [x] T011 [US3] Run the proxy caches: validation 0–1499 in the session; the stream (seed 318) on CI
   with a `g5proxy.yml` workflow.
-- [ ] T012 [US3] Baseline record `experiments/<date>-g5-base-val/`.
+- [x] T012 [US3] Baseline record `experiments/<date>-g5-base-val/`.
   - Scored on ordinals 500–1499 with `--reuse` of the Gate 4 validation scoring.
   - It contains: raw E; Gate 4's st-s3 and temperature, expressed in their own form; and the
     references raw.
   - No spec 010 statement is scored.
 - [x] T013 [US3] Write the SRD amendment: the §5 Gate 5 row (R7, after T006's check) and a §9
   record. The owner merges.
-- [ ] T014 [US3] Write the plan `configs/gate5/g5-a.json` and the decision record
+- [x] T014 [US3] Write the plan `configs/gate5/g5-a.json` and the decision record
   `experiments/<date>-g5-decision/`.
   - The decision record binds the plan, the proxy definition, the controls and the forecast.
   - It discloses the R1–R3 fits.
 
 ## Phase 5: User Stories 4 and 5 - learning and fair references (P2)
 
-- [ ] T015 [US4] CI training with `g5train/g5-a`.
+- [x] T015 [US4] CI training with `g5train/g5-a`.
   - Three head seeds, the encoder-only shuffle, the classical rule and the temperature.
   - The reference temperatures for the oracle and the IMM.
-- [ ] T016 [US4] Validation.
+- [x] T016 [US4] Validation.
   - Write the stated files and the reference files, and push them to a results branch.
   - Run `score/g5-a-val`.
   - Run `tma2-g5 --split validation`; the validation record is `experiments/<date>-g5-val/`.

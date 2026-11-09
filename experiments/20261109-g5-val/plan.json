@@ -1,0 +1,81 @@
+{
+  "description": "Spec 010 T016: Gate 5 validation (seed 314 scoring ordinals 500-1499). The carried E (e-s3) raw, and E with the truncated statement of each head seed (best epoch), the encoder-only shuffled head (best and last epoch, distinct models), the classical rule and the sd^beta temperature (all from tma2-g5predict, results/g5predict-g5-a-val); the reference estimators reused from the Gate 5 baseline scoring (results/score-g5-base-val-42705184463). tma2-g5 --split validation reads this run.",
+  "kind": "g2",
+  "data": {
+    "seed": 314,
+    "count": 100000,
+    "ranges": "configs/man2-ranges.json",
+    "heldout": "configs/man2-heldout.json",
+    "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+    "split": "validation",
+    "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+  },
+  "start": 500,
+  "count": 1000,
+  "c": {
+    "branch": "results/segment-c3-val-42268379557",
+    "path": "experiments/segment-runs/c3-val-42268379557/segmentations.ndjson"
+  },
+  "e": {
+    "e-s3": {
+      "branch": "results/g2predict-g3-base-val-42471500526",
+      "path": "experiments/g2predict-runs/g3-base-val-42471500526/e-s3.ndjson"
+    },
+    "st5-s1-best": {
+      "branch": "results/g5predict-g5-a-val",
+      "path": "experiments/g5predict-runs/g5-a-val/st5-s1-best.ndjson"
+    },
+    "st5-s2-best": {
+      "branch": "results/g5predict-g5-a-val",
+      "path": "experiments/g5predict-runs/g5-a-val/st5-s2-best.ndjson"
+    },
+    "st5-s3-best": {
+      "branch": "results/g5predict-g5-a-val",
+      "path": "experiments/g5predict-runs/g5-a-val/st5-s3-best.ndjson"
+    },
+    "st5-encshuf-best": {
+      "branch": "results/g5predict-g5-a-val",
+      "path": "experiments/g5predict-runs/g5-a-val/st5-encshuf-best.ndjson"
+    },
+    "st5-encshuf-last": {
+      "branch": "results/g5predict-g5-a-val",
+      "path": "experiments/g5predict-runs/g5-a-val/st5-encshuf-last.ndjson"
+    },
+    "classical5": {
+      "branch": "results/g5predict-g5-a-val",
+      "path": "experiments/g5predict-runs/g5-a-val/classical5.ndjson"
+    },
+    "temperature5": {
+      "branch": "results/g5predict-g5-a-val",
+      "path": "experiments/g5predict-runs/g5-a-val/temperature5.ndjson"
+    }
+  },
+  "knots": 12,
+  "detectability": true,
+  "glr_confirm": {
+    "branch": "results/glr-confirm-man2-val-glr-42045836931",
+    "dir": "experiments/glr-confirm-runs/man2-val-glr-42045836931",
+    "config": "glr-q0.2-t13.8"
+  },
+  "naive": {
+    "data": {
+      "seed": 314,
+      "count": 100000,
+      "ranges": "configs/man2-ranges.json",
+      "heldout": "configs/man2-heldout.json",
+      "commit": "d72cb81d43297f34cad9dc06a76dc7b31c8fbea2",
+      "split": "validation",
+      "digests": "experiments/20261104-g0-man2/dataset-digests/seed314-digests.json"
+    },
+    "ordinals": [
+      0,
+      500
+    ]
+  },
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125",
+  "reuse": {
+    "branch": "results/score-g5-base-val-42705184463",
+    "path": "experiments/score-runs/g5-base-val-42705184463/errors.npz"
+  }
+}

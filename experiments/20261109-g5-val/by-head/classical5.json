@@ -1,0 +1,462 @@
+{
+  "split": "validation",
+  "producing_commit": "25653e0bc10dbc91efa55c0a6115a2811c1cc933",
+  "git_dirty": false,
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "decision_sha256": "e96413553249273ce3340cbe9e5918dbb24d5f38723c1e47b1313f3c00962012",
+  "scoring_inputs": {
+    "truth": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "segmentations": {
+      "C": "8df52ac63d51e1285e1dc14917029d5f2b93d7be9ef84a50ee2037d5fe1ea50f"
+    },
+    "glr_confirm": {
+      "config": "glr-q0.2-t13.8",
+      "files": 34,
+      "sha256": "7b2a42743202eee149c74a2ed4b88963a83ac4d9391ea6e2706854fa2c9f716e"
+    },
+    "naive_train": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "predictions": {
+      "e-s3": "fd1706d451ab5b5eb87fcd292d674c9afbeecde440a0c271818d2e3956c96990",
+      "st5-s1-best": "838f4541769a6009d02bdcafc3243398b771e3a684e34ad1aa8f73549a51e519",
+      "st5-s2-best": "08518f4b698b47bb416e8fd19a1171b95c46f8d2b06c31399382eafb277f55b2",
+      "st5-s3-best": "48b0b94ed907641d2b010d755b5f94cb320670e660554137e4b73597867c965e",
+      "st5-encshuf-best": "8a35812548245e2ee4a88a16fd054fedd42d23fd74953cdd8362afa011389293",
+      "st5-encshuf-last": "0ff72efcad2233d116ee669ad129551b1ebbccca53b9da23ad807192b54dc40e",
+      "classical5": "df039fded85434953d0b656bf1771b4c19a49889549b1a9686e0f7766f3c0cbd",
+      "temperature5": "9585d6ce2f57be7a2cdd6c92b39d922006246196f780c46e56a3b0ec81f27d6e"
+    }
+  },
+  "rows": 3934,
+  "scenarios": 1000,
+  "roles": {
+    "head": "classical5",
+    "temperature": "temperature5",
+    "classical": "classical5",
+    "raw": "e-s3",
+    "encshuf": [
+      "st5-encshuf-best",
+      "st5-encshuf-last"
+    ]
+  },
+  "g5a": "pass",
+  "g5b": "inconclusive",
+  "g5c": "pass",
+  "g5d": "inconclusive",
+  "g5e": "pass",
+  "control_of_record": "classical5",
+  "control_means": {
+    "temperature5": 2.999999999998371,
+    "classical5": 2.968831802378868
+  },
+  "max_mass_error": 6.688064912996339e-08,
+  "encshuf_rule": "fail",
+  "intervals": {
+    "g5a": {
+      "log_range": {
+        "value": 0.9389933909506863,
+        "lo": 0.9267734553775744,
+        "hi": 0.9503184713375796
+      },
+      "speed": {
+        "value": 0.9367056431113371,
+        "lo": 0.9236621861526756,
+        "hi": 0.9484509903504317
+      }
+    },
+    "g5b": {
+      "overall": {
+        "value": -0.0038774591389024726,
+        "lo": -0.025434465977784204,
+        "hi": 0.01952299151622172
+      },
+      "slope": {
+        "value": 1.2514152569350927,
+        "lo": 1.060766470661472,
+        "hi": 1.447898240699967
+      }
+    },
+    "g5c": {
+      "log_gain": {
+        "value": 0.8014258016317184,
+        "lo": 0.7144696264009014,
+        "hi": 0.8874805258690698
+      },
+      "auc": {
+        "value": 0.6692908229505956,
+        "lo": 0.6475238788829445,
+        "hi": 0.6906571494549917
+      }
+    },
+    "g5d": {
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0
+    }
+  },
+  "slices": [
+    {
+      "slice": "g5_minutes",
+      "label": "10",
+      "rows": 1000,
+      "gated": true,
+      "reliability": {
+        "value": 0.03281654053371408,
+        "lo": -0.0005237895928157377,
+        "hi": 0.06577744636789451
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.96,
+          "lo": 0.945,
+          "hi": 0.973
+        },
+        "speed": {
+          "value": 0.948,
+          "lo": 0.931,
+          "hi": 0.962
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "g5_minutes",
+      "label": "15",
+      "rows": 996,
+      "gated": true,
+      "reliability": {
+        "value": -0.006069852633489581,
+        "lo": -0.04040512384309153,
+        "hi": 0.02695927912242435
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9397590361445783,
+          "lo": 0.9216867469879518,
+          "hi": 0.9568273092369478
+        },
+        "speed": {
+          "value": 0.9447791164658634,
+          "lo": 0.927710843373494,
+          "hi": 0.9598393574297188
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "g5_minutes",
+      "label": "20",
+      "rows": 938,
+      "gated": true,
+      "reliability": {
+        "value": -0.028596749189186255,
+        "lo": -0.06196598074186088,
+        "hi": 0.007897126918415487
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9307036247334755,
+          "lo": 0.9115138592750534,
+          "hi": 0.9477611940298507
+        },
+        "speed": {
+          "value": 0.9456289978678039,
+          "lo": 0.9285714285714286,
+          "hi": 0.9616204690831557
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "g5_minutes",
+      "label": "5",
+      "rows": 1000,
+      "gated": true,
+      "reliability": {
+        "value": -0.015201140823744463,
+        "lo": -0.04756280035126781,
+        "hi": 0.021047428231803278
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.925,
+          "lo": 0.905,
+          "hi": 0.944
+        },
+        "speed": {
+          "value": 0.909,
+          "lo": 0.887,
+          "hi": 0.929
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "open_at_k",
+      "label": "not_open",
+      "rows": 3724,
+      "gated": true,
+      "reliability": {
+        "value": -0.0034393471434952527,
+        "lo": -0.025719422238096645,
+        "hi": 0.020680859020143605
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.939312567132116,
+          "lo": 0.926605504587156,
+          "hi": 0.9504577275175013
+        },
+        "speed": {
+          "value": 0.9377013963480129,
+          "lo": 0.924871168972064,
+          "hi": 0.9495820976004313
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "open_at_k",
+      "label": "open",
+      "rows": 210,
+      "gated": true,
+      "reliability": {
+        "value": -0.011646645190793614,
+        "lo": -0.08345920877786084,
+        "hi": 0.060104278428378066
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9333333333333333,
+          "lo": 0.892018779342723,
+          "hi": 0.9680365296803652
+        },
+        "speed": {
+          "value": 0.919047619047619,
+          "lo": 0.8701923076923077,
+          "hi": 0.9575471698113207
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "range_band",
+      "label": "0-2km",
+      "rows": 52,
+      "gated": false,
+      "reliability": {
+        "value": 0.22348008271119746,
+        "lo": 0.05482970811840798,
+        "hi": 0.3760006103192648
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9423076923076923,
+          "lo": 0.8636363636363636,
+          "hi": 1.0
+        },
+        "speed": {
+          "value": 0.9423076923076923,
+          "lo": 0.8636363636363636,
+          "hi": 1.0
+        }
+      },
+      "verdict_reliability": "fail",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "range_band",
+      "label": "10-20km",
+      "rows": 1369,
+      "gated": true,
+      "reliability": {
+        "value": -0.01676161787488606,
+        "lo": -0.053607700745147424,
+        "hi": 0.019711527349526414
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9539810080350621,
+          "lo": 0.9363295880149812,
+          "hi": 0.9698924731182795
+        },
+        "speed": {
+          "value": 0.956172388604821,
+          "lo": 0.938034188034188,
+          "hi": 0.9724702380952381
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "range_band",
+      "label": "2-5km",
+      "rows": 215,
+      "gated": true,
+      "reliability": {
+        "value": 0.1169319488063264,
+        "lo": 0.044222468656496705,
+        "hi": 0.18815844520943203
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9720930232558139,
+          "lo": 0.9441860465116279,
+          "hi": 0.9914893617021276
+        },
+        "speed": {
+          "value": 0.986046511627907,
+          "lo": 0.9655172413793104,
+          "hi": 1.0
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "range_band",
+      "label": "20-30km",
+      "rows": 969,
+      "gated": true,
+      "reliability": {
+        "value": -0.03603058426982486,
+        "lo": -0.08069521009062869,
+        "hi": 0.008644698212950552
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.934984520123839,
+          "lo": 0.9132706374085684,
+          "hi": 0.9552549427679501
+        },
+        "speed": {
+          "value": 0.9174406604747162,
+          "lo": 0.8874868559411146,
+          "hi": 0.9446764091858038
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "range_band",
+      "label": "30+km",
+      "rows": 670,
+      "gated": true,
+      "reliability": {
+        "value": -0.008247275125531195,
+        "lo": -0.06186405226353475,
+        "hi": 0.04835153466174935
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.8940298507462686,
+          "lo": 0.8520710059171598,
+          "hi": 0.9284603421461898
+        },
+        "speed": {
+          "value": 0.8761194029850746,
+          "lo": 0.834597875569044,
+          "hi": 0.9150227617602428
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "range_band",
+      "label": "5-10km",
+      "rows": 659,
+      "gated": true,
+      "reliability": {
+        "value": 0.01725448833915022,
+        "lo": -0.033996237589103306,
+        "hi": 0.06586163447184468
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9484066767830045,
+          "lo": 0.9226190476190477,
+          "hi": 0.9687964338781575
+        },
+        "speed": {
+          "value": 0.9696509863429439,
+          "lo": 0.9528301886792453,
+          "hi": 0.9842271293375394
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "proxy",
+      "label": "flagged",
+      "rows": 926,
+      "gated": true,
+      "reliability": {
+        "value": -0.054222580292985045,
+        "lo": -0.08746680129901935,
+        "hi": -0.017883003096839323
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.908207343412527,
+          "lo": 0.8829902491874323,
+          "hi": 0.9312977099236641
+        },
+        "speed": {
+          "value": 0.906047516198704,
+          "lo": 0.8814102564102564,
+          "hi": 0.9310344827586207
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    },
+    {
+      "slice": "proxy",
+      "label": "not_flagged",
+      "rows": 2969,
+      "gated": true,
+      "reliability": {
+        "value": 0.011773723509215572,
+        "lo": -0.014370276807761817,
+        "hi": 0.038905920192341736
+      },
+      "coverage": {
+        "log_range": {
+          "value": 0.9609296059279219,
+          "lo": 0.9505843071786311,
+          "hi": 0.9705882352941176
+        },
+        "speed": {
+          "value": 0.9585719097339171,
+          "lo": 0.947565543071161,
+          "hi": 0.9688873858640514
+        }
+      },
+      "verdict_reliability": "pass",
+      "verdict_coverage": "pass"
+    }
+  ],
+  "overall": "inconclusive",
+  "encshuf_minus_control": {
+    "st5-encshuf-best": {
+      "value": -0.0393135511490037,
+      "lo": -0.07483123122873359,
+      "hi": -0.005332450967679314
+    },
+    "st5-encshuf-last": {
+      "value": -0.02743281612593096,
+      "lo": -0.06755575856272245,
+      "hi": 0.007867583940292633
+    }
+  },
+  "shuffled_rule": "fail"
+}
