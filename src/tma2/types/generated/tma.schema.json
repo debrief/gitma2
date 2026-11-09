@@ -2404,6 +2404,101 @@
             "title": "HeadLiveness",
             "type": "object"
         },
+        "HeadroomPredictionHeader": {
+            "additionalProperties": false,
+            "description": "First record of a tma2-hpredict file (spec 010 contracts/cli.md): an oracle ceiling or the classical robust control on one split.",
+            "properties": {
+                "code_sha256": {
+                    "description": "C's code digest, when C's segmentation is used.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "condition": {
+                    "description": "The split's mismatch condition id (off without one).",
+                    "type": "string"
+                },
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "estimator": {
+                    "description": "Kind and segmentation, for example robust@truth.",
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "description": "nominal, realisation, attainable or robust.",
+                    "type": "string"
+                },
+                "knots": {
+                    "type": "integer"
+                },
+                "mode": {
+                    "description": "Always per_timestep.",
+                    "type": "string"
+                },
+                "ordinal_count": {
+                    "type": "integer"
+                },
+                "ordinal_start": {
+                    "type": "integer"
+                },
+                "plan_sha256": {
+                    "description": "SHA-256 of the Gate H plan read.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "segmentation": {
+                    "description": "truth, or c2 (the classical C'' hand-over).",
+                    "type": "string"
+                },
+                "settings": {
+                    "description": "The robust control's settings as canonical JSON (robust only).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "truth_sha256": {
+                    "description": "Digest of the mismatch truth read (ceilings only; absent for every other estimator).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "estimator",
+                "mode",
+                "kind",
+                "segmentation",
+                "condition",
+                "dataset_digest",
+                "knots",
+                "ordinal_start",
+                "ordinal_count",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "HeadroomPredictionHeader",
+            "type": "object"
+        },
         "HelmWanderRanges": {
             "additionalProperties": false,
             "description": "Helm wander (generator 0.6.0): a first-order autoregressive course error with standard deviation sd_rad, correlation time tau_s and a hard clip at \u00b1clip_rad.",

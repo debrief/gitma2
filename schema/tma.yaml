@@ -1825,6 +1825,33 @@ classes:
         range: string
         description: SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).
 
+  HeadroomPredictionHeader:
+    description: >-
+      First record of a tma2-hpredict file (spec 010 contracts/cli.md): an oracle ceiling or the
+      classical robust control on one split.
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      estimator: { range: string, required: true, description: "Kind and segmentation, for example robust@truth." }
+      mode: { range: string, required: true, description: Always per_timestep. }
+      kind: { range: string, required: true, description: "nominal, realisation, attainable or robust." }
+      segmentation: { range: string, required: true, description: "truth, or c2 (the classical C'' hand-over)." }
+      condition: { range: string, required: true, description: "The split's mismatch condition id (off without one)." }
+      dataset_digest: { range: string, required: true }
+      truth_sha256:
+        range: string
+        description: Digest of the mismatch truth read (ceilings only; absent for every other estimator).
+      settings:
+        range: string
+        description: The robust control's settings as canonical JSON (robust only).
+      plan_sha256: { range: string, description: SHA-256 of the Gate H plan read. }
+      code_sha256: { range: string, description: "C's code digest, when C's segmentation is used." }
+      knots: { range: integer, required: true }
+      ordinal_start: { range: integer, required: true }
+      ordinal_count: { range: integer, required: true }
+      git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, required: true }
+
   CalibrationHeadConfig:
     description: >-
       Spec 008 (research R5, R6): the learned calibration, a log-scale s = bound * tanh(MLP) on

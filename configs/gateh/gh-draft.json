@@ -1,0 +1,28 @@
+{
+  "id": "gh-draft",
+  "description": "Spec 010 Gate H: DRAFT plan for tuning on seed 320 only. The decision record binds configs/gateh/gh-a.json, written after tuning; nothing on validation or test rows may be scored from this file.",
+  "conditions": "configs/gateh/conditions.json",
+  "primary": "all-central",
+  "ranges": "configs/man2-ranges.json",
+  "heldout": "configs/man2-heldout.json",
+  "seeds": {"tuning": 320, "validation": 321, "test": 322, "rescore": 323},
+  "robust": {
+    "huber": true,
+    "huber_k": 1.345,
+    "sigma": true,
+    "whiten": true,
+    "min_bearings": 60,
+    "rho_shrink": 0.0,
+    "outer": 3,
+    "sigma_clamp": 4.0
+  },
+  "c2": {
+    "parameters_from": "configs/segment/gs-plan.json",
+    "parameters_sha256": "60e6ee635d9390e2c959b408997e39e8c30859febcb2d86f199142ea66aa425f",
+    "code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+    "mode": "gap",
+    "open_handover": "knot_at_k",
+    "window": 6,
+    "fade": [0.73, 0.0079]
+  }
+}

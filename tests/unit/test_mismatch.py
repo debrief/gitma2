@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -25,7 +26,9 @@ CONDITIONS = str(ROOT / "configs" / "gateh" / "conditions.json")
 DEG = math.pi / 180.0
 
 
-def _opts(out: Path, mismatch: dict | None, seed: int = 320, count: int = 20) -> GenerateOptions:
+def _opts(
+    out: Path, mismatch: dict[str, Any] | None, seed: int = 320, count: int = 20
+) -> GenerateOptions:
     return GenerateOptions(
         seed=np.uint64(seed),
         count=count,
