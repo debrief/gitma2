@@ -1,8 +1,8 @@
-# Reflection after Gate 4: is there anything for learning to win?
+# The path so far and the planned route: reflection after Gate 4
 
 Status: reflection requested by the owner, 9 November 2026, after Gate 4 stopped at validation.
-Nothing here is a new measurement; every figure cites a committed record. It ends in two owner
-decisions (§6) and spec 010.
+Nothing here is a new measurement; every figure cites a committed record. §1–5 are observations on the path
+followed; §6 the owner's decisions; §7–10 the planned route (spec 010, then the scaled regressor).
 
 ## 1. The record of learned components against their controls
 
@@ -96,3 +96,80 @@ So the scaled regressor is a cheap, decisive experiment inside this repository, 
 
 Practice changes adopted with them: a fresh tuning seed separate from the validation seed for
 every choice (seed 314 retired from tuning); every effect also stated in operational units.
+
+## 7. The planned route
+
+```
+Gate H (spec 010): headroom under bearing-error mismatch, nothing trained
+  ├─ soundness fails on validation ──► fix the pipeline; no verdict
+  ├─ material (R wholly above 10%) ──► spec 011: a learned component trained under mismatch,
+  │                                    with C″ and the robust control as standing controls
+  ├─ not material (wholly below) ────► the learning track on this estimator stops; publish
+  └─ inconclusive ───────────────────► one re-score on a larger fresh seed (323), then final
+then, whatever the verdict:
+Scaled end-to-end regressor (note 04 option B) on Modal's free credit
+  ├─ reaches the bound on straight legs ──► the physics layer is not needed for precision;
+  │                                         the design question reopens, with evidence
+  └─ stays at a flat floor ───────────────► gitma's result was architecture, not compute;
+                                            the hybrid design stands
+```
+
+Gate H in brief (`specs/010-headroom-mismatch/`, plan research R1–R9):
+
+- **Data**: an overlay on generator 0.6.0 (version 0.7.0). Four kinds, each switchable:
+  correlated error, slow bias, an untold σ, outliers. Mismatch off is byte-identical to 0.6.0.
+- **Severities**: a declared grid, accepted by the owner on 9 November. A search found the
+  model forms in open sources but no authoritative open figures, so the grid brackets and does
+  not claim realism. The gate is decided on all four kinds at their central values.
+- **Ceilings**: the declared piecewise-constant-velocity solve by generalised least squares with
+  the true error covariance. The *attainable* ceiling knows the error model but not which
+  bearings were wild; the *realisation* ceiling also knows that, and is reported only.
+- **Control**: a classical robust estimator (Huber weights, σ from residuals, whitening by an
+  estimated correlation). Only what remains after it counts as headroom for learning.
+- **Statistic**: R, the robust control's median range error over the attainable ceiling's,
+  minus 1, on G5 rows, **both on the true segmentation**. Material at 10% (owner, 9 November).
+- **Seeds**: 320 tuning, 321 validation, 322 test, 323 held back.
+
+## 8. Design choices worth remembering
+
+- **Headroom on the true segmentation.** As first written, the criterion compared the control on
+  C's segmentation with a ceiling on the true one. C recovers 0.898 of the gap with no mismatch
+  at all, so that would have passed 10% before the experiment began and restated Gate S. Giving
+  both sides the true segmentation isolates what knowing the error model is worth. The
+  comparison on C's segmentation is reported beside it.
+- **Validation cannot stop the gate on a small headroom**, only on an unsound pipeline. A null
+  result needs its test score as much as a positive one does.
+- **A tuning seed apart from the validation seed**, after the reuse of seed 314 (§4).
+- **Every effect also in operational units**: metres, degrees, knots, and the share of
+  engagements with a settled solution by each scored time.
+
+## 9. The GPU route (after Gate H)
+
+- **Owner, once**: a Modal account; a workspace spending limit at the free credit; an API token
+  added as two repository secrets. Spending and secrets are owner-only (`AGENTS.md`).
+- **Agents**: a `gputrain/**` branch starts a workflow that calls Modal; the run is detached
+  because Modal has no 6-hour limit and Actions has; data are generated on the fly from a seed
+  (about 10^7 scenarios against gitma's 80,000); weights and metrics return to a `results/*`
+  branch; scoring stays on the CPU runners with the existing scorer and references.
+- **Caveats**: GPU training is not bit-reproducible across hardware, so the record holds seeds
+  and the GPU type, with three seeds per configuration. Secrets must reach only workflows on
+  this repository's branches. Note 03's prices (T4 at $0.59 an hour, $30 a month of credit) date
+  from 31 October and are to be confirmed at sign-up.
+- The spec will pre-register a cap in GPU-hours and what "reaches the bound" means before any run.
+
+## 10. What this route does not test
+
+- **Target-motion mismatch**: a target that does not move in constant-velocity legs. It is the
+  other half of "the model is wrong", and arguably the larger half. Out of scope for Gate H.
+- **A classical bias state** in the robust control. If the remaining headroom is mostly bias, a
+  textbook augmented state may remove it; the write-up must say how much of R is bias.
+- **Other severities.** A verdict holds for the declared grid. The single-kind conditions show
+  which kind drives it, not what a real sensor does.
+- **Real data.** Excluded by the classification rule; no simulated mismatch substitutes for it.
+- **Reviewer independence.** The panel remains agents of one model family (§4). The owner's
+  review of the SRD amendments is the only outside check.
+
+Honest expectation, stated before any result: the robust control will remove most of the outlier
+and untold-σ loss, because those are textbook problems. If material headroom remains it is most
+likely in correlated error and bias. A verdict of "not material" is a real possibility, and would
+be the project's clearest finding.
