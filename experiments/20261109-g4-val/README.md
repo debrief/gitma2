@@ -34,8 +34,9 @@ Carried rule (median validation standardised summed score): st-s1 2.773, st-s2 2
 | G4-e points identical | exact | — | pass |
 
 **Validation rule** (every check's point within its band or limit): not met. G4-b's top bin is
-0.054 above its stated P (limit 0.05); the head is *under*-confident on the rows it is most sure
-of. Seed 320 is not generated (still unused).
+0.054 above its stated P (limit 0.05): the stated P is below the hit rate in the top bin because
+the isotonic map caps P at 0.677; the raw head is slightly over-confident there (0.761 against
+0.730; see Reading). Seed 320 is not generated (still unused).
 
 ## The other seeds and the temperature (information, not decision)
 
@@ -66,6 +67,9 @@ follow-on), not a reason to read the stop as luck.
   needed overall (raw P 0.655 against a hit rate of 0.622) but its top is noise-driven. The
   temperature's map pools 7 of 10 knots to 0.583: about 80% of its rows state the same P, so its
   per-bin pass rests on ties.
+- **P is compressed for every seed** (slope of hit rate on P 1.38, 1.22, 1.15 for st-s3, s1, s2;
+  st-s3's top-bin hit − P +0.055 [+0.016, +0.097]), and the 9.5% of rows more than 90° off in
+  course (consistent with the reciprocal-course ambiguity) still state P 0.62.
 - **P carries little per-row information.** The carried head's P runs 0.46–0.68 (5th–95th
   percentile); its AUC for a hit is about 0.60 (temperature 0.53). Most of the course log gain
   (+1.0 nat) is the arc's overall concentration; the head adds 0.044 nats over the temperature.
@@ -81,12 +85,13 @@ follow-on), not a reason to read the stop as luck.
   35° at the 95th percentile; the cap limits X, not a·sd).
 - **Learning: the head beats the registered sd^β temperature by 0.235 standardised units, in
   every component** (course log score 0.827 against 0.871; range interval score 1.99 against 2.18;
-  speed 11.86 against 13.12), so G4-d passes and does not depend on its weights. **Most of that gain
+  speed 11.86 against 13.12), so G4-d passes, and the shuffled control does not void it. **Most of that gain
   is a classical function of E's own sds, not per-row learning.** The registered control states
   each quantity from its own sd; unregistered rules checked by the panel (fitted on tuning ordinals
   0–499 only, evaluated on the scoring rows, so evidence, not a result) recover 39% of the margin
   with each log scale linear in all three log sds (19 parameters) and 72% with a quadratic in them
-  (43 parameters); 10 sd-deciles × 8 cells fitted on the stream recover about a third. The
+  (43 parameters); 10 sd-deciles × 8 cells fitted on the stream recover about 40% (35% against the
+  refitted temperature). The
   remaining ~0.07, mostly in course, is unattributed (encoder state or the stream's 20× rows). The
   registered shuffled control permutes errors but keeps the sds, which breaks the error–sd link the
   temperature itself uses, so it rules out "a better constant", not "a better function of the
@@ -100,7 +105,8 @@ follow-on), not a reason to read the stop as luck.
   intervals.
 - **Comparison with the references is not like for like.** The baseline gives the oracle and the
   IMM statements from their raw sds, against E's fitted one; a fair ceiling would fit the same
-  temperature to the oracle on the tuning rows.
+  temperature to the oracle on the tuning rows. The IMM's 22.5% of rows with no estimate are
+  counted as P = 0 by the rule; they should be reported apart.
 
 Files: `validation.json`, `by-head/*.json`, `calibration.json` (every measure by slice),
 `metrics.json`, `report.md`, `inputs.json`, `plan.json`, `run.json`. `errors.npz` stays on the

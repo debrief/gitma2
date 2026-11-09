@@ -113,3 +113,22 @@ from E's sds), the trial-training disclosure. Recommended follow-on (for the wri
 4. Controls registered before results: a cross-sd parametric rule (quadratic in the three log sds,
    fitted on the stream) and a shuffled control that permutes only the encoder state.
 5. Calibrated references (the oracle with the same temperature) and plain-language widths.
+
+# Round 2
+
+One reviewer checked the corrected record against every round-1 major: **approve-with-findings**.
+The bound files (`decision.json`, `configs/gate4/g4-a.json`, `e357f8a7…`) are unchanged since
+7270104; every major is answered with review.md's numbers or carried to the follow-on list. Its
+findings, all applied:
+
+- [major] A withdrawn claim survived in the validation-rule paragraph ("the head is under-confident
+  on the rows it is most sure of"): replaced by the isotonic-map cause.
+- [minor] "G4-d does not depend on its weights" reworded; the sd-decile rule recovers about 40%
+  (35% against the refitted temperature), not a third; the addendum now names the raw-E baseline
+  as the one thing scored on 500–1499 before the record; the slope of hit on P, st-s3's top-bin
+  interval, the 9.5% of rows over 90° off and the IMM's no-estimate share added.
+- [minor] SRD wording (criteria unchanged): the Gate 4 row's control named as registered (sd^β per
+  quantity) with a note that a G4-d pass does not by itself show learning; a dated §9 line records
+  the stop.
+
+**Decided by the panel, round 2: Gate 4 stopped at validation.** Seed 320 unused.

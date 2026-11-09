@@ -65,6 +65,7 @@ plain temperature 3.08) are the ones quoted above and drove the sd^β redesign o
 (research R3a). Training is deterministic, so CI's st-s1 best weights after this record are
 byte-identical to the trial's (`601c820b…`): the registered st-s1 is a rerun of a model that
 already existed, not a model first trained after the record. Nothing was scored on validation
-ordinals 500–1499 by any stated estimator before this record (the trial and the β choice used
+ordinals 500–1499 by any stated estimator before this record other than the raw-E baseline
+(T009, whose statement is its own sds) (the trial and the β choice used
 ordinals 0–499 only); constitution IV allows validation exploration, and the change made the
 classical control stronger. Neither the criteria nor the plan changed.
