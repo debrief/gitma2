@@ -279,7 +279,9 @@ def test_headroom_statistics() -> None:
     assert res["R_nominal"]["range"]["value"] > 0.4
     assert res["closed_by_robust"]["range"]["value"] == pytest.approx(0.5, abs=0.05)
     assert res["rows_all_answer"] == n - 8 and res["R_all_answer"]["rows"] == n - 8
-    assert res["estimators"]["attainable@truth"]["efficiency_settled_range"] == pytest.approx(1.0, abs=1e-3)
+    assert res["estimators"]["attainable@truth"]["efficiency_settled_range"] == pytest.approx(
+        1.0, abs=1e-3
+    )
     op = res["operational"]["attainable@truth"]
     assert op["median_range_m"] == pytest.approx(10_000.0 * np.median(base[:, 0]), rel=0.02)
     assert 0.0 <= op["settled_by_5min"] <= op["settled_by_20min"] <= 1.0
