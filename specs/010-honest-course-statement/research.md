@@ -119,10 +119,11 @@ here touches scoring ordinals 500–1499. Scripts: `scripts/research/g5_tuning.p
 - **G5-a (intervals):** range and speed coverage. Overall, the interval must lie wholly within
   [0.92, 0.98]. Per gated slice, it must not lie wholly outside [0.90, 0.99].
 - **G5-b (reliability):**
-  - overall hit − P wholly within ±0.03;
+  - overall hit − P wholly within ±0.04 (revised from ±0.03 by the synthetic check below);
   - the calibration slope (logistic regression of the hit on logit P), with an interval wholly
     within [0.75, 1.33];
-  - per gated slice, hit − P not wholly outside ±0.05, and its point within ±0.08.
+  - per gated slice, hit − P not wholly outside ±0.05. The point band of ±0.08 was dropped
+    after the synthetic check below.
 
   The gated slices are G5 minute (4), open at k (2), range band (6) and proxy state (2). A slice
   with fewer than 150 rows is reported, not gated.
@@ -134,9 +135,20 @@ here touches scoring ordinals 500–1499. Scripts: `scripts/research/g5_tuning.p
 - **G5-e (consistency):** every row's P equals its density's arc mass to within 1e-6, and the
   points are identical.
 - **Synthetic check (SC-003).** Before the decision record, the verdict logic is run on resampled
-  synthetic statements: a calibrated one must pass G5-b in at least 90% of datasets, and one
-  miscalibrated by 0.15 on one slice must fail it in at least 90%. Bands that fail this check are
-  revised before the amendment, not after.
+  synthetic statements (`scripts/research/g5_synthetic.py`). A calibrated statement must pass G5-b
+  in at least 90% of datasets, and one miscalibrated by 0.15 on one slice must fail it in at least
+  90%. Bands that fail this check are revised before the amendment, not after.
+  - **First proposal** (overall ±0.03, per-slice point band ±0.08), 10 datasets: G5-b on the
+    calibrated statement passed 60%, was inconclusive 30% and failed 10%. Two components caused it:
+    - the overall interval is about ±0.019 wide, so it falls wholly within ±0.03 only when the
+      point is within ±0.011;
+    - slices of about 200 rows have a clustered sd near 0.035, so the ±0.08 point band failed them
+      on noise.
+  - **Revision:** overall ±0.04, and an interval-only check per slice. The slice verdict is pass
+    unless the interval lies wholly outside ±0.05. Result over 60 datasets: the calibrated statement
+    never failed G5-b (75% pass, 25% inconclusive, before the interval-only change), and the
+    0.15-off slice failed in 100%. The final run (100 datasets, 500 resamples) is recorded in the
+    decision record.
 
 ## R8. Sample sizes
 
