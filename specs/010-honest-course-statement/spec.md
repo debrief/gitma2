@@ -186,8 +186,9 @@ without an estimate are reported separately.
 - **FR-001**: Every scored row of E MUST state a course arc half-width X (at most a declared
   maximum), the probability P that the true course lies within it, and the parameters of a course
   distribution whose mass on ±X is exactly P.
-- **FR-002**: P MUST be computed from the exact distribution, not an approximation; recalibration
-  MUST act on the distribution's parameters, so that P and the density stay consistent.
+- **FR-002**: P MUST be computed exactly, not by an approximation, and any recalibration MUST keep P
+  and the density consistent (research R2: the density is defined from P, a truncated shape inside
+  the arc and a uniform remainder outside, so the arc mass is P by construction).
 - **FR-003**: The statement MUST use causal inputs only. The unsettled proxy uses only information
   available at the row.
 - **FR-004**: Every scored row MUST state 95% intervals for range (as a ratio) and speed.
@@ -209,7 +210,8 @@ without an estimate are reported separately.
 - **FR-011**: Statistics MUST use the scenario-clustered bootstrap (97.5%, 2,000 resamples) on one
   scoring run's stored arrays.
 - **FR-012**: Rows before minute 5 MUST be measured as a reported slice if the scored row set can
-  include them without changing the G5 rows. Otherwise the gap MUST be stated.
+  include them without changing the G5 rows. Otherwise the gap MUST be stated (research R5: stated,
+  carried as a follow-on).
 
 **Controls and training**
 
