@@ -63,7 +63,7 @@ ALPHA = 0.05
 KT_PER_MPS = 3600.0 / 1852.0
 # interval scores and widths are reported in natural-log range, degrees and knots
 UNITS = np.array([1.0, 180.0 / math.pi, KT_PER_MPS])
-WIDTH = 15
+WIDTH = 16  # spec 010: column 15 is the row's unsettled-proxy flag (1/0; NaN if not stated)
 XMAX = math.radians(45.0)  # spec 009 research R2: the largest usable course arc
 
 
@@ -82,6 +82,7 @@ def row_cal(
     out = np.full(WIDTH, np.inf)
     out[7] = out[8] = 0.0
     out[9:15] = (0.0, 0.0, 0.0, 0.0, -math.log(2 * math.pi), 0.0)
+    out[15] = math.nan
     if est is None or not est.get("converged", False):
         return out
     out[8] = 1.0
@@ -109,18 +110,28 @@ def row_cal(
         from tma2.calib.statement import course_log_score as cls
 
         sd = float(est["course_sd_rad"])
-        a = 1.0 / (math.sqrt(float(est["course_conc"])) * sd)
+        x_arc, prob = float(est["course_arc_rad"]), float(est["course_arc_prob"])
+        if est.get("course_form") == "truncated":
+            from tma2.calib.statement import truncated_log_score
+
+            ls = float(truncated_log_score(np.array([out[1]]), np.array([x_arc]), np.array([prob]),
+                                           np.array([float(est["course_conc"])]))[0])  # fmt: skip
+        else:
+            a = 1.0 / (math.sqrt(float(est["course_conc"])) * sd)
+            ls = float(cls(np.array([out[1]]), np.array([a]),
+                           np.array([float(est["course_mix_p"])]), np.array([sd]))[0])  # fmt: skip
         out[9:15] = (
-            float(est["course_arc_rad"]),
-            float(est["course_arc_prob"]),
+            x_arc,
+            prob,
             float(est["range_ratio_q95"]),
             float(est["speed_q95_mps"]),
-            float(cls(np.array([out[1]]), np.array([a]),
-                                   np.array([float(est["course_mix_p"])]), np.array([sd]))[0]),
+            ls,
             1.0,
-        )  # fmt: skip
+        )
     else:
         out[9:15] = statement_from_sds(out[None, :9])[0]
+    flag = est.get("unsettled_flag")
+    out[15] = math.nan if flag is None else float(bool(flag))
     return out
 
 
@@ -147,10 +158,13 @@ def statement_from_sds(cal9: np.ndarray, xmax: float = XMAX) -> np.ndarray:
 
 
 def widen(cal: np.ndarray) -> np.ndarray:
-    """A [N, 9] array (stored before spec 009) widened to [N, 15] by ``statement_from_sds``."""
-    if cal.shape[1] >= WIDTH:
-        return cal
-    return np.concatenate([cal, statement_from_sds(cal)], axis=1)
+    """An array stored by an earlier scorer widened to ``WIDTH``: [N, 9] (before spec 009) gains
+    the statement from its sds; [N, 15] (spec 009) gains a NaN proxy flag."""
+    if cal.shape[1] < 15:
+        cal = np.concatenate([cal, statement_from_sds(cal)], axis=1)
+    if cal.shape[1] < WIDTH:
+        cal = np.concatenate([cal, np.full((cal.shape[0], WIDTH - cal.shape[1]), np.nan)], axis=1)
+    return cal
 
 
 def _velocity(est: dict[str, Any]) -> np.ndarray:
@@ -284,6 +298,42 @@ def _st_is(j: int) -> Stat:
     return f
 
 
+def calibration_slope(c: np.ndarray) -> float:
+    """β of the logistic regression hit ~ α + β · logit P over rows that state P in (0, 1)
+    (1 when P is calibrated in the logistic sense); Newton's method, 25 steps."""
+    p = c[:, 10]
+    ok = (p > 0) & (p < 1) & (c[:, 9] > 0)
+    if ok.sum() < 10:
+        return math.nan
+    x = np.log(p[ok] / (1 - p[ok]))
+    y = _st_hit(c[ok])
+    xm = np.stack([np.ones_like(x), x], axis=1)
+    w = np.array([0.0, 1.0])
+    for _ in range(25):
+        mu = 1 / (1 + np.exp(-(xm @ w)))
+        g = xm.T @ (y - mu)
+        h = (xm * (mu * (1 - mu))[:, None]).T @ xm + 1e-9 * np.eye(2)
+        step = np.linalg.solve(h, g)
+        w = w + step
+        if np.abs(step).max() < 1e-10:
+            break
+    return float(w[1])
+
+
+def p_auc(c: np.ndarray) -> float:
+    """AUC of the stated P for a hit (ties averaged); rows stating nothing count with P = 0."""
+    p, y = c[:, 10], _st_hit(c).astype(bool)
+    n1, n0 = int(y.sum()), int((~y).sum())
+    if n1 == 0 or n0 == 0:
+        return math.nan
+    order = np.argsort(p, kind="stable")
+    r = np.empty(len(p))
+    r[order] = np.arange(1, len(p) + 1)
+    _, inv, cnt = np.unique(p, return_inverse=True, return_counts=True)
+    r = np.bincount(inv, weights=r)[inv] / cnt[inv]
+    return float((r[y].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
+
+
 def reliability_bins(c: np.ndarray, bins: int = 5) -> list[dict[str, float]]:
     """Equal-count bins of stated P: {mean P, hit rate, rows} (spec 009 G4-b, points)."""
     order = np.argsort(c[:, 10], kind="stable")
@@ -315,6 +365,8 @@ def measures() -> list[Measure]:
     out.append(Measure("statement_coverage95_speed", _st_cov(1)))
     out.append(Measure("statement_interval_score_log_range", _st_is(0)))
     out.append(Measure("statement_interval_score_speed_kt", _st_is(1)))
+    out.append(Measure("statement_slope", lambda d: calibration_slope(d["c"])))
+    out.append(Measure("statement_auc", lambda d: p_auc(d["c"])))
     return out
 
 
@@ -358,6 +410,7 @@ SLICE_INTERVALS = {
     "statement_reliability",
     "statement_coverage95_log_range",
     "statement_coverage95_speed",
+    "statement_slope",
 }
 
 
@@ -381,6 +434,9 @@ def report(
         rec["reliability_bins"] = reliability_bins(cal)
         g = gross[name]
         own = {"gross": {"gross": g, "not_gross": ~g}}
+        fl = cal[:, 15] if cal.shape[1] > 15 else np.full(cal.shape[0], np.nan)
+        if np.isfinite(fl).any():
+            own["proxy"] = {"flagged": fl == 1.0, "not_flagged": fl == 0.0}
         for sname, labels in {**slices, **own}.items():
             rec[f"by_{sname}"] = {
                 lab: {"n_rows": int(mask.sum())}

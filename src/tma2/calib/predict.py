@@ -85,7 +85,7 @@ def write_calibrated(
 def write_fields(
     pred_in: Path,
     out: Path,
-    fields: dict[tuple[int, float], dict[str, float]],
+    fields: dict[tuple[int, float], dict[str, Any]],
     calibration: dict[str, Any],
 ) -> int:
     """Copy a prediction file, adding ``fields`` to each row named by (ordinal, float32

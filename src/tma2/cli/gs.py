@@ -705,6 +705,13 @@ def main(argv: list[str] | None = None) -> int:
             slices["row_band"] = {b_: row_bands == b_ for b_ in sorted(set(row_bands.tolist()))}
         gross = {n: ~(errs[n][:, 0] <= 0.5) for n in cals}
         cal_rec = ec.report(cals, cluster, slices, LEVEL, RESAMPLES, gross)
+        # slice labels per row, so a gate can rebuild every slice from errors.npz (spec 010)
+        slice_labels = {
+            f"slice_{sname}": np.array(
+                [next((lab for lab, m in labels.items() if m[i]), "") for i in range(len(rows))]
+            )
+            for sname, labels in slices.items()
+        }
         (out / "calibration.json").write_text(json.dumps(cal_rec, indent=2) + "\n")
         print(f"calibration [{time.time() - t0:.0f} s]", flush=True)
     # the files read, in every mode (gate mode also puts them in manifest.json; panel round 2)
@@ -718,6 +725,8 @@ def main(argv: list[str] | None = None) -> int:
     }
     arrays.update({f"err_{n}": e for n, e in errs.items()})
     arrays.update({f"cal_{n}": c for n, c in cals.items()})
+    if cals:
+        arrays.update(slice_labels)
     np.savez_compressed(out / "errors.npz", **arrays)
     lines = [
         f"# Segmentation scoring: {a.truth}, ordinals {a.start}–{a.start + a.count - 1}",

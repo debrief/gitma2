@@ -111,3 +111,99 @@ def isotonic_apply(x: np.ndarray, knots: tuple[list[float], list[float]]) -> np.
     bx, fy = knots
     out: np.ndarray = np.clip(np.interp(np.asarray(x, dtype=np.float64), bx, fy), 0.0, 1.0)
     return out
+
+
+# ---------------------------------------------------------------- spec 010: the truncated form
+#
+# The row states an arc ±X, the probability P that the course lies within it, and a concentration
+# κ for the shape inside (research R2 of spec 010). The density at a wrapped course error e is
+#   P · exp(κ (cos e − 1)) / Z(κ, X)        for |e| ≤ X,
+#   (1 − P) / (2π − 2X)                      otherwise,
+# with Z(κ, X) = ∫_{−X}^{X} exp(κ (cos θ − 1)) dθ. The arc mass is P exactly, for any P, so any
+# recalibration of P keeps the statement consistent; the log score is proper.
+
+_GL_NODES, _GL_WEIGHTS = np.polynomial.legendre.leggauss(64)
+_REACH = 12.0  # integrate over min(X, 12/√κ): beyond it the integrand is below e^-72
+
+
+def arc_norm(kappa: np.ndarray, x: np.ndarray) -> np.ndarray:
+    """Z(κ, X) by 64-point Gauss–Legendre on [−X′, X′], X′ = min(X, 12/√κ) (the integrand is
+    below e^-72 beyond X′, so a narrow peak is still resolved)."""
+    k = np.asarray(kappa, dtype=np.float64)[..., None]
+    xx = np.minimum(
+        np.asarray(x, dtype=np.float64), _REACH / np.sqrt(np.maximum(k[..., 0], 1e-300))
+    )
+    xx = xx[..., None]
+    th = xx * _GL_NODES
+    out: np.ndarray = (xx * (_GL_WEIGHTS * np.exp(k * (np.cos(th) - 1.0)))).sum(axis=-1)
+    return out
+
+
+def arc_norm_t(kappa: Tensor, x: Tensor) -> Tensor:
+    nodes = torch.as_tensor(_GL_NODES, dtype=kappa.dtype)
+    weights = torch.as_tensor(_GL_WEIGHTS, dtype=kappa.dtype)
+    xx = torch.minimum(x, _REACH / torch.sqrt(torch.clamp(kappa, min=1e-300)))[..., None]
+    th = xx * nodes
+    return (xx * weights * torch.exp(kappa[..., None] * (torch.cos(th) - 1.0))).sum(-1)
+
+
+def vm_arc_mass(kappa: np.ndarray, x: np.ndarray) -> np.ndarray:
+    """The exact von Mises (concentration κ, centred) mass on ±X: Z(κ, X) / (2π I0e(κ))."""
+    k = np.asarray(kappa, dtype=np.float64)
+    out: np.ndarray = arc_norm(k, x) / (2.0 * math.pi * _i0e(k))
+    return out
+
+
+def _i0e(k: np.ndarray) -> np.ndarray:
+    """exp(−κ) I0(κ), stable for large κ (torch's special function; NumPy has no i0e)."""
+    with torch.no_grad():
+        out: np.ndarray = torch.special.i0e(torch.as_tensor(k, dtype=torch.float64)).numpy()
+    return out
+
+
+def truncated_log_score_t(e: Tensor, x: Tensor, prob: Tensor, kappa: Tensor) -> Tensor:
+    """[N] log density of the truncated statement at the wrapped course error e."""
+    prob = torch.clamp(prob, 1e-9, 1.0 - 1e-9)
+    inside = e.abs() <= x
+    log_in = torch.log(prob) + kappa * (torch.cos(e) - 1.0) - torch.log(arc_norm_t(kappa, x))
+    log_out = torch.log1p(-prob) - torch.log(2.0 * math.pi - 2.0 * x)
+    return torch.where(inside, log_in, log_out)
+
+
+def truncated_log_score(
+    e: np.ndarray, x: np.ndarray, prob: np.ndarray, kappa: np.ndarray
+) -> np.ndarray:
+    with torch.no_grad():
+        out: np.ndarray = truncated_log_score_t(
+            *(torch.as_tensor(np.asarray(v, dtype=np.float64)) for v in (e, x, prob, kappa))
+        ).numpy()
+    return out
+
+
+def platt_fit(prob: np.ndarray, hit: np.ndarray) -> tuple[float, float]:
+    """(α, β) minimising the binary log loss of sigmoid(α + β logit P) against the hits."""
+    lp = torch.as_tensor(_logit(prob))
+    y = torch.as_tensor(np.asarray(hit, dtype=np.float64))
+    a = torch.zeros(1, dtype=torch.float64, requires_grad=True)
+    b = torch.ones(1, dtype=torch.float64, requires_grad=True)
+    opt = torch.optim.LBFGS([a, b], max_iter=200, line_search_fn="strong_wolfe")
+
+    def closure() -> Tensor:
+        opt.zero_grad()
+        loss = torch.nn.functional.binary_cross_entropy_with_logits(a + b * lp, y)
+        loss.backward()  # type: ignore[no-untyped-call]
+        return loss
+
+    opt.step(closure)  # type: ignore[no-untyped-call]
+    return float(a.detach()), float(b.detach())
+
+
+def platt_apply(prob: np.ndarray, ab: tuple[float, float]) -> np.ndarray:
+    out: np.ndarray = 1.0 / (1.0 + np.exp(-(ab[0] + ab[1] * _logit(prob))))
+    return out
+
+
+def _logit(prob: np.ndarray) -> np.ndarray:
+    q = np.clip(np.asarray(prob, dtype=np.float64), 1e-6, 1.0 - 1e-6)
+    out: np.ndarray = np.log(q / (1.0 - q))
+    return out

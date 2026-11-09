@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.30.0
+version: 0.31.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -755,6 +755,19 @@ classes:
       speed_q95_mps:
         range: float
         description: "Spec 009: the stated 95% half-width of the speed error, m/s."
+      course_form:
+        range: string
+        description: >-
+          Spec 010: how the course statement's density is formed. "mixture" (spec 009: course_mix_p
+          von Mises plus uniform) or "truncated" (spec 010: course_arc_prob times a von Mises of
+          concentration course_conc truncated to +-X, the rest uniform outside; the arc mass is P
+          exactly). Absent means "mixture".
+      unsettled_score:
+        range: float
+        description: "Spec 010: the causal unsettled proxy's logistic score at the row."
+      unsettled_flag:
+        range: boolean
+        description: "Spec 010: the proxy's state at the row (score above the decision record's threshold)."
       cov_scale_log:
         range: float
         multivalued: true
@@ -1962,3 +1975,81 @@ classes:
       shuffled_rule: { range: string, required: true }
       verdicts: { range: Gate2Verdicts, required: true }
       decided_by: { range: string }
+
+  StatementConfig5:
+    description: "Spec 010 (research R2, R3, R6): the truncated-form statement head."
+    attributes:
+      width: { range: integer, required: true }
+      bound: { range: float, required: true, description: "Bound on each log-scale output." }
+      xmax_rad: { range: float, required: true }
+      p_features: { range: string, multivalued: true, required: true, description: "Proxy-cache features entering logit P beside the three log sds and the minute." }
+      learning_rate: { range: float, required: true }
+      batch_rows: { range: integer, required: true }
+      max_epochs: { range: integer, required: true }
+      patience: { range: integer, required: true }
+      min_improvement: { range: float, required: true }
+      seed: { range: integer, required: true }
+      shuffle: { range: string, description: "none (default), errors, or encoder (permute E-w's encoder state only, each epoch)." }
+
+  ClassicalRuleConfig:
+    description: "Spec 010 (R6.2): quadratic in the three log sds, plus linear proxy terms for logit P."
+    attributes:
+      xmax_rad: { range: float, required: true }
+      p_features: { range: string, multivalued: true, required: true }
+      l2: { range: float, required: true }
+      steps: { range: integer, required: true }
+
+  TemperatureConfig5:
+    description: "Spec 010 (R6.1): the sd^beta temperature in the truncated form, per cell, with a Platt map for P."
+    attributes:
+      slices: { range: string, multivalued: true }
+      beta_grid: { range: float, multivalued: true }
+      xmax_rad: { range: float, required: true }
+
+  ProxyDefinition:
+    description: "Spec 010 (R1): the causal unsettled proxy, fitted on tuning rows; bound by the decision record."
+    attributes:
+      features: { range: string, multivalued: true, required: true }
+      mean: { range: float, multivalued: true, required: true }
+      scale: { range: float, multivalued: true, required: true }
+      coef: { range: float, multivalued: true, required: true }
+      intercept: { range: float, required: true }
+      threshold: { range: float, required: true, description: "Score above which the row is flagged." }
+      flag_share_tuning: { range: float, required: true }
+
+  Gate5Criteria:
+    description: "Gate 5 bands (spec 010 FR-030, research R7)."
+    attributes:
+      coverage95_overall: { range: float, multivalued: true, required: true }
+      coverage95_slice: { range: float, multivalued: true, required: true }
+      reliability_overall: { range: float, required: true }
+      reliability_slice: { range: float, required: true, description: "Interval must not lie wholly outside +-this." }
+      reliability_slice_point: { range: float, required: true }
+      slope: { range: float, multivalued: true, required: true }
+      auc_min: { range: float, required: true }
+      min_slice_rows: { range: integer, required: true }
+      consistency_tol: { range: float, required: true }
+
+  Gate5Decision:
+    description: "The Gate 5 decision record (spec 010 FR-031), committed before any training on CI."
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      validation_seed: { range: integer, required: true }
+      validation_digest: { range: string, required: true }
+      train_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true }
+      carried_e: { range: string, required: true }
+      carried_e_weights: { range: string, required: true }
+      criteria: { range: Gate5Criteria, required: true }
+      proxy: { range: ProxyDefinition, required: true }
+      proxy_sha256: { range: string, required: true }
+      slices: { range: string, multivalued: true, required: true }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      carried_rule: { range: string, required: true }
+      shuffled_rule: { range: string, required: true }
+      validation_rule: { range: string, required: true }
+      follow_on: { range: string, required: true }
+      forecast: { range: string, required: true }
+      disclosures: { range: string, required: true }

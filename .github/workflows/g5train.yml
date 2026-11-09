@@ -1,0 +1,138 @@
+name: Train the honest course statement (Gate 5)
+
+# Spec 010 T015. Push `g5train/<name>`: the plan configs/gate5/<name>.json names
+#   head, classical, temperature   StatementConfig5 (without seed), ClassicalRuleConfig, TemperatureConfig5
+#   models                         {id: {seed, shuffle?}}
+#   tuning_ordinals                [a, b): validation rows for early stopping, the temperature, the Platt maps
+#   caches, proxy_caches           {train, val}: results branches holding feature and proxy caches
+# The proxy definition is fitted in the session before the decision record binds it.
+# Jobs: fits (temperature, classical), then one per head model, then results to
+# `results/g5-<name>-<run id>`. Nothing merges automatically.
+
+on:
+  push:
+    branches: ["g5train/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.p.outputs.plan }}
+      models: ${{ steps.p.outputs.models }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          PLAN="configs/gate5/${GITHUB_REF_NAME#g5train/}.json"
+          test -f "$PLAN"
+          echo "plan=$PLAN" >> "$GITHUB_OUTPUT"
+          echo "models=$(python3 -c "import json; print(json.dumps(sorted(json.load(open('$PLAN'))['models'])))")" >> "$GITHUB_OUTPUT"
+
+  fits:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Caches (outside the checkout)
+        run: |
+          scripts/ci/fetch_caches.sh "$PLAN" "$RUNNER_TEMP/caches"
+          scripts/ci/fetch_proxy.sh "$PLAN" "$RUNNER_TEMP/proxy"
+      - name: Fits
+        run: |
+          mkdir -p "$RUNNER_TEMP/ck"
+          V="$RUNNER_TEMP/caches/val" VP="$RUNNER_TEMP/proxy/val"
+          T="$RUNNER_TEMP/caches/train" TP="$RUNNER_TEMP/proxy/train"
+          uv run tma2-g5train temperature --plan "$PLAN" --val "$V"/*.npz --val-proxy "$VP"/*.npz \
+            --out "$RUNNER_TEMP/ck/temperature.json"
+          uv run tma2-g5train classical --plan "$PLAN" --train "$T"/*.npz --train-proxy "$TP"/*.npz \
+            --val "$V"/*.npz --val-proxy "$VP"/*.npz --out "$RUNNER_TEMP/ck/classical.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: g5-fits
+          path: ${{ runner.temp }}/ck/
+
+  train:
+    needs: [plan, fits]
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(needs.plan.outputs.models) }}
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Caches (outside the checkout)
+        run: |
+          scripts/ci/fetch_caches.sh "$PLAN" "$RUNNER_TEMP/caches"
+          scripts/ci/fetch_proxy.sh "$PLAN" "$RUNNER_TEMP/proxy"
+      - uses: actions/download-artifact@v4
+        with:
+          name: g5-fits
+          path: ${{ runner.temp }}/fits
+      - name: Train
+        run: |
+          mkdir -p "$RUNNER_TEMP/ck"
+          uv run tma2-g5train head --plan "$PLAN" --model "${{ matrix.model }}" \
+            --classical "$RUNNER_TEMP/fits/classical.json" \
+            --train "$RUNNER_TEMP"/caches/train/*.npz --train-proxy "$RUNNER_TEMP"/proxy/train/*.npz \
+            --val "$RUNNER_TEMP"/caches/val/*.npz --val-proxy "$RUNNER_TEMP"/proxy/val/*.npz \
+            --checkpoint "$RUNNER_TEMP/ck/${{ matrix.model }}" \
+            2>&1 | tee "$RUNNER_TEMP/ck/${{ matrix.model }}.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: g5-${{ matrix.model }}
+          path: ${{ runner.temp }}/ck/
+
+  results:
+    needs: [plan, fits, train]
+    runs-on: ubuntu-latest
+    env:
+      PLAN: ${{ needs.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: g5-*
+          path: ${{ runner.temp }}/ck
+          merge-multiple: true
+      - name: Push the results branch
+        run: |
+          NAME=$(basename "$PLAN" .json)
+          OUT="experiments/g5-runs/$NAME-${{ github.run_id }}"
+          mkdir -p "$OUT"
+          for d in "$RUNNER_TEMP"/ck/*/; do
+            m=$(basename "$d"); mkdir -p "$OUT/$m"
+            cp "$d/meta.json" "$d/best.safetensors" "$d/last.safetensors" "$OUT/$m/"
+            cp "$RUNNER_TEMP/ck/$m.log" "$OUT/$m/train.log" 2>/dev/null || true
+          done
+          cp "$RUNNER_TEMP"/ck/temperature.json "$RUNNER_TEMP"/ck/classical.json "$OUT/"
+          cp "$PLAN" "$OUT/plan.json"
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "cpu_model": "%s"}\n' "${{ github.run_id }}" "${{ github.sha }}" "$CPU" > "$OUT/run.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/g5-$NAME-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: Gate 5 statement training $NAME (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"

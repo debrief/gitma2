@@ -335,6 +335,35 @@
             "title": "CheckpointMeta",
             "type": "object"
         },
+        "ClassicalRuleConfig": {
+            "additionalProperties": false,
+            "description": "Spec 010 (R6.2): quadratic in the three log sds, plus linear proxy terms for logit P.",
+            "properties": {
+                "l2": {
+                    "type": "number"
+                },
+                "p_features": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "steps": {
+                    "type": "integer"
+                },
+                "xmax_rad": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "xmax_rad",
+                "p_features",
+                "l2",
+                "steps"
+            ],
+            "title": "ClassicalRuleConfig",
+            "type": "object"
+        },
         "Continuation": {
             "additionalProperties": false,
             "description": "The committed model a seeded continuation started from (scripts/train-continue.mjs; spec 003 decision 14, spec 004 decision 15). Its epoch records up to best_epoch are kept in the continued run's manifest, with their val_loss as recorded under the earlier config.",
@@ -1935,6 +1964,155 @@
                 "forecast"
             ],
             "title": "Gate4Decision",
+            "type": "object"
+        },
+        "Gate5Criteria": {
+            "additionalProperties": false,
+            "description": "Gate 5 bands (spec 010 FR-030, research R7).",
+            "properties": {
+                "auc_min": {
+                    "type": "number"
+                },
+                "consistency_tol": {
+                    "type": "number"
+                },
+                "coverage95_overall": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "coverage95_slice": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "min_slice_rows": {
+                    "type": "integer"
+                },
+                "reliability_overall": {
+                    "type": "number"
+                },
+                "reliability_slice": {
+                    "description": "Interval must not lie wholly outside +-this.",
+                    "type": "number"
+                },
+                "reliability_slice_point": {
+                    "type": "number"
+                },
+                "slope": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "coverage95_overall",
+                "coverage95_slice",
+                "reliability_overall",
+                "reliability_slice",
+                "reliability_slice_point",
+                "slope",
+                "auc_min",
+                "min_slice_rows",
+                "consistency_tol"
+            ],
+            "title": "Gate5Criteria",
+            "type": "object"
+        },
+        "Gate5Decision": {
+            "additionalProperties": false,
+            "description": "The Gate 5 decision record (spec 010 FR-031), committed before any training on CI.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "carried_e": {
+                    "type": "string"
+                },
+                "carried_e_weights": {
+                    "type": "string"
+                },
+                "carried_rule": {
+                    "type": "string"
+                },
+                "criteria": {
+                    "$ref": "#/$defs/Gate5Criteria"
+                },
+                "disclosures": {
+                    "type": "string"
+                },
+                "follow_on": {
+                    "type": "string"
+                },
+                "forecast": {
+                    "type": "string"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "proxy": {
+                    "$ref": "#/$defs/ProxyDefinition"
+                },
+                "proxy_sha256": {
+                    "type": "string"
+                },
+                "shuffled_rule": {
+                    "type": "string"
+                },
+                "slices": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "train_seed": {
+                    "type": "integer"
+                },
+                "validation_digest": {
+                    "type": "string"
+                },
+                "validation_rule": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "validation_seed",
+                "validation_digest",
+                "train_seed",
+                "test_seed",
+                "carried_e",
+                "carried_e_weights",
+                "criteria",
+                "proxy",
+                "proxy_sha256",
+                "slices",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "carried_rule",
+                "shuffled_rule",
+                "validation_rule",
+                "follow_on",
+                "forecast",
+                "disclosures"
+            ],
+            "title": "Gate5Decision",
             "type": "object"
         },
         "GateCheck": {
@@ -3828,6 +4006,13 @@
                         "null"
                     ]
                 },
+                "course_form": {
+                    "description": "Spec 010: how the course statement's density is formed. \"mixture\" (spec 009: course_mix_p von Mises plus uniform) or \"truncated\" (spec 010: course_arc_prob times a von Mises of concentration course_conc truncated to +-X, the rest uniform outside; the arc mass is P exactly). Absent means \"mixture\".",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "course_mix_p": {
                     "description": "Spec 009: the peaked part's weight; the rest is uniform on the circle.",
                     "type": [
@@ -3922,6 +4107,20 @@
                 "timestamp_s": {
                     "type": "number"
                 },
+                "unsettled_flag": {
+                    "description": "Spec 010: the proxy's state at the row (score above the decision record's threshold).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "unsettled_score": {
+                    "description": "Spec 010: the causal unsettled proxy's logistic score at the row.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
                 "vx_sd_mps": {
                     "description": "Standard deviation of the estimated east velocity (velocity_gaussian only).",
                     "type": [
@@ -3953,6 +4152,57 @@
                 "converged"
             ],
             "title": "PredictionRow",
+            "type": "object"
+        },
+        "ProxyDefinition": {
+            "additionalProperties": false,
+            "description": "Spec 010 (R1): the causal unsettled proxy, fitted on tuning rows; bound by the decision record.",
+            "properties": {
+                "coef": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "features": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "flag_share_tuning": {
+                    "type": "number"
+                },
+                "intercept": {
+                    "type": "number"
+                },
+                "mean": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "scale": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "threshold": {
+                    "description": "Score above which the row is flagged.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "features",
+                "mean",
+                "scale",
+                "coef",
+                "intercept",
+                "threshold",
+                "flag_share_tuning"
+            ],
+            "title": "ProxyDefinition",
             "type": "object"
         },
         "RangeDistribution": {
@@ -4613,6 +4863,68 @@
             "title": "Split",
             "type": "string"
         },
+        "StatementConfig5": {
+            "additionalProperties": false,
+            "description": "Spec 010 (research R2, R3, R6): the truncated-form statement head.",
+            "properties": {
+                "batch_rows": {
+                    "type": "integer"
+                },
+                "bound": {
+                    "description": "Bound on each log-scale output.",
+                    "type": "number"
+                },
+                "learning_rate": {
+                    "type": "number"
+                },
+                "max_epochs": {
+                    "type": "integer"
+                },
+                "min_improvement": {
+                    "type": "number"
+                },
+                "p_features": {
+                    "description": "Proxy-cache features entering logit P beside the three log sds and the minute.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "patience": {
+                    "type": "integer"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "shuffle": {
+                    "description": "none (default), errors, or encoder (permute E-w's encoder state only, each epoch).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "width": {
+                    "type": "integer"
+                },
+                "xmax_rad": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "width",
+                "bound",
+                "xmax_rad",
+                "p_features",
+                "learning_rate",
+                "batch_rows",
+                "max_epochs",
+                "patience",
+                "min_improvement",
+                "seed"
+            ],
+            "title": "StatementConfig5",
+            "type": "object"
+        },
         "StatementHeadConfig": {
             "additionalProperties": false,
             "description": "Spec 009 (research R2, R3, R6): the learned uncertainty statement. Outputs, bounded by tanh: the course spread scale a, the peaked weight p (logit), and the range and speed interval scales; trained on the exact errors by the standardised sum of the course log score and the two 95% interval scores.",
@@ -4796,6 +5108,38 @@
                 "cap"
             ],
             "title": "TemperatureConfig",
+            "type": "object"
+        },
+        "TemperatureConfig5": {
+            "additionalProperties": false,
+            "description": "Spec 010 (R6.1): the sd^beta temperature in the truncated form, per cell, with a Platt map for P.",
+            "properties": {
+                "beta_grid": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "slices": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "xmax_rad": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "xmax_rad"
+            ],
+            "title": "TemperatureConfig5",
             "type": "object"
         },
         "Track": {
@@ -5142,6 +5486,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.30.0"
+    "version": "0.31.0"
 }
 
