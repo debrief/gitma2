@@ -48,27 +48,55 @@ of. Seed 320 is not generated (still unused).
 | shuffled best / last | 3.164 / 3.370 | 0.922 / 0.934 | — | 0.954 / 0.858 | 0.619 / 0.612 | — |
 | E raw (baseline) | 9.021 | 0.647 | −0.09 … −0.49 | −2.587 | 0.904 | no |
 
-The stop is narrow and seed-dependent: two of three seeds meet every point, and the carried one
-misses one per-bin point by 0.004 (787 rows per bin, sampling sd about 0.016). The rule was fixed
-before any result and is applied as written; choosing another seed now would be choosing on
-scoring rows.
+The rule was fixed before any result and is applied as written; choosing another seed now would
+be choosing on scoring rows. The panel (round 1, `review.md`) corrected this record's first reading
+that the stop was "narrow and seed-dependent": re-binning under resampling, some bin misses ±0.05
+in 87% of resamples for st-s3 and in 47% and 43% for st-s1 and st-s2, and the top bin is
+under-stated for every seed (+0.055, +0.040, +0.022). The per-bin check is a point check whose
+clustered sampling sd is about 0.018–0.023 per bin, so ±0.05 is about 2.5 sd; the temperature
+itself would miss it in 28% of resamples. That is a design flaw in G4-b (recorded for the
+follow-on), not a reason to read the stop as luck.
 
-## Reading
+## Reading (as corrected by the panel, round 1)
 
-- **Learning shown, for the first time on uncertainty.** All three seeds beat the sd^β
-  temperature by 0.23–0.24 standardised units, in every component (course log score 0.827 against
-  0.871; range interval score 1.99 against 2.18; speed 11.86 against 13.12 m/s units), and the
-  shuffled head is worse than the temperature at both epochs, so the gain is per-row information,
-  not a better constant. Gate 3's head showed none.
-- **The statement is usable.** E's raw sds claim P 0.90 and are right half the time (log gain
-  −2.6); the stated E claims 0.62 within ±22° and is right 0.62 of the time, with a course
-  statement 1.0 nat per row better than "unknown", and 95% intervals that cover 0.93–0.94.
-- **What failed is the top of P's isotonic map:** fitted on 1,971 tuning rows with 10 knots, its
-  last knot under-states the best rows for seed 3. A per-bin check at ±0.05 on 787 rows is
-  sensitive to that; the overall reliability is −0.002.
-- **Speed coverage sits at 0.93**, inside the band by point but not wholly: the interval-score
-  minimiser on the training stream lands slightly low on validation for every head seed (0.929–
-  0.935), while the temperature, fitted on the tuning rows of the same seed, lands at 0.943.
+- **The top-bin miss is the isotonic map's, not the head's.** In the top bin the raw head states
+  0.761 against a hit rate of 0.730 (slightly over-confident); the map, fitted on 1,971 tuning
+  rows with 10 knots (about 197 rows each, sampling sd about 0.034), pooled its top two knots to
+  0.677, so no row can state more than 0.677 and 13.8% of rows sit at that ceiling. The map is
+  needed overall (raw P 0.655 against a hit rate of 0.622) but its top is noise-driven. The
+  temperature's map pools 7 of 10 knots to 0.583: about 80% of its rows state the same P, so its
+  per-bin pass rests on ties.
+- **P carries little per-row information.** The carried head's P runs 0.46–0.68 (5th–95th
+  percentile); its AUC for a hit is about 0.60 (temperature 0.53). Most of the course log gain
+  (+1.0 nat) is the arc's overall concentration; the head adds 0.044 nats over the temperature.
+- **P is not conditionally reliable.** On rows not settled after a target manoeuvre (1,001 of
+  3,934; "settled" is defined from the truth, so no statement can read it) P is 0.617 and the hit
+  rate 0.30; on settled rows 0.626 against 0.73. The temperature does the same. Overall
+  reliability (−0.002) averages a −0.31 and a +0.10. On open transitions the statement widens the
+  arc (21° to 38°) at the same P, and is reliable there (−0.015).
+- **The course statement contradicts itself.** P goes through the isotonic map; the stated density
+  (`course_conc`, `course_mix_p`), which G4-c's log score scores, does not, so a row's density
+  mass on ±X differs from its P by 0.037 on average and up to 0.20 (temperature up to 0.33). The
+  normal approximation to the von Mises in P adds up to 0.12 on single rows (a·sd reaches about
+  35° at the 95th percentile; the cap limits X, not a·sd).
+- **Learning: the head beats the sd^β temperature by 0.235 standardised units, in every component**
+  (course log score 0.827 against 0.871; range interval score 1.99 against 2.18; speed 11.86
+  against 13.12), so the claim does not depend on G4-d's weights. But the registered shuffled
+  control permutes errors while keeping the sds, which breaks the error–sd link the temperature
+  itself uses; it being worse than the temperature does not show per-row information beyond the
+  sd. An unregistered check by the panel (on the scoring rows, so evidence, not a result): a
+  temperature refitted on the head's 39,054 stream rows scores 2.995, and a classical rule of 10
+  deciles of sd × 8 cells per quantity fitted on the stream scores 2.907 against the heads'
+  2.744–2.747, so about two-thirds of the gain lies beyond any function of sd and cell.
+- **Plain-language widths.** The 95% range interval is a factor of 1.74 either way at the median
+  (3.77 at the 95th percentile: at 20 km, 11–35 km); the speed half-width is 3.4 m/s (6.7 kn) at the
+  median, 6.4 m/s at the 95th percentile. Honest, but wide. Coverage falls short at minute 5
+  (range 0.916, speed 0.903) and beyond 30 km (range 0.907, speed 0.867), slices the gate reports
+  but does not gate. `sharpness95_*` in `calibration.json` measures E's raw sds, not the stated
+  intervals.
+- **Comparison with the references is not like for like.** The baseline gives the oracle and the
+  IMM statements from their raw sds, against E's fitted one; a fair ceiling would fit the same
+  temperature to the oracle on the tuning rows.
 
 Files: `validation.json`, `by-head/*.json`, `calibration.json` (every measure by slice),
 `metrics.json`, `report.md`, `inputs.json`, `plan.json`, `run.json`. `errors.npz` stays on the

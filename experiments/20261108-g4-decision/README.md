@@ -55,3 +55,16 @@ sd^β temperature 2.66, head 2.46 (st-s1, best epoch 29).
 
 G4-a pass 0.7, G4-b 0.5, G4-c 0.8, G4-d 0.4, G4-e 1.0; overall about 0.15. The most likely
 failure is G4-b's ±0.03 overall band or G4-d out of sample.
+
+## Addendum (2026-11-09, after validation; panel round 1): a trial training before this record
+
+Before this record was committed, two models were trained locally as a design trial on the tuning
+rows (st-s1 and st-shuffled, commit 9e8c7d4 with a dirty tree and an earlier plan digest
+448cbce9; `scratchpad/g4ck/`, not committed). Their in-sample numbers (head 2.46, shuffled 2.85,
+plain temperature 3.08) are the ones quoted above and drove the sd^β redesign of the temperature
+(research R3a). Training is deterministic, so CI's st-s1 best weights after this record are
+byte-identical to the trial's (`601c820b…`): the registered st-s1 is a rerun of a model that
+already existed, not a model first trained after the record. Nothing was scored on validation
+ordinals 500–1499 by any stated estimator before this record (the trial and the β choice used
+ordinals 0–499 only); constitution IV allows validation exploration, and the change made the
+classical control stronger. Neither the criteria nor the plan changed.
