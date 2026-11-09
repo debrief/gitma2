@@ -1,0 +1,96 @@
+{
+  "description": "Spec 010 research R2: the declared severity grid (owner accepted 2026-11-09). Error = white + correlated + bias + outlier; an absent field means the kind is off.",
+  "primary": "all-central",
+  "conditions": [
+    {
+      "id": "off"
+    },
+    {
+      "id": "corr-mild",
+      "corr_tau_s": 30.0,
+      "corr_share": 0.5
+    },
+    {
+      "id": "corr-central",
+      "corr_tau_s": 60.0,
+      "corr_share": 0.5
+    },
+    {
+      "id": "corr-harsh",
+      "corr_tau_s": 180.0,
+      "corr_share": 0.5
+    },
+    {
+      "id": "bias-mild",
+      "bias_sd_rad": 0.0043633231,
+      "bias_tau_s": 1800.0
+    },
+    {
+      "id": "bias-central",
+      "bias_sd_rad": 0.0087266463,
+      "bias_tau_s": 1800.0
+    },
+    {
+      "id": "bias-harsh",
+      "bias_sd_rad": 0.0174532925,
+      "bias_tau_s": 1800.0
+    },
+    {
+      "id": "sigma-mild",
+      "sigma_factor_max": 1.25
+    },
+    {
+      "id": "sigma-central",
+      "sigma_factor_max": 1.5
+    },
+    {
+      "id": "sigma-harsh",
+      "sigma_factor_max": 2.0
+    },
+    {
+      "id": "out-mild",
+      "outlier_rate": 0.005,
+      "outlier_spread": 10.0
+    },
+    {
+      "id": "out-central",
+      "outlier_rate": 0.02,
+      "outlier_spread": 10.0
+    },
+    {
+      "id": "out-harsh",
+      "outlier_rate": 0.05,
+      "outlier_spread": 10.0
+    },
+    {
+      "id": "all-mild",
+      "corr_tau_s": 30.0,
+      "corr_share": 0.5,
+      "bias_sd_rad": 0.0043633231,
+      "bias_tau_s": 1800.0,
+      "sigma_factor_max": 1.25,
+      "outlier_rate": 0.005,
+      "outlier_spread": 10.0
+    },
+    {
+      "id": "all-central",
+      "corr_tau_s": 60.0,
+      "corr_share": 0.5,
+      "bias_sd_rad": 0.0087266463,
+      "bias_tau_s": 1800.0,
+      "sigma_factor_max": 1.5,
+      "outlier_rate": 0.02,
+      "outlier_spread": 10.0
+    },
+    {
+      "id": "all-harsh",
+      "corr_tau_s": 180.0,
+      "corr_share": 0.5,
+      "bias_sd_rad": 0.0174532925,
+      "bias_tau_s": 1800.0,
+      "sigma_factor_max": 2.0,
+      "outlier_rate": 0.05,
+      "outlier_spread": 10.0
+    }
+  ]
+}

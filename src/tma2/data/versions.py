@@ -12,6 +12,7 @@ READABLE_GENERATOR_VERSIONS: tuple[str, ...] = (
     "0.4.0",
     "0.5.0",
     "0.6.0",
+    "0.7.0",
 )
 """Generator versions whose files this build reads. Each later version reproduces the earlier
 ones byte for byte when the ranges lack the newer parameters (gitma's record), so earlier

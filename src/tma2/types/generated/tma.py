@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.30.0"
+version = "0.31.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -673,6 +673,7 @@ class Track(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: TrackId = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -811,6 +812,31 @@ class DatasetHeader(ConfiguredBaseModel):
     created_by: str = Field(default=..., description="""Command line that produced the file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
     generator_git_commit: Optional[str] = Field(default=None, description="""Commit of the checkout that ran tma-generate (absent before schema 0.8.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
     generator_git_dirty: Optional[bool] = Field(default=None, description="""True when that checkout had uncommitted changes (only allowed with --allow-dirty; absent before schema 0.8.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
+    mismatch: Optional[MismatchCondition] = Field(default=None, description="""Bearing-error mismatch applied to this split (generator 0.7.0, spec 010); absent when the errors are white Gaussian with the stated sigma.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
+
+
+class MismatchCondition(ConfiguredBaseModel):
+    """
+    Spec 010 (Gate H): how a split's bearing errors depart from white Gaussian noise of the stated sigma. Error = white + correlated + bias + outlier, with the true sd equal to the nominal sd times a factor. A kind is off when its fields are absent. Estimators are never given this record's realisation; only the oracle ceilings read the truth side file.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    id: str = Field(default=..., description="""Condition name, for example all-central.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
+                       'ExperimentManifest',
+                       'TrainingConfig',
+                       'ModelManifest',
+                       'PhysicsModelConfig',
+                       'TrainingPlan',
+                       'DetectorConfig',
+                       'EModelConfig']} })
+    corr_tau_s: Optional[float] = Field(default=None, description="""Correlation time of the first-order Gauss-Markov error component.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition'], 'unit': {'ucum_code': 's'}} })
+    corr_share: Optional[float] = Field(default=None, description="""Share of the true error variance that is correlated (the rest is white).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
+    bias_sd_rad: Optional[float] = Field(default=None, description="""Stationary sd of the slowly varying bias (Gauss-Markov).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition'], 'unit': {'ucum_code': 'rad'}} })
+    bias_tau_s: Optional[float] = Field(default=None, description="""Correlation time of the bias.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition'], 'unit': {'ucum_code': 's'}} })
+    sigma_factor_max: Optional[float] = Field(default=None, description="""k: the true sd is the nominal sd times a factor drawn log-uniformly on [1/k, k], once per engagement, and not told to the estimator.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
+    outlier_rate: Optional[float] = Field(default=None, description="""Probability per bearing of an added outlier.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
+    outlier_spread: Optional[float] = Field(default=None, description="""Outlier sd in units of the true error sd.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
 
 
 class NormalisationConstants(ConfiguredBaseModel):
@@ -1115,6 +1141,7 @@ class ExperimentManifest(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -1256,6 +1283,7 @@ class TrainingConfig(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: str = Field(default=..., description="""Estimator name used in predictions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -1346,6 +1374,7 @@ class ModelManifest(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -1448,6 +1477,7 @@ class PhysicsModelConfig(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: str = Field(default=..., description="""Estimator name in predictions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -1511,6 +1541,7 @@ class TrainingPlan(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -1803,6 +1834,7 @@ class DetectorConfig(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -2422,6 +2454,7 @@ class EModelConfig(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     id: str = Field(default=..., description="""Model id in predictions, e.g. e-s1, ew-s2, e-shuffled.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Track',
+                       'MismatchCondition',
                        'ExperimentManifest',
                        'TrainingConfig',
                        'ModelManifest',
@@ -3053,6 +3086,7 @@ ScenarioMetadata.model_rebuild()
 ManoeuvreSpan.model_rebuild()
 Scenario.model_rebuild()
 DatasetHeader.model_rebuild()
+MismatchCondition.model_rebuild()
 NormalisationConstants.model_rebuild()
 FeatureLayout.model_rebuild()
 PredictionRow.model_rebuild()

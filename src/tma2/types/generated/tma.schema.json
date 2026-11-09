@@ -659,6 +659,17 @@
                     "description": "First scenario index (inclusive).",
                     "type": "integer"
                 },
+                "mismatch": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MismatchCondition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Bearing-error mismatch applied to this split (generator 0.7.0, spec 010); absent when the errors are white Gaussian with the stated sigma."
+                },
                 "parameter_ranges": {
                     "$ref": "#/$defs/ParameterRanges"
                 },
@@ -2715,6 +2726,70 @@
                 "excluded"
             ],
             "title": "MetricsRecord",
+            "type": "object"
+        },
+        "MismatchCondition": {
+            "additionalProperties": false,
+            "description": "Spec 010 (Gate H): how a split's bearing errors depart from white Gaussian noise of the stated sigma. Error = white + correlated + bias + outlier, with the true sd equal to the nominal sd times a factor. A kind is off when its fields are absent. Estimators are never given this record's realisation; only the oracle ceilings read the truth side file.",
+            "properties": {
+                "bias_sd_rad": {
+                    "description": "Stationary sd of the slowly varying bias (Gauss-Markov).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "bias_tau_s": {
+                    "description": "Correlation time of the bias.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "corr_share": {
+                    "description": "Share of the true error variance that is correlated (the rest is white).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "corr_tau_s": {
+                    "description": "Correlation time of the first-order Gauss-Markov error component.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Condition name, for example all-central.",
+                    "type": "string"
+                },
+                "outlier_rate": {
+                    "description": "Probability per bearing of an added outlier.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "outlier_spread": {
+                    "description": "Outlier sd in units of the true error sd.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "sigma_factor_max": {
+                    "description": "k: the true sd is the nominal sd times a factor drawn log-uniformly on [1/k, k], once per engagement, and not told to the estimator.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "MismatchCondition",
             "type": "object"
         },
         "ModelDigest": {
@@ -5142,6 +5217,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.30.0"
+    "version": "0.31.0"
 }
 

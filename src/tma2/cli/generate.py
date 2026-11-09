@@ -20,7 +20,8 @@ from tma2.types import ParameterRanges, dump_record, parse_record
 
 USAGE = (
     "usage: tma2-generate --seed <uint64> --count <n> --out <dir> [--ranges f] "
-    "[--heldout-ranges f] [--noise-free] [--allow-dirty] [--format f32pack|ndjson|both]"
+    "[--heldout-ranges f] [--noise-free] [--allow-dirty] [--format f32pack|ndjson|both] "
+    "[--mismatch conditions.json#id]"
 )
 
 
@@ -36,6 +37,23 @@ def load_ranges(path: str) -> dict[str, Any]:
     return ranges
 
 
+def load_condition(spec: str) -> dict[str, Any]:
+    """``<file>#<id>``: one ``MismatchCondition`` from a conditions file, validated."""
+    from tma2.sim.mismatch import flatten_condition
+    from tma2.types.generated.tma import MismatchCondition
+
+    if "#" not in spec:
+        raise ValueError("expected <conditions file>#<condition id>")
+    path, cid = spec.split("#", 1)
+    doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    for raw in doc["conditions"]:
+        if raw.get("id") == cid:
+            cond = dump_record(parse_record(MismatchCondition, raw, path, "mismatch condition"))
+            flatten_condition(cond)
+            return cond
+    raise KeyError(f"no condition {cid!r} in {path}")
+
+
 def run(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="tma2-generate", usage=USAGE, add_help=True)
     ap.add_argument("--seed", required=True)
@@ -46,6 +64,7 @@ def run(argv: list[str]) -> int:
     ap.add_argument("--noise-free", action="store_true")
     ap.add_argument("--allow-dirty", action="store_true")
     ap.add_argument("--format", default="both")
+    ap.add_argument("--mismatch", help="spec 010: <conditions file>#<condition id>")
     try:
         args = ap.parse_args(argv)
     except SystemExit as e:
@@ -76,6 +95,14 @@ def run(argv: list[str]) -> int:
         if args.noise_free:
             ranges = noise_free(ranges)
             heldout = noise_free(heldout)
+        mismatch: dict[str, Any] | None = None
+        if args.mismatch:
+            try:
+                mismatch = load_condition(args.mismatch)
+            except (ValueError, OSError, KeyError) as e:
+                raise UsageError(f"--mismatch: {e}") from e
+            if args.noise_free:
+                raise UsageError("--mismatch needs bearing noise; do not combine with --noise-free")
         # Provenance is read once, before any output exists, from this package's checkout.
         commit, dirty = generator_provenance(read_git_provenance(), args.allow_dirty)
         created_by = "".join(
@@ -86,6 +113,12 @@ def run(argv: list[str]) -> int:
                 (
                     f" --heldout-ranges sha256:{file_digest(args.heldout_ranges)}"
                     if args.heldout_ranges
+                    else ""
+                ),
+                (
+                    f" --mismatch sha256:{file_digest(args.mismatch.split('#')[0])}"
+                    f"#{args.mismatch.split('#')[1]}"
+                    if args.mismatch
                     else ""
                 ),
             ]
@@ -101,6 +134,7 @@ def run(argv: list[str]) -> int:
                 created_by=created_by,
                 generator_git_commit=commit,
                 generator_git_dirty=dirty,
+                mismatch=mismatch,
             )
         )
         print(json.dumps(summary))
