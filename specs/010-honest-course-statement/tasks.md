@@ -6,7 +6,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Schema 0.31.0 in `schema/tma.yaml`. All new fields are optional.
+- [x] T001 Schema 0.31.0 in `schema/tma.yaml`. All new fields are optional.
   - New `PredictionRow` fields: `course_kappa`, `course_form`, `unsettled_score`, `unsettled_flag`.
   - New configs: `StatementConfig5` (with `shuffle: none|errors|encoder`), `ClassicalRuleConfig`,
     `TemperatureConfig5`, `ProxyDefinition`.
@@ -18,24 +18,24 @@
 
 ## Phase 2: Foundational
 
-- [ ] T003 Extend `src/tma2/calib/statement.py` with the truncated form.
+- [x] T003 Extend `src/tma2/calib/statement.py` with the truncated form.
   - The exact von Mises mass on ±X (numerical, `np.i0e`).
   - The truncated density and its log score, in NumPy and torch.
   - The Platt map.
   - Tests in `tests/unit/test_statement5.py`: the density integrates to 1; the arc mass equals P to
     1e-9; the log score is proper (its expectation is maximised at the true P); the torch and NumPy
     versions agree.
-- [ ] T004 Add `src/tma2/calib/proxy.py` and `src/tma2/cli/g5proxy.py`: the R1 features per row
+- [x] T004 Add `src/tma2/calib/proxy.py` and `src/tma2/cli/g5proxy.py`: the R1 features per row
   (residual bias 6/12/30, χ² 60, C open, minutes since C's last closed transition) and the proxy
   cache with digests.
   - Tests in `tests/unit/test_proxy.py`: changing bearings after row k leaves the features at k
     unchanged; synthetic CV data gives bias ≈ 0; refusal on a missing segmentation.
-- [ ] T005 Extend `src/tma2/eval/calibration.py`.
+- [x] T005 Extend `src/tma2/eval/calibration.py`.
   - Columns for κ, the form, and the proxy score and flag.
   - The truncated log score, by form.
   - Per-slice reliability, the calibration slope and the AUC of P.
   - Tests in `tests/unit/test_calibration_metrics.py`.
-- [ ] T006 Add `src/tma2/calib/gate5.py`: the G5 criteria (R7).
+- [x] T006 Add `src/tma2/calib/gate5.py`: the G5 criteria (R7).
   - Tests in `tests/unit/test_gate5.py`, including SC-003's synthetic check: a calibrated statement
     passes G5-b in ≥ 90% of 200 resampled datasets; one miscalibrated by 0.15 on a slice fails it in
     ≥ 90%.
@@ -43,30 +43,30 @@
 
 ## Phase 3: User Stories 1 and 2 - one consistent probability that drops after a suspected manoeuvre (P1)
 
-- [ ] T007 [US1] Add `tma2-g3train proxy5` (fits the proxy definition on tuning rows; R1) and
+- [x] T007 [US1] Add `tma2-g3train proxy5` (fits the proxy definition on tuning rows; R1) and
   `temperature5` (the truncated temperature per cell with the β grid and the Platt map; R6.1;
   `--errors-of` for the references).
-- [ ] T008 [US2] Add `tma2-g3train classical5` (the classical rule on the stream; R6.2) and
+- [x] T008 [US2] Add `tma2-g3train classical5` (the classical rule on the stream; R6.2) and
   `statement5`.
   - `statement5` trains the head in the truncated form, with the P features plus the encoder
     state, on the exact errors.
   - Each model can take `shuffle: encoder`, which permutes only the encoder state each epoch (R6.3).
   - In `src/tma2/calib/statement_fit.py`.
-- [ ] T009 [US1] Extend `tma2-g4predict` for the truncated form: the classical rule, the
+- [x] T009 [US1] Extend `tma2-g4predict` for the truncated form: the classical rule, the
   temperature and the head, with the proxy fields. The header records the digests and provenance.
 - [ ] T010 [US3] Extend the scorer (`cli/gs.py`) to read the new columns and report the per-slice
   table, the slope, the AUC, and the proxy-state and truth-settled splits.
 
 ## Phase 4: User Story 3 - the gate (P1)
 
-- [ ] T011 [US3] Run the proxy caches: validation 0–1499 in the session; the stream (seed 318) on CI
+- [x] T011 [US3] Run the proxy caches: validation 0–1499 in the session; the stream (seed 318) on CI
   with a `g5proxy.yml` workflow.
 - [ ] T012 [US3] Baseline record `experiments/<date>-g5-base-val/`.
   - Scored on ordinals 500–1499 with `--reuse` of the Gate 4 validation scoring.
   - It contains: raw E; Gate 4's st-s3 and temperature, expressed in their own form; and the
     references raw.
   - No spec 010 statement is scored.
-- [ ] T013 [US3] Write the SRD amendment: the §5 Gate 5 row (R7, after T006's check) and a §9
+- [x] T013 [US3] Write the SRD amendment: the §5 Gate 5 row (R7, after T006's check) and a §9
   record. The owner merges.
 - [ ] T014 [US3] Write the plan `configs/gate5/g5-a.json` and the decision record
   `experiments/<date>-g5-decision/`.

@@ -147,8 +147,9 @@ here touches scoring ordinals 500–1499. Scripts: `scripts/research/g5_tuning.p
   - **Revision:** overall ±0.04, and an interval-only check per slice. The slice verdict is pass
     unless the interval lies wholly outside ±0.05. Result over 60 datasets: the calibrated statement
     never failed G5-b (75% pass, 25% inconclusive, before the interval-only change), and the
-    0.15-off slice failed in 100%. The final run (100 datasets, 500 resamples) is recorded in the
-    decision record.
+    0.15-off slice failed in 100%. The final run (100 datasets, 500 resamples, seed 7, at 733de07's
+    gate logic) passed G5-a and G5-b on the calibrated statement in 100% of datasets, and failed
+    G5-b on the 0.15-off slice in 100%.
 
 ## R8. Sample sizes
 
