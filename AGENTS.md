@@ -134,6 +134,12 @@ headroom after the robust control: train under mismatch; none: stop the learning
 publish. The Gate 4 follow-on is set aside. Seeds: 320 tuning, 321 validation, 322 test; seed 314
 is retired from tuning. After Gate H: the scaled end-to-end regressor control (note 04 option B)
 on Modal's free credit, once the owner has set up the account and secret.
+Implemented so far (PR 25, steps 1–3): `sim/mismatch.py` (overlay from its own stream;
+`run_kernel(..., mismatch)`; `tma2-generate --mismatch configs/gateh/conditions.json#<id>`; truth
+side file `<split>.mismatch.npz`), `src/tma2/headroom/` (`cov`, `gls` the whitened layer, `estimators`
+the ceilings and the robust control, `crb`, `gate`), `tma2-hpredict`, `tma2-gh`, workflow
+`headroom/**` → `.github/workflows/headroom.yml` with plans `configs/headroom/`. Draft plan
+`configs/gateh/gh-draft.json` (tuning only). Schema 0.31.0. Gate H is not yet registered.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -389,5 +395,10 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   about 800 rows is about 2.5 sampling sd: use an interval or a slope test. A 10-knot PAV map on
   2,000 rows caps P by noise at its top knot. Recalibrating P but not the density makes the
   statement contradict itself.
+- Spec 010: never add an argument to `physics.layer.residuals`/`iterate` for a reference
+  estimator: C's frozen `code_sha256` covers `physics/layer.py`. Subclass (`headroom/gls.py`).
+  An `.npz` carries zip timestamps, so its file digest is not reproducible: bind a digest of the
+  arrays (`mismatch_truth_digest`). A numba function called from Python returns a Python int
+  for a `uint64`: wrap it in `np.uint64` before passing it back in (`OverflowError` otherwise).
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.

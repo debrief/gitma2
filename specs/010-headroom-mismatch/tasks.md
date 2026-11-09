@@ -9,41 +9,41 @@ Implementation follows in its own PR, with the slides post.
 
 ## Phase 1: Setup
 
-- [ ] T001 Add `MismatchCondition`, `MismatchTruth`, `GateHPlan`, `GateHCriteria`, `GateHDecision`
+- [x] T001 Add `MismatchCondition`, `MismatchTruth`, `GateHPlan`, `GateHCriteria`, `GateHDecision`
   and `HeadroomRecord` to `schema/tma.yaml` (schema 0.31.0); regenerate types
   (`scripts/gen_types.py`); bump `tests/unit/test_types.py`; regenerate the data dictionary.
-- [ ] T002 [P] Add `configs/gateh/conditions.json`: the 16 conditions of research R2 (owner
+- [x] T002 [P] Add `configs/gateh/conditions.json`: the 16 conditions of research R2 (owner
   accepted the grid, 2026-11-09), `all-central` primary.
 
 ## Phase 2: Data (US1)
 
-- [ ] T003 `src/tma2/sim/mismatch.py` (numba): the overlay of research R1 from its own stream
+- [x] T003 `src/tma2/sim/mismatch.py` (numba): the overlay of research R1 from its own stream
   (label `mismatch`), fixed draw order, draws for every sample whether dropped or not; returns the
   bearing and the truth arrays. The kernel must expose b and the white draw without changing its
   own draws.
-- [ ] T004 `src/tma2/sim/generate.py`, `cli/generate.py`: generator 0.7.0, `--mismatch FILE#id`,
+- [x] T004 `src/tma2/sim/generate.py`, `cli/generate.py`: generator 0.7.0, `--mismatch FILE#id`,
   the side file `<split>.mismatch.npz` with the split's digest; `off` takes the 0.6.0 path and
   writes no side file. `GenerateOptions.generator_version` stays explicit for older fixtures.
-- [ ] T005 [P] `tests/golden/test_mismatch_off.py`: data bytes equal 0.6.0's for three seeds
+- [x] T005 [P] `tests/unit/test_mismatch.py`: data bytes equal 0.6.0's for three seeds
   (SC-001); existing golden and conformance tests unchanged.
-- [ ] T006 [P] `tests/unit/test_mismatch_stats.py`: per kind on 200 scenarios, lag
+- [x] T006 [P] `tests/unit/test_mismatch.py`: per kind on 200 scenarios, lag
   autocorrelation, bias sd, σ range and outlier rate within sampling error; tracks, manoeuvres
   and dropouts equal the `off` split's (FR-003); determinism.
-- [ ] T007 [P] `tests/unit/test_mismatch_isolation.py`: no estimator entry point other than
+- [x] T007 [P] `tests/unit/test_mismatch.py`, `tests/unit/test_headroom.py`: no estimator entry point other than
   `tma2-hpredict ceiling` opens the side file; pack header σ is the nominal value (FR-005).
 - [ ] T008 Generate seed 320 (500 scenarios × 16 conditions) on CI; commit digests under
   `experiments/<date>-gh-data/`.
 
 ## Phase 3: Ceilings and bound (US2)
 
-- [ ] T009 `src/tma2/headroom/cov.py`: Σ from the parameters on valid sample times, Cholesky
+- [x] T009 `src/tma2/headroom/cov.py`: Σ from the parameters on valid sample times, Cholesky
   whitening, prefix-causal (FR-014). Tests: against a dense reference; gaps; Σ = σ² I when off.
-- [ ] T010 `src/tma2/headroom/gls.py`: the whitened piecewise-CV solve through the physics
+- [x] T010 `src/tma2/headroom/gls.py`: the whitened piecewise-CV solve through the physics
   layer's residuals and Jacobian (double); with no whitening the existing oracle path, untouched.
-- [ ] T011 `src/tma2/headroom/ceilings.py` and `tma2-hpredict ceiling`: realisation (exact) and
-  attainable (mixture responsibilities, iteratively reweighted). `tests/unit/test_ceilings_off.py`:
+- [x] T011 `src/tma2/headroom/ceilings.py` and `tma2-hpredict ceiling`: realisation (exact) and
+  attainable (mixture responsibilities, iteratively reweighted). `tests/unit/test_headroom.py`:
   both equal the existing oracle row for row with mismatch off (FR-013).
-- [ ] T012 `src/tma2/headroom/crb.py`: Jᵀ Σ⁻¹ J with known manoeuvres (research R4); test that it
+- [x] T012 `src/tma2/headroom/crb.py`: Jᵀ Σ⁻¹ J with known manoeuvres (research R4); test that it
   equals `known_manoeuvres` when off.
 - [ ] T013 Efficiency of both ceilings against the bound on seed 320, every condition; investigate
   any settled-slice value far from 1 before going on (US2 scenario 2). Record in
@@ -51,7 +51,7 @@ Implementation follows in its own PR, with the slides post.
 
 ## Phase 4: Robust control and references (US3)
 
-- [ ] T014 `src/tma2/headroom/robust.py` and `tma2-hpredict robust`: Huber weights, σ̂ from the
+- [x] T014 `src/tma2/headroom/robust.py` and `tma2-hpredict robust`: Huber weights, σ̂ from the
   median absolute residual, ρ̂ whitening with the fallback rule; `--only` ablations;
   `--segmentation truth|FILE`. Tests: on clean data with wide Huber constant and no whitening it
   equals C″'s solve; finite outputs on short legs.
@@ -59,11 +59,12 @@ Implementation follows in its own PR, with the slides post.
   R5 (27 points), on CI; record the table and the choice.
 - [ ] T016 Re-tune the IMM and EKF on seed 320, primary condition (`tune/**`, the grids of
   `experiments/20261104-man2-refs/`); freeze by name.
-- [ ] T017 `src/tma2/headroom/gate.py`, `cli/gh.py` (`tma2-gh`): `tma2-gs` scoring with
+- [x] T017 `src/tma2/headroom/gate.py`, `cli/gh.py` (`tma2-gh`): `tma2-gs` scoring with
   `--predictions`, the statistic R with its paired clustered interval, the segmentation part, the
   operational table (research R8), `headroom.json`; refusals of contracts/cli.md. Tests on fixture
   scenarios, including R's interval containing zero with mismatch off (US3 scenario 4).
-- [ ] T018 `score.yml` kind `gh`; plans under `configs/score/`.
+- [x] T018 `.github/workflows/headroom.yml` (`headroom/**`; generation, predictions and scoring
+  per condition and variant); plans under `configs/headroom/`.
 
 ## Phase 5: Gate H registered (US4)
 
