@@ -61,8 +61,8 @@ scenarios the fields are present and the points equal Gate 2's.
   standardised sum of the course log score and the two interval scores; early stopping on tuning
   ordinals; shuffled control writes distinct model ids for best and last (FR-041). Tests in
   `tests/unit/test_calib.py`.
-- [ ] T014 [US3] (CI) `g3train/g4-a`: three seeds, shuffled, temperature.
-- [ ] T015 [US3] Calibrated validation files (`tma2-g3predict`), validation scoring (`score/g4-a-val`,
+- [x] T014 [US3] (CI) `g3train/g4-a`: three seeds, shuffled, temperature.
+- [x] T015 [US3] Calibrated validation files (`tma2-g3predict`), validation scoring (`score/g4-a-val`,
   `--reuse`), `tma2-g4 --split validation`, carried rule, `carried.json` or the validation stop.
 
 ## Phase 6: Test and panel (P2)

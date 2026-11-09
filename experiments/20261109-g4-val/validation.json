@@ -1,0 +1,124 @@
+{
+  "split": "validation",
+  "producing_commit": "74834aaba2d89716de7f987efaf0fba48684afec",
+  "git_dirty": false,
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "decision_sha256": "b1b57010840db5d127c9f0682ed5563856677202d2ae6dc1605321be87dbb0e8",
+  "scoring_inputs": {
+    "truth": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "segmentations": {
+      "C": "8df52ac63d51e1285e1dc14917029d5f2b93d7be9ef84a50ee2037d5fe1ea50f"
+    },
+    "glr_confirm": {
+      "config": "glr-q0.2-t13.8",
+      "files": 34,
+      "sha256": "7b2a42743202eee149c74a2ed4b88963a83ac4d9391ea6e2706854fa2c9f716e"
+    },
+    "naive_train": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+    "predictions": {
+      "e-s3": "fd1706d451ab5b5eb87fcd292d674c9afbeecde440a0c271818d2e3956c96990",
+      "st-s1-best": "8ab6b8c4ff1076a1c6be21028e2f7746cd1dace65e5baf20ea6bfd0e7b7d16a0",
+      "st-s2-best": "6095d222fc873378d1bd7409b6d5da7dfe002c6a558d9df8026c6dc9c4f59e73",
+      "st-s3-best": "70951daf796b8d576e6614a9b101d0aad4290c584cd01722b25e1c894affbc16",
+      "st-shuffled-best": "44ceb0bcb4f08d826d0370bcd46007d1a578081d57c374cd68795ec160a73f7e",
+      "st-shuffled-last": "40ad4428e8d970e3d28e982e892fca78db5c7aea0e226ad9941aa9179860bc2d",
+      "temperature": "c23525dede86cd9da7c8860b5581910d0b9e925da3df557b6e233b4c03a89386"
+    }
+  },
+  "rows": 3934,
+  "scenarios": 1000,
+  "roles": {
+    "head": "st-s3-best",
+    "temperature": "temperature",
+    "raw": "e-s3",
+    "shuffled": [
+      "st-shuffled-best",
+      "st-shuffled-last"
+    ]
+  },
+  "g4a": "inconclusive",
+  "g4a_by_quantity": {
+    "log_range": "pass",
+    "speed": "inconclusive"
+  },
+  "g4b": "fail",
+  "g4b_bins": [
+    {
+      "p": 0.4748932215348836,
+      "hit": 0.4714104193138501,
+      "rows": 787
+    },
+    {
+      "p": 0.6310349742619594,
+      "hit": 0.5870393900889453,
+      "rows": 787
+    },
+    {
+      "p": 0.6484026841112701,
+      "hit": 0.6327827191867853,
+      "rows": 787
+    },
+    {
+      "p": 0.656944525288906,
+      "hit": 0.6569250317662008,
+      "rows": 787
+    },
+    {
+      "p": 0.6745027089072851,
+      "hit": 0.7290076335877863,
+      "rows": 786
+    }
+  ],
+  "g4c": "pass",
+  "g4c_mean_p": 0.61714104552394,
+  "g4d": "pass",
+  "g4e": "pass",
+  "g4d_scale": {
+    "course": 0.8713399681434667,
+    "range": 2.1784231870955537,
+    "speed": 13.11594221204968
+  },
+  "intervals": {
+    "g4a": {
+      "log_range": {
+        "value": 0.9395017793594306,
+        "lo": 0.9260958205912334,
+        "hi": 0.9503690506490201
+      },
+      "speed": {
+        "value": 0.9288256227758007,
+        "lo": 0.914575411913815,
+        "hi": 0.9411014788373279
+      }
+    },
+    "g4b": {
+      "value": -0.0017368767389882578,
+      "lo": -0.02369596640315552,
+      "hi": 0.020629899651406935
+    },
+    "g4c": {
+      "value": 1.0108946479657688,
+      "lo": 0.9219207773512691,
+      "hi": 1.0990536761618956
+    },
+    "g4d": {
+      "value": -0.23464534601822695,
+      "lo": -0.35537799762261946,
+      "hi": -0.13680680390078104
+    }
+  },
+  "shuffled_rule": "pass",
+  "overall": "fail",
+  "shuffled_minus_temperature": {
+    "st-shuffled-best": {
+      "value": 0.16359798737433628,
+      "lo": 0.037004257445292676,
+      "hi": 0.2585073483250242
+    },
+    "st-shuffled-last": {
+      "value": 0.3698490015042646,
+      "lo": 0.20018550335106555,
+      "hi": 0.544765156574909
+    }
+  }
+}
