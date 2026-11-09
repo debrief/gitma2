@@ -1,0 +1,93 @@
+{
+  "plan_id": "g5-a",
+  "plan_digest": "3febde6f4cfcfe8384111fa3cb0ed8cff69b96b526c6cd368e3fff77ba19cb86",
+  "validation_seed": 314,
+  "validation_digest": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+  "train_seed": 318,
+  "test_seed": 320,
+  "carried_e": "e-s3",
+  "carried_e_weights": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+  "criteria": {
+    "coverage95_overall": [
+      0.92,
+      0.98
+    ],
+    "coverage95_slice": [
+      0.9,
+      0.99
+    ],
+    "reliability_overall": 0.04,
+    "reliability_slice": 0.05,
+    "reliability_slice_point": 1.0,
+    "slope": [
+      0.75,
+      1.33
+    ],
+    "auc_min": 0.55,
+    "min_slice_rows": 150,
+    "consistency_tol": 1e-06
+  },
+  "proxy": {
+    "features": [
+      "log1p_bias6",
+      "log1p_bias12",
+      "log1p_bias30",
+      "log_chi60",
+      "c_open",
+      "log_sd_range",
+      "log_sd_course",
+      "log_sd_speed",
+      "minute"
+    ],
+    "mean": [
+      0.5400187110770798,
+      0.4691131515687695,
+      0.4083844842373271,
+      0.3084933069532968,
+      0.07790876473603281,
+      -2.6883093974466092,
+      -2.386882112300992,
+      -0.5830405941820597,
+      12.44233726294208
+    ],
+    "scale": [
+      0.40880813669191884,
+      0.43033857969064343,
+      0.48216460903728564,
+      0.9890795393060345,
+      0.26802796330583356,
+      0.8393034626364223,
+      1.4005608424008893,
+      0.9740495837080645,
+      5.554227472848482
+    ],
+    "coef": [
+      0.3276432356752993,
+      -0.0012637652628019122,
+      -0.028003899439639834,
+      0.2996778212129142,
+      0.26593122912930844,
+      -0.14176099335139256,
+      -0.04197584147816067,
+      0.05789342046486666,
+      -0.07510568438251362
+    ],
+    "intercept": -1.059233244853297,
+    "threshold": -0.9379630605443369,
+    "flag_share_tuning": 0.26806765761148127
+  },
+  "proxy_sha256": "6248deea31464127a506d944db1ed17612e575744e6b2b3daa9cdcd56d99ad54",
+  "slices": [
+    "g5_minutes",
+    "open_at_k",
+    "range_band"
+  ],
+  "bootstrap_level": 0.975,
+  "bootstrap_resamples": 2000,
+  "carried_rule": "Of the head's three seeds (st5-s1..st5-s3, best epoch), the carried head is the one with the median standardised summed score on validation (seed 314 scoring ordinals 500-1499), on the control of record's scale (calib.gate4.summed_score with calib.gate4.scale_of of the control of record).",
+  "shuffled_rule": "The encoder-only shuffled head (st5-encshuf: E-w's encoder state permuted across rows each epoch, sds, proxy features, C's code and errors kept) is scored on validation at its best and at its last epoch as distinct models (st5-encshuf-best, st5-encshuf-last). If either one's standardised summed score minus the control of record's (paired, clustered, 97.5%) lies wholly below zero, a G5-d pass is void (recorded as not passed). The test gate reads the outcome from validation.json by the digest in carried.json.",
+  "validation_rule": "The carried head goes to test only if, on validation, no check (G5-a to G5-e) fails and each overall point lies inside its band (coverage95 of range and speed in [0.92, 0.98]; hit - P within +/-0.04; slope in [0.75, 1.33]; log gain above 0; AUC above 0.55; head - control below 0; points identical and mass error within 1e-6). The per-slice checks count only as fail or pass (interval wholly outside the band, or not). Otherwise seed 320 is not generated and the record says so; the follow-on is decided as SRD section 5.",
+  "follow_on": "SRD section 5: proposed in the write-up with a recommended default, adopted if the owner has not objected by the next spec. If only G5-d fails (or is void), the control of record's statement is carried. If G5-b fails on the proxy-flagged slice, the expected default is a stronger causal manoeuvre detector (a learned change detector on the bearing residuals) before any further statement work.",
+  "forecast": "Validation baseline (experiments/20261109-g5-base-val/): Gate 4's carried head would pass G5-b's overall checks (hit - P -0.002, slope 1.16) and G5-c's AUC (0.61), the Gate 4 temperature would miss the slope (0.74) and the AUC (0.544); both state about 0.6 on truth-unsettled rows that hit about 0.3. Tuning rows (in sample, smoke fits): the classical rule (no encoder) scores 2.557 against the sd^beta temperature's 2.667 (standardised summed score) with P spread 0.29-0.77 and AUC 0.63; the head after 8 epochs 2.492; the proxy flags 26.8% of tuning rows (held-out AUC about 0.65 for truth-unsettled). Forecast: G5-a pass 0.7 (speed coverage sat at 0.93 in Gate 4), G5-b 0.45 (the proxy-flagged slice is the risk: the proxy is weak, so reliability there depends on P dropping enough), G5-c 0.85, G5-d 0.35 (the head starts at the classical rule and its in-sample lead of 0.06 may not survive out of sample), G5-e 1.0. Overall about 0.1; the most likely outcome is a stop at validation on G5-d or the flagged slice, with the classical rule as the carried statement.",
+  "disclosures": "Before this record, on validation tuning ordinals 0-499 only (no stated estimator was scored on ordinals 500-1499 except the baseline's re-report of Gate 4's statements): research R1-R4 fits (proxy AUCs, held-out logistic, exact vs normal mass, Platt slopes), a smoke run of the temperature, the classical rule and an 8-epoch head (seed 1, a dirty tree, scratch outputs not kept), and the proxy definition in proxy.json (fitted at 733de07, clean, under the draft plan 5b785c8d, whose tuning_ordinals, caches and proxy caches are unchanged in the bound plan; proxy.json cannot record the bound plan's digest because the plan names it). The gate's bands were revised before this record by the synthetic check (research R7). The head's CI training at this record's commit will not be byte-identical to the smoke run (different epochs and plan)."
+}
