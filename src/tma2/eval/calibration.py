@@ -300,24 +300,31 @@ def _st_is(j: int) -> Stat:
 
 def calibration_slope(c: np.ndarray) -> float:
     """β of the logistic regression hit ~ α + β · logit P over rows that state P in (0, 1)
-    (1 when P is calibrated in the logistic sense); Newton's method, 25 steps."""
+    (1 when P is calibrated in the logistic sense); Newton's method. NaN when the fit does not
+    converge or |β| > 50 (P nearly constant or the hits separable: no slope can be stated, and a
+    gate reading NaN does not pass)."""
     p = c[:, 10]
     ok = (p > 0) & (p < 1) & (c[:, 9] > 0)
     if ok.sum() < 10:
         return math.nan
-    x = np.log(p[ok] / (1 - p[ok]))
+    q = np.clip(p[ok], 1e-6, 1 - 1e-6)
+    x = np.log(q / (1 - q))
     y = _st_hit(c[ok])
+    if np.std(x) < 1e-9:
+        return math.nan
     xm = np.stack([np.ones_like(x), x], axis=1)
     w = np.array([0.0, 1.0])
-    for _ in range(25):
-        mu = 1 / (1 + np.exp(-(xm @ w)))
+    for _ in range(50):
+        mu = 1 / (1 + np.exp(-np.clip(xm @ w, -500, 500)))
         g = xm.T @ (y - mu)
         h = (xm * (mu * (1 - mu))[:, None]).T @ xm + 1e-9 * np.eye(2)
         step = np.linalg.solve(h, g)
         w = w + step
+        if not np.isfinite(w).all() or abs(w[1]) > 50:
+            return math.nan
         if np.abs(step).max() < 1e-10:
-            break
-    return float(w[1])
+            return float(w[1])
+    return math.nan
 
 
 def p_auc(c: np.ndarray) -> float:
