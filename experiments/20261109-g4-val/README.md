@@ -79,15 +79,19 @@ follow-on), not a reason to read the stop as luck.
   mass on ±X differs from its P by 0.037 on average and up to 0.20 (temperature up to 0.33). The
   normal approximation to the von Mises in P adds up to 0.12 on single rows (a·sd reaches about
   35° at the 95th percentile; the cap limits X, not a·sd).
-- **Learning: the head beats the sd^β temperature by 0.235 standardised units, in every component**
-  (course log score 0.827 against 0.871; range interval score 1.99 against 2.18; speed 11.86
-  against 13.12), so the claim does not depend on G4-d's weights. But the registered shuffled
-  control permutes errors while keeping the sds, which breaks the error–sd link the temperature
-  itself uses; it being worse than the temperature does not show per-row information beyond the
-  sd. An unregistered check by the panel (on the scoring rows, so evidence, not a result): a
-  temperature refitted on the head's 39,054 stream rows scores 2.995, and a classical rule of 10
-  deciles of sd × 8 cells per quantity fitted on the stream scores 2.907 against the heads'
-  2.744–2.747, so about two-thirds of the gain lies beyond any function of sd and cell.
+- **Learning: the head beats the registered sd^β temperature by 0.235 standardised units, in
+  every component** (course log score 0.827 against 0.871; range interval score 1.99 against 2.18;
+  speed 11.86 against 13.12), so G4-d passes and does not depend on its weights. **Most of that gain
+  is a classical function of E's own sds, not per-row learning.** The registered control states
+  each quantity from its own sd; unregistered rules checked by the panel (fitted on tuning ordinals
+  0–499 only, evaluated on the scoring rows, so evidence, not a result) recover 39% of the margin
+  with each log scale linear in all three log sds (19 parameters) and 72% with a quadratic in them
+  (43 parameters); 10 sd-deciles × 8 cells fitted on the stream recover about a third. The
+  remaining ~0.07, mostly in course, is unattributed (encoder state or the stream's 20× rows). The
+  registered shuffled control permutes errors but keeps the sds, which breaks the error–sd link the
+  temperature itself uses, so it rules out "a better constant", not "a better function of the
+  sds". The record's first reading ("the gain is per-row information") was wrong. A temperature
+  refitted on the head's 39,054 stream rows scores 2.995, so the gain is not the extra data.
 - **Plain-language widths.** The 95% range interval is a factor of 1.74 either way at the median
   (3.77 at the 95th percentile: at 20 km, 11–35 km); the speed half-width is 3.4 m/s (6.7 kn) at the
   median, 6.4 m/s at the 95th percentile. Honest, but wide. Coverage falls short at minute 5
