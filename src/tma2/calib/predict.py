@@ -80,3 +80,36 @@ def write_calibrated(
     if done != len(scales):
         raise ValueError(f"{len(scales) - done} cache rows have no prediction row in {pred_in}")
     return done
+
+
+def write_fields(
+    pred_in: Path,
+    out: Path,
+    fields: dict[tuple[int, float], dict[str, float]],
+    calibration: dict[str, Any],
+) -> int:
+    """Copy a prediction file, adding ``fields`` to each row named by (ordinal, float32
+    timestamp) (spec 009's statement); every other field is copied unchanged. Every entry must
+    find its row."""
+    from tma2.sim.geometry import f32
+
+    done = 0
+    with open(pred_in, encoding="utf-8") as fi, open(out, "w", encoding="utf-8") as fo:
+        h = json.loads(fi.readline())
+        h["calibration"] = calibration
+        fo.write(canonical_json(h) + "\n")
+        for line in fi:
+            rec = json.loads(line)
+            j = int(rec["ordinal"])
+            new = []
+            for r in rec["rows"]:
+                f = fields.get((j, f32(float(r["timestamp_s"]))))
+                if f is not None:
+                    r = {**r, **f}
+                    done += 1
+                new.append(r)
+            rec["rows"] = new
+            fo.write(canonical_json(rec) + "\n")
+    if done != len(fields):
+        raise ValueError(f"{len(fields) - done} cache rows have no prediction row in {pred_in}")
+    return done

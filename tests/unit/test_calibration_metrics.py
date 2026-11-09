@@ -8,11 +8,14 @@ import numpy as np
 
 from tma2.eval.calibration import (
     CHI2_4_MEDIAN,
+    WIDTH,
     Z95,
     covered,
     interval_score,
     measures,
+    reliability_bins,
     row_cal,
+    widen,
 )
 from tma2.physics.uncertainty import row_fields
 
@@ -75,3 +78,40 @@ def test_missing_row_is_not_covered() -> None:
     m = {x.name: x for x in measures()}
     assert abs(m["no_estimate_share"].stat({"c": cal}) - 1 / 50) < 1e-12
     assert math.isfinite(m["interval_score95_log_range"].stat({"c": cal}))
+
+
+def test_statement_from_sds_is_reliable_on_calibrated_rows() -> None:
+    """Spec 009 T005: a Gaussian-derived statement on calibrated rows: P matches the hit rate,
+    range and speed intervals cover 95%, and the course is more informative than uniform."""
+    cal, _ = _rows(4000, 1.0)
+    assert cal.shape[1] == WIDTH
+    m = {x.name: x.stat({"c": cal}) for x in measures()}
+    assert abs(m["statement_reliability"]) < 0.02
+    assert abs(m["statement_coverage95_log_range"] - 0.95) < 0.02
+    assert abs(m["statement_coverage95_speed"] - 0.95) < 0.02
+    assert m["statement_course_log_gain"] > 0.5
+    assert all(abs(b["hit"] - b["p"]) < 0.05 for b in reliability_bins(cal))
+
+
+def test_widen_matches_row_cal_and_missing_rows_state_nothing() -> None:
+    cal, _ = _rows(30, 1.0)
+    cal[0] = row_cal(None, np.zeros(4), (0.0, 0.0))
+    assert np.allclose(widen(cal[:, :9]), cal, equal_nan=True)
+    assert cal[0, 9] == cal[0, 10] == 0.0
+    assert abs(cal[0, 13] + math.log(2 * math.pi)) < 1e-12
+
+
+def test_explicit_statement_fields_are_read() -> None:
+    cal0, _ = _rows(1, 1.0)
+    rng_row = {
+        "converged": True, "x_m": 1e4, "y_m": 0.0, "range_m": 1e4, "course_rad": 0.5,
+        "speed_mps": 4.0,
+        **row_fields(np.array([1e4, 0.0, 4 * math.sin(0.5), 4 * math.cos(0.5)]),
+                     np.diag([40.0**2, 40.0**2, 0.03**2, 0.03**2]), (0.0, 0.0)),
+        "course_arc_rad": 0.2, "course_arc_prob": 0.7, "course_conc": 50.0, "course_mix_p": 0.8,
+        "range_ratio_q95": 0.05, "speed_q95_mps": 0.4,
+    }  # fmt: skip
+    c = row_cal(rng_row, np.array([1e4, 0.0, 4 * math.sin(0.6), 4 * math.cos(0.6)]), (0.0, 0.0))
+    assert c[14] == 1.0 and c[9] == 0.2 and c[10] == 0.7 and c[11] == 0.05 and c[12] == 0.4
+    assert math.isfinite(c[13])
+    assert cal0.shape == (1, WIDTH)

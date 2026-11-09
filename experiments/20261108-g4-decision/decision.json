@@ -1,0 +1,45 @@
+{
+  "plan_id": "g4-a",
+  "plan_digest": "e357f8a7d9fa93495a61b385aa913cbb9a02403f9532b64ce0c02f49820c064b",
+  "validation_seed": 314,
+  "validation_digest": "e8150cb0657799131e3205e1d29e2e5ea70f5ca9db334187e6f62718512536d8",
+  "train_seed": 318,
+  "test_seed": 320,
+  "carried_e": "e-s3",
+  "carried_e_weights": "a5485318f55f0840771373556e0ddb6ec5085f9f453ac1858c56a11e2e8e5e0a",
+  "criteria": {
+    "coverage95": [
+      0.92,
+      0.98
+    ],
+    "reliability_overall": 0.03,
+    "reliability_bin": 0.05,
+    "bins": 5,
+    "min_mean_prob": 0.5
+  },
+  "temperature": {
+    "slices": [
+      "minute",
+      "open"
+    ],
+    "xmax_rad": 0.7853981633974483,
+    "isotonic_bins": 10,
+    "beta_grid": [
+      1.0,
+      0.9,
+      0.8,
+      0.7,
+      0.6,
+      0.5,
+      0.4,
+      0.3
+    ]
+  },
+  "bootstrap_level": 0.975,
+  "bootstrap_resamples": 2000,
+  "carried_rule": "Of the head's three seeds (st-s1..st-s3, best epoch), the carried head is the one with the median standardised summed score on validation (seed 314 scoring ordinals 500-1499; calib.gate4.summed_score scaled by the temperature's means on those rows; tma2-g4 on the validation scoring run's errors.npz).",
+  "shuffled_rule": "The shuffled head (st-shuffled) is scored on validation at its best and at its last epoch, as distinct models (st-shuffled-best, st-shuffled-last). If either one's standardised summed score minus the temperature's (paired, clustered, 97.5%) lies wholly below zero, a G4-d pass is void (recorded as not passed). The test gate reads the outcome from validation.json by the digest in carried.json.",
+  "validation_rule": "The carried head goes to test only if every check's point meets its band or limit on validation (G4-a coverage points inside [0.92, 0.98]; G4-b overall within +/-0.03 and every bin within +/-0.05; G4-c log gain above 0 and mean P at least 0.5; G4-d below 0; G4-e exact). Otherwise seed 320 is not generated and the record says so; the follow-on is decided as SRD section 5.",
+  "follow_on": "SRD section 5: proposed in the write-up with a recommended default, adopted if the owner has not objected by the next spec. If only G4-d fails (or is void), the temperature's statement is carried. If G4-b or G4-c fails, the expected default is a statement that also gates on a causal manoeuvre flag (state 'course unknown' explicitly), since the oracle itself is overconfident on unsettled rows.",
+  "forecast": "Validation baseline (experiments/20261108-g4-base-val/): raw E states P 0.904 and hits 0.508 (reliability -0.396), course log gain -2.59, range and speed coverage 0.598 and 0.647; every check fails. On the tuning rows (0-499, in sample): the plain per-slice temperature states P 0.602 against a hit rate 0.608 with its lowest bin under-confident by 0.13 before the isotonic map; the sd^beta temperature (beta 0.7, 0.9, 0.4) scores 2.66 against the head's 2.46 and the shuffled head's 2.85 (standardised summed score). Forecast: G4-a pass 0.7 (interval-score-trained widths; validation and tuning rows from one seed), G4-b pass 0.5 (the overall band +/-0.03 needs a tight interval on about 4,000 rows; per-bin points after the isotonic map), G4-c pass 0.8 (tuning log gain about +1.0; mean P about 0.6), G4-d pass 0.4 (in-sample head lead of 0.2 may shrink out of sample; R1's AUC 0.62 says per-row course information is weak), G4-e 1.0. Overall about 0.15."
+}

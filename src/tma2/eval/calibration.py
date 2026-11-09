@@ -13,6 +13,21 @@ Every estimator's rows are summarised in one array ``cal`` of shape [N, 9]:
 A row with no plausible estimate or an unusable covariance has infinite errors, standard
 deviations and NEES, and is **not covered** (spec FR-012).
 
+**Spec 009's statement** extends the array to [N, 15] (``WIDTH``):
+
+| column | meaning |
+| --- | --- |
+| 9 | X, the course arc half-width (rad) |
+| 10 | P, the stated probability that the course lies within ±X |
+| 11, 12 | the 95% half-widths of ln range ratio and speed |
+| 13 | the course log score (log density of the statement at the true course) |
+| 14 | 1 if the row carries an explicit statement (spec 009 fields), 0 if derived from its sds |
+
+A row with no explicit statement but a usable covariance is given the Gaussian one: X =
+min(Xmax, 1.96 sd), P the normal probability of ±X, half-widths 1.96 sd, a von Mises log score with
+the stated sd. A row with neither states nothing: X = P = 0, half-widths 0 (not covered), the
+uniform log score ("course unknown").
+
 Measures, each a function of the paired columns so that the scorer's clustered bootstrap
 (``eval.bootstrap.bootstrap_clustered_statistic``) gives its interval:
 
@@ -48,6 +63,8 @@ ALPHA = 0.05
 KT_PER_MPS = 3600.0 / 1852.0
 # interval scores and widths are reported in natural-log range, degrees and knots
 UNITS = np.array([1.0, 180.0 / math.pi, KT_PER_MPS])
+WIDTH = 15
+XMAX = math.radians(45.0)  # spec 009 research R2: the largest usable course arc
 
 
 def wrap(a: float) -> float:
@@ -62,8 +79,9 @@ def row_cal(
 ) -> np.ndarray:
     """The [9] calibration row for one estimate (a prediction row or ``None`` when absent).
     ``truth_state`` is (x, y, vx, vy) at the row."""
-    out = np.full(9, np.inf)
+    out = np.full(WIDTH, np.inf)
     out[7] = out[8] = 0.0
+    out[9:15] = (0.0, 0.0, 0.0, 0.0, -math.log(2 * math.pi), 0.0)
     if est is None or not est.get("converged", False):
         return out
     out[8] = 1.0
@@ -87,7 +105,52 @@ def row_cal(
         out[6] = float(e @ np.linalg.solve(p, e))
     except np.linalg.LinAlgError:
         out[6] = np.inf
+    if est.get("course_arc_prob") is not None:
+        from tma2.calib.statement import course_log_score as cls
+
+        sd = float(est["course_sd_rad"])
+        a = 1.0 / (math.sqrt(float(est["course_conc"])) * sd)
+        out[9:15] = (
+            float(est["course_arc_rad"]),
+            float(est["course_arc_prob"]),
+            float(est["range_ratio_q95"]),
+            float(est["speed_q95_mps"]),
+            float(cls(np.array([out[1]]), np.array([a]),
+                                   np.array([float(est["course_mix_p"])]), np.array([sd]))[0]),
+            1.0,
+        )  # fmt: skip
+    else:
+        out[9:15] = statement_from_sds(out[None, :9])[0]
     return out
+
+
+def statement_from_sds(cal9: np.ndarray, xmax: float = XMAX) -> np.ndarray:
+    """[N, 6] columns 9–14 for rows that state only Gaussian sds (spec 008 files, the trackers,
+    and arrays stored by earlier scoring runs): see the module docstring."""
+    from tma2.calib.statement import course_log_score
+
+    n = cal9.shape[0]
+    out = np.zeros((n, 6))
+    out[:, 4] = -math.log(2 * math.pi)
+    ok = (cal9[:, 7] > 0) & (cal9[:, 8] > 0) & np.isfinite(cal9[:, 3:6]).all(axis=1)
+    if ok.any():
+        sd = cal9[ok, 3:6]
+        x = np.minimum(xmax, Z95 * sd[:, 1])
+        erf = np.vectorize(math.erf)
+        out[ok, 0] = x
+        out[ok, 1] = erf(x / (sd[:, 1] * math.sqrt(2.0)))
+        out[ok, 2] = Z95 * sd[:, 0]
+        out[ok, 3] = Z95 * sd[:, 2]
+        e = np.where(np.isfinite(cal9[ok, 1]), cal9[ok, 1], math.pi)
+        out[ok, 4] = course_log_score(e, np.ones(ok.sum()), np.full(ok.sum(), 1 - 1e-6), sd[:, 1])
+    return out
+
+
+def widen(cal: np.ndarray) -> np.ndarray:
+    """A [N, 9] array (stored before spec 009) widened to [N, 15] by ``statement_from_sds``."""
+    if cal.shape[1] >= WIDTH:
+        return cal
+    return np.concatenate([cal, statement_from_sds(cal)], axis=1)
 
 
 def _velocity(est: dict[str, Any]) -> np.ndarray:
@@ -173,6 +236,65 @@ def _no_estimate(d: dict[str, np.ndarray]) -> float:
     return float(1.0 - (d["c"][:, 8] > 0).mean())
 
 
+def _st_hit(c: np.ndarray) -> np.ndarray:
+    with np.errstate(invalid="ignore"):
+        hit: np.ndarray = (c[:, 1] <= c[:, 9]) & (c[:, 9] > 0)
+    return hit.astype(np.float64)
+
+
+def _st_reliability(d: dict[str, np.ndarray]) -> float:
+    """Hit rate minus mean stated P (spec 009 G4-b): 0 when P is reliable."""
+    c = d["c"]
+    return float(_st_hit(c).mean() - c[:, 10].mean())
+
+
+def _st_mean_p(d: dict[str, np.ndarray]) -> float:
+    return float(d["c"][:, 10].mean())
+
+
+def _st_mean_x(d: dict[str, np.ndarray]) -> float:
+    return float(np.degrees(d["c"][:, 9].mean()))
+
+
+def _st_log_gain(d: dict[str, np.ndarray]) -> float:
+    """Mean course log score minus the uniform's (positive: more informative than "unknown")."""
+    return float(d["c"][:, 13].mean() + math.log(2 * math.pi))
+
+
+def _st_cov(j: int) -> Stat:
+    def f(d: dict[str, np.ndarray]) -> float:
+        c = d["c"]
+        e, q = c[:, 0 if j == 0 else 2], c[:, 11 + j]
+        with np.errstate(invalid="ignore"):
+            return float(((e <= q) & (q > 0)).mean())
+
+    return f
+
+
+def _st_is(j: int) -> Stat:
+    def f(d: dict[str, np.ndarray]) -> float:
+        c = d["c"]
+        e, q = c[:, 0 if j == 0 else 2], c[:, 11 + j]
+        with np.errstate(invalid="ignore"):
+            s = 2 * q + (2 / ALPHA) * np.maximum(e - q, 0.0)
+        s = np.where(np.isfinite(s), s, np.nan)
+        fill = np.nanpercentile(s, 99) if np.isfinite(s).any() else math.nan
+        return float(np.where(np.isnan(s), fill, s).mean() * (1.0 if j == 0 else KT_PER_MPS))
+
+    return f
+
+
+def reliability_bins(c: np.ndarray, bins: int = 5) -> list[dict[str, float]]:
+    """Equal-count bins of stated P: {mean P, hit rate, rows} (spec 009 G4-b, points)."""
+    order = np.argsort(c[:, 10], kind="stable")
+    hit = _st_hit(c)
+    out = []
+    for i in np.array_split(order, bins):
+        if len(i):
+            out.append({"p": float(c[i, 10].mean()), "hit": float(hit[i].mean()), "rows": len(i)})
+    return out
+
+
 def measures() -> list[Measure]:
     """Every per-estimator measure as a statistic of its ``cal`` column (name ``c``)."""
     out: list[Measure] = []
@@ -185,6 +307,14 @@ def measures() -> list[Measure]:
     out.append(Measure("nees_median_ratio", _nees_ratio))
     out.append(Measure("nees_within95", _nees_within))
     out.append(Measure("no_estimate_share", _no_estimate))
+    out.append(Measure("statement_reliability", _st_reliability))
+    out.append(Measure("statement_mean_p", _st_mean_p))
+    out.append(Measure("statement_mean_arc_deg", _st_mean_x))
+    out.append(Measure("statement_course_log_gain", _st_log_gain))
+    out.append(Measure("statement_coverage95_log_range", _st_cov(0)))
+    out.append(Measure("statement_coverage95_speed", _st_cov(1)))
+    out.append(Measure("statement_interval_score_log_range", _st_is(0)))
+    out.append(Measure("statement_interval_score_speed_kt", _st_is(1)))
     return out
 
 
@@ -225,6 +355,9 @@ SLICE_INTERVALS = {
     "coverage95_speed",
     "nees_median_ratio",
     "nees_within95",
+    "statement_reliability",
+    "statement_coverage95_log_range",
+    "statement_coverage95_speed",
 }
 
 
@@ -245,6 +378,7 @@ def report(
     out: dict[str, Any] = {}
     for name, cal in cals.items():
         rec: dict[str, Any] = {"overall": summarise(cal, cluster, level, resamples)}
+        rec["reliability_bins"] = reliability_bins(cal)
         g = gross[name]
         own = {"gross": {"gross": g, "not_gross": ~g}}
         for sname, labels in {**slices, **own}.items():
