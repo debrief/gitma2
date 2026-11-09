@@ -34,7 +34,7 @@ leave room worth learning for.
   new §5 row, proposed as an amendment the owner merges. Spec: `specs/010-headroom-mismatch/`.
 - **Judged by**: headroom, the share of the gap between C″ and an *attainable ceiling* that
   remains after a classical robust control. The ceiling is the same solve told the true
-  segmentation and the true error model, but not which bearings were wild. Proposed threshold for
+  segmentation and the true error model, but not which bearings were wild. The owner's threshold for
   "material": the robust control's median range error at least 10% above the ceiling's, interval
   wholly above, on the primary condition. The panel decides.
 - **Plan**:

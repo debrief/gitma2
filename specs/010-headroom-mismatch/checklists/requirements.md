@@ -31,8 +31,8 @@
 
 ## Notes
 
-- The 10% materiality threshold and the three severities per kind are proposals for the SRD
-  amendment and the plan, which the owner can overrule before the decision record; they are not
+- The 10% materiality threshold is the owner's (2026-11-09). The three severities per kind are a
+  proposal for the plan, which the owner can overrule before the decision record; they are not
   clarification markers.
 - "Physics-layer solve", C, C″ and efficiency are project vocabulary (glossary), not
   implementation details.

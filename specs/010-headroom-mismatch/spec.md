@@ -277,8 +277,7 @@ and every figure in it cites a committed record.
   validation or test rows.
 - **FR-041**: The decision record MUST name the primary condition, the severities, the
   materiality threshold, the validation rule, the seeds and forecasts.
-- **FR-042**: Proposed default for materiality, to be confirmed or overruled by the owner on the
-  amendment: on the primary condition (all four kinds at their central severities), G5 rows, the
+- **FR-042**: Materiality (owner, 2026-11-09, before any result): on the primary condition (all four kinds at their central severities), G5 rows, the
   robust control's median range error exceeds the attainable ceiling's by at least 10% of the
   ceiling's, with the paired interval wholly above 10%; **not material** if the interval is wholly
   below 10%; otherwise inconclusive.
@@ -344,8 +343,8 @@ and every figure in it cites a committed record.
 - C″ (C with the zig veto and the fixed fade, `experiments/20261107-g2-veto/`) is the standing
   classical estimator, as the Gate 2 write-up recommended; C is frozen at its Gate 2 code and
   parameters.
-- The 10% materiality threshold is an agent proposal with no result behind it; it is the owner's
-  to change until the decision record is committed, and nobody's after.
+- The 10% materiality threshold was confirmed by the owner on 2026-11-09 with no result behind
+  it; the decision record binds it.
 - Target-motion mismatch (a target that does not move in constant-velocity legs) is a second
   kind of model error and is out of scope here; the write-up lists it as not tested.
 - Scoring runs on CI (`score/**`), not in a session; one long run at a time.
