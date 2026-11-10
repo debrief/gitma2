@@ -1,0 +1,46 @@
+{
+  "description": "Spec 010 T022: Gate H test. Seed 322: every sigma = 1 deg scenario of the primary condition (four shards of 1,300, the last taking the rest), and the first 1,000 of off and of the four single kinds at central. H-c is decided here. Pushed only after the validation record.",
+  "plan": "configs/gateh/gh-a.json",
+  "split": "test",
+  "gate": {
+    "decision": "experiments/20261110-gh-decision"
+  },
+  "seed": 322,
+  "count": 13000,
+  "data_split": "train",
+  "start": 0,
+  "ordinals": 100000,
+  "shards": 4,
+  "shard_size": 1300,
+  "ordinals_by_condition": {
+    "off": 1000,
+    "corr-central": 1000,
+    "bias-central": 1000,
+    "sigma-central": 1000,
+    "out-central": 1000
+  },
+  "conditions": [
+    "all-central",
+    "off",
+    "corr-central",
+    "bias-central",
+    "sigma-central",
+    "out-central"
+  ],
+  "runs": [
+    {
+      "kind": "nominal"
+    },
+    {
+      "kind": "robust"
+    },
+    {
+      "kind": "attainable"
+    },
+    {
+      "kind": "realisation"
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5"
+}
