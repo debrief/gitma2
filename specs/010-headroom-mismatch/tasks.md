@@ -79,7 +79,7 @@ Implementation follows in its own PR, with the slides post.
 
 - [x] T020a Shard `headroom.yml` (predictions per ordinal range, one scoring job) before the
   test run: about 5,200 scenarios exceed one job's time limit.
-- [ ] T021 Generate seed 321 (1,000 × 16) and score on CI, one run at a time; apply H-a and H-b
+- [x] T021 Generate seed 321 (1,000 × 16) and score on CI, one run at a time; apply H-a and H-b
   only; record `experiments/<date>-gh-val/`. Stop only if a soundness check fails.
 - [ ] T022 Generate seed 322 after the validation record (5,000 primary; 1,000 each for `off` and
   the four single kinds at central); score once from a worktree at the commit.
