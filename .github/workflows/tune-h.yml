@@ -1,0 +1,98 @@
+name: Reference tuning under mismatch (Gate H)
+
+# Spec 010 T016: re-tune the IMM and EKF on tuning seed 320 under the primary mismatch condition
+# (all-central), as tune-sharded.yml does for clean MAN2 data: eight 4-core shards and a merge.
+# Push `tune-h/<grid>` (`default`, `man2-pass2` … `man2-pass4`: tma2-tune --grid). The split is
+# generated at this commit (seed 320, count 5200, train: about 2,000 sigma = 1 deg scenarios).
+# The record goes to results/gh-tune-<grid>-<run id>; nothing merges.
+
+on:
+  push:
+    branches: ["tune-h/**"]
+
+permissions:
+  contents: write
+
+env:
+  DATA: ${{ github.workspace }}/../gh-tune
+  SHARDS: 8
+
+jobs:
+  shard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Grid from the branch name (tune-h/<grid>)
+        run: |
+          G="${GITHUB_REF_NAME#tune-h/}"
+          echo "GRID=$G" >> "$GITHUB_ENV"
+          echo "EXP=experiments/gh-tune-runs/$G-${{ github.run_id }}" >> "$GITHUB_ENV"
+      - run: uv sync
+      - name: Generate seed 320 under the primary condition
+        run: |
+          uv run tma2-generate --seed 320 --count 5200 --ranges configs/man2-ranges.json \
+            --heldout-ranges configs/man2-heldout.json --format f32pack --out "$DATA" \
+            --mismatch configs/gateh/conditions.json#all-central
+          sha256sum "$DATA/train.f32pack"
+      - name: Tune this shard (spec 004's G5 grids, 2,000 σ = 1° scenarios)
+        run: |
+          uv run tma2-tune --criterion g5 --validation "$DATA/train.f32pack" \
+            --experiment "$EXP" --scenarios 2000 --workers 4 --grid "$GRID" --shard "${{ matrix.shard }}/$SHARDS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: grid-part-${{ matrix.shard }}
+          path: ${{ env.EXP }}/grid-part-${{ matrix.shard }}.csv
+
+  merge:
+    needs: shard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Grid from the branch name (tune-h/<grid>)
+        run: |
+          G="${GITHUB_REF_NAME#tune-h/}"
+          echo "GRID=$G" >> "$GITHUB_ENV"
+          echo "EXP=experiments/gh-tune-runs/$G-${{ github.run_id }}" >> "$GITHUB_ENV"
+      - run: uv sync
+      - name: Generate seed 320 under the primary condition
+        run: |
+          uv run tma2-generate --seed 320 --count 5200 --ranges configs/man2-ranges.json \
+            --heldout-ranges configs/man2-heldout.json --format f32pack --out "$DATA" \
+            --mismatch configs/gateh/conditions.json#all-central
+          sha256sum "$DATA/train.f32pack"
+      - uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/parts
+          merge-multiple: true
+      - name: Choose from all parts
+        run: |
+          uv run tma2-tune --criterion g5 --validation "$DATA/train.f32pack" \
+            --experiment "$EXP" --scenarios 2000 --grid "$GRID" \
+            --from-parts $(ls "$RUNNER_TEMP"/parts/grid-part-*.csv | sort -V)
+          cp "$RUNNER_TEMP"/parts/grid-part-*.csv "$EXP/"
+          printf '{"run_id": "%s", "commit": "%s", "shards": %s}\n' "${{ github.run_id }}" \
+            "${{ github.sha }}" "$SHARDS" > "$EXP/run.json"
+      - name: Push the results branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/gh-tune-$GRID-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$EXP"
+          git commit -qm "experiments: Gate H reference tuning under mismatch (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"

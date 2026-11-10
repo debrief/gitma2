@@ -1,14 +1,19 @@
 {
   "id": "gh-draft",
-  "description": "Spec 010 Gate H: DRAFT plan for tuning on seed 320 only. The decision record binds configs/gateh/gh-a.json, written after tuning; nothing on validation or test rows may be scored from this file.",
+  "description": "Spec 010 Gate H: DRAFT plan for tuning on seed 320 only. Robust settings as chosen by the grid (experiments/20261110-gh-grid). The decision record binds configs/gateh/gh-a.json; nothing on validation or test rows may be scored from this file.",
   "conditions": "configs/gateh/conditions.json",
   "primary": "all-central",
   "ranges": "configs/man2-ranges.json",
   "heldout": "configs/man2-heldout.json",
-  "seeds": {"tuning": 320, "validation": 321, "test": 322, "rescore": 323},
+  "seeds": {
+    "tuning": 320,
+    "validation": 321,
+    "test": 322,
+    "rescore": 323
+  },
   "robust": {
     "huber": true,
-    "huber_k": 1.345,
+    "huber_k": 2.0,
     "sigma": true,
     "whiten": true,
     "min_bearings": 60,
@@ -23,6 +28,9 @@
     "mode": "gap",
     "open_handover": "knot_at_k",
     "window": 6,
-    "fade": [0.73, 0.0079]
+    "fade": [
+      0.73,
+      0.0079
+    ]
   }
 }

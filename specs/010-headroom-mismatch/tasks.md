@@ -31,8 +31,8 @@ Implementation follows in its own PR, with the slides post.
   and dropouts equal the `off` split's (FR-003); determinism.
 - [x] T007 [P] `tests/unit/test_mismatch.py`, `tests/unit/test_headroom.py`: no estimator entry point other than
   `tma2-hpredict ceiling` opens the side file; pack header σ is the nominal value (FR-005).
-- [ ] T008 Generate seed 320 (500 scenarios × 16 conditions) on CI; commit digests under
-  `experiments/<date>-gh-data/`.
+- [x] T008 Generate seed 320 (500 scenarios × 16 conditions) on CI; digests recorded per condition in
+  `experiments/20261109-gh-tuning/<condition>/data-digests.json`.
 
 ## Phase 3: Ceilings and bound (US2)
 
@@ -45,7 +45,7 @@ Implementation follows in its own PR, with the slides post.
   both equal the existing oracle row for row with mismatch off (FR-013).
 - [x] T012 `src/tma2/headroom/crb.py`: Jᵀ Σ⁻¹ J with known manoeuvres (research R4); test that it
   equals `known_manoeuvres` when off.
-- [ ] T013 Efficiency of both ceilings against the bound on seed 320, every condition; investigate
+- [x] T013 Efficiency of both ceilings against the bound on seed 320, every condition; investigate
   any settled-slice value far from 1 before going on (US2 scenario 2). Record in
   `experiments/<date>-gh-tuning/`.
 
@@ -55,7 +55,7 @@ Implementation follows in its own PR, with the slides post.
   median absolute residual, ρ̂ whitening with the fallback rule; `--only` ablations;
   `--segmentation truth|FILE`. Tests: on clean data with wide Huber constant and no whitening it
   equals C″'s solve; finite outputs on short legs.
-- [ ] T015 Choose the control's settings on seed 320, primary condition, from the grid of research
+- [x] T015 Choose the control's settings on seed 320, primary condition, from the grid of research
   R5 (27 points), on CI; record the table and the choice.
 - [ ] T016 Re-tune the IMM and EKF on seed 320, primary condition (`tune/**`, the grids of
   `experiments/20261104-man2-refs/`); freeze by name.
