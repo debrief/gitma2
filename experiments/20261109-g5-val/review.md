@@ -31,7 +31,8 @@ has been rewritten accordingly.
 - AUC 0.654;
 - log gain 0.798;
 - the carried seed (s1), which is the median on both scales;
-- G5-d −0.081 [−0.126, −0.041], with the encoder-shuffle rule failing at −0.039 [−0.067, −0.015].
+- G5-d −0.081 [−0.126, −0.041], with the encoder-shuffle rule failing at −0.039 [−0.067, −0.015]
+  (the reviewer's cluster bootstrap; the record's intervals are in README.md).
 
 **Findings:**
 - [major] "P is honest within the band" on flagged rows is false. The classical rule's slice is
@@ -172,6 +173,28 @@ Recommended follow-on, for the write-up and spec 011:
    - Separate geometry from target manoeuvres in the proxy.
    - State the caveat about undetected manoeuvres in the row (a field description) and on any
      display.
+   - Add a range-band check of the short-range under-confidence (2–5 km: +0.117).
 6. **Fix the references and provenance.**
    - Give the oracle a statement that uses the manoeuvre times it knows, as a fair ceiling.
    - Run the stated files and the proxy caches on CI, with digests in their headers.
+
+# Round 2
+
+One reviewer checked the corrected record against every round-1 major and returned
+**approve-with-findings**. The bound files are unchanged since 06dd705, and no superseded claim
+survives. Its findings, all applied:
+
+- [major] The Platt relation was stated backwards. It is now "the validation slope equals the
+  unmapped slope divided by the map's b (1.06 / 0.85 ≈ 1.25)".
+- [major] The learning claim is now "no learning from E-w's encoder state beyond an encoder-free
+  model is shown". The encoder does help within the bounded head (−0.041 [−0.074, −0.012]). The MLP
+  is now marked as post hoc, red-team, two seeds.
+- [minor]
+  - The geometry bullet is corrected (range band is a gated slice).
+  - The session-made files are noted under Provenance.
+  - The statistics intervals are labelled as the reviewer's.
+  - The short-range check is added to follow-on item 5.
+  - A dated §9 line in the SRD records the result. The criteria are unchanged.
+
+**Decided by the panel, round 2: Gate 5 stopped at validation** (G5-d void). The classical rule's
+statement is carried. Seed 320 is unused.

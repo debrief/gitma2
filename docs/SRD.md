@@ -213,6 +213,12 @@ and recorded, not asked.
   within, per-slice point band ±0.08) passed a calibrated statement in only 60% of datasets and was
   revised to overall ±0.04 and interval-only slice checks, which fail no calibrated dataset and
   fail a slice off by 0.15 in every one. No Gate 5 result exists.
+- **2026-11-10 (agent, after the result):** Gate 5 stopped at validation (G5-d void: the
+  encoder-only shuffle also beat the classical control; G5-b slope inconclusive, 1.25 [1.06, 1.47];
+  `experiments/20261109-g5-val/`, panel rounds 1–2). The classical rule is carried. The synthetic
+  check behind the bands understated the real data's structure (logit sd of P 0.48 on validation
+  against 0.87 synthetic; within-scenario correlation about 0.24 against none), so the per-slice
+  check had less power than stated. Criteria unchanged. Seed 320 unused.
 
 ## Annexes
 

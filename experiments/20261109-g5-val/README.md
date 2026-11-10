@@ -19,6 +19,8 @@ decision record is `experiments/20261109-g5-decision/` (plan `configs/gate5/g5-a
 - **Verdict.** `tma2-g5 --split validation` at 25653e0 (clean; Intel Xeon) wrote `validation.json`
   (`5d2f296a…`). The `by-head/` folder holds the same checks run with other statements in the
   head's role. They are for information only and decide nothing.
+- **Session-made files.** The stated files and proxy caches were made in the session, not on CI.
+  They reproduce byte for byte, but their headers do not bind the feature or proxy cache digests.
 
 ## The carried seed and the checks
 
@@ -114,8 +116,7 @@ best statement available (see below).
 - **The flag also reacts to geometry, not only to target manoeuvres.**
   - Its rate falls with time since the zig (0.27 to 0.18) while the unsettled rate stays near 0.26.
   - At 0–2 km it flags 37% of rows against 16% unsettled.
-  - Ownship manoeuvres and close-range bearing rate raise the residuals too, and neither is a slice
-    here.
+  - Ownship manoeuvres also raise the residuals and are not a slice here.
 - **The statement is under-confident at short range.**
   - classical rule at 2–5 km (215 rows): +0.117 [+0.044, +0.188];
   - head at 2–5 km: +0.075 [0.000, 0.148];
@@ -127,7 +128,7 @@ best statement available (see below).
   temperature (AUC 0.54) and does not use the manoeuvre times it knows.
 
 **The slope (G5-b inconclusive) is the Platt map's doing.** A Platt map is affine in logit P, so the
-validation slope equals the unmapped slope times the map's b.
+validation slope equals the unmapped slope divided by the map's b (1.06 / 0.85 ≈ 1.25).
 - Unmapped, the classical rule's P has slope 1.06 [0.94, 1.20] on the scoring rows.
 - The map's b, fitted on the 1,951 tuning rows (500 scenarios), is 0.85 [0.67, 1.05]. That fit is
   noisy: the minute-10 cell alone gives 0.60 on tuning rows against 1.36 on scoring rows.
@@ -154,7 +155,7 @@ validation slope equals the unmapped slope times the map's b.
   against 1.88; speed 10.50 against 10.84). On course it is no better: +0.004 [−0.013, +0.021] on
   the classical rule's scale. The earlier reading, "its gain is in the arc width", was wrong.
 
-**Learning: no learning from E-w's encoder state is shown.**
+**Learning: no learning from E-w's encoder state beyond an encoder-free model is shown.**
 - **Within the bounded-residual head, the encoder helps a little.** Head − encoder shuffle (best) is
   −0.041 [−0.074, −0.012].
 - **An encoder-free model beats the head.** The red team trained a plain MLP (64×64, tanh) on the
@@ -165,6 +166,8 @@ validation slope equals the unmapped slope times the map's b.
   - One MLP seed passes G5-b outright (slope 1.13 [0.95, 1.31]).
 
   The head's gain is a nonlinear use of the classical features, and the bounded head underfits it.
+  The MLP was trained after the result (post hoc), on two seeds, by the red team, whose scripts are
+  not part of the record.
 - **A richer parametric rule does not match the head.** A 105-term quadratic in the sds, the
   design, the code and the minute gave −0.008 [−0.066, +0.048].
 
