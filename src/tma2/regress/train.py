@@ -76,8 +76,10 @@ def train(
     device_name: str = "cpu",
     resume: Path | None = None,
     limit_seconds: int | None = None,
+    git_commit: str | None = None,
 ) -> dict[str, Any]:
     gp = read_git_provenance()  # before any output
+    commit = git_commit or gp.commit  # a remote container has no checkout: the caller's commit
     t0 = time.time()
     limit = cfg.limit_seconds if limit_seconds is None else limit_seconds
     device = torch.device(device_name)
@@ -106,7 +108,7 @@ def train(
     val = validation(cfg, ranges)
     out.mkdir(parents=True, exist_ok=True)
     start_update = update
-    seg: dict[str, Any] = {"start_update": update, "started": time.time(), "git_commit": gp.commit}
+    seg: dict[str, Any] = {"start_update": update, "started": time.time(), "git_commit": commit}
     rng = np.random.default_rng(cfg.seed * 1_000_003 + update)
 
     def save(stopped: str) -> None:
@@ -127,7 +129,7 @@ def train(
             gpu=torch.cuda.get_device_name(0) if device.type == "cuda" else None,
             torch=torch.__version__,
             cuda=torch.version.cuda,
-            git_dirty=gp.dirty,
+            git_dirty=gp.dirty if git_commit is None else False,
             stopped=stopped,
         )
         sd = {k: v.detach().cpu().contiguous() for k, v in model.state_dict().items()}
@@ -168,7 +170,7 @@ def train(
         update += 1
         if update % cfg.val_every_updates == 0 or update == cfg.total_updates:
             v = evaluate(model, val, device, amp)
-            v.update(update=update, seconds=time.time() - t0, train_loss=float(loss))
+            v.update(update=update, seconds=time.time() - t0, train_loss=float(loss.detach()))
             record["validation"].append(v)
             print(json.dumps(v), flush=True)
         if time.time() - last_save > cfg.checkpoint_seconds:

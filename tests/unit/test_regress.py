@@ -118,3 +118,23 @@ def test_toy_training_learns_and_resumes(tmp_path: Path) -> None:
     done = _run(p, tmp_path / "b", "--resume", str(tmp_path / "a"))
     assert done["stopped"] == "complete" and done["updates"] == 60
     assert done["scenarios_seen"] == full["scenarios_seen"] and len(done["segments"]) == 2
+
+
+def test_segments_resume_and_ledger(tmp_path: Path) -> None:
+    """The provider-free segment runner (what the GPU function calls): two segments of a plan
+    continue one run and accumulate their time; the ledger refuses a plan past the cap."""
+    from tma2.regress.ledger import check
+    from tma2.regress.remote import plan_limit_seconds, run_segment
+
+    cfg = {**TOY, "id": "t", "total_updates": 30, "warmup_updates": 3, "val_count": 16,
+           "val_every_updates": 15, "ranges": str(ROOT / "configs/man2-ranges.json")}  # fmt: skip
+    plan = {"config": cfg, "segments": 2, "segment_limit_seconds": 0}
+    work = tmp_path / "run"
+    a = run_segment(plan, work, "cpu", "abc")
+    assert a["stopped"] == "limit" and a["gpu_seconds"] > 0
+    b = run_segment({**plan, "segment_limit_seconds": 600}, work, "cpu", "abc")
+    assert b["stopped"] == "complete" and b["updates"] == 30 and len(b["segments"]) == 2
+    assert b["gpu_seconds"] > a["gpu_seconds"] and b["segments"][0]["git_commit"] == "abc"
+    assert not (tmp_path / "run.prev").exists()
+    assert plan_limit_seconds({"segments": 2, "segment_limit_seconds": 18000}) == 2 * 18600
+    assert check(10 * 3600, 5 * 3600, 50 * 3600) and not check(46 * 3600, 5 * 3600, 50 * 3600)

@@ -13,9 +13,9 @@
 
 ## Phase 2: GPU plumbing (no secrets needed)
 
-- [ ] T010 `scripts/modal_train.py` (image, volume, one function, hard timeout), checked against Modal's current documentation; `modal` in an optional dependency group
-- [ ] T011 `.github/workflows/gputrain.yml` (ledger check, modal run, chained segments, results branch); never on fork pull requests
-- [ ] T012 Dry run: the app's function executed locally on CPU with `configs/regress/toy.json`
+- [x] T010 `scripts/modal_train.py` (image, volume, one function, hard timeout), written from Modal's documentation of 2026-11-10; not yet run with credentials; `modal` installed by the workflow only (`uv run --with modal`)
+- [x] T011 `.github/workflows/gputrain.yml` (ledger check, modal run, chained segments, results branch); pushes only; `regress/ledger.py`
+- [x] T012 Dry run: the provider-free segment runner (`regress/remote.py`) on CPU, two segments (test)
 
 ## Phase 3: registration
 

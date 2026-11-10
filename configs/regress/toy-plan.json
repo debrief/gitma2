@@ -1,0 +1,22 @@
+{
+  "description": "Spec 012 dry run of the segment runner on CPU (no GPU, no secrets): the toy model in two segments.",
+  "config": {
+    "id": "toy",
+    "seed": 1,
+    "layers": 2,
+    "width": 64,
+    "heads": 4,
+    "feedforward": 128,
+    "batch_scenarios": 32,
+    "learning_rate": 0.001,
+    "warmup_updates": 20,
+    "total_updates": 300,
+    "val_count": 128,
+    "val_every_updates": 50,
+    "limit_seconds": 600,
+    "checkpoint_seconds": 60,
+    "precision": "float32"
+  },
+  "segments": 2,
+  "segment_limit_seconds": 8
+}
