@@ -68,15 +68,17 @@ Implementation follows in its own PR, with the slides post.
 
 ## Phase 5: Gate H registered (US4)
 
-- [ ] T019 SRD §5 row for Gate H (criteria of research R7, with the true-segmentation denominator
+- [x] T019 SRD §5 row for Gate H (criteria of research R7, with the true-segmentation denominator
   flagged for the owner) and a dated §9 line, in a PR the owner merges. No result on 321 or 322
   may exist.
-- [ ] T020 `configs/gateh/gh-a.json` and the decision record `experiments/<date>-gh-decision/`:
+- [x] T020 `configs/gateh/gh-a.json` and the decision record `experiments/<date>-gh-decision/`:
   conditions and digest, settings from T015, references from T016, the H-a band from T013, seeds,
   forecasts for R per condition, the validation rule. Committed before T021.
 
 ## Phase 6: Validation and test
 
+- [ ] T020a Shard `headroom.yml` (predictions per ordinal range, one scoring job) before the
+  test run: about 5,200 scenarios exceed one job's time limit.
 - [ ] T021 Generate seed 321 (1,000 × 16) and score on CI, one run at a time; apply H-a and H-b
   only; record `experiments/<date>-gh-val/`. Stop only if a soundness check fails.
 - [ ] T022 Generate seed 322 after the validation record (5,000 primary; 1,000 each for `off` and

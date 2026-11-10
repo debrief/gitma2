@@ -2132,6 +2132,115 @@
             "title": "GateDDecision",
             "type": "object"
         },
+        "GateHCriteria": {
+            "additionalProperties": false,
+            "description": "Gate H's checks (spec 010 research R7, SRD section 5), fixed by the decision record.",
+            "properties": {
+                "clean_cost_interval": {
+                    "description": "H-b: and the cost's interval not wholly above this.",
+                    "type": "number"
+                },
+                "clean_cost_point": {
+                    "description": "H-b: the robust control's cost on mismatch-off data (median range error over the plain solve's, minus 1) at most this.",
+                    "type": "number"
+                },
+                "efficiency_band": {
+                    "description": "H-a: band for the attainable ceiling's range efficiency against the bound under the true covariance, settled rows of the primary condition.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "materiality": {
+                    "description": "H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09).",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "efficiency_band",
+                "clean_cost_point",
+                "clean_cost_interval",
+                "materiality"
+            ],
+            "title": "GateHCriteria",
+            "type": "object"
+        },
+        "GateHDecision": {
+            "additionalProperties": false,
+            "description": "The Gate H decision record (spec 010 FR-040, FR-041), committed before any validation or test scoring.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "conditions_digest": {
+                    "type": "string"
+                },
+                "criteria": {
+                    "$ref": "#/$defs/GateHCriteria"
+                },
+                "ekf": {
+                    "type": "string"
+                },
+                "forecasts": {
+                    "description": "Forecasts stated before any validation or test result.",
+                    "type": "string"
+                },
+                "imm": {
+                    "type": "string"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "primary": {
+                    "type": "string"
+                },
+                "rescore_seed": {
+                    "type": "integer"
+                },
+                "robust_settings": {
+                    "description": "The control's settings as canonical JSON.",
+                    "type": "string"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "tuning_seed": {
+                    "type": "integer"
+                },
+                "validation_rule": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "conditions_digest",
+                "primary",
+                "tuning_seed",
+                "validation_seed",
+                "test_seed",
+                "rescore_seed",
+                "criteria",
+                "robust_settings",
+                "imm",
+                "ekf",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "validation_rule",
+                "forecasts"
+            ],
+            "title": "GateHDecision",
+            "type": "object"
+        },
         "GateId": {
             "description": "",
             "enum": [

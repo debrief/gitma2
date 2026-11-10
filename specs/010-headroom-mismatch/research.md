@@ -113,10 +113,11 @@ Bearing error at sample i: e_i = w_i + c_i + β_i + o_i, with σ_true = σ_nomin
 
 | Check | Criterion | Kind |
 | --- | --- | --- |
-| H-a | attainable ceiling's efficiency against the bound on settled rows of the primary condition within the band the decision record declares from seed 320 | soundness |
-| H-b | on mismatch-off data the robust control's median range error at most 1.02 × C″'s, interval wholly below | soundness |
+| H-a | attainable ceiling's range efficiency against the bound on settled rows of the primary condition within [0.9, 1.6] (from seed 320: the plain oracle is 1.57 on clean data), and its median range error no worse than the plain solve's | soundness |
+| H-b | (owner, 2026-11-10) on mismatch-off data the robust control's median range error over the plain solve's, minus 1, at most 5%, and its interval not wholly above 2%. The first draft (at most 2%, interval wholly below) could not be decided at the validation sample size | soundness |
 | H-c | R (R6) on the primary condition: **material** if the interval is wholly above 0.10; **not material** if wholly below; otherwise inconclusive, one re-score on a larger fresh seed (323), then final | the verdict |
 
+- Intervals are 97.5%, as at Gates 2 to 4 (tuning runs used 95%).
 - Validation (seed 321) applies H-a and H-b only. H-c is computed and reported there but does not
   stop the gate (FR-043).
 - Reported, not gated: course and speed; every other condition; the realisation ceiling; the

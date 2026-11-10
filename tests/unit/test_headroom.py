@@ -288,11 +288,21 @@ def test_headroom_statistics() -> None:
     assert gate.verdict(res, 0.10)["H-c"]["verdict"] == "material"
     assert gate.verdict(res, 0.50)["H-c"]["verdict"] == "not_material"
     assert gate.verdict(res, 0.25)["H-c"]["verdict"] == "inconclusive"
-    off = {"robust_over_nominal": {"range": {"value": 0.005, "lo": -0.01, "hi": 0.015}}}
-    snd = gate.soundness(res, off, (0.8, 1.3), 1.02)
+    off = {"robust_over_nominal": {"range": {"value": 0.03, "lo": -0.01, "hi": 0.07}}}
+    snd = gate.soundness(res, off, (0.9, 1.6), 0.05, 0.02)
     assert snd["H-a"]["pass"] and snd["H-b"]["pass"]
-    off["robust_over_nominal"]["range"]["hi"] = 0.03
-    assert not gate.soundness(res, off, (0.8, 1.3), 1.02)["H-b"]["pass"]
+    off["robust_over_nominal"]["range"]["value"] = 0.06  # the point is too high
+    assert not gate.soundness(res, off, (0.9, 1.6), 0.05, 0.02)["H-b"]["pass"]
+    off["robust_over_nominal"]["range"] = {"value": 0.04, "lo": 0.025, "hi": 0.06}  # wholly above
+    assert not gate.soundness(res, off, (0.9, 1.6), 0.05, 0.02)["H-b"]["pass"]
+    assert not gate.soundness(res, off, (1.1, 1.6), 0.05, 0.02)["H-a"]["pass"]
+    assert res["level"] == 0.95
+    worse = {**res, "estimators": {**res["estimators"]}}
+    worse["estimators"]["attainable@truth"] = {
+        **res["estimators"]["attainable@truth"],
+        "median_range": 1.0,
+    }
+    assert not gate.soundness(worse, off, (0.9, 1.6), 0.05, 0.02)["H-a"]["ceiling_not_above_plain"]
 
 
 def test_scorer_cli(splits: dict[str, Path], tmp_path: Path) -> None:

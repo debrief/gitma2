@@ -46,8 +46,9 @@ def interval(
     cluster: np.ndarray,
     stat: Any,
     resamples: int = BOOTSTRAP_RESAMPLES,
+    level: float = LEVEL,
 ) -> dict[str, float]:
-    iv = bootstrap_clustered_statistic(cols, cluster, stat, LEVEL, resamples)
+    iv = bootstrap_clustered_statistic(cols, cluster, stat, level, resamples)
     return {"value": iv.value, "lo": iv.lo, "hi": iv.hi}
 
 
@@ -58,13 +59,14 @@ def comparison(
     b: str,
     mask: np.ndarray | None = None,
     resamples: int = BOOTSTRAP_RESAMPLES,
+    level: float = LEVEL,
 ) -> dict[str, Any]:
     """R of ``a`` against ``b`` for range, course and speed, each with its interval."""
     m = np.ones(cluster.shape[0], dtype=bool) if mask is None else mask
     cols = {a: errs[a][m], b: errs[b][m]}
     out: dict[str, Any] = {"numerator": a, "denominator": b, "rows": int(m.sum())}
     for c, name in enumerate(COLS):
-        out[name] = interval(cols, cluster[m], lambda x, c=c: ratio(x, a, b, c), resamples)
+        out[name] = interval(cols, cluster[m], lambda x, c=c: ratio(x, a, b, c), resamples, level)
     return out
 
 
@@ -109,10 +111,12 @@ def headroom(
     minute: np.ndarray,
     bound: np.ndarray | None,
     resamples: int = BOOTSTRAP_RESAMPLES,
+    level: float = LEVEL,
 ) -> dict[str, Any]:
     """Everything ``headroom.json`` holds for one condition's scoring."""
     names = sorted(errs)
     out: dict[str, Any] = {
+        "level": level,
         "rows": int(cluster.shape[0]),
         "scenarios": int(np.unique(cluster).shape[0]),
         "estimators": {n: summary(errs[n], bound, settled) for n in names},
@@ -138,29 +142,50 @@ def headroom(
     }
     for key, (a, b) in pairs.items():
         if a in errs and b in errs:
-            out[key] = comparison(errs, cluster, a, b, None, resamples)
-            out[f"{key}_all_answer"] = comparison(errs, cluster, a, b, answered, resamples)
+            out[key] = comparison(errs, cluster, a, b, None, resamples, level)
+            out[f"{key}_all_answer"] = comparison(errs, cluster, a, b, answered, resamples, level)
     trio = ("nominal@truth", "robust@truth", "attainable@truth")
     if all(n in errs for n in trio):
         cols = {n: errs[n] for n in trio}
         out["closed_by_robust"] = {
-            name: interval(cols, cluster, lambda x, c=c: closed(x, *trio, c), resamples)
+            name: interval(cols, cluster, lambda x, c=c: closed(x, *trio, c), resamples, level)
             for c, name in enumerate(COLS)
         }
     return out
 
 
 def soundness(
-    primary: dict[str, Any], off: dict[str, Any], band: tuple[float, float], tolerance: float
+    primary: dict[str, Any],
+    off: dict[str, Any],
+    band: tuple[float, float],
+    cost_point: float,
+    cost_interval: float,
 ) -> dict[str, Any]:
-    """H-a and H-b (research R7) from the primary and the mismatch-off ``headroom.json``."""
-    eff = primary["estimators"]["attainable@truth"].get("efficiency_settled_range")
-    h_a = eff is not None and band[0] <= eff <= band[1]
+    """H-a and H-b (research R7) from the primary and the mismatch-off ``headroom.json``.
+
+    H-a: the attainable ceiling's range efficiency on settled rows of the primary condition is
+    inside ``band``, and its median range error is no worse than the plain solve's. H-b (owner,
+    2026-11-10): on mismatch-off data the robust control's cost over the plain solve is at most
+    ``cost_point`` and its interval is not wholly above ``cost_interval``."""
+    est = primary["estimators"]
+    eff = est["attainable@truth"].get("efficiency_settled_range")
+    below = est["attainable@truth"]["median_range"] <= est["nominal@truth"]["median_range"]
+    h_a = eff is not None and band[0] <= eff <= band[1] and below
     rb = off["robust_over_nominal"]["range"]
-    h_b = rb["hi"] <= tolerance - 1.0
+    h_b = rb["value"] <= cost_point and rb["lo"] <= cost_interval
     return {
-        "H-a": {"efficiency_settled_range": eff, "band": list(band), "pass": bool(h_a)},
-        "H-b": {**rb, "limit": tolerance - 1.0, "pass": bool(h_b)},
+        "H-a": {
+            "efficiency_settled_range": eff,
+            "band": list(band),
+            "ceiling_not_above_plain": bool(below),
+            "pass": bool(h_a),
+        },
+        "H-b": {
+            **rb,
+            "point_limit": cost_point,
+            "interval_limit": cost_interval,
+            "pass": bool(h_b),
+        },
     }
 
 

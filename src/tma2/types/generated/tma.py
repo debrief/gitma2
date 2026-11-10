@@ -1637,6 +1637,7 @@ class CheckpointMeta(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1645,6 +1646,7 @@ class CheckpointMeta(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1707,6 +1709,7 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1715,6 +1718,7 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1744,6 +1748,7 @@ class Gate1Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1752,6 +1757,7 @@ class Gate1Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1767,6 +1773,7 @@ class Gate1Decision(ConfiguredBaseModel):
                        'ChangeDecision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1782,12 +1789,14 @@ class Gate1Decision(ConfiguredBaseModel):
     bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1795,10 +1804,12 @@ class Gate1Decision(ConfiguredBaseModel):
                        'ControlSettings',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     ekf: str = Field(default=..., description="""Frozen EKF settings (JSON).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'ControlSettings',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     forecast: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
@@ -1809,6 +1820,7 @@ class Gate1Decision(ConfiguredBaseModel):
     if_failed: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision']} })
     validation_rule: str = Field(default=..., description="""When validation stops the phase before test.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1840,6 +1852,7 @@ class ChangeDecision(ConfiguredBaseModel):
                        'ChangeDecision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -1952,10 +1965,12 @@ class ControlSettings(ConfiguredBaseModel):
                        'ControlSettings',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     ekf: Optional[str] = Field(default=None, description="""Frozen EKF setting name (cusum_ekf).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'ControlSettings',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     tuned_on: Optional[str] = Field(default=None, description="""SHA-256 of the validation file the threshold was tuned on.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
     target_false_alarm: Optional[float] = Field(default=None, description="""Held-leg G5 false-alarm fraction the threshold was tuned to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ControlSettings']} })
@@ -2119,6 +2134,7 @@ class GateDDecision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2127,6 +2143,7 @@ class GateDDecision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2144,12 +2161,14 @@ class GateDDecision(ConfiguredBaseModel):
     bootstrap_level: float = Field(default=..., description="""D2.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2157,6 +2176,7 @@ class GateDDecision(ConfiguredBaseModel):
     false_alarm_limit: float = Field(default=..., description="""D3's limit as a number: 0.05, or the frozen IMM's validation rate at μ_CT > 0.5 if lower.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision']} })
     validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2164,6 +2184,7 @@ class GateDDecision(ConfiguredBaseModel):
                        'ChangeDecision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2177,10 +2198,12 @@ class GateDDecision(ConfiguredBaseModel):
                        'ControlSettings',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     ekf: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'ControlSettings',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     criterion: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
@@ -2188,6 +2211,7 @@ class GateDDecision(ConfiguredBaseModel):
                        'Gate2Decision']} })
     validation_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2380,6 +2404,7 @@ class GateSDecision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2388,11 +2413,13 @@ class GateSDecision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2404,6 +2431,7 @@ class GateSDecision(ConfiguredBaseModel):
                        'ChangeDecision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2428,17 +2456,20 @@ class GateSDecision(ConfiguredBaseModel):
                        'ControlSettings',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     glr_confirm: str = Field(default=..., description="""GLR + confirm configuration.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision', 'Gate2Decision']} })
     bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2679,6 +2710,96 @@ class EPredictionHeader(ConfiguredBaseModel):
     segmentation_sha256: Optional[str] = Field(default=None, description="""SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader']} })
 
 
+class GateHCriteria(ConfiguredBaseModel):
+    """
+    Gate H's checks (spec 010 research R7, SRD section 5), fixed by the decision record.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    efficiency_band: list[float] = Field(default=..., description="""H-a: band for the attainable ceiling's range efficiency against the bound under the true covariance, settled rows of the primary condition.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
+    clean_cost_point: float = Field(default=..., description="""H-b: the robust control's cost on mismatch-off data (median range error over the plain solve's, minus 1) at most this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
+    clean_cost_interval: float = Field(default=..., description="""H-b: and the cost's interval not wholly above this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
+    materiality: float = Field(default=..., description="""H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
+
+
+class GateHDecision(ConfiguredBaseModel):
+    """
+    The Gate H decision record (spec 010 FR-040, FR-041), committed before any validation or test scoring.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    plan_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
+                       'PhysicsModelManifest',
+                       'Gate1Decision',
+                       'GateDDecision',
+                       'GateSDecision',
+                       'GateHDecision',
+                       'Gate4Decision',
+                       'Gate2Decision',
+                       'Gate3Decision']} })
+    plan_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckpointMeta',
+                       'PhysicsModelManifest',
+                       'Gate1Decision',
+                       'GateDDecision',
+                       'GateSDecision',
+                       'GateHDecision',
+                       'Gate4Decision',
+                       'Gate2Decision',
+                       'Gate3Decision']} })
+    conditions_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision']} })
+    primary: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision']} })
+    tuning_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision']} })
+    validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision',
+                       'GateSDecision',
+                       'GateHDecision',
+                       'Gate4Decision',
+                       'Gate2Decision',
+                       'Gate3Decision']} })
+    test_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ChangeDecision',
+                       'GateDDecision',
+                       'GateSDecision',
+                       'GateHDecision',
+                       'Gate4Decision',
+                       'Gate2Decision',
+                       'Gate3Decision']} })
+    rescore_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision']} })
+    criteria: GateHCriteria = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision', 'Gate4Decision', 'Gate3Decision']} })
+    robust_settings: str = Field(default=..., description="""The control's settings as canonical JSON.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision']} })
+    imm: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ControlSettings',
+                       'GateDDecision',
+                       'GateSDecision',
+                       'GateHDecision',
+                       'Gate2Decision']} })
+    ekf: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'ControlSettings',
+                       'GateDDecision',
+                       'GateHDecision',
+                       'Gate2Decision']} })
+    bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'GateDDecision',
+                       'GateSDecision',
+                       'GateHDecision',
+                       'Gate4Decision',
+                       'Gate2Decision',
+                       'Gate3Decision']} })
+    bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'GateDDecision',
+                       'GateSDecision',
+                       'GateHDecision',
+                       'Gate4Decision',
+                       'Gate2Decision',
+                       'Gate3Decision']} })
+    validation_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
+                       'GateDDecision',
+                       'GateHDecision',
+                       'Gate4Decision',
+                       'Gate2Decision',
+                       'Gate3Decision']} })
+    forecasts: str = Field(default=..., description="""Forecasts stated before any validation or test result.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision']} })
+
+
 class HeadroomPredictionHeader(ConfiguredBaseModel):
     """
     First record of a tma2-hpredict file (spec 010 contracts/cli.md): an oracle ceiling or the classical robust control on one split.
@@ -2902,6 +3023,7 @@ class Gate4Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2910,11 +3032,13 @@ class Gate4Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2932,22 +3056,25 @@ class Gate4Decision(ConfiguredBaseModel):
                        'ChangeDecision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     carried_e: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate4Decision', 'Gate3Decision']} })
     carried_e_weights: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate4Decision', 'Gate3Decision']} })
-    criteria: Gate4Criteria = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate4Decision', 'Gate3Decision']} })
+    criteria: Gate4Criteria = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision', 'Gate4Decision', 'Gate3Decision']} })
     temperature: StatementTemperatureConfig = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig', 'Gate4Decision', 'Gate3Decision']} })
     bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2964,6 +3091,7 @@ class Gate4Decision(ConfiguredBaseModel):
                        'Gate2Record']} })
     validation_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2991,6 +3119,7 @@ class Gate2Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -2999,11 +3128,13 @@ class Gate2Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3021,6 +3152,7 @@ class Gate2Decision(ConfiguredBaseModel):
                        'ChangeDecision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3040,10 +3172,12 @@ class Gate2Decision(ConfiguredBaseModel):
                        'ControlSettings',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     ekf: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'ControlSettings',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate2Decision']} })
     glr_confirm: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSDecision', 'Gate2Decision']} })
     g2a_limit: float = Field(default=..., description="""E / IMM, median range and course, wholly below.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate2Decision']} })
@@ -3052,12 +3186,14 @@ class Gate2Decision(ConfiguredBaseModel):
     bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3074,6 +3210,7 @@ class Gate2Decision(ConfiguredBaseModel):
                        'Gate2Record']} })
     validation_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3116,6 +3253,7 @@ class Gate3Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3124,11 +3262,13 @@ class Gate3Decision(ConfiguredBaseModel):
                        'Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     validation_seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3146,23 +3286,26 @@ class Gate3Decision(ConfiguredBaseModel):
                        'ChangeDecision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     carried_e: str = Field(default=..., description="""The carried Gate 2 estimator (model id).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate4Decision', 'Gate3Decision']} })
     carried_e_weights: str = Field(default=..., description="""Its weights' SHA-256 (prediction headers' weights_sha256).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate4Decision', 'Gate3Decision']} })
-    criteria: Gate3Criteria = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate4Decision', 'Gate3Decision']} })
+    criteria: Gate3Criteria = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateHDecision', 'Gate4Decision', 'Gate3Decision']} })
     score_of_record: str = Field(default=..., description="""G3-c's score: mean 95% interval score in log range, missing rows charged.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate3Decision']} })
     temperature: TemperatureConfig = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EModelConfig', 'Gate4Decision', 'Gate3Decision']} })
     bootstrap_level: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
     bootstrap_resamples: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
                        'GateSDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3179,6 +3322,7 @@ class Gate3Decision(ConfiguredBaseModel):
                        'Gate2Record']} })
     validation_rule: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
                        'GateDDecision',
+                       'GateHDecision',
                        'Gate4Decision',
                        'Gate2Decision',
                        'Gate3Decision']} })
@@ -3315,6 +3459,8 @@ GateSRecord.model_rebuild()
 EModelConfig.model_rebuild()
 DecisionTableHeader.model_rebuild()
 EPredictionHeader.model_rebuild()
+GateHCriteria.model_rebuild()
+GateHDecision.model_rebuild()
 HeadroomPredictionHeader.model_rebuild()
 CalibrationHeadConfig.model_rebuild()
 TemperatureConfig.model_rebuild()

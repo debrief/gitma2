@@ -149,6 +149,10 @@ grid (`experiments/20261110-gh-grid/`: Huber constant 2.0, no shrinkage), refere
 `ekf-sa0.00003-p4-r0.5`). Next: register Gate H (SRD §5 row, owner merges; H-b needs a form the
 sample size can decide; H-a's band from the clean-data oracle's efficiency, about 1.57), then the
 decision record, validation seed 321 and test seed 322.
+Gate H registered (2026-11-10): SRD §5 row and §9 line in PR 25 (owner merges; H-b's form is
+the owner's: point at most 5%, interval not wholly above 2%); plan `configs/gateh/gh-a.json`
+(`26d8e898…`, never edited); decision `experiments/20261110-gh-decision/`. Seeds 321 and 322 are
+not generated. Next: shard `headroom.yml`, validation (H-a, H-b), test (H-c), panel.
 
 ## Stack (owner decisions, 2026-10-31)
 

@@ -1825,6 +1825,38 @@ classes:
         range: string
         description: SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).
 
+  GateHCriteria:
+    description: "Gate H's checks (spec 010 research R7, SRD section 5), fixed by the decision record."
+    attributes:
+      efficiency_band:
+        range: float
+        multivalued: true
+        required: true
+        description: "H-a: band for the attainable ceiling's range efficiency against the bound under the true covariance, settled rows of the primary condition."
+      clean_cost_point: { range: float, required: true, description: "H-b: the robust control's cost on mismatch-off data (median range error over the plain solve's, minus 1) at most this." }
+      clean_cost_interval: { range: float, required: true, description: "H-b: and the cost's interval not wholly above this." }
+      materiality: { range: float, required: true, description: "H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09)." }
+
+  GateHDecision:
+    description: "The Gate H decision record (spec 010 FR-040, FR-041), committed before any validation or test scoring."
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      conditions_digest: { range: string, required: true }
+      primary: { range: string, required: true }
+      tuning_seed: { range: integer, required: true }
+      validation_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true }
+      rescore_seed: { range: integer, required: true }
+      criteria: { range: GateHCriteria, required: true, inlined: true }
+      robust_settings: { range: string, required: true, description: The control's settings as canonical JSON. }
+      imm: { range: string, required: true }
+      ekf: { range: string, required: true }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      validation_rule: { range: string, required: true }
+      forecasts: { range: string, required: true, description: Forecasts stated before any validation or test result. }
+
   HeadroomPredictionHeader:
     description: >-
       First record of a tma2-hpredict file (spec 010 contracts/cli.md): an oracle ceiling or the

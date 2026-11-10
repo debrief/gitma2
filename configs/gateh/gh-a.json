@@ -1,0 +1,76 @@
+{
+  "id": "gh-a",
+  "description": "Spec 010 Gate H plan: headroom under bearing-error mismatch, nothing trained. Bound by the decision record experiments/20261110-gh-decision by SHA-256 and never edited after it.",
+  "conditions": "configs/gateh/conditions.json",
+  "primary": "all-central",
+  "ranges": "configs/man2-ranges.json",
+  "heldout": "configs/man2-heldout.json",
+  "seeds": {
+    "tuning": 320,
+    "validation": 321,
+    "test": 322,
+    "rescore": 323
+  },
+  "splits": {
+    "validation": {
+      "seed": 321,
+      "count": 2600,
+      "data_split": "train",
+      "ordinals": 1000,
+      "conditions": "all 16"
+    },
+    "test": {
+      "seed": 322,
+      "count": 13000,
+      "data_split": "train",
+      "ordinals": "every sigma = 1 deg scenario of the primary condition (about 5,200); the first 1,000 of off and of the four single kinds at central"
+    },
+    "rescore": {
+      "seed": 323,
+      "count": 26000,
+      "data_split": "train",
+      "ordinals": "every sigma = 1 deg scenario of the primary condition (about 10,400)"
+    }
+  },
+  "robust": {
+    "huber": true,
+    "huber_k": 2.0,
+    "sigma": true,
+    "whiten": true,
+    "min_bearings": 60,
+    "rho_shrink": 0.0,
+    "outer": 3,
+    "sigma_clamp": 4.0
+  },
+  "c2": {
+    "parameters_from": "configs/segment/gs-plan.json",
+    "parameters_sha256": "60e6ee635d9390e2c959b408997e39e8c30859febcb2d86f199142ea66aa425f",
+    "code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+    "mode": "gap",
+    "open_handover": "knot_at_k",
+    "window": 6,
+    "fade": [
+      0.73,
+      0.0079
+    ]
+  },
+  "references": {
+    "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+    "ekf": "ekf-sa0.00003-p4-r0.5",
+    "record": "experiments/20261110-gh-refs"
+  },
+  "criteria": {
+    "efficiency_band": [
+      0.9,
+      1.6
+    ],
+    "clean_cost_point": 0.05,
+    "clean_cost_interval": 0.02,
+    "materiality": 0.1
+  },
+  "bootstrap": {
+    "level": 0.975,
+    "resamples": 2000
+  },
+  "knots": 12
+}

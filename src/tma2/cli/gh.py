@@ -68,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
             raw = Path(a.plan).read_bytes()
             plan = json.loads(raw)
             rec = json.loads((Path(a.decision) / "decision.json").read_text())
-            if rec.get("plan_sha256") != hashlib.sha256(raw).hexdigest():
+            if rec.get("plan_digest") != hashlib.sha256(raw).hexdigest():
                 bad.append("the decision record does not bind this plan")
             if str(plan["seeds"][a.split]) != hdr.dataset_seed:
                 bad.append(f"{a.truth} is not the plan's {a.split} seed")
@@ -183,7 +183,8 @@ def main(argv: list[str] | None = None) -> int:
         else:
             bound = sc.bounds(rows, metas, owns, tgts, obss)
         print(f"bound [{time.time() - t0:.0f} s]", flush=True)
-    res = gate.headroom(errs, cluster, settled, true_range, minute, bound, a.resamples)
+    level = float(plan.get("bootstrap", {}).get("level", gate.LEVEL))
+    res = gate.headroom(errs, cluster, settled, true_range, minute, bound, a.resamples, level)
     res |= {
         "record": "headroom",
         "condition": condition,
