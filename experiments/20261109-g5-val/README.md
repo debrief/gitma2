@@ -37,7 +37,7 @@ picks the carried seed: st5-s1 2.919, st5-s2 2.927, st5-s3 2.906, so **st5-s1**.
 | G5-b hit − P, per slice | every gated slice passes; proxy-flagged −0.038 [−0.072, −0.001]; minute 5 −0.035 [−0.068, 0.000] | not wholly outside ±0.05 | pass |
 | G5-c course log gain | +0.80 [0.71, 0.88] | wholly > 0 | pass |
 | G5-c AUC of P | 0.654 [0.633, 0.677] | wholly > 0.55 | pass |
-| G5-d head − classical | −0.081 [−0.136, −0.028] | wholly < 0 | **void** |
+| G5-d head − classical | −0.081 [−0.136, −0.028] | wholly < 0 | **void (not passed)** |
 | G5-d encoder shuffle − classical | best −0.039 [−0.075, −0.005]; last −0.027 [−0.068, +0.008] | the rule fails if either is wholly < 0 | **rule fails** |
 | G5-e points identical; arc mass error | exact; 6.4e-8 | ≤ 1e-6 | pass |
 
@@ -79,29 +79,115 @@ The truth's settled split is reported, not gated. Each cell is stated P / hit ra
 | oracle | 1.52 | −0.006 | 0.75 / 0.81 | 0.75 / 0.56 | all |
 | IMM | 0.21 | −0.003 | — | — | 77% |
 
-## Reading
+## Reading (as corrected by the panel, round 1; `review.md`)
 
-- **The statement is now consistent and causally gated.**
-  - The arc mass equals P to within 7e-8 on every probed row.
-  - On the rows the causal proxy flags, P is honest within the band (−0.038 for the head, −0.054
-    for the classical rule), where Gate 4's statements were off by about −0.3 on the truth's
-    unsettled rows.
-  - P now varies (0.32–0.72) and ranks hits (AUC 0.65–0.67).
-- **The truth's unsettled rows are still far off.** They state 0.50 and hit 0.27. The proxy's
-  held-out AUC for those rows is about 0.65, so it lowers P on the flagged rows, but most
-  truth-unsettled rows are not flagged. No causal statement built from these signals can fix that.
-  Even the oracle, which knows the manoeuvre times, states 0.75 and hits 0.56 there.
-- **Learning beyond the classical rule is not shown.** The head beats the classical rule by 0.08,
-  but a head with E-w's encoder state shuffled beats it by 0.04. At least half of the margin is a
-  better nonlinear use of the sds, the proxy and C's code, which a richer classical rule might
-  match. The head's AUC (0.654) is no better than the classical rule's (0.669). Its gain is in the
-  arc width and the interval widths, not in P's resolution.
-- **P is under-dispersed out of sample** for every learned or classical statement: the slope is
-  1.24–1.28. The Platt map fitted on the 1,951 tuning rows shrank P (slope 0.85 for the classical
-  rule). The validation rows say it should have stretched P. With a two-parameter map, the tuning
-  set was too small to tell.
-- **The temperature has almost no resolution.** P sits between 0.60 and 0.61, its AUC is 0.50, and
-  its flagged slice is off by −0.134. Gate 4's control fails Gate 5.
+**The stop.** It is correct and applied as written. G5-d is void (not passed), and under the
+validation rule G5-d alone blocks: G5-b's slope point, 1.25, lies inside its band. "Only G5-d
+fails", so the follow-on carries the control of record, the classical rule. That rule is not the
+best statement available (see below).
 
-Files: `validation.json`, `by-head/*.json`, `references.txt`, `calibration.json`, `metrics.json`,
-`report.md`, `inputs.json`, `plan.json` and `run.json`. `errors.npz` stays on the results branch.
+**What improved.**
+- **The statement is consistent.** The arc mass equals P by construction. The panel checked the
+  normalisation to 1e-9 for κ from 1e-8 to 1e8 and X up to 45°. The record's 6e-8 is the trapezoid
+  check on 200 probed rows.
+- **P now varies and ranks hits.** P runs 0.32–0.72 and its AUC is 0.65–0.67 (0.647–0.662 on
+  stated rows only). Gate 4's temperature, re-fitted here, has an AUC of 0.50 and fails G5-b and
+  G5-c.
+- **The range and speed intervals cover 0.94.**
+
+**Not honest where it matters.**
+- **The proxy-flagged slice is mildly over-confident.** It is not "honest within the band":
+  - head −0.038 [−0.072, −0.001];
+  - classical rule −0.054 [−0.087, −0.018].
+
+  Both intervals exclude 0. They pass G5-b only because the per-slice check fails a slice only
+  when its interval lies wholly outside ±0.05.
+- **The flag mixes two kinds of row.** It catches 42% of the truth-unsettled rows (417 of 1,001),
+  and 55% of the rows it flags are settled. Within the flagged rows (head):
+  - unsettled: P 0.47 against hit 0.33 (−0.14);
+  - settled: P 0.49 against hit 0.53 (+0.04).
+
+  P moves little with the flag: 0.48 flagged against 0.54 unflagged.
+- **The 572 unflagged unsettled rows** state P 0.53 and hit 0.22. Of these, 129 state P ≥ 0.6. The
+  statement must carry this caveat: **P assumes no undetected target manoeuvre in the last ~5
+  min, and the flag misses most manoeuvres.**
+- **The flag also reacts to geometry, not only to target manoeuvres.**
+  - Its rate falls with time since the zig (0.27 to 0.18) while the unsettled rate stays near 0.26.
+  - At 0–2 km it flags 37% of rows against 16% unsettled.
+  - Ownship manoeuvres and close-range bearing rate raise the residuals too, and neither is a slice
+    here.
+- **The statement is under-confident at short range.**
+  - classical rule at 2–5 km (215 rows): +0.117 [+0.044, +0.188];
+  - head at 2–5 km: +0.075 [0.000, 0.148];
+  - 0–2 km (52 rows, ungated): about +0.2.
+
+  Both pass only because their intervals touch the band.
+- **The record's claim that "no causal statement can fix the unsettled rows" is withdrawn.** It
+  was not tested, and the oracle comparison behind it was unfair: the oracle's statement is the
+  temperature (AUC 0.54) and does not use the manoeuvre times it knows.
+
+**The slope (G5-b inconclusive) is the Platt map's doing.** A Platt map is affine in logit P, so the
+validation slope equals the unmapped slope times the map's b.
+- Unmapped, the classical rule's P has slope 1.06 [0.94, 1.20] on the scoring rows.
+- The map's b, fitted on the 1,951 tuning rows (500 scenarios), is 0.85 [0.67, 1.05]. That fit is
+  noisy: the minute-10 cell alone gives 0.60 on tuning rows against 1.36 on scoring rows.
+- The map therefore made a nearly calibrated P worse. This finding is post hoc and does not change
+  the verdict.
+- The same 500 tuning scenarios also fitted the proxy and its threshold and the temperature, and
+  chose the heads' early-stopping epoch.
+
+**The course arc is badly fitted.** Validation course log scores are:
+
+| Statement | Course log score |
+| --- | --- |
+| temperature | −0.904 |
+| classical rule | −1.028 |
+| head | −1.032 |
+| shuffle | −1.035 |
+
+- The "failed" temperature has the best course proper score.
+- X is tied to the spread a, and the log density jumps by about 1.4 nats when |e| crosses X.
+  Gradient fits cannot see that jump.
+- Scaling a by 1.5 improves the classical rule on its own training stream from −0.966 to −0.861. The
+  temperature reached a wider arc only through its β grid.
+- **The head's whole G5-d margin is in the range and speed intervals** (range interval score 1.79
+  against 1.88; speed 10.50 against 10.84). On course it is no better: +0.004 [−0.013, +0.021] on
+  the classical rule's scale. The earlier reading, "its gain is in the arc width", was wrong.
+
+**Learning: no learning from E-w's encoder state is shown.**
+- **Within the bounded-residual head, the encoder helps a little.** Head − encoder shuffle (best) is
+  −0.041 [−0.074, −0.012].
+- **An encoder-free model beats the head.** The red team trained a plain MLP (64×64, tanh) on the
+  stream, early-stopped on tuning rows, with no encoder state; its inputs were the sds, C's code,
+  the proxy design and the minute. Nothing was chosen on the scoring rows.
+  - MLP − classical: −0.16 [−0.23, −0.10] for both seeds.
+  - Head − MLP: +0.082 [+0.025, +0.147] for st5-s1 and +0.069 for st5-s3.
+  - One MLP seed passes G5-b outright (slope 1.13 [0.95, 1.31]).
+
+  The head's gain is a nonlinear use of the classical features, and the bounded head underfits it.
+- **A richer parametric rule does not match the head.** A 105-term quadratic in the sds, the
+  design, the code and the minute gave −0.008 [−0.066, +0.048].
+
+**The carried statement is the classical rule, by the rule.** It is dominated by the encoder-free
+MLP by 0.16. It is under-dispersed through its Platt map, under-confident at short range, and its
+arc is too narrow.
+
+**The gate's per-slice check is weak** (design; to be revised for the next gate). The synthetic
+check did not represent the real data:
+- its P spread was logit sd 0.87, against 0.48 on validation;
+- it had no within-scenario correlation, against about 0.24 on validation.
+
+Resampling hits from the head's real P, with the real clusters and slices:
+- a calibrated statement comes out G5-b inconclusive in about 29% of datasets;
+- a −0.08 shortfall on the flagged slice fails in only 5 of 12 datasets.
+
+Slices of about 200 rows have intervals of about ±0.075, so a slice off by 0.12 can pass. An AUC
+of 0.55 is reachable with four cells.
+
+**References.** FR-023 asked for the references' temperatures fitted on tuning rows. They were
+cross-fitted on the scoring rows instead, because there are no reference files on tuning rows
+(`scripts/research/g5_refs.py`). The IMM states only 77% of rows.
+
+Files: `validation.json` (it records G5-d as `fail`: void counts as not passed), `by-head/*.json`,
+`references.txt`, `calibration.json`, `metrics.json`, `report.md`, `inputs.json`, `plan.json`,
+`run.json`, and `review.md` (the panel). `errors.npz` stays on the results branch.
