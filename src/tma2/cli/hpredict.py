@@ -111,7 +111,18 @@ def _task(args: tuple[Any, ...]) -> Task:
     where: list[tuple[int, int]] = []
     if seg == "c2":
         p = SegmentParameters.model_validate(c2["parameters"])
-        sg = veto_segmentations(data, rows, p, int(c2["window"]))
+        seg_data = data
+        if c2.get("segments_from"):
+            # The segmentation is computed on another split of the same seed (the clean
+            # bearings) and applied to this split's bearings (spec 011 FR-003; a diagnostic).
+            other = {
+                j: bearing_data_from_arrays(m, own, obs)
+                for j, m, own, _tgt, obs in iter_selected(c2["segments_from"], start, count)
+            }
+            seg_data = [other[j] for j in ords]
+            if any(a.n != b.n or a.index != b.index for a, b in zip(seg_data, data, strict=True)):
+                raise ValueError("--segments-from: not the same scenarios as --in")
+        sg = veto_segmentations(seg_data, rows, p, int(c2["window"]))
         fade = c2["fade"]
     for i, (d, m, ks) in enumerate(zip(data, metas, rows, strict=True)):
         for q, k in enumerate(ks):
@@ -164,6 +175,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--segmentation", default="truth", choices=("truth", "c2"))
     ap.add_argument("--plan", help="the Gate H plan (robust settings; C'' for --segmentation c2)")
     ap.add_argument("--mismatch-truth", help="the split's truth side file (ceilings only)")
+    ap.add_argument(
+        "--segments-from",
+        help="c2: compute the segmentation on this split of the same seed (a diagnostic)",
+    )
     ap.add_argument("--only", help="robust: one fix alone (huber, sigma or whiten)")
     ap.add_argument("--set", action="append", default=[], help="robust: key=value over the plan")
     ap.add_argument("--start", type=int, required=True)
@@ -200,6 +215,17 @@ def main(argv: list[str] | None = None) -> int:
         bad.append("the split carries no mismatch; a ceiling there is the plain oracle")
     if (a.kind == "robust" or a.segmentation == "c2") and not a.plan:
         bad.append("--plan is needed for robust and for --segmentation c2")
+    if a.segments_from and a.segmentation != "c2":
+        bad.append("--segments-from applies to --segmentation c2")
+    if a.segments_from:
+        oh = read_pack_header(a.segments_from)
+        same = (oh.dataset_seed, oh.index_start, oh.scenario_count) == (
+            hdr.dataset_seed,
+            hdr.index_start,
+            hdr.scenario_count,
+        )
+        if not same:
+            bad.append("--segments-from: a split of another seed or range")
     if (a.only or a.set) and a.kind != "robust":
         bad.append("--only and --set apply to robust")
     if bad:
@@ -230,6 +256,8 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as e:
             print(str(e), file=sys.stderr)
             return 2
+        if a.segments_from:
+            c2["segments_from"] = a.segments_from
         code = code_digest()
         if code != c2["code_sha256"]:
             print(
@@ -247,6 +275,9 @@ def main(argv: list[str] | None = None) -> int:
         truth, truth_sha = (eng, outlier), meta["truth_sha256"]
     plain = ceiling and hdr.mismatch is None
     name = f"{a.kind}{'-' + a.only if a.only else ''}@{a.segmentation}"
+    if a.segments_from:
+        oc = read_pack_header(a.segments_from).mismatch
+        name += f"<{oc.id if oc is not None else 'off'}"
     h = HeadroomPredictionHeader(
         record=RecordKind.header,
         schema_version=SCHEMA_VERSION,

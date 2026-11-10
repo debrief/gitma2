@@ -11,7 +11,7 @@ name: Headroom (Gate H)
 #                 taking the rest (default one shard)
 #   conditions    ids from the plan's conditions file; "ordinals_by_condition" {id: n} overrides
 #                 `ordinals` for a condition (and it then runs unsharded)
-#   runs          [{kind, segmentation?, only?}]: the estimators (ceilings get the truth file on
+#   runs          [{kind, segmentation?, only?, segments_from?}]: the estimators (ceilings get the truth file on
 #                 a mismatch split; nothing else is given it)
 #   variants      optional [{name, set: {key: value}}]: robust settings over the plan's, one job
 #                 each (the tuning grid); default one variant with the plan's settings
@@ -96,6 +96,19 @@ jobs:
       - name: Predict
         run: |
           mkdir -p "$RUNNER_TEMP/pred"
+          # runs with segments_from: the same seed under that condition (spec 011 FR-003)
+          for C in $(python3 -c "
+          import json; p = json.load(open('$PLAN'))
+          print(' '.join(sorted({r['segments_from'] for r in p['runs'] if r.get('segments_from')} - {'$COND'})))"); do
+            read -r SEED COUNT DSPLIT <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN')); print(p['seed'], p['count'], p['data_split'])")"
+            read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
+          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+            uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
+              --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data-$C" \
+              --mismatch "$CONDS#$C"
+          done
+          DSPLIT=$(python3 -c "import json; print(json.load(open('$PLAN'))['data_split'])")
           python3 -c "
           import json, shlex
           p = json.load(open('$PLAN')); cond = '$COND'; variant = '$VARIANT'
@@ -106,6 +119,8 @@ jobs:
                    '--start', '${{ matrix.start }}', '--count', '${{ matrix.count }}',
                    '--out', f'$RUNNER_TEMP/pred/{i}.${{ matrix.shard }}.ndjson']
               if kind == 'robust' or seg == 'c2': a += ['--plan', '$GH']
+              if r.get('segments_from') and r['segments_from'] != cond:
+                  a += ['--segments-from', '$RUNNER_TEMP/data-' + r['segments_from'] + '/$DSPLIT.f32pack']
               if kind == 'robust':
                   if r.get('only'): a += ['--only', r['only']]
                   for k, v in sets.items(): a += ['--set', f'{k}={json.dumps(v)}']
