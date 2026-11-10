@@ -109,7 +109,7 @@ def _task(args: tuple[Any, ...]) -> Task:
     out = [[empty_row(d, k) for k in ks] for d, ks in zip(data, rows, strict=True)]
     items: list[tuple[BearingData, int, LayerInputs]] = []
     where: list[tuple[int, int]] = []
-    if seg == "c2":
+    if seg in ("c2", "c2r"):
         p = SegmentParameters.model_validate(c2["parameters"])
         seg_data = data
         if c2.get("segments_from"):
@@ -122,7 +122,14 @@ def _task(args: tuple[Any, ...]) -> Task:
             seg_data = [other[j] for j in ords]
             if any(a.n != b.n or a.index != b.index for a, b in zip(seg_data, data, strict=True)):
                 raise ValueError("--segments-from: not the same scenarios as --in")
-        sg = veto_segmentations(seg_data, rows, p, int(c2["window"]))
+        if seg == "c2r":
+            from tma2.gate2.predict import zig_veto_evidence
+            from tma2.segment.robust import RobustConfirm, robust_segmentations
+
+            ev = [zig_veto_evidence(d, int(c2["window"])) for d in seg_data]
+            sg, _ = robust_segmentations(seg_data, rows, p, RobustConfirm(**c2["cr"]), ev)
+        else:
+            sg = veto_segmentations(seg_data, rows, p, int(c2["window"]))
         fade = c2["fade"]
     for i, (d, m, ks) in enumerate(zip(data, metas, rows, strict=True)):
         for q, k in enumerate(ks):
@@ -172,9 +179,10 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-hpredict", description=__doc__)
     ap.add_argument("--in", dest="inp", required=True, help="the split's f32pack")
     ap.add_argument("--kind", required=True)
-    ap.add_argument("--segmentation", default="truth", choices=("truth", "c2"))
+    ap.add_argument("--segmentation", default="truth", choices=("truth", "c2", "c2r"))
     ap.add_argument("--plan", help="the Gate H plan (robust settings; C'' for --segmentation c2)")
     ap.add_argument("--mismatch-truth", help="the split's truth side file (ceilings only)")
+    ap.add_argument("--robust-confirm", help="c2r: C-r's settings (a JSON file or object)")
     ap.add_argument(
         "--segments-from",
         help="c2: compute the segmentation on this split of the same seed (a diagnostic)",
@@ -213,10 +221,12 @@ def main(argv: list[str] | None = None) -> int:
         bad.append(f"{a.kind} must not read the mismatch truth")
     if a.mismatch_truth and hdr.mismatch is None:
         bad.append("the split carries no mismatch; a ceiling there is the plain oracle")
-    if (a.kind == "robust" or a.segmentation == "c2") and not a.plan:
-        bad.append("--plan is needed for robust and for --segmentation c2")
-    if a.segments_from and a.segmentation != "c2":
-        bad.append("--segments-from applies to --segmentation c2")
+    if (a.kind == "robust" or a.segmentation != "truth") and not a.plan:
+        bad.append("--plan is needed for robust and for C's segmentations")
+    if a.segments_from and a.segmentation not in ("c2", "c2r"):
+        bad.append("--segments-from applies to --segmentation c2 or c2r")
+    if (a.segmentation == "c2r") != bool(a.robust_confirm):
+        bad.append("--robust-confirm is needed for, and only for, --segmentation c2r")
     if a.segments_from:
         oh = read_pack_header(a.segments_from)
         same = (oh.dataset_seed, oh.index_start, oh.scenario_count) == (
@@ -249,8 +259,22 @@ def main(argv: list[str] | None = None) -> int:
             return 2
     c2 = None
     code = None
-    if a.segmentation == "c2":
+    cr_json = None
+    cr_code = None
+    if a.segmentation in ("c2", "c2r"):
         c2 = dict(plan["c2"])
+        if a.robust_confirm:
+            from tma2.segment.robust import RobustConfirm, robust_code_digest
+
+            txt = a.robust_confirm
+            raw_cr = json.loads(txt if txt.lstrip().startswith("{") else Path(txt).read_text())
+            try:
+                c2["cr"] = asdict(RobustConfirm(**raw_cr))
+            except (TypeError, ValueError) as e:
+                print(f"--robust-confirm: {e}", file=sys.stderr)
+                return 2
+            cr_json = json.dumps(c2["cr"], sort_keys=True, separators=(",", ":"))
+            cr_code = robust_code_digest()
         try:
             c2["parameters"] = c2_parameters(c2)
         except ValueError as e:
@@ -275,9 +299,11 @@ def main(argv: list[str] | None = None) -> int:
         truth, truth_sha = (eng, outlier), meta["truth_sha256"]
     plain = ceiling and hdr.mismatch is None
     name = f"{a.kind}{'-' + a.only if a.only else ''}@{a.segmentation}"
+    seg_from = None
     if a.segments_from:
         oc = read_pack_header(a.segments_from).mismatch
-        name += f"<{oc.id if oc is not None else 'off'}"
+        seg_from = oc.id if oc is not None else "off"
+        name += f"<{seg_from}"
     h = HeadroomPredictionHeader(
         record=RecordKind.header,
         schema_version=SCHEMA_VERSION,
@@ -285,6 +311,9 @@ def main(argv: list[str] | None = None) -> int:
         mode="per_timestep",
         kind=a.kind,
         segmentation=a.segmentation,
+        segments_from=seg_from,
+        segmenter_settings=cr_json,
+        robust_code_sha256=cr_code,
         condition=condition,
         dataset_digest=sha256_file(a.inp),
         truth_sha256=truth_sha,
