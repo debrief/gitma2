@@ -83,7 +83,7 @@ Implementation follows in its own PR, with the slides post.
   only; record `experiments/<date>-gh-val/`. Stop only if a soundness check fails.
 - [x] T022 Generate seed 322 after the validation record (5,000 primary; 1,000 each for `off` and
   the four single kinds at central); score once from a worktree at the commit.
-- [ ] T023 Panel review (five reviewers, rounds until decided); record `experiments/<date>-gh/`
+- [x] T023 Panel review (five reviewers, rounds until decided); record `experiments/<date>-gh/`
   with `review.md`. Inconclusive: one re-score on seed 323, larger, then final.
 
 ## Phase 7: Reporting

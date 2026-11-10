@@ -99,10 +99,14 @@ No condition's interval reaches 10%.
 - **"Nothing to win" is true only pooled.** By range it is +4.9% under 10.7 km and −5.2% over
   25.3 km (table above). A component that used the error model at short range and the robust fit
   at long range would gain a few percent. That is far below 10%, and it is a rule, not learning.
-- **The reference is not a ceiling.** It is an error-model-informed fit of a model that is wrong
-  about the target: it sits at 1.26 times the known-manoeuvre Cramér–Rao bound on settled rows
-  (1.59 on clean data), because the solve fits each manoeuvre by a chord, and the control beats
-  it at long range. The robust control itself is at about 1.25 times the bound. That 25% is not
+- **The reference is not a ceiling.** It sits at 1.26 times the known-manoeuvre Cramér–Rao bound
+  on settled rows (1.59 on clean data), and the control beats it at long range. **Why the solve
+  is that far from the bound is not established.** Earlier versions of this record said "because
+  the solve fits each manoeuvre by a chord". The estimation reviewer tested that on the tuning
+  seed: on noise-free bearings the plain solve's median range error is 2.0%, which in quadrature
+  explains an efficiency of about 1.16, not 1.61. The rest is unexplained; one untested candidate
+  is that the layer fits 4 + 2 × knots parameters (median 12) under weak priors against the
+  bound's 8. The robust control itself is at about 1.25 times the bound. That 25% is not
   error-model headroom (it is larger with no mismatch at all), and the bound is not attainable
   (it knows the manoeuvre times and the outlier flags). But it is room that a better motion
   model or an end-to-end estimator could claim, and this gate says nothing about it.
@@ -117,6 +121,12 @@ No condition's interval reaches 10%.
   zero-mean independent outliers: Huber's best case. Untested and more likely to matter: a bias
   that steps or lags at the ownship zig; bursty or one-sided outliers; σ that varies within an
   engagement with signal-to-noise or relative bearing.
+- **The severity grid came close to fixing the outcome in advance.** The estimation reviewer's
+  linearised calculation on the tuning seed: for the Gaussian part of the primary condition, the
+  plain solve's range sd over the exact generalised-least-squares sd is 1.028 (median; P90
+  1.06). Stretching the grid on the same geometry gives 1.085 at a 180 s correlation time, 1.12
+  with 90% of the variance correlated, 1.06 at 1° of bias. Within this error family only
+  outliers could reach 10%, and Huber weights remove those. The verdict holds for this grid.
 - **"An untold σ costs nothing" is true by construction**, not a finding: one scale per
   engagement cannot move a least-squares point estimate.
 - **The control was tuned on the gated condition and statistic** (seed 320, the primary
