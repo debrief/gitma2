@@ -32,6 +32,21 @@ def test_stream_is_a_function_of_the_config() -> None:
     assert stream_indices(rep, 2).tolist() == list(range(8))  # 16..23 wraps to 0..7
 
 
+def test_held_course_share_of_the_stream() -> None:
+    """A quarter of each batch from the held-course ranges: those targets do not change."""
+    cfg = _cfg(
+        held_fraction=0.25, held_ranges=str(ROOT / "configs/regress/held-course-ranges.json")
+    )
+    held = load_ranges(cfg.held_ranges)
+    x = batch_at(cfg, load_ranges(cfg.ranges), 0, held)
+    assert x.f.shape[0] == 8
+    v = x.y[:2, :, 1:]  # the first two scenarios: velocity targets constant over existing rows
+    for i in range(2):
+        rows = x.mask[i]
+        assert np.ptp(v[i][rows], axis=0).max() < 1e-4
+    assert any(np.ptp(x.y[i, x.mask[i], 1:], axis=0).max() > 1e-3 for i in range(2, 8))
+
+
 def test_causal() -> None:
     """A token's output does not change when later rows change."""
     cfg = _cfg()

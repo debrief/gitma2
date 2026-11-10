@@ -105,6 +105,7 @@ def train(
         update = int(st["update"])
         record = json.loads((resume / "run.json").read_text())
     ranges = load_ranges(cfg.ranges)
+    held = load_ranges(cfg.held_ranges) if cfg.held_fraction > 0 else None
     val = validation(cfg, ranges)
     out.mkdir(parents=True, exist_ok=True)
     start_update = update
@@ -158,7 +159,7 @@ def train(
             break
         for g in opt.param_groups:
             g["lr"] = lr_at(cfg, update)
-        x = batch_at(cfg, ranges, update)
+        x = batch_at(cfg, ranges, update, held)
         offset = int(rng.integers(0, cfg.patch_rows))
         loss, _, _, _ = _loss(model, x, offset, device, amp)
         opt.zero_grad(set_to_none=True)

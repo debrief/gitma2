@@ -54,8 +54,30 @@ def stream_indices(cfg: RegressorConfig, update: int) -> np.ndarray:
     return cfg.stream_start + idx
 
 
-def batch_at(cfg: RegressorConfig, ranges: dict[str, Any], update: int) -> Tensors:
-    return tensors_of(generate_indices(cfg.stream_seed, stream_indices(cfg, update), ranges), cfg)
+def _concat(a: Tensors, b: Tensors) -> Tensors:
+    return Tensors(*(np.concatenate([x, y]) for x, y in zip(astuple_(a), astuple_(b), strict=True)))
+
+
+def astuple_(t: Tensors) -> tuple[np.ndarray, ...]:
+    return (t.f, t.y, t.mask, t.zig, t.index)
+
+
+def batch_at(
+    cfg: RegressorConfig,
+    ranges: dict[str, Any],
+    update: int,
+    held: dict[str, Any] | None = None,
+) -> Tensors:
+    """Update ``update``'s batch. With ``held`` ranges and ``cfg.held_fraction`` > 0, the first
+    round(B · fraction) indices of the batch are drawn with the held-course ranges."""
+    idx = stream_indices(cfg, update)
+    n_held = int(round(cfg.held_fraction * idx.size)) if held is not None else 0
+    if held is None or n_held == 0:
+        return tensors_of(generate_indices(cfg.stream_seed, idx, ranges), cfg)
+    a = tensors_of(generate_indices(cfg.stream_seed, idx[:n_held], held), cfg)
+    if n_held == idx.size:
+        return a
+    return _concat(a, tensors_of(generate_indices(cfg.stream_seed, idx[n_held:], ranges), cfg))
 
 
 def validation(cfg: RegressorConfig, ranges: dict[str, Any]) -> Tensors:

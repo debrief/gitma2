@@ -43,11 +43,17 @@ class RegressorConfig:
     val_count: int = 512
     val_every_updates: int = 1000
     ranges: str = "configs/man2-ranges.json"
+    # Share of each batch drawn with ``held_ranges`` (the same ranges with target legs longer
+    # than any window: the target holds course). MAN2 scenarios almost never do (1 in 2,000).
+    held_fraction: float = 0.0
+    held_ranges: str = "configs/regress/held-course-ranges.json"
     precision: str = "amp"  # "amp" | "float32"
 
     def __post_init__(self) -> None:
         if self.inputs not in ("full", "ownship_only"):
             raise ValueError(f"inputs {self.inputs!r}")
+        if not 0.0 <= self.held_fraction <= 1.0:
+            raise ValueError("held_fraction must be in [0, 1]")
         if self.max_rows % self.patch_rows:
             raise ValueError("max_rows must be a multiple of patch_rows")
 

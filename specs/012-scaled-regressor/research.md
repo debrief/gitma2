@@ -116,3 +116,27 @@ dollar (the pilot may compare a T4 with an L4 for a few minutes each).
   subset with shorter histories than gitma's constant-velocity data.
 - The thresholds 1.25 and 2.0 are proposals (spec assumptions) until the decision record.
 - Authors and reviewers are agents of one model family (note 10 §4).
+
+## R8. Held-course data (found while building the readings, before any scored run)
+
+- **Finding**: on MAN2 data, at the scorer's prefixes, a target change has already begun on
+  every row (593 of 593 on seed 323; 1 scenario in 2,000 of the stream has no change at all).
+  FR-021's held-course reading would have had no rows, and the model would never have seen a
+  target that holds course through a window.
+- **Decision**: a held-course variant of the MAN2 ranges (`configs/regress/held-course-ranges.json`:
+  identical except target legs longer than any window; 9 scenarios in 2,000 still change, and
+  their rows are excluded by the row label). The training stream draws a fifth of every batch
+  from it (`held_fraction` 0.2). The held-course reading is scored on a held-course split of
+  the validation and test seeds (327, 328); the manoeuvring reading on the MAN2 splits of the
+  same seeds, as planned.
+- **Rationale**: the question is whether a direct model reaches the bound *where the
+  constant-velocity model holds*; that needs such data on both sides. A fifth keeps the
+  manoeuvring comparison close to the plan.
+- **Alternatives**: held-course rows inside MAN2 scenarios (there are none at the scored
+  prefixes; earlier prefixes are before the ownship zig, where range is undetermined); training
+  on MAN2 only and testing on held course (a test outside the training distribution would make a
+  floor uninterpretable).
+- **The reading's rule, made exact** (`regress/reading.py`): *reaches* needs the efficiency
+  intervals of range, course and speed all wholly below 1.25; *floor* needs one of them wholly
+  above 2.0 with no improvement from the worst to the best geometry quartile; otherwise
+  partial. The least-squares check on the same rows is the plain solve with no knots.

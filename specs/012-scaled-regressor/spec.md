@@ -211,6 +211,9 @@ checkpoint and metrics in the final format, and the scorer reads its predictions
   (test); the next fresh seed is then 329.
 - The generator's kernel is fast enough (about 20,000 scenarios a second on CPU) that data are
   not the bottleneck; whether the GPU container's CPUs keep up is for the plan to measure.
+- Held-course rows do not occur on MAN2 data at the scored prefixes (plan research R8): the
+  held-course reading uses a held-course variant of the same ranges, in a fifth of the training
+  stream and in its own validation and test splits of seeds 327 and 328.
 - Out of scope: bearing-error mismatch (a later question if the regressor reaches the bound);
   any hybrid of the regressor and the physics layer; export; uncertainty calibration of the
   regressor beyond what the loss needs.

@@ -8,7 +8,8 @@
 - [x] T004 `regress/train.py`, `tma2-rtrain` (time limit, checkpoints, resume, run record) + toy run test
 - [x] T005 `regress/predict.py`, `tma2-rpredict` (rows at the scorer's prefixes)
 - [x] T006 Score a toy model's predictions with the existing scorer on a small split (proves the path)
-- [ ] T007 `regress/reading.py`, `tma2-rread` (held-course efficiency by geometry band; manoeuvring differences) + tests
+- [x] T007 `regress/reading.py`, `tma2-rread` (held-course efficiency by geometry band; manoeuvring differences) + tests
+- [x] T007a Held-course ranges and a held-course share of the stream (research R8) + test
 - [ ] T008 Schema: `RegressorConfig`, `RegressorRunRecord`, `RegressorDecision`; the prediction header as a schema type
 
 ## Phase 2: GPU plumbing (no secrets needed)
