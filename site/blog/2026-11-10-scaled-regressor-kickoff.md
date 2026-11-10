@@ -1,6 +1,6 @@
 ---
 title: "Kickoff: was it compute? The scaled end-to-end regressor"
-date: 2026-11-10T18:00
+date: 2026-11-10
 tags: [kickoff, spec-012]
 ---
 
