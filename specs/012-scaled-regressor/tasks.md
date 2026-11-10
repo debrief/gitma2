@@ -7,7 +7,7 @@
 - [x] T003 `regress/model.py` (folded rows, causal transformer, β-NLL) + causality test
 - [x] T004 `regress/train.py`, `tma2-rtrain` (time limit, checkpoints, resume, run record) + toy run test
 - [x] T005 `regress/predict.py`, `tma2-rpredict` (rows at the scorer's prefixes)
-- [ ] T006 Score a toy model's predictions with the existing scorer on a small split (proves the path)
+- [x] T006 Score a toy model's predictions with the existing scorer on a small split (proves the path)
 - [ ] T007 `regress/reading.py`, `tma2-rread` (held-course efficiency by geometry band; manoeuvring differences) + tests
 - [ ] T008 Schema: `RegressorConfig`, `RegressorRunRecord`, `RegressorDecision`; the prediction header as a schema type
 
