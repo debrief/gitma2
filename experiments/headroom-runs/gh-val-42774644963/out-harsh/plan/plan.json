@@ -1,0 +1,49 @@
+{
+  "description": "Spec 010 T021: Gate H validation. Seed 321, every condition, the first 1,000 sigma = 1 deg scenarios, in two shards. H-a (primary) and H-b (off) are applied; H-c is reported only. Bound by experiments/20261110-gh-decision.",
+  "plan": "configs/gateh/gh-a.json",
+  "split": "validation",
+  "gate": {
+    "decision": "experiments/20261110-gh-decision"
+  },
+  "seed": 321,
+  "count": 2600,
+  "data_split": "train",
+  "start": 0,
+  "ordinals": 1000,
+  "shards": 2,
+  "shard_size": 500,
+  "conditions": [
+    "off",
+    "corr-mild",
+    "corr-central",
+    "corr-harsh",
+    "bias-mild",
+    "bias-central",
+    "bias-harsh",
+    "sigma-mild",
+    "sigma-central",
+    "sigma-harsh",
+    "out-mild",
+    "out-central",
+    "out-harsh",
+    "all-mild",
+    "all-central",
+    "all-harsh"
+  ],
+  "runs": [
+    {
+      "kind": "nominal"
+    },
+    {
+      "kind": "robust"
+    },
+    {
+      "kind": "attainable"
+    },
+    {
+      "kind": "realisation"
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5"
+}
