@@ -19,7 +19,7 @@
 
 - **Decision**: a causal transformer. A front-end folds 3 consecutive rows (30 s) into one
   token, right-aligned so that a prefix's last row ends a token; 8 layers, width 256, 8 heads,
-  feed-forward 1,024, pre-norm, learned relative-time bias; about 6.4 million parameters, twelve
+  feed-forward 1,024, pre-norm, learned position embeddings; 6.39 million parameters, twelve
   times gitma's largest model. Every token is a training target (the state at its last row), so
   one scenario gives up to 240 supervised prefixes in one pass.
 - **Rationale**: attention can relate any two bearings directly, which is the triangulation the
