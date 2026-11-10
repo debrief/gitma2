@@ -178,6 +178,19 @@ by classical means; C stays frozen); measure the share of the gap between C's se
 the true manoeuvre times that C-r closes, each with the robust final solve (validation 324, test
 325). What remains is the headroom for a better segmenter of any kind; C-r becomes the standing
 control. The scaled regressor follows.
+Diagnosis done (`experiments/20261110-gr-diagnosis/`): outliers, then correlated error, make C
+declare false transitions (248 clean, 1,126 under all four); misses do not rise; bias and an
+untold σ do nothing; true nominations do not help, so confirmation over-accepts. C-r is
+`segment/robust.py` (Huber-cost confirmation over C's unchanged generator; C's digests asserted
+in `tests/unit/test_segment_robust.py`), run by `tma2-hpredict --segmentation c2r
+--robust-confirm`; `--segments-from` applies a clean split's segmentation (FR-003). Schema
+0.32.0. Owner fixed R-b's 10% threshold. Pilot and yield plans: `configs/headroom/gr-*.json`.
+012 (scaled end-to-end regressor control, `specs/012-scaled-regressor/`; owner 2026-11-10: start
+now beside 011, cap one month of Modal free credit, about 50 T4-hours; specified, not planned):
+a direct sequence-to-state model, about 10^7 scenarios on the fly (seed 326 stream, 327
+validation, 328 test; next fresh 329), read against the bound on held course (reaches < 1.25,
+floor > 2.0) and against C″ after manoeuvres. A control, never carried. No GPU run before the
+owner's account, spending limit and secrets `MODAL_TOKEN_ID`/`MODAL_TOKEN_SECRET` exist.
 
 ## Stack (owner decisions, 2026-10-31)
 
