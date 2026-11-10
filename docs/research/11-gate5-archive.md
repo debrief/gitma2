@@ -34,13 +34,15 @@ pointer.
 Findings that bear on Gate H and later work:
 - **The statement form.** A course statement in the truncated form (P times a von Mises truncated
   to ±X, the rest uniform) is consistent by construction: its arc mass is exactly P. The earlier
-  mixture with a normal approximation was off by up to 0.5 on broad rows.
+  mixture with a normal approximation was off by up to about 0.55 on broad rows.
 - **Detecting fresh manoeuvres.** Recent bearing residuals catch fresh target manoeuvres only
   weakly: held-out AUC about 0.65, and the flag catches 42% of rows just after a manoeuvre. C's
   segmentation is weaker still (AUC 0.55). The residuals also respond to geometry, such as close
-  range and ownship turns.
-- **No learning from E-w's encoder state was shown.** A plain MLP without the encoder, trained
-  post hoc, beat the learned head by 0.08 and the classical rule by 0.16. This is consistent with
+  range (and, unmeasured, ownship turns).
+- **No learning from E-w's encoder state beyond an encoder-free model was shown.** The encoder
+  helps a little inside the bounded head (−0.041 against its shuffle), but a plain MLP without the
+  encoder (post hoc, red team, two seeds) beat the learned head by 0.08 and the classical rule by
+  0.16. This is consistent with
   note 10's reading that learned components reduce to classical rules on this generator.
 - **Process lessons** (also in that branch's AGENTS.md gotchas):
   - A synthetic check of a gate's bands must reproduce the real data's P spread and
