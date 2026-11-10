@@ -27,6 +27,10 @@ architecture?
 - 2026-11-10: the GPU budget is one month of Modal's free credit, about 50 T4-hours, as a hard
   cap.
 
+- 2026-11-10 (later, superseding the cap above): the budget is **$50 in total** for this spike
+  ($30 of free credit and up to $20 charged), "useful to understand our hardware limits". The
+  cap is in dollars; hours follow from the measured cost per hour.
+
 **Standing of the model**: constitution principle III requires the reported estimate to come
 from a declared physics layer. This model has none. It is a **control**: it is never carried,
 exported, or reported as the project's estimator, whatever it scores.
@@ -132,8 +136,8 @@ checkpoint and metrics in the final format, and the scorer reads its predictions
 
 **Budget**
 
-- **FR-010**: Total GPU time MUST NOT exceed the owner's cap (50 T4-hours or its equivalent in
-  cost on another GPU type); the decision record splits it (pilot; three seeds) and each run
+- **FR-010**: Total spend MUST NOT exceed the owner's cap ($50, all charges: GPU, CPU, memory
+  and storage), converted to GPU-hours at the cost per hour the pilot measures; the decision record splits it (pilot; three seeds) and each run
   enforces its own limit.
 - **FR-011**: Every run MUST record GPU type, hours, library versions, seed and code commit.
   GPU training is not bit-reproducible; the record says so and relies on three seeds.

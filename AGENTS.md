@@ -191,6 +191,10 @@ a direct sequence-to-state model, about 10^7 scenarios on the fly (seed 326 stre
 validation, 328 test; next fresh 329), read against the bound on held course (reaches < 1.25,
 floor > 2.0) and against C″ after manoeuvres. A control, never carried. No GPU run before the
 owner's account, spending limit and secrets `MODAL_TOKEN_ID`/`MODAL_TOKEN_SECRET` exist.
+Owner 2026-11-10 (later): the budget is $50 in total (free credit plus up to $20), in dollars
+not hours. Secrets exist and authenticate (`modal-check/**` workflow). CPU build done
+(`src/tma2/regress/`, `tma2-rtrain`, `tma2-rpredict`, `scripts/modal_train.py`,
+`gputrain/**` → `.github/workflows/gputrain.yml` with the ledger `regress/ledger.py`).
 
 ## Stack (owner decisions, 2026-10-31)
 

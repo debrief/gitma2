@@ -64,7 +64,16 @@
   selector, the timeout ceiling, volume commit semantics, and how billed GPU seconds are read
   back for the run record.
 
-## R5. The budget (50 T4-hours, owner's cap)
+## R5. The budget
+
+**Owner, 2026-11-10 (later): $50 in total**, replacing the 50 T4-hour cap this table was written
+for. Modal bills the container's CPU and memory on top of the GPU rate, so the hours $50 buys
+are not known until the throughput pilot's cost is read from Modal's usage page. The table's
+shares stand (pilot 16%, three seeds 60%, controls 16%, reserve 8%); the hours are rescaled in
+the decision record, and the workflow's cap (`CAP_HOURS`) is set from the measured cost so that
+cap × cost per hour ≤ $50 less storage. A faster GPU is allowed if it buys more scenarios per
+dollar (the pilot may compare a T4 with an L4 for a few minutes each).
+
 
 | Use | T4-hours |
 | --- | --- |
