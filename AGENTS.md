@@ -171,6 +171,13 @@ one-leg-to-oracle gap clean and 0.66 under mismatch. Not evidence for learning: 
 Recommended follow-on (owner may object): a robust classical segmenter (estimated σ and Huber
 costs in C's own tests) as the control for that factor of two, then the scaled regressor.
 Seeds: 320 tuning, 321 validation, 322 test (all used); 323 unused; the next fresh seed is 323.
+011 (robust classical segmenter, Gate R, `specs/011-robust-segmenter/`; owner go-ahead
+2026-11-10; specified, not planned): nothing trained. Diagnose which mismatch kind breaks C and
+how (false transitions, misses, delay) on tuning seed 323; build C-r (C's own tests made robust
+by classical means; C stays frozen); measure the share of the gap between C's segmentation and
+the true manoeuvre times that C-r closes, each with the robust final solve (validation 324, test
+325). What remains is the headroom for a better segmenter of any kind; C-r becomes the standing
+control. The scaled regressor follows.
 
 ## Stack (owner decisions, 2026-10-31)
 
