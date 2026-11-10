@@ -1,0 +1,22 @@
+{
+  "description": "Spec 012 pilot, step 1: throughput of the planned model on a T4. One segment of 10 minutes; at most 20 minutes of GPU time with start-up. Nothing is scored.",
+  "config": {
+    "id": "pilot-throughput",
+    "layers": 8,
+    "width": 256,
+    "heads": 8,
+    "feedforward": 1024,
+    "batch_scenarios": 256,
+    "learning_rate": 0.0003,
+    "warmup_updates": 2000,
+    "total_updates": 40000,
+    "val_count": 512,
+    "val_every_updates": 200,
+    "checkpoint_seconds": 900,
+    "precision": "amp",
+    "seed": 1,
+    "limit_seconds": 600
+  },
+  "segments": 1,
+  "segment_limit_seconds": 600
+}
