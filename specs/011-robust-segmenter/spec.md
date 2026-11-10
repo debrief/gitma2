@@ -21,6 +21,8 @@ closes; what remains is the headroom any better segmenter, learned or not, could
 - `site/blog/2026-11-10-gate-h.md` (the follow-on) and `experiments/20261110-gh-c2/`.
 
 **Owner decisions this spec implements**:
+- 2026-11-10: Gate R's verdict rule: the gap is closed if the remainder's interval lies wholly
+  below 10% (R-b), fixed before any Gate R result.
 - 2026-11-10: go ahead with the robust classical segmenter before the scaled regressor.
 - 2026-11-09: the mismatch model and its severity grid (spec 010 research R2), reused unchanged.
 
@@ -273,8 +275,8 @@ and test seeds; the write-up gives the remainder in the same units as the gain.
   robust control's settings are those frozen for Gate H (`configs/gateh/gh-a.json`).
 - "Robust by classical means" excludes anything fitted to labelled data; settings chosen on the
   tuning seed by a declared rule are tuning, not training.
-- The 10% bound in R-b echoes Gate H's materiality threshold; it is a proposal with no result
-  behind it and is the owner's to change until the decision record.
+- The 10% bound in R-b echoes Gate H's materiality threshold; the owner fixed it on 2026-11-10,
+  with no Gate R result behind it.
 - C's speed (about 16 s per engagement per system on one core) limits sample sizes: the primary
   condition at about 2,000 engagements on the test seed, others at 500 or fewer.
 - Out of scope: any learned component; the scaled end-to-end regressor (next, on the owner's
