@@ -1,0 +1,44 @@
+{
+  "description": "Spec 010 smoke test of headroom.yml: 6 scenarios of seed 320 in two shards, mismatch off and the primary condition.",
+  "plan": "configs/gateh/gh-draft.json",
+  "split": "tuning",
+  "seed": 320,
+  "count": 1300,
+  "data_split": "train",
+  "start": 0,
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125",
+  "ordinals": 6,
+  "conditions": [
+    "off",
+    "all-central"
+  ],
+  "runs": [
+    {
+      "kind": "nominal"
+    },
+    {
+      "kind": "robust"
+    },
+    {
+      "kind": "robust",
+      "only": "huber"
+    },
+    {
+      "kind": "robust",
+      "only": "sigma"
+    },
+    {
+      "kind": "robust",
+      "only": "whiten"
+    },
+    {
+      "kind": "attainable"
+    },
+    {
+      "kind": "realisation"
+    }
+  ],
+  "shards": 2,
+  "shard_size": 3
+}
