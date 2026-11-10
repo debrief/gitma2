@@ -1,0 +1,28 @@
+{
+  "description": "Spec 011 smoke test of diagnose.yml: 3 scenarios of tuning seed 323, mismatch off and outliers.",
+  "seed": 323,
+  "count": 800,
+  "data_split": "train",
+  "start": 0,
+  "conditions_file": "configs/gateh/conditions.json",
+  "ranges": "configs/man2-ranges.json",
+  "heldout": "configs/man2-heldout.json",
+  "params_from": "configs/segment/gs-plan.json",
+  "variants": [
+    {
+      "name": "C"
+    },
+    {
+      "name": "C-truthnom",
+      "extra_nominations": "truth"
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "knots": 12,
+  "ordinals": 3,
+  "conditions": [
+    "off",
+    "out-central"
+  ]
+}

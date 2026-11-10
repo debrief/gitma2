@@ -1,0 +1,117 @@
+name: Segmenter diagnosis under mismatch
+
+# Spec 011 (FR-001, FR-002): run the frozen C on one seed under each listed mismatch condition and
+# score its segmentation against the truth and its downstream error with tma2-gs, one 4-core job
+# per condition. Push `diagnose/<name>` with a plan configs/diagnose/<name>.json:
+#   seed, count, data_split   tma2-generate arguments and the split file scored
+#   start, ordinals           sigma = 1 deg ordinals
+#   conditions                ids from the conditions file
+#   variants                  [{name, extra_nominations?, set?}]: C runs, each scored on the same
+#                             rows (extra_nominations "truth": true change starts are added as
+#                             nominations, confirmation still decides; a tuning-seed diagnostic)
+#   params_from               the plan whose segmenter.parameters are C's
+#   imm, ekf, knots           as tma2-gs
+# Each record goes to results/diagnose-<name>-<condition>-<run id>. Tuning seeds only.
+
+on:
+  push:
+    branches: ["diagnose/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+      name: ${{ steps.m.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: |
+          NAME="${GITHUB_REF_NAME#diagnose/}"
+          test -f "configs/diagnose/$NAME.json"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          python3 -c "
+          import json
+          p = json.load(open('configs/diagnose/$NAME.json'))
+          print('matrix=' + json.dumps({'include': [{'condition': c} for c in p['conditions']]}))" >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    env:
+      NAME: ${{ needs.setup.outputs.name }}
+      COND: ${{ matrix.condition }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Generate the split under the condition
+        run: |
+          PLAN="configs/diagnose/$NAME.json"
+          echo "PLAN=$PLAN" >> "$GITHUB_ENV"
+          read -r SEED COUNT DSPLIT CONDS RANGES HELDOUT PARAMS <<< "$(python3 -c "
+          import json; p = json.load(open('$PLAN'))
+          print(p['seed'], p['count'], p['data_split'], p['conditions_file'], p['ranges'], p['heldout'], p['params_from'])")"
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
+            --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data" \
+            --mismatch "$CONDS#$COND"
+          sha256sum "$RUNNER_TEMP/data/$DSPLIT.f32pack"
+          python3 -c "
+          import json; json.dump(json.load(open('$PARAMS'))['segmenter']['parameters'], open('$RUNNER_TEMP/params.json', 'w'))"
+          echo "TRUTH=$RUNNER_TEMP/data/$DSPLIT.f32pack" >> "$GITHUB_ENV"
+      - name: Segment (each variant)
+        run: |
+          mkdir -p "$RUNNER_TEMP/seg"
+          python3 -c "
+          import json, shlex
+          p = json.load(open('$PLAN'))
+          for v in p['variants']:
+              a = ['--in', '$TRUTH', '--out', f\"$RUNNER_TEMP/seg/{v['name']}.ndjson\",
+                   '--params', '$RUNNER_TEMP/params.json', '--start', str(p['start']),
+                   '--count', str(p['ordinals']), '--workers', '4']
+              if v.get('extra_nominations'): a += ['--extra-nominations', v['extra_nominations']]
+              for k, val in v.get('set', {}).items(): a += ['--set', f'{k}={json.dumps(val)}']
+              print(shlex.join(a))" > "$RUNNER_TEMP/cmds"
+          while read -r ARGS; do
+            echo "tma2-segment $ARGS"
+            /usr/bin/time -f "%e s wall" bash -c "eval uv run tma2-segment $ARGS" 2>&1 | tail -3
+          done < "$RUNNER_TEMP/cmds"
+      - name: Score
+        run: |
+          OUT="experiments/diagnose-runs/$NAME-${{ github.run_id }}/$COND"
+          ARGS=$(python3 -c "
+          import json, shlex
+          p = json.load(open('$PLAN'))
+          a = ['--start', str(p['start']), '--count', str(p['ordinals']), '--knots', str(p.get('knots', 12)),
+               '--imm', p['imm']]
+          if p.get('ekf'): a += ['--ekf', p['ekf']]
+          a += ['--segmentations'] + [f\"{v['name']}=$RUNNER_TEMP/seg/{v['name']}.ndjson\" for v in p['variants']]
+          print(shlex.join(a))")
+          eval uv run tma2-gs --truth "$TRUTH" --experiment "$RUNNER_TEMP/out" $ARGS
+          mkdir -p "$OUT"
+          cp -r "$RUNNER_TEMP/out/." "$OUT/"
+          for f in "$RUNNER_TEMP"/seg/*.ndjson; do gzip -c "$f" > "$OUT/$(basename "$f").gz"; done
+          cp "$PLAN" "$OUT/plan.json"
+          cp "$RUNNER_TEMP/data/digests.json" "$OUT/data-digests.json"
+          CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
+          printf '{"run_id": "%s", "commit": "%s", "cpu_model": "%s", "condition": "%s"}\n' \
+            "${{ github.run_id }}" "${{ github.sha }}" "$CPU" "$COND" > "$OUT/run.json"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+      - name: Push the results branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/diagnose-$NAME-$COND-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add -f "$OUT"
+          git commit -qm "experiments: segmenter diagnosis $NAME, $COND (run ${{ github.run_id }}, ${{ github.sha }})"
+          git push origin "$BR"
