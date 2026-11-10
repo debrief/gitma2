@@ -140,6 +140,15 @@ side file `<split>.mismatch.npz`), `src/tma2/headroom/` (`cov`, `gls` the whiten
 the ceilings and the robust control, `crb`, `gate`), `tma2-hpredict`, `tma2-gh`, workflow
 `headroom/**` → `.github/workflows/headroom.yml` with plans `configs/headroom/`. Draft plan
 `configs/gateh/gh-draft.json` (tuning only). Schema 0.31.0. Gate H is not yet registered.
+Steps 1–3 done on tuning seed 320 (never a gate result): all 16 conditions
+(`experiments/20261109-gh-tuning/`: on the primary condition the robust control is within about
+1.5% of the attainable ceiling; outliers are the only kind that hurts the plain solve badly and
+Huber removes it; correlated error and bias hurt the ceiling as much as everyone), the control's
+grid (`experiments/20261110-gh-grid/`: Huber constant 2.0, no shrinkage), references re-tuned
+(`experiments/20261110-gh-refs/`, workflow `tune-h/**`: IMM unchanged, EKF
+`ekf-sa0.00003-p4-r0.5`). Next: register Gate H (SRD §5 row, owner merges; H-b needs a form the
+sample size can decide; H-a's band from the clean-data oracle's efficiency, about 1.57), then the
+decision record, validation seed 321 and test seed 322.
 
 ## Stack (owner decisions, 2026-10-31)
 

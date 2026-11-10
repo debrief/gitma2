@@ -57,7 +57,7 @@ Implementation follows in its own PR, with the slides post.
   equals C″'s solve; finite outputs on short legs.
 - [x] T015 Choose the control's settings on seed 320, primary condition, from the grid of research
   R5 (27 points), on CI; record the table and the choice.
-- [ ] T016 Re-tune the IMM and EKF on seed 320, primary condition (`tune/**`, the grids of
+- [x] T016 Re-tune the IMM and EKF on seed 320, primary condition (`tune/**`, the grids of
   `experiments/20261104-man2-refs/`); freeze by name.
 - [x] T017 `src/tma2/headroom/gate.py`, `cli/gh.py` (`tma2-gh`): `tma2-gs` scoring with
   `--predictions`, the statistic R with its paired clustered interval, the segmentation part, the
