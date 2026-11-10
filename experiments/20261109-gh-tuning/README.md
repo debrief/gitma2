@@ -9,7 +9,6 @@ seed 322 has been generated or scored. Gate H is not yet registered.
 - Seed 320, `train` split of 1,300, the first 500 σ = 1° scenarios, 1,919 G5 rows per condition.
 - Robust control at the draft plan's settings (`configs/gateh/gh-draft.json`), not yet tuned.
 - IMM and EKF are the white-noise tunings (not re-tuned for mismatch; T016).
-- `all-mild` and `all-harsh` had not finished when this was written.
 
 ## Median relative range error, both sides on the true segmentation
 
@@ -28,7 +27,9 @@ seed 322 has been generated or scored. Gate H is not yet registered.
 | out-mild | 0.0682 | 0.0669 | 0.0649 | 1.58 | +3.0% [−1.0, +8.9] | +5.1% [−0.5, +11.9] |
 | out-central | 0.0865 | 0.0667 | 0.0634 | 1.58 | +5.2% [+0.2, +10.3] | +36.4% [+24.9, +47.6] |
 | out-harsh | 0.1174 | 0.0675 | 0.0629 | 1.52 | +7.2% [+1.4, +12.1] | +86.5% [+66.4, +108.0] |
+| all-mild | 0.1029 | 0.0930 | 0.0921 | 1.33 | +1.0% [−2.7, +5.0] | +11.7% [+2.8, +18.8] |
 | **all-central (primary)** | 0.1378 | 0.1169 | 0.1152 | 1.24 | **+1.5% [−3.4, +6.4]** | +19.6% [+10.6, +31.4] |
+| all-harsh | 0.1789 | 0.1502 | 0.1487 | 1.16 | +1.0% [−6.6, +8.6] | +20.3% [+9.2, +30.8] |
 
 Intervals are 95%, paired and scenario-clustered, 2,000 resamples. Efficiency is the attainable
 ceiling's range error over the Cramér–Rao bound under the true covariance, settled rows.
@@ -37,7 +38,7 @@ ceiling's range error over the Cramér–Rao bound under the true covariance, se
 
 - **On the primary condition the untuned robust control is already within 1.5% of the ceiling**,
   and the interval lies wholly below the 10% threshold. If validation and test agree, the
-  verdict is "not material".
+  verdict is "not material". The mild and harsh combinations say the same (+1.0% each).
 - **Outliers are the only kind that hurts the plain solve badly** (+36% at 2%, +87% at 5%), and
   Huber weighting alone removes nearly all of it. That is a textbook fix, not learning headroom.
 - **Correlated error and bias hurt every estimator, the ceiling included.** The plain solve's
