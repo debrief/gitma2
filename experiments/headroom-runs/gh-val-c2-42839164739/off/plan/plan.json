@@ -1,0 +1,40 @@
+{
+  "description": "Spec 010 (research R6, FR-033): the registered comparison on C's own segmentation, reported beside the gate and not gated. Validation seed 321, the primary condition and mismatch off, the first 1,000 sigma = 1 deg scenarios in four shards. C'' (C at the nominal sigma, zig veto, fixed fade) with the plain solve and with the robust control, beside the plain solve and the attainable ceiling on the true segmentation. Run after the test record, at the panel's request; the c2 path needed a fix to how C's frozen parameters are read (no estimator changed).",
+  "plan": "configs/gateh/gh-a.json",
+  "split": "validation",
+  "gate": {
+    "decision": "experiments/20261110-gh-decision"
+  },
+  "seed": 321,
+  "count": 2600,
+  "data_split": "train",
+  "start": 0,
+  "ordinals": 1000,
+  "shards": 4,
+  "shard_size": 250,
+  "conditions": [
+    "all-central",
+    "off"
+  ],
+  "runs": [
+    {
+      "kind": "nominal"
+    },
+    {
+      "kind": "robust"
+    },
+    {
+      "kind": "attainable"
+    },
+    {
+      "kind": "nominal",
+      "segmentation": "c2"
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2"
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5"
+}
