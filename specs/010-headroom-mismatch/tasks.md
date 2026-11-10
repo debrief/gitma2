@@ -88,16 +88,16 @@ Implementation follows in its own PR, with the slides post.
 
 ## Phase 7: Reporting
 
-- [ ] T024 `scripts/research/gh_charts.py`: bearings under each kind on one engagement; the
+- [x] T024 `scripts/research/gh_charts.py`: bearings under each kind on one engagement; the
   headroom chart per condition; efficiency per slice. Track plots with `tma2-plot` (C″, robust
   control, attainable ceiling at zig + 10 and + 20 min). SVG with sidecars under
   `site/static/img/<date-slug>/`.
-- [ ] T025 Write-up `site/blog/<date>-gate-h.md` (critical; states what was not tested: target
+- [x] T025 Write-up `site/blog/<date>-gate-h.md` (critical; states what was not tested: target
   motion mismatch, a classical bias state, other severities) and the slides post
   (`/speckit-report-slides`) before the PR.
-- [ ] T026 `AGENTS.md` status, seeds and gotchas; glossary entries (headroom, attainable ceiling,
+- [x] T026 `AGENTS.md` status, seeds and gotchas; glossary entries (headroom, attainable ceiling,
   whitening); quickstart corrected to the commands run.
-- [ ] T027 Follow-on recorded per the verdict (FR-044), and the scaled regressor control named as
+- [x] T027 Follow-on recorded per the verdict (FR-044), and the scaled regressor control named as
   the next spec with what the owner must set up (Modal account, spending limit, two repository
   secrets).
 

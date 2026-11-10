@@ -152,7 +152,21 @@ decision record, validation seed 321 and test seed 322.
 Gate H registered (2026-11-10): SRD §5 row and §9 line in PR 25 (owner merges; H-b's form is
 the owner's: point at most 5%, interval not wholly above 2%); plan `configs/gateh/gh-a.json`
 (`26d8e898…`, never edited); decision `experiments/20261110-gh-decision/`. Seeds 321 and 322 are
-not generated. Next: shard `headroom.yml`, validation (H-a, H-b), test (H-c), panel.
+generated in their runs only. Validation (`experiments/20261110-gh-val/`, seed 321, 16 conditions):
+H-a and H-b pass. **Test record `experiments/20261110-gh/` (seed 322, 5,203 scenarios): H-c
+R = −0.4% [−2.4, +1.4], headroom not material; decided by the panel, round 1** (`review.md`,
+five approve-with-findings). What it supports is narrower than the SRD row: on the true
+segmentation, under this stationary Gaussian-plus-outlier error family at these severities,
+learning the bearing-error model for this solve is not pursued. The pooled zero is +4.9% under
+10.7 km and −5.2% over 25.3 km (`range-bands.json`); the "ceiling" is an error-model-informed
+fit, not a ceiling; both fits are about 1.25 × the known-manoeuvre bound and why is not
+established (the chord explanation was tested and rejected). The robust control is kept: 12%
+better than the plain solve under these errors, under 2% cost on clean data. Write-up
+`site/blog/2026-11-10-gate-h.md`, slides `site/blog/2026-11-10-gate-h-slides.md`. Registered
+comparison on C's segmentation (`configs/headroom/gh-val-c2.json`) run late:
+`experiments/20261110-gh-c2/`. Recommended follow-on (owner may object): the same harness on the
+segmenter's output with a zig-coupled bias and bursty outliers, then the scaled regressor.
+Seeds: 320 tuning, 321 validation, 322 test (all used); 323 unused; the next fresh seed is 323.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -413,5 +427,14 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   An `.npz` carries zip timestamps, so its file digest is not reproducible: bind a digest of the
   arrays (`mismatch_truth_digest`). A numba function called from Python returns a Python int
   for a `uint64`: wrap it in `np.uint64` before passing it back in (`OverflowError` otherwise).
+- Gate H panel: a reference built by a model-based fit is not a ceiling; name it for what it is
+  told. Check a pooled statistic by range band before saying "nothing to win". Do not explain a
+  gap you have not tested (the chord explanation of the efficiency was wrong). Before a
+  headroom gate, compute the linearised OLS-over-GLS ratio for the declared grid: it shows what
+  the grid can possibly yield. A registered "reported beside" comparison is a deliverable: run
+  it with the gate, and test its code path first (`--segmentation c2` read the wrong block).
+- `headroom.yml`: scoring waits for every prediction shard of every condition; a run's jobs
+  show as checks on the PR whose head commit they run from. `ci.yml` skips the site build and
+  ONNX conformance on pull requests that cannot affect them (job `changes`).
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.
