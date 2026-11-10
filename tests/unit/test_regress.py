@@ -36,7 +36,12 @@ def test_causal() -> None:
     """A token's output does not change when later rows change."""
     cfg = _cfg()
     torch.manual_seed(0)
-    m = Regressor(cfg).eval()
+    prev = torch.get_default_dtype()
+    torch.set_default_dtype(torch.float64)  # as left by the physics layer's tests and CLIs
+    try:
+        m = Regressor(cfg).eval()
+    finally:
+        torch.set_default_dtype(prev)
     torch.nn.init.normal_(m.head.weight, std=0.1)
     x = batch_at(cfg, load_ranges(cfg.ranges), 0)
     f = torch.from_numpy(x.f)

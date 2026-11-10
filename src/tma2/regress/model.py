@@ -78,6 +78,8 @@ class Regressor(nn.Module):
         nn.init.normal_(self.pos, std=0.02)
         nn.init.zeros_(self.head.weight)
         nn.init.zeros_(self.head.bias)
+        # float32 whatever the process default (the physics layer's code sets double)
+        self.float()
 
     def forward(self, f: Tensor, offset: int = 0) -> tuple[Tensor, Tensor]:
         """f [B, R, 7] → (mean [B, T, 3], log-variance [B, T, 3]); token j ends at row
