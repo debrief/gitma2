@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.30.0
+version: 0.31.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -665,6 +665,47 @@ classes:
         description: >-
           True when that checkout had uncommitted changes (only allowed with --allow-dirty; absent
           before schema 0.8.0).
+      mismatch:
+        range: MismatchCondition
+        inlined: true
+        description: >-
+          Bearing-error mismatch applied to this split (generator 0.7.0, spec 010); absent when the
+          errors are white Gaussian with the stated sigma.
+
+  MismatchCondition:
+    description: >-
+      Spec 010 (Gate H): how a split's bearing errors depart from white Gaussian noise of the
+      stated sigma. Error = white + correlated + bias + outlier, with the true sd equal to the
+      nominal sd times a factor. A kind is off when its fields are absent. Estimators are never
+      given this record's realisation; only the oracle ceilings read the truth side file.
+    attributes:
+      id: { range: string, required: true, description: "Condition name, for example all-central." }
+      corr_tau_s:
+        range: float
+        unit: { ucum_code: s }
+        description: Correlation time of the first-order Gauss-Markov error component.
+      corr_share:
+        range: float
+        description: Share of the true error variance that is correlated (the rest is white).
+      bias_sd_rad:
+        range: float
+        unit: { ucum_code: rad }
+        description: Stationary sd of the slowly varying bias (Gauss-Markov).
+      bias_tau_s:
+        range: float
+        unit: { ucum_code: s }
+        description: Correlation time of the bias.
+      sigma_factor_max:
+        range: float
+        description: >-
+          k: the true sd is the nominal sd times a factor drawn log-uniformly on [1/k, k], once
+          per engagement, and not told to the estimator.
+      outlier_rate:
+        range: float
+        description: Probability per bearing of an added outlier.
+      outlier_spread:
+        range: float
+        description: Outlier sd in units of the true error sd.
 
   NormalisationConstants:
     description: Fixed scaling constants computed from the train split's input channels only.
@@ -1783,6 +1824,65 @@ classes:
       segmentation_sha256:
         range: string
         description: SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).
+
+  GateHCriteria:
+    description: "Gate H's checks (spec 010 research R7, SRD section 5), fixed by the decision record."
+    attributes:
+      efficiency_band:
+        range: float
+        multivalued: true
+        required: true
+        description: "H-a: band for the attainable ceiling's range efficiency against the bound under the true covariance, settled rows of the primary condition."
+      clean_cost_point: { range: float, required: true, description: "H-b: the robust control's cost on mismatch-off data (median range error over the plain solve's, minus 1) at most this." }
+      clean_cost_interval: { range: float, required: true, description: "H-b: and the cost's interval not wholly above this." }
+      materiality: { range: float, required: true, description: "H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09)." }
+
+  GateHDecision:
+    description: "The Gate H decision record (spec 010 FR-040, FR-041), committed before any validation or test scoring."
+    attributes:
+      plan_id: { range: string, required: true }
+      plan_digest: { range: string, required: true }
+      conditions_digest: { range: string, required: true }
+      primary: { range: string, required: true }
+      tuning_seed: { range: integer, required: true }
+      validation_seed: { range: integer, required: true }
+      test_seed: { range: integer, required: true }
+      rescore_seed: { range: integer, required: true }
+      criteria: { range: GateHCriteria, required: true, inlined: true }
+      robust_settings: { range: string, required: true, description: The control's settings as canonical JSON. }
+      imm: { range: string, required: true }
+      ekf: { range: string, required: true }
+      bootstrap_level: { range: float, required: true }
+      bootstrap_resamples: { range: integer, required: true }
+      validation_rule: { range: string, required: true }
+      forecasts: { range: string, required: true, description: Forecasts stated before any validation or test result. }
+
+  HeadroomPredictionHeader:
+    description: >-
+      First record of a tma2-hpredict file (spec 010 contracts/cli.md): an oracle ceiling or the
+      classical robust control on one split.
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      estimator: { range: string, required: true, description: "Kind and segmentation, for example robust@truth." }
+      mode: { range: string, required: true, description: Always per_timestep. }
+      kind: { range: string, required: true, description: "nominal, realisation, attainable or robust." }
+      segmentation: { range: string, required: true, description: "truth, or c2 (the classical C'' hand-over)." }
+      condition: { range: string, required: true, description: "The split's mismatch condition id (off without one)." }
+      dataset_digest: { range: string, required: true }
+      truth_sha256:
+        range: string
+        description: Digest of the mismatch truth read (ceilings only; absent for every other estimator).
+      settings:
+        range: string
+        description: The robust control's settings as canonical JSON (robust only).
+      plan_sha256: { range: string, description: SHA-256 of the Gate H plan read. }
+      code_sha256: { range: string, description: "C's code digest, when C's segmentation is used." }
+      knots: { range: integer, required: true }
+      ordinal_start: { range: integer, required: true }
+      ordinal_count: { range: integer, required: true }
+      git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, required: true }
 
   CalibrationHeadConfig:
     description: >-

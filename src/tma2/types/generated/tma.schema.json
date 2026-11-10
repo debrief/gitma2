@@ -659,6 +659,17 @@
                     "description": "First scenario index (inclusive).",
                     "type": "integer"
                 },
+                "mismatch": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/MismatchCondition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Bearing-error mismatch applied to this split (generator 0.7.0, spec 010); absent when the errors are white Gaussian with the stated sigma."
+                },
                 "parameter_ranges": {
                     "$ref": "#/$defs/ParameterRanges"
                 },
@@ -2121,6 +2132,115 @@
             "title": "GateDDecision",
             "type": "object"
         },
+        "GateHCriteria": {
+            "additionalProperties": false,
+            "description": "Gate H's checks (spec 010 research R7, SRD section 5), fixed by the decision record.",
+            "properties": {
+                "clean_cost_interval": {
+                    "description": "H-b: and the cost's interval not wholly above this.",
+                    "type": "number"
+                },
+                "clean_cost_point": {
+                    "description": "H-b: the robust control's cost on mismatch-off data (median range error over the plain solve's, minus 1) at most this.",
+                    "type": "number"
+                },
+                "efficiency_band": {
+                    "description": "H-a: band for the attainable ceiling's range efficiency against the bound under the true covariance, settled rows of the primary condition.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "materiality": {
+                    "description": "H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09).",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "efficiency_band",
+                "clean_cost_point",
+                "clean_cost_interval",
+                "materiality"
+            ],
+            "title": "GateHCriteria",
+            "type": "object"
+        },
+        "GateHDecision": {
+            "additionalProperties": false,
+            "description": "The Gate H decision record (spec 010 FR-040, FR-041), committed before any validation or test scoring.",
+            "properties": {
+                "bootstrap_level": {
+                    "type": "number"
+                },
+                "bootstrap_resamples": {
+                    "type": "integer"
+                },
+                "conditions_digest": {
+                    "type": "string"
+                },
+                "criteria": {
+                    "$ref": "#/$defs/GateHCriteria"
+                },
+                "ekf": {
+                    "type": "string"
+                },
+                "forecasts": {
+                    "description": "Forecasts stated before any validation or test result.",
+                    "type": "string"
+                },
+                "imm": {
+                    "type": "string"
+                },
+                "plan_digest": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "primary": {
+                    "type": "string"
+                },
+                "rescore_seed": {
+                    "type": "integer"
+                },
+                "robust_settings": {
+                    "description": "The control's settings as canonical JSON.",
+                    "type": "string"
+                },
+                "test_seed": {
+                    "type": "integer"
+                },
+                "tuning_seed": {
+                    "type": "integer"
+                },
+                "validation_rule": {
+                    "type": "string"
+                },
+                "validation_seed": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "plan_id",
+                "plan_digest",
+                "conditions_digest",
+                "primary",
+                "tuning_seed",
+                "validation_seed",
+                "test_seed",
+                "rescore_seed",
+                "criteria",
+                "robust_settings",
+                "imm",
+                "ekf",
+                "bootstrap_level",
+                "bootstrap_resamples",
+                "validation_rule",
+                "forecasts"
+            ],
+            "title": "GateHDecision",
+            "type": "object"
+        },
         "GateId": {
             "description": "",
             "enum": [
@@ -2391,6 +2511,101 @@
                 "output_sd"
             ],
             "title": "HeadLiveness",
+            "type": "object"
+        },
+        "HeadroomPredictionHeader": {
+            "additionalProperties": false,
+            "description": "First record of a tma2-hpredict file (spec 010 contracts/cli.md): an oracle ceiling or the classical robust control on one split.",
+            "properties": {
+                "code_sha256": {
+                    "description": "C's code digest, when C's segmentation is used.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "condition": {
+                    "description": "The split's mismatch condition id (off without one).",
+                    "type": "string"
+                },
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "estimator": {
+                    "description": "Kind and segmentation, for example robust@truth.",
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "description": "nominal, realisation, attainable or robust.",
+                    "type": "string"
+                },
+                "knots": {
+                    "type": "integer"
+                },
+                "mode": {
+                    "description": "Always per_timestep.",
+                    "type": "string"
+                },
+                "ordinal_count": {
+                    "type": "integer"
+                },
+                "ordinal_start": {
+                    "type": "integer"
+                },
+                "plan_sha256": {
+                    "description": "SHA-256 of the Gate H plan read.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "segmentation": {
+                    "description": "truth, or c2 (the classical C'' hand-over).",
+                    "type": "string"
+                },
+                "settings": {
+                    "description": "The robust control's settings as canonical JSON (robust only).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "truth_sha256": {
+                    "description": "Digest of the mismatch truth read (ceilings only; absent for every other estimator).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "estimator",
+                "mode",
+                "kind",
+                "segmentation",
+                "condition",
+                "dataset_digest",
+                "knots",
+                "ordinal_start",
+                "ordinal_count",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "HeadroomPredictionHeader",
             "type": "object"
         },
         "HelmWanderRanges": {
@@ -2715,6 +2930,70 @@
                 "excluded"
             ],
             "title": "MetricsRecord",
+            "type": "object"
+        },
+        "MismatchCondition": {
+            "additionalProperties": false,
+            "description": "Spec 010 (Gate H): how a split's bearing errors depart from white Gaussian noise of the stated sigma. Error = white + correlated + bias + outlier, with the true sd equal to the nominal sd times a factor. A kind is off when its fields are absent. Estimators are never given this record's realisation; only the oracle ceilings read the truth side file.",
+            "properties": {
+                "bias_sd_rad": {
+                    "description": "Stationary sd of the slowly varying bias (Gauss-Markov).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "bias_tau_s": {
+                    "description": "Correlation time of the bias.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "corr_share": {
+                    "description": "Share of the true error variance that is correlated (the rest is white).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "corr_tau_s": {
+                    "description": "Correlation time of the first-order Gauss-Markov error component.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Condition name, for example all-central.",
+                    "type": "string"
+                },
+                "outlier_rate": {
+                    "description": "Probability per bearing of an added outlier.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "outlier_spread": {
+                    "description": "Outlier sd in units of the true error sd.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "sigma_factor_max": {
+                    "description": "k: the true sd is the nominal sd times a factor drawn log-uniformly on [1/k, k], once per engagement, and not told to the estimator.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "MismatchCondition",
             "type": "object"
         },
         "ModelDigest": {
@@ -5142,6 +5421,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.30.0"
+    "version": "0.31.0"
 }
 

@@ -134,6 +134,43 @@ headroom after the robust control: train under mismatch; none: stop the learning
 publish. The Gate 4 follow-on is set aside. Seeds: 320 tuning, 321 validation, 322 test; seed 314
 is retired from tuning. After Gate H: the scaled end-to-end regressor control (note 04 option B)
 on Modal's free credit, once the owner has set up the account and secret.
+Implemented so far (PR 25, steps 1–3): `sim/mismatch.py` (overlay from its own stream;
+`run_kernel(..., mismatch)`; `tma2-generate --mismatch configs/gateh/conditions.json#<id>`; truth
+side file `<split>.mismatch.npz`), `src/tma2/headroom/` (`cov`, `gls` the whitened layer, `estimators`
+the ceilings and the robust control, `crb`, `gate`), `tma2-hpredict`, `tma2-gh`, workflow
+`headroom/**` → `.github/workflows/headroom.yml` with plans `configs/headroom/`. Draft plan
+`configs/gateh/gh-draft.json` (tuning only). Schema 0.31.0. Gate H is not yet registered.
+Steps 1–3 done on tuning seed 320 (never a gate result): all 16 conditions
+(`experiments/20261109-gh-tuning/`: on the primary condition the robust control is within about
+1.5% of the attainable ceiling; outliers are the only kind that hurts the plain solve badly and
+Huber removes it; correlated error and bias hurt the ceiling as much as everyone), the control's
+grid (`experiments/20261110-gh-grid/`: Huber constant 2.0, no shrinkage), references re-tuned
+(`experiments/20261110-gh-refs/`, workflow `tune-h/**`: IMM unchanged, EKF
+`ekf-sa0.00003-p4-r0.5`). Next: register Gate H (SRD §5 row, owner merges; H-b needs a form the
+sample size can decide; H-a's band from the clean-data oracle's efficiency, about 1.57), then the
+decision record, validation seed 321 and test seed 322.
+Gate H registered (2026-11-10): SRD §5 row and §9 line in PR 25 (owner merges; H-b's form is
+the owner's: point at most 5%, interval not wholly above 2%); plan `configs/gateh/gh-a.json`
+(`26d8e898…`, never edited); decision `experiments/20261110-gh-decision/`. Seeds 321 and 322 are
+generated in their runs only. Validation (`experiments/20261110-gh-val/`, seed 321, 16 conditions):
+H-a and H-b pass. **Test record `experiments/20261110-gh/` (seed 322, 5,203 scenarios): H-c
+R = −0.4% [−2.4, +1.4], headroom not material; decided by the panel, round 1** (`review.md`,
+five approve-with-findings). What it supports is narrower than the SRD row: on the true
+segmentation, under this stationary Gaussian-plus-outlier error family at these severities,
+learning the bearing-error model for this solve is not pursued. The pooled zero is +4.9% under
+10.7 km and −5.2% over 25.3 km (`range-bands.json`); the "ceiling" is an error-model-informed
+fit, not a ceiling; both fits are about 1.25 × the known-manoeuvre bound and why is not
+established (the chord explanation was tested and rejected). The robust control is kept: 12%
+better than the plain solve under these errors, under 2% cost on clean data. Write-up
+`site/blog/2026-11-10-gate-h.md`, slides `site/blog/2026-11-10-gate-h-slides.md`. Registered
+comparison on C's segmentation (`configs/headroom/gh-val-c2.json`) run late, validation seed,
+reported only (`experiments/20261110-gh-c2/`): **the mismatch's cost is in the segmentation**. C″
+is 0.102 clean and 0.280 under the primary condition (0.230 with the robust control in its final
+solve) against 0.114 for the robust control on the true segmentation; C recovers 0.92 of the
+one-leg-to-oracle gap clean and 0.66 under mismatch. Not evidence for learning: C ran unchanged.
+Recommended follow-on (owner may object): a robust classical segmenter (estimated σ and Huber
+costs in C's own tests) as the control for that factor of two, then the scaled regressor.
+Seeds: 320 tuning, 321 validation, 322 test (all used); 323 unused; the next fresh seed is 323.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -389,5 +426,19 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   about 800 rows is about 2.5 sampling sd: use an interval or a slope test. A 10-knot PAV map on
   2,000 rows caps P by noise at its top knot. Recalibrating P but not the density makes the
   statement contradict itself.
+- Spec 010: never add an argument to `physics.layer.residuals`/`iterate` for a reference
+  estimator: C's frozen `code_sha256` covers `physics/layer.py`. Subclass (`headroom/gls.py`).
+  An `.npz` carries zip timestamps, so its file digest is not reproducible: bind a digest of the
+  arrays (`mismatch_truth_digest`). A numba function called from Python returns a Python int
+  for a `uint64`: wrap it in `np.uint64` before passing it back in (`OverflowError` otherwise).
+- Gate H panel: a reference built by a model-based fit is not a ceiling; name it for what it is
+  told. Check a pooled statistic by range band before saying "nothing to win". Do not explain a
+  gap you have not tested (the chord explanation of the efficiency was wrong). Before a
+  headroom gate, compute the linearised OLS-over-GLS ratio for the declared grid: it shows what
+  the grid can possibly yield. A registered "reported beside" comparison is a deliverable: run
+  it with the gate, and test its code path first (`--segmentation c2` read the wrong block).
+- `headroom.yml`: scoring waits for every prediction shard of every condition; a run's jobs
+  show as checks on the PR whose head commit they run from. `ci.yml` skips the site build and
+  ONNX conformance on pull requests that cannot affect them (job `changes`).
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.

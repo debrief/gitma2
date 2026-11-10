@@ -1,0 +1,33 @@
+{
+  "record": "gate_h_test",
+  "run_id": 42799040276,
+  "plan_digest": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a",
+  "verdict": {
+    "H-c": {
+      "hi": 0.014454808092530635,
+      "lo": -0.023607998729888613,
+      "value": -0.00392373493293241,
+      "threshold": 0.1,
+      "verdict": "not_material"
+    }
+  },
+  "soundness_for_information": {
+    "H-a": {
+      "efficiency_settled_range": 1.2572887348232715,
+      "band": [
+        0.9,
+        1.6
+      ],
+      "ceiling_not_above_plain": true,
+      "pass": true
+    },
+    "H-b": {
+      "hi": 0.04800900453396806,
+      "lo": -0.007736182127311975,
+      "value": 0.01884016623834972,
+      "point_limit": 0.05,
+      "interval_limit": 0.02,
+      "pass": true
+    }
+  }
+}

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gate H: headroom under bearing-error mismatch</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.7em; margin: 0 auto; }
+      .reveal .big { font-size: 1.5em; font-weight: 600; margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Gate H: is there anything for learning to win?</h1>
+          <p>Headroom under bearing-error mismatch, with nothing trained</p>
+          <p class="small">10 November 2026 · spec 010, Gate H · gitma2</p>
+        </section>
+
+        <section>
+          <h2>Why this gate</h2>
+          <ul>
+            <li>Every learned component so far reduced to a classical rule under its control.</li>
+            <li>Suspected cause: the simulated bearing errors are exactly what the estimator assumes.</li>
+            <li>So measure first: make the errors unlike the model, and ask what <em>knowing</em> the true error model is worth.</li>
+            <li>The owner fixed the threshold beforehand: material if the gap is wholly above 10%.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Four kinds of mismatch</h2>
+          <img src="../../img/2026-11-10-gate-h-slides/mismatch.svg" alt="Bearing error of one engagement under no mismatch, correlated error, slow bias, outliers and all four" />
+          <p class="small">One engagement of tuning seed 320 under each kind at central severity. The gate is decided on all four together.</p>
+        </section>
+
+        <section>
+          <h2>Three estimators, one solve</h2>
+          <div class="two">
+            <ul>
+              <li><strong>Plain solve</strong>: assumes white noise.</li>
+              <li><strong>Robust control</strong>: Huber weights, σ and correlation estimated from residuals. Classical; nothing learned.</li>
+              <li><strong>Error-model-informed fit</strong>: told the true error covariance.</li>
+              <li>All three are given the true manoeuvre times.</li>
+            </ul>
+            <img src="../../img/2026-11-10-gate-h-slides/track-3.svg" alt="Track plot: ownship (blue), target (red), three estimate trails after the zig" />
+          </div>
+          <p class="small">Engagement 3 of a demo split (tuning seed 320, primary condition). Marks at zig + 10 and + 20 min.</p>
+        </section>
+
+        <section>
+          <h2>Validation: every condition</h2>
+          <img src="../../img/2026-11-10-gate-h-slides/conditions.svg" alt="Median range error of the three estimators on sixteen conditions" />
+          <p class="small">Seed 321, 1,000 engagements each. Outliers are the only kind the plain solve suffers from badly, and the control removes it. Both soundness checks passed.</p>
+        </section>
+
+        <section>
+          <h2>The verdict: not material</h2>
+          <p class="big">R = −0.4% [−2.4, +1.4]</p>
+          <img src="../../img/2026-11-10-gate-h-slides/verdict.svg" alt="R with 97.5% intervals on six test conditions against the 10% threshold" style="max-height: 44vh" />
+          <p class="small">Test seed 322. Primary condition: 5,203 engagements, 20,473 rows. Median range error 1,880 m (control) against 1,885 m (informed fit); plain solve 2,110 m.</p>
+        </section>
+
+        <section>
+          <h2>The panel: the pooled zero hides a split</h2>
+          <div class="two">
+            <img src="../../img/2026-11-10-gate-h-slides/range-bands.svg" alt="R by quartile of true range" />
+            <ul>
+              <li>Short range: knowing the error model is worth about 5%.</li>
+              <li>Long range: the informed fit is <em>worse</em> than the robust control.</li>
+              <li>Post hoc, not gated. No band reaches 10%.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2>What the panel narrowed</h2>
+          <ul>
+            <li>The reference is not a ceiling: both fits sit about 25% above the Cramér–Rao bound, and why is not established.</li>
+            <li>The severity grid came close to fixing the outcome: only outliers could reach 10%, and Huber removes them.</li>
+            <li>The simulated errors are the control's own model family: stationary, independent of geometry.</li>
+            <li>True manoeuvre times hide the likeliest operational cost.</li>
+          </ul>
+          <p class="small">Five reviewers, all approve-with-findings. Three recomputed R; one regenerated the test data and matched every digest.</p>
+        </section>
+
+        <section>
+          <h2>But on our own segmenter's output, mismatch costs a factor of two</h2>
+          <table>
+            <tr><th>Median range error</th><th>No mismatch</th><th>Primary condition</th></tr>
+            <tr><td>Robust control, true manoeuvre times</td><td>0.060</td><td>0.114</td></tr>
+            <tr><td>C″ (our segmenter, plain solve)</td><td>0.102</td><td>0.280</td></tr>
+            <tr><td>C″ + robust control</td><td>0.103</td><td>0.230</td></tr>
+          </table>
+          <ul>
+            <li>C recovers 0.92 of the gap to the oracle on clean data, 0.66 under mismatch.</li>
+            <li>The gate could not see this: both its sides had the true manoeuvre times.</li>
+            <li>Not evidence for learning yet: C was run unchanged, with no robust tests of its own.</li>
+          </ul>
+          <p class="small">Validation seed 321, 1,000 engagements. Registered, reported and not gated; run after the verdict at the panel's request.</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>Nothing was shown about other error families, target-motion mismatch or real data.</li>
+            <li>The solve's distance from the bound is unexplained; the author's first explanation was wrong.</li>
+            <li>The IMM and EKF references are not competitive on these rows.</li>
+            <li>The segmenter comparison was delivered late, and only for the combined condition.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next</h2>
+          <ul>
+            <li>Learning the bearing-error model for this solve is not pursued.</li>
+            <li>The robust control stays: a classical 12% gain under these errors.</li>
+            <li>Recommended first: make the segmenter robust by classical means (estimated σ, Huber costs in its own tests) and measure what is left. Cheap; trains nothing.</li>
+            <li>Then the scaled end-to-end regressor (needs the owner's Modal account and secrets).</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/10/gate-h · Figures: scripts/research/gh_charts.py and tma2-plot, sidecars next to each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

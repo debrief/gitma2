@@ -15,6 +15,7 @@ import numpy as np
 from tma2.kinds import KIND_NAMES
 from tma2.types import Scenario
 
+from . import mismatch as mm
 from . import scenario as sc
 from .geometry import f32
 from .prng import derive_seed
@@ -35,6 +36,11 @@ class KernelBuffers:
     TI: np.ndarray
     spans: np.ndarray
     stats: np.ndarray
+    clean: np.ndarray
+    white: np.ndarray
+    eng: np.ndarray
+    comp: np.ndarray
+    outlier: np.ndarray
 
     @classmethod
     def for_rows(cls, rmax: int) -> KernelBuffers:
@@ -49,6 +55,11 @@ class KernelBuffers:
             TI=np.full(sc.TI_LEN, -1, dtype=np.int64),
             spans=np.zeros((sc.MAX_TM, 3), dtype=np.int64),
             stats=np.zeros(3),
+            clean=np.zeros(rmax),
+            white=np.zeros(rmax),
+            eng=np.zeros(mm.E_LEN),
+            comp=np.zeros((rmax, 4)),
+            outlier=np.zeros(rmax, dtype=np.bool_),
         )
 
 
@@ -222,10 +233,20 @@ def kernel_arrays(buf: KernelBuffers) -> tuple[np.ndarray, np.ndarray, np.ndarra
     return own, tgt, obs
 
 
-def run_kernel(dataset_seed: np.uint64, index: int, R: np.ndarray, buf: KernelBuffers) -> int:
-    """Run the kernel for one index into ``buf``; returns the redraw count."""
+def run_kernel(
+    dataset_seed: np.uint64,
+    index: int,
+    R: np.ndarray,
+    buf: KernelBuffers,
+    mismatch: mm.Condition | None = None,
+) -> int:
+    """Run the kernel for one index into ``buf``; returns the redraw count.
+
+    With a ``mismatch`` condition that is not off, the bearings are then rebuilt by the spec 010
+    overlay and ``buf.eng``, ``buf.comp`` and ``buf.outlier`` hold the mismatch truth. Without
+    one the 0.6.0 output is untouched."""
     redraws = int(
-        sc.generate_into(
+        sc.generate_parts_into(
             dataset_seed,
             index,
             R,
@@ -239,10 +260,27 @@ def run_kernel(dataset_seed: np.uint64, index: int, R: np.ndarray, buf: KernelBu
             buf.TI,
             buf.spans,
             buf.stats,
+            buf.clean,
+            buf.white,
         )
     )
     if redraws < 0:
         raise ValueError(f"scenario {index}: no valid geometry after {sc.MAX_REDRAWS} redraws")
+    if mismatch is not None and not mismatch.off:
+        mm.apply_mismatch(
+            np.uint64(derive_seed(dataset_seed, index)),
+            mismatch.M,
+            int(buf.TI[sc.TI_SAMPLES]),
+            float(buf.P[sc.P_DT]),
+            float(buf.P[sc.P_SIGMA]),
+            buf.clean,
+            buf.white,
+            buf.valid,
+            buf.bearing,
+            buf.eng,
+            buf.comp,
+            buf.outlier,
+        )
     return redraws
 
 

@@ -1079,12 +1079,21 @@ def observe(
     tgt_y: np.ndarray,
     bearing: np.ndarray,
     valid: np.ndarray,
+    clean: np.ndarray,
+    white: np.ndarray,
 ) -> None:
-    """Bearings with Gaussian noise and dropouts; draws noise and dropout for every sample."""
+    """Bearings with Gaussian noise and dropouts; draws noise and dropout for every sample.
+
+    ``clean`` receives the noise-free bearing and ``white`` the standard normal draw of every
+    sample (spec 010: the mismatch overlay rebuilds the bearing from them). Writing them changes
+    no draw and no output."""
     for i in range(samples):
-        noise = gaussian(s) * P[P_SIGMA]
+        g = gaussian(s)
+        noise = g * P[P_SIGMA]
         dropped = uniform01(s) < P[P_DROPOUT]
         b = bearing_of(tgt_x[i] - own_x[i], tgt_y[i] - own_y[i])
+        clean[i] = b
+        white[i] = g
         if dropped:
             bearing[i] = 0.0
             valid[i] = False
@@ -1110,6 +1119,51 @@ def generate_into(
     stats: np.ndarray,
 ) -> int:
     """Generate scenario ``index`` into the given arrays; returns the redraw count.
+
+    See ``generate_parts_into``; this is the same kernel without the noise-free outputs."""
+    clean = np.empty(rmax)
+    white = np.empty(rmax)
+    return generate_parts_into(
+        dataset_seed,
+        index,
+        R,
+        rmax,
+        own,
+        tgt,
+        bearing,
+        valid,
+        P,
+        tm,
+        TI,
+        spans,
+        stats,
+        clean,
+        white,
+    )
+
+
+@njit(cache=True)
+def generate_parts_into(
+    dataset_seed: uint64,
+    index: int,
+    R: np.ndarray,
+    rmax: int,
+    own: np.ndarray,
+    tgt: np.ndarray,
+    bearing: np.ndarray,
+    valid: np.ndarray,
+    P: np.ndarray,
+    tm: np.ndarray,
+    TI: np.ndarray,
+    spans: np.ndarray,
+    stats: np.ndarray,
+    clean: np.ndarray,
+    white: np.ndarray,
+) -> int:
+    """Generate scenario ``index`` into the given arrays; returns the redraw count.
+
+    ``clean`` and ``white`` ``[rmax]`` receive each sample's noise-free bearing (double) and its
+    standard normal noise draw, for the spec 010 mismatch overlay.
 
     ``own``/``tgt`` are ``[rmax, 4]`` (x, y, course, speed) and hold float32-rounded values; rows
     beyond ``samples`` are zero. ``bearing``/``valid`` are ``[rmax]``. ``stats`` receives
@@ -1144,7 +1198,7 @@ def generate_into(
         mean_r, min_r = range_stats(samples, own_x, own_y, tgt_x, tgt_y)
         if min_r < R[R_MIN_RANGE]:
             continue
-        observe(s, P, samples, own_x, own_y, tgt_x, tgt_y, bearing, valid)
+        observe(s, P, samples, own_x, own_y, tgt_x, tgt_y, bearing, valid, clean, white)
         for i in range(rmax):
             if i < samples:
                 own[i, 0] = f32(own_x[i])

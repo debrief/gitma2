@@ -1,0 +1,26 @@
+{
+  "plan_id": "gh-a",
+  "plan_digest": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a",
+  "conditions_digest": "d260fd7538d2fbcbc8c25cfd402a091ed9d50bf254a79bfd2c6c5bcc4b634e15",
+  "primary": "all-central",
+  "tuning_seed": 320,
+  "validation_seed": 321,
+  "test_seed": 322,
+  "rescore_seed": 323,
+  "criteria": {
+    "efficiency_band": [
+      0.9,
+      1.6
+    ],
+    "clean_cost_point": 0.05,
+    "clean_cost_interval": 0.02,
+    "materiality": 0.1
+  },
+  "robust_settings": "{\"huber\":true,\"huber_k\":2.0,\"min_bearings\":60,\"outer\":3,\"rho_shrink\":0.0,\"sigma\":true,\"sigma_clamp\":4.0,\"whiten\":true}",
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "bootstrap_level": 0.975,
+  "bootstrap_resamples": 2000,
+  "validation_rule": "On validation seed 321 (1,000 sigma = 1 deg scenarios per condition) H-a is applied to the primary condition and H-b to the mismatch-off condition. If either fails, the gate stops before seed 322 is generated and the pipeline is fixed. H-c is computed and reported on validation but cannot stop the gate: a small headroom is a result to confirm on test.",
+  "forecasts": "Stated 2026-11-10 from tuning seed 320 only. H-a: efficiency about 1.25, pass (0.9). H-b: cost point about +3%, pass (0.75; the risk is a point above 5%). H-c on test: R about +1.5%, interval about [-1, +4] at 97.5%, verdict not material (0.85); inconclusive 0.12; material 0.03."
+}

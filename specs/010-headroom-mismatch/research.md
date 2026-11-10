@@ -6,7 +6,8 @@
   the white draw g and the dropout flag per sample. The overlay draws from a separate stream
   derived from the scenario seed (label `mismatch`), in a fixed order: σ factor; correlated
   process; bias process; outlier flags and values, for every sample whether dropped or not.
-  Generator version 0.7.0; with no condition the 0.6.0 path is taken unchanged.
+  Generator version 0.7.0 labels a split that carries a mismatch; with no condition the 0.6.0
+  path is taken unchanged and the header still says 0.6.0, so the whole file is identical.
 - **Rationale**: FR-002 and FR-003 hold by construction: no kernel draw moves.
 - **Alternatives**: draws inside the kernel (shifts later draws; breaks byte-identity); a
   post-processing tool on finished packs (cannot recover b after float32 rounding).
@@ -20,7 +21,7 @@ Bearing error at sample i: e_i = w_i + c_i + β_i + o_i, with σ_true = σ_nomin
 | Correlated | c: first-order Gauss–Markov, correlation time τ; a share f = 0.5 of σ_true² is correlated and the rest white, so the total sd is unchanged | τ = 30 s | 60 s | 180 s |
 | Bias | β: Gauss–Markov with sd σ_b and correlation time 30 min (a part constant over the window is unobservable, see edge cases) | σ_b = 0.25° | 0.5° | 1° |
 | Untold σ | s log-uniform on [1/k, k], per engagement | k = 1.25 | 1.5 | 2 |
-| Outliers | with probability p the error is replaced by N(0, (10 σ_true)²) (the glint mixture) | p = 0.5% | 2% | 5% |
+| Outliers | with probability p an N(0, (10 σ_true)²) error is added (the glint mixture; added, not substituted, so the realisation ceiling's covariance is exact) | p = 0.5% | 2% | 5% |
 
 - **Decision**: these are a **declared design grid that brackets plausible behaviour**, not
   measured sensor figures. The primary condition is all four at central.
@@ -55,6 +56,11 @@ Bearing error at sample i: e_i = w_i + c_i + β_i + o_i, with σ_true = σ_nomin
   if the two are close, the approximation is immaterial, and both are reported.
 - **Mismatch off**: Σ = σ² I, the whitening branch is skipped and the existing oracle path runs,
   so FR-013 holds row for row.
+- **Implementation**: `headroom/gls.py` subclasses the physics layer and multiplies the bearing
+  residuals and Jacobian rows by a per-item operator; `physics/layer.py` is unchanged, so C's
+  frozen code digest holds. The inflation for the attainable ceiling is v with
+  1/(s² + v) = (1 − γ)/s² + γ/(s² + s_o²), γ the outlier responsibility at the residual: EM for
+  the mixture when the errors are white.
 - **Causality**: Σ for a row uses samples up to that row's time only (FR-014).
 - **Alternatives**: a particle or MCMC posterior mean as the ceiling (the true Bayes ceiling, but
   slow, a different estimator class, and it would add a prior the other estimators lack).
@@ -72,8 +78,12 @@ Bearing error at sample i: e_i = w_i + c_i + β_i + o_i, with σ_true = σ_nomin
 - **Decision**: C″'s solve with three textbook additions, each also scored alone:
   1. Huber weights on standardised residuals (iteratively reweighted);
   2. σ̂ from the median absolute residual on the current prefix;
-  3. whitening by an estimated first-order correlation ρ̂ from the lag-one autocorrelation of
-     residuals within legs, with ρ̂^(Δt/dt) across gaps.
+  3. whitening by an estimated correlation model. Amended in implementation, before any
+     scoring: white plus first-order, fitted by moments from the residuals' lag-one and lag-two
+     autocorrelations (ρ₁ = share · φ, ρ₂ = share · φ²), falling back to first-order alone and
+     then to white. A first-order-only model cannot represent the declared error (half white),
+     and a weak control would credit learning with a textbook fix. Gaps use the model's own
+     covariance on the sample times.
   It does not model the bias: a classical bias state is a larger design, listed as not tested.
 - **Settings grid** (chosen on seed 320, primary condition, by median range error on G5 rows):
   Huber constant 1.0, 1.345, 2.0; minimum bearings before σ̂ and ρ̂ are trusted 30, 60, 120
@@ -103,10 +113,11 @@ Bearing error at sample i: e_i = w_i + c_i + β_i + o_i, with σ_true = σ_nomin
 
 | Check | Criterion | Kind |
 | --- | --- | --- |
-| H-a | attainable ceiling's efficiency against the bound on settled rows of the primary condition within the band the decision record declares from seed 320 | soundness |
-| H-b | on mismatch-off data the robust control's median range error at most 1.02 × C″'s, interval wholly below | soundness |
+| H-a | attainable ceiling's range efficiency against the bound on settled rows of the primary condition within [0.9, 1.6] (from seed 320: the plain oracle is 1.57 on clean data), and its median range error no worse than the plain solve's | soundness |
+| H-b | (owner, 2026-11-10) on mismatch-off data the robust control's median range error over the plain solve's, minus 1, at most 5%, and its interval not wholly above 2%. The first draft (at most 2%, interval wholly below) could not be decided at the validation sample size | soundness |
 | H-c | R (R6) on the primary condition: **material** if the interval is wholly above 0.10; **not material** if wholly below; otherwise inconclusive, one re-score on a larger fresh seed (323), then final | the verdict |
 
+- Intervals are 97.5%, as at Gates 2 to 4 (tuning runs used 95%).
 - Validation (seed 321) applies H-a and H-b only. H-c is computed and reported there but does not
   stop the gate (FR-043).
 - Reported, not gated: course and speed; every other condition; the realisation ceiling; the
