@@ -65,17 +65,38 @@ four: 1,160 against 1,126; outliers 976 against 923) and matches rise by 15–42
 ## Not delivered here (FR-002, FR-003)
 
 - **Delay** is not measured: segmentation files hold scored prefixes only.
-- **The most the design can yield (FR-003)** needs the robust final solve, which this run did
-  not use. From validation seed 321 (`experiments/20261110-gh-c2/`): robust control on the true
-  segmentation 0.114, C″ with the robust final solve 0.230, under all four. The same two
-  figures on this seed, and the robust solve on C's clean-data segmentation applied to the
-  mismatched bearings, are the plan's first task.
+- **The most the design can yield (FR-003)**: delivered below.
 - **False transitions on held legs** as Annex A defines them: every scored row here has at
   least one true change, so the scorer's `false_split_rate` is empty; the counts above are
   unmatched declarations instead.
 - Even clean, C declares 248 false transitions and misses 406 of 1,223 changes; note 08 found
   most changes leave little trace, and how many of these misses are detectable is not measured
   here.
+
+## The most a segmenter can yield (FR-003; `yield/`, CI runs 42899120783 and 42899125213)
+
+The same 593 rows, with the Gate H robust control in the final solve and C″ (C with the zig veto
+and the fixed fade) as the segmenter. Median relative range error:
+
+| System | No mismatch | All four |
+| --- | --- | --- |
+| True manoeuvre times, robust solve (the reference) | 0.057 | 0.116 |
+| C″ on the bearings it is given, robust solve (the baseline) | 0.122 | 0.250 |
+| C″'s segmentation of the *clean* bearings, applied to the mismatched ones | — | 0.165 |
+| C″, plain solve | 0.124 | 0.290 |
+
+(`yield/summary.json`; paired, scenario-clustered, 95%.)
+
+- A segmenter that did under mismatch what C″ does on clean data would close **0.63
+  [0.46, 0.81]** of the gap between the baseline and the reference. That is the realistic most
+  for C-r, which is C's own tests made robust.
+- It would still sit **43% [19%, 71%]** above the reference, and on clean data C″ is already
+  about twice the reference (0.122 against 0.057). So Gate R's "closed" verdict (remainder
+  wholly below 10% of the reference) is out of reach for any segmenter of C's clean-data
+  quality: the outcome to expect at best is "adopted, with open headroom", and most of that
+  headroom exists without any mismatch.
+- The baseline is 2.16 times the reference under mismatch [1.77, 2.66] and 2.1 times clean; the
+  mismatch adds little to the *ratio*, and the absolute gap doubles because everything doubles.
 
 ## Consequence for the design (a proposal for the plan, not a result)
 
