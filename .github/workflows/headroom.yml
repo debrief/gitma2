@@ -120,7 +120,7 @@ jobs:
                    '--out', f'$RUNNER_TEMP/pred/{i}.${{ matrix.shard }}.ndjson']
               if kind == 'robust' or seg == 'c2': a += ['--plan', '$GH']
               if r.get('name'): a += ['--name', r['name']]
-              if r.get('robust_confirm'): a += ['--robust-confirm', json.dumps(r['robust_confirm'])]
+              if 'robust_confirm' in r: a += ['--robust-confirm', json.dumps(r['robust_confirm'])]
               if r.get('segments_from') and r['segments_from'] != cond:
                   a += ['--segments-from', '$RUNNER_TEMP/data-' + r['segments_from'] + '/$DSPLIT.f32pack']
               if kind == 'robust':
