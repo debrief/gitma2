@@ -186,8 +186,9 @@ and test seeds; the write-up gives the remainder in the same units as the gain.
 **The robust segmenter**
 
 - **FR-010**: C-r MUST use classical means only: estimates of scatter and correlation from
-  residuals, and weights or costs that discount wild bearings, in nomination and confirmation.
-  Nothing is trained.
+  residuals, and weights or costs that discount wild bearings, in confirmation, and in
+  nomination only if the pilot shows an effect (the diagnosis found nomination is not where C
+  fails; plan research R2). Nothing is trained.
 - **FR-011**: C-r MUST be causal and MUST read only the bearings, their times, the ownship track
   and the stated σ.
 - **FR-012**: C MUST remain exactly as frozen (code and parameter digests unchanged) and MUST be
