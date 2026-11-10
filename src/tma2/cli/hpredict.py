@@ -60,6 +60,20 @@ def load_truth(path: str, pack: str) -> tuple[dict[str, Any], Any, Any]:
     return meta, z["eng"], z["outlier"]
 
 
+def c2_parameters(c2: dict[str, Any]) -> dict[str, Any]:
+    """C's frozen parameters from the file the plan names, checked against the plan's digest."""
+    from tma2.cli.segment import params_digest
+    from tma2.types.generated.tma import SegmentParameters
+
+    raw = json.loads(Path(c2["parameters_from"]).read_text())["segmenter"]["parameters"]
+    if params_digest(SegmentParameters.model_validate(raw)) != c2["parameters_sha256"]:
+        raise ValueError(
+            f"{c2['parameters_from']}: not the plan's C parameters (parameters_sha256)"
+        )
+    out: dict[str, Any] = raw
+    return out
+
+
 def _task(args: tuple[Any, ...]) -> Task:
     import numpy as np
     import torch
@@ -211,7 +225,11 @@ def main(argv: list[str] | None = None) -> int:
     code = None
     if a.segmentation == "c2":
         c2 = dict(plan["c2"])
-        c2["parameters"] = json.loads(Path(c2["parameters_from"]).read_text())["segmenter"]
+        try:
+            c2["parameters"] = c2_parameters(c2)
+        except ValueError as e:
+            print(str(e), file=sys.stderr)
+            return 2
         code = code_digest()
         if code != c2["code_sha256"]:
             print(

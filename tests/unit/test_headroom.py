@@ -381,3 +381,11 @@ def test_shards_merge_to_the_unsharded_file(splits: dict[str, Path], tmp_path: P
             assert p["range_m"] == pytest.approx(q["range_m"], rel=1e-6)
     assert hmerge.main(["--out", str(out), parts[0], parts[0]]) == 2
     assert hmerge.main(["--out", str(out), parts[0], str(whole)]) == 2
+
+
+def test_c2_parameters_are_the_frozen_c() -> None:
+    plan = json.loads((ROOT / "configs" / "gateh" / "gh-a.json").read_text())
+    c2 = {**plan["c2"], "parameters_from": str(ROOT / plan["c2"]["parameters_from"])}
+    assert hpredict.c2_parameters(c2)
+    with pytest.raises(ValueError):
+        hpredict.c2_parameters({**c2, "parameters_sha256": "0" * 64})
