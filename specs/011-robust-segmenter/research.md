@@ -35,29 +35,29 @@
   with Huber weights, constant 2.0 (Gate H's frozen value), three reweightings, through the
   weighted layer subclass of spec 010 (`headroom/gls.py`).
 - **Statistic**: the drop in Huber cost, Σ 2ρ(r/s), base minus candidate.
-- **Scale s** (FR-014): estimated from the bearings alone, not from either hypothesis: 1.4826 ×
-  the median absolute second difference of the bearings up to the prefix row, ÷ √6. On 40
-  engagements with outliers it is 0.98–1.77 × the stated σ (median 1.2; curvature and outliers
-  inflate it). Pilot setting: this estimate, or the stated σ.
-- **Threshold**: C's χ² point × E[ψ²]/E[ψ′] for the Huber constant (the scaling of a Huber
-  likelihood-ratio-type statistic under Gaussian errors).
-- **Correlation** (pilot setting, default off): threshold × a variance inflation from the lag-1
-  autocorrelation of the second differences (−2/3 for white error). The diagnosis puts
-  correlated error's segmentation part at +0.032 [−0.005, +0.070], so this may be dropped.
-- **Speed variant** (pilot setting): Huber weights taken once from the base hypothesis and
-  reused for its candidates (one extra solve per nomination, not three per request). It biases
-  against a real change, whose bearings the base fits badly; dropped if matches fall.
+- **Scale s**: the stated σ by default. Pilot alternative (FR-014: it reads neither
+  hypothesis): 1.4826 × the median absolute second difference of the bearings up to the prefix
+  row, ÷ √6. Measured on seed 323 (150 engagements): on clean data it is 1.17 × the stated σ at
+  the median (0.96–1.56 at the 5% and 95% points), and why it is above 1 is not established.
+- **Threshold**: C's χ² point × E[ψ²]/E[ψ′] for the Huber constant (0.964 at 2.0), the scaling
+  of a Huber cost drop under Gaussian errors; applied by dividing the costs, so the 2- and
+  4-degree-of-freedom points both scale.
+- **Reweightings**: 2 after the plain start (3 solves per request), for run time; not searched.
+- **Dropped before the pilot**: a threshold correction for correlation (the diagnosis puts
+  correlated error's segmentation part at +0.032 [−0.005, +0.070]; correlated error alone is
+  measured at the gate) and weights reused from the base hypothesis (it biases against a real
+  change, and the driver sees the base only for some requests).
 
 ## R4. Settings rule (FR-013), declared before the pilot
 
-- Settings: scale (estimated, stated), correlation correction (off, on), weights (own, base),
-  and the reference lines τ × 1.5 and × 2 for plain C.
+- Settings: Huber constant (2.0, 1.345), scale (stated, estimated), and the reference lines
+  τ × 1.5 and × 2 for plain C (`configs/headroom/gr-pilot.json`).
 - Pilot: 60 engagements of seed 323, primary condition and off. A setting whose two values
   differ by less than 0.005 in median range error (robust final solve) on both is fixed at its
   cheaper value.
 - Choice among the rest, on the 150 engagements: the lowest median range error on the primary
   condition among those whose clean-data error is within 2% of C″-r's; ties to the cheaper.
-- The Huber constant and reweighting count are Gate H's and are not searched.
+- The final solve's robust settings are Gate H's and are not searched.
 
 ## R5. Gate R
 

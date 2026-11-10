@@ -182,6 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--segmentation", default="truth", choices=("truth", "c2", "c2r"))
     ap.add_argument("--plan", help="the Gate H plan (robust settings; C'' for --segmentation c2)")
     ap.add_argument("--mismatch-truth", help="the split's truth side file (ceilings only)")
+    ap.add_argument("--name", help="the estimator name in the header (default: kind@segmentation)")
     ap.add_argument("--robust-confirm", help="c2r: C-r's settings (a JSON file or object)")
     ap.add_argument(
         "--segments-from",
@@ -304,6 +305,7 @@ def main(argv: list[str] | None = None) -> int:
         oc = read_pack_header(a.segments_from).mismatch
         seg_from = oc.id if oc is not None else "off"
         name += f"<{seg_from}"
+    name = a.name or name
     h = HeadroomPredictionHeader(
         record=RecordKind.header,
         schema_version=SCHEMA_VERSION,

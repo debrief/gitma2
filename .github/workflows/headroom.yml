@@ -11,7 +11,7 @@ name: Headroom (Gate H)
 #                 taking the rest (default one shard)
 #   conditions    ids from the plan's conditions file; "ordinals_by_condition" {id: n} overrides
 #                 `ordinals` for a condition (and it then runs unsharded)
-#   runs          [{kind, segmentation?, only?, segments_from?}]: the estimators (ceilings get the truth file on
+#   runs          [{kind, segmentation?, only?, segments_from?, name?, robust_confirm?}]: the estimators (ceilings get the truth file on
 #                 a mismatch split; nothing else is given it)
 #   variants      optional [{name, set: {key: value}}]: robust settings over the plan's, one job
 #                 each (the tuning grid); default one variant with the plan's settings
@@ -119,6 +119,8 @@ jobs:
                    '--start', '${{ matrix.start }}', '--count', '${{ matrix.count }}',
                    '--out', f'$RUNNER_TEMP/pred/{i}.${{ matrix.shard }}.ndjson']
               if kind == 'robust' or seg == 'c2': a += ['--plan', '$GH']
+              if r.get('name'): a += ['--name', r['name']]
+              if r.get('robust_confirm'): a += ['--robust-confirm', json.dumps(r['robust_confirm'])]
               if r.get('segments_from') and r['segments_from'] != cond:
                   a += ['--segments-from', '$RUNNER_TEMP/data-' + r['segments_from'] + '/$DSPLIT.f32pack']
               if kind == 'robust':

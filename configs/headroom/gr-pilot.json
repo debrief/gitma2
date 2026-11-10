@@ -1,0 +1,67 @@
+{
+  "description": "Spec 011 pilot (plan research R4): C-r's settings on tuning seed 323, the first 60 sigma = 1 deg scenarios, primary condition and no mismatch; every system with the Gate H robust final solve. Reference lines: plain C at 1.5 and 2 times its threshold. Nothing gated.",
+  "plan": "configs/gateh/gh-a.json",
+  "split": "tuning",
+  "seed": 323,
+  "count": 800,
+  "data_split": "train",
+  "start": 0,
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "ordinals": 60,
+  "shards": 15,
+  "shard_size": 4,
+  "conditions": [
+    "all-central",
+    "off"
+  ],
+  "runs": [
+    {
+      "kind": "robust"
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2"
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2r",
+      "name": "cr-k2",
+      "robust_confirm": {}
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2r",
+      "name": "cr-k1.345",
+      "robust_confirm": {
+        "huber_k": 1.345
+      }
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2r",
+      "name": "cr-k2-est",
+      "robust_confirm": {
+        "scale": "estimated"
+      }
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2r",
+      "name": "c-tau1.5",
+      "robust_confirm": {
+        "robust": false,
+        "tau_factor": 1.5
+      }
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2r",
+      "name": "c-tau2",
+      "robust_confirm": {
+        "robust": false,
+        "tau_factor": 2.0
+      }
+    }
+  ]
+}
