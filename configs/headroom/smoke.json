@@ -1,5 +1,5 @@
 {
-  "description": "Spec 010 smoke test of headroom.yml: 6 scenarios of seed 320, mismatch off and the primary condition.",
+  "description": "Spec 010 smoke test of headroom.yml: 6 scenarios of seed 320 in two shards, mismatch off and the primary condition.",
   "plan": "configs/gateh/gh-draft.json",
   "split": "tuning",
   "seed": 320,
@@ -38,5 +38,7 @@
     {
       "kind": "realisation"
     }
-  ]
+  ],
+  "shards": 2,
+  "shard_size": 3
 }

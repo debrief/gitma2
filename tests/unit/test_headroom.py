@@ -337,3 +337,47 @@ def test_scorer_cli(splits: dict[str, Path], tmp_path: Path) -> None:
     )
     off = str(splits["off"] / "train.f32pack")
     assert gh.main(["--truth", off, *args[2:], "--predictions", *files, "--out", str(out)]) == 2
+
+
+def test_shards_merge_to_the_unsharded_file(splits: dict[str, Path], tmp_path: Path) -> None:
+    from tma2.cli import hmerge
+
+    off = str(splits["off"] / "train.f32pack")
+    whole = tmp_path / "whole.ndjson"
+    assert (
+        _run(
+            ["--in", off, "--kind", "nominal", "--start", "0", "--count", "4", "--out", str(whole)]
+        )
+        == 0
+    )
+    parts = []
+    for s in (0, 2):
+        p = tmp_path / f"s{s}.ndjson"
+        assert (
+            _run(
+                [
+                    "--in",
+                    off,
+                    "--kind",
+                    "nominal",
+                    "--start",
+                    str(s),
+                    "--count",
+                    "2",
+                    "--out",
+                    str(p),
+                ]
+            )
+            == 0
+        )
+        parts.append(str(p))
+    out = tmp_path / "merged.ndjson"
+    assert hmerge.main(["--out", str(out), *reversed(parts)]) == 0
+    a, b = whole.read_text().splitlines(), out.read_text().splitlines()
+    assert json.loads(a[0]) == json.loads(b[0])
+    assert [json.loads(x)["ordinal"] for x in a[1:]] == [json.loads(x)["ordinal"] for x in b[1:]]
+    for x, y in zip(a[1:], b[1:], strict=True):  # padding differs between batches: last bits only
+        for p, q in zip(json.loads(x)["rows"], json.loads(y)["rows"], strict=True):
+            assert p["range_m"] == pytest.approx(q["range_m"], rel=1e-6)
+    assert hmerge.main(["--out", str(out), parts[0], parts[0]]) == 2
+    assert hmerge.main(["--out", str(out), parts[0], str(whole)]) == 2
