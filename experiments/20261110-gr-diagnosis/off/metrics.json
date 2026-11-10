@@ -1,0 +1,1332 @@
+{
+  "truth": "/home/runner/work/_temp/data/train.f32pack",
+  "ordinals": [
+    0,
+    149
+  ],
+  "scenarios": 150,
+  "rows": 593,
+  "settled_rows": 436,
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "level": 0.975,
+  "resamples": 2000,
+  "naive": null,
+  "bound": "known_manoeuvres",
+  "knots": 12,
+  "segmenters": {
+    "one_leg": {
+      "all": {
+        "range_median": 0.6707614638916416,
+        "range_p90": Infinity,
+        "course_deg_median": 64.96864875030703,
+        "course_deg_p90": Infinity,
+        "speed_kt_median": 7.081527196647244,
+        "speed_kt_p90": Infinity
+      },
+      "settled": {
+        "range_median": 0.6580768696681175,
+        "range_p90": Infinity,
+        "course_deg_median": 58.14669521530704,
+        "course_deg_p90": Infinity,
+        "speed_kt_median": 7.085080423770524,
+        "speed_kt_p90": Infinity
+      },
+      "vs_imm": {
+        "range": {
+          "ratio": 1.172066049719496,
+          "lo": 1.0133320828183576,
+          "hi": 1.3519241085871316
+        },
+        "course_deg": {
+          "ratio": 1.0936996795440896,
+          "lo": 0.8601549941265899,
+          "hi": 1.466328962402786
+        },
+        "speed_kt": {
+          "ratio": 1.0135971276623676,
+          "lo": 0.8048248677387752,
+          "hi": 1.2098099640628128
+        }
+      },
+      "gross": {
+        "no_estimate": 0.27318718381112983,
+        "range_over_50pct": 0.5952782462057336
+      },
+      "finite_rows": {
+        "rows": 431,
+        "range_median": 0.3999481240274248,
+        "range_p90": 0.9151445732827591,
+        "course_deg_median": 42.15454291171439,
+        "course_deg_p90": 105.4920869762305,
+        "speed_kt_median": 4.4311944565889085,
+        "speed_kt_p90": 11.46575784323589
+      },
+      "efficiency": {
+        "range": 22.419529697814358,
+        "course_deg": 19.254090020205243,
+        "speed_kt": 19.374336025686866
+      },
+      "strata": {
+        "range_band": {
+          "0-2km": {
+            "rows": 4,
+            "range_median": 6.79135754410875,
+            "course_deg_median": 98.686238470908,
+            "speed_kt_median": 3.7514648179531807,
+            "gross_rate": 0.75,
+            "efficiency_range": 214.02295731981954
+          },
+          "10-20km": {
+            "rows": 214,
+            "range_median": 0.6816005571918312,
+            "course_deg_median": 57.92188518866555,
+            "speed_kt_median": 7.34316957396827,
+            "gross_rate": 0.5794392523364486,
+            "efficiency_range": 18.255931780709076
+          },
+          "2-5km": {
+            "rows": 52,
+            "range_median": 0.31195984226006834,
+            "course_deg_median": 47.7717739690862,
+            "speed_kt_median": 2.1964076110657733,
+            "gross_rate": 0.3269230769230769,
+            "efficiency_range": 24.93504023333919
+          },
+          "20-30km": {
+            "rows": 151,
+            "range_median": 0.7526857615776017,
+            "course_deg_median": 75.30314594114793,
+            "speed_kt_median": 7.893883458537671,
+            "gross_rate": 0.6490066225165563,
+            "efficiency_range": 10.605444852198577
+          },
+          "30+km": {
+            "rows": 74,
+            "range_median": 0.7726135554304857,
+            "course_deg_median": 92.70654794653358,
+            "speed_kt_median": 11.314648437638196,
+            "gross_rate": 0.7837837837837838,
+            "efficiency_range": 20.0330588294471
+          },
+          "5-10km": {
+            "rows": 98,
+            "range_median": 0.6153327813508246,
+            "course_deg_median": 63.15814311058346,
+            "speed_kt_median": 4.45402410831883,
+            "gross_rate": 0.5408163265306123,
+            "efficiency_range": 38.134801055788714
+          }
+        },
+        "changes": {
+          "1-5": {
+            "rows": 593,
+            "range_median": 0.6707614638916416,
+            "course_deg_median": 64.96864875030703,
+            "speed_kt_median": 7.081527196647244,
+            "gross_rate": 0.5952782462057336,
+            "efficiency_range": 22.419529697814358
+          }
+        },
+        "latest_kind": {
+          "both": {
+            "rows": 87,
+            "range_median": 0.7935272785787265,
+            "course_deg_median": 80.91759775643513,
+            "speed_kt_median": 10.904224439046917,
+            "gross_rate": 0.7471264367816092,
+            "efficiency_range": 13.925421895057703
+          },
+          "course": {
+            "rows": 460,
+            "range_median": 0.6707614638916416,
+            "course_deg_median": 69.04976697005102,
+            "speed_kt_median": 6.9063154205455515,
+            "gross_rate": 0.5934782608695652,
+            "efficiency_range": 25.63050003309273
+          },
+          "speed": {
+            "rows": 46,
+            "range_median": 0.15068479683862482,
+            "course_deg_median": 10.627655117124107,
+            "speed_kt_median": 3.8264729128109636,
+            "gross_rate": 0.32608695652173914,
+            "efficiency_range": 6.644928771943433
+          }
+        },
+        "speed_only": {
+          "no": {
+            "rows": 547,
+            "range_median": 0.6971192481746487,
+            "course_deg_median": 69.99991137892341,
+            "speed_kt_median": 7.482212593340427,
+            "gross_rate": 0.6179159049360147,
+            "efficiency_range": 24.385866960404698
+          },
+          "yes": {
+            "rows": 46,
+            "range_median": 0.15068479683862482,
+            "course_deg_median": 10.627655117124107,
+            "speed_kt_median": 3.8264729128109636,
+            "gross_rate": 0.32608695652173914,
+            "efficiency_range": 6.644928771943433
+          }
+        },
+        "latest_duration": {
+          "10-20 rows": {
+            "rows": 269,
+            "range_median": 0.6678012228973808,
+            "course_deg_median": 68.65324751039164,
+            "speed_kt_median": 7.570196896663066,
+            "gross_rate": 0.5985130111524164,
+            "efficiency_range": 19.764178480485878
+          },
+          "<10 rows": {
+            "rows": 218,
+            "range_median": 0.6548951833665158,
+            "course_deg_median": 58.54957906721707,
+            "speed_kt_median": 5.748995846682029,
+            "gross_rate": 0.5504587155963303,
+            "efficiency_range": 20.60237687306915
+          },
+          ">20 rows": {
+            "rows": 106,
+            "range_median": 0.7037915748004081,
+            "course_deg_median": 76.27847283229508,
+            "speed_kt_median": 7.993211179309036,
+            "gross_rate": 0.6792452830188679,
+            "efficiency_range": 32.37548611564229
+          }
+        }
+      }
+    },
+    "oracle": {
+      "all": {
+        "range_median": 0.06074094616691137,
+        "range_p90": 0.266469738131495,
+        "course_deg_median": 7.593274012994274,
+        "course_deg_p90": 63.73494094842385,
+        "speed_kt_median": 0.8486144426115202,
+        "speed_kt_p90": 4.309909175827555
+      },
+      "settled": {
+        "range_median": 0.05538770362971474,
+        "range_p90": 0.23959776031058522,
+        "course_deg_median": 4.302265728469167,
+        "course_deg_p90": 46.37647726813466,
+        "speed_kt_median": 0.7616754464990796,
+        "speed_kt_p90": 3.5276517123171467
+      },
+      "vs_imm": {
+        "range": {
+          "ratio": 0.10613668891625111,
+          "lo": 0.0819829494576931,
+          "hi": 0.13778664111941946
+        },
+        "course_deg": {
+          "ratio": 0.12782721380923062,
+          "lo": 0.08571389636329842,
+          "hi": 0.1969513983385397
+        },
+        "speed_kt": {
+          "ratio": 0.12146435897769034,
+          "lo": 0.08975918342919362,
+          "hi": 0.16794120242311525
+        }
+      },
+      "vs_one_leg_settled": {
+        "range": {
+          "ratio": 0.08416600883973929,
+          "lo": 0.06711290914762832,
+          "hi": 0.10918523955940045
+        },
+        "course_deg": {
+          "ratio": 0.07398985810867892,
+          "lo": 0.0436515449503261,
+          "hi": 0.1146238112394971
+        },
+        "speed_kt": {
+          "ratio": 0.10750413558378956,
+          "lo": 0.07948161015233926,
+          "hi": 0.1453676434288163
+        }
+      },
+      "gross": {
+        "no_estimate": 0.0,
+        "range_over_50pct": 0.02866779089376054
+      },
+      "finite_rows": {
+        "rows": 593,
+        "range_median": 0.06074094616691137,
+        "range_p90": 0.266469738131495,
+        "course_deg_median": 7.593274012994274,
+        "course_deg_p90": 63.73494094842385,
+        "speed_kt_median": 0.8486144426115202,
+        "speed_kt_p90": 4.309909175827555
+      },
+      "efficiency": {
+        "range": 1.5928756490101947,
+        "course_deg": 1.6756868770240407,
+        "speed_kt": 1.6467017883048742
+      },
+      "strata": {
+        "range_band": {
+          "0-2km": {
+            "rows": 4,
+            "range_median": 0.012266005023855534,
+            "course_deg_median": 0.02515727776807755,
+            "speed_kt_median": 0.023043888700296108,
+            "gross_rate": 0.0,
+            "efficiency_range": 0.21822958142895865
+          },
+          "10-20km": {
+            "rows": 214,
+            "range_median": 0.05079521374742292,
+            "course_deg_median": 7.4559712048314974,
+            "speed_kt_median": 0.8951874003838788,
+            "gross_rate": 0.02336448598130841,
+            "efficiency_range": 1.4617980647551372
+          },
+          "2-5km": {
+            "rows": 52,
+            "range_median": 0.03577816311327363,
+            "course_deg_median": 3.135026066822344,
+            "speed_kt_median": 0.30002701117893044,
+            "gross_rate": 0.019230769230769232,
+            "efficiency_range": 2.491450261260504
+          },
+          "20-30km": {
+            "rows": 151,
+            "range_median": 0.07659815091612728,
+            "course_deg_median": 10.966511168566294,
+            "speed_kt_median": 1.1539750018529493,
+            "gross_rate": 0.046357615894039736,
+            "efficiency_range": 1.4789037712133892
+          },
+          "30+km": {
+            "rows": 74,
+            "range_median": 0.0932898306745627,
+            "course_deg_median": 7.52980362173376,
+            "speed_kt_median": 1.743163234307692,
+            "gross_rate": 0.0,
+            "efficiency_range": 1.8511944432922356
+          },
+          "5-10km": {
+            "rows": 98,
+            "range_median": 0.04681099056486256,
+            "course_deg_median": 6.401309236569092,
+            "speed_kt_median": 0.4680862629006789,
+            "gross_rate": 0.04081632653061224,
+            "efficiency_range": 2.0332893276683013
+          }
+        },
+        "changes": {
+          "1-5": {
+            "rows": 593,
+            "range_median": 0.06074094616691137,
+            "course_deg_median": 7.593274012994274,
+            "speed_kt_median": 0.8486144426115202,
+            "gross_rate": 0.02866779089376054,
+            "efficiency_range": 1.5928756490101947
+          }
+        },
+        "latest_kind": {
+          "both": {
+            "rows": 87,
+            "range_median": 0.08602972478275575,
+            "course_deg_median": 16.187477718915517,
+            "speed_kt_median": 2.052964351128639,
+            "gross_rate": 0.011494252873563218,
+            "efficiency_range": 1.0804426152264437
+          },
+          "course": {
+            "rows": 460,
+            "range_median": 0.05588397992784876,
+            "course_deg_median": 6.978739529109563,
+            "speed_kt_median": 0.7480587019313439,
+            "gross_rate": 0.034782608695652174,
+            "efficiency_range": 1.74631021594357
+          },
+          "speed": {
+            "rows": 46,
+            "range_median": 0.06924248765080629,
+            "course_deg_median": 3.4582983985522806,
+            "speed_kt_median": 1.6379907409429202,
+            "gross_rate": 0.0,
+            "efficiency_range": 1.4770641836410756
+          }
+        },
+        "speed_only": {
+          "no": {
+            "rows": 547,
+            "range_median": 0.0607100012777553,
+            "course_deg_median": 7.803785184890176,
+            "speed_kt_median": 0.8367964813474836,
+            "gross_rate": 0.031078610603290677,
+            "efficiency_range": 1.6021734852709901
+          },
+          "yes": {
+            "rows": 46,
+            "range_median": 0.06924248765080629,
+            "course_deg_median": 3.4582983985522806,
+            "speed_kt_median": 1.6379907409429202,
+            "gross_rate": 0.0,
+            "efficiency_range": 1.4770641836410756
+          }
+        },
+        "latest_duration": {
+          "10-20 rows": {
+            "rows": 269,
+            "range_median": 0.06819052797697679,
+            "course_deg_median": 7.797869000874189,
+            "speed_kt_median": 0.9524405158346995,
+            "gross_rate": 0.02973977695167286,
+            "efficiency_range": 1.847348620984362
+          },
+          "<10 rows": {
+            "rows": 218,
+            "range_median": 0.052395452174878086,
+            "course_deg_median": 5.741615755751035,
+            "speed_kt_median": 0.7572424301990869,
+            "gross_rate": 0.009174311926605505,
+            "efficiency_range": 1.3539430771753738
+          },
+          ">20 rows": {
+            "rows": 106,
+            "range_median": 0.054160446192859764,
+            "course_deg_median": 11.805013390537285,
+            "speed_kt_median": 0.8410999129924569,
+            "gross_rate": 0.0660377358490566,
+            "efficiency_range": 1.6903016611603068
+          }
+        }
+      }
+    },
+    "imm": {
+      "all": {
+        "range_median": 0.5722898159640161,
+        "range_p90": Infinity,
+        "course_deg_median": 59.402640382403064,
+        "course_deg_p90": Infinity,
+        "speed_kt_median": 6.986530450198871,
+        "speed_kt_p90": Infinity
+      },
+      "settled": {
+        "range_median": 0.5722898159640161,
+        "range_p90": Infinity,
+        "course_deg_median": 49.00601989916034,
+        "course_deg_p90": Infinity,
+        "speed_kt_median": 6.720196711579358,
+        "speed_kt_p90": Infinity
+      },
+      "vs_one_leg_settled": {
+        "range": {
+          "ratio": 0.8696397675436219,
+          "lo": 0.7338828872053755,
+          "hi": 1.0173532114603336
+        },
+        "course_deg": {
+          "ratio": 0.8427997449846397,
+          "lo": 0.594333782667622,
+          "hi": 1.166274904460366
+        },
+        "speed_kt": {
+          "ratio": 0.9484997077849706,
+          "lo": 0.7607886749911884,
+          "hi": 1.253085490881083
+        }
+      },
+      "gross": {
+        "no_estimate": 0.26138279932546377,
+        "range_over_50pct": 0.5446880269814502
+      },
+      "finite_rows": {
+        "rows": 438,
+        "range_median": 0.39959404656183034,
+        "range_p90": 0.8432774970989337,
+        "course_deg_median": 32.505580599764365,
+        "course_deg_p90": 117.6537513971348,
+        "speed_kt_median": 3.9534240767971225,
+        "speed_kt_p90": 14.404324887895687
+      },
+      "efficiency": {
+        "range": 17.61913443880797,
+        "course_deg": 19.257477691994843,
+        "speed_kt": 18.81609505488131
+      },
+      "strata": {
+        "range_band": {
+          "0-2km": {
+            "rows": 4,
+            "range_median": 0.438309099802063,
+            "course_deg_median": 9.672148921385016,
+            "speed_kt_median": 2.7864256378898866,
+            "gross_rate": 0.5,
+            "efficiency_range": 63.992854380491835
+          },
+          "10-20km": {
+            "rows": 214,
+            "range_median": 0.5075348433168523,
+            "course_deg_median": 54.677949231600536,
+            "speed_kt_median": 7.377767305394743,
+            "gross_rate": 0.514018691588785,
+            "efficiency_range": 17.61913443880797
+          },
+          "2-5km": {
+            "rows": 52,
+            "range_median": 0.3387835841976452,
+            "course_deg_median": 30.655755571579032,
+            "speed_kt_median": 2.4993831601565133,
+            "gross_rate": 0.25,
+            "efficiency_range": 22.603133903945167
+          },
+          "20-30km": {
+            "rows": 151,
+            "range_median": 0.7075835674902251,
+            "course_deg_median": 65.1460745111094,
+            "speed_kt_median": 9.384801629810044,
+            "gross_rate": 0.6291390728476821,
+            "efficiency_range": 10.883964129035665
+          },
+          "30+km": {
+            "rows": 74,
+            "range_median": 0.7220739147627246,
+            "course_deg_median": 83.9163088418893,
+            "speed_kt_median": 11.49119331821252,
+            "gross_rate": 0.8243243243243243,
+            "efficiency_range": 18.590156901646274
+          },
+          "5-10km": {
+            "rows": 98,
+            "range_median": 0.388679657689069,
+            "course_deg_median": 49.073488507194256,
+            "speed_kt_median": 4.319601800477788,
+            "gross_rate": 0.42857142857142855,
+            "efficiency_range": 25.82341814065064
+          }
+        },
+        "changes": {
+          "1-5": {
+            "rows": 593,
+            "range_median": 0.5722898159640161,
+            "course_deg_median": 59.402640382403064,
+            "speed_kt_median": 6.986530450198871,
+            "gross_rate": 0.5446880269814502,
+            "efficiency_range": 17.61913443880797
+          }
+        },
+        "latest_kind": {
+          "both": {
+            "rows": 87,
+            "range_median": 0.7939423464633555,
+            "course_deg_median": 83.9748435630763,
+            "speed_kt_median": 10.697108365547065,
+            "gross_rate": 0.7586206896551724,
+            "efficiency_range": 11.377622383839594
+          },
+          "course": {
+            "rows": 460,
+            "range_median": 0.5550245549044265,
+            "course_deg_median": 59.402640382403064,
+            "speed_kt_median": 6.382293062642635,
+            "gross_rate": 0.5304347826086957,
+            "efficiency_range": 19.64890062560274
+          },
+          "speed": {
+            "rows": 46,
+            "range_median": 0.21004063027932685,
+            "course_deg_median": 16.71902584281642,
+            "speed_kt_median": 3.7459358025833027,
+            "gross_rate": 0.2826086956521739,
+            "efficiency_range": 7.304025949812602
+          }
+        },
+        "speed_only": {
+          "no": {
+            "rows": 547,
+            "range_median": 0.6187878622365782,
+            "course_deg_median": 65.77159348058292,
+            "speed_kt_median": 7.167440176525075,
+            "gross_rate": 0.56672760511883,
+            "efficiency_range": 18.850551273750302
+          },
+          "yes": {
+            "rows": 46,
+            "range_median": 0.21004063027932685,
+            "course_deg_median": 16.71902584281642,
+            "speed_kt_median": 3.7459358025833027,
+            "gross_rate": 0.2826086956521739,
+            "efficiency_range": 7.304025949812602
+          }
+        },
+        "latest_duration": {
+          "10-20 rows": {
+            "rows": 269,
+            "range_median": 0.5722898159640161,
+            "course_deg_median": 60.63116579047465,
+            "speed_kt_median": 6.663365394971283,
+            "gross_rate": 0.550185873605948,
+            "efficiency_range": 15.403517106846929
+          },
+          "<10 rows": {
+            "rows": 218,
+            "range_median": 0.4987514818657665,
+            "course_deg_median": 55.545106406159675,
+            "speed_kt_median": 6.986530450198871,
+            "gross_rate": 0.5,
+            "efficiency_range": 17.602409770974106
+          },
+          ">20 rows": {
+            "rows": 106,
+            "range_median": 0.6768214666290818,
+            "course_deg_median": 70.38012701926563,
+            "speed_kt_median": 7.21199914137179,
+            "gross_rate": 0.6226415094339622,
+            "efficiency_range": 25.07764725608266
+          }
+        }
+      }
+    },
+    "ekf": {
+      "all": {
+        "range_median": 0.6471984447671655,
+        "range_p90": Infinity,
+        "course_deg_median": 59.83882286561815,
+        "course_deg_p90": Infinity,
+        "speed_kt_median": 5.896153048356717,
+        "speed_kt_p90": Infinity
+      },
+      "settled": {
+        "range_median": 0.6294131050353259,
+        "range_p90": Infinity,
+        "course_deg_median": 54.16193162752956,
+        "course_deg_p90": Infinity,
+        "speed_kt_median": 5.653841706640519,
+        "speed_kt_p90": Infinity
+      },
+      "vs_one_leg_settled": {
+        "range": {
+          "ratio": 0.9564431361229162,
+          "lo": 0.8346139046052838,
+          "hi": 1.1150176500428823
+        },
+        "course_deg": {
+          "ratio": 0.9314705062252877,
+          "lo": 0.7547405935497511,
+          "hi": 1.027636311495139
+        },
+        "speed_kt": {
+          "ratio": 0.7979925940814754,
+          "lo": 0.6849048077077644,
+          "hi": 0.9561293478239213
+        }
+      },
+      "gross": {
+        "no_estimate": 0.21585160202360876,
+        "range_over_50pct": 0.5919055649241147
+      },
+      "finite_rows": {
+        "rows": 465,
+        "range_median": 0.4716512509104586,
+        "range_p90": 0.8997095900951193,
+        "course_deg_median": 46.065859102408744,
+        "course_deg_p90": 121.65084321359448,
+        "speed_kt_median": 4.215878750284084,
+        "speed_kt_p90": 11.165295769792396
+      },
+      "efficiency": {
+        "range": 16.188502075810515,
+        "course_deg": 17.654077793395054,
+        "speed_kt": 14.954400482891302
+      },
+      "strata": {
+        "range_band": {
+          "0-2km": {
+            "rows": 4,
+            "range_median": 3.604548206856035,
+            "course_deg_median": 93.46159018716482,
+            "speed_kt_median": 7.802904965295647,
+            "gross_rate": 1.0,
+            "efficiency_range": 758.426857401564
+          },
+          "10-20km": {
+            "rows": 214,
+            "range_median": 0.6055579086492163,
+            "course_deg_median": 52.791952774375915,
+            "speed_kt_median": 5.689121271055151,
+            "gross_rate": 0.5514018691588785,
+            "efficiency_range": 14.05713812454182
+          },
+          "2-5km": {
+            "rows": 52,
+            "range_median": 0.35539832080994377,
+            "course_deg_median": 44.00341518063169,
+            "speed_kt_median": 2.5056466685515497,
+            "gross_rate": 0.3269230769230769,
+            "efficiency_range": 22.805054333602857
+          },
+          "20-30km": {
+            "rows": 151,
+            "range_median": 0.7832574078273601,
+            "course_deg_median": 66.54712048029033,
+            "speed_kt_median": 7.12379281515694,
+            "gross_rate": 0.6622516556291391,
+            "efficiency_range": 11.272071891831441
+          },
+          "30+km": {
+            "rows": 74,
+            "range_median": 0.7986930442646606,
+            "course_deg_median": 100.18492787780188,
+            "speed_kt_median": 10.982167746541824,
+            "gross_rate": 0.8243243243243243,
+            "efficiency_range": 19.365228416364275
+          },
+          "5-10km": {
+            "rows": 98,
+            "range_median": 0.5431593855419201,
+            "course_deg_median": 46.160617731858906,
+            "speed_kt_median": 3.592011532052289,
+            "gross_rate": 0.5204081632653061,
+            "efficiency_range": 28.74441674487849
+          }
+        },
+        "changes": {
+          "1-5": {
+            "rows": 593,
+            "range_median": 0.6471984447671655,
+            "course_deg_median": 59.83882286561815,
+            "speed_kt_median": 5.896153048356717,
+            "gross_rate": 0.5919055649241147,
+            "efficiency_range": 16.188502075810515
+          }
+        },
+        "latest_kind": {
+          "both": {
+            "rows": 87,
+            "range_median": 0.8202965646992002,
+            "course_deg_median": 96.72931854555739,
+            "speed_kt_median": 8.690810924472355,
+            "gross_rate": 0.7701149425287356,
+            "efficiency_range": 10.527670656480177
+          },
+          "course": {
+            "rows": 460,
+            "range_median": 0.6154508395190713,
+            "course_deg_median": 59.83882286561815,
+            "speed_kt_median": 5.642922856637777,
+            "gross_rate": 0.5804347826086956,
+            "efficiency_range": 18.62377076682277
+          },
+          "speed": {
+            "rows": 46,
+            "range_median": 0.16542167872639063,
+            "course_deg_median": 10.86336123339192,
+            "speed_kt_median": 4.580294442228313,
+            "gross_rate": 0.3695652173913043,
+            "efficiency_range": 6.877253889616555
+          }
+        },
+        "speed_only": {
+          "no": {
+            "rows": 547,
+            "range_median": 0.6685961972147836,
+            "course_deg_median": 64.24906235231704,
+            "speed_kt_median": 6.2033214785367825,
+            "gross_rate": 0.6106032906764168,
+            "efficiency_range": 17.07253536553376
+          },
+          "yes": {
+            "rows": 46,
+            "range_median": 0.16542167872639063,
+            "course_deg_median": 10.86336123339192,
+            "speed_kt_median": 4.580294442228313,
+            "gross_rate": 0.3695652173913043,
+            "efficiency_range": 6.877253889616555
+          }
+        },
+        "latest_duration": {
+          "10-20 rows": {
+            "rows": 269,
+            "range_median": 0.6325398490963674,
+            "course_deg_median": 64.04168414873712,
+            "speed_kt_median": 6.4617045239804884,
+            "gross_rate": 0.5910780669144982,
+            "efficiency_range": 16.31540984724716
+          },
+          "<10 rows": {
+            "rows": 218,
+            "range_median": 0.6115672659487501,
+            "course_deg_median": 48.67390878037017,
+            "speed_kt_median": 5.372903774418017,
+            "gross_rate": 0.5688073394495413,
+            "efficiency_range": 14.074436664181963
+          },
+          ">20 rows": {
+            "rows": 106,
+            "range_median": 0.6699372867720875,
+            "course_deg_median": 77.40629480713355,
+            "speed_kt_median": 5.6473677925620684,
+            "gross_rate": 0.6415094339622641,
+            "efficiency_range": 23.02484242782184
+          }
+        }
+      }
+    },
+    "C": {
+      "all": {
+        "range_median": 0.1313386883957319,
+        "range_p90": 0.520746400255346,
+        "course_deg_median": 14.72831144370823,
+        "course_deg_p90": 93.68095903662976,
+        "speed_kt_median": 1.4266038773416634,
+        "speed_kt_p90": 6.558365858565023
+      },
+      "settled": {
+        "range_median": 0.12882321256784954,
+        "range_p90": 0.5035436164384827,
+        "course_deg_median": 8.600267392005643,
+        "course_deg_p90": 81.1932156281432,
+        "speed_kt_median": 1.3210047987210594,
+        "speed_kt_p90": 6.015624576566712
+      },
+      "vs_imm": {
+        "range": {
+          "ratio": 0.22949681216062404,
+          "lo": 0.1615338914247703,
+          "hi": 0.30131834517304107
+        },
+        "course_deg": {
+          "ratio": 0.24794034993890982,
+          "lo": 0.15543769220892173,
+          "hi": 0.3803534253706011
+        },
+        "speed_kt": {
+          "ratio": 0.20419346734559143,
+          "lo": 0.14166355463246985,
+          "hi": 0.291731914000953
+        }
+      },
+      "vs_one_leg_settled": {
+        "range": {
+          "ratio": 0.19575708933945343,
+          "lo": 0.13811315889039516,
+          "hi": 0.25038783471236026
+        },
+        "course_deg": {
+          "ratio": 0.14790638333202527,
+          "lo": 0.08928411970396277,
+          "hi": 0.2229763054685072
+        },
+        "speed_kt": {
+          "ratio": 0.18644880787648838,
+          "lo": 0.12928510585049613,
+          "hi": 0.26798631505666604
+        }
+      },
+      "gross": {
+        "no_estimate": 0.008431703204047217,
+        "range_over_50pct": 0.10961214165261383
+      },
+      "finite_rows": {
+        "rows": 588,
+        "range_median": 0.12987204837987687,
+        "range_p90": 0.5035436164384827,
+        "course_deg_median": 14.102319493611372,
+        "course_deg_p90": 91.58336082841646,
+        "speed_kt_median": 1.387804424574835,
+        "speed_kt_p90": 6.321278008923104
+      },
+      "efficiency": {
+        "range": 2.9038099189488245,
+        "course_deg": 2.8472984291939025,
+        "speed_kt": 2.9349231649164893
+      },
+      "strata": {
+        "range_band": {
+          "0-2km": {
+            "rows": 4,
+            "range_median": 0.03608514442489995,
+            "course_deg_median": 0.6972975051994551,
+            "speed_kt_median": 0.07864244008929955,
+            "gross_rate": 0.0,
+            "efficiency_range": 2.097053559457618,
+            "gap_recovered_range": 0.9964863818014973
+          },
+          "10-20km": {
+            "rows": 214,
+            "range_median": 0.1426490472433126,
+            "course_deg_median": 22.417082106056228,
+            "speed_kt_median": 1.667722578418706,
+            "gross_rate": 0.11682242990654206,
+            "efficiency_range": 3.2374890913016943,
+            "gap_recovered_range": 0.8543864054886773
+          },
+          "2-5km": {
+            "rows": 52,
+            "range_median": 0.07442021927681257,
+            "course_deg_median": 6.985928698458361,
+            "speed_kt_median": 0.4337261332753546,
+            "gross_rate": 0.09615384615384616,
+            "efficiency_range": 4.063717492487656,
+            "gap_recovered_range": 0.8600846504992096
+          },
+          "20-30km": {
+            "rows": 151,
+            "range_median": 0.1543174489297203,
+            "course_deg_median": 15.014731958164756,
+            "speed_kt_median": 1.7336827024722017,
+            "gross_rate": 0.10596026490066225,
+            "efficiency_range": 2.5508896971892754,
+            "gap_recovered_range": 0.8850455225210331
+          },
+          "30+km": {
+            "rows": 74,
+            "range_median": 0.16176588523304436,
+            "course_deg_median": 15.346307644241975,
+            "speed_kt_median": 3.326191460405067,
+            "gross_rate": 0.08108108108108109,
+            "efficiency_range": 2.1869390975248595,
+            "gap_recovered_range": 0.8991996715806081
+          },
+          "5-10km": {
+            "rows": 98,
+            "range_median": 0.076250880516094,
+            "course_deg_median": 7.901224958750879,
+            "speed_kt_median": 0.7491166323304577,
+            "gross_rate": 0.1326530612244898,
+            "efficiency_range": 3.5279957967033906,
+            "gap_recovered_range": 0.9482167782689003
+          }
+        },
+        "changes": {
+          "1-5": {
+            "rows": 593,
+            "range_median": 0.1313386883957319,
+            "course_deg_median": 14.72831144370823,
+            "speed_kt_median": 1.4266038773416634,
+            "gross_rate": 0.10961214165261383,
+            "efficiency_range": 2.9038099189488245,
+            "gap_recovered_range": 0.8842698889995737
+          }
+        },
+        "latest_kind": {
+          "both": {
+            "rows": 87,
+            "range_median": 0.16136749597589115,
+            "course_deg_median": 35.9046973316559,
+            "speed_kt_median": 3.308697810005282,
+            "gross_rate": 0.08045977011494253,
+            "efficiency_range": 1.5401025658153444,
+            "gap_recovered_range": 0.8935151495734196
+          },
+          "course": {
+            "rows": 460,
+            "range_median": 0.13282763744417223,
+            "course_deg_median": 13.308566540993908,
+            "speed_kt_median": 1.171101126647845,
+            "gross_rate": 0.11739130434782609,
+            "efficiency_range": 3.3218207029419595,
+            "gap_recovered_range": 0.8748634329227539
+          },
+          "speed": {
+            "rows": 46,
+            "range_median": 0.07517384385210565,
+            "course_deg_median": 3.0001981408095535,
+            "speed_kt_median": 2.2267466802558364,
+            "gross_rate": 0.08695652173913043,
+            "efficiency_range": 2.1214262741547483,
+            "gap_recovered_range": 0.9271710704122995
+          }
+        },
+        "speed_only": {
+          "no": {
+            "rows": 547,
+            "range_median": 0.1373936944437739,
+            "course_deg_median": 15.347603422021118,
+            "speed_kt_median": 1.3847321877561538,
+            "gross_rate": 0.11151736745886655,
+            "efficiency_range": 3.0062528471768797,
+            "gap_recovered_range": 0.8795056898687043
+          },
+          "yes": {
+            "rows": 46,
+            "range_median": 0.07517384385210565,
+            "course_deg_median": 3.0001981408095535,
+            "speed_kt_median": 2.2267466802558364,
+            "gross_rate": 0.08695652173913043,
+            "efficiency_range": 2.1214262741547483,
+            "gap_recovered_range": 0.9271710704122995
+          }
+        },
+        "latest_duration": {
+          "10-20 rows": {
+            "rows": 269,
+            "range_median": 0.1328228103670487,
+            "course_deg_median": 13.574685155794263,
+            "speed_kt_median": 1.5887517279767844,
+            "gross_rate": 0.11524163568773234,
+            "efficiency_range": 2.8497382685963117,
+            "gap_recovered_range": 0.8922095904265824
+          },
+          "<10 rows": {
+            "rows": 218,
+            "range_median": 0.13372321510941199,
+            "course_deg_median": 14.021196247585154,
+            "speed_kt_median": 1.5212148689700427,
+            "gross_rate": 0.10091743119266056,
+            "efficiency_range": 3.0544339153369195,
+            "gap_recovered_range": 0.8650161008807722
+          },
+          ">20 rows": {
+            "rows": 106,
+            "range_median": 0.10631093905756307,
+            "course_deg_median": 19.30654699604169,
+            "speed_kt_median": 1.1902367193667305,
+            "gross_rate": 0.11320754716981132,
+            "efficiency_range": 2.785136630034572,
+            "gap_recovered_range": 0.9197229157160537
+          }
+        }
+      },
+      "gap_recovered": {
+        "range": {
+          "value": 0.8842698889995737,
+          "lo": 0.8354188083288164,
+          "hi": 0.9319281265134721
+        },
+        "course_deg": {
+          "value": 0.8756428613602788,
+          "lo": 0.7747847955552042,
+          "hi": 0.9430335799635536
+        },
+        "speed_kt": {
+          "value": 0.9072681653764681,
+          "lo": 0.8330235993294094,
+          "hi": 0.9569724304213557
+        }
+      },
+      "gap_minus": {
+        "C-truthnom": {
+          "range": {
+            "value": -0.02809153967675415,
+            "lo": -0.056354828462465645,
+            "hi": 0.0038631302196685535
+          },
+          "course_deg": {
+            "value": -0.016457190654457943,
+            "lo": -0.06592583753101089,
+            "hi": 0.038463993528067175
+          },
+          "speed_kt": {
+            "value": -0.02890140215185566,
+            "lo": -0.08738654692699133,
+            "hi": 0.0059476218343996745
+          }
+        }
+      },
+      "segmentation": {
+        "contamination_median": 0.0,
+        "contamination_p90": 0.31313131313131315,
+        "coverage_median": 1.0,
+        "false_split_rate": NaN,
+        "false_split_rows": 0,
+        "leg_count_accuracy": 0.5160202360876898,
+        "hits_60s": 0.09157808667211774,
+        "hits_3min": 0.44317252657399836,
+        "changes": 1223
+      },
+      "by_open_at_k": {
+        "open": {
+          "rows": 34,
+          "range_median": 0.18039899074779928,
+          "gross_rate": 0.17647058823529413,
+          "gap_recovered_range": 0.443125135955679
+        },
+        "not_open": {
+          "rows": 559,
+          "range_median": 0.1292504900155617,
+          "gross_rate": 0.10554561717352415,
+          "gap_recovered_range": 0.895205251221076
+        }
+      }
+    },
+    "C-truthnom": {
+      "all": {
+        "range_median": 0.1142022728184335,
+        "range_p90": 0.4903789718182597,
+        "course_deg_median": 13.784073962785309,
+        "course_deg_p90": 87.78127085306937,
+        "speed_kt_median": 1.2464639592598472,
+        "speed_kt_p90": 6.496397107628703
+      },
+      "settled": {
+        "range_median": 0.10732402636512196,
+        "range_p90": 0.4816302073485945,
+        "course_deg_median": 7.540070779595794,
+        "course_deg_p90": 63.667664428904246,
+        "speed_kt_median": 1.1210107916857803,
+        "speed_kt_p90": 5.920619263362448
+      },
+      "vs_imm": {
+        "range": {
+          "ratio": 0.19955321522900243,
+          "lo": 0.1457918435571195,
+          "hi": 0.27427875186594025
+        },
+        "course_deg": {
+          "ratio": 0.2320448026224199,
+          "lo": 0.13509607104555105,
+          "hi": 0.37421734642488697
+        },
+        "speed_kt": {
+          "ratio": 0.17840957942498722,
+          "lo": 0.12224458487987687,
+          "hi": 0.261815562568647
+        }
+      },
+      "vs_one_leg_settled": {
+        "range": {
+          "ratio": 0.16308737065815396,
+          "lo": 0.12175189585492983,
+          "hi": 0.23311619337351128
+        },
+        "course_deg": {
+          "ratio": 0.1296732471497517,
+          "lo": 0.08148000441390849,
+          "hi": 0.1951268054131723
+        },
+        "speed_kt": {
+          "ratio": 0.15822132207910816,
+          "lo": 0.11327576475171687,
+          "hi": 0.2352226947137411
+        }
+      },
+      "gross": {
+        "no_estimate": 0.003372681281618887,
+        "range_over_50pct": 0.09780775716694773
+      },
+      "finite_rows": {
+        "rows": 591,
+        "range_median": 0.1137096867614866,
+        "range_p90": 0.48865152215506175,
+        "course_deg_median": 13.574685155794263,
+        "course_deg_p90": 86.94930847514807,
+        "speed_kt_median": 1.2312938084528093,
+        "speed_kt_p90": 6.283974530500334
+      },
+      "efficiency": {
+        "range": 2.597798935423969,
+        "course_deg": 2.538183442015529,
+        "speed_kt": 2.513851128575893
+      },
+      "strata": {
+        "range_band": {
+          "0-2km": {
+            "rows": 4,
+            "range_median": 0.014485932904996328,
+            "course_deg_median": 0.30720160197013485,
+            "speed_kt_median": 0.021287075584509634,
+            "gross_rate": 0.25,
+            "efficiency_range": 1.6094439112710028,
+            "gap_recovered_range": 0.9996725331309746
+          },
+          "10-20km": {
+            "rows": 214,
+            "range_median": 0.09739157798227646,
+            "course_deg_median": 19.021369507187195,
+            "speed_kt_median": 1.3717587954349064,
+            "gross_rate": 0.0794392523364486,
+            "efficiency_range": 2.342961518779351,
+            "gap_recovered_range": 0.9261319443167335
+          },
+          "2-5km": {
+            "rows": 52,
+            "range_median": 0.1067443443111443,
+            "course_deg_median": 9.079364381455232,
+            "speed_kt_median": 0.5511233788944949,
+            "gross_rate": 0.1346153846153846,
+            "efficiency_range": 6.148591673022443,
+            "gap_recovered_range": 0.7430452975117474
+          },
+          "20-30km": {
+            "rows": 151,
+            "range_median": 0.16478529646424236,
+            "course_deg_median": 16.903623167968266,
+            "speed_kt_median": 2.0902146106085975,
+            "gross_rate": 0.13245033112582782,
+            "efficiency_range": 2.555417152006483,
+            "gap_recovered_range": 0.8695625475789536
+          },
+          "30+km": {
+            "rows": 74,
+            "range_median": 0.17071293742407026,
+            "course_deg_median": 12.622915501282392,
+            "speed_kt_median": 3.008750947560686,
+            "gross_rate": 0.10810810810810811,
+            "efficiency_range": 2.519771562101404,
+            "gap_recovered_range": 0.8860291435024956
+          },
+          "5-10km": {
+            "rows": 98,
+            "range_median": 0.06901843558489908,
+            "course_deg_median": 7.023532130519754,
+            "speed_kt_median": 0.5237991140966968,
+            "gross_rate": 0.05102040816326531,
+            "efficiency_range": 2.6091349533812394,
+            "gap_recovered_range": 0.9609382694208863
+          }
+        },
+        "changes": {
+          "1-5": {
+            "rows": 593,
+            "range_median": 0.1142022728184335,
+            "course_deg_median": 13.784073962785309,
+            "speed_kt_median": 1.2464639592598472,
+            "gross_rate": 0.09780775716694773,
+            "efficiency_range": 2.597798935423969,
+            "gap_recovered_range": 0.9123614286763279
+          }
+        },
+        "latest_kind": {
+          "both": {
+            "rows": 87,
+            "range_median": 0.1539948006168657,
+            "course_deg_median": 31.71819508057518,
+            "speed_kt_median": 2.6111624892086662,
+            "gross_rate": 0.034482758620689655,
+            "efficiency_range": 1.2535176005000175,
+            "gap_recovered_range": 0.9039359564291725
+          },
+          "course": {
+            "rows": 460,
+            "range_median": 0.11774023267997509,
+            "course_deg_median": 13.308566540993908,
+            "speed_kt_median": 0.9938265387591521,
+            "gross_rate": 0.11304347826086956,
+            "efficiency_range": 3.0119473516203223,
+            "gap_recovered_range": 0.899400686534541
+          },
+          "speed": {
+            "rows": 46,
+            "range_median": 0.06901843558489908,
+            "course_deg_median": 2.512202012913944,
+            "speed_kt_median": 2.506210901181635,
+            "gross_rate": 0.06521739130434782,
+            "efficiency_range": 2.212745371131232,
+            "gap_recovered_range": 1.0027510524706575
+          }
+        },
+        "speed_only": {
+          "no": {
+            "rows": 547,
+            "range_median": 0.12002038575279665,
+            "course_deg_median": 15.195643038831133,
+            "speed_kt_median": 1.1902367193667305,
+            "gross_rate": 0.10054844606946983,
+            "efficiency_range": 2.6709035121395894,
+            "gap_recovered_range": 0.9068046469088303
+          },
+          "yes": {
+            "rows": 46,
+            "range_median": 0.06901843558489908,
+            "course_deg_median": 2.512202012913944,
+            "speed_kt_median": 2.506210901181635,
+            "gross_rate": 0.06521739130434782,
+            "efficiency_range": 2.212745371131232,
+            "gap_recovered_range": 1.0027510524706575
+          }
+        },
+        "latest_duration": {
+          "10-20 rows": {
+            "rows": 269,
+            "range_median": 0.11044057795872932,
+            "course_deg_median": 12.146243492339241,
+            "speed_kt_median": 1.3551590998065441,
+            "gross_rate": 0.08178438661710037,
+            "efficiency_range": 2.6650136280170593,
+            "gap_recovered_range": 0.9295375310352644
+          },
+          "<10 rows": {
+            "rows": 218,
+            "range_median": 0.12314857187822228,
+            "course_deg_median": 13.391130535816975,
+            "speed_kt_median": 1.3560246573763244,
+            "gross_rate": 0.11009174311926606,
+            "efficiency_range": 2.7045650724696917,
+            "gap_recovered_range": 0.8825673837838781
+          },
+          ">20 rows": {
+            "rows": 106,
+            "range_median": 0.08102339526572333,
+            "course_deg_median": 18.713558800233237,
+            "speed_kt_median": 0.9490004368140009,
+            "gross_rate": 0.11320754716981132,
+            "efficiency_range": 2.0821686993749493,
+            "gap_recovered_range": 0.958648919533085
+          }
+        }
+      },
+      "gap_recovered": {
+        "range": {
+          "value": 0.9123614286763279,
+          "lo": 0.8579982297926719,
+          "hi": 0.9500862937262986
+        },
+        "course_deg": {
+          "value": 0.8921000520147367,
+          "lo": 0.7861921828611953,
+          "hi": 0.9655110133750073
+        },
+        "speed_kt": {
+          "value": 0.9361695675283238,
+          "lo": 0.874374774213738,
+          "hi": 0.9782791460444599
+        }
+      },
+      "gap_minus": {
+        "C": {
+          "range": {
+            "value": 0.02809153967675415,
+            "lo": -0.0038631302196685535,
+            "hi": 0.056354828462465645
+          },
+          "course_deg": {
+            "value": 0.016457190654457943,
+            "lo": -0.038463993528067175,
+            "hi": 0.06592583753101089
+          },
+          "speed_kt": {
+            "value": 0.02890140215185566,
+            "lo": -0.0059476218343996745,
+            "hi": 0.08738654692699133
+          }
+        }
+      },
+      "segmentation": {
+        "contamination_median": 0.0,
+        "contamination_p90": 0.2808988764044944,
+        "coverage_median": 1.0,
+        "false_split_rate": NaN,
+        "false_split_rows": 0,
+        "leg_count_accuracy": 0.524451939291737,
+        "hits_60s": 0.21504497138184792,
+        "hits_3min": 0.517579721995094,
+        "changes": 1223
+      },
+      "by_open_at_k": {
+        "open": {
+          "rows": 33,
+          "range_median": 0.19728130753209216,
+          "gross_rate": 0.15151515151515152,
+          "gap_recovered_range": 0.5330910109908554
+        },
+        "not_open": {
+          "rows": 560,
+          "range_median": 0.11032566462979028,
+          "gross_rate": 0.09464285714285714,
+          "gap_recovered_range": 0.9215916802296661
+        }
+      }
+    }
+  }
+}
