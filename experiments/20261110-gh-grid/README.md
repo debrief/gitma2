@@ -37,7 +37,8 @@ declared rule: the lowest median range error on the primary condition.
   might be slightly better still. It was not explored: a wider search for a gain this far inside
   the noise would be tuning to seed 320.
 - **The clean-data cost cannot be resolved here.** Its point value runs from +1.4% to +4.0% with
-  intervals about ±6 points wide, and on the rows every estimator answers it is within ±1% for
-  every setting. The differences between the two columns come from a handful of rows the control
-  does not answer, not from the typical row.
+  intervals about ±6 points wide. On the rows every estimator answers (853 of 1,181; the rows
+  one leg, the IMM or the EKF fail on are dropped) it is within ±1% for every setting. The
+  control itself answers the same rows as the plain solve (99.9%), so whatever cost there is
+  sits on the harder rows, the ones the trackers fail on. Not investigated further here.
 - **300 scenarios is small.** Validation (1,000) and test (5,000) will be much tighter.
