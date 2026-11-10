@@ -1,0 +1,32 @@
+{
+  "description": "Spec 011 FR-001, FR-002: the frozen C on tuning seed 323 (150 sigma = 1 deg scenarios) under no mismatch, each kind alone at central severity and all four. Two runs per condition on the same rows: C as frozen, and C with the true change starts added as nominations (confirmation still decides), which separates a nomination failure from a confirmation failure. Plain final solve, 12 knots.",
+  "seed": 323,
+  "count": 800,
+  "data_split": "train",
+  "start": 0,
+  "conditions_file": "configs/gateh/conditions.json",
+  "ranges": "configs/man2-ranges.json",
+  "heldout": "configs/man2-heldout.json",
+  "params_from": "configs/segment/gs-plan.json",
+  "variants": [
+    {
+      "name": "C"
+    },
+    {
+      "name": "C-truthnom",
+      "extra_nominations": "truth"
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "knots": 12,
+  "ordinals": 150,
+  "conditions": [
+    "off",
+    "corr-central",
+    "bias-central",
+    "sigma-central",
+    "out-central",
+    "all-central"
+  ]
+}
