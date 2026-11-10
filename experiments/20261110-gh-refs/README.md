@@ -24,6 +24,6 @@ primary condition (`all-central`), count 5,200, the `train` split's first 2,000 
   lowest of four; r 2, the higher of two), as they did when it was frozen: the earlier passes on
   clean data bounded those axes, and they were not re-explored under mismatch. The EKF's
   process-noise value is at its lower edge.
-- Both trackers are about five times worse than the oracle solve (0.115 on this condition) and
+- Both trackers are about five times worse than the attainable ceiling (0.115 on this condition; the plain oracle is 0.138) and
   take no part in the gate's statistic. They are references on the same rows, as the
   constitution requires.
