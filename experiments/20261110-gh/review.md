@@ -111,5 +111,12 @@ this file); no criterion, setting or number of the gate changed.
   this estimator stops". The panel supports: *learning the bearing-error model for this solve is
   not pursued.* Whether the learning track as a whole stops is the owner's, with the scaled
   regressor experiment already decided as the next step.
-- **Open from this panel:** the C-segmentation comparison (running); why the solve is 1.26–1.6
-  times the bound; the short-range 5%; a zig-coupled bias and bursty outliers.
+- **The C-segmentation comparison, delivered after this round** (`experiments/20261110-gh-c2/`,
+  validation seed, reported only): under the primary condition C″ is +135% [+114, +163] above
+  the informed fit and C″ with the robust control +93.5% [+76, +113], against +70% with no
+  mismatch. The red team's and the domain reviewer's second major is borne out: the mismatch's
+  cost to the system is in the segmentation. H-c is unaffected (it is defined on the true
+  segmentation); the consequence drawn from it is narrowed further.
+- **Open from this panel:** a robust classical segmenter as the control for that factor of two;
+  why the solve is 1.26–1.6 times the bound; the short-range 5%; a zig-coupled bias and bursty
+  outliers.

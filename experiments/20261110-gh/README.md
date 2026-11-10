@@ -113,8 +113,11 @@ No condition's interval reaches 10%.
 - **The true segmentation defines away the likeliest operational cost.** Correlated error and a
   wandering bias can look like target manoeuvres, and C nominates with the nominal σ. Whether
   C's segmentation degrades under mismatch was a registered comparison (research R6, FR-033)
-  that had not been run when the verdict was computed. It is being run on the validation seed
-  (`configs/headroom/gh-val-c2.json`) and is reported in `experiments/20261110-gh-c2/`.
+  that had not been run when the verdict was computed. It has since been run on the validation
+  seed (`experiments/20261110-gh-c2/`): under the primary condition C″ is +135% above the
+  informed fit, and +93.5% with the robust control in its final solve, against +70% with no
+  mismatch. The mismatch's cost to the system is in the segmentation, which this gate's
+  statistic cannot see.
 - **The simulated mismatch is the control's own model family.** The control's correlation model
   (white plus first-order) was chosen in implementation because first-order alone could not
   represent the declared error. The errors are stationary, independent of geometry, with

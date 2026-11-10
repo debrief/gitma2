@@ -94,11 +94,19 @@
         </section>
 
         <section>
-          <h2>On our own segmenter's output</h2>
-          <div id="c2">
-            <p>The registered comparison on C″'s segmentation was run after the verdict, at the panel's request.</p>
-            <p class="small">Result: see the slides post and <code>experiments/20261110-gh-c2/</code>.</p>
-          </div>
+          <h2>But on our own segmenter's output, mismatch costs a factor of two</h2>
+          <table>
+            <tr><th>Median range error</th><th>No mismatch</th><th>Primary condition</th></tr>
+            <tr><td>Robust control, true manoeuvre times</td><td>0.060</td><td>0.114</td></tr>
+            <tr><td>C″ (our segmenter, plain solve)</td><td>0.102</td><td>0.280</td></tr>
+            <tr><td>C″ + robust control</td><td>0.103</td><td>0.230</td></tr>
+          </table>
+          <ul>
+            <li>C recovers 0.92 of the gap to the oracle on clean data, 0.66 under mismatch.</li>
+            <li>The gate could not see this: both its sides had the true manoeuvre times.</li>
+            <li>Not evidence for learning yet: C was run unchanged, with no robust tests of its own.</li>
+          </ul>
+          <p class="small">Validation seed 321, 1,000 engagements. Registered, reported and not gated; run after the verdict at the panel's request.</p>
         </section>
 
         <section>
@@ -107,7 +115,7 @@
             <li>Nothing was shown about other error families, target-motion mismatch or real data.</li>
             <li>The solve's distance from the bound is unexplained; the author's first explanation was wrong.</li>
             <li>The IMM and EKF references are not competitive on these rows.</li>
-            <li>The segmenter comparison was delivered late.</li>
+            <li>The segmenter comparison was delivered late, and only for the combined condition.</li>
           </ul>
         </section>
 
@@ -116,7 +124,7 @@
           <ul>
             <li>Learning the bearing-error model for this solve is not pursued.</li>
             <li>The robust control stays: a classical 12% gain under these errors.</li>
-            <li>Recommended first: the same harness on the segmenter's output, with a zig-coupled bias and bursty outliers. Cheap; trains nothing.</li>
+            <li>Recommended first: make the segmenter robust by classical means (estimated σ, Huber costs in its own tests) and measure what is left. Cheap; trains nothing.</li>
             <li>Then the scaled end-to-end regressor (needs the owner's Modal account and secrets).</li>
           </ul>
           <p class="small">Write-up: /blog/2026/11/10/gate-h · Figures: scripts/research/gh_charts.py and tma2-plot, sidecars next to each SVG</p>

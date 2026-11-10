@@ -53,11 +53,12 @@ Sidecars next to each SVG name the digests, the command and the commit (clean tr
 
 - Nothing was shown about other error families, target-motion mismatch or real data.
 - The solve's 25% distance from the Cramér–Rao bound is unexplained.
-- The comparison on the segmenter's own output was delivered after the verdict.
+- The comparison on the segmenter's own output was delivered after the verdict, for the combined
+  condition only; it shows a factor of two and does not say which kind of mismatch causes it.
 - No error-against-time figure: the estimators answer at four scored times only.
 
 ## Next
 
 - Learning the bearing-error model for this solve is not pursued; the robust control is kept.
-- Recommended next, if the owner does not object: the same harness on the segmenter's output
-  with a zig-coupled bias and bursty outliers. Then the scaled end-to-end regressor.
+- Recommended next, if the owner does not object: a robust classical segmenter, to measure what
+  is left of the factor of two. Then the scaled end-to-end regressor.

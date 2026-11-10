@@ -163,9 +163,13 @@ fit, not a ceiling; both fits are about 1.25 × the known-manoeuvre bound and wh
 established (the chord explanation was tested and rejected). The robust control is kept: 12%
 better than the plain solve under these errors, under 2% cost on clean data. Write-up
 `site/blog/2026-11-10-gate-h.md`, slides `site/blog/2026-11-10-gate-h-slides.md`. Registered
-comparison on C's segmentation (`configs/headroom/gh-val-c2.json`) run late:
-`experiments/20261110-gh-c2/`. Recommended follow-on (owner may object): the same harness on the
-segmenter's output with a zig-coupled bias and bursty outliers, then the scaled regressor.
+comparison on C's segmentation (`configs/headroom/gh-val-c2.json`) run late, validation seed,
+reported only (`experiments/20261110-gh-c2/`): **the mismatch's cost is in the segmentation**. C″
+is 0.102 clean and 0.280 under the primary condition (0.230 with the robust control in its final
+solve) against 0.114 for the robust control on the true segmentation; C recovers 0.92 of the
+one-leg-to-oracle gap clean and 0.66 under mismatch. Not evidence for learning: C ran unchanged.
+Recommended follow-on (owner may object): a robust classical segmenter (estimated σ and Huber
+costs in C's own tests) as the control for that factor of two, then the scaled regressor.
 Seeds: 320 tuning, 321 validation, 322 test (all used); 323 unused; the next fresh seed is 323.
 
 ## Stack (owner decisions, 2026-10-31)
