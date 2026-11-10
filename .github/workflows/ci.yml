@@ -13,6 +13,35 @@ env:
   UV_FROZEN: "1"
 
 jobs:
+  # Which slow jobs this change can affect. On a pull request the changed files are compared with
+  # the base; anything else (push to main, manual run) runs everything.
+  # - site: only the site's own files, the schema and the data-dictionary script feed the build.
+  # - onnx-conformance: skipped only when every changed file is one the exports cannot read
+  #   (documents, records, configs, tests, the site, and packages no export imports). A file
+  #   outside that list runs it, so a new package is covered until it is listed here.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      site: ${{ steps.f.outputs.site }}
+      onnx: ${{ steps.f.outputs.onnx }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: f
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "site=true" >> "$GITHUB_OUTPUT"; echo "onnx=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          git diff --name-only "$BASE...HEAD" > "$RUNNER_TEMP/changed"
+          wc -l < "$RUNNER_TEMP/changed"
+          SITE='^(site/|schema/|scripts/data_dictionary\.py$|\.github/workflows/ci\.yml$)'
+          SAFE='^(docs/|specs/|experiments/|site/|configs/|tests/|scripts/research/|\.specify/|\.claude/|[^/]*\.md$|src/tma2/(headroom|calib|cli|report)/|\.github/workflows/(?!ci\.yml$))'
+          if grep -qE "$SITE" "$RUNNER_TEMP/changed"; then echo "site=true"; else echo "site=false"; fi | tee -a "$GITHUB_OUTPUT"
+          if grep -vP "$SAFE" "$RUNNER_TEMP/changed" | grep -q .; then echo "onnx=true"; else echo "onnx=false"; fi | tee -a "$GITHUB_OUTPUT"
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -61,6 +90,8 @@ jobs:
         run: uv run pytest -q
 
   site:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,6 +109,8 @@ jobs:
         run: npm ci && npm run build
 
   onnx-conformance:
+    needs: changes
+    if: needs.changes.outputs.onnx == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
