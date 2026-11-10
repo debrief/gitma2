@@ -86,17 +86,17 @@
 
 ## Phase 6: Test and panel (P2)
 
-- [ ] T017 (only if the validation rule is met) Seed 320 on CI: data, E features, C segmentation,
+- [x] T017 (not run: validation rule not met; seed 320 unused) (only if the validation rule is met) Seed 320 on CI: data, E features, C segmentation,
   the proxy, the scoring, then `tma2-g5 --split test`.
-- [ ] T018 Panel: five specialities, in rounds; `review.md`.
+- [x] T018 Panel: five specialities, in rounds; `review.md`.
 
 ## Phase 7: Polish
 
-- [ ] T019 [P] The write-up and the slides post (reliability diagram, P and hit rate by proxy and
+- [x] T019 [P] The write-up and the slides post (reliability diagram, P and hit rate by proxy and
   truth slice, plain-language widths).
-- [ ] T020 [P] Update AGENTS.md (status, seeds, gotchas) and the glossary (calibration slope,
+- [x] T020 [P] Update AGENTS.md (status, seeds, gotchas) and the glossary (calibration slope,
   truncated statement).
-- [ ] T021 Run `quickstart.md` end to end.
+- [x] T021 Run `quickstart.md` end to end.
 
 ## Dependencies
 

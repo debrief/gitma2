@@ -123,6 +123,20 @@ pass, G4-a speed inconclusive. P is honest on average but not on unsettled rows 
 Write-up `site/blog/2026-11-09-gate-4.md`; follow-on spec 010 (one self-consistent course
 probability, slice-gated reliability with a causal unsettled proxy, interval-based bin checks,
 cross-sd and encoder-only controls registered first). Seed 320 still unused.
+010 (honest course statement, Gate 5, `specs/010-honest-course-statement/`): course stated in a
+truncated form (P times a von Mises truncated to ±X, the rest uniform: arc mass = P exactly;
+`calib/statement.py`), P a logistic of E's sds, a causal unsettled proxy (recent bearing residuals
+and C's open flag: `calib/proxy.py`, `tma2-g5proxy`, caches on `results/g5proxy-{val,stream}`) and
+the minute, then a Platt map; `calib/statement5.py`, `tma2-g5train {proxy,temperature,classical,
+head}` (CI `g5train/**`), `tma2-g5predict`, criteria `calib/gate5.py` and `tma2-g5`; scorer
+columns 15 (proxy flag), calibration slope, AUC, slice labels in `errors.npz`. Decision
+`experiments/20261109-g5-decision/` (plan `3febde6f…`, proxy `6248deea…`). **Gate 5 stopped at
+validation** (`experiments/20261109-g5-val/`, panel round 2): G5-d void (the encoder-only
+shuffle also beat the classical control); G5-a, G5-c, G5-e pass; G5-b slope inconclusive (1.25,
+caused by the Platt map: 1.06 unmapped). The classical rule is carried. Panel: the flag catches
+42% of truth-unsettled rows (the rest state 0.53, hit 0.22); the course arc is fitted too narrow
+(gradients cannot see the jump at X); an encoder-free MLP beats the head (post hoc). Write-up
+`site/blog/2026-11-10-gate-5.md`; follow-on spec 011. Seed 320 still unused.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -378,5 +392,11 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   about 800 rows is about 2.5 sampling sd: use an interval or a slope test. A 10-knot PAV map on
   2,000 rows caps P by noise at its top knot. Recalibrating P but not the density makes the
   statement contradict itself.
+- Gate 5 panel: a synthetic check of a gate's bands must reproduce the real data's P spread and
+  within-scenario correlation, or it overstates the bands' power. A Platt map fitted on ~2,000
+  tuning rows can make a calibrated P worse (mapped slope = unmapped / b). An arc tied to the
+  spread with a jump in the log score at X is not fitted by gradients: search it. Register an
+  encoder-free model, not only an encoder shuffle, before claiming learning from the encoder. The
+  torch thread gotcha bit again: CLIs that run beside other jobs set `torch.set_num_threads(1)`.
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.

@@ -1,22 +1,37 @@
 # Quickstart: spec 010
 
-1. Unit tests:
+1. **Unit tests.** Run:
    ```
    uv run pytest -q tests/unit/test_statement5.py tests/unit/test_proxy.py tests/unit/test_gate5.py tests/unit/test_calibration_metrics.py
    ```
-   They check that:
-   - the truncated density integrates to 1 and its arc mass equals P;
-   - the proxy uses no future bearings;
-   - the gate's synthetic check passes (R7).
-2. Tuning evidence, R1 to R4 on ordinals 0–499:
+   They check that the truncated density integrates to 1 and its arc mass equals P, that the proxy
+   reads no future bearings, and that the gate logic behaves on synthetic statements.
+2. **Synthetic check of the bands (R7).** Run:
    ```
-   uv run python scripts/research/g5_tuning.py --data <val f32pack> --val <cache> --segmentation <C tuning ndjson>
+   uv run python scripts/research/g5_synthetic.py --datasets 100 --resamples 500 --seed 7
    ```
-3. The proxy caches. Validation 0–1499 runs in the session; the stream (seed 318) runs on CI via `g5proxy/<plan>`.
-4. Baseline (CI): push `score/g5-base-val` with `--reuse` of the Gate 4 validation scoring.
-5. After the amendment and the decision record:
-   - train on CI with `g5train/g5-a`;
-   - run `tma2-g4predict` for each model and control, and push the files to a results branch;
-   - score with `score/g5-a-val`;
-   - run `tma2-g5 --split validation`.
-6. Test, only if validation passes: generate seed 320, then run its features, proxy and segmentation on CI, then the scoring, then `tma2-g5 --split test`.
+3. **Proxy caches.** For each split, run:
+   ```
+   uv run tma2-g5proxy --data <split.f32pack> --features <cache shards> --out <dir>
+   ```
+   Use validation seed 314 and the stream seed 318. Regenerate seed 318 at ed428a0 with
+   `--count 25000`.
+4. **Proxy definition, fitted on tuning rows only.** Run:
+   ```
+   uv run tma2-g5train proxy --plan configs/gate5/g5-a.json --data <val f32pack> --val <cache> --val-proxy <proxy cache> --out proxy.json
+   ```
+5. **Baseline (CI).** Push `score/g5-base-val`.
+6. **After the decision record:**
+   - train on CI by pushing `g5train/g5-a`;
+   - for each model and control, run `uv run tma2-g5predict --in <E val file> --features …
+     --proxy … --proxy-def experiments/20261109-g5-decision/proxy.json --plan configs/gate5/g5-a.json`
+     with one of `--temperature F`, `--classical F`, or `--model ID --run DIR --classical F
+     --epoch best|last`;
+   - push the files to a results branch, then push `score/g5-a-val`;
+   - run `uv run tma2-g5 --scoring <dir> --decision … --split validation --head N=P
+     --temperature N=P --classical N=P --raw N=P --encshuf N=P --encshuf N=P --out <dir>`.
+7. **References (FR-023, reported only).** Run:
+   ```
+   uv run python scripts/research/g5_refs.py --scoring <score dir>
+   ```
+8. **Test.** Not run, because Gate 5 stopped at validation.

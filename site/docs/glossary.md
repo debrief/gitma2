@@ -28,6 +28,7 @@ TMA and ML terms as used in gitma2. Terms carried from gitma keep gitma's meanin
 - **Efficiency** — the median over a slice's rows of error ÷ that row's CRB, divided by 0.6745,
   so an unbiased estimator at the bound scores 1; a flat efficiency across geometry slices is the
   signature of an approximation floor.
+- **Calibration slope** — the slope of a logistic regression of the hits on logit P; 1 when P is calibrated, above 1 when P is too compressed (under-dispersed), below 1 when too spread. Gate 5's G5-b checks it.
 - **Circular log score** — the log density of a stated course distribution at the true course (on the circle); a proper score, higher is better. Gate 4's G4-c compares it with the uniform's (−log 2π), the score of saying "course unknown".
 - **Interval score** — Gneiting and Raftery's score for a central (1 − α) interval: its width plus 2/α times the distance by which the truth falls outside it; lower is better, and it rewards calibration and sharpness together. Gate 3's score of record (G3-c).
 - **Fisher information** — the curvature of the bearings' log-likelihood in the target state; its

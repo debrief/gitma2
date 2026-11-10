@@ -1,0 +1,100 @@
+<!doctype html>
+<!-- Gate 5 slides post deck (site/docs/process/reporting.md). Figures in
+     site/static/img/2026-11-08-gate-3-slides/, each with its .json sidecar. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gate 5: uncertainty calibration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.6em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Gate 5: an honest course statement?</h1>
+          <p class="small">2026-11-10 · spec 010, Gate 5 · gitma2 · stopped at validation (panel round 2)</p>
+        </section>
+
+        <section>
+          <h2>The statement, made consistent</h2>
+          <ul>
+            <li>Course "within ±X with probability P, otherwise unknown"</li>
+            <li>Inside the arc: P times a von Mises truncated to ±X; outside: the rest, uniform. The arc mass is P exactly</li>
+            <li>P from E's spread, a causal "unsettled" signal (recent bearing residuals, C's open flag) and the minute</li>
+            <li>Controls: a classical rule, the sd^β temperature, and an encoder-only shuffle of the learned head</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>P now ranks hits and sits near the diagonal</h2>
+          <img src="../../img/2026-11-10-gate-5-slides/reliability.svg" alt="Reliability diagram" style="max-height: 480px" />
+          <p class="small">E's raw sds claim 0.9 and hit 0.5. The classical rule and the head run from about 0.3 to 0.7 and track the diagonal (AUC 0.65–0.67). The temperature has no resolution: its P is flat at 0.6.</p>
+        </section>
+
+        <section>
+          <h2>Honest on average, not after an unseen manoeuvre</h2>
+          <img src="../../img/2026-11-10-gate-5-slides/slices.svg" alt="Stated P and hit rate by slice" />
+          <p class="small">Flagged rows are mildly over-confident (−0.05). The flag catches only 42% of the truth's unsettled rows, and the rest state 0.53 and hit 0.22. The statement is under-confident at 2–5 km.</p>
+        </section>
+
+        <section>
+          <h2>The validation verdict (carried st5-s1)</h2>
+          <table>
+            <tr><th>Check</th><th>Value</th><th>Outcome</th></tr>
+            <tr><td>G5-a coverage</td><td>0.938 / 0.938</td><td>pass</td></tr>
+            <tr><td>G5-b reliability, slope</td><td>−0.006; 1.25 [1.06, 1.47]</td><td>inconclusive</td></tr>
+            <tr><td>G5-c log gain, AUC</td><td>+0.80; 0.654</td><td>pass</td></tr>
+            <tr><td>G5-d head − classical</td><td>−0.081, but the encoder shuffle −0.039</td><td><b>void</b></td></tr>
+            <tr><td>G5-e consistency</td><td>points identical; 6e-8</td><td>pass</td></tr>
+          </table>
+          <p class="small">Stopped at validation; seed 320 is unused. The classical rule is carried.</p>
+        </section>
+
+        <section>
+          <h2>What the panel found</h2>
+          <ul>
+            <li>The Platt map made a nearly calibrated P worse: the slope is 1.06 unmapped, 1.25 mapped</li>
+            <li>The course arc is fitted too narrow (the log score jumps at X; gradients miss it)</li>
+            <li>An encoder-free MLP beats the head by 0.08 and the classical rule by 0.16 (post hoc)</li>
+            <li>The per-slice check is weak: a slice off by 0.08 passes about half the time</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>Honesty on rows just after an undetected target manoeuvre</li>
+            <li>A learning claim beyond an encoder-free model</li>
+            <li>A well-fitted course arc</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (spec 011, recommended)</h2>
+          <ul>
+            <li>Fit the arc by search; drop or re-fit the Platt map on separate scenarios</li>
+            <li>Register an encoder-free MLP and an unbounded encoder shuffle before any result</li>
+            <li>Give the slice checks power; separate ownship geometry from target manoeuvres</li>
+            <li>A fair oracle ceiling; stated files on CI with digests</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
