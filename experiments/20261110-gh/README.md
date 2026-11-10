@@ -1,7 +1,8 @@
 # Gate H test record (spec 010 T022)
 
 Run 42799040276 (`headroom/gh-test`, plan `configs/headroom/gh-test.json`), commit eb028df, clean
-tree, every job exit 0, AMD EPYC 9V45. Seed 322, count 13,000, generated in the run after the
+tree, every job exit 0. Scoring CPUs (each `run.json`): AMD EPYC 9V45 for the primary condition,
+EPYC 7763 and an Intel Xeon for others; the prediction shards' CPUs were not recorded. Seed 322, count 13,000, generated in the run after the
 validation record (`experiments/20261110-gh-val/`). Bound by `experiments/20261110-gh-decision/`
 (plan `26d8e898…`). Primary condition: every σ = 1° scenario of the `train` split, 5,203
 scenarios, 20,473 G5 rows. Five further conditions: the first 1,000 scenarios, 3,927 rows each.
@@ -30,6 +31,30 @@ primary condition, every estimator on the true segmentation:
   103% [90, 123] of it.
 - By time since the zig (5, 10, 15, 20 min): R −0.4%, −1.3%, +1.6%, +1.4%. Settled rows −0.2%,
   unsettled −2.2%. The control beats the ceiling on 50.8% of rows.
+
+### By true range (added after panel round 1; post hoc, not gated)
+
+| True range | Rows | Plain solve | Robust control | Attainable ceiling | R: control over ceiling | Plain over ceiling |
+| --- | --- | --- | --- | --- | --- | --- |
+| under 10.7 km | 5,118 | 0.0922 | 0.0776 | 0.0740 | +4.9% [+1.8, +8.2] | +24.7% [+18.1, +31.6] |
+| 10.7–17.2 km | 5,118 | 0.1248 | 0.1053 | 0.1022 | +3.0% [−0.2, +7.1] | +22.1% [+15.3, +28.6] |
+| 17.2–25.3 km | 5,118 | 0.1487 | 0.1297 | 0.1332 | −2.6% [−5.7, +0.7] | +11.6% [+5.2, +17.4] |
+| over 25.3 km | 5,119 | 0.1792 | 0.1711 | 0.1805 | −5.2% [−8.3, −2.1] | −0.7% [−5.8, +5.3] |
+
+The pooled R near zero is a short-range deficit and a long-range surplus cancelling. At short
+range knowing the error model is worth about 5%; at long range the error-model-informed fit is
+*worse* than the robust control and no better than the plain solve. The statistics reviewer
+found two finer post-hoc slices whose intervals cross 10% (under 11 km and settled:
++7.2% [+3.6, +11.6]; under 11 km at 15 min or later: +8.6% [+2.7, +12.9]); no point exceeds 10%.
+
+### Other statistics (panel, recomputed from `errors.npz`; rows both answer)
+
+Geometric mean +0.9% [−0.7, +2.6]; 10% trimmed mean +0.3% [−0.8, +1.3]; P90 +1.7% [+0.1, +3.0];
+P95 +1.8% [−0.4, +3.7]. The median is the most favourable to the control; none comes near 10%.
+The control is slightly worse in the tail. Row by row the two fits differ by a factor of up to
+3.3 either way (5–95%): they are equal in distribution, not per row. The "rows every estimator
+answers" figure above conditions on the IMM, the EKF and one leg answering, which drops 30% of
+rows; on the rows the two fits both answer (20,426), R is −0.5% [−2.4, +1.4].
 
 Soundness on the test seed, for information (it is applied on validation): H-a efficiency 1.26,
 pass; H-b clean-data cost +1.9% [−0.8, +4.8], pass.
@@ -65,28 +90,47 @@ No condition's interval reaches 10%.
 | H-b | about +3%, pass (0.75) | +0.7% on validation, pass |
 | H-c | about +1.5%, [−1, +4], not material (0.85) | −0.4% [−2.4, +1.4], not material |
 
-## Critical reading
+## Critical reading (revised after panel round 1)
 
-- **What the result says.** Under correlated, biased, mis-scaled and outlier-ridden bearing
-  errors of the declared severities, a least-squares fit of the piecewise-constant-velocity
-  model with textbook robust weighting is as accurate as the same fit told the true error
-  model. A learner of the *error model*, feeding this solve, has nothing measurable to win.
-- **What it does not say.** It does not say this estimator is near the best possible. The
-  ceiling sits at 1.26 times the Cramér–Rao bound on settled rows (1.59 on clean data), because
-  the solve fits each manoeuvre by a chord. That gap is model error in the *target's motion*,
-  which this gate did not test and no error-model learner could close.
-- **"Ceiling" overstates the reference.** On validation the control beat both ceilings in point
-  value (−4.0%). On test, at five times the size, the three are within half a percent and the
-  realisation ceiling is 0.8% [0.1, 1.8] below the attainable one, as it should be. The
-  validation gap looks like noise, but the reference is a model-based fit, not an optimum: R
-  measures "what knowing the error model is worth to this fit", and should be read that way.
-- **Where the mismatch hurts.** Outliers alone raise the plain solve's error by 43%, and Huber
-  weights remove nearly all of it. Correlated error raises everyone's error and leaves the
-  largest residual (+3.1%, interval to +6.7%). Bias and an untold σ cost almost nothing.
-- **The speed component is the closest to showing anything** (+2.1% [−0.1, +4.5]): far below
-  the threshold, but the one place the control is visibly behind.
-- **The trackers are not competitive here** (IMM 0.652, EKF 0.582 against 0.118), and fail to
-  answer a quarter of rows. They take no part in the verdict.
-- **Not tested:** target-motion mismatch; other severities (harsh outliers left +6.3%
-  [+2.6, +11.6] on validation); a classical bias state; the same comparison on C's
-  segmentation, which was planned as a reported extra and not run; real data.
+- **What the result says, in the narrowest honest words.** On the true segmentation, under the
+  declared stationary Gaussian-plus-outlier bearing-error family at the stated severities,
+  knowing the true error model is worth no more than about 1.5% in median range error (about 3%
+  at P90) to the piecewise-constant-velocity least-squares solve, over a textbook robust fit.
+- **"Nothing to win" is true only pooled.** By range it is +4.9% under 10.7 km and −5.2% over
+  25.3 km (table above). A component that used the error model at short range and the robust fit
+  at long range would gain a few percent. That is far below 10%, and it is a rule, not learning.
+- **The reference is not a ceiling.** It is an error-model-informed fit of a model that is wrong
+  about the target: it sits at 1.26 times the known-manoeuvre Cramér–Rao bound on settled rows
+  (1.59 on clean data), because the solve fits each manoeuvre by a chord, and the control beats
+  it at long range. The robust control itself is at about 1.25 times the bound. That 25% is not
+  error-model headroom (it is larger with no mismatch at all), and the bound is not attainable
+  (it knows the manoeuvre times and the outlier flags). But it is room that a better motion
+  model or an end-to-end estimator could claim, and this gate says nothing about it.
+- **The true segmentation defines away the likeliest operational cost.** Correlated error and a
+  wandering bias can look like target manoeuvres, and C nominates with the nominal σ. Whether
+  C's segmentation degrades under mismatch was a registered comparison (research R6, FR-033)
+  that had not been run when the verdict was computed. It is being run on the validation seed
+  (`configs/headroom/gh-val-c2.json`) and is reported in `experiments/20261110-gh-c2/`.
+- **The simulated mismatch is the control's own model family.** The control's correlation model
+  (white plus first-order) was chosen in implementation because first-order alone could not
+  represent the declared error. The errors are stationary, independent of geometry, with
+  zero-mean independent outliers: Huber's best case. Untested and more likely to matter: a bias
+  that steps or lags at the ownship zig; bursty or one-sided outliers; σ that varies within an
+  engagement with signal-to-noise or relative bearing.
+- **"An untold σ costs nothing" is true by construction**, not a finding: one scale per
+  engagement cannot move a least-squares point estimate.
+- **The control was tuned on the gated condition and statistic** (seed 320, the primary
+  condition, median range error). The test data are fresh, so the test is valid, but R is the
+  control's best case. Outliers alone left +4.2% [+0.8, +7.8] here and harsh outliers
+  +6.3% [+2.6, +11.6] on validation.
+- **The gate was confirmatory.** The forecast gave "not material" 0.85 from the tuning seed.
+- **The trackers are not credible as tuned references** on these rows (IMM 0.652, EKF 0.582
+  against 0.118; a quarter of rows unanswered). They take no part in the verdict. No naive
+  baseline was scored: nothing is trained, so there is no training-set mean to report.
+- **Process.** Validation and test ran from the pull request's branch before the SRD row was
+  merged: the owner said in the session on 2026-11-10 "merged, go ahead with validation and
+  test" while PR 25 was in fact still open. The criteria were committed (a814ac5) before either
+  seed was generated; the panel's process reviewer regenerated seed 322 and reproduced every
+  digest and R exactly.
+- **Not tested:** target-motion mismatch; other error families and severities; a classical bias
+  state; real data.

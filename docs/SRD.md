@@ -226,6 +226,11 @@ and recorded, not asked.
   at Gates 2 to 4. No result on validation seed 321 or test seed 322 exists: neither has been
   generated. Tuning seed 320 has been used (`experiments/20261109-gh-tuning/`,
   `experiments/20261110-gh-grid/`, `experiments/20261110-gh-refs/`).
+- **2026-11-10 (owner, recorded by the agent):** the owner chose H-b's form and then said in the
+  session "merged, go ahead with validation and test". PR 25, which carries the Gate H row, was
+  still open at that moment; validation (seed 321) and test (seed 322) ran from its branch on
+  that instruction. The row, the plan and the decision record were committed (a814ac5) before
+  either seed was generated and have not been edited since.
 
 ## Annexes
 
