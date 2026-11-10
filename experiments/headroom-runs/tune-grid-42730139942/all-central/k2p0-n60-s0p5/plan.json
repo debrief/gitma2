@@ -1,0 +1,245 @@
+{
+  "description": "Spec 010 T015: the robust control's settings grid (research R5, 27 points) on tuning seed 320, the primary condition and mismatch off (300 sigma = 1 deg scenarios). Chosen by median range error on the primary condition among points whose cost on mismatch-off data is within tolerance.",
+  "plan": "configs/gateh/gh-draft.json",
+  "split": "tuning",
+  "seed": 320,
+  "count": 1300,
+  "data_split": "train",
+  "start": 0,
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.03125",
+  "ordinals": 300,
+  "conditions": [
+    "all-central",
+    "off"
+  ],
+  "runs": [
+    {
+      "kind": "nominal"
+    },
+    {
+      "kind": "robust"
+    },
+    {
+      "kind": "attainable"
+    }
+  ],
+  "variants": [
+    {
+      "name": "k1p0-n30-s0p0",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 30,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k1p0-n30-s0p25",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 30,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k1p0-n30-s0p5",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 30,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k1p0-n60-s0p0",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 60,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k1p0-n60-s0p25",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 60,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k1p0-n60-s0p5",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 60,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k1p0-n120-s0p0",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 120,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k1p0-n120-s0p25",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 120,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k1p0-n120-s0p5",
+      "set": {
+        "huber_k": 1.0,
+        "min_bearings": 120,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k1p345-n30-s0p0",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 30,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k1p345-n30-s0p25",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 30,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k1p345-n30-s0p5",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 30,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k1p345-n60-s0p0",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 60,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k1p345-n60-s0p25",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 60,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k1p345-n60-s0p5",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 60,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k1p345-n120-s0p0",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 120,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k1p345-n120-s0p25",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 120,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k1p345-n120-s0p5",
+      "set": {
+        "huber_k": 1.345,
+        "min_bearings": 120,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k2p0-n30-s0p0",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 30,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k2p0-n30-s0p25",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 30,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k2p0-n30-s0p5",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 30,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k2p0-n60-s0p0",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 60,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k2p0-n60-s0p25",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 60,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k2p0-n60-s0p5",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 60,
+        "rho_shrink": 0.5
+      }
+    },
+    {
+      "name": "k2p0-n120-s0p0",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 120,
+        "rho_shrink": 0.0
+      }
+    },
+    {
+      "name": "k2p0-n120-s0p25",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 120,
+        "rho_shrink": 0.25
+      }
+    },
+    {
+      "name": "k2p0-n120-s0p5",
+      "set": {
+        "huber_k": 2.0,
+        "min_bearings": 120,
+        "rho_shrink": 0.5
+      }
+    }
+  ]
+}
