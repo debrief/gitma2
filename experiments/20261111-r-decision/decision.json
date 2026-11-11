@@ -1,0 +1,45 @@
+{
+ "budget": {
+  "cap_hours": 68,
+  "measured_usd_per_t4_hour": 0.66,
+  "modal_enforced_usd": 45,
+  "owner_cap_usd": 50,
+  "planned_limit_hours": {
+   "pilot-curve": 2.67,
+   "pilot-throughput (done)": 0.17,
+   "r-a-own": 3.17,
+   "r-a-s1": 10.0,
+   "r-a-s2": 10.0,
+   "r-a-s3": 10.0,
+   "r-a-tenth": 5.0
+  }
+ },
+ "date": "2026-11-11",
+ "forecasts": {
+  "after_manoeuvres": "worse than C'' in median range error (regressor - C'' > 0), better than the IMM",
+  "held_course": "partial: efficiency between 1.3 and 2.5 for range, worse for speed; not flat across geometry",
+  "ownship_only": "median range error near the prior's (about 0.5 relative)",
+  "tenth_of_data": "worse than the carried model by more than seed-to-seed spread"
+ },
+ "plans_sha256": {
+  "pilot-curve": "13ab1f4b0db71c07b7993d299841067f1e22c1b4e3e8edded92765a491d54c44",
+  "r-a-own": "c9ce7f66c8c8a667fe82f050f2c1ffbcb0e1336d28ea9031e3b4acd6c003b3c8",
+  "r-a-s1": "cdeec6e2ccd2ed853a92cf35deadc12fc9b54c79fef39e78de15709ffd17db58",
+  "r-a-s2": "1301b48809c4e7566c83caeac4bddb0a85fc039be177053d33cf5f1acc112bee",
+  "r-a-s3": "4e151fc3ef736fc1efa946f9722a8a6e88c8ae7fd7e4e8dc6dcc7449ac1dc9f9",
+  "r-a-tenth": "712db040b4d61965be98b6cd575cb3ab897a954b31458cfe188b0cfedce4330f"
+ },
+ "readings": {
+  "floor": 2.0,
+  "level": 0.95,
+  "reach": 1.25,
+  "resamples": 2000,
+  "rule": "src/tma2/regress/reading.py"
+ },
+ "seeds": {
+  "test": 328,
+  "training_stream": 326,
+  "validation": 327
+ },
+ "spec": "specs/012-scaled-regressor"
+}

@@ -20,8 +20,8 @@
 
 ## Phase 3: registration
 
-- [ ] T020 `configs/regress/pilot.json`, `r-a.json`; decision record (configuration, budget, readings, controls, forecasts, reduction rule)
-- [ ] T021 Owner: Modal account, spending limit, `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` (owner-only; wait)
+- [x] T020 Plans `configs/regress/{pilot-curve,r-a-s1..3,r-a-own,r-a-tenth}.json`; decision record `experiments/20261111-r-decision/`
+- [x] T021 Owner: Modal account, limits ($15 spend limit; $50 budget), secrets (checked by `modal-check`)
 
 ## Phase 4: runs
 
