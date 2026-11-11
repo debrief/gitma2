@@ -1,0 +1,34 @@
+{
+  "description": "Spec 012 smoke of rscore.yml: the 10-minute throughput-pilot checkpoint (undertrained; a pipeline check only) on 8 MAN2 and 12 held-course engagements of validation seed 327.",
+  "seed": 327,
+  "count": 800,
+  "data_split": "train",
+  "ordinals": 8,
+  "shards": 2,
+  "shard_size": 4,
+  "held_ordinals": 12,
+  "gh_plan": "configs/gateh/gh-a.json",
+  "classical": [
+    {
+      "name": "c2",
+      "segmentation": "c2"
+    },
+    {
+      "name": "c-tau3",
+      "segmentation": "c2r",
+      "robust_confirm": {
+        "robust": false,
+        "tau_factor": 3.0
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "name": "reg-pilot",
+      "branch": "results/gputrain-pilot-throughput-42911778716",
+      "dir": "experiments/gputrain-runs/pilot-throughput-42911778716"
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5"
+}
