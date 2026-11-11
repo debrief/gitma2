@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.31.0"
+version = "0.32.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -2848,7 +2848,10 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'SpanDetection',
                        'SegmentInterval',
                        'HeadroomPredictionHeader']} })
-    segmentation: str = Field(default=..., description="""truth, or c2 (the classical C'' hand-over).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
+    segmentation: str = Field(default=..., description="""truth, c2 (the classical C'' hand-over) or c2r (C'' with C-r's robust confirmation, spec 011).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
+    segments_from: Optional[str] = Field(default=None, description="""The condition of the split the segmentation was computed on, when not this one (spec 011 FR-003, a diagnostic).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
+    segmenter_settings: Optional[str] = Field(default=None, description="""C-r's confirmation settings as canonical JSON (c2r only; spec 011).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
+    robust_code_sha256: Optional[str] = Field(default=None, description="""Digest of C-r's own source (segment.robust), c2r only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
     condition: str = Field(default=..., description="""The split's mismatch condition id (off without one).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
     dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'CrbHeader',

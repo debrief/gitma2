@@ -231,6 +231,12 @@ and recorded, not asked.
   still open at that moment; validation (seed 321) and test (seed 322) ran from its branch on
   that instruction. The row, the plan and the decision record were committed (a814ac5) before
   either seed was generated and have not been edited since.
+- **2026-11-11 (owner, recorded by the agent):** spec 011 stops at tuning and is published
+  (`site/blog/2026-11-11-robust-segmenter.md`); no Gate R row is added to §5. On tuning seed 323
+  the robust confirmation test did no more than a raised threshold, and neither closed most of
+  the gap to the true manoeuvre times. C stays frozen and C″ the standing classical system;
+  seeds 324 and 325 are unused. Spec 012 (the scaled end-to-end regressor, a control) runs
+  beside it on the owner's Modal account with a budget of $50 in total (2026-11-10).
 
 ## Annexes
 

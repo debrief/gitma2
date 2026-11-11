@@ -2568,12 +2568,33 @@
                 "record": {
                     "$ref": "#/$defs/RecordKind"
                 },
+                "robust_code_sha256": {
+                    "description": "Digest of C-r's own source (segment.robust), c2r only.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "schema_version": {
                     "type": "string"
                 },
                 "segmentation": {
-                    "description": "truth, or c2 (the classical C'' hand-over).",
+                    "description": "truth, c2 (the classical C'' hand-over) or c2r (C'' with C-r's robust confirmation, spec 011).",
                     "type": "string"
+                },
+                "segmenter_settings": {
+                    "description": "C-r's confirmation settings as canonical JSON (c2r only; spec 011).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "segments_from": {
+                    "description": "The condition of the split the segmentation was computed on, when not this one (spec 011 FR-003, a diagnostic).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "settings": {
                     "description": "The robust control's settings as canonical JSON (robust only).",
@@ -5421,6 +5442,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.31.0"
+    "version": "0.32.0"
 }
 

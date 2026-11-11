@@ -25,8 +25,9 @@ from tma2.data.provenance import read_git_provenance
 
 CHUNK = 16  # as cli.segment, so C's segmentation is the one tma2-g2predict computes
 KNOTS = 12
+KIND_NAMES = {0: "steady", 1: "transition", 2: "unknown"}
 
-Task = list[tuple[int, int, list[dict[str, Any]]]]
+Task = list[tuple[int, int, list[dict[str, Any]], Any]]
 
 
 def load_truth(path: str, pack: str) -> tuple[dict[str, Any], Any, Any]:
@@ -109,9 +110,27 @@ def _task(args: tuple[Any, ...]) -> Task:
     out = [[empty_row(d, k) for k in ks] for d, ks in zip(data, rows, strict=True)]
     items: list[tuple[BearingData, int, LayerInputs]] = []
     where: list[tuple[int, int]] = []
-    if seg == "c2":
+    if seg in ("c2", "c2r"):
         p = SegmentParameters.model_validate(c2["parameters"])
-        sg = veto_segmentations(data, rows, p, int(c2["window"]))
+        seg_data = data
+        if c2.get("segments_from"):
+            # The segmentation is computed on another split of the same seed (the clean
+            # bearings) and applied to this split's bearings (spec 011 FR-003; a diagnostic).
+            other = {
+                j: bearing_data_from_arrays(m, own, obs)
+                for j, m, own, _tgt, obs in iter_selected(c2["segments_from"], start, count)
+            }
+            seg_data = [other[j] for j in ords]
+            if any(a.n != b.n or a.index != b.index for a, b in zip(seg_data, data, strict=True)):
+                raise ValueError("--segments-from: not the same scenarios as --in")
+        if seg == "c2r":
+            from tma2.gate2.predict import zig_veto_evidence
+            from tma2.segment.robust import RobustConfirm, robust_segmentations
+
+            ev = [zig_veto_evidence(d, int(c2["window"])) for d in seg_data]
+            sg, _ = robust_segmentations(seg_data, rows, p, RobustConfirm(**c2["cr"]), ev)
+        else:
+            sg = veto_segmentations(seg_data, rows, p, int(c2["window"]))
         fade = c2["fade"]
     for i, (d, m, ks) in enumerate(zip(data, metas, rows, strict=True)):
         for q, k in enumerate(ks):
@@ -154,16 +173,37 @@ def _task(args: tuple[Any, ...]) -> Task:
             if np.isfinite(st).all():
                 rcs = (float(o.range[b]), float(o.course[b]), float(o.speed[b]))
                 out[i][q] = _row(d, k, st, rcs, bool(o.plausible[b]), o.cov[b].numpy())
-    return [(j, int(m["index"]), r) for j, m, r in zip(ords, metas, out, strict=True)]
+    dump = None
+    if seg != "truth" and c2 is not None and c2.get("dump"):
+        dump = [
+            {
+                int(k): [[iv.kind, iv.start, iv.end, bool(iv.open)] for iv in ivs]
+                for k, ivs in g.items()
+            }
+            for g in sg
+        ]
+    return [
+        (j, int(m["index"]), r, None if dump is None else dump[i])
+        for i, (j, m, r) in enumerate(zip(ords, metas, out, strict=True))
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-hpredict", description=__doc__)
     ap.add_argument("--in", dest="inp", required=True, help="the split's f32pack")
     ap.add_argument("--kind", required=True)
-    ap.add_argument("--segmentation", default="truth", choices=("truth", "c2"))
+    ap.add_argument("--segmentation", default="truth", choices=("truth", "c2", "c2r"))
     ap.add_argument("--plan", help="the Gate H plan (robust settings; C'' for --segmentation c2)")
     ap.add_argument("--mismatch-truth", help="the split's truth side file (ceilings only)")
+    ap.add_argument(
+        "--dump-segmentation", help="c2/c2r: write each prefix's intervals here (ndjson.gz)"
+    )
+    ap.add_argument("--name", help="the estimator name in the header (default: kind@segmentation)")
+    ap.add_argument("--robust-confirm", help="c2r: C-r's settings (a JSON file or object)")
+    ap.add_argument(
+        "--segments-from",
+        help="c2: compute the segmentation on this split of the same seed (a diagnostic)",
+    )
     ap.add_argument("--only", help="robust: one fix alone (huber, sigma or whiten)")
     ap.add_argument("--set", action="append", default=[], help="robust: key=value over the plan")
     ap.add_argument("--start", type=int, required=True)
@@ -198,8 +238,21 @@ def main(argv: list[str] | None = None) -> int:
         bad.append(f"{a.kind} must not read the mismatch truth")
     if a.mismatch_truth and hdr.mismatch is None:
         bad.append("the split carries no mismatch; a ceiling there is the plain oracle")
-    if (a.kind == "robust" or a.segmentation == "c2") and not a.plan:
-        bad.append("--plan is needed for robust and for --segmentation c2")
+    if (a.kind == "robust" or a.segmentation != "truth") and not a.plan:
+        bad.append("--plan is needed for robust and for C's segmentations")
+    if a.segments_from and a.segmentation not in ("c2", "c2r"):
+        bad.append("--segments-from applies to --segmentation c2 or c2r")
+    if (a.segmentation == "c2r") != bool(a.robust_confirm):
+        bad.append("--robust-confirm is needed for, and only for, --segmentation c2r")
+    if a.segments_from:
+        oh = read_pack_header(a.segments_from)
+        same = (oh.dataset_seed, oh.index_start, oh.scenario_count) == (
+            hdr.dataset_seed,
+            hdr.index_start,
+            hdr.scenario_count,
+        )
+        if not same:
+            bad.append("--segments-from: a split of another seed or range")
     if (a.only or a.set) and a.kind != "robust":
         bad.append("--only and --set apply to robust")
     if bad:
@@ -223,13 +276,30 @@ def main(argv: list[str] | None = None) -> int:
             return 2
     c2 = None
     code = None
-    if a.segmentation == "c2":
+    cr_json = None
+    cr_code = None
+    if a.segmentation in ("c2", "c2r"):
         c2 = dict(plan["c2"])
+        if a.robust_confirm:
+            from tma2.segment.robust import RobustConfirm, robust_code_digest
+
+            txt = a.robust_confirm
+            raw_cr = json.loads(txt if txt.lstrip().startswith("{") else Path(txt).read_text())
+            try:
+                c2["cr"] = asdict(RobustConfirm(**raw_cr))
+            except (TypeError, ValueError) as e:
+                print(f"--robust-confirm: {e}", file=sys.stderr)
+                return 2
+            cr_json = json.dumps(c2["cr"], sort_keys=True, separators=(",", ":"))
+            cr_code = robust_code_digest()
         try:
             c2["parameters"] = c2_parameters(c2)
         except ValueError as e:
             print(str(e), file=sys.stderr)
             return 2
+        if a.segments_from:
+            c2["segments_from"] = a.segments_from
+        c2["dump"] = bool(a.dump_segmentation)
         code = code_digest()
         if code != c2["code_sha256"]:
             print(
@@ -247,6 +317,12 @@ def main(argv: list[str] | None = None) -> int:
         truth, truth_sha = (eng, outlier), meta["truth_sha256"]
     plain = ceiling and hdr.mismatch is None
     name = f"{a.kind}{'-' + a.only if a.only else ''}@{a.segmentation}"
+    seg_from = None
+    if a.segments_from:
+        oc = read_pack_header(a.segments_from).mismatch
+        seg_from = oc.id if oc is not None else "off"
+        name += f"<{seg_from}"
+    name = a.name or name
     h = HeadroomPredictionHeader(
         record=RecordKind.header,
         schema_version=SCHEMA_VERSION,
@@ -254,6 +330,9 @@ def main(argv: list[str] | None = None) -> int:
         mode="per_timestep",
         kind=a.kind,
         segmentation=a.segmentation,
+        segments_from=seg_from,
+        segmenter_settings=cr_json,
+        robust_code_sha256=cr_code,
         condition=condition,
         dataset_digest=sha256_file(a.inp),
         truth_sha256=truth_sha,
@@ -295,7 +374,7 @@ def main(argv: list[str] | None = None) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         f.write(canonical_json(h) + "\n")
-        for j, index, rows in sorted(recs, key=lambda r: r[0]):
+        for j, index, rows, _seg in sorted(recs, key=lambda r: r[0]):
             f.write(
                 canonical_json(
                     {
@@ -309,6 +388,31 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 + "\n"
             )
+    if a.dump_segmentation:
+        import gzip
+
+        dp = Path(a.dump_segmentation)
+        dp.parent.mkdir(parents=True, exist_ok=True)
+        with gzip.open(dp, "wt", encoding="utf-8") as g:
+            for j, index, _rows, seg in sorted(recs, key=lambda r: r[0]):
+                for k, ivs in sorted((seg or {}).items()):
+                    rec = {
+                        "record": "segmentation",
+                        "ordinal": j,
+                        "scenario_index": index,
+                        "vessel": "target",
+                        "prefix_row": k,
+                        "intervals": [
+                            {
+                                "kind": KIND_NAMES[kind],
+                                "start_index": s0,
+                                "end_index": e0,
+                                "open": op,
+                            }
+                            for kind, s0, e0, op in ivs
+                        ],
+                    }
+                    g.write(json.dumps(rec) + "\n")
     print(f"wrote {out}: {len(recs)} scenarios [{time.time() - t0:.0f} s]")
     return 0
 

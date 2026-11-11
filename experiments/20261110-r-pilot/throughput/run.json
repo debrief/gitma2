@@ -1,0 +1,114 @@
+{
+ "checkpoint_sha256": "42b8b155e9d698cae39c18999a5af1b3b3d69d9c3a25e13b026b652f0d0322d5",
+ "config": {
+  "batch_scenarios": 256,
+  "beta": 0.5,
+  "checkpoint_seconds": 900,
+  "feedforward": 1024,
+  "heads": 8,
+  "id": "pilot-throughput",
+  "inputs": "full",
+  "layers": 8,
+  "learning_rate": 0.0003,
+  "limit_seconds": 600,
+  "max_rows": 720,
+  "patch_rows": 3,
+  "precision": "amp",
+  "ranges": "configs/man2-ranges.json",
+  "seed": 1,
+  "stream_repeat": 0,
+  "stream_seed": 326,
+  "stream_start": 0,
+  "total_updates": 40000,
+  "val_count": 512,
+  "val_every_updates": 200,
+  "val_seed": 327,
+  "warmup_updates": 2000,
+  "weight_decay": 0.01,
+  "width": 256
+ },
+ "config_sha256": "c5b6e7b9ae2d4e12c755d7865669b95871a8260b02fc8b75db9b7e645669ca66",
+ "cuda": "13.2",
+ "device": "cuda",
+ "git_dirty": false,
+ "gpu": "Tesla T4",
+ "gpu_seconds": 600.5227451324463,
+ "plan": {
+  "description": "Spec 012 pilot, step 1: throughput of the planned model on a T4. One segment of 10 minutes; at most 20 minutes of GPU time with start-up. Nothing is scored.",
+  "segment_limit_seconds": 600,
+  "segments": 1
+ },
+ "scenarios_per_second": 635.1416175298824,
+ "scenarios_seen": 381184,
+ "segments": [
+  {
+   "end_update": 1489,
+   "git_commit": "b313c62abbe01781572824e7b88c8d38f4f8c425",
+   "seconds": 600.1559054851532,
+   "start_update": 0,
+   "started": 1794348603.4049819
+  }
+ ],
+ "stopped": "limit",
+ "torch": "2.15.0+cu132",
+ "train_seconds": 600.1559054851532,
+ "updates": 1489,
+ "validation": [
+  {
+   "ln_range_abs_median": 0.5634981393814087,
+   "loss": -0.13588711991906166,
+   "seconds": 105.8943977355957,
+   "train_loss": -0.1464449018239975,
+   "update": 200,
+   "velocity_mps_median": 5.246150016784668
+  },
+  {
+   "ln_range_abs_median": 0.34874653816223145,
+   "loss": -0.4804447516798973,
+   "seconds": 182.23200154304504,
+   "train_loss": -0.4907101094722748,
+   "update": 400,
+   "velocity_mps_median": 4.349096775054932
+  },
+  {
+   "ln_range_abs_median": 0.3061554431915283,
+   "loss": -0.5302949547767639,
+   "seconds": 258.930828332901,
+   "train_loss": -0.52217036485672,
+   "update": 600,
+   "velocity_mps_median": 3.952171802520752
+  },
+  {
+   "ln_range_abs_median": 0.24116313457489014,
+   "loss": -0.5851700603961945,
+   "seconds": 335.6687443256378,
+   "train_loss": -0.5722308158874512,
+   "update": 800,
+   "velocity_mps_median": 3.5816407203674316
+  },
+  {
+   "ln_range_abs_median": 0.21428340673446655,
+   "loss": -0.5374100059270859,
+   "seconds": 412.5482406616211,
+   "train_loss": -0.6312150359153748,
+   "update": 1000,
+   "velocity_mps_median": 3.4396121501922607
+  },
+  {
+   "ln_range_abs_median": 0.21421590447425842,
+   "loss": -0.5580838024616241,
+   "seconds": 489.37559700012207,
+   "train_loss": -0.5873968601226807,
+   "update": 1200,
+   "velocity_mps_median": 3.4376800060272217
+  },
+  {
+   "ln_range_abs_median": 0.18480753898620605,
+   "loss": -0.5891894549131393,
+   "seconds": 566.1533484458923,
+   "train_loss": -0.5517058968544006,
+   "update": 1400,
+   "velocity_mps_median": 3.1027982234954834
+  }
+ ]
+}

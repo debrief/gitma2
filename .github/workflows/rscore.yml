@@ -1,0 +1,134 @@
+name: Regressor scoring (spec 012)
+
+# Push `rscore/<name>` with a plan configs/rscore/<name>.json:
+#   seed, count, data_split      the scored seed; MAN2 and held-course splits are both generated
+#   ordinals, shards, shard_size sigma = 1 deg ordinals of the MAN2 split, classical systems in shards
+#   held_ordinals                sigma = 1 deg ordinals of the held-course split
+#   gh_plan                      the Gate H plan (C'' block) for the classical systems
+#   classical                    [{name, segmentation, robust_confirm?}] run by tma2-hpredict (plain solve)
+#   checkpoints                  [{name, branch, dir}] regressors on results/gputrain-* branches
+#   imm, ekf                     frozen reference names
+# Jobs: classical (shards) -> man2 (regressor rows, scorer, readings after manoeuvres) and
+# held (regressor rows, scorer, held-course reading). Results: results/rscore-<name>-{man2,held}-<run id>.
+# CPU only; no secrets.
+
+on:
+  push:
+    branches: ["rscore/**"]
+
+permissions:
+  contents: write
+
+env:
+  RANGES: configs/man2-ranges.json
+  HELD_RANGES: configs/regress/held-course-ranges.json
+  HELDOUT: configs/man2-heldout.json
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.plan.outputs.name }}
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        run: |
+          NAME="${GITHUB_REF_NAME#rscore/}"
+          test -f "configs/rscore/$NAME.json"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          python3 - "configs/rscore/$NAME.json" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          p = json.load(open(sys.argv[1]))
+          n, size = p["ordinals"], p["shard_size"]
+          m = [{"shard": i, "start": i * size, "count": min(size, n - i * size)} for i in range(p["shards"]) if i * size < n]
+          print("shards=" + json.dumps({"include": m}))
+          PY
+
+  classical:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.shards) }}
+    env:
+      PLAN: configs/rscore/${{ needs.setup.outputs.name }}.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Generate the MAN2 split
+        run: |
+          read -r SEED COUNT DSPLIT <<< "$(python3 -c "import json; p = json.load(open('$PLAN')); print(p['seed'], p['count'], p['data_split'])")"
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/man2"
+          echo "TRUTH=$RUNNER_TEMP/man2/$DSPLIT.f32pack" >> "$GITHUB_ENV"
+      - name: Classical systems
+        run: |
+          mkdir -p "$RUNNER_TEMP/pred"
+          python3 - "$PLAN" "$TRUTH" "$RUNNER_TEMP/pred" "${{ matrix.start }}" "${{ matrix.count }}" "${{ matrix.shard }}" > "$RUNNER_TEMP/cmds" <<'PY'
+          import json, shlex, sys
+          plan, truth, out, start, count, shard = sys.argv[1:]
+          p = json.load(open(plan))
+          for r in p["classical"]:
+              a = ["--in", truth, "--kind", "nominal", "--segmentation", r["segmentation"], "--plan", p["gh_plan"],
+                   "--start", start, "--count", count, "--name", r["name"], "--out", f"{out}/{r['name']}.{shard}.ndjson"]
+              if "robust_confirm" in r:
+                  a += ["--robust-confirm", json.dumps(r["robust_confirm"])]
+              print(shlex.join(a))
+          PY
+          while read -r ARGS; do
+            echo "tma2-hpredict $ARGS"
+            eval uv run tma2-hpredict $ARGS
+          done < "$RUNNER_TEMP/cmds"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: classical-${{ matrix.shard }}
+          path: ${{ runner.temp }}/pred/*
+
+  man2:
+    needs: [setup, classical]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      NAME: ${{ needs.setup.outputs.name }}
+      PLAN: configs/rscore/${{ needs.setup.outputs.name }}.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Generate the MAN2 split
+        run: |
+          read -r SEED COUNT DSPLIT <<< "$(python3 -c "import json; p = json.load(open('$PLAN')); print(p['seed'], p['count'], p['data_split'])")"
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data"
+          echo "TRUTH=$RUNNER_TEMP/data/$DSPLIT.f32pack" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: classical-*
+          path: ${{ runner.temp }}/shards
+          merge-multiple: true
+      - name: Regressor rows, scorer, readings
+        run: bash scripts/rscore_job.sh man2
+      - name: Push the results branch
+        run: bash scripts/rscore_push.sh man2
+
+  held:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      NAME: ${{ needs.setup.outputs.name }}
+      PLAN: configs/rscore/${{ needs.setup.outputs.name }}.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Generate the held-course split
+        run: |
+          read -r SEED COUNT DSPLIT <<< "$(python3 -c "import json; p = json.load(open('$PLAN')); print(p['seed'], p['count'], p['data_split'])")"
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$HELD_RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data"
+          echo "TRUTH=$RUNNER_TEMP/data/$DSPLIT.f32pack" >> "$GITHUB_ENV"
+      - name: Regressor rows, scorer, reading
+        run: bash scripts/rscore_job.sh held
+      - name: Push the results branch
+        run: bash scripts/rscore_push.sh held

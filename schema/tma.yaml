@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.31.0
+version: 0.32.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -1867,7 +1867,10 @@ classes:
       estimator: { range: string, required: true, description: "Kind and segmentation, for example robust@truth." }
       mode: { range: string, required: true, description: Always per_timestep. }
       kind: { range: string, required: true, description: "nominal, realisation, attainable or robust." }
-      segmentation: { range: string, required: true, description: "truth, or c2 (the classical C'' hand-over)." }
+      segmentation: { range: string, required: true, description: "truth, c2 (the classical C'' hand-over) or c2r (C'' with C-r's robust confirmation, spec 011)." }
+      segments_from: { range: string, description: "The condition of the split the segmentation was computed on, when not this one (spec 011 FR-003, a diagnostic)." }
+      segmenter_settings: { range: string, description: "C-r's confirmation settings as canonical JSON (c2r only; spec 011)." }
+      robust_code_sha256: { range: string, description: "Digest of C-r's own source (segment.robust), c2r only." }
       condition: { range: string, required: true, description: "The split's mismatch condition id (off without one)." }
       dataset_digest: { range: string, required: true }
       truth_sha256:
