@@ -1,5 +1,5 @@
 {
-  "description": "Spec 012 validation scoring, to be completed with the trained checkpoints' results branches: validation seed 327, the first 1,000 sigma = 1 deg engagements of the MAN2 split and of the held-course split. Classical systems: C'' and C at three times its confirmation threshold (reported).",
+  "description": "Spec 012 validation scoring: the three trained seeds and the two controls on validation seed 327, the first 1,000 sigma = 1 deg engagements of the MAN2 split and of the held-course split. Classical systems: C'' and C at three times its confirmation threshold (reported).",
   "seed": 327,
   "count": 3000,
   "data_split": "train",
@@ -24,5 +24,31 @@
   ],
   "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
   "ekf": "ekf-sa0.00003-p4-r0.5",
-  "checkpoints": []
+  "checkpoints": [
+    {
+      "name": "reg-s1",
+      "branch": "results/gputrain-r-a-s1-42990055824",
+      "dir": "experiments/gputrain-runs/r-a-s1-42990055824"
+    },
+    {
+      "name": "reg-s2",
+      "branch": "results/gputrain-r-a-s2-42990055730",
+      "dir": "experiments/gputrain-runs/r-a-s2-42990055730"
+    },
+    {
+      "name": "reg-s3",
+      "branch": "results/gputrain-r-a-s3-42990059695",
+      "dir": "experiments/gputrain-runs/r-a-s3-42990059695"
+    },
+    {
+      "name": "reg-tenth",
+      "branch": "results/gputrain-r-a-tenth-42990067151",
+      "dir": "experiments/gputrain-runs/r-a-tenth-42990067151"
+    },
+    {
+      "name": "reg-own",
+      "branch": "results/gputrain-r-a-own-42990062999",
+      "dir": "experiments/gputrain-runs/r-a-own-42990062999"
+    }
+  ]
 }
