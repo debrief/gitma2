@@ -16,8 +16,10 @@ on:
 permissions:
   contents: write
 
+# One run per plan at a time; different plans may run side by side (the ledger cannot see a
+# run still in progress, so the plans launched together must fit the cap together).
 concurrency:
-  group: gputrain
+  group: gputrain-${{ github.ref }}
   cancel-in-progress: false
 
 env:
