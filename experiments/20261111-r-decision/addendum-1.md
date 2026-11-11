@@ -33,3 +33,11 @@ Reported: scenarios a second and, from the listed prices, scenarios per dollar.
   improve by less than the gap between the carried model and the bound halves.
 - If model B is slower than 100 scenarios a second on every GPU type within reach, step 2 is
   not run and the write-up says what the hardware allows.
+
+## Paused by the owner, 2026-11-11 (20:19 UTC)
+
+The owner asked for GPU training to pause while a time-late strategy is agreed. Step 1 stopped
+after one probe was launched (model B on a T4, run 43093184330): it had not published after 25
+minutes against a 10-minute limit and was cancelled, so it gives no figure, and why it ran long
+is not established. The other six probes were never launched. Step 2 (the larger model) is not
+run. Nothing in this addendum produced a result.
