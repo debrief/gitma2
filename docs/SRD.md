@@ -237,6 +237,10 @@ and recorded, not asked.
   the gap to the true manoeuvre times. C stays frozen and C″ the standing classical system;
   seeds 324 and 325 are unused. Spec 012 (the scaled end-to-end regressor, a control) runs
   beside it on the owner's Modal account with a budget of $50 in total (2026-11-10).
+- **2026-11-11 (owner, recorded by the agent):** spending on the Modal account within the $50
+  budget of spec 012 needs no further approval: "I've allocated the funding to this project."
+  Agents still register any run before its result and keep the ledger; anything beyond $50, a
+  new account or a new secret remains owner-only.
 
 ## Annexes
 
