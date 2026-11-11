@@ -207,6 +207,20 @@ decision record `experiments/20261111-r-decision/` (plans `configs/regress/r-a-*
 digest; ledger cap 68 h). MAN2 has no held-course rows at the scored prefixes, so a fifth of the
 stream and the held-course reading use `configs/regress/held-course-ranges.json` (research R8).
 Readings: `tma2-rread`. In 012's scoring, also report C with a raised confirmation threshold.
+Three seeds trained (38 T4-hours, about $26; `experiments/20261111-r-runs/`). Validation seed
+327 (`experiments/20261111-r-val/`): held course 1.15–1.19 × the bound in range, 1.8 course, 1.4
+speed (partial; least squares 1.01); after manoeuvres the regressor beats C″ (0.065 against
+0.105, −0.042 [−0.051, −0.034]) and matches the true-manoeuvre solve in range; C at three times
+its threshold is worse than C″ on that fresh seed. Test seed 328 and a held-out-ranges split
+are scored by `rscore.yml` (`configs/rscore/r-a-test*.json`). Owner 2026-11-11: spending within
+$50 is pre-approved; then GPU training paused (addendum 1 not run).
+013 (time-late, Gate T, `specs/013-time-late/`; owner 2026-11-11; specified, not planned): the
+whole track over a period (position, course, speed at every moment, manoeuvre times), 5-second
+bearings, periods cut at random from longer engagements; nothing trained: C″ read as a track, a
+classical full-period re-test, the true-manoeuvre solve and a bound at every moment; the owner's
+bearing-rate thinning idea tested (dropping, normal points, adaptive bins); headroom at 10%
+decides whether a learned full-period proposer follows. Seeds 329 tuning, 330 validation, 331
+test (324, 325 unused).
 
 ## Stack (owner decisions, 2026-10-31)
 
