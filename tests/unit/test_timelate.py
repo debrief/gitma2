@@ -141,3 +141,35 @@ def test_arc_fit_keeps_turns_bounded() -> None:
     th[4] = 10.0  # a start wound round more than once
     fit = fit_arc(t, ox, oy, z, np.ones(t.size, dtype=bool), 0.01, spans, th)
     assert float(np.abs(fit.theta[4::2]).max()) < MAX_TURN
+
+
+def test_soft_uniform_is_a_density() -> None:
+    from tma2.timelate.prior import log_soft_uniform
+
+    x = np.linspace(-5.0, 9.0, 20001)
+    d = np.exp([log_soft_uniform(float(v), 1.0, 3.0) for v in x])
+    assert abs(float(np.sum(d) * (x[1] - x[0])) - 1.0) < 1e-3
+    assert log_soft_uniform(2.0, 1.0, 3.0) > log_soft_uniform(3.5, 1.0, 3.0)
+
+
+def test_evidence_prefers_the_history_with_a_clear_manoeuvre() -> None:
+    import json
+    from pathlib import Path
+
+    from tma2.timelate.prior import ManoeuvrePrior
+    from tma2.timelate.retest import joint_fit, log_evidence
+
+    prior = ManoeuvrePrior.from_ranges(
+        json.loads(Path("configs/timelate/tl-ranges.json").read_text())
+    )
+    t, ox, oy, z, spans, theta, _st = _arc_case()
+    rng = np.random.default_rng(5)
+    sigma = 0.0175
+    pb = (t, ox, oy, z + sigma * rng.standard_normal(t.size), np.ones(t.size, dtype=bool), sigma)
+    kinds = np.array([[True, False], [False, True]])
+    full = joint_fit(pb, theta, spans, free_changes=kinds)
+    one = joint_fit(pb, theta[:6], spans[:1], free_changes=kinds[:1])
+    assert (
+        log_evidence(pb, full, kinds, prior)["total"]
+        > log_evidence(pb, one, kinds[:1], prior)["total"]
+    )

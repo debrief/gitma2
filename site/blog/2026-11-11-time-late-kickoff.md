@@ -91,3 +91,18 @@ So the limit is not the search. Structures with different manoeuvres explain the
 bearings, and what separates them is knowledge of how targets manoeuvre, which a test of fit
 does not use and a model trained on millions of engagements does. That is the likeliest
 reason spec 012's regressor beat C″. Record: `experiments/20261111-tl-retest/` (tuning data).
+
+## Update, 12 November: prior knowledge does not pick the history either
+
+The owner chose to try a classical estimator that uses Annex B's manoeuvre statistics. The
+cheap test came first: under those statistics, is the true manoeuvre history more probable
+than the wrong one the re-test finds? It is not. Where the re-test is badly wrong, the truth
+is clearly ahead in about four periods in ten and the wrong history clearly ahead in about
+four in ten. The true history fits slightly better and pays more than that for its extra
+manoeuvres. The re-test was already close to the most probable history.
+
+Told only the right history, with every time left free, the fit sits at the bound. So the
+problem is neither the solve nor the timing: in about half the difficult periods the bearings
+and the statistics together leave two histories standing, and they put the target in different
+places. An honest system would say so, with candidate tracks and probabilities. Record:
+`experiments/20261112-tl-prior/` (tuning data).

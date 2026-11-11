@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 
@@ -297,3 +298,99 @@ def retest(
             break
     s.log = log
     return s
+
+
+def log_evidence(
+    pb: Problem,
+    s: Structure,
+    kinds: np.ndarray,
+    prior: Any,
+) -> dict[str, float]:
+    """Laplace's approximation to the log evidence of a fitted history, by part: ``fit``
+    (−cost / 2), the prior's three parts at the fit, and ``occam`` (the volume left)."""
+    from .prior import LOG_2PI, log_prior, prior_precision
+
+    t, ox, oy, *_ = pb
+    m = s.spans.shape[0]
+    x = _pack(s.theta, s.spans)
+    mask = np.ones(x.size, dtype=bool)
+    mask[4 : 4 + 2 * m] = kinds.reshape(-1)
+    idx = np.flatnonzero(mask)
+
+    def f(y: np.ndarray) -> np.ndarray:
+        th, sp = _unpack(y, m)
+        return _resid(pb, th, sp)
+
+    r = f(x)
+    jac = _jacobian(f, x, r, idx, m)
+    range0 = float(np.hypot(s.theta[0] - ox[0], s.theta[1] - oy[0]))
+    h = jac.T @ jac + np.diag(prior_precision(prior, m, range0)[idx])
+    _sign, logdet = np.linalg.slogdet(h)
+    out = {"fit": -0.5 * float(r @ r)}
+    out.update(log_prior(prior, s.theta, s.spans, kinds, float(t[-1]), range0))
+    out["occam"] = 0.5 * idx.size * LOG_2PI - 0.5 * float(logdet)
+    out["total"] = float(sum(out.values()))
+    return out
+
+
+def choose_kinds(
+    pb: Problem, s: Structure, prior: Any
+) -> tuple[Structure, np.ndarray, dict[str, float]]:
+    """Each manoeuvre's kind (turn, speed change or both) by evidence, one manoeuvre at a time
+    from all turns; the history refitted with the chosen changes."""
+    m = s.spans.shape[0]
+    kinds = np.zeros((m, 2), dtype=bool)
+    kinds[:, 0] = True
+
+    def fitted(k: np.ndarray) -> tuple[Structure, dict[str, float]]:
+        th = s.theta.copy()
+        th[4:][~k.reshape(-1)] = 0.0
+        for i in range(m):  # a change switched on starts from a small value, not from zero
+            for j in range(2):
+                if k[i, j] and th[4 + 2 * i + j] == 0.0:
+                    th[4 + 2 * i + j] = 0.5 if j == 0 else 1.0
+        g = joint_fit(pb, th, s.spans, free_changes=k)
+        return g, log_evidence(pb, g, k, prior)
+
+    best, ev = fitted(kinds)
+    for i in range(m):
+        for alt in ((False, True), (True, True)):
+            k = kinds.copy()
+            k[i] = alt
+            g, e = fitted(k)
+            if e["total"] > ev["total"]:
+                best, ev, kinds = g, e, k
+    return best, kinds, ev
+
+
+def ensemble(
+    pb: Problem, s: Structure, prior: Any, more: int = 2
+) -> tuple[list[Structure], np.ndarray, np.ndarray]:
+    """Histories near a fitted one, with their posterior weights and the weighted mean track:
+    the history itself, up to ``more`` further additions (taken whatever they save), and the
+    history with each manoeuvre removed in turn. Kinds are chosen by evidence for each.
+    A local stand-in for the posterior over histories: it holds the alternatives the bearings
+    cannot rule out one step from the fit, not the whole space."""
+    members: list[Structure] = [s]
+    cur = s
+    for _ in range(more):
+        new = try_add(pb, cur)
+        if new is None:
+            break
+        members.append(new)
+        cur = new
+    for i in range(s.spans.shape[0]):
+        th = np.delete(s.theta, [4 + 2 * i, 5 + 2 * i])
+        members.append(joint_fit(pb, th, np.delete(s.spans, i, axis=0)))
+    fitted, logw = [], []
+    for mem in members:
+        g, _kinds, ev = choose_kinds(pb, mem, prior)
+        fitted.append(g)
+        logw.append(ev["total"])
+    lw = np.array(logw)
+    w = np.exp(lw - lw.max())
+    w = w / w.sum()
+    mean = np.zeros_like(fitted[0].states)
+    for wi, g in zip(w, fitted, strict=True):
+        mean += wi * g.states
+    return fitted, w, mean

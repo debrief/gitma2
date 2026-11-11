@@ -232,8 +232,13 @@ Full-period re-test on the arc cost (`timelate/retest.py`, `experiments/20261111
 no better than C″ read as a track. It reaches the cost of the true-times fit (median difference 0)
 with a third of manoeuvres missed and 3 to 4 times the range error: the bearings do not separate
 the structures, so a test of fit cannot reach the reference; prior knowledge of manoeuvres
-(Annex B's statistics) is what remains. Next (owner's decision pending): an estimator that uses
-those statistics, classical (posterior over structures) as the control for a learned one.
+(Annex B's statistics) is what remains. Owner 2026-11-11: classical prior first. Measured (`experiments/20261112-tl-prior/`,
+`timelate/prior.py`, `retest.log_evidence`): told only the basin (times free) the arc fit is at the
+bound; but under Annex B's prior the true history is no more probable than the re-test's wrong
+one (each ahead by over 3 nats in about 0.4 of the bad periods), so the re-test was already near
+the most probable history, and a local evidence-weighted ensemble does not help. No estimator
+that names one history reaches the reference. Open (owner): a full sampler over histories
+(candidate tracks with probabilities), the learned full-period model, or write up.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -521,6 +526,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Spec 013: before building a better search, compare its cost with the cost of the fit told the
   truth. If they are equal and the errors are not, the limit is identifiability and no search on
   that cost will help.
+- A Laplace evidence must pair every density with its volume: an extra manoeuvre costs about
+  −7 (leg) and −10 (changes) in log prior and gains about +6 in Occam factor; forgetting either
+  side makes any history win (spec 013).
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).
