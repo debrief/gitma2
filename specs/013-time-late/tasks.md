@@ -14,7 +14,8 @@
 - [ ] T010 `timelate/systems.py`: reference, C″ to the end (frozen C on pair points), one leg, IMM (causal); `tma2-tlsolve`
 - [ ] T011 `timelate/score.py`, `tma2-tlscore`: whole-track errors, determined rows, strata, manoeuvre measures
 - [ ] T012 `timelate.yml`, smoke plan; emulate the command builder locally before launching
-- [x] T013 First checkpoint on seed 329 (local, 24 to 60 periods): **stopped by the rule.** The reference is at about twice its bound on cut periods and 4.5 times on whole engagements; the scoring is sound; the cause is the layer's manoeuvre model (`experiments/20261111-tl-diagnosis/`). Owner's decision needed before T010 onward.
+- [x] T013 First checkpoint on seed 329 (local, 24 to 60 periods): **stopped by the rule.** The reference is at about twice its bound on cut periods and 4.5 times on whole engagements; the scoring is sound; the cause is the layer's manoeuvre model (`experiments/20261111-tl-diagnosis/`). Owner 2026-11-11: add the arc-model solve.
+- [x] T014 `timelate/arc.py` (arc-model least squares, search over starts, kind selection; tests); measured on 60 tuning periods (`experiments/20261111-tl-arc/`): 1.2 to 1.4 × the bound on true times against the chord's 1.9; worse than the chord on C″'s own transitions. The reference is the arc solve on true times.
 
 ## Phase 3: the full-period system
 

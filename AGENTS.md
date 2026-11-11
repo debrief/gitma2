@@ -221,6 +221,14 @@ classical full-period re-test, the true-manoeuvre solve and a bound at every mom
 bearing-rate thinning idea tested (dropping, normal points, adaptive bins); headroom at 10%
 decides whether a learned full-period proposer follows. Seeds 329 tuning, 330 validation, 331
 test (324, 325 unused).
+Build so far (`src/tma2/timelate/`: periods cut in memory, normal points, track read-out, whole-period
+bound, `arc.py`). First checkpoint (`experiments/20261111-tl-diagnosis/`): the chord reference is
+at 1.9 × the bound on cut periods (4.5 on whole engagements) because the layer gives a manoeuvre
+four free unknowns. Owner 2026-11-11: add the arc-model solve (turn at a constant rate, speed
+change at a constant rate; classical). On 60 tuning periods (`experiments/20261111-tl-arc/`) it
+is at 1.2 (kind told) to 1.4 (kind judged) × the bound on true times, but worse than the chord
+on C″'s own transitions: the segmentation is the larger factor (about 3 in median range error).
+Next: the full-period re-test built on the arc cost.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -502,6 +510,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   scorer's prefixes (spec 012 research R8).
 - Spec 011: design for what the gap is made of, not for what changed. False transitions rose
   under mismatch, but misses were the larger part of the gap with or without it.
+- Arc solve (spec 013): a span starts one row before a manoeuvre's `start_index` (the first row
+  already inside it); unbounded least squares winds turns round, so bound them; a cost consistent
+  with the bearing error does not rule out a mirror solution (one turn's sign wrong).
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).

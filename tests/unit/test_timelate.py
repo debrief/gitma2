@@ -90,3 +90,54 @@ def test_pair_points() -> None:
     assert pt.data.n == 10 and np.allclose(pt.data.t[:2], [2.5, 12.5])
     assert np.allclose(pt.data.z, 0.5) and np.isclose(pt.data.sigma, 0.02 / np.sqrt(2))
     assert np.allclose(pt.data.ox[:2], [31.5, 37.5])
+
+
+def _arc_case() -> tuple[np.ndarray, ...]:
+    from tma2.timelate.arc import arc_states
+
+    t = np.arange(0.0, 3600.0, 5.0)
+    # ownship: north at 4 m/s, then east from t = 1500
+    ovx = np.where(t < 1500, 0.0, 4.0)
+    ovy = np.where(t < 1500, 4.0, 0.0)
+    ox = np.concatenate([[0.0], np.cumsum(ovx[:-1] * 5.0)])
+    oy = np.concatenate([[0.0], np.cumsum(ovy[:-1] * 5.0)])
+    spans = np.array([[900.0, 1000.0], [2400.0, 2500.0]])
+    theta = np.array([6000.0, 3000.0, 4.0, 5.0, 1.2, 0.0, 0.0, 2.0])
+    st = arc_states(theta, t, spans)
+    z = np.arctan2(st[:, 0] - ox, st[:, 1] - oy)
+    return t, ox, oy, z, spans, theta, st
+
+
+def test_arc_states_hold_course_and_speed_between_manoeuvres() -> None:
+    t, _ox, _oy, _z, _spans, theta, st = _arc_case()
+    course = np.arctan2(st[:, 2], st[:, 3])
+    speed = np.hypot(st[:, 2], st[:, 3])
+    leg = (t > 1000) & (t < 2400)
+    assert np.allclose(np.cos(course[leg] - theta[2] - theta[4]), 1.0)
+    assert np.allclose(speed[leg], theta[3])
+    assert np.allclose(speed[t >= 2500], theta[3] + theta[7])
+    # position is the integral of velocity (midpoint steps): check a leg by its endpoints
+    i, j = int(np.argmax(t > 1000)), int(np.argmax(t >= 2400))
+    assert np.allclose(st[j, :2] - st[i, :2], st[i, 2:] * (t[j] - t[i]), atol=1e-6)
+
+
+def test_arc_fit_recovers_noise_free_truth_and_the_kind() -> None:
+    from tma2.timelate.arc import solve_arc
+
+    t, ox, oy, z, spans, theta, st = _arc_case()
+    start = st.copy()
+    start[:, :2] = np.stack([ox, oy], axis=1) + 1.3 * (st[:, :2] - np.stack([ox, oy], axis=1))
+    start[:, 2:] *= 1.3
+    fit, free, _n = solve_arc(t, ox, oy, z, np.ones(t.size, dtype=bool), 0.01, spans, start)
+    assert np.allclose(fit.states[:, :2], st[:, :2], atol=1.0)
+    assert free.tolist() == [[True, False], [False, True]]
+
+
+def test_arc_fit_keeps_turns_bounded() -> None:
+    from tma2.timelate.arc import MAX_TURN, fit_arc
+
+    t, ox, oy, z, spans, theta, _st = _arc_case()
+    th = theta.copy()
+    th[4] = 10.0  # a start wound round more than once
+    fit = fit_arc(t, ox, oy, z, np.ones(t.size, dtype=bool), 0.01, spans, th)
+    assert float(np.abs(fit.theta[4::2]).max()) < MAX_TURN

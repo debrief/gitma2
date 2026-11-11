@@ -60,3 +60,20 @@ measures what is left before anything is trained.
   period.
 - **Misses recovered** by the full period, against the causal system's.
 - **Compression trade-off**: accuracy against run time for each form of thinning.
+
+## Update, 11 November (evening): the reference was the weak point
+
+The first checkpoint tripped the plan's stop rule. The reference (the physics layer told the
+true manoeuvre times) sat at about twice its bound on cut periods and 4.5 times on whole
+engagements. The scoring was not at fault: with no target manoeuvre, least squares read as a
+track is at the bound. The cause, tested, is that the layer gives each manoeuvre four free
+unknowns where a turn at constant speed has one.
+
+The owner chose to add a classical arc-model solve: a manoeuvre is a turn at a constant rate
+and a speed change at a constant rate between two times. On 60 tuning periods it reaches 1.2
+times the bound told the kind of manoeuvre and 1.4 judging the kind from the data, with the
+true times. On C″'s own transitions it is no better than the chord and probably worse: a
+stricter model forgives a missed manoeuvre less. So the segmentation remains the larger
+factor, about three in median range error, and the full-period re-test is the next step.
+Records: `experiments/20261111-tl-diagnosis/`, `experiments/20261111-tl-arc/` (tuning data,
+not a gate result).
