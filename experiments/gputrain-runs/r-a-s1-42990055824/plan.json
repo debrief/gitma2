@@ -1,0 +1,27 @@
+{
+  "description": "Spec 012: the carried configuration, training seed 1. 85,000 updates of 256 scenarios (21.8 million scenarios from stream seed 326, a fifth held course), two segments of at most 4 h 50 min on a T4.",
+  "config": {
+    "layers": 8,
+    "width": 256,
+    "heads": 8,
+    "feedforward": 1024,
+    "batch_scenarios": 256,
+    "learning_rate": 0.0003,
+    "warmup_updates": 2000,
+    "weight_decay": 0.01,
+    "val_count": 512,
+    "val_every_updates": 1000,
+    "checkpoint_seconds": 900,
+    "precision": "amp",
+    "held_fraction": 0.2,
+    "stream_seed": 326,
+    "val_seed": 327,
+    "id": "r-a-s1",
+    "limit_seconds": 17400,
+    "seed": 1,
+    "total_updates": 85000,
+    "stream_start": 0
+  },
+  "segments": 2,
+  "segment_limit_seconds": 17400
+}
