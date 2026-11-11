@@ -158,3 +158,20 @@ def test_segments_resume_and_ledger(tmp_path: Path) -> None:
     assert not (tmp_path / "run.prev").exists()
     assert plan_limit_seconds({"segments": 2, "segment_limit_seconds": 18000}) == 2 * 18600
     assert check(10 * 3600, 5 * 3600, 50 * 3600) and not check(46 * 3600, 5 * 3600, 50 * 3600)
+
+
+def test_config_matches_its_schema_type() -> None:
+    """Types once: the dataclass the code uses has exactly the schema type's fields, and every
+    committed plan's config validates against it."""
+    import dataclasses
+    import json
+
+    from tma2.types.generated.tma import RegressorConfig as Schema
+
+    assert {f.name for f in dataclasses.fields(RegressorConfig)} == set(Schema.model_fields)
+    for plan in sorted((ROOT / "configs" / "regress").glob("*.json")):
+        raw = json.loads(plan.read_text())
+        if "config" not in raw:
+            continue
+        cfg = RegressorConfig(**raw["config"])
+        Schema.model_validate(cfg.to_json())

@@ -28,6 +28,7 @@ def main(argv: list[str] | None = None) -> int:
     from tma2.regress.train import config_digest
     from tma2.segment.gate import sha256_file
     from tma2.types import SCHEMA_VERSION
+    from tma2.types.generated.tma import RecordKind, RegressorPredictionHeader
 
     t0 = time.time()
     gp = read_git_provenance()  # before any output
@@ -35,18 +36,18 @@ def main(argv: list[str] | None = None) -> int:
     torch.set_num_threads(4)
     model = load_model(cfg, Path(a.weights))
     recs = predict_split(model, a.inp, a.start, a.count)
-    head = {
-        "record": "header",
-        "schema_version": SCHEMA_VERSION,
-        "estimator": a.name,
-        "mode": "per_timestep",
-        "kind": "regressor-control",
-        "dataset_digest": sha256_file(a.inp),
-        "config_sha256": config_digest(cfg),
-        "weights_sha256": hashlib.sha256(Path(a.weights).read_bytes()).hexdigest(),
-        "git_commit": gp.commit,
-        "git_dirty": gp.dirty,
-    }
+    head = RegressorPredictionHeader(
+        record=RecordKind.header,
+        schema_version=SCHEMA_VERSION,
+        estimator=a.name,
+        mode="per_timestep",
+        kind="regressor-control",
+        dataset_digest=sha256_file(a.inp),
+        config_sha256=config_digest(cfg),
+        weights_sha256=hashlib.sha256(Path(a.weights).read_bytes()).hexdigest(),
+        git_commit=gp.commit,
+        git_dirty=gp.dirty,
+    ).model_dump(mode="json", exclude_none=True)
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:

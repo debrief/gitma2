@@ -10,7 +10,7 @@
 - [x] T006 Score a toy model's predictions with the existing scorer on a small split (proves the path)
 - [x] T007 `regress/reading.py`, `tma2-rread` (held-course efficiency by geometry band; manoeuvring differences) + tests
 - [x] T007a Held-course ranges and a held-course share of the stream (research R8) + test
-- [ ] T008 Schema: `RegressorConfig`, `RegressorRunRecord`, `RegressorDecision`; the prediction header as a schema type
+- [x] T008 Schema 0.33.0: `RegressorConfig` (the dataclass is tested against it) and `RegressorPredictionHeader`; the run and decision records stay plain JSON (written once, read by people)
 
 ## Phase 2: GPU plumbing (no secrets needed)
 
