@@ -120,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
             ),
         ]
         fig, ax = plt.subplots(figsize=(8.0, 3.6))
-        for i, (lab, clean, mm, col) in enumerate(rows):
+        for i, (_lab, clean, mm, col) in enumerate(rows):
             if clean is not None:
                 ax.barh(i + 0.2, clean, 0.38, color=col, alpha=0.45)
                 ax.text(clean + 0.004, i + 0.2, f"{clean:.3f} clean", va="center", fontsize=8)
