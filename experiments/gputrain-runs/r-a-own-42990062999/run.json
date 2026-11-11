@@ -1,0 +1,260 @@
+{
+ "checkpoint_sha256": "47e10c0ea5fc41a6d50abccc73224c009e5fb5d7ed58fc4b632a378777b4e841",
+ "config": {
+  "batch_scenarios": 256,
+  "beta": 0.5,
+  "checkpoint_seconds": 900,
+  "feedforward": 1024,
+  "heads": 8,
+  "held_fraction": 0.2,
+  "held_ranges": "configs/regress/held-course-ranges.json",
+  "id": "r-a-own",
+  "inputs": "ownship_only",
+  "layers": 8,
+  "learning_rate": 0.0003,
+  "limit_seconds": 10800,
+  "max_rows": 720,
+  "patch_rows": 3,
+  "precision": "amp",
+  "ranges": "configs/man2-ranges.json",
+  "seed": 1,
+  "stream_repeat": 0,
+  "stream_seed": 326,
+  "stream_start": 0,
+  "total_updates": 25000,
+  "val_count": 512,
+  "val_every_updates": 1000,
+  "val_seed": 327,
+  "warmup_updates": 2000,
+  "weight_decay": 0.01,
+  "width": 256
+ },
+ "config_sha256": "c520c8ffba743c986eb32767d3a7ff4b044c3078ef70502a3650c35534220d98",
+ "cuda": "13.2",
+ "device": "cuda",
+ "git_dirty": false,
+ "gpu": "Tesla T4",
+ "gpu_seconds": 9389.083236455917,
+ "plan": {
+  "description": "Spec 012 control: the same model given the ownship track only (what the prior alone yields). 25,000 updates, one segment of at most 3 hours.",
+  "segment_limit_seconds": 10800,
+  "segments": 1
+ },
+ "scenarios_per_second": 681.6679863150028,
+ "scenarios_seen": 6400000,
+ "segments": [
+  {
+   "end_update": 25000,
+   "git_commit": "51cc62bec861759da9a2ae86d8afb5bfea4c5d87",
+   "seconds": 9388.734864711761,
+   "start_update": 0,
+   "started": 1794387023.226722
+  }
+ ],
+ "stopped": "complete",
+ "torch": "2.15.0+cu132",
+ "train_seconds": 9388.734864711761,
+ "updates": 25000,
+ "validation": [
+  {
+   "ln_range_abs_median": 0.3979002833366394,
+   "loss": -0.22277597337961197,
+   "seconds": 398.21288681030273,
+   "train_loss": -0.2775076627731323,
+   "update": 1000,
+   "velocity_mps_median": 5.790276527404785
+  },
+  {
+   "ln_range_abs_median": 0.41581523418426514,
+   "loss": -0.2352644018828869,
+   "seconds": 769.0799052715302,
+   "train_loss": -0.2885926067829132,
+   "update": 2000,
+   "velocity_mps_median": 5.786397933959961
+  },
+  {
+   "ln_range_abs_median": 0.38553905487060547,
+   "loss": -0.22392426058650017,
+   "seconds": 1142.2670872211456,
+   "train_loss": -0.2662286162376404,
+   "update": 3000,
+   "velocity_mps_median": 5.826855182647705
+  },
+  {
+   "ln_range_abs_median": 0.38214683532714844,
+   "loss": -0.23175658658146858,
+   "seconds": 1514.3524942398071,
+   "train_loss": -0.2461891621351242,
+   "update": 4000,
+   "velocity_mps_median": 5.718140602111816
+  },
+  {
+   "ln_range_abs_median": 0.397382527589798,
+   "loss": -0.2239077053964138,
+   "seconds": 1888.8731064796448,
+   "train_loss": -0.28102993965148926,
+   "update": 5000,
+   "velocity_mps_median": 5.723573684692383
+  },
+  {
+   "ln_range_abs_median": 0.38558125495910645,
+   "loss": -0.23235725238919258,
+   "seconds": 2261.233803987503,
+   "train_loss": -0.239437997341156,
+   "update": 6000,
+   "velocity_mps_median": 5.790838718414307
+  },
+  {
+   "ln_range_abs_median": 0.40609869360923767,
+   "loss": -0.22940178960561752,
+   "seconds": 2632.186516046524,
+   "train_loss": -0.3150794208049774,
+   "update": 7000,
+   "velocity_mps_median": 5.706171989440918
+  },
+  {
+   "ln_range_abs_median": 0.43082261085510254,
+   "loss": -0.22154797613620758,
+   "seconds": 3003.746406555176,
+   "train_loss": -0.2635354697704315,
+   "update": 8000,
+   "velocity_mps_median": 5.672161102294922
+  },
+  {
+   "ln_range_abs_median": 0.4029306173324585,
+   "loss": -0.22689400240778923,
+   "seconds": 3375.0009264945984,
+   "train_loss": -0.29891344904899597,
+   "update": 9000,
+   "velocity_mps_median": 5.710212707519531
+  },
+  {
+   "ln_range_abs_median": 0.40639305114746094,
+   "loss": -0.23026425391435623,
+   "seconds": 3745.9282236099243,
+   "train_loss": -0.29389750957489014,
+   "update": 10000,
+   "velocity_mps_median": 5.735927581787109
+  },
+  {
+   "ln_range_abs_median": 0.4206448793411255,
+   "loss": -0.22095073014497757,
+   "seconds": 4118.519384860992,
+   "train_loss": -0.2473883479833603,
+   "update": 11000,
+   "velocity_mps_median": 5.707864284515381
+  },
+  {
+   "ln_range_abs_median": 0.416839599609375,
+   "loss": -0.23183820396661758,
+   "seconds": 4491.25389623642,
+   "train_loss": -0.25915566086769104,
+   "update": 12000,
+   "velocity_mps_median": 5.699455261230469
+  },
+  {
+   "ln_range_abs_median": 0.4054858684539795,
+   "loss": -0.2236412800848484,
+   "seconds": 4863.208475351334,
+   "train_loss": -0.24895229935646057,
+   "update": 13000,
+   "velocity_mps_median": 5.742738723754883
+  },
+  {
+   "ln_range_abs_median": 0.4111812114715576,
+   "loss": -0.22700045257806778,
+   "seconds": 5237.601644515991,
+   "train_loss": -0.21414422988891602,
+   "update": 14000,
+   "velocity_mps_median": 5.7334113121032715
+  },
+  {
+   "ln_range_abs_median": 0.3937763571739197,
+   "loss": -0.22658046707510948,
+   "seconds": 5610.5117623806,
+   "train_loss": -0.28688082098960876,
+   "update": 15000,
+   "velocity_mps_median": 5.743897438049316
+  },
+  {
+   "ln_range_abs_median": 0.39255303144454956,
+   "loss": -0.22940747067332268,
+   "seconds": 5987.808848619461,
+   "train_loss": -0.31701549887657166,
+   "update": 16000,
+   "velocity_mps_median": 5.73988151550293
+  },
+  {
+   "ln_range_abs_median": 0.4038015305995941,
+   "loss": -0.2284298837184906,
+   "seconds": 6364.0671055316925,
+   "train_loss": -0.2600743770599365,
+   "update": 17000,
+   "velocity_mps_median": 5.771927356719971
+  },
+  {
+   "ln_range_abs_median": 0.39766818284988403,
+   "loss": -0.22589724510908127,
+   "seconds": 6744.682848453522,
+   "train_loss": -0.2855517268180847,
+   "update": 18000,
+   "velocity_mps_median": 5.721017837524414
+  },
+  {
+   "ln_range_abs_median": 0.4144594073295593,
+   "loss": -0.2285422906279564,
+   "seconds": 7122.22957777977,
+   "train_loss": -0.26973411440849304,
+   "update": 19000,
+   "velocity_mps_median": 5.750058174133301
+  },
+  {
+   "ln_range_abs_median": 0.41352516412734985,
+   "loss": -0.22819897904992104,
+   "seconds": 7494.01426243782,
+   "train_loss": -0.24172423779964447,
+   "update": 20000,
+   "velocity_mps_median": 5.749652862548828
+  },
+  {
+   "ln_range_abs_median": 0.4080411195755005,
+   "loss": -0.22810621187090874,
+   "seconds": 7868.78600692749,
+   "train_loss": -0.26801982522010803,
+   "update": 21000,
+   "velocity_mps_median": 5.747193813323975
+  },
+  {
+   "ln_range_abs_median": 0.404818058013916,
+   "loss": -0.22862309217453003,
+   "seconds": 8257.96739935875,
+   "train_loss": -0.2550254464149475,
+   "update": 22000,
+   "velocity_mps_median": 5.73007869720459
+  },
+  {
+   "ln_range_abs_median": 0.40725409984588623,
+   "loss": -0.23062220588326454,
+   "seconds": 8642.58739566803,
+   "train_loss": -0.27756401896476746,
+   "update": 23000,
+   "velocity_mps_median": 5.726171016693115
+  },
+  {
+   "ln_range_abs_median": 0.40613165497779846,
+   "loss": -0.23002363741397858,
+   "seconds": 9015.731501102448,
+   "train_loss": -0.22006365656852722,
+   "update": 24000,
+   "velocity_mps_median": 5.729948997497559
+  },
+  {
+   "ln_range_abs_median": 0.4057517349720001,
+   "loss": -0.2303885817527771,
+   "seconds": 9388.733315706253,
+   "train_loss": -0.21727700531482697,
+   "update": 25000,
+   "velocity_mps_median": 5.726565361022949
+  }
+ ]
+}
