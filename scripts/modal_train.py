@@ -33,8 +33,10 @@ app = modal.App("gitma2-regress", image=image)
 volume = modal.Volume.from_name("gitma2-regress", create_if_missing=True)
 
 
-@app.function(gpu="T4", timeout=MAX_SEGMENT_SECONDS + STARTUP_SECONDS, volumes={"/vol": volume})
-def segment(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
+GPUS = ("T4", "L4", "A10", "L40S", "A100-40GB")  # a plan's "gpu" (default T4)
+
+
+def _segment(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
     import os
 
     import torch
@@ -53,11 +55,28 @@ def segment(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
     return json.dumps(rec), (work / "checkpoint.safetensors").read_bytes()
 
 
+# One statically configured function per GPU type (a per-call override is documented for
+# deployed functions; this form needs nothing beyond what the first runs already used).
+SEGMENTS = {
+    g: app.function(
+        gpu=g,
+        timeout=MAX_SEGMENT_SECONDS + STARTUP_SECONDS,
+        volumes={"/vol": volume},
+        name="segment_" + g.lower().replace("-", "_"),
+        serialized=True,
+    )(_segment)
+    for g in GPUS
+}
+
+
 @app.local_entrypoint()
 def main(plan: str, out: str, run_name: str = "", commit: str = "unknown") -> None:
     text = Path(plan).read_text()
     name = run_name or Path(plan).stem
-    rec, ckpt = segment.remote(text, name, commit)
+    gpu = json.loads(text).get("gpu", "T4")
+    if gpu not in SEGMENTS:
+        raise SystemExit(f"plan gpu {gpu!r}: expected one of {', '.join(GPUS)}")
+    rec, ckpt = SEGMENTS[gpu].remote(text, name, commit)
     dest = Path(out)
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "run.json").write_text(json.dumps(json.loads(rec), indent=1, sort_keys=True) + "\n")
