@@ -63,3 +63,8 @@ much of the gap that closes. What is left is the headroom a better segmenter cou
   325), and the same by range band.
 - **Track plots** of the three systems on a representative engagement, at zig + 10 and + 20 min.
 - **Operational table**: metres, degrees, knots and the share of engagements settled.
+
+## Updates
+
+- 2026-11-11: the study stopped on the tuning seed with no gate. The robust confirmation test
+  did no more than a raised threshold. See [the write-up](/blog/2026/11/11/robust-segmenter).

@@ -185,6 +185,13 @@ untold σ do nothing; true nominations do not help, so confirmation over-accepts
 in `tests/unit/test_segment_robust.py`), run by `tma2-hpredict --segmentation c2r
 --robust-confirm`; `--segments-from` applies a clean split's segmentation (FR-003). Schema
 0.32.0. Owner fixed R-b's 10% threshold. Pilot and yield plans: `configs/headroom/gr-*.json`.
+**011 closed at tuning (owner, 2026-11-11): no Gate R.** On 150 engagements of seed 323
+(`experiments/20261111-gr-choice/`; pilot `20261110-gr-pilot/`) the Huber test removed 28% of
+false transitions and so did doubling C's threshold; no variant was separated, and by the rule
+declared beforehand the robust test is not carried. A clean-data-quality segmenter would close
+0.63 of the gap and still sit 43% above the true-manoeuvre reference (C″ is twice it on clean
+data): misses, about 30% of true changes, are the larger part. C stays frozen, C″ standing;
+seeds 324, 325 unused. Write-up `site/blog/2026-11-11-robust-segmenter.md`.
 012 (scaled end-to-end regressor control, `specs/012-scaled-regressor/`; owner 2026-11-10: start
 now beside 011, cap one month of Modal free credit, about 50 T4-hours; specified, not planned):
 a direct sequence-to-state model, about 10^7 scenarios on the fly (seed 326 stream, 327
@@ -195,6 +202,11 @@ Owner 2026-11-10 (later): the budget is $50 in total (free credit plus up to $20
 not hours. Secrets exist and authenticate (`modal-check/**` workflow). CPU build done
 (`src/tma2/regress/`, `tma2-rtrain`, `tma2-rpredict`, `scripts/modal_train.py`,
 `gputrain/**` → `.github/workflows/gputrain.yml` with the ledger `regress/ledger.py`).
+Throughput 635 scenarios/s on a T4 at about $0.66 an hour (`experiments/20261110-r-pilot/`);
+decision record `experiments/20261111-r-decision/` (plans `configs/regress/r-a-*.json` bound by
+digest; ledger cap 68 h). MAN2 has no held-course rows at the scored prefixes, so a fifth of the
+stream and the held-course reading use `configs/regress/held-course-ranges.json` (research R8).
+Readings: `tma2-rread`. In 012's scoring, also report C with a raised confirmation threshold.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -466,3 +478,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   ONNX conformance on pull requests that cannot affect them (job `changes`).
 - 20 concurrent CI jobs: a 32-job prediction run blocks every other workflow's merge job until
   it drains; queue long runs one at a time when a result is waited on.
+- Workflow plans: an empty object is falsy (`if r.get('x')` dropped C-r's default settings and
+  30 shards failed in minutes), and double quotes inside a bash-quoted `python3 -c "..."` are
+  stripped. Emulate the workflow's command builder through bash against the real plan before
+  launching, and schedule a failure check 20 minutes after every launch, not only a collection.
+- A model built after physics-layer code in the same process inherits a double default dtype:
+  force the dtype in the module (`Regressor.float()`), and test under the changed default.
+- Check that a reading has rows before registering it: MAN2 has no held-course rows at the
+  scorer's prefixes (spec 012 research R8).
+- Spec 011: design for what the gap is made of, not for what changed. False transitions rose
+  under mismatch, but misses were the larger part of the gap with or without it.

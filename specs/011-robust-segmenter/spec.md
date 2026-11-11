@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft
+**Status**: Closed at tuning (owner, 2026-11-11): no Gate R. Write-up
+`site/blog/2026-11-11-robust-segmenter.md`; records `experiments/20261110-gr-diagnosis/`,
+`20261110-gr-pilot/`, `20261111-gr-choice/`.
 
 **Input**: User description: the Gate H write-up's recommended follow-on, with the owner's go-ahead
 of 2026-11-10. Nothing is trained. Gate H's comparison on C″'s own segmentation showed that the

@@ -34,3 +34,9 @@ Order is dependency order. [P] can run beside its neighbours.
 - [ ] T023 Test (seed 325), once; record; registered breakdowns
 - [ ] T024 Panel review; `review.md`; verdict
 - [ ] T025 Write-up, slides post (FR-040), AGENTS.md; kickoff post dated paragraph
+
+## Closed at tuning (owner, 2026-11-11)
+
+- [x] T005 not run: the choice run's transition counts answered the design question
+- [x] T020–T024 not run: no Gate R (the robust test was not carried; the owner chose to publish)
+- [x] T025 Write-up `site/blog/2026-11-11-robust-segmenter.md`, slides post and deck, AGENTS.md, SRD §9
