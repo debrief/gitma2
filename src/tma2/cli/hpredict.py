@@ -25,8 +25,9 @@ from tma2.data.provenance import read_git_provenance
 
 CHUNK = 16  # as cli.segment, so C's segmentation is the one tma2-g2predict computes
 KNOTS = 12
+KIND_NAMES = {0: "steady", 1: "transition", 2: "unknown"}
 
-Task = list[tuple[int, int, list[dict[str, Any]]]]
+Task = list[tuple[int, int, list[dict[str, Any]], Any]]
 
 
 def load_truth(path: str, pack: str) -> tuple[dict[str, Any], Any, Any]:
@@ -172,7 +173,19 @@ def _task(args: tuple[Any, ...]) -> Task:
             if np.isfinite(st).all():
                 rcs = (float(o.range[b]), float(o.course[b]), float(o.speed[b]))
                 out[i][q] = _row(d, k, st, rcs, bool(o.plausible[b]), o.cov[b].numpy())
-    return [(j, int(m["index"]), r) for j, m, r in zip(ords, metas, out, strict=True)]
+    dump = None
+    if seg != "truth" and c2 is not None and c2.get("dump"):
+        dump = [
+            {
+                int(k): [[iv.kind, iv.start, iv.end, bool(iv.open)] for iv in ivs]
+                for k, ivs in g.items()
+            }
+            for g in sg
+        ]
+    return [
+        (j, int(m["index"]), r, None if dump is None else dump[i])
+        for i, (j, m, r) in enumerate(zip(ords, metas, out, strict=True))
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -182,6 +195,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--segmentation", default="truth", choices=("truth", "c2", "c2r"))
     ap.add_argument("--plan", help="the Gate H plan (robust settings; C'' for --segmentation c2)")
     ap.add_argument("--mismatch-truth", help="the split's truth side file (ceilings only)")
+    ap.add_argument(
+        "--dump-segmentation", help="c2/c2r: write each prefix's intervals here (ndjson.gz)"
+    )
     ap.add_argument("--name", help="the estimator name in the header (default: kind@segmentation)")
     ap.add_argument("--robust-confirm", help="c2r: C-r's settings (a JSON file or object)")
     ap.add_argument(
@@ -283,6 +299,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         if a.segments_from:
             c2["segments_from"] = a.segments_from
+        c2["dump"] = bool(a.dump_segmentation)
         code = code_digest()
         if code != c2["code_sha256"]:
             print(
@@ -357,7 +374,7 @@ def main(argv: list[str] | None = None) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         f.write(canonical_json(h) + "\n")
-        for j, index, rows in sorted(recs, key=lambda r: r[0]):
+        for j, index, rows, _seg in sorted(recs, key=lambda r: r[0]):
             f.write(
                 canonical_json(
                     {
@@ -371,6 +388,31 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 + "\n"
             )
+    if a.dump_segmentation:
+        import gzip
+
+        dp = Path(a.dump_segmentation)
+        dp.parent.mkdir(parents=True, exist_ok=True)
+        with gzip.open(dp, "wt", encoding="utf-8") as g:
+            for j, index, _rows, seg in sorted(recs, key=lambda r: r[0]):
+                for k, ivs in sorted((seg or {}).items()):
+                    rec = {
+                        "record": "segmentation",
+                        "ordinal": j,
+                        "scenario_index": index,
+                        "vessel": "target",
+                        "prefix_row": k,
+                        "intervals": [
+                            {
+                                "kind": KIND_NAMES[kind],
+                                "start_index": s0,
+                                "end_index": e0,
+                                "open": op,
+                            }
+                            for kind, s0, e0, op in ivs
+                        ],
+                    }
+                    g.write(json.dumps(rec) + "\n")
     print(f"wrote {out}: {len(recs)} scenarios [{time.time() - t0:.0f} s]")
     return 0
 
