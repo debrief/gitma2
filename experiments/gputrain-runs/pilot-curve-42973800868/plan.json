@@ -1,0 +1,26 @@
+{
+  "description": "Spec 012 pilot, step 2: the carried configuration for a fifth of its schedule (17,000 updates, 4.35 million scenarios, about 2 hours on a T4), to see the learning curve and that training is stable. Validation loss only; nothing is scored.",
+  "config": {
+    "layers": 8,
+    "width": 256,
+    "heads": 8,
+    "feedforward": 1024,
+    "batch_scenarios": 256,
+    "learning_rate": 0.0003,
+    "warmup_updates": 2000,
+    "weight_decay": 0.01,
+    "val_count": 512,
+    "val_every_updates": 1000,
+    "checkpoint_seconds": 900,
+    "precision": "amp",
+    "held_fraction": 0.2,
+    "stream_seed": 326,
+    "val_seed": 327,
+    "id": "pilot-curve",
+    "limit_seconds": 9000,
+    "seed": 1,
+    "total_updates": 17000
+  },
+  "segments": 1,
+  "segment_limit_seconds": 9000
+}
