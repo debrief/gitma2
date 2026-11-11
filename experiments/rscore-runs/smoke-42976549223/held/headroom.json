@@ -1,0 +1,134 @@
+{
+  "bound": "nominal",
+  "condition": "off",
+  "dataset_digest": "e1ed10c62bd17f784bbaf2c961d0634520aa8d84377b4d96d9902e92bb4dd914",
+  "dataset_seed": "327",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "estimators": {
+    "ekf": {
+      "answered": 1.0,
+      "efficiency_settled_course": 1.4216756307165277,
+      "efficiency_settled_range": 1.491780304300832,
+      "efficiency_settled_speed": 1.5236519629130292,
+      "median_course": 2.184396949407628,
+      "median_range": 0.06389569748485385,
+      "median_speed": 0.6048306018178458,
+      "p90_course": 11.474286137665876,
+      "p90_range": 0.17349889165063503,
+      "p90_speed": 3.223033373608186
+    },
+    "imm": {
+      "answered": 1.0,
+      "efficiency_settled_course": 3.6057574315970036,
+      "efficiency_settled_range": 1.541235284003765,
+      "efficiency_settled_speed": 2.4405179669253845,
+      "median_course": 6.327132077262972,
+      "median_range": 0.06611264837247241,
+      "median_speed": 1.168523184939028,
+      "p90_course": 19.840437319928423,
+      "p90_range": 0.15374521233994307,
+      "p90_speed": 2.905564194879058
+    },
+    "one_leg": {
+      "answered": 1.0,
+      "efficiency_settled_course": 0.97460180819118,
+      "efficiency_settled_range": 0.9207669800726546,
+      "efficiency_settled_speed": 0.998650931263761,
+      "median_course": 1.2604571096635138,
+      "median_range": 0.03139884546062091,
+      "median_speed": 0.4336719899635012,
+      "p90_course": 7.268406363250429,
+      "p90_range": 0.11018376664633701,
+      "p90_speed": 1.8037818547204547
+    },
+    "oracle": {
+      "answered": 1.0,
+      "efficiency_settled_course": 0.97460180819118,
+      "efficiency_settled_range": 0.9207669800726546,
+      "efficiency_settled_speed": 0.998650931263761,
+      "median_course": 1.2604571096635138,
+      "median_range": 0.03139884546062091,
+      "median_speed": 0.4336719899635012,
+      "p90_course": 7.268406363250429,
+      "p90_range": 0.11018376664633701,
+      "p90_speed": 1.8037818547204547
+    },
+    "reg-pilot": {
+      "answered": 1.0,
+      "efficiency_settled_course": 9.511768306120283,
+      "efficiency_settled_range": 3.78935823656191,
+      "efficiency_settled_speed": 5.838794718364206,
+      "median_course": 10.657335401434773,
+      "median_range": 0.23387599493400596,
+      "median_speed": 3.018875032653274,
+      "p90_course": 36.65252888982905,
+      "p90_range": 0.37892814824996324,
+      "p90_speed": 9.802655345031798
+    }
+  },
+  "git_commit": "dd237f61de56c363de88fd3e22308495fec378fd",
+  "git_dirty": false,
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "level": 0.95,
+  "operational": {
+    "ekf": {
+      "median_course_deg": 2.184396949407628,
+      "median_range_m": 1524.7119976769698,
+      "median_speed_kt": 0.6048306018178458,
+      "settled_by_10min": 0.5,
+      "settled_by_15min": 0.5833333333333334,
+      "settled_by_20min": 0.6363636363636364,
+      "settled_by_5min": 0.4166666666666667
+    },
+    "imm": {
+      "median_course_deg": 6.327132077262972,
+      "median_range_m": 1146.032282193838,
+      "median_speed_kt": 1.168523184939028,
+      "settled_by_10min": 0.5833333333333334,
+      "settled_by_15min": 0.6666666666666666,
+      "settled_by_20min": 0.7272727272727273,
+      "settled_by_5min": 0.5
+    },
+    "one_leg": {
+      "median_course_deg": 1.2604571096635138,
+      "median_range_m": 736.7594838590303,
+      "median_speed_kt": 0.4336719899635012,
+      "settled_by_10min": 0.8333333333333334,
+      "settled_by_15min": 0.8333333333333334,
+      "settled_by_20min": 1.0,
+      "settled_by_5min": 0.75
+    },
+    "oracle": {
+      "median_course_deg": 1.2604571096635138,
+      "median_range_m": 736.7594838590303,
+      "median_speed_kt": 0.4336719899635012,
+      "settled_by_10min": 0.8333333333333334,
+      "settled_by_15min": 0.8333333333333334,
+      "settled_by_20min": 1.0,
+      "settled_by_5min": 0.75
+    },
+    "reg-pilot": {
+      "median_course_deg": 10.657335401434773,
+      "median_range_m": 5354.01123870631,
+      "median_speed_kt": 3.018875032653274,
+      "settled_by_10min": 0.16666666666666666,
+      "settled_by_15min": 0.16666666666666666,
+      "settled_by_20min": 0.18181818181818182,
+      "settled_by_5min": 0.16666666666666666
+    }
+  },
+  "ordinals": [
+    0,
+    12
+  ],
+  "predictions": {
+    "reg-pilot": "c9a564732b8f4ab75e5a684388926d72a91bf6fdd0d8d1ef204378254da98743"
+  },
+  "record": "headroom",
+  "resamples": 2000,
+  "rows": 47,
+  "rows_all_answer": 47,
+  "scenarios": 12,
+  "seconds": 16.7,
+  "split": "tuning"
+}
