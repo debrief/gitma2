@@ -488,3 +488,6 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   scorer's prefixes (spec 012 research R8).
 - Spec 011: design for what the gap is made of, not for what changed. False transitions rose
   under mismatch, but misses were the larger part of the gap with or without it.
+- Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
+  refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
+  minute apart, or re-run the refused workflow run (the plan and its digest are untouched).
