@@ -25,6 +25,7 @@
 
 ## Phase 4: runs
 
+- [x] T029 Scoring pipeline: `.github/workflows/rscore.yml`, `scripts/rscore_job.sh`, `scripts/rscore_push.sh`, plans `configs/rscore/`; smoke run 42976549223 (pilot checkpoint; pipeline check only)
 - [ ] T030 Pilot (at most 8 T4-hours): throughput first, then learning curves; apply the reduction rule
 - [ ] T031 Three seeds; the ownship-only and tenth-of-data controls
 - [ ] T032 Predict and score on validation seed 327; then test seed 328 once per trained seed (C″, references, bound on CI)
