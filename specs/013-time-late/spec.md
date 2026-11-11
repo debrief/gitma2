@@ -27,6 +27,8 @@ helps is unknown.
 - 2026-11-11: bearings at 5-second intervals.
 - 2026-11-11: the period is not the analyst's to choose. Modelled here as a random portion of
   a longer scenario (the owner offered this, or the scenarios as they are; see Assumptions).
+- 2026-11-11: errors on 5-second bearings are independent with today's σ per bearing as the
+  primary condition, and a correlated version is scored beside it.
 - 2026-11-11: GPU training is paused; nothing is trained in this spec.
 
 ## Background
@@ -236,10 +238,11 @@ engagements, and the run time of each.
   owner offered this or the scenarios as they are; cutting is adopted because the present
   scenarios all contain an ownship zig across the line of sight near the middle, which an
   analyst's period need not. Uncut scenarios are scored beside as one stratum.
-- **5-second errors**: independent between bearings, with the same σ per bearing as today (1°
-  or 2°), as the primary condition; the correlated condition of spec 010 (60 s) is scored
-  beside it. Independent errors at twice the rate nearly double the information, which a real
-  sensor may not deliver; this is the owner's to correct before the decision record.
+- **5-second errors** (owner, 2026-11-11): independent between bearings, with the same σ per
+  bearing as today (1° or 2°), as the primary condition; the correlated condition of spec 010
+  (60 s) is scored beside it. Independent errors at twice the rate nearly double the
+  information, which a real sensor may not deliver; the side-by-side shows how much the answer
+  depends on it.
 - "Undetermined" is decided from the solution's own covariance for the systems and from the
   bound for the score; the threshold is fixed in the plan.
 - The 10% threshold in T-b repeats Gate H's and Gate R's; it is a proposal until the decision
