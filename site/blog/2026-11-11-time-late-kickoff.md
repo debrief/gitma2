@@ -77,3 +77,17 @@ stricter model forgives a missed manoeuvre less. So the segmentation remains the
 factor, about three in median range error, and the full-period re-test is the next step.
 Records: `experiments/20261111-tl-diagnosis/`, `experiments/20261111-tl-arc/` (tuning data,
 not a gate result).
+
+## Update, 11 November (late): a better search does not help
+
+The full-period re-test was built on the arc model: refine every manoeuvre's times, add a
+manoeuvre where the whole-period fit demands one, remove one it does not support. On the same
+60 tuning periods it is no better than C″ read as a track (median range error 0.11 to 0.14
+against 0.11; the reference told the true times is at 0.035). It fits the bearings exactly as
+well as the fit told the truth, with a third of the manoeuvres missed. A missed manoeuvre
+costs almost nothing in fit and a factor of five in range.
+
+So the limit is not the search. Structures with different manoeuvres explain the same
+bearings, and what separates them is knowledge of how targets manoeuvre, which a test of fit
+does not use and a model trained on millions of engagements does. That is the likeliest
+reason spec 012's regressor beat C″. Record: `experiments/20261111-tl-retest/` (tuning data).

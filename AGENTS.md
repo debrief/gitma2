@@ -228,7 +228,12 @@ four free unknowns. Owner 2026-11-11: add the arc-model solve (turn at a constan
 change at a constant rate; classical). On 60 tuning periods (`experiments/20261111-tl-arc/`) it
 is at 1.2 (kind told) to 1.4 (kind judged) × the bound on true times, but worse than the chord
 on C″'s own transitions: the segmentation is the larger factor (about 3 in median range error).
-Next: the full-period re-test built on the arc cost.
+Full-period re-test on the arc cost (`timelate/retest.py`, `experiments/20261111-tl-retest/`):
+no better than C″ read as a track. It reaches the cost of the true-times fit (median difference 0)
+with a third of manoeuvres missed and 3 to 4 times the range error: the bearings do not separate
+the structures, so a test of fit cannot reach the reference; prior knowledge of manoeuvres
+(Annex B's statistics) is what remains. Next (owner's decision pending): an estimator that uses
+those statistics, classical (posterior over structures) as the control for a learned one.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -513,6 +518,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Arc solve (spec 013): a span starts one row before a manoeuvre's `start_index` (the first row
   already inside it); unbounded least squares winds turns round, so bound them; a cost consistent
   with the bearing error does not rule out a mirror solution (one turn's sign wrong).
+- Spec 013: before building a better search, compare its cost with the cost of the fit told the
+  truth. If they are equal and the errors are not, the limit is identifiability and no search on
+  that cost will help.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).

@@ -155,6 +155,8 @@ def fit_arc(
                 step = step * (MAX_ANGLE_STEP / big)
             trial = theta.copy()
             trial[idx] += step
+            trial[4::2] = np.clip(trial[4::2], -MAX_TURN + 1e-6, MAX_TURN - 1e-6)
+            trial[5::2] = np.clip(trial[5::2], -MAX_SPEED_CHANGE + 1e-6, MAX_SPEED_CHANGE - 1e-6)
             if _allowed(trial):
                 r2 = resid(trial)
                 c2 = float(r2 @ r2)
