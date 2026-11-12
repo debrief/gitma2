@@ -26,7 +26,13 @@ SEARCH_FILES = (
 )
 
 
-STUDY_FILES = ("controls.py", "counts.py", "run2.py", "thin.py")  # spec 014's additions
+STUDY_FILES = (
+    "controls.py",
+    "counts.py",
+    "run2.py",
+    "smooth.py",
+    "thin.py",
+)  # spec 014's additions
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -48,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--out", required=True, help="output prefix")
     ap.add_argument("--thin", help="spec 014: overrides the plan's settings.thinning")
+    ap.add_argument("--systems", help="spec 014: overrides the plan's settings.systems")
     a = ap.parse_args(argv)
     from tma2.data.provenance import read_git_provenance
 
@@ -82,6 +89,8 @@ def main(argv: list[str] | None = None) -> int:
     run2 = plan.get("runner") == "run2"
     if a.thin:
         plan["settings"]["thinning"] = a.thin
+    if a.systems:
+        plan["settings"]["systems"] = a.systems.split(",")
     extra: dict[str, Any] = {}
     if run2:
         from tma2.timelate.run2 import run_shard2
@@ -89,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         ranges = json.loads(Path(plan["prior"]).read_text())
         kinds = {"v1": (1, "annex-b"), "v2": (2, "annex-b"), "flat": (2, "flat")}
         priors = {k: ManoeuvrePrior.from_ranges(ranges, *vk) for k, vk in kinds.items()}
-        arrays, recs = run_shard2(periods, priors, c_params, c2, plan["settings"])
+        arrays, recs = run_shard2(periods, priors, c_params, c2, plan["settings"], ekf)
         extra = {
             "runner": "run2",
             "prior_kinds": canonical_json({k: list(vk) for k, vk in kinds.items()}),

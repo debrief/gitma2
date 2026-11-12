@@ -217,3 +217,27 @@ def test_thinning_forms() -> None:
     assert worst(robust) < worst(plain)
     with pytest.raises(ValueError):
         thin(pb, "wavelet:3")
+
+
+def test_smoother_equals_the_filter_at_the_end_and_does_not_hurt_on_a_held_course() -> None:
+    from tma2.references.classical import BearingData
+    from tma2.timelate.smooth import ekf_rts, rows_from_points
+
+    n = 360
+    t = np.arange(n) * 10.0
+    ox = np.where(t < 900, 4.0 * t, 3600.0)
+    oy = np.where(t < 900, 0.0, 4.0 * (t - 900.0))
+    tx, ty = 2000.0 + 3.0 * t, 9000.0 - 2.0 * t
+    rng = np.random.default_rng(4)
+    sigma = 0.0175
+    z = np.arctan2(tx - ox, ty - oy) + sigma * rng.standard_normal(n)
+    d = BearingData(t, ox, oy, z, np.ones(n, dtype=np.uint8), 95, sigma, 0)
+    sm, fl = ekf_rts(d, 0.00003, 4.0, 0.5)
+    assert np.isfinite(fl[-1]).all() and np.allclose(sm[-1], fl[-1])
+    assert np.isfinite(sm).all() and not np.isfinite(fl[:90]).any()
+    k = np.isfinite(fl[:, 0])
+    truth = np.stack([tx, ty], axis=1)
+    e_s = np.hypot(*(sm[k, :2] - truth[k]).T)
+    e_f = np.hypot(*(fl[k, :2] - truth[k]).T)
+    assert float(np.median(e_s)) <= float(np.median(e_f))
+    assert rows_from_points(sm, 2, 2 * n).shape == (2 * n, 4)

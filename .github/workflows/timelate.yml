@@ -5,6 +5,8 @@ name: Time-late (spec 013)
 #   seed, count the seed and engagements generated per split (5-second data)
 #   splits      {<split>: {start, periods}}: sigma = 1 deg ordinals cut into periods
 #   shard_size  periods per job
+#   thinning, systems  (spec 014, optional) override the plan's settings for this run
+# A plan split may name a `condition` (a spec 010 mismatch condition id) for its data.
 # Jobs: solve (one per split shard: C'' as a track, the evidence search, the reference) ->
 # score (tma2-tlscore). Results: results/timelate-<name>-<run id>. CPU only; no secrets.
 
@@ -61,16 +63,23 @@ jobs:
           r = json.load(open(sys.argv[1]))
           p = json.load(open(r["plan"]))
           s = p["splits"][sys.argv[2]]
-          print(r["plan"], r["seed"], r["count"], s["ranges"], s["heldout_ranges"], p["data_split"])
+          print(r["plan"], r["seed"], r["count"], s["ranges"], s["heldout_ranges"], p["data_split"], s.get("condition", "clean"), r.get("thinning", "plan"), ",".join(r.get("systems", [])) or "plan")
           PY
-          read -r PLAN SEED COUNT RANGES HELDOUT DSPLIT < "$RUNNER_TEMP/gen"
-          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data"
+          read -r PLAN SEED COUNT RANGES HELDOUT DSPLIT CONDITION THIN SYSTEMS < "$RUNNER_TEMP/gen"
+          MISMATCH=()
+          if [ "$CONDITION" != "clean" ]; then MISMATCH=(--mismatch "configs/gateh/conditions.json#$CONDITION"); fi
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data" "${MISMATCH[@]}"
+          echo "THIN=$THIN" >> "$GITHUB_ENV"
+          echo "SYSTEMS=$SYSTEMS" >> "$GITHUB_ENV"
           echo "PLAN=$PLAN" >> "$GITHUB_ENV"
           echo "TRUTH=$RUNNER_TEMP/data/$DSPLIT.f32pack" >> "$GITHUB_ENV"
       - name: Solve
         run: |
           mkdir -p "$RUNNER_TEMP/shards"
-          uv run tma2-tlsolve --in "$TRUTH" --plan "$PLAN" --split "${{ matrix.split }}" --start "${{ matrix.start }}" --count "${{ matrix.count }}" --out "$RUNNER_TEMP/shards/${{ matrix.split }}.${{ matrix.shard }}"
+          EXTRA=()
+          if [ "$THIN" != "plan" ]; then EXTRA+=(--thin "$THIN"); fi
+          if [ "$SYSTEMS" != "plan" ]; then EXTRA+=(--systems "$SYSTEMS"); fi
+          uv run tma2-tlsolve --in "$TRUTH" --plan "$PLAN" --split "${{ matrix.split }}" --start "${{ matrix.start }}" --count "${{ matrix.count }}" --out "$RUNNER_TEMP/shards/${{ matrix.split }}.${{ matrix.shard }}" "${EXTRA[@]}"
       - uses: actions/upload-artifact@v4
         with:
           name: shard-${{ matrix.split }}-${{ matrix.shard }}

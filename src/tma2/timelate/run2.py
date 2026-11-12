@@ -16,16 +16,19 @@ from .arc import arc_states, fit_arc, fit_arc_search, solve_arc, start_from_trac
 from .bound import period_bound
 from .controls import c2_refit
 from .periods import Period
+from .points import fixed_points
 from .prior import ManoeuvrePrior
 from .retest import Problem, Structure, joint_fit, log_evidence
 from .run import nominal_starts
 from .score import row_errors, strata_of, truth_rows
 from .search import History, candidate_set, evidence_search
+from .smooth import ekf_rts, rows_from_points
 from .systems import solve_systems
 from .thin import thin
 
 BASE = ("c2", "one-leg", "history-fixed", "history-fit", "history-map", "history-best")
-OPTIONAL = ("search", "search2", "search-flat", "c2-refit")
+OPTIONAL = ("search", "search2", "search-flat", "c2-refit", "ekf-rts", "ekf")
+POINT_ROWS = 2
 
 
 def consistent(cost: float, n: int) -> bool:
@@ -91,6 +94,7 @@ def run_shard2(
     c_params: SegmentParameters,
     c2: dict[str, Any],
     settings: dict[str, Any],
+    ekf: tuple[float, float, float] | None = None,
 ) -> tuple[dict[str, np.ndarray], list[dict[str, Any]]]:
     """``priors``: "v1" (Gate T's), "v2" (corrected) and "flat". Arrays: ``period``, ``bound``,
     ``stratum`` and ``true_range`` at the scored rows and ``err_<system>`` [rows, 4]. One
@@ -126,6 +130,14 @@ def run_shard2(
         took: dict[str, float] = {"layer": t_layer}
         cc = res["c2-end-nofade"][i]
         tracks["c2"], tracks["one-leg"] = cc.states, res["one-leg"][i].states
+        if ekf is not None and ("ekf-rts" in chosen or "ekf" in chosen):
+            t0 = time.perf_counter()
+            sm, fl = ekf_rts(fixed_points(x, POINT_ROWS).data, *ekf)
+            took["ekf-rts"] = time.perf_counter() - t0
+            if "ekf-rts" in chosen:
+                tracks["ekf-rts"] = rows_from_points(sm, POINT_ROWS, x.rows)
+            if "ekf" in chosen:
+                tracks["ekf"] = rows_from_points(fl, POINT_ROWS, x.rows)
         sp = [s for s in x.spans() if s["end_index"] > s["start_index"]]
         spt = np.array(
             [[t[max(s["start_index"] - 1, 0)], t[s["end_index"]]] for s in sp], dtype=np.float64
