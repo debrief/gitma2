@@ -214,6 +214,11 @@ speed (partial; least squares 1.01); after manoeuvres the regressor beats C″ (
 its threshold is worse than C″ on that fresh seed. Test seed 328 and a held-out-ranges split
 are scored by `rscore.yml` (`configs/rscore/r-a-test*.json`). Owner 2026-11-11: spending within
 $50 is pre-approved; then GPU training paused (addendum 1 not run).
+**Test record `experiments/20261111-r-test/`** (seed 328; relaunched after two runs stalled without
+ever creating a job): held course partial on all seeds (range 1.13–1.16, course 1.75, speed 1.42;
+worst in the best geometry); after manoeuvres the regressor beats C″ on all seeds (0.066 against
+0.105, −0.039 [−0.045, −0.033]; forecast wrong) and on held-out ranges (0.114 against 0.151); a
+tenth of the data loses little. Not yet reviewed by the panel; write-up and slides owed.
 013 (time-late, Gate T, `specs/013-time-late/`; owner 2026-11-11; specified, not planned): the
 whole track over a period (position, course, speed at every moment, manoeuvre times), 5-second
 bearings, periods cut at random from longer engagements; nothing trained: C″ read as a track, a

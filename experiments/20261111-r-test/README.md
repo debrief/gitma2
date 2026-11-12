@@ -69,3 +69,50 @@ rows, not how strong the model is.
 The held-course half of the held-out split has 3 rows from 2 engagements (the held-out ranges
 file is a MAN2 file; almost nothing holds course at the scored prefixes): **no reading**. The
 plan should not have included it; recorded as a planning error, nothing is read from it.
+
+### Registered reading 2: after manoeuvres, test seed 328 (collected 02:37 UTC)
+
+`test/man2/` (run 43125383838; rows on `results/rscore-r-a-test-man2-43125383838`). Median
+relative range error on rows both systems answer; difference regressor minus other [95%]:
+
+| Regressor | C″ | Difference | IMM | Difference | C at 3 × threshold |
+| --- | --- | --- | --- | --- | --- |
+| Seed 1: 0.066 | 0.105 | −0.039 [−0.045, −0.033] | 0.416 | −0.348 [−0.372, −0.330] | 0.118 |
+| Seed 2: 0.067 | 0.105 | −0.038 [−0.044, −0.033] | 0.416 | −0.346 [−0.370, −0.328] | 0.118 |
+| Seed 3: 0.067 | 0.105 | −0.038 [−0.044, −0.032] | 0.416 | −0.347 [−0.370, −0.329] | 0.118 |
+| A tenth of the data: 0.071 | 0.105 | −0.033 [−0.040, −0.028] | 0.416 | −0.343 | 0.118 |
+| Ownship only: 0.335 | 0.105 | +0.230 [+0.217, +0.244] | 0.416 | −0.075 [−0.101, −0.052] | 0.118 |
+
+All rows (scorer's medians): regressor 0.066 to 0.067 in range, 9.5° to 9.7° in course, 1.34
+to 1.36 kt in speed; C″ 0.105, 12.7°, 1.48 kt; the true-manoeuvre chord solve 0.062, 6.9°,
+0.95 kt; IMM 0.579; one leg 0.596. 90th percentile of range error: regressor 0.217, the
+true-manoeuvre solve 0.243, C″ 0.488. By true-range quartile (seed 1 against C″): 0.062 / 0.070,
+0.062 / 0.097, 0.065 / 0.112, 0.075 / 0.157: the margin is small at short range and grows
+with range.
+
+**Outcome: the regressor beats C″ on the test seed on all three seeds** (−0.038 to −0.039,
+intervals well clear of zero), as on validation (−0.042). **The forecast ("worse than C″,
+better than the IMM") was wrong in its first half**, on validation and now on test. The
+model matches the true-manoeuvre chord solve in range (0.066 against 0.062) and has a
+shorter tail, and is worse than it in course and speed.
+
+### What this does and does not support
+
+- A direct learned model, with no physics layer and no segmenter, is better than the
+  standing classical system after manoeuvres, on a fresh seed and on ranges it never saw.
+  That is the first clear result for learning in this project.
+- It is a control, never carried: no covariance, no declared physics layer, no stated
+  manoeuvre times, and 1.75 times the bound in course on held course, where least squares
+  is at 1.0.
+- Why it wins is not established here. Spec 013's tuning results (`../20261111-tl-retest/`,
+  `../20261112-tl-prior/`) give the likeliest reason: about half the difficult cases have two
+  manoeuvre histories the bearings cannot separate; C″ commits to one, and a model trained to
+  minimise error learns to hedge between them and to use the simulator's ranges. Its
+  advantage growing with range, its shorter tail, and its sub-bound efficiency in poor
+  geometry all fit that reading; none of them tests it.
+- "Matches the true-manoeuvre solve" is weaker than it sounds: that solve is the chord
+  model, which spec 013 measured at about twice the bound.
+- A tenth of the data loses little (0.071 against 0.066), so more data or a bigger model
+  (addendum 1, not run) is unlikely to move this much.
+- Seeds 2 and 3 stopped at 91% and 97% of the planned updates (decision-record deviation);
+  the three seeds agree to 0.001.
