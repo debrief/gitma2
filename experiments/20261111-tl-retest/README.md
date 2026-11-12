@@ -45,9 +45,10 @@ only come from what is known beforehand about how targets manoeuvre (Annex B: le
 40 minutes, turns of 30° to 120°, turn rates, speeds). The causal segmenter, the re-test and
 any other test of fit with a preference for fewer manoeuvres share this limit.
 
-This also explains spec 012's validation result, where the learned regressor matched the
-true-manoeuvre chord solve and beat C″: trained on ten million engagements, it carries the
-manoeuvre statistics; C″ does not.
+A possible link to spec 012, where the learned regressor beat C″: it is trained on ten
+million engagements and carries the simulator's statistics; C″ does not. This is not
+tested, and spec 012's panel (`../20261111-r-test/review.md`) found a range prior the more
+likely source of that margin.
 
 So the headroom above C″ is real (a factor of three to four to the reference) but most of
 the reference's advantage is knowledge of the manoeuvre times, which no system has. How much

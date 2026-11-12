@@ -67,8 +67,9 @@ True manoeuvres found by the re-test: 0.67 with an ownship turn after them, 0.66
   is not a fair target for anything.
 - What a system can still do is (a) report that ambiguity, as two or three candidate tracks
   with probabilities, and (b) give the average that minimises error. A model trained on
-  millions of engagements does (b) without being asked; that remains the likeliest reading
-  of spec 012's result. A proper sampler over histories would do both classically; the
+  millions of engagements may do (b) without being asked; whether spec 012's regressor does
+  is untested, and its panel found a range prior the more likely source of its margin
+  (`../20261111-r-test/review.md`). A proper sampler over histories would do both classically; the
   local ensemble here does neither.
 
 ## Limits

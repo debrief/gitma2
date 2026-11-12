@@ -9,8 +9,9 @@
   No result branch exists. The test seed has not been generated or scored by them.
 - 2026-11-12 00:15 UTC: relaunched by pushing this commit to the same trigger branches (the
   plan is chosen by the branch name, so the name cannot change). Nothing under
-  `src/tma2/regress`, the scorer, the workflow, the plans or C's code differs between
-  7f77188 and this commit (`git diff --stat` is empty for those paths).
+  `src/tma2/regress`, the CLIs, the scorer, the workflow, `configs/rscore` or C's code differs
+  between 7f77188 and this commit (the only additions are spec 013 files; corrected after the
+  panel, which checked).
 - If an orphaned run later starts and publishes, the result of the relaunch is the record
   and the duplicate is noted here, not read.
 
@@ -116,3 +117,52 @@ shorter tail, and is worse than it in course and speed.
   (addendum 1, not run) is unlikely to move this much.
 - Seeds 2 and 3 stopped at 91% and 97% of the planned updates (decision-record deviation);
   the three seeds agree to 0.001.
+
+## Corrections after the panel (2026-11-12; `review.md`, three approve with findings)
+
+The readings above stand. These statements above are withdrawn or narrowed:
+
+- **"The first clear result for learning"** is narrowed to: *a prior-informed estimator
+  trained to minimise the scored error beats a prior-free fit, in median range error*. The
+  regressor knows the simulator's ranges, speeds and manoeuvre statistics; C″ uses none.
+- **"On ranges it never saw"** is withdrawn. The held-out split differs only in initial
+  range (20–30 km against 2–20 km), its realised ranges overlap training, and 276 of the 400
+  engagements contribute rows. There the margin by true-range quartile is −0.054, −0.055,
+  −0.044 and −0.014 [−0.050, +0.025]: it vanishes at the far end, where on the test seed it
+  grows with range. The regressor does not match the true-manoeuvre solve there (0.115
+  against 0.084) and its speed is not better than C″'s (+0.26 kt [−0.13, +0.56]).
+- **The hedging explanation** is withdrawn as "likeliest". It is untested, spec 013's
+  evidence is 57 tuning periods of other data, and the far-range collapse above is what a
+  range prior predicts and hedging does not. Leading candidates, untested: a range prior and
+  shrinkage toward it.
+- **"More data or a bigger model is unlikely to move this"**: the tenth-of-data control
+  varies data only. It says nothing about capacity, and on held course a tenth costs 1.22
+  against 1.13.
+- **"The three seeds agree to 0.001"** was the training loop's own validation figure. On the
+  test seed they differ by up to 0.03 on held course (1.13, 1.16, 1.13). The tenth-of-data
+  control also stopped early (41,512 of 42,500 updates).
+
+Registered items the first write-up left out (test seed 328, seed 1 against C″, rows both
+answer, [95%]): range −0.039 [−0.045, −0.033]; **in metres −657 m [−765, −565]**; course
+−3.1° [−4.0, −2.3]; speed −0.14 kt [−0.23, −0.05]. Efficiency against the bound on settled
+rows after manoeuvres, regressor seeds / C″ / true-manoeuvre solve: range 1.71–1.73 / 2.52
+/ 1.65; **course 3.40–3.57 / 3.19 / 2.04**; speed 2.48–2.55 / 2.63 / 1.86. In course
+efficiency the regressor is worse than C″. The three seeds are reported singly, not pooled;
+the naive estimator was not in this scorer's output (a gap against FR-020).
+
+Not registered, read off the test seed, and to be treated as description only: the scorer's
+all-row medians, the 90th percentiles, the comparison with the chord solve, C at three times
+its threshold, the range-quartile and geometry-quartile patterns. The IMM column uses fewer
+rows (5,949); on those rows the regressor is at 0.068. The ownship-only model equals the IMM
+on the held-out split, so the IMM comparison says nothing about the regressor.
+
+Plan digests (SHA-256; committed at 7f77188 with the validation results, before any test
+result, unchanged since; they were not bound in the decision record):
+`configs/rscore/r-a-test.json` `e27862aa…5ea8b0c`, `r-a-test-heldout.json` `5e0cd254…4c1783b`.
+`headroom.json` labels the split "tuning": a label from the scorer's default, the data are
+seed 328.
+
+**For a reader who would use this**: the regressor gives no uncertainty and no manoeuvre
+times, is 1.75 times the bound in course on a steady target (3.2 in the best geometry), and
+is below the bound in poor geometry, which means it is biased toward what the simulator
+usually does. It is a control. Nothing here supports a claim outside the simulator.

@@ -218,7 +218,13 @@ $50 is pre-approved; then GPU training paused (addendum 1 not run).
 ever creating a job): held course partial on all seeds (range 1.13–1.16, course 1.75, speed 1.42;
 worst in the best geometry); after manoeuvres the regressor beats C″ on all seeds (0.066 against
 0.105, −0.039 [−0.045, −0.033]; forecast wrong) and on held-out ranges (0.114 against 0.151); a
-tenth of the data loses little. Not yet reviewed by the panel; write-up and slides owed.
+tenth of the data loses little. **Panel round 1 (`review.md`): three approve with findings.**
+Readings stand; narrowed to "a prior-informed, error-minimising estimator beats a prior-free fit in
+median range": in course efficiency after manoeuvres it is worse than C″ (3.40 against 3.19), the
+held-out split varies initial range only and the margin vanishes in its far quartile, and the
+hedging explanation is withdrawn (a range prior is the leading candidate, untested). Controls owed
+before any learning claim or GPU spend: C″ plus the prior (precision-weighted with the ownship-only
+model), hedged C″. Write-up and slides owed.
 013 (time-late, Gate T, `specs/013-time-late/`; owner 2026-11-11; specified, not planned): the
 whole track over a period (position, course, speed at every moment, manoeuvre times), 5-second
 bearings, periods cut at random from longer engagements; nothing trained: C″ read as a track, a
@@ -534,6 +540,11 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - A Laplace evidence must pair every density with its volume: an extra manoeuvre costs about
   −7 (leg) and −10 (changes) in log prior and gains about +6 in Occam factor; forgetting either
   side makes any history win (spec 013).
+- Spec 012 panel: a learned model that knows the simulator's prior must be compared with a
+  classical estimator given the same prior, not with a prior-free fit; a held-out split that moves
+  one scalar is not "unseen"; report efficiency per slice beside medians (the regressor's course
+  efficiency was worse than C″'s while its range median was better); do not carry an explanation
+  from one spec's tuning data into another's result.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).
