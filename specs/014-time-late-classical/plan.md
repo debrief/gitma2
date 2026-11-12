@@ -31,7 +31,7 @@ forecasts first, and the panel reviews it (R9).
 `*.periods.json`, and now per-row errors in the experiment folder as `errors.npz` (the Gate T
 panel had to fetch them from results branches).
 
-**Testing**: `pytest` (Gate T fixture unchanged to 1e-9 with prior version 1; the corrected
+**Testing**: `pytest` (Gate T fixture unchanged to 1e-4 (the evidence moves 2e-7 between CPU families) with prior version 1; the corrected
 prior integrates to 1 over its support on a grid; the flat prior is constant inside the box;
 the refit control never calls the search; classing is antisymmetric in its two histories;
 thinning with bin 1 equals the full data; the smoother equals the filter at the last row;

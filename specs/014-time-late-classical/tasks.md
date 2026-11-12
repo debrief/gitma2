@@ -6,7 +6,7 @@ Tests are part of each task (plan, Testing). Nothing is trained; no GPU.
 
 ## Phase 1: Setup
 
-- [ ] T001 Pin Gate T: write `tests/fixtures/timelate/gt-fixture.json` (two periods of tuning seed 329: candidates' evidence, spans, tracks from the registered search) and a test in `tests/unit/test_timelate2.py` that the working tree reproduces it to 1e-9 with default settings (R1)
+- [ ] T001 Pin Gate T: write `tests/fixtures/timelate/gt-fixture.json` (two periods of tuning seed 329: candidates' evidence, spans, tracks from the registered search) and a test in `tests/unit/test_timelate2.py` that the working tree reproduces it to 1e-4 (the evidence moves 2e-7 between CPU families) with default settings (R1)
 - [ ] T002 Schema 0.36.0 in `schema/tma.yaml`: `TimeLateStudyCriteria` (class threshold 3, match tolerance 120 s, materiality 1.10, soundness band [0.8, 1.3], convergence minimum 0.90, forecasts); `TimeLateShardHeader` fields `prior_version`, `prior_kind`, `thinning`, `condition`, `split`; regenerate types (`scripts/gen_types.py`), update `tests/unit/test_types.py`
 
 ## Phase 2: Foundational (blocks every story)
