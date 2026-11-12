@@ -7,10 +7,11 @@ two run configurations, the three ranges files, the search's code (`a40eb130…`
 them is edited after this; later additions are new files here. No criterion may change once a
 validation result exists.
 
-**Status at this commit: committed while the workflow's smoke run on the tuning seed is still
-being made to pass.** No validation or test data exist. If the smoke run forces a change to the
-search's code, the digests here are updated in a later commit, before validation is launched;
-the launch commit is the one that counts, and it is named in the validation record.
+**Status:** the workflow's smoke run on the tuning seed passed at 6da75cf (run 43200187567, four
+periods a split; two earlier attempts failed on the shifted ranges file and on a shell detail in
+the scoring step, neither in the search's code). Every digest below was re-checked against the
+files at this commit and is unchanged since the record was first committed (9ada270).
+Validation is launched from this commit; it is the one that counts.
 
 ## Fixed here
 

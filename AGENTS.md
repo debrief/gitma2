@@ -263,8 +263,14 @@ as candidate tracks) measured on 99 fresh tuning periods (ordinals 60 onward;
 as good started from nothing as from C″; true history with the prior 0.018; best of the top three
 candidates in hindsight 0.028. The search is not the limit (its best history has evidence at or
 above the truth's in 97 of 99); the evidence and real ambiguity are. Candidate probabilities are
-not calibrated. Next: CLIs and `timelate.yml`, register Gate T (against C″ as a track, a
-prior-shift split, a calibration criterion fixed first), validation 330, test 331. Figures for the eventual slides:
+not calibrated. Gate T tooling (PR 32): `tma2-tlsolve`, `tma2-tlscore`, `timelate/**` →
+`.github/workflows/timelate.yml` with runs in `configs/timelate/runs/`, `timelate/run.py`,
+`timelate/gate.py`, a shifted-prior split (`tl-shift-ranges.json`), one leg, IMM and EKF as tracks;
+schema 0.34.0. **Gate T registered** (2026-11-12): plan `configs/timelate/tl-a.json` (`6f15a246…`,
+never edited), decision `experiments/20261112-gt-decision/` (T-a soundness, T-b C″ ÷ search above
+1.10, T-c the same above 1.00 under the shifted prior, T-d candidates, T-e headroom; temperature 3);
+SRD §5 row proposed (owner merges). Validation seed 330 launched (`timelate/tl-a-val`); test seed
+331 only after T-a is read on validation. Figures for the eventual slides:
 `scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
 
 ## Stack (owner decisions, 2026-10-31)

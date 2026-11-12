@@ -38,5 +38,5 @@
 - [ ] T044 Panel review; verdict
 - [ ] T045 Write-up, slides post (FR-050), AGENTS.md
 - [x] T018 Owner 2026-11-12: continue classically. `timelate/search.py` (evidence-scored search, candidate tracks; test). Measured on 99 fresh tuning periods (`experiments/20261112-tl-search/`): 0.042 against C″'s 0.088 (2.12 [1.62, 2.96]). Probabilities not calibrated.
-- [ ] T019 `tma2-tlsolve`, `tma2-tlscore`, `timelate.yml`; schema types for a period's candidate tracks.
-- [ ] T020 Register Gate T (SRD row for the owner; criteria incl. a prior-shift split and a calibration measure), decision record; validation 330; test 331; panel; write-up; slides.
+- [x] T019 `tma2-tlsolve`, `tma2-tlscore`, `timelate.yml` (smoke run 43200187567 green); schema 0.34.0 (`TimeLateShardHeader`, `GateTCriteria`); one leg, IMM, EKF as tracks.
+- [ ] T020 (registered 2026-11-12, `experiments/20261112-gt-decision/`; validation launched) Register Gate T (SRD row for the owner; criteria incl. a prior-shift split and a calibration measure), decision record; validation 330; test 331; panel; write-up; slides.
