@@ -241,6 +241,15 @@ and recorded, not asked.
   budget of spec 012 needs no further approval: "I've allocated the funding to this project."
   Agents still register any run before its result and keep the ledger; anything beyond $50, a
   new account or a new secret remains owner-only.
+- **2026-11-12 (owner, recorded by the agent):** spec 013 (time-late) stops at tuning and is
+  written up; no Gate T row is added to §5. On tuning seed 329 the bearings and Annex B's
+  manoeuvre statistics leave the manoeuvre history ambiguous in about half the difficult
+  periods, so no estimator that names one history reaches the true-history reference
+  (`experiments/20261111-tl-retest/`, `experiments/20261112-tl-prior/`). The time-late goal is
+  re-scoped from one track to candidate tracks with probabilities (a new spec). The GPU pause
+  of 2026-11-11 is lifted for time-late learning: "you now have freedom to use GPU in support
+  of the time-late learning", within the same $50 total; runs are registered before their
+  results and the ledger is kept. Seeds 330 and 331 are unused.
 
 ## Annexes
 
