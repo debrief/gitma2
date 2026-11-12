@@ -1,0 +1,71 @@
+{
+ "description": "Draft of spec 014's study plan (tuning seed 333 only).",
+ "data_split": "train",
+ "splits": {
+  "man2": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "Annex B's manoeuvre statistics (the search's prior is right)"
+  },
+  "shift": {
+   "ranges": "configs/timelate/tl-shift-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "shorter legs (mean 15 min), smaller turns (15 to 75 degrees), faster turn rates, more speed changes: the search's prior is wrong"
+  },
+  "quiet": {
+   "ranges": "configs/timelate/tl-quiet-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "the target holds course for the whole engagement (spec 014 FR-009)"
+  },
+  "man2-corr": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "Annex B data with correlated bearing errors (60 s, half the variance)",
+   "condition": "corr-central"
+  },
+  "man2-out": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "Annex B data with 2% outlying bearings (10 sd)",
+   "condition": "out-central"
+  }
+ },
+ "prior": "configs/timelate/tl-ranges.json",
+ "gh_plan": "configs/gateh/gh-a.json",
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 5,
+  "score_every": 6,
+  "systems": [
+   "search",
+   "search2",
+   "search-flat",
+   "c2-refit",
+   "ekf-rts",
+   "ekf"
+  ]
+ },
+ "temperature": 3.0,
+ "top": 3,
+ "runner": "run2",
+ "reference": {
+  "sound": "history-fixed",
+  "tight_bound": 0.05
+ },
+ "study": {
+  "class_threshold": 3.0,
+  "match_tolerance_s": 120.0,
+  "materiality": 1.1,
+  "soundness_band": [
+   0.8,
+   1.3
+  ],
+  "convergence_min": 0.9
+ },
+ "references": {
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "record": "experiments/20261110-gh-refs",
+  "note": "frozen for 10-second MAN2 real-time rows; run here on 10-second points, smoothed backwards (ekf-rts) and read as a track; not re-tuned"
+ }
+}
