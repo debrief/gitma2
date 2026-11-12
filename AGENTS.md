@@ -308,6 +308,9 @@ follow-on is the owner's choice and no GPU run starts before it. Write-up
 `site/blog/2026-11-12-gate-t.md`, slides `2026-11-12-gate-t-slides.md` (figures by
 `scripts/research/gt_charts.py` and `tl_charts.py`). Seeds 329–332 used; 324, 325 unused; the next
 fresh seed is 333.
+**Owner 2026-11-12: follow-on is classical work first (spec 014), nothing trained, no GPU**: the
+owed studies and controls above and the ambiguity share; a learned whole-period model is decided
+after it.
 
 ## Stack (owner decisions, 2026-10-31)
 

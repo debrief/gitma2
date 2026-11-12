@@ -276,6 +276,15 @@ and recorded, not asked.
   check is added on the shifted split; validation moves to fresh seed 332 and test seed 331
   stays untouched. The §5 row above is the re-registered one
   (`experiments/20261112-gt2-decision/`). Seed 330 is spent.
+- **2026-11-12 (owner, recorded by the agent):** Gate T is decided by the panel
+  (`experiments/20261112-gt2/review.md`; five approve with findings). The owner chose the
+  follow-on: classical work first (spec 014), nothing trained and no GPU run. It delivers what
+  spec 013 owed (the bearing-rate thinning study, periods where the target never manoeuvres
+  with a false-manoeuvre rate, correlated and outlying bearing errors, manoeuvre counts and
+  timing as outputs, a smoothed IMM line), the two controls the panel asked for (C″'s
+  transitions refitted with the arc model and prior; the search with a flat prior) and the
+  share of periods that are ambiguous in the bearings themselves, so that Gate T's upper limit
+  on headroom becomes an attainable figure. A learned whole-period model is decided after it.
 
 ## Annexes
 
