@@ -173,3 +173,25 @@ def test_evidence_prefers_the_history_with_a_clear_manoeuvre() -> None:
         log_evidence(pb, full, kinds, prior)["total"]
         > log_evidence(pb, one, kinds[:1], prior)["total"]
     )
+
+
+def test_evidence_search_finds_a_clear_manoeuvre_from_nothing() -> None:
+    import json
+    from pathlib import Path
+
+    from tma2.timelate.prior import ManoeuvrePrior
+    from tma2.timelate.search import candidate_set, evidence_search
+
+    prior = ManoeuvrePrior.from_ranges(
+        json.loads(Path("configs/timelate/tl-ranges.json").read_text())
+    )
+    t, ox, oy, z, spans, theta, st = _arc_case()
+    rng = np.random.default_rng(7)
+    sigma = 0.0175
+    pb = (t, ox, oy, z + sigma * rng.standard_normal(t.size), np.ones(t.size, dtype=bool), sigma)
+    best, seen = evidence_search(pb, theta[:4], np.zeros((0, 2)), prior, steps=4)
+    assert best.fit.spans.shape[0] >= 1
+    assert float(np.abs(best.fit.spans[:, 0] - spans[0, 0]).min()) < 180.0
+    cands = candidate_set(seen)
+    assert abs(sum(p for _h, p in cands) - 1.0) < 1e-9
+    assert cands[0][0].evidence == max(h.evidence for h in seen if np.isfinite(h.evidence))

@@ -258,6 +258,11 @@ and recorded, not asked.
   read as a track (0.057 against 0.113, ratio 1.99 [1.01, 3.11], 57 tuning periods;
   `experiments/20261112-tl-prior/`). Some ambiguity is real (about a third of the wrong
   periods). Whether spec 013 still stops at tuning is put back to the owner.
+- **2026-11-12 (owner, recorded by the agent):** on the corrected evidence, spec 013 continues
+  classically: a search over manoeuvre histories scored by evidence under Annex B's prior, on
+  CPU, taken to Gate T against C″ read as a track; its output is candidate tracks with
+  probabilities. It is the control any learned time-late model must beat; GPU spending is held
+  until it exists. The entry of the same date stopping spec 013 at tuning is superseded.
 
 ## Annexes
 
