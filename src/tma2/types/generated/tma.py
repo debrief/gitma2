@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.34.0"
+version = "0.35.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -3114,7 +3114,9 @@ class GateTCriteria(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
-    reference_efficiency_band: list[float] = Field(default=..., description="""T-a: band for the range efficiency of the true history fitted to the bearings alone.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    reference_efficiency_band: Optional[list[float]] = Field(default=None, description="""T-a, first registration (stopped at validation): band for the range efficiency of the true history fitted to the bearings alone from the truth.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    reference_tight_efficiency_band: Optional[list[float]] = Field(default=None, description="""T-a, re-registered 2026-11-12: band for the range efficiency of the true history fitted from neutral starts with its times held, on rows whose bound on relative range is below 0.05.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    shift_calibration_gap_max: Optional[float] = Field(default=None, description="""T-d on the shift split (re-registered): the first candidate's mean stated probability minus the share of periods in which it is the true history, at most this in size.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
     search_ratio_min: float = Field(default=..., description="""T-b: the 95% interval of C″'s median period range error over the search's lies above this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
     shift_ratio_min: float = Field(default=..., description="""T-c: the same ratio on the shifted-prior split lies above this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
     truth_in_set_min: float = Field(default=..., description="""T-d: share of periods whose true history is among the first three candidates, at least this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })

@@ -13,12 +13,12 @@ from tma2.references.ekf import ekf_predict
 from tma2.references.imm import ImmParams, imm_predict
 from tma2.types.generated.tma import SegmentParameters
 
-from .arc import fit_arc, solve_arc, start_from_track
+from .arc import fit_arc, fit_arc_search, solve_arc, start_from_track
 from .bound import period_bound
 from .periods import Period
 from .points import fixed_points
 from .prior import ManoeuvrePrior
-from .retest import joint_fit, log_evidence
+from .retest import Problem, Structure, joint_fit, log_evidence
 from .score import row_errors, truth_rows
 from .search import candidate_set, evidence_search
 from .systems import solve_systems
@@ -28,6 +28,9 @@ SYSTEMS = (
     "search",
     "search-c2",
     "search-none",
+    "history-fixed",
+    "history-fit",
+    "history-map",
     "truth-fit",
     "truth-map",
     "one-leg",
@@ -37,6 +40,50 @@ SYSTEMS = (
 POINT_ROWS = 2
 NOMINAL_RANGE_M = 8000.0
 NOMINAL_SPEED = 5.0
+
+
+def nominal_starts(pb: Problem) -> list[np.ndarray]:
+    """Four states that use nothing but the first bearing: a nominal range along it, a nominal
+    speed, and a course in each quadrant."""
+    _t, ox, oy, z, v, _sigma = pb
+    z0 = float(z[v][0]) if v.any() else 0.0
+    return [
+        np.array(
+            [
+                ox[0] + NOMINAL_RANGE_M * np.sin(z0),
+                oy[0] + NOMINAL_RANGE_M * np.cos(z0),
+                c0,
+                NOMINAL_SPEED,
+            ]
+        )
+        for c0 in (0.0, 1.57, 3.14, 4.71)
+    ]
+
+
+def history_reference(
+    pb: Problem, spans: np.ndarray, kinds: np.ndarray, prior: ManoeuvrePrior
+) -> tuple[np.ndarray, Structure, Structure]:
+    """The reference: the true manoeuvre history (when, how long, which changes) and nothing
+    else of the truth. Fitted to the bearings from the nominal starts (lowest cost kept) with
+    the times held, which is exactly what the known-history bound assumes (the first track
+    returned: the soundness check); then with every time free, to the bearings alone and to
+    the posterior. Not started at the true state: a fit started there returns it on rows the
+    bearings determine weakly (Gate T's first validation run)."""
+    t, ox, oy, z, v, sigma = pb
+    m = spans.shape[0]
+    best = None
+    for q0 in nominal_starts(pb):
+        th0 = np.concatenate([q0, np.zeros(2 * m)])
+        for i in range(m):  # a change the history has starts off zero
+            th0[4 + 2 * i] = 0.5 if kinds[i, 0] else 0.0
+            th0[5 + 2 * i] = 1.0 if (kinds[i, 1] and not kinds[i, 0]) else 0.0
+        f, _n = fit_arc_search(t, ox, oy, z, v, sigma, spans, th0, kinds if m else None)
+        if best is None or f.cost < best.cost:
+            best = f
+    assert best is not None
+    fit = joint_fit(pb, best.theta, spans, free_changes=kinds)
+    post = joint_fit(pb, fit.theta, fit.spans, free_changes=kinds, prior=prior)
+    return best.states, fit, post
 
 
 def _filter_track(rows: list[dict[str, Any]], first_point: int, n_rows: int) -> np.ndarray:
@@ -104,6 +151,9 @@ def run_shard(
         ft = joint_fit(pb, th, spt, free_changes=kt)
         fm = joint_fit(pb, ft.theta, ft.spans, free_changes=kt, prior=prior)
         tracks["truth-fit"], tracks["truth-map"] = ft.states, fm.states
+        fixed, hf, hm = history_reference(pb, spt, kt, prior)
+        tracks["history-fixed"] = fixed
+        tracks["history-fit"], tracks["history-map"] = hf.states, hm.states
         rec: dict[str, Any] = {
             "ordinal": int(x.ordinal),
             "first_row": int(x.first),
@@ -111,6 +161,9 @@ def run_shard(
             "bearings": int(v.sum()),
             "true": spt.tolist(),
             "truth_evidence": float(log_evidence(pb, fm, kt, prior)["total"]),
+            "history_evidence": float(log_evidence(pb, hm, kt, prior)["total"]),
+            "history_cost": float(hf.cost),
+            "truth_start_cost": float(ft.cost),
         }
         seen = []
         spc = np.array(
@@ -125,16 +178,7 @@ def run_shard(
             seen += s1
         none = np.zeros((0, 2))
         b0 = None
-        z0 = float(z[v][0]) if v.any() else 0.0
-        for c0 in (0.0, 1.57, 3.14, 4.71):  # no layer, no truth: a nominal state on the bearing
-            q0 = np.array(
-                [
-                    ox[0] + NOMINAL_RANGE_M * np.sin(z0),
-                    oy[0] + NOMINAL_RANGE_M * np.cos(z0),
-                    c0,
-                    NOMINAL_SPEED,
-                ]
-            )
+        for q0 in nominal_starts(pb):  # no layer, no truth
             f = fit_arc(t, ox, oy, z, v, sigma, none, q0)
             if b0 is None or f.cost < b0.cost:
                 b0 = f

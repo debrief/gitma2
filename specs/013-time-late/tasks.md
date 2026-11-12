@@ -41,3 +41,5 @@
 - [x] T019 `tma2-tlsolve`, `tma2-tlscore`, `timelate.yml` (smoke run 43200187567 green); schema 0.34.0 (`TimeLateShardHeader`, `GateTCriteria`); one leg, IMM, EKF as tracks.
 - [ ] T020 (registered 2026-11-12, `experiments/20261112-gt-decision/`; validation launched) Register Gate T (SRD row for the owner; criteria incl. a prior-shift split and a calibration measure), decision record; validation 330; test 331; panel; write-up; slides.
 - [x] T021 Validation seed 330 (`experiments/20261112-gt-val/`): **T-a failed (0.67); gate stopped; seed 331 not generated.** The reference starts at the truth (tested on tuning data). T-b to T-d would pass (C″ ÷ search 2.56). Owner to decide on re-registration.
+- [x] T022 Owner 2026-11-12: re-register. `run.history_reference` (neutral starts; times held / free / with the prior), efficiency by bound band in `tma2-tlscore`, T-d-shift, schema 0.35.0; second decision record `experiments/20261112-gt2-decision/` (plan `tl-b.json`).
+- [ ] T023 Smoke on CI, validation seed 332, test seed 331 if T-a passes, panel, write-up, slides.

@@ -101,12 +101,22 @@ def candidate_reading(
 
 
 def verdicts(reading: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
-    """Gate T's checks from a scored record and the plan's ``criteria`` block."""
+    """Gate T's checks from a scored record and the plan's ``criteria`` block. A plan with
+    ``reference_tight_efficiency_band`` is the re-registered gate (2026-11-12): T-a reads the
+    history reference with its times held, on tightly bounded rows; T-e compares the search
+    with the history reference fitted with the prior; and T-d also checks the candidates'
+    calibration on the shift split. Otherwise the first registration's checks."""
     out: dict[str, Any] = {}
-    eff = reading["man2"]["systems"]["truth-fit"]["efficiency_range"]
-    lo, hi = c["reference_efficiency_band"]
+    second = "reference_tight_efficiency_band" in c
+    man2 = reading["man2"]
+    if second:
+        eff = man2["systems"]["history-fixed"]["efficiency_range_tight"]
+        lo, hi = c["reference_tight_efficiency_band"]
+    else:
+        eff = man2["systems"]["truth-fit"]["efficiency_range"]
+        lo, hi = c["reference_efficiency_band"]
     out["T-a"] = {"value": eff, "band": [lo, hi], "pass": bool(lo <= eff <= hi)}
-    r = reading["man2"]["ratios"]["c2_over_search"]
+    r = man2["ratios"]["c2_over_search"]
     out["T-b"] = {
         **r,
         "threshold": c["search_ratio_min"],
@@ -119,7 +129,7 @@ def verdicts(reading: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
             "threshold": c["shift_ratio_min"],
             "pass": bool(s["lo"] > c["shift_ratio_min"]),
         }
-    cand = reading["man2"]["candidates"]
+    cand = man2["candidates"]
     key = next(k for k in cand if k.startswith("truth_in_top"))
     out["T-d"] = {
         "truth_in_set": cand[key],
@@ -131,7 +141,14 @@ def verdicts(reading: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
             and abs(cand["calibration_gap"]) <= c["calibration_gap_max"]
         ),
     }
-    h = reading["man2"]["ratios"]["search_over_truth"]
+    if second and "shift" in reading:
+        gap = reading["shift"]["candidates"]["calibration_gap"]
+        out["T-d-shift"] = {
+            "calibration_gap": gap,
+            "calibration_gap_max": c["shift_calibration_gap_max"],
+            "pass": bool(abs(gap) <= c["shift_calibration_gap_max"]),
+        }
+    h = man2["ratios"]["search_over_history" if second else "search_over_truth"]
     out["T-e"] = {
         **h,
         "threshold": c["headroom_ratio_min"],

@@ -276,8 +276,13 @@ at the truth and stays there on weakly determined rows (efficiency 1.05 where th
 0.05, 0.27 from 0.05 to 0.2). Seed 331 not generated. Not gate results: C″ ÷ search 2.56
 [1.78, 3.51], 1.70 [1.24, 2.27] under the shifted prior; candidates calibrated on Annex B data
 (first right 0.61, stated 0.54) and badly overconfident under the shift (0.22 against 0.52). T-e's
-headroom is overstated by the same fault. Owner to decide: re-register with a reference that does
-not start at the truth, T-a on well-determined rows, a shift-split candidate check, validation 332. Figures for the eventual slides:
+headroom is overstated by the same fault. **Owner 2026-11-12: re-register and run again.** Second
+registration `experiments/20261112-gt2-decision/`, plan `configs/timelate/tl-b.json` (`08793d8b…`):
+the reference is the true history's structure fitted from neutral starts (`run.history_reference`;
+`history-fixed` times held, `history-fit`, `history-map`); T-a reads `history-fixed` on rows bounded
+below 0.05 (1.10 on tuning; with times free 1.43, because the bound assumes them known); T-d-shift
+added (expected to fail); T-e against `history-map`; validation seed 332, test 331; schema 0.35.0.
+Open: rows bounded 0.05–0.2 show sub-bound efficiency even from neutral starts (0.45). Figures for the eventual slides:
 `scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
 
 ## Stack (owner decisions, 2026-10-31)

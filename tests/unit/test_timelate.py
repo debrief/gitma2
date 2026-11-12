@@ -246,3 +246,35 @@ def test_gate_t_verdicts_follow_the_criteria() -> None:
     v = verdicts({"man2": split(1.5), "shift": split(0.9)}, crit)
     assert v["T-a"]["pass"] and v["T-b"]["pass"] and not v["T-c"]["pass"]
     assert not v["T-d"]["pass"] and v["T-e"]["material"]
+
+
+def test_reregistered_gate_reads_the_history_reference_and_the_shift_calibration() -> None:
+    from tma2.timelate.gate import verdicts
+
+    crit = {
+        "reference_tight_efficiency_band": [0.8, 1.3],
+        "search_ratio_min": 1.1,
+        "shift_ratio_min": 1.0,
+        "truth_in_set_min": 0.6,
+        "calibration_gap_max": 0.1,
+        "shift_calibration_gap_max": 0.1,
+        "headroom_ratio_min": 1.1,
+    }
+
+    def split(gap: float) -> dict[str, object]:
+        return {
+            "systems": {
+                "history-fixed": {"efficiency_range_tight": 1.1},
+                "truth-fit": {"efficiency_range": 0.6},
+            },
+            "ratios": {
+                "c2_over_search": {"value": 2.0, "lo": 1.5, "hi": 3.0},
+                "search_over_truth": {"value": 3.0, "lo": 2.0, "hi": 4.0},
+                "search_over_history": {"value": 1.05, "lo": 0.9, "hi": 1.2},
+            },
+            "candidates": {"truth_in_top3": 0.7, "calibration_gap": gap},
+        }
+
+    v = verdicts({"man2": split(0.05), "shift": split(0.3)}, crit)
+    assert v["T-a"]["pass"] and v["T-d"]["pass"] and not v["T-d-shift"]["pass"]
+    assert not v["T-e"]["material"] and v["T-e"]["value"] == 1.05

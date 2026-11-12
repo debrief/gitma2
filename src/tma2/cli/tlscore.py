@@ -74,12 +74,29 @@ def main(argv: list[str] | None = None) -> int:
                 rec[f"efficiency_{col.split('_')[0]}"] = (
                     float(np.median(e[ok, c] / bound[ok, c]) / Q) if ok.any() else float("nan")
                 )
+            tight = float((plan.get("reference") or {}).get("tight_bound", 0.05))
+            bands = {
+                "tight": det & (bound[:, 0] < tight),
+                "middle": det & (bound[:, 0] >= tight) & (bound[:, 0] < 0.2),
+                "loose": det & (bound[:, 0] >= 0.2),
+            }
+            for label, k in bands.items():
+                ok = k & np.isfinite(e[:, 0])
+                rec[f"efficiency_range_{label}"] = (
+                    float(np.median(e[ok, 0] / bound[ok, 0]) / Q) if ok.any() else float("nan")
+                )
+                rec[f"median_rows_range_{label}"] = (
+                    float(np.median(e[ok, 0])) if ok.any() else float("nan")
+                )
+            rec["rows_by_band"] = {label: int(k.sum()) for label, k in bands.items()}
             systems[name] = rec
         ratios = {
             "c2_over_search": ratio(meds["c2"], meds["search"]),
             "c2_over_search_none": ratio(meds["c2"], meds["search-none"]),
             "search_over_truth": ratio(meds["search"], meds["truth-map"]),
         }
+        if "history-map" in meds:
+            ratios["search_over_history"] = ratio(meds["search"], meds["history-map"])
         reading[split] = {
             "periods": len(periods),
             "periods_with_determined_rows": int(meds["c2"].size),

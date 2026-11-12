@@ -2464,15 +2464,35 @@
                     "type": "number"
                 },
                 "reference_efficiency_band": {
-                    "description": "T-a: band for the range efficiency of the true history fitted to the bearings alone.",
+                    "description": "T-a, first registration (stopped at validation): band for the range efficiency of the true history fitted to the bearings alone from the truth.",
                     "items": {
                         "type": "number"
                     },
-                    "type": "array"
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "reference_tight_efficiency_band": {
+                    "description": "T-a, re-registered 2026-11-12: band for the range efficiency of the true history fitted from neutral starts with its times held, on rows whose bound on relative range is below 0.05.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "search_ratio_min": {
                     "description": "T-b: the 95% interval of C\u2033's median period range error over the search's lies above this.",
                     "type": "number"
+                },
+                "shift_calibration_gap_max": {
+                    "description": "T-d on the shift split (re-registered): the first candidate's mean stated probability minus the share of periods in which it is the true history, at most this in size.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
                 },
                 "shift_ratio_min": {
                     "description": "T-c: the same ratio on the shifted-prior split lies above this.",
@@ -2484,7 +2504,6 @@
                 }
             },
             "required": [
-                "reference_efficiency_band",
                 "search_ratio_min",
                 "shift_ratio_min",
                 "truth_in_set_min",
@@ -5740,6 +5759,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.34.0"
+    "version": "0.35.0"
 }
 

@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.34.0
+version: 0.35.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -1897,8 +1897,12 @@ classes:
       reference_efficiency_band:
         range: float
         multivalued: true
-        required: true
-        description: "T-a: band for the range efficiency of the true history fitted to the bearings alone."
+        description: "T-a, first registration (stopped at validation): band for the range efficiency of the true history fitted to the bearings alone from the truth."
+      reference_tight_efficiency_band:
+        range: float
+        multivalued: true
+        description: "T-a, re-registered 2026-11-12: band for the range efficiency of the true history fitted from neutral starts with its times held, on rows whose bound on relative range is below 0.05."
+      shift_calibration_gap_max: { range: float, description: "T-d on the shift split (re-registered): the first candidate's mean stated probability minus the share of periods in which it is the true history, at most this in size." }
       search_ratio_min: { range: float, required: true, description: "T-b: the 95% interval of C″'s median period range error over the search's lies above this." }
       shift_ratio_min: { range: float, required: true, description: "T-c: the same ratio on the shifted-prior split lies above this." }
       truth_in_set_min: { range: float, required: true, description: "T-d: share of periods whose true history is among the first three candidates, at least this." }
