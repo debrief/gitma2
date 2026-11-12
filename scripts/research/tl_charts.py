@@ -201,8 +201,6 @@ def main(argv: list[str] | None = None) -> int:
                 label=f"history the re-test found: {found.spans.shape[0]} manoeuvres "
                 f"(cost {found.cost:.0f})",
             )
-            for arr, col in ((ox, "#1f77b4"), (tr[:, 0], "#d62728")):
-                pass
             ax.plot(ox[0] * km, oy[0] * km, "o", color="#1f77b4", ms=4)
             ax.plot(tr[0, 0] * km, tr[0, 1] * km, "o", color="#d62728", ms=4)
             ax.set_aspect("equal")
@@ -235,9 +233,7 @@ def main(argv: list[str] | None = None) -> int:
             "script": "scripts/research/tl_charts.py",
             "git_commit": g.commit,
             "git_dirty": g.dirty,
-            "inputs": {
-                str(p): hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in paths
-            },
+            "inputs": {str(p): hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in paths},
             **extra.get(name, {}),
         }
         (out / f"{name}.json").write_text(json.dumps(side, indent=1) + "\n")
