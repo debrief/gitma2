@@ -8,6 +8,11 @@ It binds the plan `configs/timelate/tl-b.json` (`08793d8b…`), the two run conf
 ranges files, the time-late code (the digest in `decision.json`, written by `tma2-tlsolve`
 into every shard) and the frozen C (`4d2c084f…`). Nothing bound here is edited after this.
 
+**Launch:** the workflow's smoke run on the tuning seed passed at b3b2903 (run 43249491892, four
+periods a split: a check that the tools run, not a measurement). Every digest in
+`decision.json` was re-checked against the files and is unchanged. Validation seed 332 is
+launched from the commit that adds this paragraph.
+
 ## What changed from the first registration, and nothing else
 
 | | First | Second |
