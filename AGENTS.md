@@ -258,9 +258,13 @@ tracks with probabilities" and lifted the GPU pause for time-late learning, on t
 (withdrawn) reading: the decision is back with the owner. Owner 2026-11-12 (on the corrected
 evidence): continue classically; GPU held until the control exists. `timelate/search.py`
 (`evidence_search`, `candidate_set`: histories scored by evidence, the best few with probabilities
-as candidate tracks) is written and unit-tested, not yet measured. Next: measure on unused tuning
-ordinals (60 onward; 0–59 were used for development), CLIs and `timelate.yml`, register Gate T
-against C″ read as a track, validation 330, test 331. Figures for the eventual slides:
+as candidate tracks) measured on 99 fresh tuning periods (ordinals 60 onward;
+`experiments/20261112-tl-search/`): 0.042 against C″'s 0.088 read as a track (2.12 [1.62, 2.96]),
+as good started from nothing as from C″; true history with the prior 0.018; best of the top three
+candidates in hindsight 0.028. The search is not the limit (its best history has evidence at or
+above the truth's in 97 of 99); the evidence and real ambiguity are. Candidate probabilities are
+not calibrated. Next: CLIs and `timelate.yml`, register Gate T (against C″ as a track, a
+prior-shift split, a calibration criterion fixed first), validation 330, test 331. Figures for the eventual slides:
 `scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
 
 ## Stack (owner decisions, 2026-10-31)

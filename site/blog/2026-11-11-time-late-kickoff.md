@@ -122,3 +122,18 @@ as a track (0.057 against 0.113 in median range error; ratio 1.99, interval 1.01
 on 57 tuning periods). About a third of the difficult periods remain genuinely ambiguous.
 The direct next step is a classical search over histories scored by that evidence. Record:
 `experiments/20261112-tl-prior/` (the withdrawn files are kept beside the corrected ones).
+
+## Update, 12 November (evening): a classical search, twice as good as the standing system
+
+The owner chose to continue classically. A search over manoeuvre histories, scored by how
+probable each is given the bearings and Annex B's statistics, was run once on 99 tuning
+periods it had not seen during development. Its median range error over the whole track is
+0.042 against 0.088 for the standing classical system read as a track (ratio 2.1, interval
+1.6 to 3.0). It does as well started from nothing as started from the standing system's
+answer. The fit told the true history is at 0.018.
+
+The search is no longer the weak point: where it is wrong it has usually found a history that
+scores above the true one. What limits it is the score, and periods that really do admit two
+explanations. The probabilities it attaches to its candidate tracks are not yet trustworthy.
+Next comes a gate on fresh seeds, with a test split whose targets manoeuvre differently from
+what the search assumes. Record: `experiments/20261112-tl-search/` (tuning data).

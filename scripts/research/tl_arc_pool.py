@@ -71,6 +71,12 @@ def ratio(a, b):
 
 
 for a, b in (
+    ("chord-c2", "search-pick"),
+    ("chord-c2", "search-c2"),
+    ("chord-c2", "search-none"),
+    ("search-pick", "truth-map"),
+    ("search-pick", "cand-best3"),
+    ("cand-best3", "truth-map"),
     ("chord-c2", "retest-c2-k"),
     ("chord-c2", "retest-none-k"),
     ("retest-c2", "retest-c2-k"),
