@@ -1,0 +1,56 @@
+{
+ "study": "spec 014: time-late, the classical follow-on to Gate T",
+ "registered": "2026-11-12",
+ "digests": {
+  "configs/timelate/tl-c.json": "351538c232309ccb387ee599792d9c2e1124f37511cd51cecca6dabeec320f33",
+  "configs/timelate/runs/tl-c-val.json": "f601bcf4447e0e3797a5c30a220e8ee853a0c25610f1204ec1d899554a7b51d8",
+  "configs/timelate/runs/tl-c-test.json": "6807e7d7ae98b731af957e3410390dbb8d5b94a89bdec9a873777c1fea888350",
+  "configs/timelate/tl-ranges.json": "cb48fcabb5a51f76685cab482e23f01cb53c504406a1654c2ec1b664216a4784",
+  "configs/timelate/tl-shift-ranges.json": "bc76abf0d5916f4a91909ebb6ef90e84438eae2ee1142e6607c21823d489081b",
+  "configs/timelate/tl-quiet-ranges.json": "a964509642c46015db6c38dc7b6c774c3cf36d992d3be954a10627be1368782b",
+  "configs/timelate/tl-heldout.json": "aeedfe10ca841d95d1cf2026382c43afe59c548aef9f5fed9fe07e16d3832634",
+  "configs/gateh/conditions.json": "d260fd7538d2fbcbc8c25cfd402a091ed9d50bf254a79bfd2c6c5bcc4b634e15",
+  "configs/gateh/gh-a.json": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a"
+ },
+ "time_late_code_sha256": "0704cdbcbb5659f0e4a0a5fdac0f359724e09eda6551d82adf4536a3f4992e6a",
+ "scorer_files": {
+  "src/tma2/timelate/study.py": "a17c54155cf1cf8c2a65595faf3811fa6b4ab2b979275533db33d8388c6c3883",
+  "src/tma2/timelate/gate.py": "fd31e1c82759c8a0f5a0161b504b3979e6affe813d0f3bb0ba846ab79f1030c7",
+  "src/tma2/cli/tlscore.py": "80ac45b6b8a5f4c10ae6229e185254240520e4817e4df54370f6631a8bacaaac",
+  "src/tma2/cli/tlsolve.py": "9ee6b18d9cb2e40d4a991de952703013ecc5a72f67bd64d030bc1324d8ffb4ba"
+ },
+ "seeds": {
+  "tuning": 333,
+  "validation": 334,
+  "test": 335
+ },
+ "criteria": {
+  "class_threshold": 3.0,
+  "match_tolerance_s": 120.0,
+  "materiality": 1.1,
+  "soundness_band": [
+   0.8,
+   1.3
+  ],
+  "convergence_min": 0.9,
+  "quiet_interval_halfwidth_max": 0.05
+ },
+ "decided": {
+  "D1": "share of the log gain C″ → search2 that c2-refit obtains, Annex B test split, with its 95% interval (FR-005)",
+  "D2": "shares of wrong-history periods classed ambiguous, search failure, evidence failure at threshold 3 and a 120 s match (FR-006)",
+  "D3": "attainable headroom: geometric mean per-period ratio search2 ÷ ident-search and search2 ÷ ident-all, each material / not material / inconclusive against 1.10 (FR-007)",
+  "D4": "false-manoeuvre rate on held-course periods for search2, C″, search-flat and search-mix, each interval within ±0.05 (FR-010)",
+  "D5": "recommendation on a learned whole-period model by the rule below (SC-006)"
+ },
+ "forecasts": {
+  "D1": "0.75; the interval will include 0.6 and will not include 0.3",
+  "D2": "ambiguous 0.45, evidence failure 0.45, search failure 0.10; search failure below 0.20",
+  "D3": "ident-search inconclusive (about 1.10); ident-all material (about 1.3)",
+  "D4": "search2 0.80; C″ 0.03; search-flat 0.02; search-mix 0.10 (six tuning periods seen: 0 of 6), and search-mix within 1.10 of search2 on Annex B data",
+  "soundness": "pass: reference at 1.0 to 1.2 of the bound on tight rows; every true-history fit consistent",
+  "reported": "search-flat ÷ search2 about 1.0 on Annex B data and above 1.0 under the shift; c2-refit no better than C″ under the shift; ekf-rts worse than C″; correlated and outlying errors hurt every system and the search's manoeuvre counts most"
+ },
+ "recommendation_rule": "Pursue a learned whole-period model only if the ident-all headroom is material on the Annex B test split. If so it is registered against search2, search-mix and c2-refit under the same prior, on the Annex B, shifted and held-course splits. Not material or inconclusive: no GPU budget is spent on it. Fixed in research R9 before the tuning run.",
+ "soundness_stop": "validation seed 334: history-fixed range efficiency on rows bounded below 0.05 within [0.8, 1.3] and at least 0.90 of true-history fits with a consistent cost; otherwise seed 335 is not generated",
+ "added_after_tuning": "search-mix (Annex B prior mixed half and half with a target that never manoeuvres; the half is stated, not tuned), because the tuning seed showed search2 declaring a manoeuvre on 81% of held-course periods. Reported under D4; it changes no other decided quantity."
+}

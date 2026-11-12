@@ -285,6 +285,14 @@ and recorded, not asked.
   transitions refitted with the arc model and prior; the search with a flat prior) and the
   share of periods that are ambiguous in the bearings themselves, so that Gate T's upper limit
   on headroom becomes an attainable figure. A learned whole-period model is decided after it.
+- **2026-11-12 (agent, proposed; owner to merge):** spec 014 ends in a registered study, not
+  a gate (`experiments/20261112-tl2-decision/`): nothing in it is carried or stopped by a
+  threshold. Decided on test seed 335, with forecasts written first: the share of the search's
+  gain that refitting C″'s own manoeuvre times obtains; the shares of wrong-history periods
+  that are ambiguous, search failures and evidence failures; the attainable headroom against
+  10%; the false-manoeuvre rate on targets that hold course. A learned whole-period model is
+  recommended only if the headroom with a perfect evidence is material. Validation seed 334
+  carries a soundness stop. The panel reviews the record as it would a gate.
 
 ## Annexes
 

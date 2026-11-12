@@ -15,7 +15,15 @@ from .gate import candidate_reading, history_right, period_medians, ratio
 from .score import UNDETERMINED, Q
 
 CLASSES = ("right", "ambiguous", "search_failure", "evidence_failure")
-PRIOR_SYSTEMS = ("search", "search2", "search-flat", "c2-refit", "history-map", "history-best")
+PRIOR_SYSTEMS = (
+    "search",
+    "search2",
+    "search-flat",
+    "search-mix",
+    "c2-refit",
+    "history-map",
+    "history-best",
+)
 FLOOR, CEILING = 1e-4, 1e2  # a period median outside these is clipped before a log ratio
 
 
@@ -169,6 +177,10 @@ def study_split(
         ("search", "search2"),
         ("search2", "history-map"),
         ("search2", "one-leg"),
+        ("search2", "search-mix"),
+        ("c2", "search-mix"),
+        ("search-mix", "one-leg"),
+        ("c2", "ekf-rts"),
         ("c2", "one-leg"),
     ]
     out["comparisons"] = {}
@@ -243,7 +255,7 @@ def study_split(
     # manoeuvre counts and false manoeuvres on targets that made none (FR-010, FR-013)
     out["counts"] = {
         n: pooled(periods, n)
-        for n in ("c2", "c2-refit", "search", "search2", "search-flat")
+        for n in ("c2", "c2-refit", "search", "search2", "search-flat", "search-mix")
         if any(n in (r.get("histories") or {}) for r in periods)
     }
     quiet = [r for r in periods if not r["true"]]

@@ -246,3 +246,27 @@ def test_smoother_equals_the_filter_at_the_end_and_does_not_hurt_on_a_held_cours
     e_f = np.hypot(*(fl[k, :2] - truth[k]).T)
     assert float(np.median(e_s)) <= float(np.median(e_f))
     assert rows_from_points(sm, 2, 2 * n).shape == (2 * n, 4)
+
+
+def test_mixed_prior_only_reweights_the_quiet_history() -> None:
+    from tma2.timelate.prior import QUIET
+
+    informed = ManoeuvrePrior.from_ranges(RANGES, version=2)
+    mix = ManoeuvrePrior.from_ranges(RANGES, version=2, kind="mix")
+    none, k0 = np.zeros((0, 2)), np.zeros((0, 2), dtype=bool)
+    th = np.array([0.0, 8000.0, 1.0, 5.0])
+    a = log_prior(informed, th, none, k0, 2400.0, 8000.0)
+    b = log_prior(mix, th, none, k0, 2400.0, 8000.0)
+    assert b["legs"] == pytest.approx(np.log(QUIET + (1 - QUIET) * np.exp(a["legs"])))
+    assert b["legs"] > a["legs"] and b["state"] == a["state"]
+    kinds = np.array([[True, False]])
+    th1 = np.array([0.0, 8000.0, 1.0, 5.0, 0.8, 0.0])
+    sp = np.array([[900.0, 960.0]])
+    c = log_prior(informed, th1, sp, kinds, 2400.0, 8000.0)
+    d = log_prior(mix, th1, sp, kinds, 2400.0, 8000.0)
+    assert d["legs"] == pytest.approx(c["legs"] + np.log(1 - QUIET))
+    assert d["changes"] == c["changes"]
+    assert np.array_equal(prior_precision(mix, 1, 8000.0), prior_precision(informed, 1, 8000.0))
+    assert np.array_equal(
+        prior_residuals(mix, th1, sp, kinds), prior_residuals(informed, th1, sp, kinds)
+    )

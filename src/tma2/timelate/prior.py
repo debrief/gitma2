@@ -19,6 +19,11 @@ a uniform direction's stand-in precision 12 / W² gave it a volume of 0.72 W, no
 leg's normal density allowed legs below the generator's minimum. ``kind`` "flat" (spec 014,
 research R3) replaces what Annex B says about manoeuvres by uniform densities over the
 solver's own box, keeping the state's prior: the search with no manoeuvre statistics.
+``kind`` "mix" (spec 014, registered after the tuning seed showed the informed search declaring
+a manoeuvre on four held-course periods in five) is Annex B's prior for a target that
+manoeuvres, mixed with a target that never does: with probability ``QUIET`` there are no
+manoeuvres at all. Only the weight of the no-manoeuvre history changes; ``QUIET`` is a stated
+half, not a tuned value.
 """
 
 from __future__ import annotations
@@ -30,6 +35,7 @@ from typing import Any
 import numpy as np
 
 LOG_2PI = math.log(2.0 * math.pi)
+QUIET = 0.5  # kind "mix": the prior probability that the target never manoeuvres
 
 
 @dataclass(frozen=True)
@@ -53,7 +59,7 @@ class ManoeuvrePrior:
     def from_ranges(
         cls, r: dict[str, Any], version: int = 1, kind: str = "annex-b"
     ) -> ManoeuvrePrior:
-        if version not in (1, 2) or kind not in ("annex-b", "flat"):
+        if version not in (1, 2) or kind not in ("annex-b", "flat", "mix"):
             raise ValueError(f"unknown prior version {version!r} or kind {kind!r}")
 
         def pair(k: str) -> tuple[float, float]:
@@ -176,6 +182,12 @@ def log_prior(
                 0.5 * (p.speed[0] + p.speed[1]), *p.speed
             )
     state += _log_position(p, range0)
+    if p.kind == "mix":
+        legs = (
+            math.log(QUIET + (1.0 - QUIET) * math.exp(legs))
+            if m == 0
+            else (legs + math.log(1.0 - QUIET))
+        )
     return {"legs": legs, "changes": changes, "state": state}
 
 
@@ -231,7 +243,7 @@ def prior_precision(p: ManoeuvrePrior, m: int, range0: float, t_end: float = 0.0
     because the interior legs' curvature is already in ``prior_residuals``."""
     r = max(range0, p.range0[0])
     two_pi = 2.0 * math.pi
-    if p.version == 1 and p.kind == "annex-b":
+    if p.version == 1 and p.kind != "flat":
         d = [1 / r**2, 1 / r**2, 1 / math.pi**2, 12 / (p.speed[1] - p.speed[0]) ** 2]
         for _ in range(m):
             d += [12 / (2 * p.angle[1]) ** 2, 12 / (2 * p.dv[1]) ** 2]

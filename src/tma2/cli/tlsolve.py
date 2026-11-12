@@ -80,7 +80,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"split {a.split!r} is not in {a.plan}")
     prior = ManoeuvrePrior.from_ranges(json.loads(Path(plan["prior"]).read_text()))
     c_params, c2 = c_parameters(plan["gh_plan"])
-    periods = list(iter_periods(a.inp, a.start, a.count))
+    whole = bool(plan["splits"][a.split].get("whole", False))
+    periods = list(iter_periods(a.inp, a.start, a.count, whole=whole))
     if not periods:
         raise SystemExit(f"no σ = 1° periods at {a.start} in {a.inp}")
     refs = plan.get("references") or {}
@@ -96,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
         from tma2.timelate.run2 import run_shard2
 
         ranges = json.loads(Path(plan["prior"]).read_text())
-        kinds = {"v1": (1, "annex-b"), "v2": (2, "annex-b"), "flat": (2, "flat")}
+        kinds = {"v1": (1, "annex-b"), "v2": (2, "annex-b"), "flat": (2, "flat"), "mix": (2, "mix")}
         priors = {k: ManoeuvrePrior.from_ranges(ranges, *vk) for k, vk in kinds.items()}
         arrays, recs = run_shard2(periods, priors, c_params, c2, plan["settings"], ekf)
         extra = {

@@ -27,7 +27,7 @@ from .systems import solve_systems
 from .thin import thin
 
 BASE = ("c2", "one-leg", "history-fixed", "history-fit", "history-map", "history-best")
-OPTIONAL = ("search", "search2", "search-flat", "c2-refit", "ekf-rts", "ekf")
+OPTIONAL = ("search", "search2", "search-flat", "search-mix", "c2-refit", "ekf-rts", "ekf")
 POINT_ROWS = 2
 
 
@@ -173,7 +173,12 @@ def run_shard2(
         rec["history_converged"] = consistent(float(hf.cost), int(pb[4].sum()))
         rec["fit_points"] = int(pb[4].sum())
         cands2: list[tuple[History, float]] = []
-        for name, key in (("search", "v1"), ("search2", "v2"), ("search-flat", "flat")):
+        for name, key in (
+            ("search", "v1"),
+            ("search2", "v2"),
+            ("search-flat", "flat"),
+            ("search-mix", "mix"),
+        ):
             if name not in chosen:
                 continue
             t0 = time.perf_counter()
