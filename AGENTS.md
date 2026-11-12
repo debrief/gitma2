@@ -567,6 +567,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Generate from a new ranges file locally before a workflow depends on it: the kernel's manoeuvre
   table holds 32 changes, and a leg minimum under 300 s with 2-hour windows is refused (spec 013's
   first shifted split failed its CI smoke run on that).
+- A workflow step that pipes a tool into `tee <dir>/file` must create `<dir>` first and set
+  `pipefail`: `tee` opens its file before the tool makes the folder, and without `pipefail` the
+  step's exit code is `tee`'s (`timelate.yml`'s first scoring step).
 - Never put backticks in an unquoted shell heredoc: bash runs them and deletes the text.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a

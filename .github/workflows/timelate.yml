@@ -95,6 +95,8 @@ jobs:
       - name: Score
         run: |
           PLAN="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['plan'])" "$RUN")"
+          mkdir -p "$RUNNER_TEMP/result"
+          set -o pipefail
           uv run tma2-tlscore --shards "$RUNNER_TEMP/shards" --plan "$PLAN" --out "$RUNNER_TEMP/result" | tee "$RUNNER_TEMP/result/score.txt"
           cp "$RUN" "$RUNNER_TEMP/result/run.json"
           cp "$PLAN" "$RUNNER_TEMP/result/plan.json"
