@@ -564,6 +564,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Evidence (spec 013): fit to the posterior before a Laplace approximation, never to the
   likelihood alone; and plot the per-case differences before quoting shares (the histogram showed
   thousands of units where the medians looked sane).
+- Generate from a new ranges file locally before a workflow depends on it: the kernel's manoeuvre
+  table holds 32 changes, and a leg minimum under 300 s with 2-hour windows is refused (spec 013's
+  first shifted split failed its CI smoke run on that).
 - Never put backticks in an unquoted shell heredoc: bash runs them and deletes the text.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
