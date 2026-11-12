@@ -269,8 +269,15 @@ not calibrated. Gate T tooling (PR 32): `tma2-tlsolve`, `tma2-tlscore`, `timelat
 schema 0.34.0. **Gate T registered** (2026-11-12): plan `configs/timelate/tl-a.json` (`6f15a246…`,
 never edited), decision `experiments/20261112-gt-decision/` (T-a soundness, T-b C″ ÷ search above
 1.10, T-c the same above 1.00 under the shifted prior, T-d candidates, T-e headroom; temperature 3);
-SRD §5 row proposed (owner merges). Validation seed 330 launched (`timelate/tl-a-val`); test seed
-331 only after T-a is read on validation. Figures for the eventual slides:
+SRD §5 row proposed (owner merges). **Gate T stopped at validation** (seed 330,
+`experiments/20261112-gt-val/`): T-a failed, range efficiency of the true-history reference 0.67
+(0.28 on the shift split) against [0.8, 1.3]. Cause, tested on tuning data: the reference fit starts
+at the truth and stays there on weakly determined rows (efficiency 1.05 where the bound is under
+0.05, 0.27 from 0.05 to 0.2). Seed 331 not generated. Not gate results: C″ ÷ search 2.56
+[1.78, 3.51], 1.70 [1.24, 2.27] under the shifted prior; candidates calibrated on Annex B data
+(first right 0.61, stated 0.54) and badly overconfident under the shift (0.22 against 0.52). T-e's
+headroom is overstated by the same fault. Owner to decide: re-register with a reference that does
+not start at the truth, T-a on well-determined rows, a shift-split candidate check, validation 332. Figures for the eventual slides:
 `scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
 
 ## Stack (owner decisions, 2026-10-31)
@@ -573,6 +580,10 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Generate from a new ranges file locally before a workflow depends on it: the kernel's manoeuvre
   table holds 32 changes, and a leg minimum under 300 s with 2-hour windows is refused (spec 013's
   first shifted split failed its CI smoke run on that).
+- A reference fitted from the truth is not a fit: on weakly determined rows it returns its start,
+  and its efficiency falls below 1 (Gate T's T-a: 0.67). Start references from where a real system
+  would, and read an efficiency below 1 as a fault, not a success. Check efficiency by how tight
+  the bound is before registering a band for it.
 - A workflow step that pipes a tool into `tee <dir>/file` must create `<dir>` first and set
   `pipefail`: `tee` opens its file before the tool makes the folder, and without `pipefail` the
   step's exit code is `tee`'s (`timelate.yml`'s first scoring step).

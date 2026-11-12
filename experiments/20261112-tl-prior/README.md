@@ -13,6 +13,12 @@ prior at the fit, Occam factor), `retest.choose_kinds`, `retest.ensemble`. Scrip
 
 ## 1. Told only which basin, the fit reaches the bound
 
+**Narrowed on 12 November by Gate T's validation (`../20261112-gt-val/`):** this fit started
+at the truth. On rows the bearings determine well (bound on relative range under 0.05) a
+truth-started fit is at the bound (1.05); on weakly determined rows it stays at its start, so
+the pooled 1.03 below is partly the truth handed back. The claim holds on well-determined
+rows only.
+
 The arc model fitted from the truth with every manoeuvre's start and duration **free**:
 efficiency 1.03, 1.00, 1.17 (range, course, speed); median period range error 0.021. The
 exact times are not needed. What is needed is the right history: how many manoeuvres,

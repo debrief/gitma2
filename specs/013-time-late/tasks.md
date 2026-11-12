@@ -40,3 +40,4 @@
 - [x] T018 Owner 2026-11-12: continue classically. `timelate/search.py` (evidence-scored search, candidate tracks; test). Measured on 99 fresh tuning periods (`experiments/20261112-tl-search/`): 0.042 against C″'s 0.088 (2.12 [1.62, 2.96]). Probabilities not calibrated.
 - [x] T019 `tma2-tlsolve`, `tma2-tlscore`, `timelate.yml` (smoke run 43200187567 green); schema 0.34.0 (`TimeLateShardHeader`, `GateTCriteria`); one leg, IMM, EKF as tracks.
 - [ ] T020 (registered 2026-11-12, `experiments/20261112-gt-decision/`; validation launched) Register Gate T (SRD row for the owner; criteria incl. a prior-shift split and a calibration measure), decision record; validation 330; test 331; panel; write-up; slides.
+- [x] T021 Validation seed 330 (`experiments/20261112-gt-val/`): **T-a failed (0.67); gate stopped; seed 331 not generated.** The reference starts at the truth (tested on tuning data). T-b to T-d would pass (C″ ÷ search 2.56). Owner to decide on re-registration.

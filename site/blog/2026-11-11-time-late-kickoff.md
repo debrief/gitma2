@@ -137,3 +137,22 @@ scores above the true one. What limits it is the score, and periods that really 
 explanations. The probabilities it attaches to its candidate tracks are not yet trustworthy.
 Next comes a gate on fresh seeds, with a test split whose targets manoeuvre differently from
 what the search assumes. Record: `experiments/20261112-tl-search/` (tuning data).
+
+## Update, 12 November (midday): the gate stopped at its first check
+
+Gate T was registered and its validation seed run. The search did what the tuning seed
+promised: about two and a half times better than the standing classical system read as a
+track, and 1.7 times better on targets that manoeuvre otherwise than it assumes. But the
+gate's first check, on the soundness of its own reference, failed, and by the rule written
+beforehand the gate stops and the test seed is not generated.
+
+The reference was a fit told the true manoeuvre history. It scored better than the
+theoretical bound allows, which is a fault, not a success. The fit had been started at the
+truth, and where the bearings pin the target down only weakly it simply stayed there. On
+well-determined rows it is exactly at the bound; on the rest it is the truth handed back.
+The check that caught it was registered with a forecast of "pass, 0.90".
+
+Two other things the validation run showed. The search's candidate probabilities are
+honest when its assumptions about manoeuvres are right (it names the true history first in
+61% of periods and claims 54%), and badly overconfident when they are wrong (22% against
+52%). Record: `experiments/20261112-gt-val/`. What happens next is the owner's decision.
