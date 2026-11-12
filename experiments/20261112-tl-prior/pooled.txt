@@ -1,0 +1,23 @@
+periods 60 determined rows 31537 periods with determined rows 57
+chord-true     {'eff': [1.87, 2.27, 1.95], 'med_rows': 0.0479, 'med_period': 0.0437, 'p90_period': 0.1775, 'over10pct': 0.246, 'course_med': 4.03, 'speed_med': 0.69}
+arc-true       {'eff': [1.39, 1.22, 1.38], 'med_rows': 0.0358, 'med_period': 0.0347, 'p90_period': 0.1473, 'over10pct': 0.193, 'course_med': 2.04, 'speed_med': 0.44}
+chord-c2       {'eff': [3.84, 4.97, 3.86], 'med_rows': 0.1318, 'med_period': 0.1129, 'p90_period': 0.489, 'over10pct': 0.544, 'course_med': 8.63, 'speed_med': 1.66}
+retest-c2      {'eff': [3.8, 5.34, 4.58], 'med_rows': 0.1261, 'med_period': 0.1412, 'p90_period': 0.6492, 'over10pct': 0.561, 'course_med': 9.31, 'speed_med': 1.88}
+retest-none    {'eff': [4.45, 6.23, 4.9], 'med_rows': 0.1761, 'med_period': 0.1096, 'p90_period': 10915043386.8374, 'over10pct': 0.561, 'course_med': 14.73, 'speed_med': 2.26}
+truth-fit      {'eff': [1.03, 1.0, 1.17], 'med_rows': 0.021, 'med_period': 0.0205, 'p90_period': 0.1007, 'over10pct': 0.105, 'course_med': 1.39, 'speed_med': 0.29}
+truth-map      {'eff': [1.19, 1.35, 1.34], 'med_rows': 0.0285, 'med_period': 0.027, 'p90_period': 0.1172, 'over10pct': 0.158, 'course_med': 2.24, 'speed_med': 0.33}
+retest-c2-k    {'eff': [2.81, 3.02, 3.15], 'med_rows': 0.0704, 'med_period': 0.0568, 'p90_period': 0.3322, 'over10pct': 0.386, 'course_med': 6.18, 'speed_med': 1.05}
+retest-none-k  {'eff': [3.76, 4.63, 3.82], 'med_rows': 0.0953, 'med_period': 0.0846, 'p90_period': 6249100579.3574, 'over10pct': 0.421, 'course_med': 9.76, 'speed_med': 1.06}
+chord-c2 / retest-c2-k (1.99, [1.01, 3.11])
+chord-c2 / retest-none-k (1.33, [0.73, 2.57])
+retest-c2 / retest-c2-k (2.48, [1.15, 3.19])
+retest-c2-k / truth-map (2.11, [1.45, 4.39])
+retest-none-k / truth-map (3.13, [1.71, 5.52])
+truth-fit / truth-map (0.76, [0.54, 0.99])
+chord-c2 / retest-c2 (0.8, [0.6, 1.69])
+chord-c2 / retest-none (1.03, [0.51, 1.75])
+retest-c2 / arc-true (4.07, [1.97, 5.44])
+retest-none / arc-true (3.16, [2.12, 5.89])
+retest-c2 / retest-none (1.29, [0.56, 1.76])
+chord-true / arc-true (1.26, [0.93, 2.0])
+chord-c2 / chord-true (2.59, [1.46, 4.17])

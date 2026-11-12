@@ -153,3 +153,35 @@ def prior_precision(p: ManoeuvrePrior, m: int, range0: float) -> np.ndarray:
     d += [1 / p.leg_sd**2] * m
     d += [1 / (p.angle[1] / p.turn_rate[0] / 2) ** 2] * m
     return np.array(d)
+
+
+def _shoulder(x: float, lo: float, hi: float) -> float:
+    """The soft uniform's shoulder as a residual: distance outside [lo, hi] over its sd."""
+    return max(lo - x, x - hi, 0.0) / ((hi - lo) / 10.0)
+
+
+def prior_residuals(
+    p: ManoeuvrePrior, theta: np.ndarray, spans: np.ndarray, kinds: np.ndarray
+) -> np.ndarray:
+    """The Gaussian parts of ``log_prior`` as residuals (−½ Σ r² is their log density), so a
+    least-squares fit that appends them is a fit to the posterior, not to the likelihood: the
+    speed on every leg, each change's size and rate, and the interior legs' lengths. A fixed
+    number of residuals for a given history (zeros where a term does not apply)."""
+    m = spans.shape[0]
+    out = [_shoulder(float(theta[3]), *p.speed)]
+    speed = float(theta[3])
+    for i in range(m):
+        dc, dv = float(theta[4 + 2 * i]), float(theta[5 + 2 * i])
+        dur = max(float(spans[i, 1] - spans[i, 0]), 1e-3)
+        has_c, has_v = bool(kinds[i, 0]), bool(kinds[i, 1])
+        a = abs(dc)
+        out.append(_shoulder(a, *p.angle) if has_c else 0.0)
+        out.append(_shoulder(a / dur, *p.turn_rate) if has_c else 0.0)
+        b = abs(dv)
+        out.append(_shoulder(b, *p.dv) if has_v else 0.0)
+        out.append(_shoulder(b / dur, *p.acc) if has_v and not has_c else 0.0)
+        speed += dv if has_v else 0.0
+        out.append(_shoulder(speed, *p.speed))
+    for i in range(m - 1):
+        out.append((max(float(spans[i + 1, 0] - spans[i, 1]), 0.0) - p.leg_mean) / p.leg_sd)
+    return np.array(out, dtype=np.float64)

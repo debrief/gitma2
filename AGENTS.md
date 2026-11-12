@@ -245,13 +245,17 @@ Full-period re-test on the arc cost (`timelate/retest.py`, `experiments/20261111
 no better than C″ read as a track. It reaches the cost of the true-times fit (median difference 0)
 with a third of manoeuvres missed and 3 to 4 times the range error: the bearings do not separate
 the structures, so a test of fit cannot reach the reference; prior knowledge of manoeuvres
-(Annex B's statistics) is what remains. Owner 2026-11-11: classical prior first. Measured (`experiments/20261112-tl-prior/`,
-`timelate/prior.py`, `retest.log_evidence`): told only the basin (times free) the arc fit is at the
-bound; but under Annex B's prior the true history is no more probable than the re-test's wrong
-one (each ahead by over 3 nats in about 0.4 of the bad periods), so the re-test was already near
-the most probable history, and a local evidence-weighted ensemble does not help. No estimator
-that names one history reaches the reference. Open (owner): a full sampler over histories
-(candidate tracks with probabilities), the learned full-period model, or write up.
+(Annex B's statistics) is what remains. Owner 2026-11-11: classical prior first (`timelate/prior.py`, `retest.log_evidence`,
+`experiments/20261112-tl-prior/`). Told only the basin (times free) the arc fit is at the bound.
+**First reading withdrawn** (the evidence was evaluated at a bearings-only fit: thousands of
+units of artefact). Corrected (fit to the posterior, `joint_fit(prior=...)`): where the re-test is
+wrong the true history is ahead by over 3 in 0.5–0.6 of periods and behind in under 0.1; the
+re-test's own history refitted with the prior is at 0.057 against C″'s 0.113 as a track
+(1.99 [1.01, 3.11], 57 tuning periods); true history with the prior 0.027. About a third of the
+wrong periods are genuinely ambiguous. Owner 2026-11-12 chose "write up and re-scope to candidate
+tracks with probabilities" and lifted the GPU pause for time-late learning, on the first
+(withdrawn) reading: the decision is back with the owner. The direct next step is a search or
+sampler over histories scored by evidence (classical).
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -547,6 +551,10 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   one scalar is not "unseen"; report efficiency per slice beside medians (the regressor's course
   efficiency was worse than C″'s while its range median was better); do not carry an explanation
   from one spec's tuning data into another's result.
+- Evidence (spec 013): fit to the posterior before a Laplace approximation, never to the
+  likelihood alone; and plot the per-case differences before quoting shares (the histogram showed
+  thousands of units where the medians looked sane).
+- Never put backticks in an unquoted shell heredoc: bash runs them and deletes the text.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).

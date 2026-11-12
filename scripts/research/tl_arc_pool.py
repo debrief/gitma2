@@ -71,6 +71,12 @@ def ratio(a, b):
 
 
 for a, b in (
+    ("chord-c2", "retest-c2-k"),
+    ("chord-c2", "retest-none-k"),
+    ("retest-c2", "retest-c2-k"),
+    ("retest-c2-k", "truth-map"),
+    ("retest-none-k", "truth-map"),
+    ("truth-fit", "truth-map"),
     ("chord-c2", "retest-c2"),
     ("chord-c2", "retest-none"),
     ("retest-c2", "arc-true"),

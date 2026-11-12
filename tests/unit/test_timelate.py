@@ -167,8 +167,8 @@ def test_evidence_prefers_the_history_with_a_clear_manoeuvre() -> None:
     sigma = 0.0175
     pb = (t, ox, oy, z + sigma * rng.standard_normal(t.size), np.ones(t.size, dtype=bool), sigma)
     kinds = np.array([[True, False], [False, True]])
-    full = joint_fit(pb, theta, spans, free_changes=kinds)
-    one = joint_fit(pb, theta[:6], spans[:1], free_changes=kinds[:1])
+    full = joint_fit(pb, theta, spans, free_changes=kinds, prior=prior)
+    one = joint_fit(pb, theta[:6], spans[:1], free_changes=kinds[:1], prior=prior)
     assert (
         log_evidence(pb, full, kinds, prior)["total"]
         > log_evidence(pb, one, kinds[:1], prior)["total"]

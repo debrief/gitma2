@@ -3,15 +3,15 @@ arc-true       median period err 0.0347  over10% 0.19
 truth-fit      median period err 0.0205  over10% 0.11
 chord-c2       median period err 0.1129  over10% 0.54
 retest-c2      median period err 0.1412  over10% 0.56
-retest-c2-k    median period err 0.1026  over10% 0.53
+retest-c2-k    median period err 0.0568  over10% 0.39
 retest-none    median period err 0.1096  over10% 0.56
-retest-none-k  median period err 0.1163  over10% 0.54
-retest_c2 n 57 truth minus retest log evidence: median -0.0 share truth wins by >3: 0.35 share retest wins by >3: 0.39
-   where the retest's error is over twice the truth fit's (n=34): median diff -0.0, truth wins by >3 in 0.41, retest wins by >3 in 0.44
-   parts (median, bad periods): {'fit': 3.9, 'legs': -2.9, 'changes': -9.1, 'state': -0.0, 'occam': 6.1}
-   elsewhere (n=23): median diff -0.0
-retest_none n 57 truth minus retest log evidence: median 0.0 share truth wins by >3: 0.37 share retest wins by >3: 0.32
-   where the retest's error is over twice the truth fit's (n=35): median diff 2.7, truth wins by >3 in 0.46, retest wins by >3 in 0.40
-   parts (median, bad periods): {'fit': 3.7, 'legs': -5.2, 'changes': -13.0, 'state': 0.0, 'occam': 7.1}
-   elsewhere (n=22): median diff 0.0
-pick the re-test history with the higher evidence: median err 0.0963; the better of the two in hindsight: 0.0847
+retest-none-k  median period err 0.0846  over10% 0.42
+retest_c2 n 57 truth minus retest log evidence: median 1.2 share truth wins by >3: 0.33 share retest wins by >3: 0.09
+   where the retest's error is over twice the truth fit's (n=28): median diff 3.3, truth wins by >3 in 0.50, retest wins by >3 in 0.07
+   parts (median, bad periods): {'fit': 3.7, 'legs': -4.3, 'changes': -2.2, 'state': -0.0, 'occam': 7.7}
+   elsewhere (n=29): median diff 0.2
+retest_none n 57 truth minus retest log evidence: median 2.0 share truth wins by >3: 0.42 share retest wins by >3: 0.09
+   where the retest's error is over twice the truth fit's (n=33): median diff 5.2, truth wins by >3 in 0.61, retest wins by >3 in 0.09
+   parts (median, bad periods): {'fit': 3.7, 'legs': -3.4, 'changes': -1.3, 'state': 0.0, 'occam': 8.1}
+   elsewhere (n=24): median diff 0.0
+pick the re-test history with the higher evidence: median err 0.0559; the better of the two in hindsight: 0.0525

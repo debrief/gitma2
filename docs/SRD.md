@@ -250,6 +250,14 @@ and recorded, not asked.
   of 2026-11-11 is lifted for time-late learning: "you now have freedom to use GPU in support
   of the time-late learning", within the same $50 total; runs are registered before their
   results and the ledger is kept. Seeds 330 and 331 are unused.
+- **2026-11-12 (agent, correction of the entry above; the owner's decision is theirs to
+  revisit):** the finding that entry rests on was partly an artefact. The evidence of a
+  manoeuvre history had been computed at a fit to the bearings alone; fitted with Annex B's
+  prior, the true history is usually preferred where the re-test is wrong, and the re-test's
+  own history refitted with the prior is at about half the standing classical system's error
+  read as a track (0.057 against 0.113, ratio 1.99 [1.01, 3.11], 57 tuning periods;
+  `experiments/20261112-tl-prior/`). Some ambiguity is real (about a third of the wrong
+  periods). Whether spec 013 still stops at tuning is put back to the owner.
 
 ## Annexes
 

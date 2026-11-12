@@ -106,3 +106,19 @@ problem is neither the solve nor the timing: in about half the difficult periods
 and the statistics together leave two histories standing, and they put the target in different
 places. An honest system would say so, with candidate tracks and probabilities. Record:
 `experiments/20261112-tl-prior/` (tuning data).
+
+## Correction, 12 November (later): the prior does help
+
+The update above is wrong in its main claim and is withdrawn. The comparison had scored each
+history's plausibility at a fit to the bearings alone, where a loosely determined manoeuvre
+duration often lands on an impossible turn rate; the true history was then charged thousands
+of units for a rate it does not have. The slides' histogram showed it at once.
+
+With the manoeuvre statistics inside the fit, the picture changes. Where the re-test is
+wrong, the true history is clearly the more probable in half or more of the periods and the
+wrong one in fewer than one in ten. And the re-test's own history, refitted with the
+statistics and no truth, is at about half the error of the standing classical system read
+as a track (0.057 against 0.113 in median range error; ratio 1.99, interval 1.01 to 3.11,
+on 57 tuning periods). About a third of the difficult periods remain genuinely ambiguous.
+The direct next step is a classical search over histories scored by that evidence. Record:
+`experiments/20261112-tl-prior/` (the withdrawn files are kept beside the corrected ones).

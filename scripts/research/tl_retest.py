@@ -30,6 +30,7 @@ names = [
     "retest-c2",
     "retest-none",
     "truth-fit",
+    "truth-map",
     "retest-c2-k",
     "retest-none-k",
 ]
@@ -104,7 +105,10 @@ for i, x in enumerate(ps):
     th = start_from_track(tt, t, spt)
     th[4:][~kt.reshape(-1)] = 0.0
     ft = joint_fit(pb, th, spt, free_changes=kt)
-    rec["truth_ev"] = log_evidence(pb, ft, kt, prior)
+    fm = joint_fit(pb, ft.theta, ft.spans, free_changes=kt, prior=prior)  # fit to the posterior
+    rec["truth_ev"] = log_evidence(pb, fm, kt, prior)
+    rec["truth_cost_ml"], rec["truth_cost_map"] = ft.cost, fm.cost
+    E["truth-map"].append(row_errors(fm.states, tr))
     E["truth-fit"].append(row_errors(ft.states, tr))
     for key, name in (("retest_c2", "retest-c2-k"), ("retest_none", "retest-none-k")):
         if key in rec:

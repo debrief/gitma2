@@ -127,9 +127,12 @@ def joint_fit(
     free_changes: np.ndarray | None = None,
     free_times: bool = True,
     iterations: int = 30,
+    prior: Any = None,
 ) -> Structure:
     """Least squares over the state, the changes and (``free_times``) every manoeuvre's start
-    and duration, by Levenberg–Marquardt with forward differences."""
+    and duration, by Levenberg–Marquardt with forward differences. With ``prior`` the fit is
+    to the posterior: the prior's Gaussian parts are appended as residuals
+    (``prior.prior_residuals``); ``cost`` stays the bearings' cost alone."""
     m = spans0.shape[0]
     t_end = float(pb[0][-1])
     x = _pack(theta0.astype(np.float64), spans0.astype(np.float64))
@@ -143,9 +146,16 @@ def joint_fit(
     angle[2] = True
     angle[4 : 4 + 2 * m : 2] = True
 
+    kinds = np.ones((m, 2), dtype=bool) if free_changes is None else free_changes
+
     def f(y: np.ndarray) -> np.ndarray:
         th, sp = _unpack(y, m)
-        return _resid(pb, th, sp)
+        r_data = _resid(pb, th, sp)
+        if prior is None:
+            return r_data
+        from .prior import prior_residuals
+
+        return np.concatenate([r_data, prior_residuals(prior, th, sp, kinds)])
 
     r = f(x)
     cost = float(r @ r)
@@ -178,6 +188,9 @@ def joint_fit(
         if gain < 0 or gain < 1e-7 * max(cost, 1.0):
             break
     theta, spans = _unpack(x, m)
+    if prior is not None:
+        rd = _resid(pb, theta, spans)
+        cost = float(rd @ rd)
     return Structure(theta.copy(), spans.copy(), cost, arc_states(theta, pb[0], spans))
 
 
@@ -306,9 +319,12 @@ def log_evidence(
     kinds: np.ndarray,
     prior: Any,
 ) -> dict[str, float]:
-    """Laplace's approximation to the log evidence of a fitted history, by part: ``fit``
-    (−cost / 2), the prior's three parts at the fit, and ``occam`` (the volume left)."""
-    from .prior import LOG_2PI, log_prior, prior_precision
+    """Laplace's approximation to the log evidence of a history fitted **with the prior**
+    (``joint_fit(..., prior=prior)``), by part: ``fit`` (−cost / 2), the prior's three parts
+    at the fit, and ``occam`` (the volume the bearings and the prior leave). Evaluating the
+    prior at a likelihood-only fit is wrong where the bearings leave a quantity loose (a
+    manoeuvre's duration) and the prior is sharp (its rate)."""
+    from .prior import LOG_2PI, log_prior, prior_precision, prior_residuals
 
     t, ox, oy, *_ = pb
     m = s.spans.shape[0]
@@ -319,14 +335,15 @@ def log_evidence(
 
     def f(y: np.ndarray) -> np.ndarray:
         th, sp = _unpack(y, m)
-        return _resid(pb, th, sp)
+        return np.concatenate([_resid(pb, th, sp), prior_residuals(prior, th, sp, kinds)])
 
     r = f(x)
     jac = _jacobian(f, x, r, idx, m)
     range0 = float(np.hypot(s.theta[0] - ox[0], s.theta[1] - oy[0]))
     h = jac.T @ jac + np.diag(prior_precision(prior, m, range0)[idx])
     _sign, logdet = np.linalg.slogdet(h)
-    out = {"fit": -0.5 * float(r @ r)}
+    rd = _resid(pb, s.theta, s.spans)
+    out = {"fit": -0.5 * float(rd @ rd)}
     out.update(log_prior(prior, s.theta, s.spans, kinds, float(t[-1]), range0))
     out["occam"] = 0.5 * idx.size * LOG_2PI - 0.5 * float(logdet)
     out["total"] = float(sum(out.values()))
@@ -349,7 +366,7 @@ def choose_kinds(
             for j in range(2):
                 if k[i, j] and th[4 + 2 * i + j] == 0.0:
                     th[4 + 2 * i + j] = 0.5 if j == 0 else 1.0
-        g = joint_fit(pb, th, s.spans, free_changes=k)
+        g = joint_fit(pb, th, s.spans, free_changes=k, prior=prior)
         return g, log_evidence(pb, g, k, prior)
 
     best, ev = fitted(kinds)
