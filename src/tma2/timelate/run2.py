@@ -12,16 +12,17 @@ import numpy as np
 
 from tma2.types.generated.tma import SegmentParameters
 
-from .arc import fit_arc, solve_arc, start_from_track
+from .arc import arc_states, fit_arc, fit_arc_search, solve_arc, start_from_track
 from .bound import period_bound
 from .controls import c2_refit
 from .periods import Period
 from .prior import ManoeuvrePrior
-from .retest import Problem, joint_fit, log_evidence
-from .run import history_reference, nominal_starts
+from .retest import Problem, Structure, joint_fit, log_evidence
+from .run import nominal_starts
 from .score import row_errors, strata_of, truth_rows
 from .search import History, candidate_set, evidence_search
 from .systems import solve_systems
+from .thin import thin
 
 BASE = ("c2", "one-leg", "history-fixed", "history-fit", "history-map", "history-best")
 OPTIONAL = ("search", "search2", "search-flat", "c2-refit")
@@ -57,6 +58,29 @@ def _search(
     return candidate_set(seen, top=int(settings["candidates"])), len(seen)
 
 
+def reference(
+    pb: Problem, spans: np.ndarray, kinds: np.ndarray, prior: ManoeuvrePrior
+) -> tuple[Structure, Structure, Structure]:
+    """Gate T's ``history_reference`` returning the fits themselves (times held; times free;
+    to the posterior), so their tracks can be read at rows the fit did not see."""
+    t, ox, oy, z, v, sigma = pb
+    m = spans.shape[0]
+    best = None
+    for q0 in nominal_starts(pb):
+        th0 = np.concatenate([q0, np.zeros(2 * m)])
+        for i in range(m):
+            th0[4 + 2 * i] = 0.5 if kinds[i, 0] else 0.0
+            th0[5 + 2 * i] = 1.0 if (kinds[i, 1] and not kinds[i, 0]) else 0.0
+        f, _n = fit_arc_search(t, ox, oy, z, v, sigma, spans, th0, kinds if m else None)
+        if best is None or f.cost < best.cost:
+            best = f
+    assert best is not None
+    held = Structure(best.theta, spans, float(best.cost), best.states)
+    fit = joint_fit(pb, best.theta, spans, free_changes=kinds)
+    post = joint_fit(pb, fit.theta, fit.spans, free_changes=kinds, prior=prior)
+    return held, fit, post
+
+
 def _history(spans: np.ndarray, kinds: np.ndarray, evidence: float) -> dict[str, Any]:
     return {"spans": spans.tolist(), "kinds": kinds.tolist(), "evidence": float(evidence)}
 
@@ -87,7 +111,14 @@ def run_shard2(
         ox, oy = x.own[a:b, 1].astype(np.float64), x.own[a:b, 2].astype(np.float64)
         z, v = x.obs[a:b, 1].astype(np.float64), x.obs[a:b, 2] != 0
         sigma = float(x.meta["parameters"]["noise_sigma_rad"])
-        pb: Problem = (t, ox, oy, z, v, sigma)
+        full: Problem = (t, ox, oy, z, v, sigma)
+        pb = thin(full, str(settings.get("thinning", "none")))
+        at = np.clip(np.searchsorted(t, pb[0]), 0, x.rows - 1)  # the fit's rows in the period
+
+        def track(s: Structure, t: np.ndarray = t) -> np.ndarray:
+            out: np.ndarray = arc_states(s.theta, t, s.spans)
+            return out
+
         tr = truth_rows(x)
         pick = np.arange(0, x.rows, every)
         nan = np.full((x.rows, 4), np.nan)
@@ -120,25 +151,26 @@ def run_shard2(
         }
         # the reference: the true history's structure, never its states
         t0 = time.perf_counter()
-        fixed, hf, hm = history_reference(pb, spt, kt, p2)
+        held, hf, hm = reference(pb, spt, kt, p2)
         took["reference"] = time.perf_counter() - t0
-        tracks["history-fixed"] = fixed
-        tracks["history-fit"], tracks["history-map"] = hf.states, hm.states
+        tracks["history-fixed"] = track(held)
+        tracks["history-fit"], tracks["history-map"] = track(hf), track(hm)
         true_ev = float(log_evidence(pb, hm, kt, p2)["total"])
         best_true = hm
         rec["history_cost"] = float(hf.cost)
-        rec["history_converged"] = consistent(float(hf.cost), int(v.sum()))
+        rec["history_converged"] = consistent(float(hf.cost), int(pb[4].sum()))
+        rec["fit_points"] = int(pb[4].sum())
         cands2: list[tuple[History, float]] = []
         for name, key in (("search", "v1"), ("search2", "v2"), ("search-flat", "flat")):
             if name not in chosen:
                 continue
             t0 = time.perf_counter()
-            cands, n_seen = _search(pb, priors[key], cc.states, spc, settings)
+            cands, n_seen = _search(pb, priors[key], cc.states[at], spc, settings)
             took[name] = time.perf_counter() - t0
             if not cands:
                 continue
             top = cands[0][0]
-            tracks[name] = top.fit.states
+            tracks[name] = track(top.fit)
             hist[name] = _history(top.fit.spans, top.kinds, top.evidence)
             if name == "search2":
                 cands2 = cands
@@ -150,14 +182,14 @@ def run_shard2(
         if "c2-refit" in chosen:
             t0 = time.perf_counter()
             try:
-                g, kinds, ev = c2_refit(pb, spc, cc.states, p2, nominal_starts(pb))
-                tracks["c2-refit"] = g.states
+                g, kinds, ev = c2_refit(pb, spc, cc.states[at], p2, nominal_starts(pb))
+                tracks["c2-refit"] = track(g)
                 hist["c2-refit"] = _history(g.spans, kinds, ev["total"])
             except ValueError:
                 pass
             took["c2-refit"] = time.perf_counter() - t0
         if cands2:  # the true structure again, started from the search's own best track
-            th = start_from_track(cands2[0][0].fit.states, t, spt)
+            th = start_from_track(cands2[0][0].fit.states, pb[0], spt)
             th[4:][~kt.reshape(-1)] = 0.0
             for j in range(spt.shape[0]):
                 for c in range(2):
@@ -167,7 +199,7 @@ def run_shard2(
             e = float(log_evidence(pb, alt, kt, p2)["total"])
             if np.isfinite(e) and (not np.isfinite(true_ev) or e > true_ev):
                 true_ev, best_true = e, alt
-        tracks["history-best"] = best_true.states
+        tracks["history-best"] = track(best_true)
         rec["true_evidence"] = true_ev
         rec["true_fit_spans"] = best_true.spans.tolist()
         rec["histories"] = hist

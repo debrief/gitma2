@@ -26,7 +26,7 @@ SEARCH_FILES = (
 )
 
 
-STUDY_FILES = ("controls.py", "counts.py", "run2.py")  # spec 014's additions
+STUDY_FILES = ("controls.py", "counts.py", "run2.py", "thin.py")  # spec 014's additions
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -47,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--start", type=int, default=0, help="first σ = 1° ordinal")
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--out", required=True, help="output prefix")
+    ap.add_argument("--thin", help="spec 014: overrides the plan's settings.thinning")
     a = ap.parse_args(argv)
     from tma2.data.provenance import read_git_provenance
 
@@ -79,6 +80,8 @@ def main(argv: list[str] | None = None) -> int:
     imm = parse_imm_name(refs["imm"]) if refs.get("imm") else None
     ekf = parse_ekf_name(refs["ekf"]) if refs.get("ekf") else None
     run2 = plan.get("runner") == "run2"
+    if a.thin:
+        plan["settings"]["thinning"] = a.thin
     extra: dict[str, Any] = {}
     if run2:
         from tma2.timelate.run2 import run_shard2

@@ -180,3 +180,40 @@ def test_c2_refit_keeps_the_given_manoeuvres_and_never_searches(
     assert g.spans.shape == spans.shape and kinds.shape == (2, 2)
     assert np.isfinite(ev["total"])
     assert float(np.abs(g.spans.mean(axis=1) - spans.mean(axis=1)).max()) < 120.0
+
+
+def test_thinning_forms() -> None:
+    from tma2.timelate.arc import fit_arc
+    from tma2.timelate.thin import thin
+
+    pb, spans, theta = _problem(11)
+    t, ox, oy, z, v, sigma = pb
+    assert thin(pb, "none") is pb
+    one = thin(pb, "fixed:1")
+    wrapped = (one[3] - z + np.pi) % (2 * np.pi) - np.pi
+    assert np.allclose(one[0], t) and np.allclose(wrapped, 0.0, atol=1e-12)
+    assert np.allclose(one[5], sigma)
+    d = thin(pb, "drop:4")
+    assert int(d[4].sum()) == (int(v.sum()) + 3) // 4 and d[0] is t
+    f = thin(pb, "fixed:6")
+    assert f[0].size == -(-t.size // 6)
+    assert np.allclose(np.asarray(f[5])[:-1], sigma / np.sqrt(6.0))
+    a = thin(pb, "adaptive:3.0")
+    assert t.size // 2 >= a[0].size >= t.size // 24
+    full = fit_arc(t, ox, oy, z, v, sigma, spans, theta)
+    thinned = fit_arc(f[0], f[1], f[2], f[3], f[4], f[5], spans, theta)
+    assert np.allclose(thinned.theta[:2], full.theta[:2], atol=150.0)
+    wild = z.copy()
+    wild[100] += 0.3  # 17 sd
+    plain = thin((t, ox, oy, wild, v, sigma), "adaptive:3.0")
+    robust = thin((t, ox, oy, wild, v, sigma), "adaptive:3.0:robust")
+    clean = thin(pb, "adaptive:3.0:robust")
+
+    def worst(p: Any) -> float:
+        k = int(np.argmin(np.abs(p[0] - t[100])))
+        j = int(np.argmin(np.abs(clean[0] - p[0][k])))
+        return float(abs(p[3][k] - clean[3][j]))
+
+    assert worst(robust) < worst(plain)
+    with pytest.raises(ValueError):
+        thin(pb, "wavelet:3")
