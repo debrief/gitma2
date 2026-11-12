@@ -1,0 +1,20 @@
+man2: 100 periods, 91 scored
+  c2             median 0.1020  eff 3.58 3.94 3.73  tight 4.27
+  history-best   median 0.0385  eff 1.27 1.14 1.30  tight 1.38
+  history-fit    median 0.0403  eff 1.22 1.35 1.25  tight 1.21
+  history-fixed  median 0.0236  eff 0.97 1.06 1.11  tight 1.01
+  history-map    median 0.0354  eff 1.23 1.18 1.11  tight 1.35
+  one-leg        median 0.4455  eff 23.03 18.74 16.20  tight 26.79
+  search2        median 0.0617  eff 2.04 1.81 1.70  tight 2.06
+  c2_over_search2: of medians 1.65 [1.15, 2.24]  paired 1.85 [1.39, 2.52]  a better 0.34
+  search2_over_history-map: of medians 1.74 [1.27, 2.57]  paired 1.81 [1.49, 2.24]  a better 0.33
+  search2_over_one-leg: of medians 0.14 [0.10, 0.21]  paired 0.07 [0.04, 0.11]  a better 0.91
+  c2_over_one-leg: of medians 0.23 [0.17, 0.32]  paired 0.13 [0.08, 0.21]  a better 0.76
+  classes: {"right": {"rate": 0.63, "lo": 0.5322052958094291, "hi": 0.7181763946567546, "n": 100}, "ambiguous": {"rate": 0.14, "lo": 0.08526343659939134, "hi": 0.22137188210963837, "n": 100}, "search_failure": {"rate": 0.04, "lo": 0.01566330399154762, "hi": 0.0983707143588792, "n": 100}, "evidence_failure": {"rate": 0.19, "lo": 0.12514751509768735, "hi": 0.27778845379064376, "n": 100}}
+  classes_among_wrong: {"ambiguous": {"rate": 0.3783783783783784, "lo": 0.24063999175798265, "hi": 0.5389956956078235, "n": 37}, "search_failure": {"rate": 0.10810810810810811, "lo": 0.04285189940411473, "hi": 0.24708531544126028, "n": 37}, "evidence_failure": {"rate": 0.5135135135135135, "lo": 0.358948966656188, "hi": 0.6655359569698336, "n": 37}}
+  headroom: {"ident-search": {"paired": {"geometric_mean": 1.0903879553252782, "lo": 1.0097346479266176, "hi": 1.2110799327257296, "median_ratio": 1.0, "a_better": 0.0, "a_twice_as_bad": 0.04395604395604396, "b_twice_as_bad": 0.0, "periods": 91}, "of_medians": {"value": 1.06510208000358, "lo": 1.0, "hi": 1.342690942999768}, "verdict": "inconclusive", "median_period_range": 0.05794043280184269}, "ident-all": {"paired": {"geometric_mean": 1.2756118929820954, "lo": 1.1050956136199672, "hi": 1.5067825537287207, "median_ratio": 1.0, "a_better": 0.07692307692307693, "a_twice_as_bad": 0.13186813186813187, "b_twice_as_bad": 0.02197802197802198, "periods": 91}, "of_medians": {"value": 1.2177077738741748, "lo": 1.0259824256967345, "hi": 1.7929750576415142}, "verdict": "material", "median_period_range": 0.05067921616137028}}
+  quiet: {"periods": 5, "false_manoeuvre_rate": {"c2": {"rate": 0.0, "lo": 0.0, "hi": 0.43448246478317476, "n": 5}, "search2": {"rate": 0.0, "lo": 0.0, "hi": 0.43448246478317476, "n": 5}}}
+  counts c2: {"periods": 100, "true": 168, "matched": 84, "missed": 84, "false": 73, "found": 158, "missed_share": 0.5, "false_per_period": 0.73, "timing_median_s": 52.5, "timing_p90_s": 104.25}
+  counts search2: {"periods": 100, "true": 168, "matched": 141, "missed": 27, "false": 34, "found": 178, "missed_share": 0.16071428571428573, "false_per_period": 0.34, "timing_median_s": 16.566947532488484, "timing_p90_s": 60.53162697106018}
+  seconds per period: {"layer": 11.760000000000002, "reference": 3.2683999999999997, "search2": 21.357299999999995}
+soundness {"reference_efficiency_tight": 1.0065117184905674, "band": [0.8, 1.3], "history_converged_share": 1.0, "convergence_min": 0.9, "pass": true}
