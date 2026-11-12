@@ -1,0 +1,113 @@
+name: Time-late (spec 013)
+
+# Push `timelate/<name>` with a run configs/timelate/runs/<name>.json:
+#   plan        the Gate T plan (splits, prior, settings, temperature, criteria)
+#   seed, count the seed and engagements generated per split (5-second data)
+#   splits      {<split>: {start, periods}}: sigma = 1 deg ordinals cut into periods
+#   shard_size  periods per job
+# Jobs: solve (one per split shard: C'' as a track, the evidence search, the reference) ->
+# score (tma2-tlscore). Results: results/timelate-<name>-<run id>. CPU only; no secrets.
+
+on:
+  push:
+    branches: ["timelate/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.plan.outputs.name }}
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        run: |
+          NAME="${GITHUB_REF_NAME#timelate/}"
+          test -f "configs/timelate/runs/$NAME.json"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          python3 - "configs/timelate/runs/$NAME.json" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          r = json.load(open(sys.argv[1]))
+          size, m = r["shard_size"], []
+          for split, s in r["splits"].items():
+              n, i = s["periods"], 0
+              while i * size < n:
+                  m.append({"split": split, "shard": i, "start": s.get("start", 0) + i * size, "count": min(size, n - i * size)})
+                  i += 1
+          print("shards=" + json.dumps({"include": m}))
+          PY
+
+  solve:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.shards) }}
+    env:
+      RUN: configs/timelate/runs/${{ needs.setup.outputs.name }}.json
+      OMP_NUM_THREADS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Generate the split
+        run: |
+          python3 - "$RUN" "${{ matrix.split }}" > "$RUNNER_TEMP/gen" <<'PY'
+          import json, sys
+          r = json.load(open(sys.argv[1]))
+          p = json.load(open(r["plan"]))
+          s = p["splits"][sys.argv[2]]
+          print(r["plan"], r["seed"], r["count"], s["ranges"], s["heldout_ranges"], p["data_split"])
+          PY
+          read -r PLAN SEED COUNT RANGES HELDOUT DSPLIT < "$RUNNER_TEMP/gen"
+          uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data"
+          echo "PLAN=$PLAN" >> "$GITHUB_ENV"
+          echo "TRUTH=$RUNNER_TEMP/data/$DSPLIT.f32pack" >> "$GITHUB_ENV"
+      - name: Solve
+        run: |
+          mkdir -p "$RUNNER_TEMP/shards"
+          uv run tma2-tlsolve --in "$TRUTH" --plan "$PLAN" --split "${{ matrix.split }}" --start "${{ matrix.start }}" --count "${{ matrix.count }}" --out "$RUNNER_TEMP/shards/${{ matrix.split }}.${{ matrix.shard }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.split }}-${{ matrix.shard }}
+          path: ${{ runner.temp }}/shards/*
+
+  score:
+    needs: [setup, solve]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NAME: ${{ needs.setup.outputs.name }}
+      RUN: configs/timelate/runs/${{ needs.setup.outputs.name }}.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          path: ${{ runner.temp }}/shards
+          merge-multiple: true
+      - name: Score
+        run: |
+          PLAN="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['plan'])" "$RUN")"
+          uv run tma2-tlscore --shards "$RUNNER_TEMP/shards" --plan "$PLAN" --out "$RUNNER_TEMP/result" | tee "$RUNNER_TEMP/result/score.txt"
+          cp "$RUN" "$RUNNER_TEMP/result/run.json"
+          cp "$PLAN" "$RUNNER_TEMP/result/plan.json"
+          echo "{\"run_id\": \"$GITHUB_RUN_ID\", \"commit\": \"$GITHUB_SHA\", \"cpu_model\": \"$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)\"}" > "$RUNNER_TEMP/result/ci.json"
+      - name: Push the results branch
+        run: |
+          DEST="experiments/timelate-runs/$NAME-$GITHUB_RUN_ID"
+          BRANCH="results/timelate-$NAME-$GITHUB_RUN_ID"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          mkdir -p "$DEST"
+          cp -r "$RUNNER_TEMP/result/." "$DEST/"
+          git add -f "$DEST"
+          git commit -m "Time-late run $NAME ($GITHUB_RUN_ID)"
+          git push origin "$BRANCH"

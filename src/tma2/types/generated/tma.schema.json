@@ -2451,6 +2451,49 @@
             "title": "GateSVerdicts",
             "type": "object"
         },
+        "GateTCriteria": {
+            "additionalProperties": false,
+            "description": "Gate T's checks (spec 013, SRD section 5), fixed by the decision record.",
+            "properties": {
+                "calibration_gap_max": {
+                    "description": "T-d: mean stated probability of the top candidate minus the share of periods where it is the true history, at most this in size.",
+                    "type": "number"
+                },
+                "headroom_ratio_min": {
+                    "description": "T-e: the search's error over the true history's (fitted with the prior); an interval above this is material headroom for a better use of the same knowledge.",
+                    "type": "number"
+                },
+                "reference_efficiency_band": {
+                    "description": "T-a: band for the range efficiency of the true history fitted to the bearings alone.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "search_ratio_min": {
+                    "description": "T-b: the 95% interval of C\u2033's median period range error over the search's lies above this.",
+                    "type": "number"
+                },
+                "shift_ratio_min": {
+                    "description": "T-c: the same ratio on the shifted-prior split lies above this.",
+                    "type": "number"
+                },
+                "truth_in_set_min": {
+                    "description": "T-d: share of periods whose true history is among the first three candidates, at least this.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "reference_efficiency_band",
+                "search_ratio_min",
+                "shift_ratio_min",
+                "truth_in_set_min",
+                "calibration_gap_max",
+                "headroom_ratio_min"
+            ],
+            "title": "GateTCriteria",
+            "type": "object"
+        },
         "GateVerdict": {
             "additionalProperties": false,
             "description": "Machine verdict for a gate; the team review records the final decision.",
@@ -5282,6 +5325,77 @@
             "title": "TemperatureConfig",
             "type": "object"
         },
+        "TimeLateShardHeader": {
+            "additionalProperties": false,
+            "description": "Header of a tma2-tlsolve shard (spec 013): which periods, by which code and plan.",
+            "properties": {
+                "c_code_sha256": {
+                    "description": "The frozen segmenter C's code digest (C\u2033 read as a track).",
+                    "type": "string"
+                },
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "ordinal_count": {
+                    "type": "integer"
+                },
+                "ordinal_start": {
+                    "type": "integer"
+                },
+                "plan_sha256": {
+                    "type": "string"
+                },
+                "prior_sha256": {
+                    "description": "Digest of the ranges file the search's manoeuvre prior is read from.",
+                    "type": "string"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "search_code_sha256": {
+                    "description": "Digest of the time-late solve, prior, re-test and search modules.",
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "settings": {
+                    "description": "The search's settings as canonical JSON.",
+                    "type": "string"
+                },
+                "split": {
+                    "description": "The plan's split name (man2 or shift).",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "plan_sha256",
+                "split",
+                "dataset_digest",
+                "seed",
+                "ordinal_start",
+                "ordinal_count",
+                "c_code_sha256",
+                "search_code_sha256",
+                "prior_sha256",
+                "settings",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "TimeLateShardHeader",
+            "type": "object"
+        },
         "Track": {
             "additionalProperties": false,
             "description": "Time-ordered states of one platform. Stone Soup analogue GroundTruthPath.",
@@ -5626,6 +5740,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.33.0"
+    "version": "0.34.0"
 }
 

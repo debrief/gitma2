@@ -195,3 +195,54 @@ def test_evidence_search_finds_a_clear_manoeuvre_from_nothing() -> None:
     cands = candidate_set(seen)
     assert abs(sum(p for _h, p in cands) - 1.0) < 1e-9
     assert cands[0][0].evidence == max(h.evidence for h in seen if np.isfinite(h.evidence))
+
+
+def test_history_right_and_tempered_probabilities() -> None:
+    from tma2.timelate.gate import candidate_reading, history_right, temper
+
+    true = [[100.0, 200.0], [1000.0, 1100.0]]
+    assert history_right(true, [[1010.0, 1130.0], [90.0, 180.0]])
+    assert not history_right(true, [[100.0, 200.0]])
+    assert not history_right(true, [[100.0, 200.0], [1400.0, 1500.0]])
+    assert history_right([], [])
+    p1, p3 = temper([0.0, -3.0], 1.0), temper([0.0, -3.0], 3.0)
+    assert abs(p1.sum() - 1.0) < 1e-12 and p1[0] > p3[0] > 0.5
+    periods = [
+        {"true": true, "candidates": [{"evidence": 0.0, "spans": true}]},
+        {
+            "true": true,
+            "candidates": [
+                {"evidence": 0.0, "spans": [[100.0, 200.0]]},
+                {"evidence": -1.0, "spans": true},
+            ],
+        },
+    ]
+    r = candidate_reading(periods, 1.0, top=3)
+    assert r["periods"] == 2 and r["top_right"] == 0.5 and r["truth_in_top3"] == 1.0
+
+
+def test_gate_t_verdicts_follow_the_criteria() -> None:
+    from tma2.timelate.gate import verdicts
+
+    crit = {
+        "reference_efficiency_band": [0.8, 1.3],
+        "search_ratio_min": 1.1,
+        "shift_ratio_min": 1.0,
+        "truth_in_set_min": 0.6,
+        "calibration_gap_max": 0.1,
+        "headroom_ratio_min": 1.1,
+    }
+
+    def split(lo: float) -> dict[str, object]:
+        return {
+            "systems": {"truth-fit": {"efficiency_range": 1.0}},
+            "ratios": {
+                "c2_over_search": {"value": 2.0, "lo": lo, "hi": 3.0},
+                "search_over_truth": {"value": 2.0, "lo": 1.5, "hi": 3.0},
+            },
+            "candidates": {"truth_in_top3": 0.7, "calibration_gap": 0.2},
+        }
+
+    v = verdicts({"man2": split(1.5), "shift": split(0.9)}, crit)
+    assert v["T-a"]["pass"] and v["T-b"]["pass"] and not v["T-c"]["pass"]
+    assert not v["T-d"]["pass"] and v["T-e"]["material"]

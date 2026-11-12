@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.33.0
+version: 0.34.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -1872,6 +1872,38 @@ classes:
       weights_sha256: { range: string, required: true }
       git_commit: { range: string, required: true }
       git_dirty: { range: boolean, required: true }
+
+  TimeLateShardHeader:
+    description: "Header of a tma2-tlsolve shard (spec 013): which periods, by which code and plan."
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      plan_sha256: { range: string, required: true }
+      split: { range: string, required: true, description: "The plan's split name (man2 or shift)." }
+      dataset_digest: { range: string, required: true }
+      seed: { range: integer, required: true }
+      ordinal_start: { range: integer, required: true }
+      ordinal_count: { range: integer, required: true }
+      c_code_sha256: { range: string, required: true, description: "The frozen segmenter C's code digest (C″ read as a track)." }
+      search_code_sha256: { range: string, required: true, description: "Digest of the time-late solve, prior, re-test and search modules." }
+      prior_sha256: { range: string, required: true, description: "Digest of the ranges file the search's manoeuvre prior is read from." }
+      settings: { range: string, required: true, description: "The search's settings as canonical JSON." }
+      git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, required: true }
+
+  GateTCriteria:
+    description: "Gate T's checks (spec 013, SRD section 5), fixed by the decision record."
+    attributes:
+      reference_efficiency_band:
+        range: float
+        multivalued: true
+        required: true
+        description: "T-a: band for the range efficiency of the true history fitted to the bearings alone."
+      search_ratio_min: { range: float, required: true, description: "T-b: the 95% interval of C″'s median period range error over the search's lies above this." }
+      shift_ratio_min: { range: float, required: true, description: "T-c: the same ratio on the shifted-prior split lies above this." }
+      truth_in_set_min: { range: float, required: true, description: "T-d: share of periods whose true history is among the first three candidates, at least this." }
+      calibration_gap_max: { range: float, required: true, description: "T-d: mean stated probability of the top candidate minus the share of periods where it is the true history, at most this in size." }
+      headroom_ratio_min: { range: float, required: true, description: "T-e: the search's error over the true history's (fitted with the prior); an interval above this is material headroom for a better use of the same knowledge." }
 
   GateHCriteria:
     description: "Gate H's checks (spec 010 research R7, SRD section 5), fixed by the decision record."
