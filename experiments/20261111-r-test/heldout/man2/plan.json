@@ -1,0 +1,54 @@
+{
+  "description": "Spec 012, declared after validation and before any test result: the same systems on the HELD-OUT-RANGES split of test seed 328 (scenario ranges the training stream never drew: configs/man2-heldout.json), to see how much of the regressor's margin depends on having learnt the simulator's ranges. Reported, not a registered reading.",
+  "seed": 328,
+  "count": 5600,
+  "data_split": "heldout",
+  "ordinals": 400,
+  "shards": 4,
+  "shard_size": 100,
+  "held_ordinals": 400,
+  "gh_plan": "configs/gateh/gh-a.json",
+  "classical": [
+    {
+      "name": "c2",
+      "segmentation": "c2"
+    },
+    {
+      "name": "c-tau3",
+      "segmentation": "c2r",
+      "robust_confirm": {
+        "robust": false,
+        "tau_factor": 3.0
+      }
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "checkpoints": [
+    {
+      "name": "reg-s1",
+      "branch": "results/gputrain-r-a-s1-42990055824",
+      "dir": "experiments/gputrain-runs/r-a-s1-42990055824"
+    },
+    {
+      "name": "reg-s2",
+      "branch": "results/gputrain-r-a-s2-42990055730",
+      "dir": "experiments/gputrain-runs/r-a-s2-42990055730"
+    },
+    {
+      "name": "reg-s3",
+      "branch": "results/gputrain-r-a-s3-42990059695",
+      "dir": "experiments/gputrain-runs/r-a-s3-42990059695"
+    },
+    {
+      "name": "reg-tenth",
+      "branch": "results/gputrain-r-a-tenth-42990067151",
+      "dir": "experiments/gputrain-runs/r-a-tenth-42990067151"
+    },
+    {
+      "name": "reg-own",
+      "branch": "results/gputrain-r-a-own-42990062999",
+      "dir": "experiments/gputrain-runs/r-a-own-42990062999"
+    }
+  ]
+}
