@@ -166,3 +166,8 @@ seed 328.
 times, is 1.75 times the bound in course on a steady target (3.2 in the best geometry), and
 is below the bound in poor geometry, which means it is biased toward what the simulator
 usually does. It is a control. Nothing here supports a claim outside the simulator.
+
+**Control run after the panel** (`../20261112-r-control/`, registered on validation before
+the test seed): combining C″ with a range prior by precision weighting does not explain the
+margin (C″ 0.103, C″ + prior 0.102 to 0.104, regressor 0.066). Simple shrinkage toward the
+usual range is ruled out; the source of the margin is still not established.

@@ -222,9 +222,11 @@ tenth of the data loses little. **Panel round 1 (`review.md`): three approve wit
 Readings stand; narrowed to "a prior-informed, error-minimising estimator beats a prior-free fit in
 median range": in course efficiency after manoeuvres it is worse than C″ (3.40 against 3.19), the
 held-out split varies initial range only and the margin vanishes in its far quartile, and the
-hedging explanation is withdrawn (a range prior is the leading candidate, untested). Controls owed
-before any learning claim or GPU spend: C″ plus the prior (precision-weighted with the ownship-only
-model), hedged C″. Write-up and slides owed.
+hedging explanation is withdrawn (a range prior is the leading candidate, untested). Control run
+(`experiments/20261112-r-control/`, registered on validation first): C″ precision-weighted with a
+range prior does **not** explain the margin (0.102–0.104 against the regressor's 0.066 on test), so
+it is not simple shrinkage; the hedged-C″ control is not built and the margin's source is open.
+Write-up and slides owed.
 013 (time-late, Gate T, `specs/013-time-late/`; owner 2026-11-11; specified, not planned): the
 whole track over a period (position, course, speed at every moment, manoeuvre times), 5-second
 bearings, periods cut at random from longer engagements; nothing trained: C″ read as a track, a

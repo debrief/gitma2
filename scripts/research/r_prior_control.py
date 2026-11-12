@@ -113,7 +113,8 @@ def main(argv: list[str] | None = None) -> int:
             rule[f"t_{name}"] = min(med, key=lambda t: med[t])
         rule["grid"] = {k: {str(t): v for t, v in m.items()} for k, m in grid.items()}
     else:
-        rule = json.loads(Path(g.apply).read_text())
+        loaded = json.loads(Path(g.apply).read_text())
+        rule = loaded.get("rule", loaded)  # a --fit output wraps the rule
     res = {"rows": int(ok.sum()), "engagements": int(np.unique(a["ordinal"][ok]).size)}
     res["c2_row_check_max_abs"] = check
     res["median"] = {
