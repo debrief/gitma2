@@ -44,7 +44,29 @@ R6): cost under 2% with an interval excluding 5%, and at least 30% of run time s
   registered runs use the full data. If run time ever binds (a larger search, a sampler),
   normal points of 4 to 6 are the form to test first, on enough periods to decide.
 
+## With 2% outlying bearings (`thin-outliers.json`)
+
+The same 100 periods with spec 010's central outlier condition (2% of bearings displaced by
+10 sd; 88 scored). Cost is against the full data **with the outliers**.
+
+| Form | Cost | Search seconds a period | Missed | False |
+| --- | --- | --- | --- | --- |
+| Full data | 1 | 42.3 | 23% | 66 |
+| Normal points of 6 | 0.86 [0.74, 1.00] | 13.4 | 21% | 62 |
+| Normal points of 6, wild bearings edited out | 0.56 [0.44, 0.70] | 13.4 | 17% | 36 |
+| Adaptive bins (4), wild bearings edited out | 0.76 [0.60, 0.97] | 11.1 | 17% | 39 |
+
+- Outliers cost the search a factor of 1.6 (0.062 clean to 0.097) and double its false
+  manoeuvres (34 to 66); they cost C″ far more (0.102 to 0.276; false transitions 73 to 226).
+- **Editing wild bearings out before forming normal points takes nearly all of that back**:
+  0.053 against 0.062 on the clean data, with the false count back to 36. Plain normal points
+  help a little by averaging.
+- What is not separated: the editing from the binning. No run edited wild bearings and kept
+  every other bearing. The edit (a bearing more than 4 sd from the running median of 9) is
+  the likely cause and is a pre-processing step that needs no thinning.
+- By the rule the robust form is adopted only if it is no worse than the plain one on clean
+  data, and that run was not made. Not adopted; the edit is the finding to carry forward.
+
 ## Not shown
 
-One seed, one system. Outlier-condition runs (plain and robust forms) are reported in
-`thin-outliers.json` when their baseline run completes; see below if present.
+One seed, one system; no run with the edit alone; the robust forms on clean data.
