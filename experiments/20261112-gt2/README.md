@@ -122,3 +122,63 @@ are about half what they should be at every level.
 - Validation and test ran on different CPU families (Xeon 8573C, Xeon 6975P-C); nothing is
   compared across them.
 - T-a moved from 1.26 on validation to 1.05 on test; the validation pass was near the edge.
+
+## Corrections after the panel (2026-11-12; `review.md`, five approve with findings)
+
+**Verdict: decided by the panel, round 1.** T-a pass (a weak check); T-b pass; T-c pass,
+qualified; T-d pass as registered, fragile; T-d-shift fail; T-e material as registered,
+renamed. The figures above stand. These statements above are withdrawn or narrowed:
+
+- **"2.3 times better" and "1.7 times"** are ratios of medians. Period by period the median
+  ratio C″ ÷ search is 1.68 [1.49, 2.04] (Annex B) and 1.53 [1.36, 1.80] (shift). The search
+  is better than C″ in 70% and 72% of periods, worse in about 30%, and more than twice as
+  bad in 12% and 8%.
+- **What T-b shows** is that a whole-period smoother with the arc model and Annex B's prior
+  beats a causal, prior-free filter read as a track. It wins where it names the true history
+  (0.032 against 0.081) and where it does not (0.057 against 0.093), so most of the gain is
+  the model, the prior and the whole period, not the finding of histories. The control that
+  would separate them (C″'s transitions refitted with the same model and prior) was not in
+  the gate.
+- **"It keeps most of that advantage" (T-c)** is withdrawn. Across three seeds the shift
+  ratio is 1.70, 1.26 [0.89, 1.84] and 1.69; pooled 1.6. The shift also makes the task
+  harder (3.2 manoeuvres a period against 1.9), no search with the right shifted prior was
+  run, and against the reference the search degrades from 1.46 to 1.87. Supportable: at
+  this shift (busier and smaller manoeuvres, same model family) the search remains better
+  than C″.
+- **"The probability it states is honest at every level" (T-d)** is withdrawn. It is honest
+  on average and by stated-probability bin at temperature 3 and a 120 s match. It is not
+  honest by period complexity (one manoeuvre: stated 0.53, right 0.77; three or more: 0.56
+  against 0.40), the 0.6 to 0.8 bin is under-confident, and at a 60 s match the true history
+  is in the first three in 0.57, below the 0.60 line.
+- **T-d-shift's consequence** is sharpened: under a wrong prior the candidates carry a
+  ranking and no probability (no temperature calibrates them). An analyst cannot tell from
+  the output which regime applies, so candidates are shown as ranked alternatives until a
+  prior-mismatch diagnostic exists.
+- **"That is the room left" (T-e)** is withdrawn. 1.46 is the cost of not knowing the
+  history: an upper limit. Period by period it is 1.17 [1.01, 1.32]; where the search names
+  the true history it already matches the reference (1.01), and the whole gap sits in the
+  periods where it does not (1.54), some of which are ambiguous.
+- **T-a** is a weaker check than registered: on the rows it reads the faulty truth-started
+  fit would also have passed (0.91). T-a's interval is 1.05 [0.91, 1.17]. It shows the bound
+  and the scoring agree in the median for the generator's own model with true times; 3.1%
+  of those rows are over three times the bound.
+- **The truth-started fit** in the systems table is below the bound and not attainable; it
+  is there to show the fault, not as a floor.
+- In the by-band table, the bound does not bound systems that use a prior: the reference
+  with the prior and the search may sit below 1 in loosely bounded rows without fault.
+- Candidates are scored on all 300 periods; the ratios on the 277 and 267 with determined
+  rows. No fielded system could select those rows: they are defined from the truth.
+
+**What the search gets wrong** (panel, from `*.periods.json`): it under-counts manoeuvres.
+Annex B: 23% of true manoeuvres missed, 93 false, the count right in 73% of periods. Shift:
+41% missed, fewer than true in 67% of periods. With no true manoeuvre (12 periods) it invents
+one in 58%.
+
+**What spec 013 promised and this gate did not deliver**: the owner's bearing-rate thinning
+study (FR-030, FR-031); manoeuvre counts and timing error as gate outputs (FR-011); splits
+by ownship manoeuvre, position in the period and range band (FR-013); the correlated-error
+variant scored beside (FR-003); uncut engagements as a stratum; a smoothed IMM line
+(FR-022); held-course periods and a false-manoeuvre rate. None was run. They are owed.
+
+Every bullet under "What this record supports" holds for σ = 1°, independent Gaussian
+bearing errors, one simulator, and an arc model that is the generator's own.
