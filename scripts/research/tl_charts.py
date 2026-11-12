@@ -4,9 +4,9 @@
 
 * ``efficiency.svg``: error against the bound for the chord and arc solves told the true
   manoeuvre times (`experiments/20261111-tl-arc/pooled.txt`) and the arc fit told only the
-  history (`experiments/20261112-tl-prior/ensemble.txt`).
+  history (`experiments/20261112-tl-prior/pooled.txt`).
 * ``systems.svg``: median period range error of every system
-  (`experiments/20261111-tl-retest/pooled.txt`, `experiments/20261112-tl-prior/ensemble.txt`).
+  (`experiments/20261111-tl-retest/pooled.txt`, `experiments/20261112-tl-prior/pooled.txt`).
 * ``evidence.svg``: log evidence of the true history minus the re-test's, per period
   (`experiments/20261112-tl-prior/histories.json`).
 * ``ambiguity.svg`` (with ``--data``: seed 329, count 400, `configs/timelate/tl-ranges.json`):
@@ -28,7 +28,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 ARC = Path("experiments/20261111-tl-arc/pooled.txt")
 RETEST = Path("experiments/20261111-tl-retest/pooled.txt")
-ENS = Path("experiments/20261112-tl-prior/ensemble.txt")
+ENS = Path("experiments/20261112-tl-prior/pooled.txt")
 HIST = Path("experiments/20261112-tl-prior/histories.json")
 AMBIGUOUS = 12  # ordinal: one true manoeuvre, none found, evidence within 3
 
@@ -92,13 +92,13 @@ def main(argv: list[str] | None = None) -> int:
 
         # 2. every system
         sysrows = [
-            ("true history,\ntimes free", ens["truth-fit"], green),
-            ("arc solve,\ntrue times", ret["arc-true"], green),
+            ("true history,\nbearings only", ens["truth-fit"], green),
+            ("true history,\nwith the prior", ens["truth-map"], green),
             ("chord solve,\ntrue times", ret["chord-true"], grey),
             ("C″ read\nas a track", ret["chord-c2"], orange),
-            ("re-test\nfrom C″", ret["retest-c2"], purple),
-            ("re-test\nfrom nothing", ret["retest-none"], purple),
-            ("evidence-\nweighted mean", ens["ens-mean"], purple),
+            ("re-test from C″,\nbearings only", ret["retest-c2"], grey),
+            ("re-test from C″,\nwith the prior", ens["retest-c2-k"], purple),
+            ("re-test from nothing,\nwith the prior", ens["retest-none-k"], purple),
         ]
         fig, ax = plt.subplots(figsize=(8.4, 3.8))
         xs = np.arange(len(sysrows))
@@ -108,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
         ax.set_xticks(xs, [lab for lab, *_ in sysrows], fontsize=8)
         ax.set_ylabel("median period range error (relative)")
         ax.set_title(
-            "Told the truth (green) against every system that must find it (57 periods)",
+            "Annex B's statistics in the fit halve the error (purple; nothing trained; 57 periods)",
             fontsize=10,
         )
         fig.tight_layout()
@@ -135,8 +135,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         ax.set_ylabel("periods")
         ax.set_title(
-            f"Annex B's statistics do not pick the true history ({d.size} periods, "
-            f"{int((d > 3).sum())} favour truth, {int((d < -3).sum())} favour the other)",
+            f"Fitted with the prior, the true history is usually preferred ({d.size} periods: "
+            f"{int((d > 3).sum())} favour truth, {int((d < -3).sum())} the other)",
             fontsize=10,
         )
         ax.legend(frameon=False)
