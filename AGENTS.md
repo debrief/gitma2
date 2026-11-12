@@ -282,7 +282,11 @@ the reference is the true history's structure fitted from neutral starts (`run.h
 `history-fixed` times held, `history-fit`, `history-map`); T-a reads `history-fixed` on rows bounded
 below 0.05 (1.10 on tuning; with times free 1.43, because the bound assumes them known); T-d-shift
 added (expected to fail); T-e against `history-map`; validation seed 332, test 331; schema 0.35.0.
-Open: rows bounded 0.05–0.2 show sub-bound efficiency even from neutral starts (0.45). Figures for the eventual slides:
+Validation seed 332 (`experiments/20261112-gt2-val/`): **T-a passes (1.26)**; reported only: C″ ÷
+search 2.41 [1.65, 3.02]; under the shifted prior 1.26 [0.89, 1.84] (would fail; 1.70 on seed 330);
+candidates 0.62 in the first three, gap +0.06; shift gap +0.32; search ÷ reference 1.41
+[1.19, 1.97]. The tuning seed's sub-bound middle band did not repeat (0.96). Test seed 331 launched
+(`timelate/tl-b-test`). Figures for the eventual slides:
 `scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
 
 ## Stack (owner decisions, 2026-10-31)
