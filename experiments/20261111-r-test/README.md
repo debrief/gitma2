@@ -37,12 +37,15 @@ Efficiency against the bound (reaches below 1.25 on all three, floor above 2.0):
 | A tenth of the data | partial | 1.22 [1.18, 1.27] | 2.05 | 1.57 | 2.04, 1.34, 1.08, 0.87 |
 | Ownship only | floor | 11.5 | 28.7 | 15.6 | 42.7, 16.1, 10.3, 6.3 |
 
-**Outcome: partial, on all three seeds**, as on validation (1.15 to 1.19, 1.8, 1.4). Forecast
-in the decision record: reaches in range, not in course. Range does reach (below 1.25) on every
-seed; course (1.75) and speed (1.42) do not, so the registered reading, which needs all
-three, is partial. The model is furthest from the bound where the geometry is best (1.8 in
-the best quartile) and below 1 in the worst, where the bound is loose and its knowledge of the
-ranges helps: it has learnt the prior better than the geometry.
+**Outcome: partial, on all three seeds**, as on validation (1.15 to 1.19, 1.8, 1.4). Against
+the forecast in the decision record ("partial; range between 1.3 and 2.5, worse for speed, and
+improving with geometry rather than flat"): the reading was forecast correctly; range is
+better than forecast (1.13 to 1.16, below the 1.25 line on every seed); speed is worse than
+range, as forecast; and the geometry pattern is the opposite of the forecast. The model is
+furthest from the bound where the geometry is best (1.8 in the best quartile) and below 1 in
+the worst, where the bound is loose and knowledge of the ranges helps: it has learnt the
+prior better than the geometry. A tenth of the data is worse than the carried seeds by more
+than their spread (1.22 against 1.13 to 1.16), as forecast.
 
 ### Held-out ranges, after manoeuvres (reported, not registered; 400 engagements)
 
