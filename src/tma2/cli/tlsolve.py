@@ -26,11 +26,14 @@ SEARCH_FILES = (
 )
 
 
-def search_code_digest() -> str:
-    """SHA-256 over the time-late modules, in name order."""
+STUDY_FILES = ("controls.py", "counts.py", "run2.py")  # spec 014's additions
+
+
+def search_code_digest(extra: tuple[str, ...] = ()) -> str:
+    """SHA-256 over the time-late modules, in name order (``extra``: spec 014's modules)."""
     root = Path(__file__).resolve().parents[1] / "timelate"
     h = hashlib.sha256()
-    for name in SEARCH_FILES:
+    for name in sorted(SEARCH_FILES + extra):
         h.update(name.encode())
         h.update((root / name).read_bytes())
     return h.hexdigest()
@@ -75,7 +78,23 @@ def main(argv: list[str] | None = None) -> int:
     refs = plan.get("references") or {}
     imm = parse_imm_name(refs["imm"]) if refs.get("imm") else None
     ekf = parse_ekf_name(refs["ekf"]) if refs.get("ekf") else None
-    arrays, recs = run_shard(periods, prior, c_params, c2, plan["settings"], imm, ekf)
+    run2 = plan.get("runner") == "run2"
+    extra: dict[str, Any] = {}
+    if run2:
+        from tma2.timelate.run2 import run_shard2
+
+        ranges = json.loads(Path(plan["prior"]).read_text())
+        kinds = {"v1": (1, "annex-b"), "v2": (2, "annex-b"), "flat": (2, "flat")}
+        priors = {k: ManoeuvrePrior.from_ranges(ranges, *vk) for k, vk in kinds.items()}
+        arrays, recs = run_shard2(periods, priors, c_params, c2, plan["settings"])
+        extra = {
+            "runner": "run2",
+            "prior_kinds": canonical_json({k: list(vk) for k, vk in kinds.items()}),
+            "thinning": str(plan["settings"].get("thinning", "none")),
+            "condition": str(plan["splits"][a.split].get("condition", "clean")),
+        }
+    else:
+        arrays, recs = run_shard(periods, prior, c_params, c2, plan["settings"], imm, ekf)
     head = read_pack_header(a.inp)
     header = TimeLateShardHeader(
         record=RecordKind.header,
@@ -87,11 +106,12 @@ def main(argv: list[str] | None = None) -> int:
         ordinal_start=a.start,
         ordinal_count=len(periods),
         c_code_sha256=str(c2.get("code_sha256", "")),
-        search_code_sha256=search_code_digest(),
+        search_code_sha256=search_code_digest(STUDY_FILES if run2 else ()),
         prior_sha256=sha256_file(plan["prior"]),
         settings=canonical_json(plan["settings"]),
         git_commit=g.commit,
         git_dirty=g.dirty,
+        **extra,
     )
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)

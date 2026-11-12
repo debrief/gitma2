@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.35.0
+version: 0.36.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -1888,8 +1888,25 @@ classes:
       search_code_sha256: { range: string, required: true, description: "Digest of the time-late solve, prior, re-test and search modules." }
       prior_sha256: { range: string, required: true, description: "Digest of the ranges file the search's manoeuvre prior is read from." }
       settings: { range: string, required: true, description: "The search's settings as canonical JSON." }
+      runner: { range: string, description: "Spec 014: the shard runner (absent or run: Gate T's; run2: spec 014's systems)." }
+      prior_kinds: { range: string, description: "Spec 014: the priors the shard's searches used, as canonical JSON (name to version and kind)." }
+      thinning: { range: string, description: "Spec 014: how the bearings the arc fits see were thinned (none, drop:N, fixed:N, adaptive:TOL)." }
+      condition: { range: string, description: "Spec 014: the bearing-error condition of the data (clean, or a spec 010 condition id)." }
       git_commit: { range: string, required: true }
       git_dirty: { range: boolean, required: true }
+
+  TimeLateStudyCriteria:
+    description: "Spec 014's registered study (research R4, R9): how wrong-history periods are classed and what is judged, fixed by the decision record."
+    attributes:
+      class_threshold: { range: float, required: true, description: "A wrong-history period is ambiguous when the true history's log evidence is within this of the search's first candidate; above it a search failure, below minus it an evidence failure." }
+      match_tolerance_s: { range: float, required: true, description: "Two histories are the same when they have as many manoeuvres and their mid-times pair within this." }
+      materiality: { range: float, required: true, description: "The attainable headroom (geometric mean per-period ratio of the search to a composite) is material when its 95% interval lies above this, not material when it lies below." }
+      soundness_band:
+        range: float
+        multivalued: true
+        description: "Validation stop: band for the range efficiency of the reference fitted from neutral starts with times held, on tightly bounded rows."
+      convergence_min: { range: float, required: true, description: "Validation stop: least share of periods whose true-history fit has a cost the bearing noise explains." }
+      quiet_interval_halfwidth_max: { range: float, description: "The false-manoeuvre rate on held-course periods is reported with a 95% interval no wider than plus or minus this." }
 
   GateTCriteria:
     description: "Gate T's checks (spec 013, SRD section 5), fixed by the decision record."

@@ -101,3 +101,82 @@ def test_flat_prior_is_constant_inside_the_box() -> None:
     assert prior_residuals(informed, a, sa, kinds).size == r.size
     with pytest.raises(ValueError):
         ManoeuvrePrior.from_ranges(RANGES, version=3)
+
+
+def test_counts_match_nearest_and_ignore_edge_manoeuvres() -> None:
+    from tma2.timelate.counts import match, pooled
+
+    true = [[100.0, 200.0], [1000.0, 1100.0], [3500.0, 3600.0]]
+    found = [[1080.0, 1140.0], [2000.0, 2050.0]]
+    c = match(true, found, 120.0)
+    assert (c["matched"], c["missed"], c["false"]) == (1, 2, 1)
+    assert c["timing"] == [60.0]
+    assert match(true, found, 30.0)["matched"] == 0
+    c = match(true, found + [[3540.0, 3590.0]], 120.0, edge=[False, False, True])
+    assert (c["true"], c["matched"], c["missed"], c["false"]) == (2, 1, 1, 1)
+    recs = [{"true": true, "true_edge": None, "histories": {"s": {"spans": found}}}]
+    p = pooled(recs, "s")
+    assert p["120"]["missed_share"] == pytest.approx(2 / 3)
+    assert p["60"]["matched"] == 0 and p["240"]["matched"] == 1
+
+
+def test_paired_ratio_and_gain_share() -> None:
+    from tma2.timelate.study import gain_share, paired, verdict, wilson
+
+    rng = np.random.default_rng(1)
+    base = np.exp(rng.normal(-2.0, 0.3, 200))
+    whole = base / 2.0
+    part = base / np.sqrt(2.0)
+    p = paired(base, whole)
+    assert p["geometric_mean"] == pytest.approx(2.0)
+    assert p["a_better"] == 0.0 and p["lo"] <= 2.0 <= p["hi"]
+    assert verdict(p, 1.10) == "material"
+    assert verdict({"lo": 0.9, "hi": 1.3}, 1.10) == "inconclusive"
+    assert verdict({"lo": 0.9, "hi": 1.05}, 1.10) == "not material"
+    g = gain_share(base, part, whole)
+    assert g["share"] == pytest.approx(0.5)
+    same = paired(base, base)  # a composite equal to the search on every period
+    assert same["geometric_mean"] == 1.0 and same["lo"] == 1.0
+    w = wilson(200, 400)
+    assert w["hi"] - w["lo"] < 0.10
+
+
+def test_classes_follow_the_evidence_difference() -> None:
+    from tma2.timelate.study import classify
+
+    def rec(true_ev: float, cand: list[list[float]]) -> dict[str, Any]:
+        return {
+            "true": [[900.0, 1000.0]],
+            "true_evidence": true_ev,
+            "candidates": [{"spans": cand, "evidence": -100.0}],
+        }
+
+    assert classify(rec(-90.0, [[910.0, 990.0]]), 3.0, 120.0) == "right"
+    assert classify(rec(-99.0, []), 3.0, 120.0) == "ambiguous"
+    assert classify(rec(-101.5, []), 3.0, 120.0) == "ambiguous"
+    assert classify(rec(-90.0, []), 3.0, 120.0) == "search_failure"
+    assert classify(rec(-110.0, []), 3.0, 120.0) == "evidence_failure"
+    assert classify(rec(-99.0, []), 0.5, 120.0) == "search_failure"
+    assert classify({"true": [], "candidates": []}, 3.0, 120.0) is None
+
+
+def test_c2_refit_keeps_the_given_manoeuvres_and_never_searches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import tma2.timelate.search as search
+    from tma2.timelate.arc import arc_states
+    from tma2.timelate.controls import c2_refit
+    from tma2.timelate.run import nominal_starts
+
+    def boom(*_a: Any, **_k: Any) -> None:
+        raise AssertionError("the refit control must not search over histories")
+
+    monkeypatch.setattr(search, "evidence_search", boom)
+    pb, spans, theta = _problem(3)
+    prior = ManoeuvrePrior.from_ranges(RANGES, version=2)
+    late = spans + 60.0  # a causal segmenter's times: late
+    track = arc_states(theta, pb[0], spans)
+    g, kinds, ev = c2_refit(pb, late, track, prior, nominal_starts(pb))
+    assert g.spans.shape == spans.shape and kinds.shape == (2, 2)
+    assert np.isfinite(ev["total"])
+    assert float(np.abs(g.spans.mean(axis=1) - spans.mean(axis=1)).max()) < 120.0

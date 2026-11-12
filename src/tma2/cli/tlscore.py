@@ -32,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     reading: dict[str, Any] = {}
+    study = plan.get("runner") == "run2"
     for split in plan["splits"]:
         files = sorted(
             Path(a.shards).glob(f"{split}.*.json"), key=lambda p: int(p.name.split(".")[1])
@@ -53,6 +54,20 @@ def main(argv: list[str] | None = None) -> int:
         arr = {k: np.concatenate(v) for k, v in arrays.items()}
         if len({r["ordinal"] for r in periods}) != len(periods):
             raise SystemExit(f"{split}: a period appears in two shards")
+        if study:
+            from tma2.timelate.study import study_split
+
+            r2 = study_split(arr, periods, plan)
+            for key in ("dataset_digest", "seed", "search_code_sha256", "git_commit"):
+                r2[key] = sorted({h[key] for h in headers})
+            r2["git_dirty"] = any(h["git_dirty"] for h in headers)
+            r2["condition"] = sorted({str(h.get("condition")) for h in headers})
+            r2["thinning"] = sorted({str(h.get("thinning")) for h in headers})
+            reading[split] = r2
+            payload2: dict[str, Any] = dict(arr)
+            np.savez_compressed(out / f"{split}.errors.npz", **payload2)
+            (out / f"{split}.periods.json").write_text(json.dumps(periods) + "\n")
+            continue
         period, bound = arr["period"], arr["bound"].astype(np.float64)
         det = np.isfinite(bound[:, 0]) & (bound[:, 0] < UNDETERMINED)
         systems: dict[str, Any] = {}
@@ -114,6 +129,8 @@ def main(argv: list[str] | None = None) -> int:
         payload: dict[str, Any] = dict(arr)
         np.savez_compressed(out / f"{split}.errors.npz", **payload)
         (out / f"{split}.periods.json").write_text(json.dumps(periods) + "\n")
+    if study:
+        return _study_report(a, plan, digest, g, reading, out)
     if "man2" not in reading:
         raise SystemExit("no man2 shards")
     checks = verdicts(reading, plan["criteria"])
@@ -143,6 +160,54 @@ def main(argv: list[str] | None = None) -> int:
     for k, v in checks.items():
         print(k, json.dumps(v))
     return 3 if a.gate and failed else 0
+
+
+def _study_report(
+    a: argparse.Namespace,
+    plan: dict[str, Any],
+    digest: str,
+    g: Any,
+    reading: dict[str, Any],
+    out: Path,
+) -> int:
+    """Spec 014: a registered study, not a gate. Exit 3 only when ``--gate`` is given (a
+    validation run) and the soundness stop fails."""
+    from tma2.timelate.study import soundness
+
+    sound = soundness(reading, plan) if "man2" in reading else None
+    summary = {
+        "plan": a.plan,
+        "plan_sha256": digest,
+        "scorer_git_commit": g.commit,
+        "scorer_git_dirty": g.dirty,
+        "study": plan["study"],
+        "soundness": sound,
+        "splits": reading,
+    }
+    (out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    for split, r in reading.items():
+        print(f"{split}: {r['periods']} periods, {r['periods_with_determined_rows']} scored")
+        for name, s in r["systems"].items():
+            print(
+                f"  {name:14s} median {s.get('median_period_range', float('nan')):.4f}  "
+                f"eff {s['efficiency_range']:.2f} {s['efficiency_course']:.2f} "
+                f"{s['efficiency_speed']:.2f}  tight {s['efficiency_range_tight']:.2f}"
+            )
+        for name, v in r["comparisons"].items():
+            m, p = v["of_medians"], v["paired"]
+            print(
+                f"  {name}: of medians {m['value']:.2f} [{m['lo']:.2f}, {m['hi']:.2f}]  paired "
+                f"{p['geometric_mean']:.2f} [{p['lo']:.2f}, {p['hi']:.2f}]  a better "
+                f"{p['a_better']:.2f}"
+            )
+        for key in ("classes", "classes_among_wrong", "gain_share", "headroom", "quiet"):
+            if key in r:
+                print(f"  {key}: {json.dumps(r[key])}")
+        for name, c in r["counts"].items():
+            print(f"  counts {name}: {json.dumps(c['120'])}")
+        print(f"  seconds per period: {json.dumps(r['seconds_per_period'])}")
+    print("soundness", json.dumps(sound))
+    return 3 if a.gate and sound is not None and not sound["pass"] else 0
 
 
 if __name__ == "__main__":

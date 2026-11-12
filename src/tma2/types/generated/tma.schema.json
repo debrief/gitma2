@@ -5352,6 +5352,13 @@
                     "description": "The frozen segmenter C's code digest (C\u2033 read as a track).",
                     "type": "string"
                 },
+                "condition": {
+                    "description": "Spec 014: the bearing-error condition of the data (clean, or a spec 010 condition id).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "dataset_digest": {
                     "type": "string"
                 },
@@ -5370,12 +5377,26 @@
                 "plan_sha256": {
                     "type": "string"
                 },
+                "prior_kinds": {
+                    "description": "Spec 014: the priors the shard's searches used, as canonical JSON (name to version and kind).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "prior_sha256": {
                     "description": "Digest of the ranges file the search's manoeuvre prior is read from.",
                     "type": "string"
                 },
                 "record": {
                     "$ref": "#/$defs/RecordKind"
+                },
+                "runner": {
+                    "description": "Spec 014: the shard runner (absent or run: Gate T's; run2: spec 014's systems).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "schema_version": {
                     "type": "string"
@@ -5394,6 +5415,13 @@
                 "split": {
                     "description": "The plan's split name (man2 or shift).",
                     "type": "string"
+                },
+                "thinning": {
+                    "description": "Spec 014: how the bearings the arc fits see were thinned (none, drop:N, fixed:N, adaptive:TOL).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -5413,6 +5441,53 @@
                 "git_dirty"
             ],
             "title": "TimeLateShardHeader",
+            "type": "object"
+        },
+        "TimeLateStudyCriteria": {
+            "additionalProperties": false,
+            "description": "Spec 014's registered study (research R4, R9): how wrong-history periods are classed and what is judged, fixed by the decision record.",
+            "properties": {
+                "class_threshold": {
+                    "description": "A wrong-history period is ambiguous when the true history's log evidence is within this of the search's first candidate; above it a search failure, below minus it an evidence failure.",
+                    "type": "number"
+                },
+                "convergence_min": {
+                    "description": "Validation stop: least share of periods whose true-history fit has a cost the bearing noise explains.",
+                    "type": "number"
+                },
+                "match_tolerance_s": {
+                    "description": "Two histories are the same when they have as many manoeuvres and their mid-times pair within this.",
+                    "type": "number"
+                },
+                "materiality": {
+                    "description": "The attainable headroom (geometric mean per-period ratio of the search to a composite) is material when its 95% interval lies above this, not material when it lies below.",
+                    "type": "number"
+                },
+                "quiet_interval_halfwidth_max": {
+                    "description": "The false-manoeuvre rate on held-course periods is reported with a 95% interval no wider than plus or minus this.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "soundness_band": {
+                    "description": "Validation stop: band for the range efficiency of the reference fitted from neutral starts with times held, on tightly bounded rows.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "class_threshold",
+                "match_tolerance_s",
+                "materiality",
+                "convergence_min"
+            ],
+            "title": "TimeLateStudyCriteria",
             "type": "object"
         },
         "Track": {
@@ -5759,6 +5834,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.35.0"
+    "version": "0.36.0"
 }
 

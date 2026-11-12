@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.35.0"
+version = "0.36.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -3086,6 +3086,10 @@ class TimeLateShardHeader(ConfiguredBaseModel):
     search_code_sha256: str = Field(default=..., description="""Digest of the time-late solve, prior, re-test and search modules.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
     prior_sha256: str = Field(default=..., description="""Digest of the ranges file the search's manoeuvre prior is read from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
     settings: str = Field(default=..., description="""The search's settings as canonical JSON.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
+    runner: Optional[str] = Field(default=None, description="""Spec 014: the shard runner (absent or run: Gate T's; run2: spec 014's systems).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    prior_kinds: Optional[str] = Field(default=None, description="""Spec 014: the priors the shard's searches used, as canonical JSON (name to version and kind).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    thinning: Optional[str] = Field(default=None, description="""Spec 014: how the bearings the arc fits see were thinned (none, drop:N, fixed:N, adaptive:TOL).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    condition: Optional[str] = Field(default=None, description="""Spec 014: the bearing-error condition of the data (clean, or a spec 010 condition id).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
     git_commit: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'Continuation',
                        'ModelManifest',
@@ -3106,6 +3110,20 @@ class TimeLateShardHeader(ConfiguredBaseModel):
                        'RegressorPredictionHeader',
                        'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
+
+
+class TimeLateStudyCriteria(ConfiguredBaseModel):
+    """
+    Spec 014's registered study (research R4, R9): how wrong-history periods are classed and what is judged, fixed by the decision record.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    class_threshold: float = Field(default=..., description="""A wrong-history period is ambiguous when the true history's log evidence is within this of the search's first candidate; above it a search failure, below minus it an evidence failure.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    match_tolerance_s: float = Field(default=..., description="""Two histories are the same when they have as many manoeuvres and their mid-times pair within this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    materiality: float = Field(default=..., description="""The attainable headroom (geometric mean per-period ratio of the search to a composite) is material when its 95% interval lies above this, not material when it lies below.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria', 'GateHCriteria']} })
+    soundness_band: Optional[list[float]] = Field(default=None, description="""Validation stop: band for the range efficiency of the reference fitted from neutral starts with times held, on tightly bounded rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    convergence_min: float = Field(default=..., description="""Validation stop: least share of periods whose true-history fit has a cost the bearing noise explains.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    quiet_interval_halfwidth_max: Optional[float] = Field(default=None, description="""The false-manoeuvre rate on held-course periods is reported with a 95% interval no wider than plus or minus this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
 
 
 class GateTCriteria(ConfiguredBaseModel):
@@ -3133,7 +3151,7 @@ class GateHCriteria(ConfiguredBaseModel):
     efficiency_band: list[float] = Field(default=..., description="""H-a: band for the attainable ceiling's range efficiency against the bound under the true covariance, settled rows of the primary condition.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
     clean_cost_point: float = Field(default=..., description="""H-b: the robust control's cost on mismatch-off data (median range error over the plain solve's, minus 1) at most this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
     clean_cost_interval: float = Field(default=..., description="""H-b: and the cost's interval not wholly above this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
-    materiality: float = Field(default=..., description="""H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
+    materiality: float = Field(default=..., description="""H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria', 'GateHCriteria']} })
 
 
 class GateHDecision(ConfiguredBaseModel):
@@ -3273,7 +3291,7 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
     segments_from: Optional[str] = Field(default=None, description="""The condition of the split the segmentation was computed on, when not this one (spec 011 FR-003, a diagnostic).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
     segmenter_settings: Optional[str] = Field(default=None, description="""C-r's confirmation settings as canonical JSON (c2r only; spec 011).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
     robust_code_sha256: Optional[str] = Field(default=None, description="""Digest of C-r's own source (segment.robust), c2r only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
-    condition: str = Field(default=..., description="""The split's mismatch condition id (off without one).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
+    condition: str = Field(default=..., description="""The split's mismatch condition id (off without one).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
     dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'CrbHeader',
                        'DetectorHeader',
@@ -3912,6 +3930,7 @@ EPredictionHeader.model_rebuild()
 RegressorConfig.model_rebuild()
 RegressorPredictionHeader.model_rebuild()
 TimeLateShardHeader.model_rebuild()
+TimeLateStudyCriteria.model_rebuild()
 GateTCriteria.model_rebuild()
 GateHCriteria.model_rebuild()
 GateHDecision.model_rebuild()
