@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
                     best = f
             assert best is not None
             found = retest(pb, best.theta, none, 20.0)
-            fig, ax = plt.subplots(figsize=(6.4, 5.2))
+            fig, ax = plt.subplots(figsize=(6.4, 6.4))
             km = 1e-3
             ax.plot(ox * km, oy * km, color="#1f77b4", lw=1.5, label="ownship")
             ax.plot(tr[:, 0] * km, tr[:, 1] * km, color="#d62728", lw=2, label="target (truth)")
@@ -211,9 +211,9 @@ def main(argv: list[str] | None = None) -> int:
                 f"{t[-1] / 60:.0f} min; dots mark the start)",
                 fontsize=10,
             )
-            ax.legend(frameon=False, fontsize=8)
+            ax.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.12))
             fig.tight_layout()
-            fig.savefig(out / "ambiguity.svg")
+            fig.savefig(out / "ambiguity.svg", bbox_inches="tight")
             plt.close(fig)
             used["ambiguity.svg"] = []
             extra["ambiguity.svg"] = {
