@@ -311,6 +311,14 @@ fresh seed is 333.
 **Owner 2026-11-12: follow-on is classical work first (spec 014), nothing trained, no GPU**: the
 owed studies and controls above and the ambiguity share; a learned whole-period model is decided
 after it.
+014 (time-late classical follow-on, `specs/014-time-late-classical/`; specified, not planned):
+corrected prior under a new digest (Gate T's search stays runnable as registered); controls (C″'s
+transitions refitted with arc model and prior; flat-prior search); wrong-history periods classed
+ambiguous / search failure / evidence failure and an attainable headroom against 10%; held-course
+periods with a false-manoeuvre rate; the thinning study with an adoption rule; counts, timing,
+splits, correlated and outlier errors, whole engagements, a smoothed filter; prior-mismatch
+diagnostic and broadened prior (exploratory, first to be cut). Seeds 333 tuning, 334 validation,
+335 test. Kickoff `site/blog/2026-11-12-time-late-classical-kickoff.md`.
 
 ## Stack (owner decisions, 2026-10-31)
 
