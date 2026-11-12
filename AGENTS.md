@@ -285,9 +285,29 @@ added (expected to fail); T-e against `history-map`; validation seed 332, test 3
 Validation seed 332 (`experiments/20261112-gt2-val/`): **T-a passes (1.26)**; reported only: C″ ÷
 search 2.41 [1.65, 3.02]; under the shifted prior 1.26 [0.89, 1.84] (would fail; 1.70 on seed 330);
 candidates 0.62 in the first three, gap +0.06; shift gap +0.32; search ÷ reference 1.41
-[1.19, 1.97]. The tuning seed's sub-bound middle band did not repeat (0.96). Test seed 331 launched
-(`timelate/tl-b-test`). Figures for the eventual slides:
-`scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
+[1.19, 1.97]. The tuning seed's sub-bound middle band did not repeat (0.96). **Test record
+`experiments/20261112-gt2/` (seed 331, 300 periods a split): T-a 1.05 pass; T-b 2.27 [1.76, 2.67]
+pass (C″ 0.088, search 0.039); T-c 1.69 [1.39, 2.14] pass; T-d 0.71 in the first three, gap −0.03,
+pass; T-d-shift +0.32 fail (forecast); T-e 1.46 [1.24, 1.91] material. Decided by the panel, round
+1** (`review.md`, five approve with findings). Narrowed: the ratios are ratios of medians (paired
+per period 1.68 and 1.53; the search is worse than C″ in about 30% of periods); T-b is mostly
+smoothing with the arc model and prior, not finding histories (it wins where its history is wrong
+too); T-c is seed-fragile (1.70, 1.26, 1.69) and does not isolate the wrong prior from busier
+targets; the search under-counts manoeuvres (23% missed, 41% under the shift; invents one in 7 of
+12 quiet periods); T-d passes on average only and at a 120 s match and temperature 3 only; under
+the shift the candidates carry a rank and no probability; T-e is an upper limit (paired 1.17;
+1.01 where the history is right); T-a would have passed the faulty reference. **Owed from spec
+013, not run**: the owner's bearing-rate thinning study (FR-030/031), manoeuvre counts and timing
+as outputs (FR-011), splits (FR-013), correlated errors (FR-003), whole engagements, a smoothed
+IMM, quiet-target periods with a false-manoeuvre rate; and the controls (C″'s transitions refitted
+with arc model and prior; flat-prior search). `prior.py` has three small recorded errors (leg
+curvature counted twice, uniform-direction volume, leg normal not renormalised at its minimum),
+not fixed: the code is registered. Panel's order: owed classical work, a prior-robust search with
+a mismatch diagnostic, then a learned whole-period model registered against the search; the
+follow-on is the owner's choice and no GPU run starts before it. Write-up
+`site/blog/2026-11-12-gate-t.md`, slides `2026-11-12-gate-t-slides.md` (figures by
+`scripts/research/gt_charts.py` and `tl_charts.py`). Seeds 329–332 used; 324, 325 unused; the next
+fresh seed is 333.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -597,6 +617,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   `pipefail`: `tee` opens its file before the tool makes the folder, and without `pipefail` the
   step's exit code is `tee`'s (`timelate.yml`'s first scoring step).
 - Never put backticks in an unquoted shell heredoc: bash runs them and deletes the text.
+- Gate T panel: a ratio of medians is not a typical gain; report the paired per-period ratio and
+  the share of periods lost beside it. Before crediting a search, split its win by whether its
+  answer was right: winning either way means the model and prior did the work, and the control is
+  the old system refitted with them. Test a soundness check against the fault it exists to catch
+  (T-a would have passed the truth-started fit). A calibration check that passes overall must be
+  read by complexity too. List what the spec promised and the gate did not run in the record.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).
