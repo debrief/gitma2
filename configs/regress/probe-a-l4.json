@@ -1,0 +1,24 @@
+{
+  "description": "Spec 012 addendum 1: 10-minute throughput probe of model A (the carried 8 x 256) on a L4. Nothing is scored.",
+  "gpu": "L4",
+  "config": {
+    "id": "probe-a-l4",
+    "layers": 8,
+    "width": 256,
+    "heads": 8,
+    "feedforward": 1024,
+    "batch_scenarios": 256,
+    "learning_rate": 0.0003,
+    "warmup_updates": 2000,
+    "total_updates": 40000,
+    "val_count": 512,
+    "val_every_updates": 200,
+    "checkpoint_seconds": 900,
+    "precision": "amp",
+    "seed": 1,
+    "limit_seconds": 600,
+    "held_fraction": 0.2
+  },
+  "segments": 1,
+  "segment_limit_seconds": 600
+}

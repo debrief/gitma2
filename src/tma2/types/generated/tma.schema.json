@@ -4277,6 +4277,190 @@
             "title": "RecordKind",
             "type": "string"
         },
+        "RegressorConfig": {
+            "additionalProperties": false,
+            "description": "Configuration of the scaled end-to-end regressor (spec 012): a control, never the project's estimator. A causal transformer on folded rows trained on scenarios drawn on the fly. Plans under configs/regress/ carry one as their `config`.",
+            "properties": {
+                "batch_scenarios": {
+                    "type": "integer"
+                },
+                "beta": {
+                    "description": "Exponent of the variance weighting in the \u03b2-NLL loss.",
+                    "type": "number"
+                },
+                "checkpoint_seconds": {
+                    "type": "integer"
+                },
+                "feedforward": {
+                    "type": "integer"
+                },
+                "heads": {
+                    "type": "integer"
+                },
+                "held_fraction": {
+                    "description": "Share of each batch drawn with held_ranges (spec 012 research R8).",
+                    "type": "number"
+                },
+                "held_ranges": {
+                    "description": "Path of the held-course ranges file.",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inputs": {
+                    "description": "full, or ownship_only (the prior-only control).",
+                    "type": "string"
+                },
+                "layers": {
+                    "type": "integer"
+                },
+                "learning_rate": {
+                    "description": "Peak learning rate.",
+                    "type": "number"
+                },
+                "limit_seconds": {
+                    "description": "Training time limit of one segment.",
+                    "type": "integer"
+                },
+                "max_rows": {
+                    "description": "Window in rows; a multiple of patch_rows.",
+                    "type": "integer"
+                },
+                "patch_rows": {
+                    "description": "Rows folded into one token.",
+                    "type": "integer"
+                },
+                "precision": {
+                    "description": "amp (mixed precision on GPU) or float32.",
+                    "type": "string"
+                },
+                "ranges": {
+                    "description": "Path of the scenario ranges file.",
+                    "type": "string"
+                },
+                "seed": {
+                    "description": "Model initialisation and offset seed.",
+                    "type": "integer"
+                },
+                "stream_repeat": {
+                    "description": "0, or the number of scenarios the stream cycles through (the tenth-of-data control).",
+                    "type": "integer"
+                },
+                "stream_seed": {
+                    "description": "Dataset seed of the training stream.",
+                    "type": "integer"
+                },
+                "stream_start": {
+                    "type": "integer"
+                },
+                "total_updates": {
+                    "description": "Length of the cosine schedule.",
+                    "type": "integer"
+                },
+                "val_count": {
+                    "type": "integer"
+                },
+                "val_every_updates": {
+                    "type": "integer"
+                },
+                "val_seed": {
+                    "type": "integer"
+                },
+                "warmup_updates": {
+                    "type": "integer"
+                },
+                "weight_decay": {
+                    "type": "number"
+                },
+                "width": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "id",
+                "seed",
+                "patch_rows",
+                "layers",
+                "width",
+                "heads",
+                "feedforward",
+                "max_rows",
+                "beta",
+                "batch_scenarios",
+                "learning_rate",
+                "warmup_updates",
+                "total_updates",
+                "weight_decay",
+                "stream_seed",
+                "stream_start",
+                "stream_repeat",
+                "inputs",
+                "limit_seconds",
+                "checkpoint_seconds",
+                "val_seed",
+                "val_count",
+                "val_every_updates",
+                "ranges",
+                "held_fraction",
+                "held_ranges",
+                "precision"
+            ],
+            "title": "RegressorConfig",
+            "type": "object"
+        },
+        "RegressorPredictionHeader": {
+            "additionalProperties": false,
+            "description": "First record of a tma2-rpredict file (spec 012).",
+            "properties": {
+                "config_sha256": {
+                    "type": "string"
+                },
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "estimator": {
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "description": "Always regressor-control.",
+                    "type": "string"
+                },
+                "mode": {
+                    "description": "Always per_timestep.",
+                    "type": "string"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "weights_sha256": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "estimator",
+                "mode",
+                "kind",
+                "dataset_digest",
+                "config_sha256",
+                "weights_sha256",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "RegressorPredictionHeader",
+            "type": "object"
+        },
         "RunEnvironment": {
             "additionalProperties": false,
             "description": "Software and hardware an experiment ran on (gitma2, schema 0.17.0).",
@@ -5442,6 +5626,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.32.0"
+    "version": "0.33.0"
 }
 

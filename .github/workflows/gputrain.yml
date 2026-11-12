@@ -3,7 +3,7 @@ name: GPU training (spec 012)
 # The regressor control on a Modal T4. Push `gputrain/<name>` with a plan
 # configs/regress/<name>.json: {config, segments (1 or 2), segment_limit_seconds (at most 18000)}.
 # Before anything runs, the ledger sums the GPU seconds on every results/gputrain-* branch and
-# refuses a plan whose limit would take the total past the cap (68 T4-hours: the owner's $50 of 2026-11-10 at the measured $0.66 an hour, kept under the $45 Modal enforces).
+# refuses a plan whose limit would take the total past the cap ($45: the owner's $50 of 2026-11-10, kept under what Modal's limits enforce; the ledger prices each run by its GPU type).
 # Each segment is one `modal run` that this job waits for; the second resumes from the first's
 # checkpoint on the Modal volume. Results: results/gputrain-<name>-<run id>.
 # Secrets MODAL_TOKEN_ID and MODAL_TOKEN_SECRET are the owner's; this workflow runs on pushes to
@@ -16,12 +16,14 @@ on:
 permissions:
   contents: write
 
+# One run per plan at a time; different plans may run side by side (the ledger cannot see a
+# run still in progress, so the plans launched together must fit the cap together).
 concurrency:
-  group: gputrain
+  group: gputrain-${{ github.ref }}
   cancel-in-progress: false
 
 env:
-  CAP_HOURS: "68"
+  CAP_USD: "45"
 
 jobs:
   segment1:
@@ -41,7 +43,7 @@ jobs:
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "segments=$(python3 -c "import json; print(json.load(open('configs/regress/$NAME.json'))['segments'])")" >> "$GITHUB_OUTPUT"
       - name: Ledger
-        run: uv run python -m tma2.regress.ledger --cap-hours "$CAP_HOURS" --plan "configs/regress/${{ steps.plan.outputs.name }}.json"
+        run: uv run python -m tma2.regress.ledger --cap-usd "$CAP_USD" --plan "configs/regress/${{ steps.plan.outputs.name }}.json"
       - name: Train (segment 1)
         env:
           MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}

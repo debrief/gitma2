@@ -237,6 +237,32 @@ and recorded, not asked.
   the gap to the true manoeuvre times. C stays frozen and C″ the standing classical system;
   seeds 324 and 325 are unused. Spec 012 (the scaled end-to-end regressor, a control) runs
   beside it on the owner's Modal account with a budget of $50 in total (2026-11-10).
+- **2026-11-11 (owner, recorded by the agent):** spending on the Modal account within the $50
+  budget of spec 012 needs no further approval: "I've allocated the funding to this project."
+  Agents still register any run before its result and keep the ledger; anything beyond $50, a
+  new account or a new secret remains owner-only.
+- **2026-11-12 (owner, recorded by the agent):** spec 013 (time-late) stops at tuning and is
+  written up; no Gate T row is added to §5. On tuning seed 329 the bearings and Annex B's
+  manoeuvre statistics leave the manoeuvre history ambiguous in about half the difficult
+  periods, so no estimator that names one history reaches the true-history reference
+  (`experiments/20261111-tl-retest/`, `experiments/20261112-tl-prior/`). The time-late goal is
+  re-scoped from one track to candidate tracks with probabilities (a new spec). The GPU pause
+  of 2026-11-11 is lifted for time-late learning: "you now have freedom to use GPU in support
+  of the time-late learning", within the same $50 total; runs are registered before their
+  results and the ledger is kept. Seeds 330 and 331 are unused.
+- **2026-11-12 (agent, correction of the entry above; the owner's decision is theirs to
+  revisit):** the finding that entry rests on was partly an artefact. The evidence of a
+  manoeuvre history had been computed at a fit to the bearings alone; fitted with Annex B's
+  prior, the true history is usually preferred where the re-test is wrong, and the re-test's
+  own history refitted with the prior is at about half the standing classical system's error
+  read as a track (0.057 against 0.113, ratio 1.99 [1.01, 3.11], 57 tuning periods;
+  `experiments/20261112-tl-prior/`). Some ambiguity is real (about a third of the wrong
+  periods). Whether spec 013 still stops at tuning is put back to the owner.
+- **2026-11-12 (owner, recorded by the agent):** on the corrected evidence, spec 013 continues
+  classically: a search over manoeuvre histories scored by evidence under Annex B's prior, on
+  CPU, taken to Gate T against C″ read as a track; its output is candidate tracks with
+  probabilities. It is the control any learned time-late model must beat; GPU spending is held
+  until it exists. The entry of the same date stopping spec 013 at tuning is superseded.
 
 ## Annexes
 

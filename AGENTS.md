@@ -207,6 +207,65 @@ decision record `experiments/20261111-r-decision/` (plans `configs/regress/r-a-*
 digest; ledger cap 68 h). MAN2 has no held-course rows at the scored prefixes, so a fifth of the
 stream and the held-course reading use `configs/regress/held-course-ranges.json` (research R8).
 Readings: `tma2-rread`. In 012's scoring, also report C with a raised confirmation threshold.
+Three seeds trained (38 T4-hours, about $26; `experiments/20261111-r-runs/`). Validation seed
+327 (`experiments/20261111-r-val/`): held course 1.15–1.19 × the bound in range, 1.8 course, 1.4
+speed (partial; least squares 1.01); after manoeuvres the regressor beats C″ (0.065 against
+0.105, −0.042 [−0.051, −0.034]) and matches the true-manoeuvre solve in range; C at three times
+its threshold is worse than C″ on that fresh seed. Test seed 328 and a held-out-ranges split
+are scored by `rscore.yml` (`configs/rscore/r-a-test*.json`). Owner 2026-11-11: spending within
+$50 is pre-approved; then GPU training paused (addendum 1 not run).
+**Test record `experiments/20261111-r-test/`** (seed 328; relaunched after two runs stalled without
+ever creating a job): held course partial on all seeds (range 1.13–1.16, course 1.75, speed 1.42;
+worst in the best geometry); after manoeuvres the regressor beats C″ on all seeds (0.066 against
+0.105, −0.039 [−0.045, −0.033]; forecast wrong) and on held-out ranges (0.114 against 0.151); a
+tenth of the data loses little. **Panel round 1 (`review.md`): three approve with findings.**
+Readings stand; narrowed to "a prior-informed, error-minimising estimator beats a prior-free fit in
+median range": in course efficiency after manoeuvres it is worse than C″ (3.40 against 3.19), the
+held-out split varies initial range only and the margin vanishes in its far quartile, and the
+hedging explanation is withdrawn (a range prior is the leading candidate, untested). Control run
+(`experiments/20261112-r-control/`, registered on validation first): C″ precision-weighted with a
+range prior does **not** explain the margin (0.102–0.104 against the regressor's 0.066 on test), so
+it is not simple shrinkage; the hedged-C″ control is not built and the margin's source is open.
+Write-up `site/blog/2026-11-12-scaled-regressor.md`, slides `2026-11-12-scaled-regressor-slides.md`
+(figures by `scripts/research/r_charts.py`). Spec 012 is done; about $24 of the budget is unspent.
+013 (time-late, Gate T, `specs/013-time-late/`; owner 2026-11-11; specified, not planned): the
+whole track over a period (position, course, speed at every moment, manoeuvre times), 5-second
+bearings, periods cut at random from longer engagements; nothing trained: C″ read as a track, a
+classical full-period re-test, the true-manoeuvre solve and a bound at every moment; the owner's
+bearing-rate thinning idea tested (dropping, normal points, adaptive bins); headroom at 10%
+decides whether a learned full-period proposer follows. Seeds 329 tuning, 330 validation, 331
+test (324, 325 unused).
+Build so far (`src/tma2/timelate/`: periods cut in memory, normal points, track read-out, whole-period
+bound, `arc.py`). First checkpoint (`experiments/20261111-tl-diagnosis/`): the chord reference is
+at 1.9 × the bound on cut periods (4.5 on whole engagements) because the layer gives a manoeuvre
+four free unknowns. Owner 2026-11-11: add the arc-model solve (turn at a constant rate, speed
+change at a constant rate; classical). On 60 tuning periods (`experiments/20261111-tl-arc/`) it
+is at 1.2 (kind told) to 1.4 (kind judged) × the bound on true times, but worse than the chord
+on C″'s own transitions: the segmentation is the larger factor (about 3 in median range error).
+Full-period re-test on the arc cost (`timelate/retest.py`, `experiments/20261111-tl-retest/`):
+no better than C″ read as a track. It reaches the cost of the true-times fit (median difference 0)
+with a third of manoeuvres missed and 3 to 4 times the range error: the bearings do not separate
+the structures, so a test of fit cannot reach the reference; prior knowledge of manoeuvres
+(Annex B's statistics) is what remains. Owner 2026-11-11: classical prior first (`timelate/prior.py`, `retest.log_evidence`,
+`experiments/20261112-tl-prior/`). Told only the basin (times free) the arc fit is at the bound.
+**First reading withdrawn** (the evidence was evaluated at a bearings-only fit: thousands of
+units of artefact). Corrected (fit to the posterior, `joint_fit(prior=...)`): where the re-test is
+wrong the true history is ahead by over 3 in 0.5–0.6 of periods and behind in under 0.1; the
+re-test's own history refitted with the prior is at 0.057 against C″'s 0.113 as a track
+(1.99 [1.01, 3.11], 57 tuning periods); true history with the prior 0.027. About a third of the
+wrong periods are genuinely ambiguous. Owner 2026-11-12 chose "write up and re-scope to candidate
+tracks with probabilities" and lifted the GPU pause for time-late learning, on the first
+(withdrawn) reading: the decision is back with the owner. Owner 2026-11-12 (on the corrected
+evidence): continue classically; GPU held until the control exists. `timelate/search.py`
+(`evidence_search`, `candidate_set`: histories scored by evidence, the best few with probabilities
+as candidate tracks) measured on 99 fresh tuning periods (ordinals 60 onward;
+`experiments/20261112-tl-search/`): 0.042 against C″'s 0.088 read as a track (2.12 [1.62, 2.96]),
+as good started from nothing as from C″; true history with the prior 0.018; best of the top three
+candidates in hindsight 0.028. The search is not the limit (its best history has evidence at or
+above the truth's in 97 of 99); the evidence and real ambiguity are. Candidate probabilities are
+not calibrated. Next: CLIs and `timelate.yml`, register Gate T (against C″ as a track, a
+prior-shift split, a calibration criterion fixed first), validation 330, test 331. Figures for the eventual slides:
+`scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -488,3 +547,24 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   scorer's prefixes (spec 012 research R8).
 - Spec 011: design for what the gap is made of, not for what changed. False transitions rose
   under mismatch, but misses were the larger part of the gap with or without it.
+- Arc solve (spec 013): a span starts one row before a manoeuvre's `start_index` (the first row
+  already inside it); unbounded least squares winds turns round, so bound them; a cost consistent
+  with the bearing error does not rule out a mirror solution (one turn's sign wrong).
+- Spec 013: before building a better search, compare its cost with the cost of the fit told the
+  truth. If they are equal and the errors are not, the limit is identifiability and no search on
+  that cost will help.
+- A Laplace evidence must pair every density with its volume: an extra manoeuvre costs about
+  −7 (leg) and −10 (changes) in log prior and gains about +6 in Occam factor; forgetting either
+  side makes any history win (spec 013).
+- Spec 012 panel: a learned model that knows the simulator's prior must be compared with a
+  classical estimator given the same prior, not with a prior-free fit; a held-out split that moves
+  one scalar is not "unseen"; report efficiency per slice beside medians (the regressor's course
+  efficiency was worse than C″'s while its range median was better); do not carry an explanation
+  from one spec's tuning data into another's result.
+- Evidence (spec 013): fit to the posterior before a Laplace approximation, never to the
+  likelihood alone; and plot the per-case differences before quoting shares (the histogram showed
+  thousands of units where the medians looked sane).
+- Never put backticks in an unquoted shell heredoc: bash runs them and deletes the text.
+- Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
+  refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
+  minute apart, or re-run the refused workflow run (the plan and its digest are untouched).

@@ -114,3 +114,10 @@ On the same 150 engagements (`experiments/20261111-gr-choice/`):
   a limit of method, and no spec is proposed for it here.
 
 Slides: [the illustrated companion](/blog/2026/11/11/robust-segmenter-slides).
+
+## Update, 11 November (later)
+
+The hint that C's threshold is low on clean data did not survive a fresh seed. On validation
+seed 327 (1,000 engagements, plain final solve, `experiments/20261111-r-val/`), C at three
+times its threshold is worse than C″: +0.018 [+0.010, +0.026] in median relative range error.
+C″ stays the classical system to beat.

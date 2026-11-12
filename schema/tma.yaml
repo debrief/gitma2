@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.32.0
+version: 0.33.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -1824,6 +1824,54 @@ classes:
       segmentation_sha256:
         range: string
         description: SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).
+
+  RegressorConfig:
+    description: >-
+      Configuration of the scaled end-to-end regressor (spec 012): a control, never the
+      project's estimator. A causal transformer on folded rows trained on scenarios drawn on
+      the fly. Plans under configs/regress/ carry one as their `config`.
+    attributes:
+      id: { range: string, required: true }
+      seed: { range: integer, required: true, description: Model initialisation and offset seed. }
+      patch_rows: { range: integer, required: true, description: Rows folded into one token. }
+      layers: { range: integer, required: true }
+      width: { range: integer, required: true }
+      heads: { range: integer, required: true }
+      feedforward: { range: integer, required: true }
+      max_rows: { range: integer, required: true, description: "Window in rows; a multiple of patch_rows." }
+      beta: { range: float, required: true, description: "Exponent of the variance weighting in the β-NLL loss." }
+      batch_scenarios: { range: integer, required: true }
+      learning_rate: { range: float, required: true, description: Peak learning rate. }
+      warmup_updates: { range: integer, required: true }
+      total_updates: { range: integer, required: true, description: Length of the cosine schedule. }
+      weight_decay: { range: float, required: true }
+      stream_seed: { range: integer, required: true, description: Dataset seed of the training stream. }
+      stream_start: { range: integer, required: true }
+      stream_repeat: { range: integer, required: true, description: "0, or the number of scenarios the stream cycles through (the tenth-of-data control)." }
+      inputs: { range: string, required: true, description: "full, or ownship_only (the prior-only control)." }
+      limit_seconds: { range: integer, required: true, description: Training time limit of one segment. }
+      checkpoint_seconds: { range: integer, required: true }
+      val_seed: { range: integer, required: true }
+      val_count: { range: integer, required: true }
+      val_every_updates: { range: integer, required: true }
+      ranges: { range: string, required: true, description: Path of the scenario ranges file. }
+      held_fraction: { range: float, required: true, description: "Share of each batch drawn with held_ranges (spec 012 research R8)." }
+      held_ranges: { range: string, required: true, description: Path of the held-course ranges file. }
+      precision: { range: string, required: true, description: "amp (mixed precision on GPU) or float32." }
+
+  RegressorPredictionHeader:
+    description: First record of a tma2-rpredict file (spec 012).
+    attributes:
+      record: { range: RecordKind, required: true }
+      schema_version: { range: string, required: true }
+      estimator: { range: string, required: true }
+      mode: { range: string, required: true, description: Always per_timestep. }
+      kind: { range: string, required: true, description: Always regressor-control. }
+      dataset_digest: { range: string, required: true }
+      config_sha256: { range: string, required: true }
+      weights_sha256: { range: string, required: true }
+      git_commit: { range: string, required: true }
+      git_dirty: { range: boolean, required: true }
 
   GateHCriteria:
     description: "Gate H's checks (spec 010 research R7, SRD section 5), fixed by the decision record."

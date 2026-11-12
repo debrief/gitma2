@@ -1,0 +1,27 @@
+{
+  "description": "Spec 012 control: the same model given the ownship track only (what the prior alone yields). 25,000 updates, one segment of at most 3 hours.",
+  "config": {
+    "layers": 8,
+    "width": 256,
+    "heads": 8,
+    "feedforward": 1024,
+    "batch_scenarios": 256,
+    "learning_rate": 0.0003,
+    "warmup_updates": 2000,
+    "weight_decay": 0.01,
+    "val_count": 512,
+    "val_every_updates": 1000,
+    "checkpoint_seconds": 900,
+    "precision": "amp",
+    "held_fraction": 0.2,
+    "stream_seed": 326,
+    "val_seed": 327,
+    "id": "r-a-own",
+    "limit_seconds": 10800,
+    "seed": 1,
+    "total_updates": 25000,
+    "inputs": "ownship_only"
+  },
+  "segments": 1,
+  "segment_limit_seconds": 10800
+}
