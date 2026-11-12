@@ -226,7 +226,8 @@ hedging explanation is withdrawn (a range prior is the leading candidate, untest
 (`experiments/20261112-r-control/`, registered on validation first): C″ precision-weighted with a
 range prior does **not** explain the margin (0.102–0.104 against the regressor's 0.066 on test), so
 it is not simple shrinkage; the hedged-C″ control is not built and the margin's source is open.
-Write-up and slides owed.
+Write-up `site/blog/2026-11-12-scaled-regressor.md`, slides `2026-11-12-scaled-regressor-slides.md`
+(figures by `scripts/research/r_charts.py`). Spec 012 is done; about $24 of the budget is unspent.
 013 (time-late, Gate T, `specs/013-time-late/`; owner 2026-11-11; specified, not planned): the
 whole track over a period (position, course, speed at every moment, manoeuvre times), 5-second
 bearings, periods cut at random from longer engagements; nothing trained: C″ read as a track, a
@@ -254,8 +255,13 @@ re-test's own history refitted with the prior is at 0.057 against C″'s 0.113 a
 (1.99 [1.01, 3.11], 57 tuning periods); true history with the prior 0.027. About a third of the
 wrong periods are genuinely ambiguous. Owner 2026-11-12 chose "write up and re-scope to candidate
 tracks with probabilities" and lifted the GPU pause for time-late learning, on the first
-(withdrawn) reading: the decision is back with the owner. The direct next step is a search or
-sampler over histories scored by evidence (classical).
+(withdrawn) reading: the decision is back with the owner. Owner 2026-11-12 (on the corrected
+evidence): continue classically; GPU held until the control exists. `timelate/search.py`
+(`evidence_search`, `candidate_set`: histories scored by evidence, the best few with probabilities
+as candidate tracks) is written and unit-tested, not yet measured. Next: measure on unused tuning
+ordinals (60 onward; 0–59 were used for development), CLIs and `timelate.yml`, register Gate T
+against C″ read as a track, validation 330, test 331. Figures for the eventual slides:
+`scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
 
 ## Stack (owner decisions, 2026-10-31)
 
