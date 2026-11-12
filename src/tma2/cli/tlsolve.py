@@ -51,8 +51,10 @@ def main(argv: list[str] | None = None) -> int:
     import numpy as np
     import torch
 
+    from tma2.cli.controls import parse_ekf_name
     from tma2.data.canonical import canonical_json
     from tma2.data.f32pack import read_pack_header
+    from tma2.detect.controls import parse_imm_name
     from tma2.segment.gate import sha256_file
     from tma2.timelate.periods import iter_periods
     from tma2.timelate.prior import ManoeuvrePrior
@@ -70,7 +72,10 @@ def main(argv: list[str] | None = None) -> int:
     periods = list(iter_periods(a.inp, a.start, a.count))
     if not periods:
         raise SystemExit(f"no σ = 1° periods at {a.start} in {a.inp}")
-    arrays, recs = run_shard(periods, prior, c_params, c2, plan["settings"])
+    refs = plan.get("references") or {}
+    imm = parse_imm_name(refs["imm"]) if refs.get("imm") else None
+    ekf = parse_ekf_name(refs["ekf"]) if refs.get("ekf") else None
+    arrays, recs = run_shard(periods, prior, c_params, c2, plan["settings"], imm, ekf)
     head = read_pack_header(a.inp)
     header = TimeLateShardHeader(
         record=RecordKind.header,

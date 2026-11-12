@@ -9,20 +9,48 @@ from typing import Any
 
 import numpy as np
 
+from tma2.references.ekf import ekf_predict
+from tma2.references.imm import ImmParams, imm_predict
 from tma2.types.generated.tma import SegmentParameters
 
 from .arc import fit_arc, solve_arc, start_from_track
 from .bound import period_bound
 from .periods import Period
+from .points import fixed_points
 from .prior import ManoeuvrePrior
 from .retest import joint_fit, log_evidence
 from .score import row_errors, truth_rows
 from .search import candidate_set, evidence_search
 from .systems import solve_systems
 
-SYSTEMS = ("c2", "search", "search-c2", "search-none", "truth-fit", "truth-map")
+SYSTEMS = (
+    "c2",
+    "search",
+    "search-c2",
+    "search-none",
+    "truth-fit",
+    "truth-map",
+    "one-leg",
+    "imm",
+    "ekf",
+)
+POINT_ROWS = 2
 NOMINAL_RANGE_M = 8000.0
 NOMINAL_SPEED = 5.0
+
+
+def _filter_track(rows: list[dict[str, Any]], first_point: int, n_rows: int) -> np.ndarray:
+    """A causal filter's rows (one per 10-second point from ``first_point``) as a track at the
+    period's 5-second rows; NaN where the filter gives no state. A point's state is held for
+    its two rows (the point's time is their mean: at most 2.5 s of motion)."""
+    out = np.full((n_rows, 4), np.nan)
+    for k, r in enumerate(rows):
+        if not r.get("converged"):
+            continue
+        c, sp = float(r["course_rad"]), float(r["speed_mps"])
+        a = (first_point + k) * POINT_ROWS
+        out[a : a + POINT_ROWS] = [float(r["x_m"]), float(r["y_m"]), sp * np.sin(c), sp * np.cos(c)]
+    return out
 
 
 def run_shard(
@@ -31,11 +59,13 @@ def run_shard(
     c_params: SegmentParameters,
     c2: dict[str, Any],
     settings: dict[str, Any],
+    imm: ImmParams | None = None,
+    ekf: tuple[float, float, float] | None = None,
 ) -> tuple[dict[str, np.ndarray], list[dict[str, Any]]]:
     """(arrays: ``period`` and ``bound`` at the scored rows and ``err_<system>`` [rows, 4];
     one record per period: true and found histories, candidates with evidence)."""
     every = int(settings["score_every"])
-    res = solve_systems(periods, ["c2-end-nofade"], c_params, c2)
+    res = solve_systems(periods, ["c2-end-nofade", "one-leg"], c_params, c2)
     errs: dict[str, list[np.ndarray]] = {s: [] for s in SYSTEMS}
     bounds, owner, recs = [], [], []
     for i, x in enumerate(periods):
@@ -51,6 +81,12 @@ def run_shard(
         tracks: dict[str, np.ndarray] = {s: nan for s in SYSTEMS}
         cc = res["c2-end-nofade"][i]
         tracks["c2"] = cc.states
+        tracks["one-leg"] = res["one-leg"][i].states
+        pts = fixed_points(x, POINT_ROWS).data
+        if imm is not None:
+            tracks["imm"] = _filter_track(imm_predict(pts, imm)["rows"], pts.zig_index + 1, x.rows)
+        if ekf is not None:
+            tracks["ekf"] = _filter_track(ekf_predict(pts, *ekf)["rows"], pts.zig_index + 1, x.rows)
         # the reference: the true history, fitted to the bearings and then to the posterior
         tt = np.stack(
             [tr[:, 0], tr[:, 1], tr[:, 3] * np.sin(tr[:, 2]), tr[:, 3] * np.cos(tr[:, 2])], axis=1
