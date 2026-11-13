@@ -34,6 +34,7 @@ STUDY_FILES = (
     "thin.py",
 )  # spec 014's additions
 REPAIR_FILES = (*STUDY_FILES, "match.py", "run3.py")  # spec 015
+CONTROL_FILES = (*REPAIR_FILES, "corr.py", "hedge.py", "run4.py")  # spec 016
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -88,14 +89,35 @@ def main(argv: list[str] | None = None) -> int:
     refs = plan.get("references") or {}
     imm = parse_imm_name(refs["imm"]) if refs.get("imm") else None
     ekf = parse_ekf_name(refs["ekf"]) if refs.get("ekf") else None
+    run4 = plan.get("runner") == "run4"
     run3 = plan.get("runner") == "run3"
     run2 = plan.get("runner") == "run2" or run3
+    if run4 and plan["splits"][a.split].get("systems"):  # a split's own controls
+        plan["settings"]["systems"] = list(plan["splits"][a.split]["systems"])
     if a.thin:
         plan["settings"]["thinning"] = a.thin
     if a.systems:
         plan["settings"]["systems"] = a.systems.split(",")
     extra: dict[str, Any] = {}
-    if run3:
+    if run4:
+        from tma2.timelate.run4 import run_shard4
+
+        priors = {
+            "v3": ManoeuvrePrior.from_ranges(json.loads(Path(plan["prior"]).read_text()), 3),
+            "broad": ManoeuvrePrior.from_ranges(
+                json.loads(Path(plan["prior_broad"]).read_text()), 3
+            ),
+        }
+        arrays, recs = run_shard4(periods, priors, c_params, c2, plan["settings"])
+        extra = {
+            "runner": "run4",
+            "prior_kinds": canonical_json(
+                {"v3": [3, plan["prior"]], "broad": [3, sha256_file(plan["prior_broad"])]}
+            ),
+            "thinning": "none",
+            "condition": str(plan["splits"][a.split].get("condition", "clean")),
+        }
+    elif run3:
         from tma2.timelate.run3 import run_shard3
 
         ranges = json.loads(Path(plan["prior"]).read_text())
@@ -140,7 +162,7 @@ def main(argv: list[str] | None = None) -> int:
         ordinal_count=len(periods),
         c_code_sha256=str(c2.get("code_sha256", "")),
         search_code_sha256=search_code_digest(
-            REPAIR_FILES if run3 else (STUDY_FILES if run2 else ())
+            CONTROL_FILES if run4 else (REPAIR_FILES if run3 else (STUDY_FILES if run2 else ()))
         ),
         prior_sha256=sha256_file(plan["prior"]),
         settings=canonical_json(plan["settings"]),

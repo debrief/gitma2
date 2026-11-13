@@ -32,7 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     reading: dict[str, Any] = {}
-    repair = plan.get("runner") == "run3"
+    controls = plan.get("runner") == "run4"
+    repair = plan.get("runner") == "run3" or controls
     study = plan.get("runner") == "run2" or repair
     for split in plan["splits"]:
         files = sorted(
@@ -59,7 +60,12 @@ def main(argv: list[str] | None = None) -> int:
             from tma2.timelate.study import study_split
             from tma2.timelate.study3 import study_split3
 
-            r2 = (study_split3 if repair else study_split)(arr, periods, plan)
+            if controls:
+                from tma2.timelate.study4 import study_split4
+
+                r2 = study_split4(arr, periods, plan)
+            else:
+                r2 = (study_split3 if repair else study_split)(arr, periods, plan)
             for key in ("dataset_digest", "seed", "search_code_sha256", "git_commit"):
                 r2[key] = sorted({h[key] for h in headers})
             r2["git_dirty"] = any(h["git_dirty"] for h in headers)
@@ -134,7 +140,12 @@ def main(argv: list[str] | None = None) -> int:
     if repair:
         from tma2.timelate.study3 import soundness3
 
-        sound = soundness3(reading, plan) if "man2" in reading else None
+        if controls:
+            from tma2.timelate.study4 import soundness4
+
+            sound = soundness4(reading, plan) if "man2" in reading else None
+        else:
+            sound = soundness3(reading, plan) if "man2" in reading else None
         summary3 = {
             "plan": a.plan,
             "plan_sha256": digest,
