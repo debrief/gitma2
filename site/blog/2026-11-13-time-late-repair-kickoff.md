@@ -50,3 +50,9 @@ questions again on fresh seeds. Spec 015 trains nothing.
 - Headroom at each class threshold and on each split.
 - Manoeuvring targets declared quiet, by number of true manoeuvres, for each prior.
 - All from committed experiment folders by a script named in the slides post.
+
+**Update, 2026-11-13 (later).** The study ran: validation seed 336 passed soundness and test
+seed 337 is scored. The registered figures reproduce; the rule again gives no GPU budget; the
+panel approved with findings and showed the headroom figure depends most on how the repaired
+reference is fitted. See [the write-up](/blog/2026/11/13/time-late-repair) and
+[the slides](/blog/2026/11/13/time-late-repair-slides).

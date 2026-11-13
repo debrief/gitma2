@@ -350,6 +350,41 @@ learned model. Seeds 333–335 used; 324, 325 unused; the next fresh seed is 336
 **Owner 2026-11-13: repair and re-register (spec 015)**: fix the duration volume, the edge rule
 and the drifting reference; decide the same quantities on fresh seeds (336 validation, 337 test);
 seeds 333–335 become development data. Nothing trained, no GPU.
+015 (time-late repair and re-registration, `specs/015-time-late-repair/`; done; a registered study,
+not a gate; nothing trained): prior version 3 (`prior.open_precision`: volume = 1/density for
+every factor without a Gaussian residual), `timelate/match.py` (`same_history`, `cut_flags`: one
+edge-aware rule), `run3.py` (plan key `runner: run3`; reference held to the true times and flagged
+when it drifts; refit fall-back), `study3.py`, `scripts/research/tl3_tables.py` (every record's
+`tables.md` generated from `summary.json`). Development on spent seed 335
+(`experiments/20261113-tl3-dev/`), decision `20261113-tl3-decision/` (plan
+`configs/timelate/tl-d.json` `a6556059…`, code `3b67d026…`, never edited), validation seed 336
+(`20261113-tl3-val/`, soundness passed), **test record `experiments/20261113-tl3/` (seed 337, 364
+scored periods): D1 0.33 [0.20, 0.45]; D2 first candidate right 0.64, wrong histories 0.44 / 0.13 /
+0.43; D3 headroom 1.06 (perfect search) and 1.17 [1.10, 1.25], lower limit 1.099 (perfect evidence
+as well): inconclusive; D4 held-course false manoeuvres: search 0.53 (0.80 for spec 014's search on
+the same periods; 0.09 under 30 min, 1.00 over 90), C″ 0.02, flat 0.01, mixed 0.00; D5 by the
+rule: no GPU budget. Decided by the panel, round 1** (`review.md`, five approve with findings; no
+bug changes a decided number). Narrowed: the headroom depends most on how the reference is fitted
+(1.11 to 1.19; the 19 held references carry a third of it, ten periods over half; 1.08 to 1.30
+across registered sensitivities): an oracle figure, not a limit; the rule's "no" stands and an
+override would be a departure from it (the first record's "a judgement, the owner's" is corrected);
+D1 is "between a third and a half" and mostly restates how often C″ has the history right; D2's
+ambiguous share is the threshold's (0.11 / 0.44 / 0.66 at 1 / 3 / 5); the 0.09 on short held-course
+periods is not what a correct evidence gives (integrated over where a manoeuvre might be, Annex B's
+prior favours "some manoeuvre" almost everywhere); **the evidence repair is not finished**: version
+3's pairing fails at the edges of the prior's support and the 10 s floor (1 to 3.5 nats; recorded,
+not repaired, with smaller ones in `review.md`: `_leg_tail` zero beyond 5,868 s, combined
+manoeuvres' acceleration unconstrained, speed after a change unpaired). The repair trades false
+manoeuvres for missed single ones (one-manoeuvre targets called quiet 0.13 against 0.04; mixed
+prior 0.20; re-ranked at a quiet probability of 0.01: 0.09 false, 0.14 missed). Not delivered: each
+repair's effect separated per decided quantity; unit tests for `run3`/`study3`; the fall-back
+caught one of seven runaway refits. Gaps where the simulator's assumptions fail (search ÷ oracle:
+shifted prior 1.7, correlated errors 1.4, outliers 1.5) have no classical remedy yet. Write-up
+`site/blog/2026-11-13-time-late-repair.md`, slides `2026-11-13-time-late-repair-slides.md` (figures
+`scripts/research/tl3_charts.py`). Panel's order (owner's choice): a hedged track from the stored
+candidates and a declaration margin; robust and correlated-error likelihoods and a prior that can
+be wrong, scored on the mismatch splits; then a learned model registered against those; no fourth
+Annex B identification study. Seeds 336, 337 used; 324, 325 unused; the next fresh seed is 338.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -675,6 +710,16 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   0.43). Before running an adaptive rule, run it on noise alone. "At no cost" needs the counts
   by case, not a pooled median. A fixture pinned to 1e-9 fails on another CPU family; pin the
   well-determined outputs tightly and the rest loosely.
+- Spec 015 panel: a repair to a reference changes every statistic that reads it; report the
+  decided figure under each way of fitting the reference, not only the registered one. A fit told
+  the true times knows more than which history is right. Do not register as a decision rule a
+  line you forecast as a coin's toss at the planned sample size; and when a rule returns "no" by
+  a hair, report the rule's output as the outcome and do not reword it as a judgement. Test a
+  density-volume pairing at the edges of the support and at solver bounds, not only inside.
+  Comparing one Laplace mode with "no manoeuvre" is not the evidence for "some manoeuvre":
+  integrate over where it might be. Report a class share at every registered threshold. Commit
+  the script that checks a README's numbers, or do not claim the check. A forecast written from
+  a development run minutes earlier is a restatement, not a prediction.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).
