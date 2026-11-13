@@ -70,3 +70,21 @@ The same 100 periods with spec 010's central outlier condition (2% of bearings d
 ## Not shown
 
 One seed, one system; no run with the edit alone; the robust forms on clean data.
+
+## Corrections after the panel (2026-11-13; `experiments/20261112-tl2/review.md`)
+
+- **The adaptive rule broke bins on noise.** The test statistic (a fitted quadratic term)
+  has a noise sd of about 3.35 σ/√k and is tested at every growth step; on a perfectly
+  steady bearing rate the mean bin is 8 rows at tolerance 3 and 13.6 at tolerance 4. The
+  runs tested noise-set bins, not bins set by bearing-rate steadiness. "Worse than fixed
+  ones" applies to that rule only, the explanation offered above is withdrawn, and the
+  owner's idea is not tested.
+- **"Fixed normal points lose little" is not shown**: the intervals reach 1.19 to 1.32. They
+  are not separated from zero cost, nor from a 20% cost. Timings are single CI runs.
+- The adoption rule could not be met by 90 periods and that was knowable from Gate T's
+  per-period scatter before it was written.
+- Under outliers: the edit is shown to help at a fixed bin (0.56 against 0.86); it is not
+  separated from binning; 10-sd outliers against a 4-sd edit is the easy case; a Huber cost
+  in the fit, which removed this cost at Gate H, was not run; the edit's window and
+  threshold were chosen on the periods it is scored on.
+- 91 periods were scored, not 90.

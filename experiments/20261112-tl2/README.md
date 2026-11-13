@@ -29,17 +29,18 @@ bound on tight rows; 99.8% of true-history fits with a consistent cost.
 
 ## Systems
 
-| System | Annex B (369) | Shifted (273) | Held course (360) | Correlated (92) | Outliers (92) | Whole (60) |
+| System (table regenerated from `summary.json` after the panel found hand-copied errors) | Annex B (369) | Shifted (273) | Held course (360) | Correlated (92) | Outliers (92) | Whole (60) |
 | --- | --- | --- | --- | --- | --- | --- |
 | One leg | 0.396 | 0.387 | 0.017 | 0.359 | 0.350 | 0.623 |
 | Smoothed EKF | 0.422 | 0.383 | 0.025 | 0.447 | 0.490 | 0.526 |
 | C″ read as a track | 0.078 | 0.137 | 0.017 | 0.297 | 0.180 | 0.096 |
 | C″ refitted | 0.055 | 0.128 | 0.017 | 0.190 | 0.125 | 0.062 |
-| Search, flat prior | 0.043 | 0.092 | 0.017 | 0.186 | 0.137 | 0.026 |
-| Search, Gate T's prior | 0.038 | 0.086 | 0.035 | 0.180 | 0.105 | 0.025 |
-| Search, corrected prior | 0.038 | 0.095 | 0.035 | 0.184 | 0.085 | 0.022 |
-| Search, mixed prior | 0.039 | 0.097 | 0.017 | 0.184 | 0.085 | 0.022 |
-| True history, with the prior | 0.027 | 0.039 | 0.017 | 0.100 | 0.049 | 0.021 |
+| Search, flat prior | 0.043 | 0.097 | 0.017 | 0.195 | 0.112 | 0.023 |
+| Search, Gate T's prior | 0.038 | 0.087 | 0.035 | 0.180 | 0.104 | 0.025 |
+| Search, corrected prior | 0.038 | 0.095 | 0.035 | 0.185 | 0.085 | 0.022 |
+| Search, mixed prior | 0.038 | 0.098 | 0.017 | 0.185 | 0.085 | 0.022 |
+| True history, with the prior (`history-map`) | 0.027 | 0.038 | 0.017 | 0.100 | 0.049 | 0.021 |
+| True history, best evidence (`history-best`) | 0.027 | 0.040 | 0.017 | 0.102 | 0.048 | 0.021 |
 | True history, times held | 0.025 | 0.041 | 0.017 | 0.073 | 0.035 | 0.016 |
 
 Paired ratios on Annex B data:
@@ -85,7 +86,7 @@ Paired ratios on Annex B data:
    registration; its half is not tuned.
 7. **Correlated bearing errors hurt everything**, the true-history fit included (0.027 to
    0.100), and remove the search's edge over the refit (1.12 [0.86, 1.52]). The search's
-   false manoeuvres rise from 0.38 to 1.5 a period. Outliers hurt C″ far more than the search
+   false manoeuvres rise from 0.35 to 1.42 a period. Outliers hurt C″ far more than the search
    (C″ 0.180, search 0.085); the tuning seed's wild-bearing edit was not run here.
 8. **Whole engagements favour the search most**: C″ ÷ search 4.09 [2.77, 5.72] on 60; the
    search is at the true-history fit there (0.022 against 0.021).
@@ -141,3 +142,81 @@ generator's own, and one test seed:
 It does not support: any claim about real bearings; that a learned model could not help
 where the assumptions are wrong (it shows headroom there and tests nothing); that the shares
 are constants (three seeds gave 0.79, 0.30, 0.43 for D1).
+
+## Corrections after the panel (2026-11-13; `review.md`, five approve with findings)
+
+**Verdict: decided by the panel, round 1.** The registered figures above stand as
+registered. The following statements above are withdrawn or narrowed, and two defects in the
+registered code are recorded.
+
+**Defects in the registered code** (not repaired here: the code is registered; a repair is a
+new registration):
+
+- **The evidence over-credits short manoeuvres.** A manoeuvre's duration keeps version 1's
+  stand-in volume (about 600 s) against a sharp prior density: 2 to 3 nats of unearned Occam
+  factor for each small, short manoeuvre. Re-ranking the stored candidates with a corrected
+  volume gives a held-course false rate of 0.47 to 0.57, not 0.76, and changes the first
+  candidate in 56 to 84 of 400 Annex B periods. **D4's 0.76 is partly this defect**; its
+  direction stands (C″ 0.02). The effect on D1 to D3 is unknown without re-running.
+- **The classing counts manoeuvres cut by the period's edge**, against the spec's edge case.
+  Edge-aware, D2 on scored periods is **0.57 / 0.11 / 0.33** of 147 wrong (0.61 / 0.12 / 0.27
+  on periods with no cut manoeuvre), and the first candidate is right in about 0.60, not
+  0.51. D3 barely moves.
+- **The true-history fit drifts**: with times free, 50 of 389 fits end more than 120 s from
+  the true times. "The true history's evidence" is not that for 13% of periods, and the
+  composites are noisy oracles, not upper limits.
+
+**Withdrawn or narrowed:**
+
+- **Reading 1, "the search does most of its own work", and "the first was the outlier"**:
+  withdrawn. D1 is about half: 0.43 [0.28, 0.58] as registered; 0.52 [0.41, 0.65] without
+  four refits that ran away numerically; 0.39 to 0.58 by estimand; 0.47 [0.36, 0.59] over
+  three seeds, whose spread is marginally consistent with noise. The refit inherits C″'s
+  misses. Gate T's "mostly smoothing" is qualified to "about half", not overturned. The
+  clearer split: the flat-prior search obtains 0.78 [0.67, 0.91] of the gain, so Annex B's
+  manoeuvre statistics are worth about a fifth of it.
+- **Reading 2, "the tuning seed's 'no difference' was noise"**: withdrawn as stated; the
+  intervals (1.01 [0.84, 1.23] and 1.18 [1.07, 1.29]) overlap.
+- **Reading 3, "about half the wrong histories are ambiguous"**: the share is of this
+  Laplace evidence at a threshold of 3, whose own noise is of that size. On those periods
+  the search is at 0.057 against 0.026 for the true-history fit, and the true history is in
+  the first three candidates in 0.45.
+- **Reading 4, "little left to win" and "ambiguity no identifier can remove"**: withdrawn.
+  The headroom with a perfect evidence is 1.05 to 1.20 across the registered thresholds
+  (1.18 [1.10, 1.28] at 1; 1.05 [1.01, 1.09] at 5), 1.17 [1.09, 1.25] with times held as
+  the replacement, 1.25 [1.15, 1.36] if every wrong period is replaced; ratio of medians
+  1.07 [0.96, 1.23]. Inconclusive is the fair reading: the interval admits 18%.
+- **Reading 5**: held course does not belong in the list (its gap is self-inflicted and the
+  mixed prior closes it). For the shifted prior, correlated errors and outliers the record
+  shows gaps of 1.5 to 1.9 with the same noisy composite, and no remedy of any kind tried.
+- **Reading 6, "at no cost" and the cause**: withdrawn. The mixed prior moves errors from
+  false manoeuvres to missed single ones: "held course" declared on a manoeuvring target in
+  7.8% of Annex B periods against 1.9%, and on periods with one true manoeuvre 19.7%
+  against 6.0%. Its 3% depends on its half. The flat-prior search already gives 1% on held
+  course. The cause is not only the prior's leg term: it decides periods over an hour; under
+  30 minutes the false rate is still 0.46, from the Occam factor and the defect above.
+- **Reading 7**: "removes the search's edge over the refit" (1.12 [0.86, 1.52] on 92
+  periods) is an absence of evidence.
+- **Reading 10**: the smoothed EKF's figure partly reflects rows with no state (8%) and
+  stretches smoothed apart; its recursion is right.
+- **Forecasts**: D4 is "yes, except the mixed prior" (forecast 0.10, result 0.03
+  [0.02, 0.05]); D2's ambiguous share excludes its forecast. The forecasts were written
+  from a tuning run at an earlier commit than the registered code.
+- **The systems table** had a wrong flat-prior row and small slips; it is regenerated from
+  `summary.json` above.
+- **"What this record supports"**, restated: a whole-period search halves C″'s track error
+  on Annex B data, and about half of that gain is available without a search; with this
+  evidence, as defective as recorded, the search's gap to a fit told the history's structure
+  is 5% to 25% depending on convention; this evidence invents small manoeuvres on quiet
+  targets, in part through a recorded defect.
+
+**D5, for the owner.** The registered rule gives "no GPU budget", and it was applied as
+written. What the evidence says is narrower: where targets behave exactly as the simulator's
+statistics say and errors are independent, the search is within roughly 5% to 25% of a fit
+told the history, on the 10% line and not below it; a learned model trained on Annex B to
+identify histories is not supported. Where the prior or the error model is wrong the gap is
+50% to 90% and nothing, classical or learned, has been tried against it. The study is silent
+on a model that hedges across histories instead of identifying one.
+
+**Also not run**, beyond the list above: a sampler in place of the Laplace approximation; a
+Huber cost in the search; FR-002's effect on candidate calibration.
