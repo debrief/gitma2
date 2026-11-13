@@ -200,3 +200,32 @@ every split so the slides can carry track plots (three studies had none).
   of 0.2), search under both priors and pool. It is what a system not told the conditions
   would run, and it is the classical side of the registered comparison; the single-factor
   controls are scored on their own splits for attribution (FR-020).
+
+## As registered (2026-11-13, after the tuning run and the pilot, before any training run)
+
+- **R9, the mix as built**: the shares in R9 summed to 75%; the remainder is Annex B.
+  Families: Annex B 0.65, randomised statistics 0.20, quiet 0.15; independently a quarter
+  of all engagements carry an error overlay (correlated, outliers or both, a third each).
+  Every proportion and range is in `configs/regress/tlm-mix.json`. Bias and the unknown-σ
+  factor are never in training.
+- **R10, the budget as set**: the ledger's cap is $45 of the owner's $50 and $26.35 was
+  recorded before training. Three seeds of two 15,600 s segments: at most $18.36. The
+  ledger under-counts a run whose container is replaced (pilot record), so the true spend
+  may be a little above what it records; the cap leaves $5 for that.
+- **R11, the comparison as registered**: the classical side is the combined control `ctl`
+  as a declared history (`ctl-d1-q0.01`) and as a hedged track (`ctl-h1`), settings from
+  tuning seed 338; not "the best control per split chosen on validation", because a system
+  is not told which split it is on. The single-factor controls are scored on their own
+  splits for attribution. Test sizes: Annex B 400, shifted 400, shifted 2 400, held course
+  300, correlated mild 200, correlated 300, outliers 300, outliers harsh 200, bias 300,
+  whole engagements 60 (reported only).
+- **Power** (from tuning seed 338; the smallest paired ratio separable from 1 at the test
+  size, 1.96 sd of the mean log ratio): for two classical systems that share fits (search
+  against `ctl`) 1.03 to 1.23; for two unlike systems (`ctl` against C″, the nearest proxy
+  for `ctl` against a learned track) 1.15 on the shifted split, 1.40 on shifted 2, 1.19 to
+  1.25 on the error splits, 1.28 on Annex B. A learned track must therefore differ from
+  the control by about 15% to 40% to be separated; a smaller difference will read "not
+  separated", which the criteria count as not shown and not as harm.
+- **The read-out** (R8) is fitted to the bearings `ctl` sees (edited, effective sd) with
+  Annex B's prior, at the model's manoeuvres, started from the model's track; it falls
+  back to the model's own track by spec 015's acceptance rule.

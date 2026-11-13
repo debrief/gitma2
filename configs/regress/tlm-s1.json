@@ -1,15 +1,13 @@
 {
-  "description": "DRAFT, not to be launched. Spec 016 T011: the whole-period model, training seed 1 (research R7, R9, R10): two segments of at most 4 h 50 min on a T4 (10 h with the start-up allowances). total_updates is a PLACEHOLDER (0: a run launched from this draft trains nothing): it is set from the pilot's measured periods per second so that the run completes inside its two segments, and the plan is then bound by digest in the decision record before any job.",
-  "draft": true,
-  "total_updates_placeholder": "0 until the pilot (configs/regress/tlm-pilot.json) has run: then about 0.9 x periods per second x 34800 s / 256",
+  "description": "Spec 016 T011: the whole-period model, training seed 1 (research R7, R9, R10). 49,000 updates of 256 periods (12.5 million periods from stream seed 339), two segments of at most 4 h 20 min on a T4 (9 h with the start-up allowances); the pilot measured 453 periods a second while training (experiments/20261113-tlm-pilot/). Bound by digest in experiments/20261113-tl4-decision/; never edited after.",
   "gpu": "T4",
   "config": {
     "id": "tlm-s1",
     "seed": 1,
     "warmup_updates": 2000,
-    "total_updates": 0,
+    "total_updates": 49000,
     "val_every_updates": 1000,
-    "limit_seconds": 17400,
+    "limit_seconds": 15600,
     "layers": 8,
     "width": 256,
     "heads": 8,
@@ -33,5 +31,5 @@
     "stream_start": 0
   },
   "segments": 2,
-  "segment_limit_seconds": 17400
+  "segment_limit_seconds": 15600
 }

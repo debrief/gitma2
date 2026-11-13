@@ -309,8 +309,9 @@ def test_spec_012_configurations_keep_their_digests() -> None:
 
 
 def test_committed_period_plans() -> None:
-    """The pilot fits an hour on a T4 with its allowance; the training drafts cannot train
-    until their placeholder is set; every plan reads stream seed 339 and no other seed."""
+    """The pilot fits an hour on a T4 with its allowance; the three registered training plans
+    differ in their seed only and each fits nine hours with allowances; every plan reads
+    stream seed 339 and no other seed."""
     from tma2.regress.remote import plan_limit_seconds
 
     plans = {n: json.loads((ROOT / f"configs/regress/tlm-{n}.json").read_text())
@@ -327,8 +328,8 @@ def test_committed_period_plans() -> None:
     for k in (1, 2, 3):
         plan = plans[f"s{k}"]
         cfg = RegressorConfig(**plan["config"])
-        assert plan["draft"] is True and cfg.total_updates == 0 and cfg.seed == k
-        assert plan["segments"] == 2 and plan["segment_limit_seconds"] <= 18000
+        assert "draft" not in plan and cfg.total_updates == 49000 and cfg.seed == k
+        assert plan["segments"] == 2 and plan_limit_seconds(plan) <= 9 * 3600
         arch = {f: getattr(cfg, f) for f in ("layers", "width", "heads", "feedforward", "mix")}
         assert arch == {f: getattr(pilot, f) for f in arch}
     try:

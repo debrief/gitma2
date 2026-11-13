@@ -34,7 +34,7 @@ STUDY_FILES = (
     "thin.py",
 )  # spec 014's additions
 REPAIR_FILES = (*STUDY_FILES, "match.py", "run3.py")  # spec 015
-CONTROL_FILES = (*REPAIR_FILES, "corr.py", "hedge.py", "run4.py")  # spec 016
+CONTROL_FILES = (*REPAIR_FILES, "corr.py", "hedge.py", "learned.py", "run4.py")  # spec 016
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
