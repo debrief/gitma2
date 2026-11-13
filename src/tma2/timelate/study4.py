@@ -162,3 +162,60 @@ def soundness4(reading: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
         "reference_flagged_max": limit,
         "pass": bool(lo <= eff <= hi and conv >= float(st["convergence_min"]) and flag <= limit),
     }
+
+
+def criteria4(reading: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
+    """L-c and L-d (research R11) for the learned model's seeds named in the plan.
+
+    On each mismatch split, for every seed, the declared classical control ÷ the model's
+    arc read-out and the hedged classical track ÷ the same, paired per period. A seed
+    *wins* a comparison when its interval is wholly above 1 and *loses* when wholly below.
+    Learning is ``shown`` on a split when every seed wins both; ``hedging`` when every seed
+    wins against the declared control but not every seed wins against the hedged track;
+    ``not shown`` otherwise. On the no-harm splits, ``harm`` when every seed loses against
+    the declared control."""
+    c = plan["criteria"]
+    declared, hedge = c["control"], c["hedged"]
+    seeds = [f"{s}-arc" for s in c["learned"]]
+
+    def side(p: dict[str, Any] | None) -> str:
+        if p is None:
+            return "absent"
+        return "wins" if p["lo"] > 1.0 else ("loses" if p["hi"] < 1.0 else "not separated")
+
+    out: dict[str, Any] = {"splits": {}, "no_harm": {}}
+    for split in c["mismatch_splits"] + c["no_harm_splits"]:
+        if split not in reading:
+            continue
+        comp = reading[split]["comparisons"]
+        rows = {}
+        for s in seeds:
+            a, b = comp.get(f"{declared}_over_{s}"), comp.get(f"{hedge}_over_{s}")
+            rows[s] = {"declared": a, "hedged": b, "vs_declared": side(a), "vs_hedged": side(b)}
+        va = [r["vs_declared"] for r in rows.values()]
+        vb = [r["vs_hedged"] for r in rows.values()]
+        if split in c["mismatch_splits"]:
+            if all(x == "wins" for x in va) and all(x == "wins" for x in vb):
+                verdict = "shown"
+            elif all(x == "wins" for x in va):
+                verdict = "hedging"
+            else:
+                verdict = "not shown"
+            out["splits"][split] = {"seeds": rows, "verdict": verdict}
+        else:
+            harm = bool(va) and all(x == "loses" for x in va)
+            out["no_harm"][split] = {"seeds": rows, "verdict": "harm" if harm else "no harm shown"}
+    shown = sum(1 for v in out["splits"].values() if v["verdict"] == "shown")
+    harm = any(v["verdict"] == "harm" for v in out["no_harm"].values())
+    out["learning_shown_on"] = shown
+    out["harm"] = harm
+    out["follows"] = (
+        "a gate for a learned time-late system is proposed"
+        if shown >= 2 and not harm
+        else (
+            "the classical controls stand as the time-late system; the learned track stops"
+            if shown == 0
+            else "reported; the owner decides"
+        )
+    )
+    return out

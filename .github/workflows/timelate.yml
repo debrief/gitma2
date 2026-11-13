@@ -79,6 +79,21 @@ jobs:
           EXTRA=()
           if [ "$THIN" != "plan" ]; then EXTRA+=(--thin "$THIN"); fi
           if [ "$SYSTEMS" != "plan" ]; then EXTRA+=(--systems "$SYSTEMS"); fi
+          # spec 016: a run file may name the learned model's seeds (results branch, folder,
+          # training plan); their tracks are predicted here, outside the checkout, and scored
+          # beside the controls
+          python3 - "$RUN" > "$RUNNER_TEMP/learned" <<'PY'
+          import json, sys
+          for name, v in (json.load(open(sys.argv[1])).get("learned") or {}).items():
+              print(name, v["branch"], v["dir"], v["config"])
+          PY
+          mkdir -p "$RUNNER_TEMP/ckpt" "$RUNNER_TEMP/lp"
+          while read -r LNAME LBRANCH LDIR LCONFIG; do
+            git fetch -q --depth 1 origin "$LBRANCH"
+            git show "FETCH_HEAD:$LDIR/checkpoint.safetensors" > "$RUNNER_TEMP/ckpt/$LNAME.safetensors"
+            uv run tma2-tlpredict --weights "$RUNNER_TEMP/ckpt/$LNAME.safetensors" --config "$LCONFIG" --in "$TRUTH" --plan "$PLAN" --split "${{ matrix.split }}" --start "${{ matrix.start }}" --count "${{ matrix.count }}" --out "$RUNNER_TEMP/lp/$LNAME"
+            EXTRA+=(--learned "$LNAME=$RUNNER_TEMP/lp/$LNAME")
+          done < "$RUNNER_TEMP/learned"
           uv run tma2-tlsolve --in "$TRUTH" --plan "$PLAN" --split "${{ matrix.split }}" --start "${{ matrix.start }}" --count "${{ matrix.count }}" --out "$RUNNER_TEMP/shards/${{ matrix.split }}.${{ matrix.shard }}" "${EXTRA[@]}"
       - uses: actions/upload-artifact@v4
         with:
@@ -106,7 +121,10 @@ jobs:
           PLAN="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['plan'])" "$RUN")"
           mkdir -p "$RUNNER_TEMP/result"
           set -o pipefail
-          uv run tma2-tlscore --shards "$RUNNER_TEMP/shards" --plan "$PLAN" --out "$RUNNER_TEMP/result" | tee "$RUNNER_TEMP/result/score.txt"
+          RECORD="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1])).get('controls_record', ''))" "$RUN")"
+          EXTRA=()
+          if [ -n "$RECORD" ]; then EXTRA+=(--controls-record "$RECORD"); fi
+          uv run tma2-tlscore --shards "$RUNNER_TEMP/shards" --plan "$PLAN" --out "$RUNNER_TEMP/result" "${EXTRA[@]}" | tee "$RUNNER_TEMP/result/score.txt"
           cp "$RUN" "$RUNNER_TEMP/result/run.json"
           cp "$PLAN" "$RUNNER_TEMP/result/plan.json"
           echo "{\"run_id\": \"$GITHUB_RUN_ID\", \"commit\": \"$GITHUB_SHA\", \"cpu_model\": \"$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)\"}" > "$RUNNER_TEMP/result/ci.json"

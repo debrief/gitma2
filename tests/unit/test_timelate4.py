@@ -128,3 +128,61 @@ def test_editing_removes_wild_bearings_and_little_else() -> None:
     pb, n = edited((t, ox, oy, z, v, SIGMA))
     assert not pb[4][wild].any()
     assert len(wild) <= n <= len(wild) + 5
+
+
+def _cmp(lo: float, hi: float) -> dict[str, float]:
+    return {"geometric_mean": (lo + hi) / 2, "lo": lo, "hi": hi}
+
+
+def test_the_criteria_name_a_win_for_the_control_that_explains_it() -> None:
+    from tma2.timelate.study4 import criteria4
+
+    plan = {
+        "criteria": {
+            "control": "ctl-d",
+            "hedged": "ctl-h",
+            "learned": ["m1", "m2"],
+            "mismatch_splits": ["a", "b", "c"],
+            "no_harm_splits": ["clean"],
+        }
+    }
+
+    def split(dec: list[tuple[float, float]], hed: list[tuple[float, float]]) -> dict:
+        comp = {}
+        for s, d, h in zip(("m1-arc", "m2-arc"), dec, hed, strict=True):
+            comp[f"ctl-d_over_{s}"] = _cmp(*d)
+            comp[f"ctl-h_over_{s}"] = _cmp(*h)
+        return {"comparisons": comp}
+
+    reading = {
+        "a": split([(1.1, 1.4), (1.05, 1.3)], [(1.02, 1.2), (1.01, 1.3)]),  # both, every seed
+        "b": split([(1.1, 1.4), (1.05, 1.3)], [(0.95, 1.2), (1.01, 1.3)]),  # hedging
+        "c": split([(1.1, 1.4), (0.9, 1.3)], [(1.02, 1.2), (1.01, 1.3)]),  # one seed fails
+        "clean": split([(0.7, 0.9), (0.6, 0.95)], [(0.7, 0.9), (0.7, 0.9)]),
+    }
+    out = criteria4(reading, plan)
+    assert [out["splits"][k]["verdict"] for k in "abc"] == ["shown", "hedging", "not shown"]
+    assert out["no_harm"]["clean"]["verdict"] == "harm" and out["harm"]
+    assert out["learning_shown_on"] == 1 and out["follows"].startswith("reported")
+    reading["clean"] = split([(0.7, 1.1), (0.6, 0.95)], [(0.7, 0.9), (0.7, 0.9)])
+    reading["b"] = reading["a"]
+    assert criteria4(reading, plan)["follows"].startswith("a gate")
+
+
+def test_a_record_s_tables_are_what_the_script_prints_for_its_summary() -> None:
+    import importlib.util
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location(
+        "tl4_tables", root / "scripts/research/tl4_tables.py"
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    records = sorted((root / "experiments").glob("*-tl4*/tables.md"))
+    assert records
+    for t in records:
+        summary = json.loads((t.parent / "summary.json").read_text())
+        assert t.read_text() == mod.tables(summary), t
