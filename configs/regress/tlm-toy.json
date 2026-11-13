@@ -1,0 +1,33 @@
+{
+  "description": "Spec 016: the whole-period model in miniature, for tests and CPU dry runs (30 updates of 16 periods from stream seed 339).",
+  "config": {
+    "id": "tlm-toy",
+    "seed": 1,
+    "layers": 2,
+    "width": 64,
+    "heads": 4,
+    "feedforward": 128,
+    "batch_scenarios": 16,
+    "learning_rate": 0.001,
+    "warmup_updates": 5,
+    "total_updates": 30,
+    "val_count": 32,
+    "val_every_updates": 10,
+    "limit_seconds": 600,
+    "checkpoint_seconds": 60,
+    "precision": "float32",
+    "patch_rows": 6,
+    "max_rows": 1440,
+    "causal": false,
+    "manoeuvre_head": true,
+    "manoeuvre_weight": 0.1,
+    "n_features": 9,
+    "data": "periods",
+    "mix": "configs/regress/tlm-mix.json",
+    "stream_seed": 339,
+    "val_seed": 339,
+    "stream_start": 0
+  },
+  "segments": 1,
+  "segment_limit_seconds": 600
+}

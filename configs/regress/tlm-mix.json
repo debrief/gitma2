@@ -1,0 +1,64 @@
+{
+  "description": "Spec 016 research R9: the training mix of the learned whole-period model. Every engagement of the stream draws its family and its bearing-error overlay from its own sub-stream of the stream seed (tma2.regress.period_data). Families: 40% Annex B plus the 25% R9 leaves unassigned (0.65 in all), 20% randomised statistics, 15% quiet. Independently, a quarter of all engagements carry an overlay: correlated error, outliers or both, a third each. Bias and the unknown-sigma factor are never in training (the absent-from-training split). Each engagement is cut to a period as Gate T does (tma2.timelate.periods.cut).",
+  "base_ranges": "configs/timelate/tl-ranges.json",
+  "quiet_ranges": "configs/timelate/tl-quiet-ranges.json",
+  "families": {
+    "annex_b": 0.65,
+    "randomised": 0.2,
+    "quiet": 0.15
+  },
+  "randomised": {
+    "leg_mean_s": {
+      "min": 600,
+      "max": 2400
+    },
+    "leg_sd_over_mean": 0.3,
+    "leg_min_s": 300,
+    "scale": {
+      "min": 0.5,
+      "max": 1.5
+    },
+    "scaled": [
+      "target_manoeuvre_angle_abs_rad (min and max, one factor; max at most pi)",
+      "target_turn_rate_rad_s.max",
+      "target_speed_change_abs_mps.max",
+      "target_speed_change_rate_mps2.max"
+    ],
+    "course_weight": {
+      "min": 0.5,
+      "max": 0.9
+    },
+    "speed_share_of_rest": {
+      "min": 0.3,
+      "max": 0.7
+    }
+  },
+  "overlay": {
+    "fraction": 0.25,
+    "kinds": {
+      "correlated": 0.3333333333333333,
+      "outliers": 0.3333333333333333,
+      "both": 0.3333333333333334
+    },
+    "corr_tau_s": {
+      "min": 20,
+      "max": 240
+    },
+    "corr_share": {
+      "min": 0.2,
+      "max": 0.7
+    },
+    "outlier_rate": {
+      "min": 0,
+      "max": 0.06
+    },
+    "outlier_spread": {
+      "min": 5,
+      "max": 15
+    }
+  },
+  "held_out": [
+    "bias",
+    "sigma_factor"
+  ]
+}

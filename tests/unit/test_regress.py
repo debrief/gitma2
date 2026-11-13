@@ -166,12 +166,16 @@ def test_config_matches_its_schema_type() -> None:
     import dataclasses
     import json
 
+    from tma2.regress.model import PERIOD_FIELDS
     from tma2.types.generated.tma import RegressorConfig as Schema
 
-    assert {f.name for f in dataclasses.fields(RegressorConfig)} == set(Schema.model_fields)
+    # Spec 016's fields (the whole-period model) await that spec's schema change; a spec 012
+    # configuration's JSON does not carry them.
+    names = {f.name for f in dataclasses.fields(RegressorConfig)}
+    assert names - set(PERIOD_FIELDS) == set(Schema.model_fields)
     for plan in sorted((ROOT / "configs" / "regress").glob("*.json")):
         raw = json.loads(plan.read_text())
         if "config" not in raw:
             continue
         cfg = RegressorConfig(**raw["config"])
-        Schema.model_validate(cfg.to_json())
+        Schema.model_validate({k: v for k, v in cfg.to_json().items() if k not in PERIOD_FIELDS})
