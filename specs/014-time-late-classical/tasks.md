@@ -61,7 +61,7 @@ Tests are part of each task (plan, Testing). Nothing is trained; no GPU.
 - [x] T024 Plan `configs/timelate/tl-c.json`, run files `configs/timelate/runs/tl-c-{val,test}.json`, decision record `experiments/<date>-tl2-decision/` (digests, criteria, forecasts for FR-005, FR-007, FR-010, the recommendation rule, the soundness stop); SRD §9 line (owner merges)
 - [x] T025 Validation seed 334 (`timelate/tl-c-val`); soundness stop; record `experiments/<date>-tl2-val/`; failure check 20 minutes after launch
 - [x] T026 Test seed 335 once (`timelate/tl-c-test`); record `experiments/<date>-tl2/` with `errors.npz`, the list of anything not run (FR-022), and the recommendation by the registered rule
-- [ ] T027 Panel review (five reviewers; critical); `review.md`; corrections
+- [x] T027 Panel review (five reviewers; critical); `review.md`; corrections
 
 ## Phase 9: User Story 6 - prior robustness (P3; first to be cut)
 
@@ -69,8 +69,8 @@ Tests are part of each task (plan, Testing). Nothing is trained; no GPU.
 
 ## Phase 10: Polish
 
-- [ ] T029 Write-up `site/blog/<date>-time-late-classical.md`, slides post and deck (`/speckit-report-slides`), figures by a script reading committed records
-- [ ] T030 `AGENTS.md` (status, gotchas), kickoff post updates, PR description
+- [x] T029 Write-up `site/blog/<date>-time-late-classical.md`, slides post and deck (`/speckit-report-slides`), figures by a script reading committed records
+- [x] T030 `AGENTS.md` (status, gotchas), kickoff post updates, PR description
 
 ## Dependencies
 
@@ -87,3 +87,5 @@ MVP: phases 1 to 4 on the tuning seed answer the owner's main question in draft 
 - T001: the fixture is the synthetic case of `test_timelate.py`, not two seed-329 periods (C″ on real periods costs minutes a test); tolerance 1e-4 for another CPU family.
 - T003, T008, T012, T015, T018: one tuning run, `experiments/20261112-tl2-tuning/`. Run time is no constraint (R10 not invoked). The headroom statistic is not degenerate.
 - T023: no separate smoke run; the tuning run exercised the workflow, and the thinning runs exercise `thinning`, `systems` and `condition`.
+- T028 (User Story 6): not built (cut, as the spec allowed); only the mixed prior, a narrower thing. Recorded in the test README.
+- Panel round 1 (2026-11-13): two defects in the registered code (duration volume; edge manoeuvres in classing) recorded, not repaired: a repair is a new registration.

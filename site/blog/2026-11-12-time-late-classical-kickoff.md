@@ -58,3 +58,15 @@ into a figure a decision on a learned model can rest on.
 - Accuracy against run time for each thinning form, clean and with outliers (tuning seed 333).
 - Track plots of one ambiguous period and one search failure, both candidate tracks drawn.
 - All from committed experiment folders; scripts and commits named in the slides post.
+
+## Update, 13 November: the study is decided
+
+The registered study ran on a fresh test seed and went to the panel: five approve with
+findings. The search's gain over the standing classical system held (a factor of 2.1), and
+about half of it is available without a search. On targets that never manoeuvre the search
+invents a manoeuvre three times in four. The panel found two defects in the registered code,
+one of which inflates that last figure, and narrowed most of the first readings; by the rule
+written beforehand no GPU budget goes to a learned whole-period model, though the evidence
+supports a narrower statement than the rule. The owner's thinning idea was not fairly tested.
+Write-up: [time-late, the classical follow-on](/blog/2026/11/13/time-late-classical), with
+[slides](/blog/2026/11/13/time-late-classical-slides).
