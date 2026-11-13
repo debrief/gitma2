@@ -1,0 +1,284 @@
+{
+ "description": "Spec 016's registered study (2026-11-13): the classical controls (settings from tuning seed 338) and the learned whole-period model's three seeds, scored on the same periods. Bound by digest in the decision record; never edited after.",
+ "data_split": "train",
+ "splits": {
+  "man2": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "Annex B's manoeuvre statistics, independent Gaussian errors",
+   "systems": [
+    "search3",
+    "edit",
+    "corr",
+    "broad",
+    "mix2",
+    "ctl"
+   ]
+  },
+  "shift": {
+   "ranges": "configs/timelate/tl-shift-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "shorter legs, smaller turns, faster turn rates, more speed changes",
+   "systems": [
+    "search3",
+    "broad",
+    "mix2",
+    "ctl"
+   ]
+  },
+  "shift2": {
+   "ranges": "configs/timelate/tl-shift2-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "longer legs (mean 35 min), larger and slower turns, few speed changes",
+   "systems": [
+    "search3",
+    "broad",
+    "mix2",
+    "ctl"
+   ]
+  },
+  "quiet": {
+   "ranges": "configs/timelate/tl-quiet-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "the target holds course",
+   "systems": [
+    "search3",
+    "broad",
+    "mix2",
+    "ctl"
+   ]
+  },
+  "man2-corr-mild": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "correlated errors, 30 s, half the variance",
+   "systems": [
+    "search3",
+    "corr",
+    "ctl"
+   ],
+   "condition": "corr-mild"
+  },
+  "man2-corr": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "correlated errors, 60 s, half the variance",
+   "systems": [
+    "search3",
+    "corr",
+    "ctl"
+   ],
+   "condition": "corr-central"
+  },
+  "man2-out": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "2% outlying bearings (10 sd)",
+   "systems": [
+    "search3",
+    "edit",
+    "ctl"
+   ],
+   "condition": "out-central"
+  },
+  "man2-out-harsh": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "5% outlying bearings (10 sd)",
+   "systems": [
+    "search3",
+    "edit",
+    "ctl"
+   ],
+   "condition": "out-harsh"
+  },
+  "man2-bias": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "a slowly varying bias (0.5 degree, 30 min): addressed by no control and absent from the model's training",
+   "systems": [
+    "search3",
+    "ctl"
+   ],
+   "condition": "bias-central"
+  },
+  "whole": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "Annex B engagements uncut",
+   "systems": [
+    "search3",
+    "ctl"
+   ],
+   "whole": true
+  }
+ },
+ "prior": "configs/timelate/tl-ranges.json",
+ "prior_broad": "configs/timelate/tl-broad.json",
+ "gh_plan": "configs/gateh/gh-a.json",
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [
+   1
+  ],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 20
+ },
+ "runner": "run4",
+ "reference": {
+  "sound": "history-fixed",
+  "tight_bound": 0.05
+ },
+ "study": {
+  "match_tolerance_s": 120.0,
+  "soundness_band": [
+   0.8,
+   1.3
+  ],
+  "convergence_min": 0.9,
+  "reference_flagged_max": 0.25
+ },
+ "comparisons": [
+  [
+   "ctl-d1-q0.01",
+   "learned-s1-arc"
+  ],
+  [
+   "ctl-h1",
+   "learned-s1-arc"
+  ],
+  [
+   "search3",
+   "learned-s1-arc"
+  ],
+  [
+   "c2",
+   "learned-s1-arc"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "learned-s2-arc"
+  ],
+  [
+   "ctl-h1",
+   "learned-s2-arc"
+  ],
+  [
+   "search3",
+   "learned-s2-arc"
+  ],
+  [
+   "c2",
+   "learned-s2-arc"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "learned-s3-arc"
+  ],
+  [
+   "ctl-h1",
+   "learned-s3-arc"
+  ],
+  [
+   "search3",
+   "learned-s3-arc"
+  ],
+  [
+   "c2",
+   "learned-s3-arc"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "learned-s1"
+  ],
+  [
+   "ctl-h1",
+   "learned-s1"
+  ],
+  [
+   "search3",
+   "learned-s1"
+  ],
+  [
+   "c2",
+   "learned-s1"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "learned-s2"
+  ],
+  [
+   "ctl-h1",
+   "learned-s2"
+  ],
+  [
+   "search3",
+   "learned-s2"
+  ],
+  [
+   "c2",
+   "learned-s2"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "learned-s3"
+  ],
+  [
+   "ctl-h1",
+   "learned-s3"
+  ],
+  [
+   "search3",
+   "learned-s3"
+  ],
+  [
+   "c2",
+   "learned-s3"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ctl-h1"
+  ],
+  [
+   "search3",
+   "ctl-d1-q0.01"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "c2"
+  ]
+ ],
+ "criteria": {
+  "control": "ctl-d1-q0.01",
+  "hedged": "ctl-h1",
+  "learned": [
+   "learned-s1",
+   "learned-s2",
+   "learned-s3"
+  ],
+  "mismatch_splits": [
+   "shift",
+   "shift2",
+   "man2-corr",
+   "man2-out",
+   "man2-bias"
+  ],
+  "no_harm_splits": [
+   "man2",
+   "quiet"
+  ]
+ },
+ "learned_plans": {
+  "learned-s1": "configs/regress/tlm-s1.json",
+  "learned-s2": "configs/regress/tlm-s2.json",
+  "learned-s3": "configs/regress/tlm-s3.json"
+ }
+}
