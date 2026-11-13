@@ -1,0 +1,90 @@
+# Spec 014: the bearing-rate thinning study (tuning seed 333, 2026-11-12)
+
+The owner's idea of 2026-11-11: where the bearing rate is steady, a run of 5-second bearings
+might be replaced by fewer observations. Tested on the whole-period search (`search2`) over
+the first 100 Annex B tuning periods (90 scored), each form against the full data on the same
+periods. Runs: `timelate/tl-c-thin-*` at commit 58bad9d (`runs.txt` names the results
+branches); table by `scripts/research/tl2_thin.py` (`thin-clean.json`). Tuning data.
+
+Cost is the geometric mean per-period ratio of the form's period median range error to the
+full data's, with a period bootstrap. The adoption rule was fixed before the runs (research
+R6): cost under 2% with an interval excluding 5%, and at least 30% of run time saved.
+
+| Form | Points kept | Cost | Search seconds a period | Manoeuvres missed |
+| --- | --- | --- | --- | --- |
+| Full data | all | 1 | 21.4 | 16% |
+| One bearing in 2 | 1/2 | 1.19 [0.96, 1.48] | 19.6 | 21% |
+| One bearing in 4 | 1/4 | 1.59 [1.22, 2.03] | 22.2 | 29% |
+| One bearing in 6 | 1/6 | 2.10 [1.68, 2.68] | 21.5 | 29% |
+| One bearing in 12 | 1/12 | 2.38 [1.82, 3.12] | 21.3 | 45% |
+| Normal points of 2 | 1/2 | 1.09 [0.95, 1.26] | 11.7 | 19% |
+| Normal points of 4 | 1/4 | 1.03 [0.89, 1.19] | 9.0 | 17% |
+| Normal points of 6 | 1/6 | 1.01 [0.86, 1.20] | 9.1 | 20% |
+| Normal points of 12 | 1/12 | 1.07 [0.87, 1.32] | 7.2 | 17% |
+| Adaptive bins, tolerance 3 | varies | 1.25 [1.02, 1.51] | 9.5 | 17% |
+| Adaptive bins, tolerance 4 | varies | 1.30 [1.05, 1.58] | 5.8 | 21% |
+| Adaptive bins, tolerance 6 | varies | 1.50 [1.17, 1.92] | 8.0 | 18% |
+
+## Reading
+
+- **Dropping bearings is a plain loss.** It throws information away (cost 1.2 to 2.4, misses
+  rising to 45%) and saves no time: the search's time is in its many fits, not their length.
+- **Fixed normal points lose little and halve the run time.** Costs of 1% to 9%, none
+  separated from zero, at 45% to 66% less time. A minute of bearings (12) in one point costs
+  about as little as ten seconds (2).
+- **Bins set by bearing-rate steadiness are worse than fixed ones**: 25% to 50% cost. This is
+  the owner's idea in the form research R6 declared, and in that form it does not help. A
+  likely reason, not tested: a bin that grows until the bearing bends ends exactly where a
+  manoeuvre begins to show, so the evidence of the bend is averaged into the bin's line.
+- **By the rule, nothing is adopted.** No form's interval excludes 5%: 90 periods cannot
+  decide a 2% cost when the search lands on a different history in some periods (each form is
+  "worse" in about half of them). The rule asked more of the sample than it could give; that
+  is a fault of the rule, stated here and not repaired after the fact.
+- **It does not matter for this spec**: the search takes 21 seconds a period, so the
+  registered runs use the full data. If run time ever binds (a larger search, a sampler),
+  normal points of 4 to 6 are the form to test first, on enough periods to decide.
+
+## With 2% outlying bearings (`thin-outliers.json`)
+
+The same 100 periods with spec 010's central outlier condition (2% of bearings displaced by
+10 sd; 88 scored). Cost is against the full data **with the outliers**.
+
+| Form | Cost | Search seconds a period | Missed | False |
+| --- | --- | --- | --- | --- |
+| Full data | 1 | 42.3 | 23% | 66 |
+| Normal points of 6 | 0.86 [0.74, 1.00] | 13.4 | 21% | 62 |
+| Normal points of 6, wild bearings edited out | 0.56 [0.44, 0.70] | 13.4 | 17% | 36 |
+| Adaptive bins (4), wild bearings edited out | 0.76 [0.60, 0.97] | 11.1 | 17% | 39 |
+
+- Outliers cost the search a factor of 1.6 (0.062 clean to 0.097) and double its false
+  manoeuvres (34 to 66); they cost C″ far more (0.102 to 0.276; false transitions 73 to 226).
+- **Editing wild bearings out before forming normal points takes nearly all of that back**:
+  0.053 against 0.062 on the clean data, with the false count back to 36. Plain normal points
+  help a little by averaging.
+- What is not separated: the editing from the binning. No run edited wild bearings and kept
+  every other bearing. The edit (a bearing more than 4 sd from the running median of 9) is
+  the likely cause and is a pre-processing step that needs no thinning.
+- By the rule the robust form is adopted only if it is no worse than the plain one on clean
+  data, and that run was not made. Not adopted; the edit is the finding to carry forward.
+
+## Not shown
+
+One seed, one system; no run with the edit alone; the robust forms on clean data.
+
+## Corrections after the panel (2026-11-13; `experiments/20261112-tl2/review.md`)
+
+- **The adaptive rule broke bins on noise.** The test statistic (a fitted quadratic term)
+  has a noise sd of about 3.35 σ/√k and is tested at every growth step; on a perfectly
+  steady bearing rate the mean bin is 8 rows at tolerance 3 and 13.6 at tolerance 4. The
+  runs tested noise-set bins, not bins set by bearing-rate steadiness. "Worse than fixed
+  ones" applies to that rule only, the explanation offered above is withdrawn, and the
+  owner's idea is not tested.
+- **"Fixed normal points lose little" is not shown**: the intervals reach 1.19 to 1.32. They
+  are not separated from zero cost, nor from a 20% cost. Timings are single CI runs.
+- The adoption rule could not be met by 90 periods and that was knowable from Gate T's
+  per-period scatter before it was written.
+- Under outliers: the edit is shown to help at a fixed bin (0.56 against 0.86); it is not
+  separated from binning; 10-sd outliers against a 4-sd edit is the easy case; a Huber cost
+  in the fit, which removed this cost at Gate H, was not run; the edit's window and
+  threshold were chosen on the periods it is scored on.
+- 91 periods were scored, not 90.

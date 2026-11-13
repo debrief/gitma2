@@ -263,9 +263,93 @@ as candidate tracks) measured on 99 fresh tuning periods (ordinals 60 onward;
 as good started from nothing as from C″; true history with the prior 0.018; best of the top three
 candidates in hindsight 0.028. The search is not the limit (its best history has evidence at or
 above the truth's in 97 of 99); the evidence and real ambiguity are. Candidate probabilities are
-not calibrated. Next: CLIs and `timelate.yml`, register Gate T (against C″ as a track, a
-prior-shift split, a calibration criterion fixed first), validation 330, test 331. Figures for the eventual slides:
-`scripts/research/tl_charts.py`, `site/static/img/2026-11-12-time-late-slides/`.
+not calibrated. Gate T tooling (PR 32): `tma2-tlsolve`, `tma2-tlscore`, `timelate/**` →
+`.github/workflows/timelate.yml` with runs in `configs/timelate/runs/`, `timelate/run.py`,
+`timelate/gate.py`, a shifted-prior split (`tl-shift-ranges.json`), one leg, IMM and EKF as tracks;
+schema 0.34.0. **Gate T registered** (2026-11-12): plan `configs/timelate/tl-a.json` (`6f15a246…`,
+never edited), decision `experiments/20261112-gt-decision/` (T-a soundness, T-b C″ ÷ search above
+1.10, T-c the same above 1.00 under the shifted prior, T-d candidates, T-e headroom; temperature 3);
+SRD §5 row proposed (owner merges). **Gate T stopped at validation** (seed 330,
+`experiments/20261112-gt-val/`): T-a failed, range efficiency of the true-history reference 0.67
+(0.28 on the shift split) against [0.8, 1.3]. Cause, tested on tuning data: the reference fit starts
+at the truth and stays there on weakly determined rows (efficiency 1.05 where the bound is under
+0.05, 0.27 from 0.05 to 0.2). Seed 331 not generated. Not gate results: C″ ÷ search 2.56
+[1.78, 3.51], 1.70 [1.24, 2.27] under the shifted prior; candidates calibrated on Annex B data
+(first right 0.61, stated 0.54) and badly overconfident under the shift (0.22 against 0.52). T-e's
+headroom is overstated by the same fault. **Owner 2026-11-12: re-register and run again.** Second
+registration `experiments/20261112-gt2-decision/`, plan `configs/timelate/tl-b.json` (`08793d8b…`):
+the reference is the true history's structure fitted from neutral starts (`run.history_reference`;
+`history-fixed` times held, `history-fit`, `history-map`); T-a reads `history-fixed` on rows bounded
+below 0.05 (1.10 on tuning; with times free 1.43, because the bound assumes them known); T-d-shift
+added (expected to fail); T-e against `history-map`; validation seed 332, test 331; schema 0.35.0.
+Validation seed 332 (`experiments/20261112-gt2-val/`): **T-a passes (1.26)**; reported only: C″ ÷
+search 2.41 [1.65, 3.02]; under the shifted prior 1.26 [0.89, 1.84] (would fail; 1.70 on seed 330);
+candidates 0.62 in the first three, gap +0.06; shift gap +0.32; search ÷ reference 1.41
+[1.19, 1.97]. The tuning seed's sub-bound middle band did not repeat (0.96). **Test record
+`experiments/20261112-gt2/` (seed 331, 300 periods a split): T-a 1.05 pass; T-b 2.27 [1.76, 2.67]
+pass (C″ 0.088, search 0.039); T-c 1.69 [1.39, 2.14] pass; T-d 0.71 in the first three, gap −0.03,
+pass; T-d-shift +0.32 fail (forecast); T-e 1.46 [1.24, 1.91] material. Decided by the panel, round
+1** (`review.md`, five approve with findings). Narrowed: the ratios are ratios of medians (paired
+per period 1.68 and 1.53; the search is worse than C″ in about 30% of periods); T-b is mostly
+smoothing with the arc model and prior, not finding histories (it wins where its history is wrong
+too); T-c is seed-fragile (1.70, 1.26, 1.69) and does not isolate the wrong prior from busier
+targets; the search under-counts manoeuvres (23% missed, 41% under the shift; invents one in 7 of
+12 quiet periods); T-d passes on average only and at a 120 s match and temperature 3 only; under
+the shift the candidates carry a rank and no probability; T-e is an upper limit (paired 1.17;
+1.01 where the history is right); T-a would have passed the faulty reference. **Owed from spec
+013, not run**: the owner's bearing-rate thinning study (FR-030/031), manoeuvre counts and timing
+as outputs (FR-011), splits (FR-013), correlated errors (FR-003), whole engagements, a smoothed
+IMM, quiet-target periods with a false-manoeuvre rate; and the controls (C″'s transitions refitted
+with arc model and prior; flat-prior search). `prior.py` has three small recorded errors (leg
+curvature counted twice, uniform-direction volume, leg normal not renormalised at its minimum),
+not fixed: the code is registered. Panel's order: owed classical work, a prior-robust search with
+a mismatch diagnostic, then a learned whole-period model registered against the search; the
+follow-on is the owner's choice and no GPU run starts before it. Write-up
+`site/blog/2026-11-12-gate-t.md`, slides `2026-11-12-gate-t-slides.md` (figures by
+`scripts/research/gt_charts.py` and `tl_charts.py`). Seeds 329–332 used; 324, 325 unused; the next
+fresh seed is 333.
+**Owner 2026-11-12: follow-on is classical work first (spec 014), nothing trained, no GPU**: the
+owed studies and controls above and the ambiguity share; a learned whole-period model is decided
+after it.
+014 (time-late classical follow-on, `specs/014-time-late-classical/`; done; a registered study,
+not a gate; nothing trained): `timelate/run2.py` (runner; plan key `runner: run2`), prior version 2
+and kinds `flat` and `mix` (`prior.py`), `controls.py` (C″'s transitions refitted with arc model and
+prior), `study.py` (paired ratios, gain share, classes of wrong-history periods, composite
+headroom, held-course false-manoeuvre rate), `counts.py`, `thin.py`, `smooth.py` (RTS over the
+frozen EKF); `timelate.yml` takes `thinning`, `systems` and a split `condition`/`whole`; schema
+0.36.0. Tuning seed 333 (`experiments/20261112-tl2-tuning/`), thinning study
+(`20261112-tl2-thin/`, `scripts/research/tl2_thin.py`), decision `20261112-tl2-decision/` (plan
+`configs/timelate/tl-c.json` `351538c2…`, code `0704cdbc…`, never edited), validation seed 334
+(`20261112-tl2-val/`, soundness passed), **test record `experiments/20261112-tl2/` (seed 335):
+D1 refit's share of the search's gain 0.43 [0.28, 0.58]; D2 wrong histories ambiguous / search
+failure / evidence failure 0.53 / 0.08 / 0.39; D3 headroom 1.04 (perfect search) and 1.10
+[1.04, 1.18] (perfect evidence as well: inconclusive); D4 false manoeuvres on held course: search
+0.76, C″ 0.02, flat prior 0.01, mixed prior 0.03; D5 by the registered rule: no GPU budget.
+Decided by the panel, round 1** (`review.md`, five approve with findings). C″ ÷ search 2.13
+[1.88, 2.43] paired on Annex B, 1.53 under the shift, 4.09 on whole engagements. **Two defects in
+the registered code, recorded and not repaired**: `prior_precision` keeps a 600 s stand-in volume
+for a manoeuvre's duration against a sharp density (2 to 3 nats of unearned Occam factor per
+small manoeuvre; re-ranked, the held-course false rate is 0.47 to 0.57), and `study.classify` /
+`gate.history_right` count manoeuvres cut by the period's edge (edge-aware D2 0.57 / 0.11 / 0.33;
+first candidate right about 0.60). Also: the true-history fit drifts over 120 s in 13% of periods
+(the composites are noisy oracles). Narrowed: D1 is "about half" (0.39 to 0.58 by estimand; 0.47
+over three seeds; four refit runaways carry the point); the flat-prior search obtains 0.78 of the
+gain (Annex B's statistics are worth a fifth); the headroom is 1.05 to 1.20 by convention;
+"ambiguous" is a property of the Laplace evidence, not the bearings; D5 follows from the rule, not
+the evidence, and the study is silent on a hedging model; the gaps under the shifted prior,
+correlated errors and outliers are 1.5 to 1.6 with no remedy tried; the mixed prior moves errors
+to missed single manoeuvres (6% to 20%). Thinning: fixed normal points cost 1 to 9% (not separated
+from 0 or 20%) at half the run time; the adaptive rule broke bins on noise, so the owner's idea is
+untested; wild-bearing editing restored clean quality under outliers (not separated from
+binning); nothing adopted. Not built: prior-mismatch diagnostic, broadened prior, IMM smoother.
+Write-up `site/blog/2026-11-13-time-late-classical.md`, slides
+`2026-11-13-time-late-classical-slides.md` (figures `scripts/research/tl2_charts.py`). Panel's
+order for what follows (owner's choice): repair evidence, classing and reference and re-register;
+robust likelihood, correlated-error model, a prior that can be wrong; a hedged track; then a
+learned model. Seeds 333–335 used; 324, 325 unused; the next fresh seed is 336.
+**Owner 2026-11-13: repair and re-register (spec 015)**: fix the duration volume, the edge rule
+and the drifting reference; decide the same quantities on fresh seeds (336 validation, 337 test);
+seeds 333–335 become development data. Nothing trained, no GPU.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -564,7 +648,33 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Evidence (spec 013): fit to the posterior before a Laplace approximation, never to the
   likelihood alone; and plot the per-case differences before quoting shares (the histogram showed
   thousands of units where the medians looked sane).
+- Generate from a new ranges file locally before a workflow depends on it: the kernel's manoeuvre
+  table holds 32 changes, and a leg minimum under 300 s with 2-hour windows is refused (spec 013's
+  first shifted split failed its CI smoke run on that).
+- A reference fitted from the truth is not a fit: on weakly determined rows it returns its start,
+  and its efficiency falls below 1 (Gate T's T-a: 0.67). Start references from where a real system
+  would, and read an efficiency below 1 as a fault, not a success. Check efficiency by how tight
+  the bound is before registering a band for it.
+- A workflow step that pipes a tool into `tee <dir>/file` must create `<dir>` first and set
+  `pipefail`: `tee` opens its file before the tool makes the folder, and without `pipefail` the
+  step's exit code is `tee`'s (`timelate.yml`'s first scoring step).
 - Never put backticks in an unquoted shell heredoc: bash runs them and deletes the text.
+- Gate T panel: a ratio of medians is not a typical gain; report the paired per-period ratio and
+  the share of periods lost beside it. Before crediting a search, split its win by whether its
+  answer was right: winning either way means the model and prior did the work, and the control is
+  the old system refitted with them. Test a soundness check against the fault it exists to catch
+  (T-a would have passed the truth-started fit). A calibration check that passes overall must be
+  read by complexity too. List what the spec promised and the gate did not run in the record.
+- Spec 014 panel: check a prior's whole density against its Laplace volume, parameter by
+  parameter (a test that integrates only one factor missed the duration's volume: the fourth
+  such error). Apply one rule for manoeuvres cut by a period's edge everywhere a history is
+  compared. A reference with free times can drift into another history: check it still matches
+  the truth before calling it that. Never hand-copy a table row: generate tables from the
+  summary. Report a decided statistic at every registered sensitivity value, not only the
+  class shares. A forecast from one tuning seed of 134 periods is a guess (D1: 0.79, 0.30,
+  0.43). Before running an adaptive rule, run it on noise alone. "At no cost" needs the counts
+  by case, not a pooled median. A fixture pinned to 1e-9 fails on another CPU family; pin the
+  well-determined outputs tightly and the rest loosely.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).

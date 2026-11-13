@@ -11,6 +11,27 @@ so an estimate just outside a range is unlikely, not impossible.
 
 ``log_evidence`` is Laplace's approximation: the fit's cost, the prior at the fit, and the
 volume of parameter space the bearings and the prior leave (the Occam factor).
+
+``version`` 1 is the prior Gate T registered, kept exactly. Version 2 (spec 014, research R2)
+corrects three errors its panel recorded, each of which penalised an extra manoeuvre: an
+interior leg's curvature was counted twice (as a residual and again in ``prior_precision``);
+a uniform direction's stand-in precision 12 / W² gave it a volume of 0.72 W, not W; and the
+leg's normal density allowed legs below the generator's minimum. ``kind`` "flat" (spec 014,
+research R3) replaces what Annex B says about manoeuvres by uniform densities over the
+solver's own box, keeping the state's prior: the search with no manoeuvre statistics.
+``kind`` "mix" (spec 014, registered after the tuning seed showed the informed search declaring
+a manoeuvre on four held-course periods in five) is Annex B's prior for a target that
+manoeuvres, mixed with a target that never does: with probability ``QUIET`` there are no
+manoeuvres at all. Only the weight of the no-manoeuvre history changes; ``QUIET`` is a stated
+half, not a tuned value.
+
+Version 3 (spec 015, research R1) repairs what spec 014's panel found: version 2 still gave a
+manoeuvre's duration a fixed stand-in volume of about 600 s against a sharp density (20 to
+120 s for a minimum-size change), over-crediting every small, short manoeuvre. In version 3
+every factor that has no Gaussian residual gets the volume its own density implies
+(``open_precision``: precision 2π·density², volume 1 / density), so a direction the bearings
+leave open contributes density × volume = 1. The leg's survival and tail use the renormalised
+leg density, and the flat prior no longer carries an m! it did not pair with a volume.
 """
 
 from __future__ import annotations
@@ -22,6 +43,7 @@ from typing import Any
 import numpy as np
 
 LOG_2PI = math.log(2.0 * math.pi)
+QUIET = 0.5  # kind "mix": the prior probability that the target never manoeuvres
 
 
 @dataclass(frozen=True)
@@ -38,9 +60,16 @@ class ManoeuvrePrior:
     acc: tuple[float, float]
     speed: tuple[float, float]
     range0: tuple[float, float]
+    version: int = 1
+    kind: str = "annex-b"
 
     @classmethod
-    def from_ranges(cls, r: dict[str, Any]) -> ManoeuvrePrior:
+    def from_ranges(
+        cls, r: dict[str, Any], version: int = 1, kind: str = "annex-b"
+    ) -> ManoeuvrePrior:
+        if version not in (1, 2, 3) or kind not in ("annex-b", "flat", "mix"):
+            raise ValueError(f"unknown prior version {version!r} or kind {kind!r}")
+
         def pair(k: str) -> tuple[float, float]:
             return float(r[k]["min"]), float(r[k]["max"])
 
@@ -58,6 +87,8 @@ class ManoeuvrePrior:
             pair("target_speed_change_rate_mps2"),
             pair("target_speed_mps"),
             pair("target_range0_m"),
+            version,
+            kind,
         )
 
 
@@ -73,15 +104,43 @@ def log_soft_uniform(x: float, lo: float, hi: float) -> float:
     return -0.5 * (d / s) ** 2 - math.log(norm)
 
 
+def _leg_shoulder(p: ManoeuvrePrior) -> float:
+    return p.leg_min / 10.0
+
+
 def _leg_pdf(p: ManoeuvrePrior, g: float) -> float:
-    """Log density of a steady leg of length g (the clip at the minimum spread as a shoulder)."""
-    z = (max(g, 0.0) - p.leg_mean) / p.leg_sd
-    return -0.5 * z * z - math.log(p.leg_sd) - 0.5 * LOG_2PI
+    """Log density of a steady leg of length g. Version 1: the normal, unbounded below.
+    Version 2: the normal above the minimum with a Gaussian shoulder below it (sd a tenth of
+    the minimum), renormalised to integrate to 1."""
+    if p.version == 1:
+        z = (max(g, 0.0) - p.leg_mean) / p.leg_sd
+        return -0.5 * z * z - math.log(p.leg_sd) - 0.5 * LOG_2PI
+    zmin = (p.leg_min - p.leg_mean) / p.leg_sd
+    at_min = math.exp(-0.5 * zmin * zmin) / (p.leg_sd * math.sqrt(2.0 * math.pi))
+    s = _leg_shoulder(p)
+    norm = (1.0 - _phi(zmin)) + at_min * s * math.sqrt(math.pi / 2.0)
+    if g >= p.leg_min:
+        z = (g - p.leg_mean) / p.leg_sd
+        return -0.5 * z * z - math.log(p.leg_sd) - 0.5 * LOG_2PI - math.log(norm)
+    return math.log(at_min) - 0.5 * ((p.leg_min - g) / s) ** 2 - math.log(norm)
+
+
+def _flat_box() -> tuple[float, float, float, float]:
+    """The solver's own bounds: turn, speed change, shortest and longest duration."""
+    from .arc import MAX_SPEED_CHANGE, MAX_TURN
+    from .retest import MAX_DURATION, MIN_DURATION
+
+    return MAX_TURN, MAX_SPEED_CHANGE, MIN_DURATION, MAX_DURATION
 
 
 def _leg_sf(p: ManoeuvrePrior, g: float) -> float:
-    """P(leg > g)."""
-    return 1.0 if g < p.leg_min else 1.0 - _phi((g - p.leg_mean) / p.leg_sd)
+    """P(leg > g). Version 3: of the leg density renormalised above its minimum."""
+    if g < p.leg_min:
+        return 1.0
+    sf = 1.0 - _phi((g - p.leg_mean) / p.leg_sd)
+    if p.version >= 3:
+        sf /= 1.0 - _phi((p.leg_min - p.leg_mean) / p.leg_sd)
+    return sf
 
 
 def _leg_tail(p: ManoeuvrePrior, g: float) -> float:
@@ -102,6 +161,8 @@ def log_prior(
     """The log prior density of a history, by part: ``legs`` (when), ``changes`` (what) and
     ``state`` (where the target starts). ``kinds`` [M, 2] says which changes each manoeuvre has."""
     m = spans.shape[0]
+    if p.kind == "flat":
+        return _log_prior_flat(p, theta, spans, kinds, t_end, range0)
     mean_leg = _leg_tail(p, 0.0)
     legs = 0.0
     if m == 0:
@@ -133,25 +194,141 @@ def log_prior(
             state += log_soft_uniform(speed, *p.speed) - log_soft_uniform(
                 0.5 * (p.speed[0] + p.speed[1]), *p.speed
             )
-    # position: range log-uniform (widened: the period starts later than the engagement),
-    # bearing uniform; course uniform
-    lo, hi = p.range0[0] / 4.0, p.range0[1] * 4.0
-    r = min(max(range0, 1.0), 1e9)
-    state += -math.log(r) - math.log(math.log(hi / lo)) - LOG_2PI - math.log(r) - LOG_2PI
-    if not lo <= r <= hi:
-        state += -0.5 * (math.log(r / min(max(r, lo), hi)) / 0.3) ** 2
+    state += _log_position(p, range0)
+    if p.kind == "mix":
+        legs = (
+            math.log(QUIET + (1.0 - QUIET) * math.exp(legs))
+            if m == 0
+            else (legs + math.log(1.0 - QUIET))
+        )
     return {"legs": legs, "changes": changes, "state": state}
 
 
-def prior_precision(p: ManoeuvrePrior, m: int, range0: float) -> np.ndarray:
+def _log_position(p: ManoeuvrePrior, range0: float) -> float:
+    """Position: range log-uniform (widened: the period starts later than the engagement),
+    bearing uniform; course uniform."""
+    lo, hi = p.range0[0] / 4.0, p.range0[1] * 4.0
+    r = min(max(range0, 1.0), 1e9)
+    out = -math.log(r) - math.log(math.log(hi / lo)) - LOG_2PI - math.log(r) - LOG_2PI
+    if not lo <= r <= hi:
+        out += -0.5 * (math.log(r / min(max(r, lo), hi)) / 0.3) ** 2
+    return out
+
+
+def _log_prior_flat(
+    p: ManoeuvrePrior,
+    theta: np.ndarray,
+    spans: np.ndarray,
+    kinds: np.ndarray,
+    t_end: float,
+    range0: float,
+) -> dict[str, float]:
+    """No manoeuvre statistics: ordered starts uniform over the period, durations, turns and
+    speed changes uniform over the solver's box, the three kinds equally likely. The state's
+    prior (speed on every leg, position, course) is the informed prior's."""
+    m = spans.shape[0]
+    turn, dvmax, dmin, dmax = _flat_box()
+    legs = (math.lgamma(m + 1) if p.version < 3 else 0.0) - m * math.log(max(t_end, 1.0))
+    changes = 0.0
+    speed = float(theta[3])
+    state = log_soft_uniform(speed, *p.speed)
+    for i in range(m):
+        has_c, has_v = bool(kinds[i, 0]), bool(kinds[i, 1])
+        changes += -math.log(3.0) - math.log(dmax - dmin)
+        if has_c:
+            changes += -math.log(2.0 * turn)
+        if has_v:
+            changes += -math.log(2.0 * dvmax)
+            speed += float(theta[5 + 2 * i])
+            state += log_soft_uniform(speed, *p.speed) - log_soft_uniform(
+                0.5 * (p.speed[0] + p.speed[1]), *p.speed
+            )
+    state += _log_position(p, range0)
+    return {"legs": legs, "changes": changes, "state": state}
+
+
+def prior_precision(p: ManoeuvrePrior, m: int, range0: float, t_end: float = 0.0) -> np.ndarray:
     """A diagonal precision for (x, y, course, speed, [Δcourse, Δspeed]·M, start·M, duration·M)
-    that stands for the prior's curvature where the bearings leave a direction open."""
+    that stands for the prior's curvature where the bearings leave a direction open.
+
+    Version 2: a uniform direction of width W gets 2π / W², so that the Gaussian volume
+    √(2π / precision) is W; only the first start keeps a stand-in for its (non-Gaussian) leg,
+    because the interior legs' curvature is already in ``prior_residuals``."""
     r = max(range0, p.range0[0])
-    d = [1 / r**2, 1 / r**2, 1 / math.pi**2, 12 / (p.speed[1] - p.speed[0]) ** 2]
+    two_pi = 2.0 * math.pi
+    if p.version == 1 and p.kind != "flat":
+        d = [1 / r**2, 1 / r**2, 1 / math.pi**2, 12 / (p.speed[1] - p.speed[0]) ** 2]
+        for _ in range(m):
+            d += [12 / (2 * p.angle[1]) ** 2, 12 / (2 * p.dv[1]) ** 2]
+        d += [1 / p.leg_sd**2] * m
+        d += [1 / (p.angle[1] / p.turn_rate[0] / 2) ** 2] * m
+        return np.array(d)
+    d = [1 / r**2, 1 / r**2, 1 / two_pi, two_pi / (p.speed[1] - p.speed[0]) ** 2]
+    if p.kind == "flat":
+        turn, dvmax, dmin, dmax = _flat_box()
+        for _ in range(m):
+            d += [two_pi / (2 * turn) ** 2, two_pi / (2 * dvmax) ** 2]
+        d += [two_pi / max(t_end, 1.0) ** 2] * m
+        d += [two_pi / (dmax - dmin) ** 2] * m
+        return np.array(d)
     for _ in range(m):
-        d += [12 / (2 * p.angle[1]) ** 2, 12 / (2 * p.dv[1]) ** 2]
-    d += [1 / p.leg_sd**2] * m
+        d += [
+            two_pi / (2 * (p.angle[1] - p.angle[0])) ** 2,
+            two_pi / (2 * (p.dv[1] - p.dv[0])) ** 2,
+        ]
+    d += ([1 / p.leg_sd**2] + [0.0] * (m - 1)) if m else []
     d += [1 / (p.angle[1] / p.turn_rate[0] / 2) ** 2] * m
+    return np.array(d)
+
+
+def open_precision(
+    p: ManoeuvrePrior,
+    theta: np.ndarray,
+    spans: np.ndarray,
+    kinds: np.ndarray,
+    range0: float,
+    t_end: float,
+) -> np.ndarray:
+    """Version 3's stand-in precisions, in ``prior_precision``'s order: for each parameter
+    whose prior factor has no Gaussian residual, 2π × (that factor's density at the fit)², so
+    its Gaussian volume is the reciprocal of the density. A manoeuvre's duration d given its
+    size a has density u(a / d) · a / d², u the rate's density (the turn's for a combined
+    manoeuvre, as in ``log_prior``). Interior legs have residuals and get none here."""
+    m = spans.shape[0]
+    two_pi = 2.0 * math.pi
+
+    def dens(x: float, lo: float, hi: float) -> float:
+        return math.exp(log_soft_uniform(x, lo, hi))
+
+    if p.kind == "flat":
+        turn, dvmax, dmin, dmax = _flat_box()
+        r = max(range0, p.range0[0])
+        d = [1 / r**2, 1 / r**2, 1 / two_pi, two_pi * dens(float(theta[3]), *p.speed) ** 2]
+        for _ in range(m):
+            d += [two_pi / (2 * turn) ** 2, two_pi / (2 * dvmax) ** 2]
+        d += [two_pi / max(t_end, 1.0) ** 2] * m
+        d += [two_pi / (dmax - dmin) ** 2] * m
+        return np.array(d)
+    lo, hi = p.range0[0] / 4.0, p.range0[1] * 4.0
+    r = min(max(range0, 1.0), 1e9)
+    xy = 1.0 / (r * r * math.log(hi / lo))  # 2π × the position's density
+    d = [xy, xy, 1 / two_pi, two_pi * dens(float(theta[3]), *p.speed) ** 2]
+    durs: list[float] = []
+    for i in range(m):
+        a, b = abs(float(theta[4 + 2 * i])), abs(float(theta[5 + 2 * i]))
+        dur = max(float(spans[i, 1] - spans[i, 0]), 1e-3)
+        has_c, has_v = bool(kinds[i, 0]), bool(kinds[i, 1])
+        d.append(two_pi * (0.5 * dens(max(a, 1e-6), *p.angle)) ** 2 if has_c else 1.0)
+        d.append(two_pi * (0.5 * dens(max(b, 1e-6), *p.dv)) ** 2 if has_v else 1.0)
+        if has_c:
+            size, rate = max(a, 1e-6), p.turn_rate
+        else:
+            size, rate = max(b, 1e-6), p.acc
+        durs.append(two_pi * (dens(size / dur, *rate) * size / (dur * dur)) ** 2)
+    if m:
+        first = _leg_sf(p, float(spans[0, 0])) / _leg_tail(p, 0.0)
+        d += [two_pi * first * first] + [0.0] * (m - 1)
+    d += durs
     return np.array(d)
 
 
@@ -168,6 +345,7 @@ def prior_residuals(
     speed on every leg, each change's size and rate, and the interior legs' lengths. A fixed
     number of residuals for a given history (zeros where a term does not apply)."""
     m = spans.shape[0]
+    flat = p.kind == "flat"
     out = [_shoulder(float(theta[3]), *p.speed)]
     speed = float(theta[3])
     for i in range(m):
@@ -175,13 +353,22 @@ def prior_residuals(
         dur = max(float(spans[i, 1] - spans[i, 0]), 1e-3)
         has_c, has_v = bool(kinds[i, 0]), bool(kinds[i, 1])
         a = abs(dc)
-        out.append(_shoulder(a, *p.angle) if has_c else 0.0)
-        out.append(_shoulder(a / dur, *p.turn_rate) if has_c else 0.0)
+        out.append(_shoulder(a, *p.angle) if has_c and not flat else 0.0)
+        out.append(_shoulder(a / dur, *p.turn_rate) if has_c and not flat else 0.0)
         b = abs(dv)
-        out.append(_shoulder(b, *p.dv) if has_v else 0.0)
-        out.append(_shoulder(b / dur, *p.acc) if has_v and not has_c else 0.0)
+        out.append(_shoulder(b, *p.dv) if has_v and not flat else 0.0)
+        out.append(_shoulder(b / dur, *p.acc) if has_v and not has_c and not flat else 0.0)
         speed += dv if has_v else 0.0
         out.append(_shoulder(speed, *p.speed))
+    zmin = (p.leg_min - p.leg_mean) / p.leg_sd
     for i in range(m - 1):
-        out.append((max(float(spans[i + 1, 0] - spans[i, 1]), 0.0) - p.leg_mean) / p.leg_sd)
+        g = float(spans[i + 1, 0] - spans[i, 1])
+        if flat:
+            out.append(0.0)
+        elif p.version == 1:
+            out.append((max(g, 0.0) - p.leg_mean) / p.leg_sd)
+        elif g >= p.leg_min:
+            out.append((g - p.leg_mean) / p.leg_sd)
+        else:  # −½ r² continues the density below the minimum
+            out.append(-math.sqrt(zmin * zmin + ((p.leg_min - g) / _leg_shoulder(p)) ** 2))
     return np.array(out, dtype=np.float64)

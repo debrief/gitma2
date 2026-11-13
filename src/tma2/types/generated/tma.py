@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.33.0"
+version = "0.36.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -713,6 +713,7 @@ class ScenarioMetadata(ConfiguredBaseModel):
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -772,6 +773,7 @@ class Scenario(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     metadata: ScenarioMetadata = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
     ownship: Track = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario']} })
@@ -798,6 +800,7 @@ class DatasetHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -811,13 +814,17 @@ class DatasetHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
                        'ModelManifest',
                        'PhysicsModelManifest']} })
     dataset_seed: str = Field(default=..., description="""Decimal uint64 string.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
-    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader', 'GateSRecord', 'Gate2Record']} })
+    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'GateSRecord',
+                       'TimeLateShardHeader',
+                       'Gate2Record']} })
     scenario_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
     index_start: int = Field(default=..., description="""First scenario index (inclusive).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
     index_end: int = Field(default=..., description="""Last scenario index (exclusive).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader']} })
@@ -932,6 +939,7 @@ class Prediction(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'CrbRecord',
@@ -973,6 +981,7 @@ class PredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -986,6 +995,7 @@ class PredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     estimator: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
@@ -1007,6 +1017,7 @@ class PredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     weights_digest: Optional[str] = Field(default=None, description="""SHA-256 of the learned estimator's weights file (schema 0.20.0; required by gate commands for learned estimators).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
@@ -1036,6 +1047,7 @@ class CrbHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -1049,6 +1061,7 @@ class CrbHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     model: CrbModel = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CrbHeader', 'ModelDigest', 'EPredictionHeader', 'Gate2Record']} })
     dataset_digest: str = Field(default=..., description="""SHA-256 of the truth file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
@@ -1059,6 +1072,7 @@ class CrbHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
 
@@ -1082,6 +1096,7 @@ class CrbRecord(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'CrbRecord',
@@ -1205,6 +1220,7 @@ class ExperimentManifest(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: Optional[bool] = Field(default=None, description="""True when the working tree had uncommitted changes (absent before schema 0.4.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -1213,6 +1229,7 @@ class ExperimentManifest(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     node_version: Optional[str] = Field(default=None, description="""Node.js version that ran the experiment (byte identity is promised per pinned Node).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest', 'ModelManifest']} })
     python_version: Optional[str] = Field(default=None, description="""Python version that ran the experiment (gitma2, schema 0.17.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest']} })
@@ -1229,6 +1246,7 @@ class ExperimentManifest(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
@@ -1301,6 +1319,7 @@ class NaiveModel(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     train_digest: str = Field(default=..., description="""SHA-256 of the train file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
     final: NaiveMeans = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['NaiveModel']} })
@@ -1427,6 +1446,7 @@ class Continuation(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
 
 
@@ -1459,6 +1479,7 @@ class ModelManifest(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
@@ -1498,6 +1519,7 @@ class ModelManifest(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: Optional[bool] = Field(default=None, description="""True when the working tree had uncommitted changes when training started (absent before schema 0.6.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -1506,6 +1528,7 @@ class ModelManifest(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     source_dataset_header: Optional[DatasetHeader] = Field(default=None, description="""Header of the dataset the train features came from (lineage; absent before schema 0.8.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
     g0_experiment: Optional[str] = Field(default=None, description="""Id of the G0 experiment whose verdict the training guard accepted.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModelManifest']} })
@@ -1606,6 +1629,7 @@ class PhysicsModelConfig(ConfiguredBaseModel):
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -1663,6 +1687,7 @@ class JobRecord(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: Optional[bool] = Field(default=None, description="""The job's working tree had uncommitted changes (schema 0.20.0).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -1671,6 +1696,7 @@ class JobRecord(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
 
 
@@ -1749,6 +1775,7 @@ class PhysicsModelManifest(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     generator_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'ExperimentManifest',
@@ -1897,6 +1924,7 @@ class ChangeDecision(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     plan: Optional[str] = Field(default=None, description="""The plan this decision pre-registers (configs/<…>/plan.json). Required from iteration 3 (spec 007): tma-g2 scores a test split only with the decision that names its plan.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ChangeDecision']} })
     test_seed: Optional[str] = Field(default=None, description="""Dataset seed of the test split the decision commits to (the plan's fresh_test seed, or its dataset seed); tma-g2 checks it against the plan.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Gate1Decision',
@@ -2000,6 +2028,7 @@ class DetectorConfig(ConfiguredBaseModel):
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -2058,6 +2087,7 @@ class DetectorHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -2071,6 +2101,7 @@ class DetectorHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     detector: str = Field(default=..., description="""Detector id or control name.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorHeader', 'DetectionRecord']} })
     variant: Optional[DetectorVariant] = Field(default=None, description="""Learned detectors only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig', 'DetectorHeader']} })
@@ -2083,6 +2114,7 @@ class DetectorHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     weights_digest: Optional[str] = Field(default=None, description="""SHA-256 of best.safetensors (learned detectors).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
@@ -2139,6 +2171,7 @@ class DetectorRecord(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'CrbRecord',
@@ -2368,6 +2401,7 @@ class SegmentationHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -2381,6 +2415,7 @@ class SegmentationHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     segmenter: str = Field(default=..., description="""C, L-s<seed>, oracle, one-leg or glr-confirm.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentationHeader']} })
     segmenter_sha256: str = Field(default=..., description="""Configuration digest (C) or weights digest (L).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentationHeader']} })
@@ -2392,6 +2427,7 @@ class SegmentationHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     parameters: SegmentParameters = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata', 'SegmentationHeader', 'GateSDecision']} })
@@ -2404,6 +2440,7 @@ class SegmentationHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -2412,6 +2449,7 @@ class SegmentationHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     code_sha256: Optional[str] = Field(default=None, description="""Digest of the segmenter's source files (segment.codeid), so a gate can refuse segmentations made by other code (Gate S panel round 2).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentationHeader',
                        'DecisionTableHeader',
@@ -2438,6 +2476,7 @@ class Segmentation(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     scenario_index: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'CrbRecord',
@@ -2592,13 +2631,17 @@ class GateSRecord(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     decision_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSRecord', 'Gate2Record']} })
-    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader', 'GateSRecord', 'Gate2Record']} })
+    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'GateSRecord',
+                       'TimeLateShardHeader',
+                       'Gate2Record']} })
     seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
                        'PhysicsModelConfig',
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -2610,6 +2653,7 @@ class GateSRecord(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     segmenters: list[str] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSRecord']} })
@@ -2640,6 +2684,7 @@ class EModelConfig(ConfiguredBaseModel):
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -2675,6 +2720,7 @@ class DecisionTableHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -2688,6 +2734,7 @@ class DecisionTableHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'CrbHeader',
@@ -2697,6 +2744,7 @@ class DecisionTableHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     parameters_sha256: str = Field(default=..., description="""C's parameter digest.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DecisionTableHeader', 'EPredictionHeader']} })
@@ -2715,6 +2763,7 @@ class DecisionTableHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -2723,6 +2772,7 @@ class DecisionTableHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
 
 
@@ -2745,6 +2795,7 @@ class EPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -2758,13 +2809,16 @@ class EPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     model: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CrbHeader', 'ModelDigest', 'EPredictionHeader', 'Gate2Record']} })
     weights_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModelDigest',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
                        'Gate2Record']} })
-    plan_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader', 'HeadroomPredictionHeader']} })
+    plan_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader']} })
     dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'CrbHeader',
                        'DetectorHeader',
@@ -2773,6 +2827,7 @@ class EPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     parameters_sha256: str = Field(default=..., description="""C's parameter digest.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DecisionTableHeader', 'EPredictionHeader']} })
@@ -2789,6 +2844,7 @@ class EPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -2797,6 +2853,7 @@ class EPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     model_settings: Optional[str] = Field(default=None, description="""The plan entry of the model that made the file, as canonical JSON (veto window, fade, kind, seed); binds a classical control's settings (spec 008, Gate 2 panel R2-7).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader']} })
     segmentation_sha256: Optional[str] = Field(default=None, description="""SHA-256 of the C segmentation file read, when one was read (spec 008, panel G12).""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader']} })
@@ -2824,6 +2881,7 @@ class RegressorConfig(ConfiguredBaseModel):
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -2885,6 +2943,7 @@ class RegressorPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -2898,6 +2957,7 @@ class RegressorPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     estimator: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
@@ -2927,6 +2987,7 @@ class RegressorPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     config_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['RegressorPredictionHeader']} })
@@ -2943,6 +3004,7 @@ class RegressorPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -2951,7 +3013,133 @@ class RegressorPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
+
+
+class TimeLateShardHeader(ConfiguredBaseModel):
+    """
+    Header of a tma2-tlsolve shard (spec 013): which periods, by which code and plan.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    record: RecordKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario',
+                       'DatasetHeader',
+                       'Prediction',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'CrbRecord',
+                       'DetectorHeader',
+                       'DetectorRecord',
+                       'SegmentationHeader',
+                       'Segmentation',
+                       'DecisionTableHeader',
+                       'EPredictionHeader',
+                       'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader']} })
+    schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'PredictionHeader',
+                       'CrbHeader',
+                       'ExperimentManifest',
+                       'NaiveModel',
+                       'ModelManifest',
+                       'PhysicsModelManifest',
+                       'DetectorHeader',
+                       'SegmentationHeader',
+                       'DecisionTableHeader',
+                       'EPredictionHeader',
+                       'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader']} })
+    plan_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader']} })
+    split: str = Field(default=..., description="""The plan's split name (man2 or shift).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'GateSRecord',
+                       'TimeLateShardHeader',
+                       'Gate2Record']} })
+    dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
+                       'CrbHeader',
+                       'DetectorHeader',
+                       'SegmentationHeader',
+                       'GateSRecord',
+                       'DecisionTableHeader',
+                       'EPredictionHeader',
+                       'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader',
+                       'Gate2Record']} })
+    seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
+                       'PhysicsModelConfig',
+                       'DetectorConfig',
+                       'GateSRecord',
+                       'EModelConfig',
+                       'RegressorConfig',
+                       'TimeLateShardHeader',
+                       'CalibrationHeadConfig',
+                       'StatementHeadConfig',
+                       'Gate2Record']} })
+    ordinal_start: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
+    ordinal_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
+    c_code_sha256: str = Field(default=..., description="""The frozen segmenter C's code digest (C″ read as a track).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'Gate2Decision']} })
+    search_code_sha256: str = Field(default=..., description="""Digest of the time-late solve, prior, re-test and search modules.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    prior_sha256: str = Field(default=..., description="""Digest of the ranges file the search's manoeuvre prior is read from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    settings: str = Field(default=..., description="""The search's settings as canonical JSON.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
+    runner: Optional[str] = Field(default=None, description="""Spec 014: the shard runner (absent or run: Gate T's; run2: spec 014's systems).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    prior_kinds: Optional[str] = Field(default=None, description="""Spec 014: the priors the shard's searches used, as canonical JSON (name to version and kind).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    thinning: Optional[str] = Field(default=None, description="""Spec 014: how the bearings the arc fits see were thinned (none, drop:N, fixed:N, adaptive:TOL).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader']} })
+    condition: Optional[str] = Field(default=None, description="""Spec 014: the bearing-error condition of the data (clean, or a spec 010 condition id).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
+    git_commit: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
+                       'Continuation',
+                       'ModelManifest',
+                       'JobRecord',
+                       'ChangeDecision',
+                       'SegmentationHeader',
+                       'DecisionTableHeader',
+                       'EPredictionHeader',
+                       'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader']} })
+    git_dirty: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
+                       'ModelManifest',
+                       'JobRecord',
+                       'SegmentationHeader',
+                       'DecisionTableHeader',
+                       'EPredictionHeader',
+                       'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader']} })
+
+
+class TimeLateStudyCriteria(ConfiguredBaseModel):
+    """
+    Spec 014's registered study (research R4, R9): how wrong-history periods are classed and what is judged, fixed by the decision record.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    class_threshold: float = Field(default=..., description="""A wrong-history period is ambiguous when the true history's log evidence is within this of the search's first candidate; above it a search failure, below minus it an evidence failure.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    match_tolerance_s: float = Field(default=..., description="""Two histories are the same when they have as many manoeuvres and their mid-times pair within this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    materiality: float = Field(default=..., description="""The attainable headroom (geometric mean per-period ratio of the search to a composite) is material when its 95% interval lies above this, not material when it lies below.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria', 'GateHCriteria']} })
+    soundness_band: Optional[list[float]] = Field(default=None, description="""Validation stop: band for the range efficiency of the reference fitted from neutral starts with times held, on tightly bounded rows.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    convergence_min: float = Field(default=..., description="""Validation stop: least share of periods whose true-history fit has a cost the bearing noise explains.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+    quiet_interval_halfwidth_max: Optional[float] = Field(default=None, description="""The false-manoeuvre rate on held-course periods is reported with a 95% interval no wider than plus or minus this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria']} })
+
+
+class GateTCriteria(ConfiguredBaseModel):
+    """
+    Gate T's checks (spec 013, SRD section 5), fixed by the decision record.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    reference_efficiency_band: Optional[list[float]] = Field(default=None, description="""T-a, first registration (stopped at validation): band for the range efficiency of the true history fitted to the bearings alone from the truth.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    reference_tight_efficiency_band: Optional[list[float]] = Field(default=None, description="""T-a, re-registered 2026-11-12: band for the range efficiency of the true history fitted from neutral starts with its times held, on rows whose bound on relative range is below 0.05.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    shift_calibration_gap_max: Optional[float] = Field(default=None, description="""T-d on the shift split (re-registered): the first candidate's mean stated probability minus the share of periods in which it is the true history, at most this in size.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    search_ratio_min: float = Field(default=..., description="""T-b: the 95% interval of C″'s median period range error over the search's lies above this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    shift_ratio_min: float = Field(default=..., description="""T-c: the same ratio on the shifted-prior split lies above this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    truth_in_set_min: float = Field(default=..., description="""T-d: share of periods whose true history is among the first three candidates, at least this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    calibration_gap_max: float = Field(default=..., description="""T-d: mean stated probability of the top candidate minus the share of periods where it is the true history, at most this in size.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
+    headroom_ratio_min: float = Field(default=..., description="""T-e: the search's error over the true history's (fitted with the prior); an interval above this is material headroom for a better use of the same knowledge.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateTCriteria']} })
 
 
 class GateHCriteria(ConfiguredBaseModel):
@@ -2963,7 +3151,7 @@ class GateHCriteria(ConfiguredBaseModel):
     efficiency_band: list[float] = Field(default=..., description="""H-a: band for the attainable ceiling's range efficiency against the bound under the true covariance, settled rows of the primary condition.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
     clean_cost_point: float = Field(default=..., description="""H-b: the robust control's cost on mismatch-off data (median range error over the plain solve's, minus 1) at most this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
     clean_cost_interval: float = Field(default=..., description="""H-b: and the cost's interval not wholly above this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
-    materiality: float = Field(default=..., description="""H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GateHCriteria']} })
+    materiality: float = Field(default=..., description="""H-c: threshold on R, the robust control's median range error over the attainable ceiling's, minus 1 (owner, 2026-11-09).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateStudyCriteria', 'GateHCriteria']} })
 
 
 class GateHDecision(ConfiguredBaseModel):
@@ -3063,6 +3251,7 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     schema_version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
                        'PredictionHeader',
@@ -3076,6 +3265,7 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     estimator: str = Field(default=..., description="""Kind and segmentation, for example robust@truth.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction',
                        'PredictionHeader',
@@ -3101,7 +3291,7 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
     segments_from: Optional[str] = Field(default=None, description="""The condition of the split the segmentation was computed on, when not this one (spec 011 FR-003, a diagnostic).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
     segmenter_settings: Optional[str] = Field(default=None, description="""C-r's confirmation settings as canonical JSON (c2r only; spec 011).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
     robust_code_sha256: Optional[str] = Field(default=None, description="""Digest of C-r's own source (segment.robust), c2r only.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
-    condition: str = Field(default=..., description="""The split's mismatch condition id (off without one).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
+    condition: str = Field(default=..., description="""The split's mismatch condition id (off without one).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
     dataset_digest: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionHeader',
                        'CrbHeader',
                        'DetectorHeader',
@@ -3110,11 +3300,14 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     truth_sha256: Optional[str] = Field(default=None, description="""Digest of the mismatch truth read (ceilings only; absent for every other estimator).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
-    settings: Optional[str] = Field(default=None, description="""The robust control's settings as canonical JSON (robust only).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
-    plan_sha256: Optional[str] = Field(default=None, description="""SHA-256 of the Gate H plan read.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader', 'HeadroomPredictionHeader']} })
+    settings: Optional[str] = Field(default=None, description="""The robust control's settings as canonical JSON (robust only).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
+    plan_sha256: Optional[str] = Field(default=None, description="""SHA-256 of the Gate H plan read.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EPredictionHeader',
+                       'TimeLateShardHeader',
+                       'HeadroomPredictionHeader']} })
     code_sha256: Optional[str] = Field(default=None, description="""C's code digest, when C's segmentation is used.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SegmentationHeader',
                        'DecisionTableHeader',
                        'EPredictionHeader',
@@ -3124,8 +3317,8 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'EModelConfig',
                        'HeadroomPredictionHeader',
                        'Gate2Decision']} })
-    ordinal_start: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
-    ordinal_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HeadroomPredictionHeader']} })
+    ordinal_start: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
+    ordinal_count: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'HeadroomPredictionHeader']} })
     git_commit: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'Continuation',
                        'ModelManifest',
@@ -3135,6 +3328,7 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
     git_dirty: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ExperimentManifest',
                        'ModelManifest',
@@ -3143,6 +3337,7 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader']} })
 
 
@@ -3186,6 +3381,7 @@ class CalibrationHeadConfig(ConfiguredBaseModel):
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -3242,6 +3438,7 @@ class StatementHeadConfig(ConfiguredBaseModel):
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -3423,7 +3620,7 @@ class Gate2Decision(ConfiguredBaseModel):
                        'Gate2Decision']} })
     c_parameters: SegmentParameters = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate2Decision']} })
     c_parameters_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate2Decision']} })
-    c_code_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Gate2Decision']} })
+    c_code_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TimeLateShardHeader', 'Gate2Decision']} })
     knots: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig',
                        'KnotSet',
                        'EModelConfig',
@@ -3617,13 +3814,17 @@ class Gate2Record(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
 
     decision_sha256: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateSRecord', 'Gate2Record']} })
-    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader', 'GateSRecord', 'Gate2Record']} })
+    split: Split = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DatasetHeader',
+                       'GateSRecord',
+                       'TimeLateShardHeader',
+                       'Gate2Record']} })
     seed: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
                        'PhysicsModelConfig',
                        'DetectorConfig',
                        'GateSRecord',
                        'EModelConfig',
                        'RegressorConfig',
+                       'TimeLateShardHeader',
                        'CalibrationHeadConfig',
                        'StatementHeadConfig',
                        'Gate2Record']} })
@@ -3635,6 +3836,7 @@ class Gate2Record(ConfiguredBaseModel):
                        'DecisionTableHeader',
                        'EPredictionHeader',
                        'RegressorPredictionHeader',
+                       'TimeLateShardHeader',
                        'HeadroomPredictionHeader',
                        'Gate2Record']} })
     model: str = Field(default=..., description="""The carried E.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CrbHeader', 'ModelDigest', 'EPredictionHeader', 'Gate2Record']} })
@@ -3727,6 +3929,9 @@ DecisionTableHeader.model_rebuild()
 EPredictionHeader.model_rebuild()
 RegressorConfig.model_rebuild()
 RegressorPredictionHeader.model_rebuild()
+TimeLateShardHeader.model_rebuild()
+TimeLateStudyCriteria.model_rebuild()
+GateTCriteria.model_rebuild()
 GateHCriteria.model_rebuild()
 GateHDecision.model_rebuild()
 HeadroomPredictionHeader.model_rebuild()

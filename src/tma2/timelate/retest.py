@@ -340,7 +340,13 @@ def log_evidence(
     r = f(x)
     jac = _jacobian(f, x, r, idx, m)
     range0 = float(np.hypot(s.theta[0] - ox[0], s.theta[1] - oy[0]))
-    h = jac.T @ jac + np.diag(prior_precision(prior, m, range0)[idx])
+    if getattr(prior, "version", 1) >= 3:  # spec 015: each open factor's own volume
+        from .prior import open_precision
+
+        stand_in = open_precision(prior, s.theta, s.spans, kinds, range0, float(t[-1]))
+    else:
+        stand_in = prior_precision(prior, m, range0, float(t[-1]))
+    h = jac.T @ jac + np.diag(stand_in[idx])
     _sign, logdet = np.linalg.slogdet(h)
     rd = _resid(pb, s.theta, s.spans)
     out = {"fit": -0.5 * float(rd @ rd)}

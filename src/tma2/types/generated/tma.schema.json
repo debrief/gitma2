@@ -2451,6 +2451,68 @@
             "title": "GateSVerdicts",
             "type": "object"
         },
+        "GateTCriteria": {
+            "additionalProperties": false,
+            "description": "Gate T's checks (spec 013, SRD section 5), fixed by the decision record.",
+            "properties": {
+                "calibration_gap_max": {
+                    "description": "T-d: mean stated probability of the top candidate minus the share of periods where it is the true history, at most this in size.",
+                    "type": "number"
+                },
+                "headroom_ratio_min": {
+                    "description": "T-e: the search's error over the true history's (fitted with the prior); an interval above this is material headroom for a better use of the same knowledge.",
+                    "type": "number"
+                },
+                "reference_efficiency_band": {
+                    "description": "T-a, first registration (stopped at validation): band for the range efficiency of the true history fitted to the bearings alone from the truth.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "reference_tight_efficiency_band": {
+                    "description": "T-a, re-registered 2026-11-12: band for the range efficiency of the true history fitted from neutral starts with its times held, on rows whose bound on relative range is below 0.05.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "search_ratio_min": {
+                    "description": "T-b: the 95% interval of C\u2033's median period range error over the search's lies above this.",
+                    "type": "number"
+                },
+                "shift_calibration_gap_max": {
+                    "description": "T-d on the shift split (re-registered): the first candidate's mean stated probability minus the share of periods in which it is the true history, at most this in size.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "shift_ratio_min": {
+                    "description": "T-c: the same ratio on the shifted-prior split lies above this.",
+                    "type": "number"
+                },
+                "truth_in_set_min": {
+                    "description": "T-d: share of periods whose true history is among the first three candidates, at least this.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "search_ratio_min",
+                "shift_ratio_min",
+                "truth_in_set_min",
+                "calibration_gap_max",
+                "headroom_ratio_min"
+            ],
+            "title": "GateTCriteria",
+            "type": "object"
+        },
         "GateVerdict": {
             "additionalProperties": false,
             "description": "Machine verdict for a gate; the team review records the final decision.",
@@ -5282,6 +5344,152 @@
             "title": "TemperatureConfig",
             "type": "object"
         },
+        "TimeLateShardHeader": {
+            "additionalProperties": false,
+            "description": "Header of a tma2-tlsolve shard (spec 013): which periods, by which code and plan.",
+            "properties": {
+                "c_code_sha256": {
+                    "description": "The frozen segmenter C's code digest (C\u2033 read as a track).",
+                    "type": "string"
+                },
+                "condition": {
+                    "description": "Spec 014: the bearing-error condition of the data (clean, or a spec 010 condition id).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dataset_digest": {
+                    "type": "string"
+                },
+                "git_commit": {
+                    "type": "string"
+                },
+                "git_dirty": {
+                    "type": "boolean"
+                },
+                "ordinal_count": {
+                    "type": "integer"
+                },
+                "ordinal_start": {
+                    "type": "integer"
+                },
+                "plan_sha256": {
+                    "type": "string"
+                },
+                "prior_kinds": {
+                    "description": "Spec 014: the priors the shard's searches used, as canonical JSON (name to version and kind).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "prior_sha256": {
+                    "description": "Digest of the ranges file the search's manoeuvre prior is read from.",
+                    "type": "string"
+                },
+                "record": {
+                    "$ref": "#/$defs/RecordKind"
+                },
+                "runner": {
+                    "description": "Spec 014: the shard runner (absent or run: Gate T's; run2: spec 014's systems).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "search_code_sha256": {
+                    "description": "Digest of the time-late solve, prior, re-test and search modules.",
+                    "type": "string"
+                },
+                "seed": {
+                    "type": "integer"
+                },
+                "settings": {
+                    "description": "The search's settings as canonical JSON.",
+                    "type": "string"
+                },
+                "split": {
+                    "description": "The plan's split name (man2 or shift).",
+                    "type": "string"
+                },
+                "thinning": {
+                    "description": "Spec 014: how the bearings the arc fits see were thinned (none, drop:N, fixed:N, adaptive:TOL).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "record",
+                "schema_version",
+                "plan_sha256",
+                "split",
+                "dataset_digest",
+                "seed",
+                "ordinal_start",
+                "ordinal_count",
+                "c_code_sha256",
+                "search_code_sha256",
+                "prior_sha256",
+                "settings",
+                "git_commit",
+                "git_dirty"
+            ],
+            "title": "TimeLateShardHeader",
+            "type": "object"
+        },
+        "TimeLateStudyCriteria": {
+            "additionalProperties": false,
+            "description": "Spec 014's registered study (research R4, R9): how wrong-history periods are classed and what is judged, fixed by the decision record.",
+            "properties": {
+                "class_threshold": {
+                    "description": "A wrong-history period is ambiguous when the true history's log evidence is within this of the search's first candidate; above it a search failure, below minus it an evidence failure.",
+                    "type": "number"
+                },
+                "convergence_min": {
+                    "description": "Validation stop: least share of periods whose true-history fit has a cost the bearing noise explains.",
+                    "type": "number"
+                },
+                "match_tolerance_s": {
+                    "description": "Two histories are the same when they have as many manoeuvres and their mid-times pair within this.",
+                    "type": "number"
+                },
+                "materiality": {
+                    "description": "The attainable headroom (geometric mean per-period ratio of the search to a composite) is material when its 95% interval lies above this, not material when it lies below.",
+                    "type": "number"
+                },
+                "quiet_interval_halfwidth_max": {
+                    "description": "The false-manoeuvre rate on held-course periods is reported with a 95% interval no wider than plus or minus this.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "soundness_band": {
+                    "description": "Validation stop: band for the range efficiency of the reference fitted from neutral starts with times held, on tightly bounded rows.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "class_threshold",
+                "match_tolerance_s",
+                "materiality",
+                "convergence_min"
+            ],
+            "title": "TimeLateStudyCriteria",
+            "type": "object"
+        },
         "Track": {
             "additionalProperties": false,
             "description": "Time-ordered states of one platform. Stone Soup analogue GroundTruthPath.",
@@ -5626,6 +5834,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.33.0"
+    "version": "0.36.0"
 }
 

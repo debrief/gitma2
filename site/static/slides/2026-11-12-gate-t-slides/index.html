@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gate T: the track after the fact (spec 013)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.7em; margin: 0 auto; }
+      .reveal .big { font-size: 1.5em; font-weight: 600; margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Gate T: the track after the fact</h1>
+          <p>A classical search over manoeuvre histories, a gate on test seed 331, and what the panel narrowed</p>
+          <p class="small">12 November 2026 · spec 013 · gitma2 · nothing trained</p>
+        </section>
+
+        <section>
+          <h2>A different question</h2>
+          <div class="two">
+            <ul>
+              <li>Not "where is the target now?" but "what did it do over the last half hour?"</li>
+              <li>All the bearings in hand: one every 5 seconds, 20 to 60 minutes.</li>
+              <li>The answer is a track: position, course and speed at every moment, and when it manoeuvred.</li>
+            </ul>
+            <svg viewBox="0 0 320 200" role="img" aria-label="A period cut from a longer engagement; the whole track inside it is estimated after the fact">
+              <line x1="10" y1="60" x2="310" y2="60" stroke="#999"/>
+              <rect x="90" y="48" width="150" height="24" fill="#f3e9fb" stroke="#7b4fa3"/>
+              <text x="165" y="40" font-size="11" text-anchor="middle">period, cut at random</text>
+              <text x="20" y="85" font-size="10" fill="#555">engagement</text>
+              <polyline points="95,160 140,140 175,150 205,120 235,125" fill="none" stroke="#d62728" stroke-width="2"/>
+              <circle cx="140" cy="140" r="3" fill="#d62728"/><circle cx="175" cy="150" r="3" fill="#d62728"/><circle cx="205" cy="120" r="3" fill="#d62728"/>
+              <text x="165" y="185" font-size="10" text-anchor="middle" fill="#555">target track and manoeuvre times, estimated afterwards</text>
+            </svg>
+          </div>
+        </section>
+
+        <section>
+          <h2>Told the manoeuvres, the fit is at the bound</h2>
+          <img src="../../img/2026-11-12-time-late-slides/efficiency.svg" alt="Error against the bound for the chord and arc solves told the true manoeuvre times" />
+          <p class="small">Tuning seed 329. A turn modelled as an arc at a constant rate brings the fit from 1.9 × the bound to about 1.2. The model is not the limit.</p>
+        </section>
+
+        <section>
+          <h2>But the bearings do not say which history</h2>
+          <img src="../../img/2026-11-12-time-late-slides/ambiguity.svg" alt="Two target tracks with different manoeuvre histories that fit the same bearings" />
+          <p class="small">A test of fit reaches the true history's cost with a third of manoeuvres missed. What separates histories is knowledge of how targets manoeuvre.</p>
+        </section>
+
+        <section>
+          <h2>The search</h2>
+          <div class="two">
+            <ul>
+              <li>Propose histories: add, remove or change a manoeuvre.</li>
+              <li>Fit each with the arc model and Annex B's statistics.</li>
+              <li>Score each by its evidence.</li>
+              <li>Return the best few as candidate tracks with probabilities.</li>
+            </ul>
+            <svg viewBox="0 0 320 210" role="img" aria-label="Bearings and the manoeuvre prior feed a search that returns ranked candidate tracks">
+              <rect x="10" y="30" width="90" height="36" fill="#eef" stroke="#1f77b4"/><text x="55" y="52" font-size="11" text-anchor="middle">bearings</text>
+              <rect x="10" y="120" width="90" height="36" fill="#efe" stroke="#2a9d8f"/><text x="55" y="136" font-size="10" text-anchor="middle">manoeuvre</text><text x="55" y="149" font-size="10" text-anchor="middle">statistics</text>
+              <rect x="125" y="60" width="80" height="70" fill="#f3e9fb" stroke="#7b4fa3"/><text x="165" y="92" font-size="11" text-anchor="middle">search over</text><text x="165" y="106" font-size="11" text-anchor="middle">histories</text>
+              <rect x="232" y="40" width="80" height="26" fill="#fff" stroke="#555"/><text x="272" y="57" font-size="10" text-anchor="middle">track 1 · 0.54</text>
+              <rect x="232" y="82" width="80" height="26" fill="#fff" stroke="#555"/><text x="272" y="99" font-size="10" text-anchor="middle">track 2 · 0.21</text>
+              <rect x="232" y="124" width="80" height="26" fill="#fff" stroke="#555"/><text x="272" y="141" font-size="10" text-anchor="middle">track 3 · 0.12</text>
+              <line x1="100" y1="48" x2="125" y2="85" stroke="#555"/><line x1="100" y1="138" x2="125" y2="105" stroke="#555"/>
+              <line x1="205" y1="95" x2="232" y2="53" stroke="#555"/><line x1="205" y1="95" x2="232" y2="95" stroke="#555"/><line x1="205" y1="95" x2="232" y2="137" stroke="#555"/>
+              <text x="165" y="185" font-size="10" text-anchor="middle" fill="#555">classical; nothing learned (probabilities illustrative)</text>
+            </svg>
+          </div>
+        </section>
+
+        <section>
+          <h2>The first registration stopped itself</h2>
+          <img src="../../img/2026-11-12-gate-t-slides/reference.svg" alt="Efficiency of the reference by how tight the bound is, fitted from neutral starts and started at the truth" />
+          <p class="small">The reference scored below the bound: it had been started at the truth and stayed there. The gate stopped at validation; the owner re-registered with a reference fitted from neutral starts and every threshold unchanged.</p>
+        </section>
+
+        <section>
+          <h2>The gate on test seed 331</h2>
+          <table>
+            <thead><tr><th>Check</th><th>Result</th><th>Outcome</th></tr></thead>
+            <tbody>
+              <tr><td>T-a reference at the bound</td><td>1.05 (band 0.8–1.3)</td><td>pass</td></tr>
+              <tr><td>T-b C″ ÷ search above 1.10</td><td>2.27 [1.76, 2.67]</td><td>pass</td></tr>
+              <tr><td>T-c the same, shifted prior, above 1.00</td><td>1.69 [1.39, 2.14]</td><td>pass</td></tr>
+              <tr><td>T-d candidates</td><td>0.71 in first three; gap −0.03</td><td>pass</td></tr>
+              <tr><td>T-d-shift calibration</td><td>gap +0.32</td><td>fail, as forecast</td></tr>
+              <tr><td>T-e search ÷ reference</td><td>1.46 [1.24, 1.91]</td><td>material</td></tr>
+            </tbody>
+          </table>
+          <p class="small">300 periods per split. Decided by the panel in one round: five approve with findings.</p>
+        </section>
+
+        <section>
+          <h2>Every system as a track</h2>
+          <img src="../../img/2026-11-12-gate-t-slides/systems.svg" alt="Median period range error of each system on the test seed, both splits" />
+          <p class="small">C″ 0.088, search 0.039, reference 0.022 on Annex B data. The IMM and EKF give no state on most rows and are not drawn.</p>
+        </section>
+
+        <section>
+          <h2>Three seeds</h2>
+          <img src="../../img/2026-11-12-gate-t-slides/ratios.svg" alt="C″ ÷ search with intervals on three seeds and two splits" />
+          <p class="small">Stable on Annex B data. Under the shifted prior one of three seeds would have failed: the pooled figure is about 1.6.</p>
+        </section>
+
+        <section>
+          <h2>What the panel narrowed</h2>
+          <ul>
+            <li>"2.3 times better" → a ratio of medians. Period by period 1.7; worse than C″ in 30% of periods.</li>
+            <li>"The search finds the history" → it wins where its history is wrong too. Mostly smoothing with a model and a prior.</li>
+            <li>"Room left: 1.46" → an upper limit. Paired 1.17; the gap sits only where the history is wrong.</li>
+            <li>The soundness check would have passed the faulty reference.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>It under-counts manoeuvres</h2>
+          <img src="../../img/2026-11-12-gate-t-slides/counts.svg" alt="Manoeuvres in the first candidate minus the true number, both splits" />
+          <p class="small">23% of true manoeuvres missed on Annex B data, 41% under the shift. With no manoeuvre at all (12 periods) it invents one in 7 of the 12.</p>
+        </section>
+
+        <section>
+          <h2>Probabilities: honest on average only</h2>
+          <img src="../../img/2026-11-12-gate-t-slides/calibration.svg" alt="Stated probability of the first candidate against how often it is the true history" />
+          <p class="small">Under the shifted prior the candidates carry a ranking and no probability, and nothing tells the analyst which regime applies.</p>
+        </section>
+
+        <section>
+          <h2>What was not achieved</h2>
+          <ul>
+            <li>The owner's bearing-rate thinning study.</li>
+            <li>A target that never manoeuvres, and the false-manoeuvre rate.</li>
+            <li>Correlated or outlying bearing errors; whole engagements; a smoothed IMM.</li>
+            <li>The control that separates the search from the model and prior.</li>
+            <li>Any real data: the fitting model is the generator's own.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What comes next</h2>
+          <ul>
+            <li>The owed classical studies and controls.</li>
+            <li>A search robust to a wrong prior, with a diagnostic for it.</li>
+            <li>Then a learned whole-period model, registered against the search under the same prior.</li>
+          </ul>
+          <p class="small">The choice is the owner's; no GPU run before it. Write-up: /blog/2026/11/12/gate-t · record: experiments/20261112-gt2 (review.md)</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

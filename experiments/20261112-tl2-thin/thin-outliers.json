@@ -1,0 +1,107 @@
+{
+ "rule": {
+  "cost_max": 1.02,
+  "cost_excluded": 1.05,
+  "saving_min": 0.3
+ },
+ "splits": {
+  "man2-out": [
+   {
+    "form": "adaptive:4:robust",
+    "periods": 91,
+    "median": 0.06575864553451538,
+    "cost": {
+     "geometric_mean": 0.7629165642754862,
+     "lo": 0.5990237262768356,
+     "hi": 0.9672421344862424,
+     "median_ratio": 0.7643364341143886,
+     "a_better": 0.5494505494505495,
+     "a_twice_as_bad": 0.15384615384615385,
+     "b_twice_as_bad": 0.3076923076923077,
+     "periods": 91
+    },
+    "seconds": 11.0596,
+    "saving": 0.7383922129838796,
+    "missed": 0.16666666666666666,
+    "false": 39,
+    "passes_cost": true,
+    "passes_rule": true,
+    "commit": [
+     "58bad9ddf3d6f4013f64b32d68bded6c88079411"
+    ]
+   },
+   {
+    "form": "fixed:6",
+    "periods": 91,
+    "median": 0.08053974062204361,
+    "cost": {
+     "geometric_mean": 0.8603228624283726,
+     "lo": 0.7379020914391008,
+     "hi": 1.0004219447423879,
+     "median_ratio": 0.9658189995566936,
+     "a_better": 0.5824175824175825,
+     "a_twice_as_bad": 0.07692307692307693,
+     "b_twice_as_bad": 0.17582417582417584,
+     "periods": 91
+    },
+    "seconds": 13.406499999999996,
+    "saving": 0.6828777897363723,
+    "missed": 0.21428571428571427,
+    "false": 62,
+    "passes_cost": true,
+    "passes_rule": true,
+    "commit": [
+     "58bad9ddf3d6f4013f64b32d68bded6c88079411"
+    ]
+   },
+   {
+    "form": "fixed:6:robust",
+    "periods": 91,
+    "median": 0.052500106394290924,
+    "cost": {
+     "geometric_mean": 0.5584646378412689,
+     "lo": 0.4436853344062611,
+     "hi": 0.6962156172587857,
+     "median_ratio": 0.61111006368134,
+     "a_better": 0.6593406593406593,
+     "a_twice_as_bad": 0.0989010989010989,
+     "b_twice_as_bad": 0.4175824175824176,
+     "periods": 91
+    },
+    "seconds": 13.425899999999999,
+    "saving": 0.6824188951047296,
+    "missed": 0.16666666666666666,
+    "false": 36,
+    "passes_cost": true,
+    "passes_rule": true,
+    "commit": [
+     "58bad9ddf3d6f4013f64b32d68bded6c88079411"
+    ]
+   },
+   {
+    "form": "none",
+    "periods": 91,
+    "median": 0.09727715328335762,
+    "cost": {
+     "geometric_mean": 1.0,
+     "lo": 1.0,
+     "hi": 1.0,
+     "median_ratio": 1.0,
+     "a_better": 0.0,
+     "a_twice_as_bad": 0.0,
+     "b_twice_as_bad": 0.0,
+     "periods": 91
+    },
+    "seconds": 42.275499999999994,
+    "saving": 0.0,
+    "missed": 0.2261904761904762,
+    "false": 66,
+    "passes_cost": true,
+    "passes_rule": false,
+    "commit": [
+     "58bad9ddf3d6f4013f64b32d68bded6c88079411"
+    ]
+   }
+  ]
+ }
+}
