@@ -8,6 +8,6 @@
 - [x] T006 `scripts/research/tl3_tables.py`: every table of a record from `summary.json`; a test that a record's tables equal its summary
 - [x] T007 Development run on spent seed 335 (`timelate/tl-d-dev`): before and after; record `experiments/<date>-tl3-dev/`
 - [x] T008 Register: plan `configs/timelate/tl-d.json`, run files, decision record with forecasts and every changed definition; SRD §9 line
-- [ ] T009 Validation seed 336 (soundness stop), then test seed 337 once; records
+- [x] T009 Validation seed 336 (soundness stop), then test seed 337 once; records
 - [ ] T010 Panel (five reviewers), corrections
 - [ ] T011 Write-up, slides post and deck, figures; AGENTS.md; kickoff update; PR description
