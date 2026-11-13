@@ -293,6 +293,13 @@ and recorded, not asked.
   10%; the false-manoeuvre rate on targets that hold course. A learned whole-period model is
   recommended only if the headroom with a perfect evidence is material. Validation seed 334
   carries a soundness stop. The panel reviews the record as it would a gate.
+- **2026-11-13 (owner, recorded by the agent):** spec 014's study is decided by the panel
+  (`experiments/20261112-tl2/review.md`; five approve with findings), which found two defects
+  in the registered code: the evidence gives a manoeuvre's duration too large a volume, and
+  the classing counts manoeuvres cut by the period's edge. The owner chose the follow-on:
+  repair and re-register (spec 015). The evidence, the classing and the reference are
+  repaired, and the same quantities are decided again on fresh seeds (336 validation, 337
+  test), with the spent seeds 333 to 335 as development data. Nothing trained, no GPU run.
 
 ## Annexes
 

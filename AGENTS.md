@@ -347,6 +347,9 @@ Write-up `site/blog/2026-11-13-time-late-classical.md`, slides
 order for what follows (owner's choice): repair evidence, classing and reference and re-register;
 robust likelihood, correlated-error model, a prior that can be wrong; a hedged track; then a
 learned model. Seeds 333–335 used; 324, 325 unused; the next fresh seed is 336.
+**Owner 2026-11-13: repair and re-register (spec 015)**: fix the duration volume, the edge rule
+and the drifting reference; decide the same quantities on fresh seeds (336 validation, 337 test);
+seeds 333–335 become development data. Nothing trained, no GPU.
 
 ## Stack (owner decisions, 2026-10-31)
 
