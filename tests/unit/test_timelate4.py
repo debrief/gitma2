@@ -4,6 +4,7 @@ correlation estimate and the effective sd."""
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import numpy as np
 
@@ -147,7 +148,7 @@ def test_the_criteria_name_a_win_for_the_control_that_explains_it() -> None:
         }
     }
 
-    def split(dec: list[tuple[float, float]], hed: list[tuple[float, float]]) -> dict:
+    def split(dec: list[tuple[float, float]], hed: list[tuple[float, float]]) -> dict[str, Any]:
         comp = {}
         for s, d, h in zip(("m1-arc", "m2-arc"), dec, hed, strict=True):
             comp[f"ctl-d_over_{s}"] = _cmp(*d)
