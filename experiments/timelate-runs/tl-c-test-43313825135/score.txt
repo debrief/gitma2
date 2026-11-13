@@ -1,0 +1,235 @@
+man2: 400 periods, 369 scored
+  c2             median 0.0777  eff 3.56 4.04 3.64  tight 4.34
+  c2-refit       median 0.0546  eff 2.27 2.41 2.12  tight 2.43
+  ekf            median inf  eff 12.61 19.43 11.17  tight 22.60
+  ekf-rts        median 0.4217  eff 15.79 22.17 13.15  tight 25.70
+  history-best   median 0.0275  eff 1.27 1.38 1.26  tight 1.45
+  history-fit    median 0.0265  eff 1.18 1.28 1.13  tight 1.28
+  history-fixed  median 0.0247  eff 0.98 1.00 0.97  tight 1.09
+  history-map    median 0.0266  eff 1.22 1.30 1.24  tight 1.34
+  one-leg        median 0.3962  eff 19.05 23.62 18.75  tight 26.95
+  search         median 0.0382  eff 1.77 1.98 1.64  tight 1.97
+  search-flat    median 0.0428  eff 1.96 2.19 1.96  tight 2.16
+  search-mix     median 0.0385  eff 1.63 1.85 1.56  tight 1.78
+  search2        median 0.0380  eff 1.63 1.87 1.56  tight 1.81
+  c2_over_search2: of medians 2.05 [1.69, 2.52]  paired 2.13 [1.88, 2.43]  a better 0.27
+  c2_over_c2-refit: of medians 1.42 [1.23, 1.67]  paired 1.39 [1.22, 1.57]  a better 0.39
+  c2-refit_over_search2: of medians 1.44 [1.20, 1.75]  paired 1.53 [1.35, 1.76]  a better 0.36
+  search-flat_over_search2: of medians 1.13 [0.98, 1.35]  paired 1.18 [1.07, 1.29]  a better 0.40
+  c2_over_search-flat: of medians 1.82 [1.52, 2.20]  paired 1.81 [1.60, 2.07]  a better 0.33
+  search_over_search2: of medians 1.01 [0.94, 1.14]  paired 1.07 [1.02, 1.13]  a better 0.11
+  search2_over_history-map: of medians 1.43 [1.21, 1.67]  paired 1.37 [1.23, 1.53]  a better 0.37
+  search2_over_one-leg: of medians 0.10 [0.08, 0.13]  paired 0.06 [0.05, 0.08]  a better 0.91
+  search2_over_search-mix: of medians 0.99 [0.89, 1.05]  paired 0.99 [0.96, 1.03]  a better 0.03
+  c2_over_search-mix: of medians 2.02 [1.68, 2.40]  paired 2.12 [1.88, 2.40]  a better 0.28
+  search-mix_over_one-leg: of medians 0.10 [0.08, 0.13]  paired 0.06 [0.05, 0.08]  a better 0.91
+  c2_over_ekf-rts: of medians 0.18 [0.15, 0.23]  paired 0.17 [0.14, 0.21]  a better 0.84
+  c2_over_one-leg: of medians 0.20 [0.17, 0.25]  paired 0.13 [0.10, 0.16]  a better 0.76
+  classes: {"right": {"rate": 0.5125, "lo": 0.4636306970848221, "hi": 0.5611314955568205, "n": 400}, "ambiguous": {"rate": 0.2575, "lo": 0.21709827513471777, "hi": 0.302515187617416, "n": 400}, "search_failure": {"rate": 0.04, "lo": 0.024769063069711758, "hi": 0.06398224771784103, "n": 400}, "evidence_failure": {"rate": 0.19, "lo": 0.15457385084236502, "hi": 0.2313237716448988, "n": 400}}
+  classes_among_wrong: {"ambiguous": {"rate": 0.5282051282051282, "lo": 0.45827197879106685, "hi": 0.5970484763355438, "n": 195}, "search_failure": {"rate": 0.08205128205128205, "lo": 0.05113473050364543, "hi": 0.12911670716567017, "n": 195}, "evidence_failure": {"rate": 0.38974358974358975, "lo": 0.3240541536906114, "hi": 0.4596931580871835, "n": 195}}
+  gain_share: {"all": {"share": 0.4340738360697395, "lo": 0.2801323763108026, "hi": 0.5807215068670502, "periods": 369}, "search_right": {"share": 0.3366268363288739, "lo": 0.16140453124543827, "hi": 0.4984422279129465, "periods": 193}, "search_wrong": {"share": 0.6237932651816891, "lo": 0.33257998191448956, "hi": 0.9065626447832115, "periods": 176}, "flat_prior_search": {"share": 0.7842668819934119, "lo": 0.6699900286747156, "hi": 0.9062454882001014, "periods": 369}}
+  headroom: {"ident-search": {"paired": {"geometric_mean": 1.040108496788733, "lo": 1.0066322966585308, "hi": 1.0785257841759555, "median_ratio": 1.0, "a_better": 0.008130081300813009, "a_twice_as_bad": 0.024390243902439025, "b_twice_as_bad": 0.005420054200542005, "periods": 369}, "of_medians": {"value": 1.0643655079604872, "lo": 1.0, "hi": 1.151192271030908}, "verdict": "not material", "median_period_range": 0.035678351297974586}, "ident-all": {"paired": {"geometric_mean": 1.103836910982794, "lo": 1.0405806660862293, "hi": 1.1799324066459764, "median_ratio": 1.0, "a_better": 0.07859078590785908, "a_twice_as_bad": 0.07317073170731707, "b_twice_as_bad": 0.02981029810298103, "periods": 369}, "of_medians": {"value": 1.0737824428013631, "lo": 0.9599111502847967, "hi": 1.2338979658639726}, "verdict": "inconclusive", "median_period_range": 0.03536545671522617}}
+  quiet: {"periods": 11, "false_manoeuvre_rate": {"c2": {"rate": 0.0, "lo": 0.0, "hi": 0.2588329669680317, "n": 11}, "c2-refit": {"rate": 0.0, "lo": 0.0, "hi": 0.2588329669680317, "n": 11}, "search": {"rate": 0.36363636363636365, "lo": 0.15166471095367573, "hi": 0.6461988254921511, "n": 11}, "search2": {"rate": 0.36363636363636365, "lo": 0.15166471095367573, "hi": 0.6461988254921511, "n": 11}, "search-flat": {"rate": 0.0, "lo": 0.0, "hi": 0.2588329669680317, "n": 11}, "search-mix": {"rate": 0.0, "lo": 0.0, "hi": 0.2588329669680317, "n": 11}}}
+  counts c2: {"periods": 400, "true": 711, "matched": 341, "missed": 370, "false": 299, "found": 644, "missed_share": 0.5203938115330521, "false_per_period": 0.7475, "timing_median_s": 52.5, "timing_p90_s": 102.5}
+  counts c2-refit: {"periods": 400, "true": 711, "matched": 479, "missed": 232, "false": 157, "found": 644, "missed_share": 0.3263009845288326, "false_per_period": 0.3925, "timing_median_s": 17.64123598262995, "timing_p90_s": 72.85328317460365}
+  counts search: {"periods": 400, "true": 711, "matched": 571, "missed": 140, "false": 138, "found": 723, "missed_share": 0.19690576652601968, "false_per_period": 0.345, "timing_median_s": 15.868773106014032, "timing_p90_s": 66.53871908635563}
+  counts search2: {"periods": 400, "true": 711, "matched": 569, "missed": 142, "false": 140, "found": 721, "missed_share": 0.19971870604781997, "false_per_period": 0.35, "timing_median_s": 15.672760549785835, "timing_p90_s": 65.40564736329306}
+  counts search-flat: {"periods": 400, "true": 711, "matched": 520, "missed": 191, "false": 104, "found": 636, "missed_share": 0.26863572433192684, "false_per_period": 0.26, "timing_median_s": 18.66244070464012, "timing_p90_s": 71.67911072962536}
+  counts search-mix: {"periods": 400, "true": 711, "matched": 563, "missed": 148, "false": 113, "found": 687, "missed_share": 0.20815752461322082, "false_per_period": 0.2825, "timing_median_s": 15.41447289924372, "timing_p90_s": 64.99302752632548}
+  seconds per period: {"layer": 16.846875, "ekf-rts": 0.16979999999999992, "reference": 4.9974, "search": 25.032400000000003, "search2": 25.411475, "search-flat": 26.96125, "search-mix": 25.03615, "c2-refit": 7.442675}
+shift: 300 periods, 273 scored
+  c2             median 0.1366  eff 3.47 4.30 3.18  tight 5.04
+  c2-refit       median 0.1278  eff 3.20 3.44 3.00  tight 4.43
+  ekf            median inf  eff 7.80 9.67 6.20  tight 16.01
+  ekf-rts        median 0.3829  eff 9.32 11.96 7.54  tight 16.80
+  history-best   median 0.0403  eff 1.16 1.09 1.08  tight 1.45
+  history-fit    median 0.0422  eff 1.13 1.14 1.10  tight 1.29
+  history-fixed  median 0.0411  eff 1.09 1.06 1.04  tight 1.16
+  history-map    median 0.0385  eff 1.14 1.14 1.11  tight 1.43
+  one-leg        median 0.3874  eff 12.14 14.11 9.60  tight 18.23
+  search         median 0.0866  eff 2.27 2.65 2.09  tight 3.16
+  search-flat    median 0.0968  eff 2.39 2.87 2.34  tight 3.07
+  search-mix     median 0.0976  eff 2.30 2.48 2.05  tight 3.12
+  search2        median 0.0954  eff 2.28 2.48 2.05  tight 3.17
+  c2_over_search2: of medians 1.43 [1.23, 1.77]  paired 1.53 [1.32, 1.76]  a better 0.36
+  c2_over_c2-refit: of medians 1.07 [0.92, 1.26]  paired 1.02 [0.89, 1.17]  a better 0.44
+  c2-refit_over_search2: of medians 1.34 [1.16, 1.60]  paired 1.50 [1.31, 1.71]  a better 0.35
+  search-flat_over_search2: of medians 1.02 [0.85, 1.20]  paired 1.03 [0.91, 1.16]  a better 0.51
+  c2_over_search-flat: of medians 1.41 [1.23, 1.75]  paired 1.48 [1.28, 1.71]  a better 0.37
+  search_over_search2: of medians 0.91 [0.83, 1.05]  paired 0.99 [0.93, 1.06]  a better 0.19
+  search2_over_history-map: of medians 2.48 [2.05, 2.85]  paired 1.96 [1.70, 2.28]  a better 0.32
+  search2_over_one-leg: of medians 0.25 [0.20, 0.31]  paired 0.16 [0.13, 0.21]  a better 0.82
+  search2_over_search-mix: of medians 0.98 [0.95, 1.00]  paired 1.00 [0.99, 1.02]  a better 0.03
+  c2_over_search-mix: of medians 1.40 [1.23, 1.76]  paired 1.53 [1.33, 1.76]  a better 0.36
+  search-mix_over_one-leg: of medians 0.25 [0.20, 0.31]  paired 0.16 [0.13, 0.21]  a better 0.82
+  c2_over_ekf-rts: of medians 0.36 [0.29, 0.43]  paired 0.29 [0.23, 0.37]  a better 0.74
+  c2_over_one-leg: of medians 0.35 [0.29, 0.45]  paired 0.25 [0.20, 0.32]  a better 0.69
+  classes: {"right": {"rate": 0.24333333333333335, "lo": 0.19822154125071836, "hi": 0.2949351839778819, "n": 300}, "ambiguous": {"rate": 0.2, "lo": 0.1586568589669413, "hi": 0.24892892376778628, "n": 300}, "search_failure": {"rate": 0.05333333333333334, "lo": 0.03309191251909646, "hi": 0.08486914177483133, "n": 300}, "evidence_failure": {"rate": 0.5033333333333333, "lo": 0.44707193979203275, "hi": 0.5595104403998036, "n": 300}}
+  classes_among_wrong: {"ambiguous": {"rate": 0.2643171806167401, "lo": 0.21121897385935984, "hi": 0.32525943627271203, "n": 227}, "search_failure": {"rate": 0.07048458149779736, "lo": 0.04384823592705276, "hi": 0.11141615636971378, "n": 227}, "evidence_failure": {"rate": 0.6651982378854625, "lo": 0.6015090853282198, "hi": 0.72338922532687, "n": 227}}
+  gain_share: {"all": {"share": 0.0569958684656998, "lo": -0.3474845767637458, "hi": 0.3202073246740021, "periods": 273}, "search_right": {"share": 0.2940435546729517, "lo": -0.19062766018781704, "hi": 0.6127330432764201, "periods": 67}, "search_wrong": {"share": -0.12641025577928147, "lo": -1.0987169947578783, "hi": 0.27024138114036494, "periods": 206}, "flat_prior_search": {"share": 0.9227367220762662, "lo": 0.6744095890723066, "hi": 1.2599653102000998, "periods": 273}}
+  headroom: {"ident-search": {"paired": {"geometric_mean": 1.0949911979223506, "lo": 1.0363703246714056, "hi": 1.1701648192853558, "median_ratio": 1.0, "a_better": 0.01098901098901099, "a_twice_as_bad": 0.040293040293040296, "b_twice_as_bad": 0.0, "periods": 273}, "of_medians": {"value": 1.1329068030694884, "lo": 1.0095672953791932, "hi": 1.2297445893682175}, "verdict": "inconclusive", "median_period_range": 0.08417306840419769}, "ident-all": {"paired": {"geometric_mean": 1.5316930405738938, "lo": 1.368937335674979, "hi": 1.7207697724155697, "median_ratio": 1.0, "a_better": 0.16117216117216118, "a_twice_as_bad": 0.26373626373626374, "b_twice_as_bad": 0.05860805860805861, "periods": 273}, "of_medians": {"value": 1.6223148743710758, "lo": 1.3227664991337427, "hi": 1.993373061207918}, "verdict": "material", "median_period_range": 0.058780353516340256}}
+  quiet: {"periods": 0, "false_manoeuvre_rate": {"c2": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "c2-refit": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search2": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search-flat": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search-mix": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}}}
+  counts c2: {"periods": 300, "true": 910, "matched": 279, "missed": 631, "false": 276, "found": 555, "missed_share": 0.6934065934065934, "false_per_period": 0.92, "timing_median_s": 70.0, "timing_p90_s": 107.5}
+  counts c2-refit: {"periods": 300, "true": 910, "matched": 402, "missed": 508, "false": 152, "found": 555, "missed_share": 0.5582417582417583, "false_per_period": 0.5066666666666667, "timing_median_s": 25.365364537928826, "timing_p90_s": 86.5896562428288}
+  counts search: {"periods": 300, "true": 910, "matched": 542, "missed": 368, "false": 138, "found": 681, "missed_share": 0.4043956043956044, "false_per_period": 0.46, "timing_median_s": 21.65479381760383, "timing_p90_s": 79.03755091315668}
+  counts search2: {"periods": 300, "true": 910, "matched": 552, "missed": 358, "false": 129, "found": 682, "missed_share": 0.3934065934065934, "false_per_period": 0.43, "timing_median_s": 21.287394275328097, "timing_p90_s": 82.26958718182645}
+  counts search-flat: {"periods": 300, "true": 910, "matched": 487, "missed": 423, "false": 142, "found": 631, "missed_share": 0.46483516483516485, "false_per_period": 0.47333333333333333, "timing_median_s": 21.742254481573127, "timing_p90_s": 78.69628998276013}
+  counts search-mix: {"periods": 300, "true": 910, "matched": 545, "missed": 365, "false": 123, "found": 669, "missed_share": 0.4010989010989011, "false_per_period": 0.41, "timing_median_s": 20.764054201874274, "timing_p90_s": 82.01720998291458}
+  seconds per period: {"layer": 16.0325, "ekf-rts": 0.16509999999999997, "reference": 9.684399999999998, "search": 34.0384, "search2": 36.20943333333333, "search-flat": 39.55513333333334, "search-mix": 35.88253333333334, "c2-refit": 9.332433333333332}
+quiet: 400 periods, 360 scored
+  c2             median 0.0170  eff 0.97 0.90 0.97  tight 0.95
+  c2-refit       median 0.0166  eff 0.95 0.90 0.90  tight 0.95
+  ekf            median inf  eff 2.38 2.12 2.30  tight 2.50
+  ekf-rts        median 0.0254  eff 1.41 1.44 1.40  tight 1.37
+  history-best   median 0.0166  eff 0.94 0.91 0.86  tight 0.94
+  history-fit    median 0.0166  eff 0.95 0.91 0.91  tight 0.94
+  history-fixed  median 0.0166  eff 0.95 0.91 0.91  tight 0.94
+  history-map    median 0.0166  eff 0.94 0.91 0.86  tight 0.94
+  one-leg        median 0.0165  eff 0.94 0.90 0.94  tight 0.92
+  search         median 0.0354  eff 2.01 2.48 2.13  tight 2.24
+  search-flat    median 0.0166  eff 0.94 0.91 0.86  tight 0.94
+  search-mix     median 0.0166  eff 0.95 0.91 0.86  tight 0.94
+  search2        median 0.0352  eff 2.02 2.48 2.18  tight 2.24
+  c2_over_search2: of medians 0.48 [0.41, 0.58]  paired 0.50 [0.44, 0.56]  a better 0.74
+  c2_over_c2-refit: of medians 1.02 [0.93, 1.14]  paired 1.09 [1.03, 1.15]  a better 0.45
+  c2-refit_over_search2: of medians 0.47 [0.39, 0.57]  paired 0.46 [0.40, 0.52]  a better 0.66
+  search-flat_over_search2: of medians 0.47 [0.39, 0.56]  paired 0.45 [0.40, 0.52]  a better 0.63
+  c2_over_search-flat: of medians 1.03 [0.94, 1.16]  paired 1.10 [1.03, 1.16]  a better 0.45
+  search_over_search2: of medians 1.01 [0.97, 1.07]  paired 1.00 [0.97, 1.02]  a better 0.04
+  search2_over_history-map: of medians 2.12 [1.79, 2.57]  paired 2.21 [1.95, 2.53]  a better 0.18
+  search2_over_one-leg: of medians 2.13 [1.77, 2.50]  paired 2.08 [1.83, 2.36]  a better 0.26
+  search2_over_search-mix: of medians 2.12 [1.79, 2.57]  paired 2.19 [1.92, 2.50]  a better 0.13
+  c2_over_search-mix: of medians 1.03 [0.94, 1.16]  paired 1.09 [1.02, 1.16]  a better 0.45
+  search-mix_over_one-leg: of medians 1.00 [0.89, 1.09]  paired 0.95 [0.90, 1.00]  a better 0.54
+  c2_over_ekf-rts: of medians 0.67 [0.57, 0.83]  paired 0.55 [0.47, 0.63]  a better 0.64
+  c2_over_one-leg: of medians 1.03 [1.00, 1.09]  paired 1.03 [1.00, 1.07]  a better 0.00
+  classes: {"right": {"rate": 0.2425, "lo": 0.2030764095091307, "hi": 0.286822422073032, "n": 400}, "ambiguous": {"rate": 0.3225, "lo": 0.27856795807266865, "hi": 0.3698089064160066, "n": 400}, "search_failure": {"rate": 0.0, "lo": 8.673617379884035e-19, "hi": 0.009512294334296508, "n": 400}, "evidence_failure": {"rate": 0.435, "lo": 0.3872626744968637, "hi": 0.48397392376659487, "n": 400}}
+  classes_among_wrong: {"ambiguous": {"rate": 0.42574257425742573, "lo": 0.37133986536811786, "hi": 0.4820045941030639, "n": 303}, "search_failure": {"rate": 0.0, "lo": 0.0, "hi": 0.012519360439290965, "n": 303}, "evidence_failure": {"rate": 0.5742574257425742, "lo": 0.517995405896936, "hi": 0.6286601346318821, "n": 303}}
+  gain_share: {"all": {"share": -0.12125527309591386, "lo": -0.20972867972760995, "hi": -0.036725316109871585, "periods": 360}, "search_right": {"share": 1.01370173266201, "lo": 0.9999993216768172, "hi": 1.0367273944142923, "periods": 83}, "search_wrong": {"share": -0.0599115429601003, "lo": -0.12572156754852334, "hi": 0.0013249772950496928, "periods": 277}, "flat_prior_search": {"share": -0.13346927926750124, "lo": -0.2273734667395212, "hi": -0.04337634246257382, "periods": 360}}
+  headroom: {"ident-search": {"paired": {"geometric_mean": 1.0, "lo": 1.0, "hi": 1.0, "median_ratio": 1.0, "a_better": 0.0, "a_twice_as_bad": 0.0, "b_twice_as_bad": 0.0, "periods": 360}, "of_medians": {"value": 1.0, "lo": 1.0, "hi": 1.0}, "verdict": "not material", "median_period_range": 0.035166853107512}, "ident-all": {"paired": {"geometric_mean": 1.8781788597941766, "lo": 1.6583169640747792, "hi": 2.1243727821144045, "median_ratio": 1.0, "a_better": 0.05277777777777778, "a_twice_as_bad": 0.2777777777777778, "b_twice_as_bad": 0.016666666666666666, "periods": 360}, "of_medians": {"value": 1.8127725451100953, "lo": 1.5187039136909521, "hi": 2.1840829574428824}, "verdict": "material", "median_period_range": 0.019399484619498253}}
+  quiet: {"periods": 400, "false_manoeuvre_rate": {"c2": {"rate": 0.0225, "lo": 0.011881583530495034, "hi": 0.04220265755875813, "n": 400}, "c2-refit": {"rate": 0.0225, "lo": 0.011881583530495034, "hi": 0.04220265755875813, "n": 400}, "search": {"rate": 0.76, "lo": 0.715799603858965, "hi": 0.7992540030872007, "n": 400}, "search2": {"rate": 0.7575, "lo": 0.7131775779269679, "hi": 0.7969235904908692, "n": 400}, "search-flat": {"rate": 0.01, "lo": 0.003895483794990993, "hi": 0.025426564652619582, "n": 400}, "search-mix": {"rate": 0.0275, "lo": 0.015423636260295411, "hi": 0.048565481885614784, "n": 400}}}
+  counts c2: {"periods": 400, "true": 0, "matched": 0, "missed": 0, "false": 11, "found": 11, "missed_share": NaN, "false_per_period": 0.0275, "timing_median_s": NaN, "timing_p90_s": NaN}
+  counts c2-refit: {"periods": 400, "true": 0, "matched": 0, "missed": 0, "false": 11, "found": 11, "missed_share": NaN, "false_per_period": 0.0275, "timing_median_s": NaN, "timing_p90_s": NaN}
+  counts search: {"periods": 400, "true": 0, "matched": 0, "missed": 0, "false": 359, "found": 359, "missed_share": NaN, "false_per_period": 0.8975, "timing_median_s": NaN, "timing_p90_s": NaN}
+  counts search2: {"periods": 400, "true": 0, "matched": 0, "missed": 0, "false": 360, "found": 360, "missed_share": NaN, "false_per_period": 0.9, "timing_median_s": NaN, "timing_p90_s": NaN}
+  counts search-flat: {"periods": 400, "true": 0, "matched": 0, "missed": 0, "false": 4, "found": 4, "missed_share": NaN, "false_per_period": 0.01, "timing_median_s": NaN, "timing_p90_s": NaN}
+  counts search-mix: {"periods": 400, "true": 0, "matched": 0, "missed": 0, "false": 13, "found": 13, "missed_share": NaN, "false_per_period": 0.0325, "timing_median_s": NaN, "timing_p90_s": NaN}
+  seconds per period: {"layer": 15.9225, "ekf-rts": 0.13479999999999998, "reference": 0.13135000000000002, "search": 9.567, "search2": 9.7288, "search-flat": 3.02665, "search-mix": 3.1395, "c2-refit": 0.2007}
+man2-corr: 100 periods, 92 scored
+  c2             median 0.2968  eff 11.03 17.18 10.82  tight 16.35
+  c2-refit       median 0.1898  eff 7.17 10.50 6.97  tight 8.76
+  ekf            median inf  eff 13.37 23.80 13.03  tight 25.89
+  ekf-rts        median 0.4471  eff 14.77 20.70 15.60  tight 27.96
+  history-best   median 0.1017  eff 4.09 4.86 4.46  tight 4.25
+  history-fit    median 0.0895  eff 3.89 4.54 3.99  tight 4.16
+  history-fixed  median 0.0733  eff 3.34 3.66 3.62  tight 3.29
+  history-map    median 0.0996  eff 3.90 4.70 3.69  tight 4.03
+  one-leg        median 0.3588  eff 18.68 26.13 22.04  tight 27.43
+  search         median 0.1805  eff 5.92 9.52 5.37  tight 7.70
+  search-flat    median 0.1947  eff 7.50 12.58 7.33  tight 10.10
+  search-mix     median 0.1846  eff 5.83 9.48 5.93  tight 8.02
+  search2        median 0.1846  eff 5.83 9.30 5.93  tight 8.02
+  c2_over_search2: of medians 1.61 [1.14, 2.44]  paired 1.62 [1.26, 2.11]  a better 0.40
+  c2_over_c2-refit: of medians 1.56 [1.15, 2.15]  paired 1.44 [1.12, 1.87]  a better 0.32
+  c2-refit_over_search2: of medians 1.03 [0.77, 1.40]  paired 1.12 [0.86, 1.52]  a better 0.45
+  search-flat_over_search2: of medians 1.05 [0.78, 1.44]  paired 1.04 [0.86, 1.24]  a better 0.50
+  c2_over_search-flat: of medians 1.52 [1.12, 2.22]  paired 1.56 [1.26, 1.98]  a better 0.37
+  search_over_search2: of medians 0.98 [0.76, 1.22]  paired 1.00 [0.87, 1.15]  a better 0.32
+  search2_over_history-map: of medians 1.85 [1.45, 2.57]  paired 1.87 [1.56, 2.27]  a better 0.21
+  search2_over_one-leg: of medians 0.51 [0.31, 0.80]  paired 0.26 [0.16, 0.41]  a better 0.74
+  search2_over_search-mix: of medians 1.00 [1.00, 1.00]  paired 1.00 [1.00, 1.00]  a better 0.00
+  c2_over_search-mix: of medians 1.61 [1.14, 2.44]  paired 1.62 [1.26, 2.11]  a better 0.39
+  search-mix_over_one-leg: of medians 0.51 [0.31, 0.80]  paired 0.26 [0.16, 0.41]  a better 0.75
+  c2_over_ekf-rts: of medians 0.66 [0.49, 0.99]  paired 0.43 [0.29, 0.64]  a better 0.61
+  c2_over_one-leg: of medians 0.83 [0.53, 1.19]  paired 0.42 [0.27, 0.63]  a better 0.61
+  classes: {"right": {"rate": 0.19, "lo": 0.12514751509768735, "hi": 0.27778845379064376, "n": 100}, "ambiguous": {"rate": 0.13, "lo": 0.07757167427240512, "hi": 0.20980351440076428, "n": 100}, "search_failure": {"rate": 0.02, "lo": 0.00550196755016235, "hi": 0.07001179072854388, "n": 100}, "evidence_failure": {"rate": 0.66, "lo": 0.5627772885472462, "hi": 0.7453847920265184, "n": 100}}
+  classes_among_wrong: {"ambiguous": {"rate": 0.16049382716049382, "lo": 0.09626154226711317, "hi": 0.25547049105119335, "n": 81}, "search_failure": {"rate": 0.024691358024691357, "lo": 0.006797587423664028, "hi": 0.08562725922196524, "n": 81}, "evidence_failure": {"rate": 0.8148148148148148, "lo": 0.7166841055275461, "hi": 0.884437099940933, "n": 81}}
+  gain_share: {"all": {"share": 0.7610944500428518, "lo": 0.2623849654357594, "hi": 1.490712164565952, "periods": 92}, "search_right": {"share": 0.7046807141162437, "lo": 0.31457554268962157, "hi": 1.3683117742865503, "periods": 19}, "search_wrong": {"share": 0.7988156551977095, "lo": -0.104679335951232, "hi": 2.518206857014997, "periods": 73}, "flat_prior_search": {"share": 0.9274529352976687, "lo": 0.5933749999906984, "hi": 1.5042703792342145, "periods": 92}}
+  headroom: {"ident-search": {"paired": {"geometric_mean": 1.018635135248097, "lo": 1.0, "hi": 1.0569536819325343, "median_ratio": 1.0, "a_better": 0.0, "a_twice_as_bad": 0.010869565217391304, "b_twice_as_bad": 0.0, "periods": 92}, "of_medians": {"value": 1.0226865001255003, "lo": 1.0, "hi": 1.18223499526238}, "verdict": "not material", "median_period_range": 0.18047571182250977}, "ident-all": {"paired": {"geometric_mean": 1.6075513771356598, "lo": 1.350635601049165, "hi": 1.925443834206572, "median_ratio": 1.0282166231754086, "a_better": 0.14130434782608695, "a_twice_as_bad": 0.31521739130434784, "b_twice_as_bad": 0.043478260869565216, "periods": 92}, "of_medians": {"value": 1.7007125773324971, "lo": 1.2321617267903844, "hi": 2.2270482804227716}, "verdict": "material", "median_period_range": 0.10852514207363129}}
+  quiet: {"periods": 2, "false_manoeuvre_rate": {"c2": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "c2-refit": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "search": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "search2": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "search-flat": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "search-mix": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}}}
+  counts c2: {"periods": 100, "true": 182, "matched": 73, "missed": 109, "false": 249, "found": 324, "missed_share": 0.5989010989010989, "false_per_period": 2.49, "timing_median_s": 55.0, "timing_p90_s": 105.0}
+  counts c2-refit: {"periods": 100, "true": 182, "matched": 105, "missed": 77, "false": 216, "found": 324, "missed_share": 0.4230769230769231, "false_per_period": 2.16, "timing_median_s": 37.294551643266914, "timing_p90_s": 91.04132154922807}
+  counts search: {"periods": 100, "true": 182, "matched": 119, "missed": 63, "false": 144, "found": 267, "missed_share": 0.34615384615384615, "false_per_period": 1.44, "timing_median_s": 29.313524024581966, "timing_p90_s": 92.71606277858939}
+  counts search2: {"periods": 100, "true": 182, "matched": 118, "missed": 64, "false": 142, "found": 264, "missed_share": 0.3516483516483517, "false_per_period": 1.42, "timing_median_s": 29.044242495061667, "timing_p90_s": 96.17992680742732}
+  counts search-flat: {"periods": 100, "true": 182, "matched": 108, "missed": 74, "false": 211, "found": 325, "missed_share": 0.4065934065934066, "false_per_period": 2.11, "timing_median_s": 31.955467051261962, "timing_p90_s": 93.97343587440098}
+  counts search-mix: {"periods": 100, "true": 182, "matched": 118, "missed": 64, "false": 141, "found": 263, "missed_share": 0.3516483516483517, "false_per_period": 1.41, "timing_median_s": 29.044242495061667, "timing_p90_s": 96.17992680742732}
+  seconds per period: {"layer": 14.75, "ekf-rts": 0.1931, "reference": 5.657, "search": 54.7858, "search2": 54.8638, "search-flat": 81.7941, "search-mix": 54.790699999999994, "c2-refit": 25.080299999999998}
+man2-out: 100 periods, 92 scored
+  c2             median 0.1800  eff 7.44 10.07 7.99  tight 8.55
+  c2-refit       median 0.1250  eff 4.85 7.02 5.90  tight 6.84
+  ekf            median inf  eff 14.30 23.98 14.15  tight 25.86
+  ekf-rts        median 0.4897  eff 16.54 22.13 15.41  tight 28.56
+  history-best   median 0.0481  eff 2.16 2.10 2.39  tight 2.32
+  history-fit    median 0.0430  eff 2.06 2.01 2.17  tight 2.14
+  history-fixed  median 0.0347  eff 1.81 1.73 1.98  tight 1.94
+  history-map    median 0.0489  eff 2.13 1.97 2.37  tight 2.35
+  one-leg        median 0.3503  eff 17.84 26.17 20.95  tight 27.67
+  search         median 0.1045  eff 3.33 3.84 3.08  tight 4.22
+  search-flat    median 0.1116  eff 3.70 4.45 4.23  tight 5.42
+  search-mix     median 0.0849  eff 3.29 3.47 3.31  tight 3.50
+  search2        median 0.0849  eff 3.29 3.46 3.31  tight 3.53
+  c2_over_search2: of medians 2.12 [1.29, 3.37]  paired 2.06 [1.55, 2.76]  a better 0.33
+  c2_over_c2-refit: of medians 1.44 [0.97, 2.08]  paired 1.22 [0.94, 1.56]  a better 0.40
+  c2-refit_over_search2: of medians 1.47 [0.98, 2.28]  paired 1.69 [1.28, 2.26]  a better 0.45
+  search-flat_over_search2: of medians 1.31 [0.96, 1.82]  paired 1.08 [0.90, 1.29]  a better 0.47
+  c2_over_search-flat: of medians 1.61 [1.07, 2.28]  paired 1.91 [1.45, 2.51]  a better 0.30
+  search_over_search2: of medians 1.23 [0.95, 1.53]  paired 0.99 [0.91, 1.08]  a better 0.24
+  search2_over_history-map: of medians 1.74 [1.23, 2.67]  paired 1.78 [1.38, 2.29]  a better 0.32
+  search2_over_one-leg: of medians 0.24 [0.14, 0.37]  paired 0.13 [0.08, 0.21]  a better 0.86
+  search2_over_search-mix: of medians 1.00 [0.98, 1.00]  paired 1.00 [0.98, 1.01]  a better 0.02
+  c2_over_search-mix: of medians 2.12 [1.28, 3.37]  paired 2.05 [1.54, 2.76]  a better 0.33
+  search-mix_over_one-leg: of medians 0.24 [0.14, 0.37]  paired 0.14 [0.08, 0.21]  a better 0.86
+  c2_over_ekf-rts: of medians 0.37 [0.24, 0.51]  paired 0.26 [0.18, 0.37]  a better 0.74
+  c2_over_one-leg: of medians 0.51 [0.31, 0.74]  paired 0.28 [0.18, 0.42]  a better 0.67
+  classes: {"right": {"rate": 0.29, "lo": 0.2101483574912227, "hi": 0.3853889117557111, "n": 100}, "ambiguous": {"rate": 0.25, "lo": 0.17545211362287672, "hi": 0.34304463548061603, "n": 100}, "search_failure": {"rate": 0.06, "lo": 0.027786123963188192, "hi": 0.1247681544589592, "n": 100}, "evidence_failure": {"rate": 0.4, "lo": 0.3094012864324589, "hi": 0.4979974132089382, "n": 100}}
+  classes_among_wrong: {"ambiguous": {"rate": 0.352112676056338, "lo": 0.25122748121653293, "hi": 0.4681793778839557, "n": 71}, "search_failure": {"rate": 0.08450704225352113, "lo": 0.03930650771071112, "hi": 0.1723603821430428, "n": 71}, "evidence_failure": {"rate": 0.5633802816901409, "lo": 0.4477154306941805, "hi": 0.6725387725484672, "n": 71}}
+  gain_share: {"all": {"share": 0.27280079564915405, "lo": -0.10135132849475051, "hi": 0.5869388886640987, "periods": 92}, "search_right": {"share": 0.10723725767911603, "lo": -0.7176221794837792, "hi": 0.6607260816256175, "periods": 26}, "search_wrong": {"share": 0.3495382684535867, "lo": -0.22094754936429042, "hi": 0.791741430759101, "periods": 66}, "flat_prior_search": {"share": 0.898354812016217, "lo": 0.663976891619938, "hi": 1.1961365766379861, "periods": 92}}
+  headroom: {"ident-search": {"paired": {"geometric_mean": 1.1314321851174551, "lo": 1.0152666089375513, "hi": 1.2978442758859352, "median_ratio": 1.0, "a_better": 0.010869565217391304, "a_twice_as_bad": 0.043478260869565216, "b_twice_as_bad": 0.0, "periods": 92}, "of_medians": {"value": 1.2301125366144186, "lo": 1.0, "hi": 1.6455874277435114}, "verdict": "inconclusive", "median_period_range": 0.0690134596079588}, "ident-all": {"paired": {"geometric_mean": 1.5436360277877468, "lo": 1.2745815619016732, "hi": 1.8921846215576243, "median_ratio": 1.0, "a_better": 0.11956521739130435, "a_twice_as_bad": 0.2391304347826087, "b_twice_as_bad": 0.03260869565217391, "periods": 92}, "of_medians": {"value": 1.793305273927229, "lo": 1.318853734793853, "hi": 2.461365899156619}, "verdict": "material", "median_period_range": 0.04733958188444376}}
+  quiet: {"periods": 2, "false_manoeuvre_rate": {"c2": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "c2-refit": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "search": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "search2": {"rate": 1.0, "lo": 0.34238022750665303, "hi": 1.0, "n": 2}, "search-flat": {"rate": 0.5, "lo": 0.09453120573423074, "hi": 0.9054687942657693, "n": 2}, "search-mix": {"rate": 0.5, "lo": 0.09453120573423074, "hi": 0.9054687942657693, "n": 2}}}
+  counts c2: {"periods": 100, "true": 182, "matched": 85, "missed": 97, "false": 221, "found": 309, "missed_share": 0.532967032967033, "false_per_period": 2.21, "timing_median_s": 55.0, "timing_p90_s": 109.00000000000003}
+  counts c2-refit: {"periods": 100, "true": 182, "matched": 113, "missed": 69, "false": 191, "found": 309, "missed_share": 0.3791208791208791, "false_per_period": 1.91, "timing_median_s": 26.23092800692666, "timing_p90_s": 85.41134925077314}
+  counts search: {"periods": 100, "true": 182, "matched": 138, "missed": 44, "false": 81, "found": 224, "missed_share": 0.24175824175824176, "false_per_period": 0.81, "timing_median_s": 18.297825384764792, "timing_p90_s": 85.65168054529809}
+  counts search2: {"periods": 100, "true": 182, "matched": 136, "missed": 46, "false": 82, "found": 222, "missed_share": 0.25274725274725274, "false_per_period": 0.82, "timing_median_s": 18.42408490566976, "timing_p90_s": 86.73888581358005}
+  counts search-flat: {"periods": 100, "true": 182, "matched": 121, "missed": 61, "false": 112, "found": 237, "missed_share": 0.33516483516483514, "false_per_period": 1.12, "timing_median_s": 25.639709412170077, "timing_p90_s": 96.81111728881433}
+  counts search-mix: {"periods": 100, "true": 182, "matched": 136, "missed": 46, "false": 77, "found": 217, "missed_share": 0.25274725274725274, "false_per_period": 0.77, "timing_median_s": 18.42408490566976, "timing_p90_s": 86.73888581358005}
+  seconds per period: {"layer": 11.7375, "ekf-rts": 0.15139999999999995, "reference": 4.3022, "search": 36.14219999999999, "search2": 33.9118, "search-flat": 44.30119999999999, "search-mix": 33.8523, "c2-refit": 18.6371}
+whole: 60 periods, 60 scored
+  c2             median 0.0959  eff 6.21 7.83 7.13  tight 6.72
+  c2-refit       median 0.0616  eff 3.88 4.48 3.94  tight 4.86
+  ekf            median inf  eff 28.50 53.23 20.70  tight 42.03
+  ekf-rts        median 0.5258  eff 27.09 60.57 24.81  tight 36.79
+  history-best   median 0.0210  eff 1.37 1.64 1.18  tight 1.35
+  history-fit    median 0.0209  eff 1.38 1.57 1.20  tight 1.46
+  history-fixed  median 0.0157  eff 1.02 1.06 1.04  tight 1.08
+  history-map    median 0.0208  eff 1.38 1.45 1.23  tight 1.38
+  one-leg        median 0.6228  eff 40.24 59.75 39.38  tight 62.03
+  search         median 0.0245  eff 1.83 2.15 1.96  tight 1.92
+  search-flat    median 0.0232  eff 1.67 2.22 1.62  tight 1.68
+  search-mix     median 0.0221  eff 1.54 2.00 1.46  tight 1.59
+  search2        median 0.0221  eff 1.54 2.00 1.46  tight 1.59
+  c2_over_search2: of medians 4.34 [2.65, 7.96]  paired 4.09 [2.77, 5.72]  a better 0.17
+  c2_over_c2-refit: of medians 1.56 [1.06, 3.10]  paired 1.59 [1.11, 2.23]  a better 0.35
+  c2-refit_over_search2: of medians 2.79 [1.62, 4.28]  paired 2.57 [1.70, 3.94]  a better 0.28
+  search-flat_over_search2: of medians 1.05 [0.78, 1.69]  paired 1.19 [0.88, 1.61]  a better 0.43
+  c2_over_search-flat: of medians 4.14 [2.41, 7.28]  paired 3.43 [2.35, 4.94]  a better 0.22
+  search_over_search2: of medians 1.11 [0.86, 1.58]  paired 1.11 [0.91, 1.37]  a better 0.23
+  search2_over_history-map: of medians 1.06 [0.84, 1.73]  paired 1.29 [1.03, 1.65]  a better 0.32
+  search2_over_one-leg: of medians 0.04 [0.02, 0.06]  paired 0.01 [0.01, 0.03]  a better 1.00
+  search2_over_search-mix: of medians 1.00 [1.00, 1.00]  paired 1.00 [1.00, 1.00]  a better 0.00
+  c2_over_search-mix: of medians 4.34 [2.65, 7.96]  paired 4.09 [2.77, 5.72]  a better 0.17
+  search-mix_over_one-leg: of medians 0.04 [0.02, 0.06]  paired 0.01 [0.01, 0.03]  a better 1.00
+  c2_over_ekf-rts: of medians 0.18 [0.12, 0.32]  paired 0.12 [0.07, 0.20]  a better 0.87
+  c2_over_one-leg: of medians 0.15 [0.11, 0.29]  paired 0.06 [0.03, 0.11]  a better 0.88
+  classes: {"right": {"rate": 0.6, "lo": 0.4736605349204075, "hi": 0.7143050946511744, "n": 60}, "ambiguous": {"rate": 0.2, "lo": 0.11828505322897494, "hi": 0.317818058056279, "n": 60}, "search_failure": {"rate": 0.05, "lo": 0.01714950216439568, "hi": 0.1370051647634852, "n": 60}, "evidence_failure": {"rate": 0.15, "lo": 0.08097440580167739, "hi": 0.2611458906977855, "n": 60}}
+  classes_among_wrong: {"ambiguous": {"rate": 0.5, "lo": 0.3142742581957335, "hi": 0.6857257418042665, "n": 24}, "search_failure": {"rate": 0.125, "lo": 0.04344334080123444, "hi": 0.31003881270500067, "n": 24}, "evidence_failure": {"rate": 0.375, "lo": 0.21159367559548778, "hi": 0.5729003755732572, "n": 24}}
+  gain_share: {"all": {"share": 0.33025084936847693, "lo": 0.07931525245074063, "hi": 0.5706736013327571, "periods": 60}, "search_right": {"share": 0.22138565200882335, "lo": -0.11541137185647547, "hi": 0.5461744174670554, "periods": 36}, "search_wrong": {"share": 0.5103919107636421, "lo": 0.19222227064295253, "hi": 0.7990026026212128, "periods": 24}, "flat_prior_search": {"share": 0.8759198041256308, "lo": 0.6753038162766972, "hi": 1.1081119859218744, "periods": 60}}
+  headroom: {"ident-search": {"paired": {"geometric_mean": 1.0814100099108497, "lo": 1.0, "hi": 1.2226276212393068, "median_ratio": 1.0, "a_better": 0.0, "a_twice_as_bad": 0.03333333333333333, "b_twice_as_bad": 0.0, "periods": 60}, "of_medians": {"value": 1.0, "lo": 1.0, "hi": 1.2335538578194654}, "verdict": "inconclusive", "median_period_range": 0.02212503831833601}, "ident-all": {"paired": {"geometric_mean": 1.0805521845924513, "lo": 0.9067753370233033, "hi": 1.3086418057378097, "median_ratio": 1.0, "a_better": 0.08333333333333333, "a_twice_as_bad": 0.08333333333333333, "b_twice_as_bad": 0.05, "periods": 60}, "of_medians": {"value": 1.0220644773339516, "lo": 0.8228751339220578, "hi": 1.2757061649828236}, "verdict": "inconclusive", "median_period_range": 0.02164739975705743}}
+  quiet: {"periods": 0, "false_manoeuvre_rate": {"c2": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "c2-refit": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search2": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search-flat": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}, "search-mix": {"rate": NaN, "lo": NaN, "hi": NaN, "n": 0}}}
+  counts c2: {"periods": 60, "true": 175, "matched": 84, "missed": 91, "false": 86, "found": 170, "missed_share": 0.52, "false_per_period": 1.4333333333333333, "timing_median_s": 55.0, "timing_p90_s": 101.75}
+  counts c2-refit: {"periods": 60, "true": 175, "matched": 120, "missed": 55, "false": 50, "found": 170, "missed_share": 0.3142857142857143, "false_per_period": 0.8333333333333334, "timing_median_s": 17.805382085515816, "timing_p90_s": 77.48846433670869}
+  counts search: {"periods": 60, "true": 175, "matched": 150, "missed": 25, "false": 24, "found": 175, "missed_share": 0.14285714285714285, "false_per_period": 0.4, "timing_median_s": 13.734612708484633, "timing_p90_s": 63.11234805335771}
+  counts search2: {"periods": 60, "true": 175, "matched": 150, "missed": 25, "false": 25, "found": 176, "missed_share": 0.14285714285714285, "false_per_period": 0.4166666666666667, "timing_median_s": 13.353224750458878, "timing_p90_s": 63.97583253982255}
+  counts search-flat: {"periods": 60, "true": 175, "matched": 133, "missed": 42, "false": 28, "found": 162, "missed_share": 0.24, "false_per_period": 0.4666666666666667, "timing_median_s": 11.26877010411846, "timing_p90_s": 70.10248436119272}
+  counts search-mix: {"periods": 60, "true": 175, "matched": 150, "missed": 25, "false": 25, "found": 176, "missed_share": 0.14285714285714285, "false_per_period": 0.4166666666666667, "timing_median_s": 13.353224750458878, "timing_p90_s": 63.97583253982255}
+  seconds per period: {"layer": 31.559166666666673, "ekf-rts": 0.24566666666666664, "reference": 11.537333333333333, "search": 59.58316666666667, "search2": 57.86316666666667, "search-flat": 66.173, "search-mix": 57.81316666666667, "c2-refit": 18.196166666666667}
+soundness {"reference_efficiency_tight": 1.087260806675043, "band": [0.8, 1.3], "history_converged_share": 0.9975, "convergence_min": 0.9, "pass": true}
