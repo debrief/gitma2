@@ -48,19 +48,19 @@ Tests are part of each task (plan, Testing). Nothing is trained; no GPU.
 **Independent test**: track error and run time of each form against the full data on the same periods, and the rule's outcome.
 
 - [x] T019 [US4] `src/tma2/timelate/thin.py`: `drop:N`, `fixed:N`, `adaptive:TOL[:robust]` on the arc problem's bearings (variance σ²/n; scoring rows unchanged); `--thin`; test that N = 1 equals the full data
-- [ ] T020 [US4] `scripts/research/tl2_thin.py` on 100 tuning periods, clean and with outliers, N in 2, 4, 6, 12; apply R6's adoption rule; record `experiments/<date>-tl2-thin/`; set the registered runs' `thinning` accordingly
+- [x] T020 [US4] `scripts/research/tl2_thin.py` on 100 tuning periods, clean and with outliers, N in 2, 4, 6, 12; apply R6's adoption rule; record `experiments/<date>-tl2-thin/`; set the registered runs' `thinning` accordingly
 
 ## Phase 7: User Story 5 - beyond Gate T's conditions (P2)
 
 - [x] T021 [P] [US5] `src/tma2/timelate/smooth.py`: Rauch–Tung–Striebel smoother over the frozen EKF, system `ekf-rts`; test that it equals the filter at the last row
 - [x] T022 [US5] Mismatch conditions in the time-late runs: check the overlay's correlation time units at 5 seconds; `condition` in run files and `timelate.yml`; whole engagements as split `whole`; local generation of each first
-- [ ] T023 [US5] CI smoke `timelate/tl-c-smoke` with every split and condition (3 periods each); emulate the workflow's command builder through bash against the run file before pushing
+- [x] T023 [US5] CI smoke `timelate/tl-c-smoke` with every split and condition (3 periods each); emulate the workflow's command builder through bash against the run file before pushing
 
 ## Phase 8: Registration and the fresh seeds
 
-- [ ] T024 Plan `configs/timelate/tl-c.json`, run files `configs/timelate/runs/tl-c-{val,test}.json`, decision record `experiments/<date>-tl2-decision/` (digests, criteria, forecasts for FR-005, FR-007, FR-010, the recommendation rule, the soundness stop); SRD §9 line (owner merges)
-- [ ] T025 Validation seed 334 (`timelate/tl-c-val`); soundness stop; record `experiments/<date>-tl2-val/`; failure check 20 minutes after launch
-- [ ] T026 Test seed 335 once (`timelate/tl-c-test`); record `experiments/<date>-tl2/` with `errors.npz`, the list of anything not run (FR-022), and the recommendation by the registered rule
+- [x] T024 Plan `configs/timelate/tl-c.json`, run files `configs/timelate/runs/tl-c-{val,test}.json`, decision record `experiments/<date>-tl2-decision/` (digests, criteria, forecasts for FR-005, FR-007, FR-010, the recommendation rule, the soundness stop); SRD §9 line (owner merges)
+- [x] T025 Validation seed 334 (`timelate/tl-c-val`); soundness stop; record `experiments/<date>-tl2-val/`; failure check 20 minutes after launch
+- [x] T026 Test seed 335 once (`timelate/tl-c-test`); record `experiments/<date>-tl2/` with `errors.npz`, the list of anything not run (FR-022), and the recommendation by the registered rule
 - [ ] T027 Panel review (five reviewers; critical); `review.md`; corrections
 
 ## Phase 9: User Story 6 - prior robustness (P3; first to be cut)
