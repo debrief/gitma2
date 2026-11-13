@@ -173,3 +173,30 @@ of seed 339.
 
 **Chosen**: the runner stores each system's scored-row states for the first 20 periods of
 every split so the slides can carry track plots (three studies had none).
+
+## As built (2026-11-13, before any tuning result): departures from R3 to R6
+
+- **R3**: only wild-bearing editing is built. A Huber cost inside the fits and the evidence
+  would change the registered fit code, which takes one sd for all bearings or one per row
+  of a problem with every row valid; editing needs neither. Not built, and said so.
+- **R4**: the correlated-error control does not whiten residuals. It estimates the
+  correlated share and time from the bearings' second differences (no fit needed, robust to
+  wild bearings) and gives the search one larger sd with the same spectral density at zero
+  frequency (`corr.effective`). It is right for anything slow (range, course, speed) and
+  cautious about when a manoeuvre happened. The variant told the true parameters is not
+  built.
+- **R5**: the broadened prior is a second `ManoeuvrePrior` (`configs/timelate/tl-broad.json`,
+  Annex B's ranges widened; not placed from either shifted split). The mixture is formed by
+  pooling the candidates of the two searches, each prior equally likely beforehand, which is
+  the same posterior and needs no new prior code. The diagnostic is the Bayes factor between
+  the two priors' best histories (`log_bayes_broad`), which replaces the per-history density
+  ratio.
+- **R6 deferred**: prior version 4 is not built in this pass. The declaration margin is
+  tuned on data and absorbs an over-credit that is roughly constant where invented
+  manoeuvres sit; the faults stay recorded in `experiments/20261113-tl3/review.md`. If the
+  tuning run shows the margin cannot bring held-course false manoeuvres under 0.10 at an
+  acceptable miss rate, version 4 is built before registration.
+- **The combined control `ctl`** (new): edit, estimate the correlation (used above a share
+  of 0.2), search under both priors and pool. It is what a system not told the conditions
+  would run, and it is the classical side of the registered comparison; the single-factor
+  controls are scored on their own splits for attribution (FR-020).
