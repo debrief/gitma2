@@ -137,3 +137,44 @@ is missed narrowly: 0.86 from 60 to 90 minutes and 1.00 beyond.
   fitting model is the simulator's own; bearing errors are independent Gaussian in the
   primary condition.
 - This record does not show that learning cannot help, nor that it would.
+
+## Corrections after the panel (2026-11-13; `review.md`, five approve with findings)
+
+The registered figures stand. The following statements above are corrected; figures marked
+"panel" are the reviewers' recomputations from the per-row errors and are in `review.md`, not
+in `tables.md`.
+
+- **D5.** The registered outcome is "no GPU budget". The paragraph above calling the decision
+  "a judgement, and it is the owner's" goes further than the rule allows: an override would
+  be a departure from the rule, not a reading of it. "Between 10% and 30%, most likely about
+  17%" is withdrawn. Fair wording: an oracle identifier is 8% to 30% ahead across the
+  registered sensitivities, and 11% to 19% at the registered threshold depending on how the
+  reference is fitted (panel); what a real identifier would obtain is less and unmeasured.
+- **D3 depends on the repaired reference.** A third of the composite's gain comes from the
+  19 replaced periods whose reference is held to the true times, which is more than
+  identification; ten periods carry over half of it (panel). The whole-engagement split's
+  headroom (1.22 [1.03, 1.48]) was omitted from the list, and the shifted, correlated and
+  outlier splits' figures rest on 21% to 30% held references.
+- **D1** is "between a third and a half": without the refit's ten worst periods 0.41
+  [0.29, 0.52] (panel). "Five readings on four seeds" is four readings on three seeds. The
+  repair did not move D1: with spec 014's search as the whole it is 0.36 on this seed
+  (panel). The fall-back rule caught one of the seven refits with a period median of 1 or more.
+- **D2.** The split between ambiguous and evidence failure is the threshold's (0.11 / 0.22 /
+  0.66 at threshold 1; 0.66 / 0.11 / 0.23 at 5; panel). Reading 6 is withdrawn.
+- **D4 and reading 1.** The remaining rate is the prior's leg term, confirmed by numerical
+  integration on 34 periods, but the low rate on short periods is not what a correct
+  evidence gives: integrated over where the manoeuvre might be, the prior favours "some
+  manoeuvre" almost everywhere. Version 3's pairing fails at the edges of the prior's
+  support and at the 10 s floor, where 179 of the 212 invented manoeuvres sit (1 to 3.5
+  nats; panel). The evidence repair is not finished.
+- **What the repairs changed.** The edge rule is worth about +0.10 in first candidate right
+  and the evidence repair +0.04 to +0.05 (panel); the table above shows only the second.
+- **Reading 7.** The mixed prior at a stated half is the expensive end of a curve: re-ranked
+  at a quiet probability of 0.01 the held-course false rate is 0.09 and one-manoeuvre targets
+  called quiet 0.14 (panel). Two-manoeuvre targets are called quiet in 0.085 under the
+  registered mix (`tables.md`).
+- **Reading 8.** Correlated errors multiply the false manoeuvres by about six, not three.
+- **Forecasts.** Five of seven rows held, not "seven of eight": D1 missed, and D4's "above
+  0.90 over an hour" missed (0.896). The forecasts restated the development run.
+- **"Checked by script".** The check was run in the session and the script is not committed;
+  only `tables.md` is generated.
