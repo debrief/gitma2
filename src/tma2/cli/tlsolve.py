@@ -56,6 +56,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--out", required=True, help="output prefix")
     ap.add_argument("--thin", help="spec 014: overrides the plan's settings.thinning")
+    ap.add_argument(
+        "--learned",
+        action="append",
+        default=[],
+        metavar="NAME=SHARD",
+        help="a tma2-tlpredict shard (without .npz) scored as NAME and NAME-arc (runner run4)",
+    )
     ap.add_argument("--systems", help="spec 014: overrides the plan's settings.systems")
     a = ap.parse_args(argv)
     from tma2.data.provenance import read_git_provenance
@@ -108,7 +115,12 @@ def main(argv: list[str] | None = None) -> int:
                 json.loads(Path(plan["prior_broad"]).read_text()), 3
             ),
         }
-        arrays, recs = run_shard4(periods, priors, c_params, c2, plan["settings"])
+        shards = dict(x.split("=", 1) for x in a.learned)
+        learned = {k: dict(np.load(f"{v}.npz")) for k, v in shards.items()}
+        arrays, recs = run_shard4(periods, priors, c_params, c2, plan["settings"], learned)
+        extra_learned = {
+            k: json.loads(Path(f"{v}.json").read_text())["header"] for k, v in shards.items()
+        }
         extra = {
             "runner": "run4",
             "prior_kinds": canonical_json(
@@ -174,9 +186,10 @@ def main(argv: list[str] | None = None) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     payload: dict[str, Any] = dict(arrays)
     np.savez_compressed(f"{out}.npz", **payload)
-    Path(f"{out}.json").write_text(
-        json.dumps({"header": header.model_dump(mode="json"), "periods": recs}) + "\n"
-    )
+    doc: dict[str, Any] = {"header": header.model_dump(mode="json"), "periods": recs}
+    if run4 and a.learned:
+        doc["learned"] = extra_learned
+    Path(f"{out}.json").write_text(json.dumps(doc) + "\n")
     print(f"{len(periods)} periods, {arrays['period'].size} scored rows -> {out}.npz, {out}.json")
     return 0
 

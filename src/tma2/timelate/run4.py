@@ -30,11 +30,13 @@ from tma2.types.generated.tma import SegmentParameters
 from .bound import period_bound
 from .corr import MIN_SHARE, edited, effective, estimate
 from .hedge import declared, elimination_path, hedged, pool
+from .learned import arc_readout
 from .match import cut_flags, same_history
 from .periods import Period
 from .prior import ManoeuvrePrior
 from .retest import Problem, joint_fit
 from .run2 import _history, _search, consistent, reference
+from .run3 import refit_acceptable
 from .score import row_errors, strata_of, truth_rows
 from .search import History
 from .systems import solve_systems
@@ -66,14 +68,24 @@ def run_shard4(
     c_params: SegmentParameters,
     c2: dict[str, Any],
     settings: dict[str, Any],
+    learned: dict[str, dict[str, np.ndarray]] | None = None,
 ) -> tuple[dict[str, np.ndarray], list[dict[str, Any]]]:
-    """``priors``: "v3" (Annex B) and "broad". Arrays: ``period``, ``bound``, ``stratum``,
+    """``priors``: "v3" (Annex B) and "broad". ``learned``: per model name, the arrays of a
+    ``tma2-tlpredict`` shard for these periods; each gives two systems, ``<name>`` (the
+    model's own track) and ``<name>-arc`` (the declared read-out: the arc model with Annex
+    B's prior fitted to the bearings ``ctl`` sees, at the model's manoeuvres, started from
+    the model's track; the model's own track where that fit fails or is not acceptable by
+    spec 015's rule for a refit).
+    Arrays: ``period``, ``bound``, ``stratum``,
     ``true_range`` and ``err_<system>`` at every ``score_every``-th row; for periods with
     ordinal below ``store_tracks``, ``trk_period``, ``trk_truth`` and ``trk_<system>`` at
     the same rows."""
     every = int(settings["score_every"])
     chosen = [s for s in SEARCHES if s in settings.get("systems", SEARCHES)]
     names = system_names(settings)
+    learned = learned or {}
+    for ln in learned:
+        names += [ln, f"{ln}-arc"]
     temps = [float(x) for x in settings.get("temperatures", [])]
     margins = [float(x) for x in settings.get("margins", [])]
     quiets = [float(x) for x in settings.get("quiets", [])]
@@ -208,6 +220,25 @@ def run_shard4(
                         hist[f"{name}-d{mg:g}-q{q:g}"] = {"spans": path[j].fit.spans.tolist()}
                 entry["declared"] = grid
             hist[name] = entry
+        for ln, arr in learned.items():
+            at = np.flatnonzero(arr["ordinal"] == x.ordinal)
+            if at.size != 1 or int(arr["rows"][at[0]]) != x.rows:
+                raise ValueError(f"period {x.ordinal}: no (or another) period in {ln}'s shard")
+            direct = arr["learned"][arr["row_period"] == x.ordinal].astype(np.float64)
+            spans = arr["spans"][arr["span_period"] == x.ordinal].astype(np.float64).reshape(-1, 2)
+            tracks[ln] = direct
+            hist[ln] = {"spans": spans.tolist()}
+            t1 = time.perf_counter()
+            try:
+                fit, kinds_l, ev_l = arc_readout(px, direct, spans, p3)
+                if not refit_acceptable(px, fit, direct, p3):  # spec 015's rule, no truth
+                    raise ValueError("the read-out is not a fit a system would accept")
+                tracks[f"{ln}-arc"] = fit.states
+                hist[f"{ln}-arc"] = _history(fit.spans, kinds_l, float(ev_l["total"]))
+            except ValueError:  # no acceptable fit: the model's own track stands
+                tracks[f"{ln}-arc"] = direct
+                hist[f"{ln}-arc"] = {"spans": spans.tolist(), "fell_back": True}
+            took[f"{ln}/arc"] = time.perf_counter() - t1
         rec["histories"] = hist
         rec["seconds"] = {k: round(float(s), 2) for k, s in took.items()}
         bounds.append(period_bound(x)[pick])
