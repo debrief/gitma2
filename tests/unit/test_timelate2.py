@@ -105,7 +105,7 @@ def test_flat_prior_is_constant_inside_the_box() -> None:
     informed = ManoeuvrePrior.from_ranges(RANGES, version=2)
     assert prior_residuals(informed, a, sa, kinds).size == r.size
     with pytest.raises(ValueError):
-        ManoeuvrePrior.from_ranges(RANGES, version=3)
+        ManoeuvrePrior.from_ranges(RANGES, version=9)
 
 
 def test_counts_match_nearest_and_ignore_edge_manoeuvres() -> None:

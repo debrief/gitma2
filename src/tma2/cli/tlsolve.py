@@ -33,6 +33,7 @@ STUDY_FILES = (
     "smooth.py",
     "thin.py",
 )  # spec 014's additions
+REPAIR_FILES = (*STUDY_FILES, "match.py", "run3.py")  # spec 015
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -87,13 +88,32 @@ def main(argv: list[str] | None = None) -> int:
     refs = plan.get("references") or {}
     imm = parse_imm_name(refs["imm"]) if refs.get("imm") else None
     ekf = parse_ekf_name(refs["ekf"]) if refs.get("ekf") else None
-    run2 = plan.get("runner") == "run2"
+    run3 = plan.get("runner") == "run3"
+    run2 = plan.get("runner") == "run2" or run3
     if a.thin:
         plan["settings"]["thinning"] = a.thin
     if a.systems:
         plan["settings"]["systems"] = a.systems.split(",")
     extra: dict[str, Any] = {}
-    if run2:
+    if run3:
+        from tma2.timelate.run3 import run_shard3
+
+        ranges = json.loads(Path(plan["prior"]).read_text())
+        kinds = {
+            "v2": (2, "annex-b"),
+            "v3": (3, "annex-b"),
+            "flat3": (3, "flat"),
+            "mix3": (3, "mix"),
+        }
+        priors = {k: ManoeuvrePrior.from_ranges(ranges, *vk) for k, vk in kinds.items()}
+        arrays, recs = run_shard3(periods, priors, c_params, c2, plan["settings"])
+        extra = {
+            "runner": "run3",
+            "prior_kinds": canonical_json({k: list(vk) for k, vk in kinds.items()}),
+            "thinning": "none",
+            "condition": str(plan["splits"][a.split].get("condition", "clean")),
+        }
+    elif run2:
         from tma2.timelate.run2 import run_shard2
 
         ranges = json.loads(Path(plan["prior"]).read_text())
@@ -119,7 +139,9 @@ def main(argv: list[str] | None = None) -> int:
         ordinal_start=a.start,
         ordinal_count=len(periods),
         c_code_sha256=str(c2.get("code_sha256", "")),
-        search_code_sha256=search_code_digest(STUDY_FILES if run2 else ()),
+        search_code_sha256=search_code_digest(
+            REPAIR_FILES if run3 else (STUDY_FILES if run2 else ())
+        ),
         prior_sha256=sha256_file(plan["prior"]),
         settings=canonical_json(plan["settings"]),
         git_commit=g.commit,

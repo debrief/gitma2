@@ -24,6 +24,14 @@ a manoeuvre on four held-course periods in five) is Annex B's prior for a target
 manoeuvres, mixed with a target that never does: with probability ``QUIET`` there are no
 manoeuvres at all. Only the weight of the no-manoeuvre history changes; ``QUIET`` is a stated
 half, not a tuned value.
+
+Version 3 (spec 015, research R1) repairs what spec 014's panel found: version 2 still gave a
+manoeuvre's duration a fixed stand-in volume of about 600 s against a sharp density (20 to
+120 s for a minimum-size change), over-crediting every small, short manoeuvre. In version 3
+every factor that has no Gaussian residual gets the volume its own density implies
+(``open_precision``: precision 2π·density², volume 1 / density), so a direction the bearings
+leave open contributes density × volume = 1. The leg's survival and tail use the renormalised
+leg density, and the flat prior no longer carries an m! it did not pair with a volume.
 """
 
 from __future__ import annotations
@@ -59,7 +67,7 @@ class ManoeuvrePrior:
     def from_ranges(
         cls, r: dict[str, Any], version: int = 1, kind: str = "annex-b"
     ) -> ManoeuvrePrior:
-        if version not in (1, 2) or kind not in ("annex-b", "flat", "mix"):
+        if version not in (1, 2, 3) or kind not in ("annex-b", "flat", "mix"):
             raise ValueError(f"unknown prior version {version!r} or kind {kind!r}")
 
         def pair(k: str) -> tuple[float, float]:
@@ -126,8 +134,13 @@ def _flat_box() -> tuple[float, float, float, float]:
 
 
 def _leg_sf(p: ManoeuvrePrior, g: float) -> float:
-    """P(leg > g)."""
-    return 1.0 if g < p.leg_min else 1.0 - _phi((g - p.leg_mean) / p.leg_sd)
+    """P(leg > g). Version 3: of the leg density renormalised above its minimum."""
+    if g < p.leg_min:
+        return 1.0
+    sf = 1.0 - _phi((g - p.leg_mean) / p.leg_sd)
+    if p.version >= 3:
+        sf /= 1.0 - _phi((p.leg_min - p.leg_mean) / p.leg_sd)
+    return sf
 
 
 def _leg_tail(p: ManoeuvrePrior, g: float) -> float:
@@ -215,7 +228,7 @@ def _log_prior_flat(
     prior (speed on every leg, position, course) is the informed prior's."""
     m = spans.shape[0]
     turn, dvmax, dmin, dmax = _flat_box()
-    legs = math.lgamma(m + 1) - m * math.log(max(t_end, 1.0))
+    legs = (math.lgamma(m + 1) if p.version < 3 else 0.0) - m * math.log(max(t_end, 1.0))
     changes = 0.0
     speed = float(theta[3])
     state = log_soft_uniform(speed, *p.speed)
@@ -265,6 +278,57 @@ def prior_precision(p: ManoeuvrePrior, m: int, range0: float, t_end: float = 0.0
         ]
     d += ([1 / p.leg_sd**2] + [0.0] * (m - 1)) if m else []
     d += [1 / (p.angle[1] / p.turn_rate[0] / 2) ** 2] * m
+    return np.array(d)
+
+
+def open_precision(
+    p: ManoeuvrePrior,
+    theta: np.ndarray,
+    spans: np.ndarray,
+    kinds: np.ndarray,
+    range0: float,
+    t_end: float,
+) -> np.ndarray:
+    """Version 3's stand-in precisions, in ``prior_precision``'s order: for each parameter
+    whose prior factor has no Gaussian residual, 2π × (that factor's density at the fit)², so
+    its Gaussian volume is the reciprocal of the density. A manoeuvre's duration d given its
+    size a has density u(a / d) · a / d², u the rate's density (the turn's for a combined
+    manoeuvre, as in ``log_prior``). Interior legs have residuals and get none here."""
+    m = spans.shape[0]
+    two_pi = 2.0 * math.pi
+
+    def dens(x: float, lo: float, hi: float) -> float:
+        return math.exp(log_soft_uniform(x, lo, hi))
+
+    if p.kind == "flat":
+        turn, dvmax, dmin, dmax = _flat_box()
+        r = max(range0, p.range0[0])
+        d = [1 / r**2, 1 / r**2, 1 / two_pi, two_pi * dens(float(theta[3]), *p.speed) ** 2]
+        for _ in range(m):
+            d += [two_pi / (2 * turn) ** 2, two_pi / (2 * dvmax) ** 2]
+        d += [two_pi / max(t_end, 1.0) ** 2] * m
+        d += [two_pi / (dmax - dmin) ** 2] * m
+        return np.array(d)
+    lo, hi = p.range0[0] / 4.0, p.range0[1] * 4.0
+    r = min(max(range0, 1.0), 1e9)
+    xy = 1.0 / (r * r * math.log(hi / lo))  # 2π × the position's density
+    d = [xy, xy, 1 / two_pi, two_pi * dens(float(theta[3]), *p.speed) ** 2]
+    durs: list[float] = []
+    for i in range(m):
+        a, b = abs(float(theta[4 + 2 * i])), abs(float(theta[5 + 2 * i]))
+        dur = max(float(spans[i, 1] - spans[i, 0]), 1e-3)
+        has_c, has_v = bool(kinds[i, 0]), bool(kinds[i, 1])
+        d.append(two_pi * (0.5 * dens(max(a, 1e-6), *p.angle)) ** 2 if has_c else 1.0)
+        d.append(two_pi * (0.5 * dens(max(b, 1e-6), *p.dv)) ** 2 if has_v else 1.0)
+        if has_c:
+            size, rate = max(a, 1e-6), p.turn_rate
+        else:
+            size, rate = max(b, 1e-6), p.acc
+        durs.append(two_pi * (dens(size / dur, *rate) * size / (dur * dur)) ** 2)
+    if m:
+        first = _leg_sf(p, float(spans[0, 0])) / _leg_tail(p, 0.0)
+        d += [two_pi * first * first] + [0.0] * (m - 1)
+    d += durs
     return np.array(d)
 
 

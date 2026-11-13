@@ -32,7 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     reading: dict[str, Any] = {}
-    study = plan.get("runner") == "run2"
+    repair = plan.get("runner") == "run3"
+    study = plan.get("runner") == "run2" or repair
     for split in plan["splits"]:
         files = sorted(
             Path(a.shards).glob(f"{split}.*.json"), key=lambda p: int(p.name.split(".")[1])
@@ -56,8 +57,9 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"{split}: a period appears in two shards")
         if study:
             from tma2.timelate.study import study_split
+            from tma2.timelate.study3 import study_split3
 
-            r2 = study_split(arr, periods, plan)
+            r2 = (study_split3 if repair else study_split)(arr, periods, plan)
             for key in ("dataset_digest", "seed", "search_code_sha256", "git_commit"):
                 r2[key] = sorted({h[key] for h in headers})
             r2["git_dirty"] = any(h["git_dirty"] for h in headers)
@@ -129,6 +131,24 @@ def main(argv: list[str] | None = None) -> int:
         payload: dict[str, Any] = dict(arr)
         np.savez_compressed(out / f"{split}.errors.npz", **payload)
         (out / f"{split}.periods.json").write_text(json.dumps(periods) + "\n")
+    if repair:
+        from tma2.timelate.study3 import soundness3
+
+        sound = soundness3(reading, plan) if "man2" in reading else None
+        summary3 = {
+            "plan": a.plan,
+            "plan_sha256": digest,
+            "scorer_git_commit": g.commit,
+            "scorer_git_dirty": g.dirty,
+            "study": plan["study"],
+            "soundness": sound,
+            "splits": reading,
+        }
+        (out / "summary.json").write_text(json.dumps(summary3, indent=1) + "\n")
+        print("soundness", json.dumps(sound))
+        for split, r in reading.items():
+            print(f"{split}: {r['periods']} periods, {r['periods_scored']} scored")
+        return 3 if a.gate and sound is not None and not sound["pass"] else 0
     if study:
         return _study_report(a, plan, digest, g, reading, out)
     if "man2" not in reading:
