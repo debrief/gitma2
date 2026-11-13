@@ -50,7 +50,10 @@ jobs:
           MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
         run: |
           test -n "$MODAL_TOKEN_ID" || { echo "MODAL_TOKEN_ID is not set (owner-only)"; exit 1; }
-          uv run --with modal modal run scripts/modal_train.py \
+          # a call that never starts training must not wait for hours: the segment's limit
+          # plus 25 minutes for the image, the queue and saving
+          LIMIT=$(python3 -c "import json; print(json.load(open('configs/regress/${{ steps.plan.outputs.name }}.json'))['segment_limit_seconds'] + 1500)")
+          timeout "$LIMIT" uv run --with modal modal run scripts/modal_train.py \
             --plan "configs/regress/${{ steps.plan.outputs.name }}.json" \
             --out "$RUNNER_TEMP/out" --run-name "${{ steps.plan.outputs.name }}-${{ github.run_id }}" \
             --commit "${{ github.sha }}"
@@ -72,7 +75,8 @@ jobs:
           MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
           MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
         run: |
-          uv run --with modal modal run scripts/modal_train.py \
+          LIMIT=$(python3 -c "import json; print(json.load(open('configs/regress/${{ needs.segment1.outputs.name }}.json'))['segment_limit_seconds'] + 1500)")
+          timeout "$LIMIT" uv run --with modal modal run scripts/modal_train.py \
             --plan "configs/regress/${{ needs.segment1.outputs.name }}.json" \
             --out "$RUNNER_TEMP/out" --run-name "${{ needs.segment1.outputs.name }}-${{ github.run_id }}" \
             --commit "${{ github.sha }}"
