@@ -300,6 +300,12 @@ and recorded, not asked.
   repair and re-register (spec 015). The evidence, the classing and the reference are
   repaired, and the same quantities are decided again on fresh seeds (336 validation, 337
   test), with the spent seeds 333 to 335 as development data. Nothing trained, no GPU run.
+- **2026-11-13 (agent, proposed; owner to merge):** spec 015's study is registered
+  (`experiments/20261113-tl3-decision/`): spec 014's four quantities decided again on test
+  seed 337 with the repaired evidence, one rule for manoeuvres cut by a period, a reference
+  held where it drifts and a refit control with a fall-back. The rule for a learned
+  whole-period model is unchanged; the record is to state its output and, separately, what
+  the evidence supports.
 
 ## Annexes
 

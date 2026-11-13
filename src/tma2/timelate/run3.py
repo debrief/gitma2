@@ -50,16 +50,20 @@ def track_cost(pb: Problem, states: np.ndarray) -> float:
 def refit_acceptable(
     pb: Problem, fit: Structure, c_states: np.ndarray, prior: ManoeuvrePrior
 ) -> bool:
-    """Whether a refit of C″'s transitions is kept (research R4; no truth): finite, fitting
-    the bearings no worse than C″'s own track by more than ``WORSE``, at a speed and range a
-    target could have."""
+    """Whether a refit of C″'s transitions is kept (research R4; no truth): finite, at a
+    speed and range a target could have, and either fitting the bearings as well as their
+    noise allows or no worse than C″'s own track by more than ``WORSE``. (The chord track has
+    four free unknowns a manoeuvre, so a sound arc refit may cost more than it: the first
+    form of this rule, cost against the track alone, fell back in 26 of 200 development
+    periods.)"""
     if not np.isfinite(fit.states).all() or not np.isfinite(c_states).all():
         return False
     speed = float(np.hypot(fit.states[:, 2], fit.states[:, 3]).max())
     rng = float(np.hypot(fit.states[:, 0] - pb[1], fit.states[:, 1] - pb[2]).max())
     if speed > SPEED_MAX * prior.speed[1] or rng > 16.0 * prior.range0[1]:
         return False
-    return fit.cost <= track_cost(pb, c_states) + WORSE
+    n = int(pb[4].sum())
+    return consistent(float(fit.cost), n) or fit.cost <= track_cost(pb, c_states) + WORSE
 
 
 def run_shard3(

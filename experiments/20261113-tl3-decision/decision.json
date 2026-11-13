@@ -1,0 +1,74 @@
+{
+ "study": "spec 015: time-late, repair and re-registration",
+ "registered": "2026-11-13",
+ "digests": {
+  "configs/timelate/tl-d.json": "a65560592dd419337599d73a2442a2896e8be2696fce0ec6dd53fd81d1576d92",
+  "configs/timelate/runs/tl-d-val.json": "78709f21dc6415496bd721e1f50d27e53a585a9aade6f327b852989be39af135",
+  "configs/timelate/runs/tl-d-test.json": "a2890ecbd31db1337d952b17421ddc5894a4fda1ffa7660df7a36b3347d84a98",
+  "configs/timelate/tl-ranges.json": "cb48fcabb5a51f76685cab482e23f01cb53c504406a1654c2ec1b664216a4784",
+  "configs/timelate/tl-shift-ranges.json": "bc76abf0d5916f4a91909ebb6ef90e84438eae2ee1142e6607c21823d489081b",
+  "configs/timelate/tl-quiet-ranges.json": "a964509642c46015db6c38dc7b6c774c3cf36d992d3be954a10627be1368782b",
+  "configs/timelate/tl-heldout.json": "aeedfe10ca841d95d1cf2026382c43afe59c548aef9f5fed9fe07e16d3832634",
+  "configs/gateh/conditions.json": "d260fd7538d2fbcbc8c25cfd402a091ed9d50bf254a79bfd2c6c5bcc4b634e15",
+  "configs/gateh/gh-a.json": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a"
+ },
+ "time_late_code_sha256": "3b67d0267f2b99c75e7bea0d408989d2de5a308581d440511c63b71465585ec9",
+ "scorer_files": {
+  "src/tma2/timelate/study3.py": "c32e2a3fc11a68f5649f6ccf5dcc58089a0e4cd41b1ad1639d0f30dae662e255",
+  "src/tma2/timelate/study.py": "a17c54155cf1cf8c2a65595faf3811fa6b4ab2b979275533db33d8388c6c3883",
+  "src/tma2/timelate/gate.py": "fd31e1c82759c8a0f5a0161b504b3979e6affe813d0f3bb0ba846ab79f1030c7",
+  "src/tma2/timelate/match.py": "fff96f28bee96c75361d7f0bf97624f5437a6beeb315129a7585be0428c9a7ab",
+  "src/tma2/cli/tlscore.py": "6c7f16a9e5f25fb380ae6ae0ee3a4327846d833cf0fa2eb4c68b91d505b1c87a",
+  "src/tma2/cli/tlsolve.py": "ec80661597abd9aee2bd3ae2369168294ecd8145abd7c3d5b93bf8f968119613",
+  "scripts/research/tl3_tables.py": "ca6a1e6087121053881b10928855a6f2ed6d4fa3870ef3881534f8817c76f0df"
+ },
+ "seeds": {
+  "development (spent)": [
+   333,
+   334,
+   335
+  ],
+  "validation": 336,
+  "test": 337
+ },
+ "criteria": {
+  "class_threshold": 3.0,
+  "match_tolerance_s": 120.0,
+  "materiality": 1.1,
+  "soundness_band": [
+   0.8,
+   1.3
+  ],
+  "convergence_min": 0.9,
+  "quiet_interval_halfwidth_max": 0.05,
+  "reference_flagged_max": 0.25
+ },
+ "decided": {
+  "D1": "share of the log gain C″ → search3 that c2-refit (with its fall-back) obtains, Annex B test split, scored periods, 95% interval",
+  "D2": "among scored periods where search3's first candidate is not the true history by the edge-aware rule: shares ambiguous, search failure, evidence failure (threshold 3, 120 s)",
+  "D3": "attainable headroom: geometric mean per-period ratio search3 ÷ ident-search and search3 ÷ ident-all (the reference held where it drifts), each material / not material / inconclusive against 1.10",
+  "D4": "share of the 400 held-course periods on which a manoeuvre is declared, for search3, C″, search3-flat and search3-mix",
+  "D5": "recommendation on a learned whole-period model by spec 014's rule, unchanged"
+ },
+ "changed_definitions": [
+  "the search is search3 (prior version 3: every open factor's volume is the reciprocal of its density)",
+  "a found history is the true one by match.same_history (manoeuvres cut by the period are ignored), in the classing, the candidates and the counts",
+  "D2's shares are of scored periods (spec 014: of all periods)",
+  "the true-history reference is held to the true times where it fails the match rule (flagged); D3 is also reported without flagged periods",
+  "c2-refit falls back to C″'s track when its fit is not acceptable (research R4, as changed on development data); D1 is also reported without fall-back periods"
+ ],
+ "forecasts": {
+  "D1": "0.50; the interval includes 0.5 and excludes 0.25 and 0.75",
+  "D2": "first candidate right in 0.63 of scored periods; among wrong: ambiguous 0.50, search failure 0.12, evidence failure 0.38",
+  "D3": "ident-search: inconclusive or not material, point 1.05 to 1.08; ident-all: point 1.12 to 1.20, verdict a coin's toss between inconclusive and material",
+  "D4": "search3 0.50 (between 0.44 and 0.56); C″ 0.02; flat prior 0.01; mixed prior 0.01. By length for search3: under 0.15 below 30 minutes, above 0.90 over 60 minutes",
+  "soundness": "pass: reference at 1.0 to 1.15 of the bound on tight rows; every fit consistent; 12% to 18% of references held",
+  "reported": "search2 ÷ search3 1.03 on Annex B data and 1.15 to 1.20 on held course; refit fall-backs under 5% of periods; the mixed prior calls a one-manoeuvre target quiet in about 0.2 of periods against 0.1 for search3; headroom with a perfect evidence material under the shifted prior and both error conditions"
+ },
+ "recommendation_rule": "Spec 014's, unchanged: pursue a learned whole-period model only if the ident-all headroom is material on the Annex B test split. The record states the rule's output and, separately, what the evidence supports and is silent on (FR-013).",
+ "soundness_stop": "validation seed 336: history-fixed range efficiency on rows bounded below 0.05 within [0.8, 1.3]; at least 0.90 of true-history fits with a consistent cost; at most 0.25 of references held. Otherwise seed 337 is not generated.",
+ "changed_after_development": [
+  "the refit's fall-back keeps a fit whose cost the noise explains (the first form fell back in 26 of 200 periods); untested on any run",
+  "the stop's limit on held references is 0.25 (drafted at 0.15; the development periods gave 0.15)"
+ ]
+}
