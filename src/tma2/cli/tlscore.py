@@ -38,7 +38,8 @@ def main(argv: list[str] | None = None) -> int:
     out.mkdir(parents=True, exist_ok=True)
     reading: dict[str, Any] = {}
     any_learned = False
-    controls = plan.get("runner") == "run4"
+    shifted = plan.get("runner") == "run5"
+    controls = plan.get("runner") == "run4" or shifted
     repair = plan.get("runner") == "run3" or controls
     study = plan.get("runner") == "run2" or repair
     for split in plan["splits"]:
@@ -74,7 +75,12 @@ def main(argv: list[str] | None = None) -> int:
                 any_learned = any_learned or learned_here
                 if learned_here:
                     _require_controls_record(a.controls_record, digest)
-                r2 = study_split4(arr, periods, plan)
+                if shifted:
+                    from tma2.timelate.study5 import study_split5
+
+                    r2 = study_split5(arr, periods, plan)
+                else:
+                    r2 = study_split4(arr, periods, plan)
             else:
                 r2 = (study_split3 if repair else study_split)(arr, periods, plan)
             for key in ("dataset_digest", "seed", "search_code_sha256", "git_commit"):
