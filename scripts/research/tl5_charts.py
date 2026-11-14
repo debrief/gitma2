@@ -164,7 +164,8 @@ def main(argv: list[str] | None = None) -> int:
         fig, ax = plt.subplots(figsize=(7.6, 3.8))
         cols = [grey, purple, orange, green]
         for i, (k, lab) in enumerate(have):
-            gs = sp[k]["gap_split"].get(CONTROL)
+            # under outliers the yardstick is the reference fitted to the edited bearings
+            gs = (sp[k].get("gap_split_edited") or sp[k]["gap_split"]).get(CONTROL)
             if not gs:
                 continue
             xs = np.arange(len(THRESHOLDS)) + (i - (len(have) - 1) / 2) * 0.12

@@ -436,12 +436,36 @@ fresh seed is 342.
 **Owner 2026-11-14: option A (spec 017)**: the classical control `ctl` (declared at margin 1, quiet
 probability 0.01) is the standing time-late system; one classical study of whether the
 shifted-prior gap is identifiability, CPU only, nothing trained; what study L's record owes is made
-good. 017 (`specs/017-shifted-gap/`; in progress): `timelate/detect.py` (a true manoeuvre's
-detectability: the χ² its omission adds, times held; references told only the detectable ones),
-`run5.py` (plan key `runner: run5`: `run4`'s control unchanged, `ref-full`, `ref-dT`, the search
-under the split's own prior `true`, IMM and EKF as tracks, references on edited bearings),
-`study5.py` (the gap split into an attainable share and identifiability; the rule reads the
-attainable share at threshold 20 against 0.5). Seeds 342 tuning, 343 validation, 344 test.
+good. 017 (`specs/017-shifted-gap/`; done; a registered study, not a gate; nothing trained):
+`timelate/detect.py` (a true manoeuvre's detectability: the χ² its omission adds, times held;
+references told only the detectable ones), `run5.py` (plan key `runner: run5`: `run4`'s control
+unchanged, `ref-full`, `ref-dT`, the search under the split's own prior `true`, IMM and EKF as
+tracks, references on edited bearings), `study5.py`, `scripts/research/tl5_{tables,supplement,
+tracks,charts}.py`, workflow `headers/**`. Tuning seed 342 (`experiments/20261114-tl5-tuning/`),
+decision `20261114-tl5-decision/` (plan `configs/timelate/tl-f.json` `0b29a95d…`, code
+`b32247f8…`, never edited; no decision rule, five estimands and the recommendation's logic fixed),
+validation seed 343 (`20261114-tl5-val/`, soundness passed), **test record
+`experiments/20261114-tl5/` (seed 344, shifted split 451 scored periods): 0.37 of true manoeuvres
+are under a detectability of 20 (Annex B 0.16); control ÷ full reference 2.27 [2.04, 2.55]; not
+being told those under 20 costs 1.58; control ÷ that reference 1.43 [1.28, 1.61]; attainable share
+0.65 / 0.44 / 0.14 at thresholds 10 / 20 / 40; control ÷ true-prior search 1.17 [1.06, 1.29]; by
+the fixed logic a proposer study is not recommended (the control misses 0.18, not over a third, of
+manoeuvres above 40). Decided by the panel, round 1** (`review.md`, five approve with findings).
+Narrowed: the pooled split is two kinds of period (some manoeuvre under 20, 336 periods: control ÷
+`ref-d20` 1.16; none, 115: 2.65; the 134 periods where the control misses a manoeuvre above 20
+carry 83% of the attainable gap, 2.73 against 1.09 elsewhere; share 0.70 where the bound is tight,
+0.20 where loose); the logic's second condition counted manoeuvres, not cost, and turns on the
+match tolerance (0.30 / 0.18 / 0.11 at 60 / 120 / 240 s): the "no" is the rule's, not the
+evidence's; the attainable part is at least half a prior problem (of 138 missed manoeuvres above
+40 the true-prior search finds 66; E5 2.58 where it finds more, 1.07 elsewhere); detectability is
+not additive and the references are flattered by true times and handicapped by hard omission, so
+E3 and E4 are not bounds; the IMM/EKF ratios in the first record were on 40% of periods (on common
+rows 3.8 to 10.5). Not delivered: the split under each way of fitting the reference, course and
+speed in the estimands, a joint detectability, unit tests for `detect.py`/`run5.py`. Write-up
+`site/blog/2026-11-14-shifted-gap.md`, slides `2026-11-14-shifted-gap-slides.md`. Panel's order
+(owner's choice): a manoeuvre prior that adapts to the period (classical, CPU; registered against
+`ctl`, true-prior search as ceiling, false manoeuvres on held course reported), a hedged track
+beside; no GPU proposer now. Seeds 342 to 344 used; 324, 325 unused; the next fresh seed is 345.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -789,6 +813,14 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   rows. Record the weights' digest in the scored record, not only in shard headers. A change of
   shard size reaches every system that starts from C″. Never edit a file the decision record
   binds while its run is in progress, even to add a field; put new readings in a new script.
+- Spec 017 panel: before registering a recommendation's logic, check each condition could fire
+  on tuning data and that it measures cost, not counts (a pooled miss rate hid that 22% of
+  periods carried 69% of the gap), and state its sensitivity to the matching tolerance. Split any
+  pooled "share" by the kind of period before naming it. A single-omission detectability is not
+  additive: check joint omission before calling manoeuvres hidden. A reference told true times is
+  flattered even with the right structure; do not call an estimand built on it a bound. A filter
+  with no state on early rows drops most periods from a paired period-median: report the period
+  count beside every paired ratio. A test value inside the tuning interval is not a disagreement.
 - Modal: functions must be defined at module scope with the decorator; functions built in a loop
   with `serialized=True` cannot be imported in the container ("the 'modal_train' module is not
   available"), and Modal retries the failed start for as long as the client waits. Bound the
