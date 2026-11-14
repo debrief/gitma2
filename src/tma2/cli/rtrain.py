@@ -1,4 +1,6 @@
-"""``tma2-rtrain``: train the regressor control (spec 012 contracts/cli.md)."""
+"""``tma2-rtrain``: train the regressor control (spec 012 contracts/cli.md) or, with a
+configuration whose ``data`` is "periods", the whole-period model (spec 016). ``--config`` is a
+configuration or a plan that carries one."""
 
 from __future__ import annotations
 
@@ -18,10 +20,11 @@ def main(argv: list[str] | None = None) -> int:
     from tma2.regress.model import RegressorConfig
     from tma2.regress.train import train
 
-    cfg = RegressorConfig(**json.loads(Path(a.config).read_text()))
+    raw = json.loads(Path(a.config).read_text())
+    cfg = RegressorConfig(**raw.get("config", raw))
     rec = train(cfg, Path(a.out), a.device, Path(a.resume) if a.resume else None, a.limit_seconds)
     print(
-        f"{rec['stopped']}: {rec['updates']} updates, {rec['scenarios_seen']} scenarios, "
+        f"{rec['stopped']}: {rec['updates']} updates, {rec['scenarios_seen']} {cfg.data}, "
         f"{rec['scenarios_per_second']:.0f} per second"
     )
     return 0

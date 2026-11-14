@@ -1,0 +1,133 @@
+{
+ "study": "spec 016: time-late, classical controls and a learned whole-period model (study L)",
+ "registered": "2026-11-13",
+ "owner_decision": "2026-11-13, option B",
+ "digests": {
+  "configs/timelate/tl-e.json": "82cd70ee700a19c417ea03022c2c6a70fc01f3adb8a5208f58f1ef2cef4f4647",
+  "configs/timelate/runs/tl-e-val.json": "ee8d2d3c0be88c5ed3603f6f8394c167d12c0345f74c2a861f9f8f63bb5ccf71",
+  "configs/timelate/tl-ranges.json": "cb48fcabb5a51f76685cab482e23f01cb53c504406a1654c2ec1b664216a4784",
+  "configs/timelate/tl-broad.json": "2ff99a3a2abc3696114d1a234f166e22d4d6cf494dd28631d9dd0d495a0203a1",
+  "configs/timelate/tl-shift-ranges.json": "bc76abf0d5916f4a91909ebb6ef90e84438eae2ee1142e6607c21823d489081b",
+  "configs/timelate/tl-shift2-ranges.json": "1ce6b6edec93721eb64381c5d3a98c82a62e027d6386f476487147f141338b47",
+  "configs/timelate/tl-quiet-ranges.json": "a964509642c46015db6c38dc7b6c774c3cf36d992d3be954a10627be1368782b",
+  "configs/timelate/tl-heldout.json": "aeedfe10ca841d95d1cf2026382c43afe59c548aef9f5fed9fe07e16d3832634",
+  "configs/gateh/conditions.json": "d260fd7538d2fbcbc8c25cfd402a091ed9d50bf254a79bfd2c6c5bcc4b634e15",
+  "configs/gateh/gh-a.json": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a",
+  "configs/regress/tlm-mix.json": "ea4124c0575a65458084a795c16cf26593f69bec28f1844bb8c6d7d617020966",
+  "configs/regress/tlm-s1.json": "fdff4b64d6078b44fa90afe2c49860fd0b15da3d2f7eab9698734007586cfaf2",
+  "configs/regress/tlm-s2.json": "d179059c0590231900e34591633a82b913443177f5ac175a966b94278c03d19a",
+  "configs/regress/tlm-s3.json": "3b436d0a6bfbe3a958a855cfbe1894c62a9d7924af6ae68f9f8df8bfe98f2fa3"
+ },
+ "training_config_sha256": {
+  "tlm-s1": "537b1a6bfb2ccfc3e4a1c57c17971fada306e8d43593c15c32282e0233fd1b73",
+  "tlm-s2": "08370981bbafe9a33fd31132859acb66053cbbffbb54795a846987eb0de6d69b",
+  "tlm-s3": "36e234b5d83c54d21f93f93364f9f0ae7bb5a4dbb8ab0a74180b324d0ae84fff"
+ },
+ "time_late_code_sha256": "e5040f5e8df5bfea978594da2559d1073ab283bcedc53794e99fea6a77eb70a6",
+ "files": {
+  "src/tma2/timelate/study4.py": "242cd6fc0acbb5d89b61e3cd0dc96fb48270d979d914a8b1157949b149b27d61",
+  "src/tma2/timelate/study.py": "a17c54155cf1cf8c2a65595faf3811fa6b4ab2b979275533db33d8388c6c3883",
+  "src/tma2/timelate/study3.py": "c32e2a3fc11a68f5649f6ccf5dcc58089a0e4cd41b1ad1639d0f30dae662e255",
+  "src/tma2/timelate/match.py": "fff96f28bee96c75361d7f0bf97624f5437a6beeb315129a7585be0428c9a7ab",
+  "src/tma2/cli/tlscore.py": "181c9abfa948157b620d57b4258ebb7be93ea9b7d9040bc32cb8e51c3dd6ade9",
+  "src/tma2/cli/tlsolve.py": "0e527b886969b56a67361a21a59d6d41e6198dac595b6614fe6dc1e4328926b0",
+  "src/tma2/cli/tlpredict.py": "30c2c15761e7fce7ca932981d97d3374e9c686672966858dd5301a9d5cd5a7e2",
+  "src/tma2/regress/period_data.py": "965c3b3932c1655bcfcbcb6559a511adb71c0a1b94b36d7ba0c2a670e979bfbc",
+  "src/tma2/regress/period_predict.py": "ced7178d891e8ef7614b7aa0053b1d5d2fb0b08698f2203d21ecadaf6fecbee1",
+  "src/tma2/regress/model.py": "c4422ccaf37a566721969e8e0f2a31e8c242bfe1ca91c640f9cd6344b644ea13",
+  "src/tma2/regress/train.py": "e7400fb888b66f528b113fcef7c4df07360c972ce72443eeeb81827e189358ed",
+  "src/tma2/regress/frame.py": "bc4284503b84f90cd1e747eb5ca5a906cd2ed6d955b932f69a23b934a0dec667",
+  "scripts/modal_train.py": "534ff3c7fbab8e3cc38985574f916fbd06c7caa2d0bd6176ad82eb375fb72b06",
+  "scripts/research/tl4_tables.py": "edfc6d137fb8ba9a31c36c114e5f3e7b56a77403586c86e708e760d1fd397d8c",
+  ".github/workflows/timelate.yml": "e97b82c709b43721eb928fdfb6d572e2909f2a11d822218f6f8e9d6528d561ba",
+  ".github/workflows/gputrain.yml": "e6d7a7dfcef11de4fe26a98d53112681838131dd4298c0c96f55eb9097df20a0"
+ },
+ "seeds": {
+  "tuning (spent)": 338,
+  "training stream and its monitor slice": 339,
+  "validation (controls only)": 340,
+  "test": 341
+ },
+ "test_splits": {
+  "man2": {
+   "start": 0,
+   "periods": 400
+  },
+  "shift": {
+   "start": 0,
+   "periods": 400
+  },
+  "shift2": {
+   "start": 0,
+   "periods": 400
+  },
+  "quiet": {
+   "start": 0,
+   "periods": 300
+  },
+  "man2-corr-mild": {
+   "start": 0,
+   "periods": 200
+  },
+  "man2-corr": {
+   "start": 0,
+   "periods": 300
+  },
+  "man2-out": {
+   "start": 0,
+   "periods": 300
+  },
+  "man2-out-harsh": {
+   "start": 0,
+   "periods": 200
+  },
+  "man2-bias": {
+   "start": 0,
+   "periods": 300
+  },
+  "whole": {
+   "start": 0,
+   "periods": 60
+  }
+ },
+ "systems": {
+  "standing search": "search3",
+  "declared control": "ctl-d1-q0.01",
+  "hedged control": "ctl-h1",
+  "learned (reported track)": [
+   "learned-s1-arc",
+   "learned-s2-arc",
+   "learned-s3-arc"
+  ],
+  "learned (direct, reported beside)": [
+   "learned-s1",
+   "learned-s2",
+   "learned-s3"
+  ]
+ },
+ "statistic": "per period, the median relative range error over scored rows (30 s apart, known-history bound below 0.5); a ratio a ÷ b is the geometric mean over periods with a 95% period bootstrap (2,000 resamples, seed 17, percentile); a side wins when the interval is wholly above 1 and loses when wholly below",
+ "criteria": {
+  "L-a": "validation seed 340, controls only: history-fixed range efficiency on rows bounded below 0.05 within [0.8, 1.3]; at least 0.9 of true-history fits with a consistent cost; at most 0.25 of references held. Fails: the study stops before the test seed",
+  "L-b": "reported, no line: search3 ÷ ctl-d1-q0.01 on shift, shift2, man2-corr, man2-out, and the share of the gap from search3 to history-best that ctl closes",
+  "L-c": "on each of shift, shift2, man2-corr, man2-out, man2-bias: 'shown' if every seed's ctl-d1-q0.01 ÷ learned-sK-arc and ctl-h1 ÷ learned-sK-arc both win; 'hedging' if every seed wins the first and not every seed the second; 'not shown' otherwise",
+  "L-d": "on man2 and quiet: 'harm' if every seed's ctl-d1-q0.01 ÷ learned-sK-arc loses",
+  "follows": "shown on at least two mismatch splits and no harm: a gate for a learned time-late system is proposed. Shown on none: the classical controls stand and the learned track stops. Otherwise: reported, the owner decides"
+ },
+ "order": "the learned model is scored on no validation or test data until the controls' validation record (run tl-e-val) is committed; tma2-tlscore refuses otherwise. Training reads stream seed 339 only. The test seed is scored once",
+ "power": "research.md, 'As registered': a learned track must differ from the control by about 15% (shift) to 40% (shift2) to be separated; less reads 'not separated'",
+ "forecasts": {
+  "L-a": "passes (tuning: 1.13, all converged, 0.11 held)",
+  "L-b": "search3 ÷ ctl: outliers about 1.5, correlated about 1.3, shift 1.0 to 1.1, shift2 1.1 to 1.2; gap closed: outliers over 0.6, correlated about 0.5, shift under 0.2",
+  "L-c": "not shown on outliers or correlated errors (the control is near the reference there). Shift is the one split with room: about one chance in four that learning is shown there. Bias: not shown. Overall most likely outcome: shown on none",
+  "L-d": "the model at 12.5 million periods is likely worse than the control on Annex B data (pilot: median |ln range| error 0.095 at 1.5 million periods against the control's 0.03): harm on man2 is more likely than not for the direct track; the arc read-out narrows it and may avoid 'harm'",
+  "direct against arc": "the read-out improves on the model's own track on most splits"
+ },
+ "known_limits": [
+  "the evidence faults at the edges of the prior's support (experiments/20261113-tl3/review.md, major 5) are not repaired; the declaration margin was tuned with them in place",
+  "the correlated-error control is one effective sd, not a whitened fit, and was built knowing the generator's error family",
+  "only wild-bearing editing is built as a robust form",
+  "the training budget is 12.5 million periods a seed; a null result is a result at this budget, not a limit of learning",
+  "the ledger under-counts a run whose container is replaced",
+  "the test run file's learned branches and controls_record are added by addendum before the test is launched; its splits and sizes are bound here"
+ ]
+}

@@ -1,0 +1,180 @@
+{
+ "checkpoint_sha256": "ee04aaaa953b1f2f91a166e9945c18ef28b3c059cc0b301ba373cde3bb5aba10",
+ "config": {
+  "batch_scenarios": 256,
+  "beta": 0.5,
+  "causal": false,
+  "checkpoint_seconds": 900,
+  "data": "periods",
+  "feedforward": 1024,
+  "heads": 8,
+  "held_fraction": 0.0,
+  "held_ranges": "configs/regress/held-course-ranges.json",
+  "id": "tlm-pilot",
+  "inputs": "full",
+  "layers": 8,
+  "learning_rate": 0.0003,
+  "limit_seconds": 3000,
+  "manoeuvre_head": true,
+  "max_rows": 1440,
+  "n_features": 9,
+  "patch_rows": 6,
+  "precision": "amp",
+  "ranges": "configs/man2-ranges.json",
+  "seed": 1,
+  "stream_repeat": 0,
+  "stream_seed": 339,
+  "stream_start": 0,
+  "total_updates": 6000,
+  "val_count": 512,
+  "val_every_updates": 500,
+  "val_seed": 339,
+  "warmup_updates": 500,
+  "weight_decay": 0.01,
+  "width": 256
+ },
+ "config_sha256": "e76f81fcdbbe1a0d5c8e82792d567b8d5fea7b4e11253f2c86f6254b209b2bae",
+ "cuda": "13.2",
+ "device": "cuda",
+ "git_dirty": false,
+ "gpu": "Tesla T4",
+ "gpu_seconds": 2467.7736744880676,
+ "plan": {
+  "description": "Spec 016 T009: the pilot of the whole-period model on a T4 (research R7, R10): the real architecture (8 layers, width 256, 8 heads, 240 tokens of 6 five-second rows, non-causal, manoeuvre logit), one segment of at most 50 minutes (an hour with the start-up allowance). Measures periods per second and gives a loss curve; 6,000 updates of 256 periods complete inside the limit only above about 510 periods a second, otherwise the limit stops it. Not a training run: its weights are not carried.",
+  "gpu": "T4",
+  "segment_limit_seconds": 3000,
+  "segments": 1
+ },
+ "scenarios_per_second": 435.25608736811665,
+ "scenarios_seen": 1536000,
+ "segments": [
+  {
+   "end_update": 1819,
+   "git_commit": "ab0509e5317d12c5bb27742abfe919662c9013a2",
+   "seconds": 928.536390542984,
+   "start_update": 0,
+   "started": 1794599521.5284216
+  },
+  {
+   "end_update": 6000,
+   "git_commit": "ab0509e5317d12c5bb27742abfe919662c9013a2",
+   "seconds": 2459.0948255062103,
+   "start_update": 1819,
+   "started": 1794600935.4289484
+  }
+ ],
+ "stopped": "complete",
+ "torch": "2.15.0+cu132",
+ "train_seconds": 3387.6312160491943,
+ "updates": 6000,
+ "validation": [
+  {
+   "ln_range_abs_median": 0.2393108755350113,
+   "loss": -0.5571172684431076,
+   "manoeuvre_loss": 0.299375057220459,
+   "seconds": 275.09469199180603,
+   "state_loss": -0.5870547741651535,
+   "train_loss": -0.5226305723190308,
+   "update": 500
+  },
+  {
+   "ln_range_abs_median": 0.19478058815002441,
+   "loss": -0.5666608363389969,
+   "manoeuvre_loss": 0.29005197435617447,
+   "seconds": 523.7432150840759,
+   "state_loss": -0.5956660211086273,
+   "train_loss": -0.5638507604598999,
+   "update": 1000
+  },
+  {
+   "ln_range_abs_median": 0.1680605411529541,
+   "loss": -0.5564777851104736,
+   "manoeuvre_loss": 0.27957718074321747,
+   "seconds": 770.7311325073242,
+   "state_loss": -0.5844354927539825,
+   "train_loss": -0.5559878349304199,
+   "update": 1500
+  },
+  {
+   "ln_range_abs_median": 0.14406460523605347,
+   "loss": -0.5533549040555954,
+   "manoeuvre_loss": 0.2647097185254097,
+   "seconds": 138.64467334747314,
+   "state_loss": -0.5798258930444717,
+   "train_loss": -0.6113681793212891,
+   "update": 2000
+  },
+  {
+   "ln_range_abs_median": 0.14211630821228027,
+   "loss": -0.5781416445970535,
+   "manoeuvre_loss": 0.249175313860178,
+   "seconds": 426.25533151626587,
+   "state_loss": -0.6030591875314713,
+   "train_loss": -0.6159330010414124,
+   "update": 2500
+  },
+  {
+   "ln_range_abs_median": 0.12334299087524414,
+   "loss": -0.5445492416620255,
+   "manoeuvre_loss": 0.2367401011288166,
+   "seconds": 714.1461288928986,
+   "state_loss": -0.5682232528924942,
+   "train_loss": -0.5845910906791687,
+   "update": 3000
+  },
+  {
+   "ln_range_abs_median": 0.1255866289138794,
+   "loss": -0.5204508379101753,
+   "manoeuvre_loss": 0.23051971569657326,
+   "seconds": 1000.8789262771606,
+   "state_loss": -0.5435028076171875,
+   "train_loss": -0.5538526773452759,
+   "update": 3500
+  },
+  {
+   "ln_range_abs_median": 0.11475908756256104,
+   "loss": -0.5549549460411072,
+   "manoeuvre_loss": 0.22284116968512535,
+   "seconds": 1288.1015193462372,
+   "state_loss": -0.5772390514612198,
+   "train_loss": -0.5839107036590576,
+   "update": 4000
+  },
+  {
+   "ln_range_abs_median": 0.1086818277835846,
+   "loss": -0.5171626508235931,
+   "manoeuvre_loss": 0.21700848266482353,
+   "seconds": 1581.0870378017426,
+   "state_loss": -0.5388635098934174,
+   "train_loss": -0.5328782796859741,
+   "update": 4500
+  },
+  {
+   "ln_range_abs_median": 0.09634727239608765,
+   "loss": -0.5277779176831245,
+   "manoeuvre_loss": 0.21505457907915115,
+   "seconds": 1876.4806320667267,
+   "state_loss": -0.5492833703756332,
+   "train_loss": -0.5435018539428711,
+   "update": 5000
+  },
+  {
+   "ln_range_abs_median": 0.09531223773956299,
+   "loss": -0.5150032341480255,
+   "manoeuvre_loss": 0.2130490131676197,
+   "seconds": 2168.1691274642944,
+   "state_loss": -0.5363081395626068,
+   "train_loss": -0.5337129235267639,
+   "update": 5500
+  },
+  {
+   "ln_range_abs_median": 0.09482061862945557,
+   "loss": -0.5215346589684486,
+   "manoeuvre_loss": 0.21196024492383003,
+   "seconds": 2459.0945057868958,
+   "state_loss": -0.5427306890487671,
+   "train_loss": -0.562118649482727,
+   "update": 6000
+  }
+ ]
+}

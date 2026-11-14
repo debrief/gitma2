@@ -149,3 +149,43 @@ def test_cut_flags_follow_the_engagements_table() -> None:
         5.0,
     )
     assert cut_flags(q) == [True]
+
+
+def test_refit_fall_back_rule_uses_no_truth_and_catches_runaways() -> None:
+    from tma2.timelate.arc import arc_states
+    from tma2.timelate.retest import Structure
+    from tma2.timelate.run3 import refit_acceptable, track_cost
+
+    from .test_timelate import _arc_case
+
+    t, ox, oy, z, spans, theta, _st = _arc_case()
+    sigma = 0.0175
+    rng = np.random.default_rng(2)
+    pb = (t, ox, oy, z + sigma * rng.standard_normal(t.size), np.ones(t.size, dtype=bool), sigma)
+    prior = ManoeuvrePrior.from_ranges(RANGES, version=3)
+    good = arc_states(theta, t, spans)
+    fit = Structure(theta, spans, track_cost(pb, good), good)
+    assert refit_acceptable(pb, fit, good, prior)
+    far = good.copy()  # the same bearings from a hundred times the range: a runaway
+    far[:, 0] = ox + 100.0 * (good[:, 0] - ox)
+    far[:, 1] = oy + 100.0 * (good[:, 1] - oy)
+    far[:, 2:] *= 100.0
+    assert not refit_acceptable(pb, Structure(theta, spans, track_cost(pb, far), far), good, prior)
+    bad = good.copy()
+    bad[:, 0] += 3000.0  # a poor fit, and worse than the track it started from
+    assert not refit_acceptable(pb, Structure(theta, spans, track_cost(pb, bad), bad), good, prior)
+    nan = np.full_like(good, np.nan)
+    assert not refit_acceptable(pb, Structure(theta, spans, 0.0, nan), good, prior)
+
+
+def test_a_records_tables_are_generated_from_its_summary() -> None:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("tl3_tables", "scripts/research/tl3_tables.py")
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    for record in sorted(Path("experiments").glob("*-tl3*")):
+        if (record / "tables.md").exists():
+            summary = json.loads((record / "summary.json").read_text())
+            assert mod.tables(summary) == (record / "tables.md").read_text(), record.name

@@ -1,5 +1,9 @@
 """Training loop for the regressor (spec 012 research R3): on-the-fly data, a time limit,
-checkpoints and resume. One process trains one segment; ``run.json`` accumulates segments."""
+checkpoints and resume. One process trains one segment; ``run.json`` accumulates segments.
+
+With ``data: "periods"`` (spec 016 research R7, R9) the stream is ``period_data``'s, the loss is
+the state's β-NLL plus ``manoeuvre_weight`` × the manoeuvre logit's cross-entropy over tokens
+that exist, and the monitor is a slice of the same stream seed far from the training indices."""
 
 from __future__ import annotations
 
@@ -15,8 +19,9 @@ import torch
 
 from tma2.data.provenance import read_git_provenance
 
+from . import period_data as pdata
 from .data import Tensors, batch_at, load_ranges, supervised, validation
-from .model import Regressor, RegressorConfig, beta_nll
+from .model import Regressor, RegressorConfig, beta_nll, manoeuvre_bce
 
 
 def config_digest(cfg: RegressorConfig) -> str:
@@ -70,6 +75,54 @@ def evaluate(model: Regressor, val: Tensors, device: torch.device, amp: bool) ->
     }
 
 
+def period_loss(
+    model: Regressor, x: pdata.PeriodTensors, device: torch.device, amp: bool
+) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    """(loss, parts) on a batch of periods. Tokens start at the period's first row (no folding
+    offset: the model reads the whole period); parts: the two loss terms, the predicted mean,
+    the target and the tokens that exist."""
+    cfg = model.cfg
+    y_np, label_np, w_np, _last = pdata.token_targets(x, model.patch)
+    f = torch.from_numpy(x.f).to(device)
+    mask = torch.from_numpy(x.mask).to(device)
+    y, w = torch.from_numpy(y_np).to(device), torch.from_numpy(w_np).to(device)
+    with torch.autocast(device.type, enabled=amp):
+        if cfg.manoeuvre_head:
+            mean, logvar, logit = model.forward_all(f, 0, mask)
+        else:
+            mean, logvar = model(f, 0, mask)
+    mean, logvar = mean.float(), logvar.float()
+    state = beta_nll(mean, logvar, y, w, cfg.beta)
+    parts = {"state": state, "mean": mean, "y": y, "w": w}
+    if not cfg.manoeuvre_head:
+        return state, parts
+    parts["manoeuvre"] = manoeuvre_bce(logit.float(), torch.from_numpy(label_np).to(device), w)
+    return state + cfg.manoeuvre_weight * parts["manoeuvre"], parts
+
+
+def evaluate_periods(
+    model: Regressor, val: pdata.PeriodTensors, device: torch.device, amp: bool
+) -> dict[str, float]:
+    """Both loss terms and the median absolute error of ln range over the monitor's tokens."""
+    model.eval()
+    n = val.f.shape[0]
+    tot = {"loss": 0.0, "state_loss": 0.0, "manoeuvre_loss": 0.0}
+    e_r = []
+    with torch.no_grad():
+        for s in range(0, n, 128):
+            part = pdata.PeriodTensors(*(getattr(val, k)[s : s + 128] for k in pdata.FIELDS))
+            loss, parts = period_loss(model, part, device, amp)
+            k = part.f.shape[0]
+            tot["loss"] += float(loss) * k
+            tot["state_loss"] += float(parts["state"]) * k
+            tot["manoeuvre_loss"] += float(parts.get("manoeuvre", torch.zeros(()))) * k
+            e_r.append((parts["mean"] - parts["y"])[..., 0][parts["w"] > 0].abs().cpu())
+    model.train()
+    out = {k: v / n for k, v in tot.items()}
+    out["ln_range_abs_median"] = float(torch.cat(e_r).median()) if e_r else math.nan
+    return out
+
+
 def train(
     cfg: RegressorConfig,
     out: Path,
@@ -104,9 +157,14 @@ def train(
         scaler.load_state_dict(st["scaler"])
         update = int(st["update"])
         record = json.loads((resume / "run.json").read_text())
-    ranges = load_ranges(cfg.ranges)
-    held = load_ranges(cfg.held_ranges) if cfg.held_fraction > 0 else None
-    val = validation(cfg, ranges)
+    periods = cfg.data == "periods"
+    if periods:
+        mix = pdata.load_mix(cfg.mix)
+        monitor = pdata.monitor(cfg, mix)
+    else:
+        ranges = load_ranges(cfg.ranges)
+        held = load_ranges(cfg.held_ranges) if cfg.held_fraction > 0 else None
+        val = validation(cfg, ranges)
     out.mkdir(parents=True, exist_ok=True)
     start_update = update
     seg: dict[str, Any] = {"start_update": update, "started": time.time(), "git_commit": commit}
@@ -159,9 +217,12 @@ def train(
             break
         for g in opt.param_groups:
             g["lr"] = lr_at(cfg, update)
-        x = batch_at(cfg, ranges, update, held)
-        offset = int(rng.integers(0, cfg.patch_rows))
-        loss, _, _, _ = _loss(model, x, offset, device, amp)
+        if periods:
+            loss, _ = period_loss(model, pdata.batch_at(cfg, mix, update), device, amp)
+        else:
+            x = batch_at(cfg, ranges, update, held)
+            offset = int(rng.integers(0, cfg.patch_rows))
+            loss, _, _, _ = _loss(model, x, offset, device, amp)
         opt.zero_grad(set_to_none=True)
         scaler.scale(loss).backward()  # type: ignore[no-untyped-call]
         scaler.unscale_(opt)
@@ -170,7 +231,11 @@ def train(
         scaler.update()
         update += 1
         if update % cfg.val_every_updates == 0 or update == cfg.total_updates:
-            v = evaluate(model, val, device, amp)
+            v = (
+                evaluate_periods(model, monitor, device, amp)
+                if periods
+                else evaluate(model, val, device, amp)
+            )
             v.update(update=update, seconds=time.time() - t0, train_loss=float(loss.detach()))
             record["validation"].append(v)
             print(json.dumps(v), flush=True)

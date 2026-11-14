@@ -33,9 +33,6 @@ app = modal.App("gitma2-regress", image=image)
 volume = modal.Volume.from_name("gitma2-regress", create_if_missing=True)
 
 
-GPUS = ("T4", "L4", "A10", "L40S", "A100-40GB")  # a plan's "gpu" (default T4)
-
-
 def _segment(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
     import os
 
@@ -55,18 +52,46 @@ def _segment(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
     return json.dumps(rec), (work / "checkpoint.safetensors").read_bytes()
 
 
-# One statically configured function per GPU type (a per-call override is documented for
-# deployed functions; this form needs nothing beyond what the first runs already used).
+# One function per GPU type, each defined at module scope with the decorator: the form the
+# runs of spec 012 used. (Addendum 1's form, functions built in a loop with serialized=True,
+# was never run before 2026-11-13, when its containers failed at start-up: "the
+# 'modal_train' module is not available in the remote environment".)
+_OPTS = {"timeout": MAX_SEGMENT_SECONDS + STARTUP_SECONDS, "volumes": {"/vol": volume}}
+
+
+@app.function(gpu="T4", **_OPTS)
+def segment_t4(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit)
+
+
+@app.function(gpu="L4", **_OPTS)
+def segment_l4(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit)
+
+
+@app.function(gpu="A10", **_OPTS)
+def segment_a10(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit)
+
+
+@app.function(gpu="L40S", **_OPTS)
+def segment_l40s(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit)
+
+
+@app.function(gpu="A100-40GB", **_OPTS)
+def segment_a100(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit)
+
+
 SEGMENTS = {
-    g: app.function(
-        gpu=g,
-        timeout=MAX_SEGMENT_SECONDS + STARTUP_SECONDS,
-        volumes={"/vol": volume},
-        name="segment_" + g.lower().replace("-", "_"),
-        serialized=True,
-    )(_segment)
-    for g in GPUS
+    "T4": segment_t4,
+    "L4": segment_l4,
+    "A10": segment_a10,
+    "L40S": segment_l40s,
+    "A100-40GB": segment_a100,
 }
+GPUS = tuple(SEGMENTS)  # a plan's "gpu" (default T4)
 
 
 @app.local_entrypoint()

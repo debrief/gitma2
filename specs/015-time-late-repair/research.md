@@ -42,10 +42,15 @@
 
 ## R4. The refit control's fall-back
 
-- The refit is kept only if its posterior fit's bearing cost is no worse than the cost of
-  the bearings-only arc fit it started from by more than 9 (three sd in a χ² of one), and
-  its states are finite; otherwise C″'s own track stands. No truth is used. The number of
-  fall-backs is reported, and D1 is given with and without them.
+- The refit is kept if its states are finite, its speed stays within twice the prior's
+  fastest and its range within sixteen times the prior's farthest, and its bearing cost is
+  either what the noise explains (within five sd of χ²) or no worse than C″'s own track's by
+  more than 9. Otherwise C″'s own track stands. No truth is used. The number of fall-backs
+  is reported, and D1 is given with and without them.
+- **Changed on development data** (seed 335, spent): the first form compared the cost with
+  C″'s track alone and fell back in 26 of 200 periods, because the chord track has four free
+  unknowns a manoeuvre and can fit the bearings more closely than a sound arc refit. The
+  "what the noise explains" branch was added before registration.
 
 ## R5. Keeping earlier registrations
 
@@ -68,4 +73,5 @@
 - **Other estimands for D1**, declared here: the ratio of log medians; the registered share
   without periods where either system's period median exceeds 1.
 - **Reported**: everything in FR-009 to FR-012; `search2` beside `search3`.
-- **Soundness stop**: spec 014's, plus at most 15% of references flagged.
+- **Soundness stop**: spec 014's, plus at most 25% of references flagged (15% were flagged
+  on the development periods; the limit guards against most of them being held, not some).
