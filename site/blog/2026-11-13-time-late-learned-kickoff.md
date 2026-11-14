@@ -61,3 +61,10 @@ beyond the ledger's cap.
 - One table per split: plain search, best control, hedged track, learned model, reference.
 - Track plots of a few periods where the systems differ, if the tracks are stored this time.
 - All from committed experiment folders by a script named in the slides post.
+
+**Update, 2026-11-14.** The study ran. The classical controls remove most of the damage from
+outliers and correlated bearing errors and from quiet targets; the learned model's reported
+track beats the control on no split, so by the registered rule the controls stand. The
+panel approved and showed the loss is the model's untuned manoeuvre detector, not a typical
+period. See [the write-up](/blog/2026/11/14/time-late-learned) and
+[the slides](/blog/2026/11/14/time-late-learned-slides).

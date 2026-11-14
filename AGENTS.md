@@ -385,6 +385,54 @@ shifted prior 1.7, correlated errors 1.4, outliers 1.5) have no classical remedy
 candidates and a declaration margin; robust and correlated-error likelihoods and a prior that can
 be wrong, scored on the mismatch splits; then a learned model registered against those; no fourth
 Annex B identification study. Seeds 336, 337 used; 324, 325 unused; the next fresh seed is 338.
+**Owner 2026-11-13: option B (spec 016)**: classical controls on CPU and, in parallel, a learned
+whole-period model on GPU under a plan registered before any result, scored only once the controls
+exist; within the $50 total.
+016 (time-late controls and a learned whole-period model, study L, `specs/016-time-late-learned/`;
+done; SRD §5 row proposed, owner merges). **Controls** (nothing trained; `timelate/hedge.py`,
+`corr.py`, `run4.py` with plan key `runner: run4`, `study4.py`): wild bearings edited out; an
+effective bearing sd from the error correlation estimated from the bearings' second differences
+(used above a share of 0.2); the search under Annex B's prior and a broadened one
+(`configs/timelate/tl-broad.json`), pooled; a declared history (evidence margin 1, quiet probability
+0.01: `ctl-d1-q0.01`) and a hedged track (temperature 1: `ctl-h1`); the combined control `ctl` is
+not told the conditions. Tuning seed 338 (`experiments/20261113-tl4-tuning/`). **Model**
+(`regress/period_data.py`, `period_predict.py`, `model.py` with `causal=False` and a manoeuvre
+head, `timelate/learned.py`, `tma2-tlpredict`; mix `configs/regress/tlm-mix.json`, plans
+`tlm-s1..s3.json`): a bidirectional transformer over 240 tokens of six 5-second rows, three seeds of
+12.5 million simulated periods on a T4 each (pilot `experiments/20261113-tlm-pilot/`, runs
+`experiments/20261114-tlm-runs/`, $14; November's Modal total $41 of the owner's $50); reported track
+`learned-sK-arc` (the arc model fitted at the model's manoeuvre spans, probability over 0.5), own
+track beside. Decision `experiments/20261113-tl4-decision/` (plan `configs/timelate/tl-e.json`
+`82cd70ee…`, code `e5040f5e…`, never edited; two addenda); controls' validation seed 340
+(`20261113-tl4-val/`, L-a passed; `tma2-tlscore --controls-record` refuses a learned track without
+it); **test record `experiments/20261114-tl4/` (seed 341, 2,860 periods, scored once): learning
+shown on no split (declared control ÷ learned 0.80 to 0.82 shifted, 0.87 to 0.94 shifted 2, 0.83
+correlated, 0.77 to 0.81 outliers, 0.97 to 1.00 bias), harm on Annex B (0.81 to 0.82), the learned
+track ahead on held course (1.06): by the rule the classical controls stand and the learned track
+stops. Decided by the panel, round 1** (`review.md`, five approve with findings; all 42 ratios
+reproduce). Controls against the standing search: 1.68 with 2% outliers, 2.44 with 5%, 1.33
+correlated, 1.70 held course (false manoeuvres 0.08 against 0.49), 1.03 shifted, 1.00 bias, 1.09
+Annex B (0.96 on validation); replicated on three seeds. Narrowed: the 20% is a tail (median
+per-period ratio 1.00 everywhere; level where the model declares as many manoeuvres as the control,
+about twice as bad where it declares fewer): **the registered comparison measured the model's
+untuned detector against the evidence search**, so "this model with this read-out stops"; the own
+track is 0.71 of the control on Annex B and level under the shifted prior in range only (course
+0.79, speed 0.77; a win where the bound is loose cancels a loss by three where it is tight); the
+mismatch conditions lie inside the model's training ranges (it lost in-distribution); a search
+started from the model equals the control at a third of the time (tuning data, not a result); the
+control is not free (one-manoeuvre targets called quiet 0.29 against 0.05 with correlated errors),
+does nothing under bias, and knows the generator's error family; the shifted-prior gap (control ÷
+true-history reference 1.7 to 2.1 by convention) is open for both and may be identifiability. Not
+delivered: a working prior-mismatch diagnostic (`log_bayes_broad` is not a Bayes factor), a Huber
+cost, a whitened fit, prior version 4, the export check on trained models, IMM/EKF tracks beside,
+the weights' digests in the test record, unit tests for `run4`/`study4`. Not tested: a learned
+proposer inside the search, training through the arc layer, a larger budget. Write-up
+`site/blog/2026-11-14-time-late-learned.md`, slides `2026-11-14-time-late-learned-slides.md`
+(figures `scripts/research/tl4_charts.py`; tables `tl4_tables.py`, `tl4_learned_tables.py`,
+`tl4_supplement.py`). Panel's order (owner's choice): adopt `ctl` as the standing time-late system
+and study whether the shifted-prior gap is identifiability (classical, CPU); only if it is not, the
+trained models as proposers inside the search. Seeds 338 to 341 used; 324, 325 unused; the next
+fresh seed is 342.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -720,6 +768,25 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   integrate over where it might be. Report a class share at every registered threshold. Commit
   the script that checks a README's numbers, or do not claim the check. A forecast written from
   a development run minutes earlier is a restatement, not a prediction.
+- Spec 016 panel: a registered comparison is only as wide as its narrowest part: thresholding a
+  model's manoeuvre probability at an untuned 0.5 and fitting a classical layer at those spans
+  measures the detector, not the model. Tune both sides or neither, and score the learned side on
+  validation as soon as the order allows. Report the median per-period ratio and the shares over
+  twice as bad beside any geometric mean (the 20% was a tail; the median was 1.00), and split a
+  loss by whether the two sides agree on structure. Read a "level" pooled ratio by how tight the
+  bound is and on course and speed before writing "level". A held-out condition inside the
+  training ranges is not a mismatch for the model. A reference fitted to unedited bearings is no
+  yardstick under outliers. Keep the declared and undeclared variants of a control in separate
+  rows. Record the weights' digest in the scored record, not only in shard headers. A change of
+  shard size reaches every system that starts from C″. Never edit a file the decision record
+  binds while its run is in progress, even to add a field; put new readings in a new script.
+- Modal: functions must be defined at module scope with the decorator; functions built in a loop
+  with `serialized=True` cannot be imported in the container ("the 'modal_train' module is not
+  available"), and Modal retries the failed start for as long as the client waits. Bound the
+  workflow step with `timeout`. The ledger loses a replaced container's time.
+- A script that writes a record must run under `uv run python`: a plain `python3` here has no
+  torch, the script fails, and a chained `git commit` still commits whatever else was staged
+  (spec 016's decision record took two commits). Check the commit holds what its message says.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).
