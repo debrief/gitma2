@@ -187,3 +187,23 @@ def test_a_record_s_tables_are_what_the_script_prints_for_its_summary() -> None:
     for t in records:
         summary = json.loads((t.parent / "summary.json").read_text())
         assert t.read_text() == mod.tables(summary), t
+
+
+def test_every_interval_a_test_record_quotes_is_in_its_generated_tables() -> None:
+    """FR-021: a README's "x [lo, hi]" figures are copied from the generated files."""
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    for d in sorted((root / "experiments").glob("*-tl4")):
+        made = "".join(
+            (d / n).read_text()
+            for n in ("tables.md", "learned.md", "supplement.md")
+            if (d / n).exists()
+        )
+        quoted = set(
+            re.findall(r"-?\d\.\d\d \[-?\d\.\d\d, -?\d\.\d\d\]", (d / "README.md").read_text())
+        )
+        assert quoted, d
+        missing = sorted(q for q in quoted if q not in made)
+        assert not missing, (d.name, missing)
