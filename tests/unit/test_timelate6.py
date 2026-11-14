@@ -9,12 +9,13 @@ from typing import Any
 
 import numpy as np
 
-from tma2.timelate.adapt import log_sum, rate_grid, rate_posterior
+from tma2.timelate.adapt import family, log_sum, pooled_choice, rate_grid, rate_posterior
 from tma2.timelate.prior import ManoeuvrePrior
 from tma2.timelate.study6 import (
     any_false,
     control_misses,
     coverage,
+    family_readings,
     kinds_of_period,
     medians3,
     one_called_quiet,
@@ -152,3 +153,43 @@ def test_committed_tables_are_what_the_script_prints() -> None:
     for t in sorted((ROOT / "experiments").glob("*-tl6*/tables.md")):
         summary = json.loads((t.parent / "summary.json").read_text())
         assert t.read_text() == mod.tables(summary), t
+
+
+def test_family_keys_and_pooled_choice() -> None:
+    base = ManoeuvrePrior.from_ranges(
+        json.loads((ROOT / "configs/timelate/tl-broad.json").read_text()), 3
+    )
+    fam = family(base, [600.0, 3000.0], [0.35, 0.6], [60.0, 150.0])
+    assert list(fam)[:3] == ["L600-s0.35-a60", "L600-s0.35-a150", "L600-s0.6-a60"]
+    assert math.isclose(fam["L3000-s0.35-a60"].leg_sd, 1050.0)
+    assert math.isclose(fam["L600-s0.6-a60"].angle[1], math.radians(60.0))
+    assert fam["L600-s0.6-a150"].angle[0] == base.angle[0]
+    # four periods, two members: alone, periods 0 and 3 prefer member 1; pooled, member 0 wins
+    logz = np.array([[0.0, 1.0], [5.0, 0.0], [5.0, 0.0], [0.0, 1.0]])
+    assert pooled_choice(logz, np.arange(4)).tolist() == [1, 0, 0, 1]
+    assert pooled_choice(logz, np.zeros(4, dtype=int)).tolist() == [0, 0, 0, 0]
+    assert pooled_choice(logz, np.array([0, 0, 1, 1])).tolist() == [0, 0, 0, 0]
+    logz[0, 0] = -np.inf  # a member that cannot explain a period is all but ruled out
+    assert pooled_choice(logz, np.zeros(4, dtype=int)).tolist() == [1, 1, 1, 1]
+
+
+def test_pooled_groups_use_the_member_their_evidence_prefers() -> None:
+    arr = _arrays()
+    n = 12
+    arr["err_fam-A"] = arr["err_ada"]  # wins in the first six periods
+    arr["err_fam-B"] = arr["err_ctl"]
+    arr["logz_period"] = np.arange(n)[::-1].copy()  # shards need not arrive in order
+    lz = np.zeros((n, 2))
+    lz[:, 0] = np.where(np.arange(n)[::-1] < 6, 3.0, -1.0)  # A is preferred where it wins
+    arr["logz"] = lz
+    ids, med, _b = medians3(arr)
+    reading, extra = family_readings(arr, ids, med, ["A", "B"], "ctl", [1, 6, 1000])
+    assert math.isclose(reading["members"]["A"]["range"]["geometric_mean"], 2.0, rel_tol=1e-6)
+    assert math.isclose(reading["members"]["B"]["range"]["geometric_mean"], 1.0, rel_tol=1e-6)
+    assert reading["pooled"]["6"]["groups"] == 2 and reading["pooled"]["1000"]["groups"] == 1
+    assert reading["pooled"]["6"]["picked"] == {"A": 0.5, "B": 0.5}
+    assert reading["pooled"]["1000"]["picked"] == {"A": 1.0}  # 6 × 3 − 6 × 1 > 0
+    assert np.allclose(extra["ada-pool6"][:6, 0], 0.02) and np.allclose(
+        extra["ada-pool6"][6:, 0], 0.08
+    )
+    assert np.allclose(extra["ada-pool1"], extra["ada-pool6"])

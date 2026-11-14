@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
             settings = {**plan["settings"], "edited_reference": bool(sp.get("edited_reference"))}
             arrays, recs = run_shard5(periods, priors, c_params, c2, settings, imm, ekf)
         elif run6:
-            from tma2.timelate.adapt import rate_grid
+            from tma2.timelate.adapt import family
             from tma2.timelate.run6 import run_shard6
 
             if learned:
@@ -144,14 +144,19 @@ def main(argv: list[str] | None = None) -> int:
                     json.loads(Path(sp["ranges"]).read_text()), 3
                 )
             ad = plan["adaptive"]
-            priors.update(
-                rate_grid(
-                    priors["broad"],
-                    [float(x) for x in ad["leg_means_s"]],
-                    float(ad["leg_sd_ratio"]),
-                )
+            fam = family(
+                priors["broad"],
+                [float(x) for x in ad["leg_means_s"]],
+                [float(x) for x in ad["leg_sd_ratios"]],
+                [float(x) for x in ad["angle_max_deg"]],
             )
-            settings = {**plan["settings"], "rate_weights": ad.get("rate_weights") or {}}
+            priors.update(fam)
+            settings = {
+                **plan["settings"],
+                "member_weights": ad.get("member_weights") or {},
+                "search_members": list(ad["search_members"]),
+                "member_keys": canonical_json(sorted(fam)),
+            }
             arrays, recs = run_shard6(periods, priors, c_params, c2, settings)
         else:
             arrays, recs = run_shard4(periods, priors, c_params, c2, plan["settings"], learned)

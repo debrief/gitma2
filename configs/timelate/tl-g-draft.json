@@ -1,5 +1,5 @@
 {
- "description": "Spec 018 draft plan (tuning only, seed 345): the standing control as registered, a control whose manoeuvre-rate prior adapts to the period, a hedged track with a spread, the search under the split's own prior, the true-history reference and detectability for classing periods.",
+ "description": "Spec 018 draft plan 2 (tuning only, seed 345): the standing control as registered; a family of manoeuvre priors (leg length, its spread, largest turn) scored on one shared candidate set; the member chosen per period and by groups of periods; a hedged track with a spread; the search under the split's own prior; the true-history reference and detectability for classing periods.",
  "data_split": "train",
  "splits": {
   "man2": {
@@ -48,7 +48,9 @@
    "ctl"
   ],
   "temperatures": [
-   1
+   1,
+   2,
+   3
   ],
   "margins": [
    1
@@ -65,11 +67,25 @@
  "adaptive": {
   "leg_means_s": [
    600,
-   1200,
-   2400
+   900,
+   1350,
+   2000,
+   3000
   ],
-  "leg_sd_ratio": 0.5,
-  "rate_weights": {}
+  "leg_sd_ratios": [
+   0.35,
+   0.6
+  ],
+  "angle_max_deg": [
+   60,
+   100,
+   150
+  ],
+  "member_weights": {},
+  "search_members": [
+   "L600-s0.6-a150",
+   "L3000-s0.6-a150"
+  ]
  },
  "runner": "run6",
  "reference": {
@@ -94,7 +110,13 @@
   "nominal_sd": [
    1,
    2
-  ]
+  ],
+  "pool_sizes": [
+   5,
+   20,
+   1000
+  ],
+  "family_prefix": "fam-"
  },
  "comparisons": [
   [
@@ -148,6 +170,14 @@
   [
    "c2",
    "ctl-d1-q0.01"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ada-h2"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ada-h3"
   ]
  ]
 }

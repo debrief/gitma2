@@ -58,7 +58,12 @@ def tables(summary: dict[str, Any]) -> str:
     have = [(k, lab) for k, lab in SPLITS if k in sp]
     out = ["## Median period range error", ""]
     names = sorted(
-        {n for k, _ in have for n in sp[k]["systems"] if "history" not in n and n != "ctl"}
+        {
+            n
+            for k, _ in have
+            for n in sp[k]["systems"]
+            if "history" not in n and n != "ctl" and not n.startswith("fam-")
+        }
     )
     out += ["| System | " + " | ".join(lab for _, lab in have) + " |"]
     out += ["| --- |" + " --- |" * len(have)]
@@ -98,6 +103,59 @@ def tables(summary: dict[str, Any]) -> str:
         s = sp[k]["share_of_ceiling"]
         if s:
             out += [f"| {lab} | " + " | ".join(ci(s.get(q), "share") for q in QUANT) + " |"]
+    out += [
+        "",
+        "## Members chosen by groups of periods (a ÷ b per period; above 1: b is better)",
+        "",
+    ]
+    out += [
+        "(a group is a run of consecutive periods of the split taken to share their statistics; it uses the member with the most summed log evidence)",
+        "",
+    ]
+    for k, lab in have:
+        comp = sp[k].get("pooled_comparisons") or {}
+        if not comp:
+            continue
+        out += [
+            f"### {lab}",
+            "",
+            "| a | b | Quantity | Periods | Ratio | Median per-period ratio | a over twice as bad | b over twice as bad |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        ]
+        for key in sorted(comp):
+            a, b = key.split("_over_")
+            for q in QUANT:
+                v = comp[key].get(q)
+                if v:
+                    out += [
+                        f"| `{a}` | `{b}` | {q} | {v['periods']} | {ci(v)} | {v['median_ratio']:.2f} | "
+                        f"{v['a_twice_as_bad']:.2f} | {v['b_twice_as_bad']:.2f} |"
+                    ]
+        pooled = (sp[k].get("family") or {}).get("pooled") or {}
+        out += [
+            "",
+            "| Group size | Groups | Members picked (share of periods) |",
+            "| --- | --- | --- |",
+        ]
+        for size, v in pooled.items():
+            picked = ", ".join(
+                f"`{name}` {share:.2f}"
+                for name, share in sorted(v["picked"].items(), key=lambda x: -x[1])[:4]
+            )
+            out += [f"| {size} | {v['groups']} | {picked} |"]
+        out += [""]
+    out += ["## Each fixed member: control ÷ member (range) and its mean log evidence", ""]
+    fams = [(k, lab) for k, lab in have if (sp[k].get("family") or {}).get("members")]
+    if fams:
+        keys = list(sp[fams[0][0]]["family"]["members"])
+        out += ["| Member | " + " | ".join(f"{lab} | log evidence" for _, lab in fams) + " |"]
+        out += ["| --- |" + " --- | --- |" * len(fams)]
+        for m in keys:
+            row = []
+            for k, _ in fams:
+                v = sp[k]["family"]["members"].get(m) or {}
+                row += [ci(v.get("range")), f(v.get("mean_log_evidence"), 1)]
+            out += [f"| `{m}` | " + " | ".join(row) + " |"]
     out += ["", "## By kind of period (range; a ÷ b)", ""]
     for k, lab in have:
         bk = sp[k]["by_kind"]
@@ -124,7 +182,7 @@ def tables(summary: dict[str, Any]) -> str:
     ]
     for k, lab in have:
         for n, v in sorted(sp[k]["counts"].items()):
-            if "-h" in n or n == "ctl" or n == "ada":
+            if "-h" in n or n in ("ctl", "ada") or n.startswith("fam-"):
                 continue
             af = sp[k]["any_false"].get(n) or {}
             dq = (sp[k]["declares"].get(n) or {}).get("0") or {}
@@ -141,7 +199,7 @@ def tables(summary: dict[str, Any]) -> str:
             ]
     out += ["", "## The inferred rate", ""]
     out += [
-        "| Split | Periods | Inferred leg length, median (quartiles), s | Share of periods picking each rate |",
+        "| Split | Periods | Inferred leg length, median (quartiles), s | Members most often chosen by one period's evidence |",
         "| --- | --- | --- | --- |",
     ]
     for k, lab in have:
@@ -149,7 +207,10 @@ def tables(summary: dict[str, Any]) -> str:
         if not r["periods"]:
             continue
         q = r["leg_inferred_quartiles_s"]
-        picked = ", ".join(f"{name[4:]} s: {share:.2f}" for name, share in r["picked"].items())
+        picked = ", ".join(
+            f"`{name}` {share:.2f}"
+            for name, share in sorted(r["picked"].items(), key=lambda x: -x[1])[:4]
+        )
         out += [
             f"| {lab} | {r['periods']} | {r['leg_inferred_median_s']:.0f} ({q[0]:.0f}, {q[1]:.0f}) | {picked} |"
         ]

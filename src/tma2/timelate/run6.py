@@ -1,12 +1,16 @@
 """One shard of spec 018: the standing control exactly as registered (``run4``), and beside
-it a control whose manoeuvre prior adapts to the period, a hedged track with a spread, and
-the readings that say where any gain comes from.
+it controls whose manoeuvre prior is chosen from a family, a hedged track with a spread,
+and the readings that say where any gain comes from.
 
-On the bearings the control sees (edited; an effective sd when the errors look correlated):
+On the bearings the control sees (edited; an effective sd when the errors look correlated),
+two searches (under the family's busiest and quietest members) give one set of candidate
+histories; every member refits and scores that set.
 
-* ``ada``: the first candidate under the inferred rate; ``ada-dM-qQ``: the history declared
-  under that rate's prior by the control's rule (margin M, quiet probability Q);
-* ``ada-hT``: the mean track of the candidates of every rate at temperature T, with the
+* ``fam-<member>``: the history declared under that member's prior by the control's rule
+  (margin and quiet probability the first of the settings'). One per member: what each
+  fixed prior gives, and the material for choosing a member by a group of periods.
+* ``ada-dM-qQ``: the member chosen by this period's evidence alone, declared.
+* ``ada-hT``: the mean track of every member's candidates at temperature T, with the
   mixture's sd of range (arrays ``hrange_ada-hT`` and ``spread_ada-hT``, metres);
 * ``ada-aP``: per period, the declared history when the mixture's first candidate has
   probability at least P, the hedged track otherwise (a rule that reads no truth);
@@ -16,7 +20,8 @@ On the bearings the control sees (edited; an effective sd when the errors look c
   times; not a bound), and each true manoeuvre's ``detectability`` (spec 017), read only
   to class periods.
 
-Per period the record gains the rate posterior, the inferred leg length and the histories.
+Arrays also carry ``logz`` [periods in the shard, members] and ``logz_period``; the record
+of a period gains the member posterior, the member chosen and the histories.
 """
 
 from __future__ import annotations
@@ -29,7 +34,7 @@ import numpy as np
 
 from tma2.types.generated.tma import SegmentParameters
 
-from .adapt import hedged_spread, mixture, rate_posterior
+from .adapt import hedged_spread, log_sum, mixture, rate_posterior, rescore, union
 from .corr import MIN_SHARE, edited, effective, estimate
 from .detect import detectability, detectable_reference
 from .hedge import declared, elimination_path
@@ -42,11 +47,17 @@ from .score import row_errors, truth_rows
 from .search import History
 from .systems import solve_systems
 
+FAMILY = "L"  # the family's members' keys start with this
 
-def extra_names(settings: dict[str, Any]) -> list[str]:
-    names = ["ada"]
+
+def members(priors: dict[str, ManoeuvrePrior]) -> list[str]:
+    return [k for k in priors if k.startswith(FAMILY)]
+
+
+def extra_names(settings: dict[str, Any], keys: list[str]) -> list[str]:
+    names = [f"fam-{k}" for k in keys]
     names += [f"ada-h{t:g}" for t in settings["temperatures"]]
-    names += [f"ada-d{m:g}-q{q:g}" for m in settings["margins"] for q in settings["quiets"]]
+    names += [f"ada-d{m:g}-q{q:g}" for m in settings["margins"][:1] for q in settings["quiets"][:1]]
     names += [f"ada-a{p:g}" for p in settings.get("auto_thresholds", [])]
     return names + ["true", "ref-full"]
 
@@ -58,22 +69,25 @@ def run_shard6(
     c2: dict[str, Any],
     settings: dict[str, Any],
 ) -> tuple[dict[str, np.ndarray], list[dict[str, Any]]]:
-    """``priors``: study L's "v3" and "broad", "true" (the split's own statistics) and the
-    rate grid's members (keys starting ``rate``). ``settings["rate_weights"]`` gives each
-    member's weight beforehand (equal when absent)."""
+    """``priors``: study L's "v3" and "broad", "true" (the split's own statistics; absent on
+    a quiet split) and the family's members. ``settings["member_weights"]`` gives a member's
+    weight beforehand (equal when absent); ``settings["search_members"]`` names the members
+    whose searches supply the candidates."""
     arrays, recs = run_shard4(periods, priors, c_params, c2, settings)
     every = int(settings["score_every"])
     margin, quiet = float(settings["margins"][0]), float(settings["quiets"][0])
     temps = [float(x) for x in settings["temperatures"]]
     autos = [float(x) for x in settings.get("auto_thresholds", [])]
     top = int(settings["candidates"])
-    grid = {k: p for k, p in priors.items() if k.startswith("rate")}
-    given = settings.get("rate_weights") or {}
-    logw = {k: math.log(float(given.get(k, 1.0))) for k in grid}
-    norm = math.log(sum(math.exp(v) for v in logw.values()))
+    keys = members(priors)
+    given = settings.get("member_weights") or {}
+    logw = {k: math.log(float(given.get(k, 1.0))) for k in keys}
+    norm = log_sum(np.array(list(logw.values())))
     logw = {k: v - norm for k, v in logw.items()}
-    names = extra_names(settings)
+    searched = list(settings["search_members"])
+    names = extra_names(settings, keys)
     hedges = [f"ada-h{t:g}" for t in temps]
+    said = f"ada-d{margin:g}-q{quiet:g}"
     p3 = priors["v3"]
     res = solve_systems(periods, ["c2-end-nofade"], c_params, c2)
     errs: dict[str, list[np.ndarray]] = {s: [] for s in names}
@@ -81,6 +95,7 @@ def run_shard6(
         f"{a}_{h}": [] for h in hedges for a in ("hrange", "spread")
     }
     trks: dict[str, list[np.ndarray]] = {s: [] for s in names}
+    logz_rows: list[list[float]] = []
     keep = int(settings.get("store_tracks", 0))
     for i, (x, rec) in enumerate(zip(periods, recs, strict=True)):
         a, b = x.first, x.first + x.rows
@@ -124,49 +139,51 @@ def run_shard6(
             tracks["true"] = h.fit.states
             rec["histories"]["true"] = _history(h.fit.spans, h.kinds, h.evidence)
 
-        sets = {}
-        for key, prior in grid.items():
+        found: list[list[History]] = []
+        for key in searched:
             t0 = time.perf_counter()
-            found, _seen = _search(px, prior, cc.states, spc, {**settings, "candidates": top})
-            took[f"ada/{key}"] = time.perf_counter() - t0
-            sets[key] = [h for h, _p in found]
+            got, _seen = _search(px, priors[key], cc.states, spc, {**settings, "candidates": top})
+            took[f"ada/search/{key}"] = time.perf_counter() - t0
+            found.append([h for h, _p in got])
+        shared = union(found)
+        t0 = time.perf_counter()
+        sets = {k: rescore(px, shared, priors[k]) for k in keys}
+        took["ada/rescore"] = time.perf_counter() - t0
+        logz = {k: log_sum(np.array([h.evidence for h in s])) for k, s in sets.items()}
+        logz_rows.append([float(logz[k]) for k in keys])
         post = rate_posterior({k: np.array([h.evidence for h in s]) for k, s in sets.items()}, logw)
         best = max(post, key=lambda k: post[k])
-        rec["rate_posterior"] = {k: float(p) for k, p in post.items()}
-        rec["rate_inferred"] = best
-        rec["leg_inferred_s"] = float(sum(post[k] * grid[k].leg_mean for k in grid))
+        rec["member_posterior"] = {k: round(float(p), 6) for k, p in post.items()}
+        rec["member_chosen"] = best
+        rec["leg_inferred_s"] = float(sum(post[k] * priors[k].leg_mean for k in keys))
+        rec["candidates_shared"] = len(shared)
+        t0 = time.perf_counter()
+        for k in keys:
+            if not sets[k]:
+                continue
+            path = elimination_path(px, sets[k][0], priors[k])
+            hd = path[declared(path, margin, quiet)]
+            tracks[f"fam-{k}"] = hd.fit.states
+            rec["histories"][f"fam-{k}"] = {"spans": hd.fit.spans.tolist()}
+        took["ada/paths"] = time.perf_counter() - t0
         if sets[best]:
-            top_h = sets[best][0]
-            tracks["ada"] = top_h.fit.states
-            t0 = time.perf_counter()
-            path = elimination_path(px, top_h, grid[best])
-            took["ada/path"] = time.perf_counter() - t0
-            entry = _history(top_h.fit.spans, top_h.kinds, top_h.evidence)
-            entry["prior"] = best
-            rec["histories"]["ada"] = entry
-            said: dict[str, np.ndarray] = {}
-            for mg in settings["margins"]:
-                for q in settings["quiets"]:
-                    hd = path[declared(path, float(mg), float(q))]
-                    name = f"ada-d{float(mg):g}-q{float(q):g}"
-                    tracks[name] = said[name] = hd.fit.states
-                    rec["histories"][name] = {"spans": hd.fit.spans.tolist()}
-            mix = mixture(sets, logw, top)
+            tracks[said] = tracks[f"fam-{best}"]
+            rec["histories"][said] = rec["histories"][f"fam-{best}"]
+            mix = mixture(sets, logw, top, quiet)
             t0 = time.perf_counter()
             for tt in temps:
-                st, mean, spread, w = hedged_spread(px, mix, grid, tt)
+                st, mean, spread, w = hedged_spread(px, mix, priors, tt)
                 name = f"ada-h{tt:g}"
                 tracks[name] = st
                 side[f"hrange_{name}"], side[f"spread_{name}"] = mean, spread
                 if tt == temps[0]:
                     rec["mixture"] = {
-                        "weights": [float(q) for q in w],
+                        "weights": [round(float(q), 6) for q in w],
                         "manoeuvres": [int(h.fit.spans.shape[0]) for h, _k, _s in mix],
-                        "rates": [k for _h, k, _s in mix],
+                        "members": [k for _h, k, _s in mix],
                     }
-                    first = f"ada-d{margin:g}-q{quiet:g}"
                     for p in autos:
-                        tracks[f"ada-a{p:g}"] = said[first] if float(w[0]) >= p else st
+                        tracks[f"ada-a{p:g}"] = tracks[said] if float(w[0]) >= p else st
                         rec.setdefault("auto", {})[f"{p:g}"] = bool(float(w[0]) >= p)
             took["ada/hedge"] = time.perf_counter() - t0
         rec["seconds"].update({k: round(float(s), 2) for k, s in took.items()})
@@ -179,6 +196,8 @@ def run_shard6(
                 trks[s].append(tracks[s][pick].astype(np.float32))
     arrays.update({f"err_{s}": np.concatenate(e) for s, e in errs.items()})
     arrays.update({k: np.concatenate(e) for k, e in extra.items()})
+    arrays["logz"] = np.array(logz_rows, dtype=np.float64).reshape(len(periods), len(keys))
+    arrays["logz_period"] = np.array([x.ordinal for x in periods], dtype=np.int64)
     if "trk_period" in arrays:
         arrays.update({f"trk_{s}": np.concatenate(e) for s, e in trks.items()})
     return arrays, recs

@@ -23,6 +23,7 @@ from typing import Any
 
 import numpy as np
 
+from .adapt import pooled_choice
 from .score import UNDETERMINED, _period_medians
 from .study import gain_share, paired, wilson
 from .study3 import whole_true
@@ -153,6 +154,52 @@ def any_false(periods: list[dict[str, Any]], system: str, tol: float) -> dict[st
     return wilson(k, len(rows))
 
 
+def family_readings(
+    arr: dict[str, np.ndarray],
+    ids: np.ndarray,
+    med: dict[str, np.ndarray],
+    keys: list[str],
+    control: str,
+    sizes: list[int],
+    prefix: str = "fam-",
+) -> tuple[dict[str, Any], dict[str, np.ndarray]]:
+    """What each fixed member gives against the control, and what a group of periods that
+    share their statistics gives when it chooses one member by its summed log evidence.
+
+    Groups are consecutive runs of ``size`` periods in ordinal order (the last may be
+    short). Returns the reading and, per size, the [P, 3] period medians of the pooled
+    choice (system name ``ada-pool<size>``) for further pairing."""
+    order = {int(o): r for r, o in enumerate(arr["logz_period"])}
+    rows = np.array([order.get(int(i), -1) for i in ids])
+    have = rows >= 0
+    logz = np.full((ids.size, len(keys)), np.nan)
+    logz[have] = arr["logz"][rows[have]]
+    cols = [f"{prefix}{k}" for k in keys]
+    out: dict[str, Any] = {"members": {}, "pooled": {}}
+    for k, c in zip(keys, cols, strict=True):
+        v = pair3(med, control, c)
+        if v:
+            out["members"][k] = {
+                "range": v.get("range"),
+                "mean_log_evidence": float(np.nanmean(logz[:, keys.index(k)])),
+            }
+    extra: dict[str, np.ndarray] = {}
+    stack = np.stack([med[c] for c in cols], axis=1) if all(c in med for c in cols) else None
+    if stack is None:
+        return out, extra
+    for size in sizes:
+        groups = np.arange(ids.size) // max(int(size), 1)
+        choice = pooled_choice(logz, groups)
+        name = f"ada-pool{int(size)}"
+        extra[name] = stack[np.arange(ids.size), choice]
+        picked = [keys[int(c)] for c in choice]
+        out["pooled"][f"{int(size)}"] = {
+            "groups": int(np.unique(groups).size),
+            "picked": {k: picked.count(k) / len(picked) for k in sorted(set(picked))},
+        }
+    return out, extra
+
+
 def study_split6(
     arr: dict[str, np.ndarray], periods: list[dict[str, Any]], plan: dict[str, Any]
 ) -> dict[str, Any]:
@@ -161,6 +208,24 @@ def study_split6(
     tol = float(plan["study"]["match_tolerance_s"])
     control, ada, hedge, ceiling = st["control"], st["adaptive"], st["hedged"], st["ceiling"]
     ids, med, pbound = medians3(arr)
+    ad = plan.get("adaptive") or {}
+    keys = [  # the order of ``adapt.family``, which is the order of ``logz``'s columns
+        f"L{float(m):g}-s{float(r):g}-a{float(a):g}"
+        for m in ad.get("leg_means_s", [])
+        for r in ad.get("leg_sd_ratios", [])
+        for a in ad.get("angle_max_deg", [])
+    ]
+    if keys and "logz" in arr:
+        fam, pooled = family_readings(
+            arr, ids, med, keys, control, [int(x) for x in st.get("pool_sizes", [])]
+        )
+        out["family"] = fam
+        med.update(pooled)
+        for name in pooled:
+            for other in (control, ceiling):
+                c = pair3(med, other, name)
+                if c:
+                    out.setdefault("pooled_comparisons", {})[f"{other}_over_{name}"] = c
     out["comparisons3"] = {}
     for a, b in plan.get("comparisons", []):
         c = pair3(med, a, b)
@@ -188,7 +253,7 @@ def study_split6(
         s: {f"{int(t)}": any_false(periods, s, t) for t in (60.0, 120.0, 240.0)} for s in named
     }
     legs = [float(r["leg_inferred_s"]) for r in periods if "leg_inferred_s" in r]
-    picks = [r["rate_inferred"] for r in periods if "rate_inferred" in r]
+    picks = [r["member_chosen"] for r in periods if "member_chosen" in r]
     out["rate"] = {
         "periods": len(legs),
         "leg_inferred_median_s": float(np.median(legs)) if legs else math.nan,

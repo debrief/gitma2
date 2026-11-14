@@ -1,17 +1,21 @@
 """A manoeuvre prior that adapts to the period, and a hedged track with a spread (spec 018).
 
-* **Rate grid**: the broadened prior's ranges for what a manoeuvre is, with the leg length
-  (how often the target manoeuvres) at each of a few values. The system is not told which
-  is true.
-* **Rate posterior**: each rate's model evidence is the sum of the evidences of the
-  candidate histories its search found (a lower limit on the true sum, the same for every
-  rate), times its weight beforehand. The inferred rate is the one with the most; the
-  declared history is declared under that rate's prior by the standing control's rule.
-  This is empirical Bayes over one hyperparameter.
-* **Hedged track**: the candidates of every rate are one mixture, each weighted by its
-  rate's weight and its own evidence. The track is the mixture's mean state. Its spread in
-  range is the mixture's: each candidate's own Laplace sd of range (from the curvature of
-  its posterior) and the disagreement between candidates.
+* **A family of priors**: the broadened prior with its leg length (how often the target
+  manoeuvres), the leg length's spread and the largest turn each at a few values. The
+  system is not told which is true.
+* **Model evidence of a member**: the sum of the evidences, under that member, of one
+  shared set of candidate histories (found by searches under the busiest and the quietest
+  member, each history refitted under the member). A lower limit on the true sum, over
+  the same histories for every member.
+* **Choosing the member**: per period (empirical Bayes on one period), or by the summed
+  log evidence of a group of periods taken to share their statistics (``pooled_choice``).
+  The declared history is declared under the chosen member's prior by the standing
+  control's rule.
+* **Hedged track**: the candidates of every member are one mixture, each weighted by its
+  member's weight and its own evidence (with the declaration's quiet probability). The
+  track is the mixture's mean state. Its spread in range is the mixture's: each candidate's
+  own Laplace sd of range (from the curvature of its posterior) and the disagreement
+  between candidates.
 
 Classical; nothing trained; no truth is read.
 """
@@ -25,9 +29,10 @@ from typing import Any
 import numpy as np
 
 from .arc import arc_states
+from .hedge import with_quiet
 from .prior import ManoeuvrePrior, open_precision, prior_residuals
 from .retest import Problem, _jacobian, _pack, _resid, _steps, _unpack
-from .search import History, _same
+from .search import History, _same, _score
 
 
 def rate_grid(
@@ -38,6 +43,56 @@ def rate_grid(
         f"rate{m:g}": dataclasses.replace(base, leg_mean=float(m), leg_sd=float(sd_ratio * m))
         for m in leg_means_s
     }
+
+
+def family(
+    base: ManoeuvrePrior,
+    leg_means_s: list[float],
+    sd_ratios: list[float],
+    angle_max_deg: list[float],
+) -> dict[str, ManoeuvrePrior]:
+    """Every combination of leg mean, leg sd (as a ratio of the mean) and largest turn,
+    the rest of ``base`` kept: keyed ``L<mean>-s<ratio>-a<degrees>``."""
+    out: dict[str, ManoeuvrePrior] = {}
+    for m in leg_means_s:
+        for r in sd_ratios:
+            for a in angle_max_deg:
+                out[f"L{m:g}-s{r:g}-a{a:g}"] = dataclasses.replace(
+                    base,
+                    leg_mean=float(m),
+                    leg_sd=float(r * m),
+                    angle=(base.angle[0], math.radians(float(a))),
+                )
+    return out
+
+
+def rescore(pb: Problem, histories: list[History], prior: Any) -> list[History]:
+    """Each history refitted and scored under ``prior``, best first (a history the prior
+    does not allow has no evidence and is dropped)."""
+    out = [_score(pb, h.fit.theta, h.fit.spans, h.kinds, prior) for h in histories]
+    return sorted((h for h in out if np.isfinite(h.evidence)), key=lambda x: -x.evidence)
+
+
+def union(sets: list[list[History]]) -> list[History]:
+    """Distinct histories of several candidate sets (the first seen kept)."""
+    kept: list[History] = []
+    for s in sets:
+        for h in s:
+            if not any(_same(h, k) for k in kept):
+                kept.append(h)
+    return kept
+
+
+def pooled_choice(log_z: np.ndarray, groups: np.ndarray) -> np.ndarray:
+    """[P] the member each period uses when the periods of a group share one prior: the
+    member with the largest sum of log model evidence over the group. ``log_z`` is [P, K];
+    non-finite entries count as a large penalty."""
+    z = np.where(np.isfinite(log_z), log_z, -1e6)
+    out = np.zeros(z.shape[0], dtype=np.int64)
+    for g in np.unique(groups):
+        m = groups == g
+        out[m] = int(np.argmax(z[m].sum(axis=0)))
+    return out
 
 
 def log_sum(x: np.ndarray) -> float:
@@ -106,12 +161,14 @@ def range_sd(pb: Problem, h: History, prior: Any) -> np.ndarray:
 
 
 def mixture(
-    sets: dict[str, list[History]], log_weights: dict[str, float], top: int
+    sets: dict[str, list[History]], log_weights: dict[str, float], top: int, quiet: float = 0.0
 ) -> list[tuple[History, str, float]]:
-    """The candidates of every rate as one set, best first by weight × evidence, a history
-    kept once (its heaviest version): (history, rate key, log weight + evidence)."""
+    """The candidates of every member as one set, best first by weight × evidence, a history
+    kept once (its heaviest version): (history, member key, log weight + evidence). With
+    ``quiet``, the evidence is the one the declaration uses: the target never manoeuvres
+    with that probability."""
     every = sorted(
-        ((h, k, float(log_weights[k]) + h.evidence) for k, s in sets.items() for h in s),
+        ((h, k, float(log_weights[k]) + with_quiet(h, quiet)) for k, s in sets.items() for h in s),
         key=lambda x: -x[2],
     )
     kept: list[tuple[History, str, float]] = []
