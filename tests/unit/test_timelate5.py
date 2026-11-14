@@ -81,7 +81,7 @@ def _synthetic_split(
         e = np.stack([base * scale, base * 40, base * 10, base * 2e4], axis=1)
         return e.astype(np.float32)
 
-    arr = {
+    arr: dict[str, np.ndarray] = {
         "period": period,
         "bound": bound,
         "stratum": np.zeros(period.size, dtype=np.int8),
@@ -92,7 +92,7 @@ def _synthetic_split(
         "err_history-best": err(0.25),
         "err_history-fixed": err(0.25),
     }
-    periods = []
+    periods: list[dict[str, Any]] = []
     for i in range(n_periods):
         true = [] if i % 3 == 0 else [[600.0, 700.0]]
         periods.append(
