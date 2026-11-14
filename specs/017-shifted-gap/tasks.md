@@ -6,7 +6,7 @@
 - [x] T004 Owed: export check on the three trained checkpoints
 - [x] T005 Owed: unit tests for `study_split4`, the controls-record guard, `run_shard4`
 - [x] T006 SRD §9 (the control stands; this study); decision record
-- [ ] T007 Validation on seed 343 (soundness)
-- [ ] T008 Test on seed 344, once; tables by script
-- [ ] T009 Panel (five reviewers), corrections
-- [ ] T010 Write-up, slides post and deck with track plots; AGENTS.md; kickoff update; PR
+- [x] T007 Validation on seed 343 (soundness)
+- [x] T008 Test on seed 344, once; tables by script
+- [x] T009 Panel (five reviewers), corrections
+- [x] T010 Write-up, slides post and deck with track plots; AGENTS.md; kickoff update; PR

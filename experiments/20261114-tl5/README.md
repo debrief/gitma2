@@ -8,6 +8,11 @@ below are copied from them. Per-row errors: results branch
 `results/timelate-tl-f-test-43618868241`. `tracks.npz` (`tl5_tracks.py`) holds the first
 20 shifted periods' tracks for the slides.
 
+**Decided by the panel, round 1 (`review.md`): five approve with findings.** Every number
+below reproduces and the logic's output stands, but the panel changed what it means; read
+"After the panel" at the end before quoting anything from the sections above it. Sentences
+the panel found wrong are struck through there, not silently edited here.
+
 A registered study, not a gate: no pass or fail. The decision record
 (`experiments/20261114-tl5-decision/`) fixed five estimands and the logic of the
 recommendation before seeds 343 and 344 existed.
@@ -100,3 +105,35 @@ owner decides.
 - Detectability with times free, or jointly over pairs of manoeuvres.
 - A smoothed IMM (the filters are scored as they are).
 - Unit tests for `run4`/`study4` beyond those added in this spec's `test_timelate5.py`.
+
+## After the panel (round 1, 2026-11-14)
+
+Corrections to this record; the evidence is in `review.md`.
+
+- **"Part identifiability and part attainable" is two kinds of period.** Where a manoeuvre
+  is under 20 (336 periods) the control is 1.16 [1.04, 1.30] times the reference not told
+  it; where none is (115 periods) it is 2.65 times the full reference. The attainable part
+  is the under-a-third of periods where the control misses a manoeuvre the bearings show
+  (E4 2.73 there, 1.09 elsewhere). The share at 20 is 0.70 in the tight third of periods
+  by bound and 0.20 in the loose third.
+- **E4 is not an upper limit and E3 is not a lower limit.** The references are flattered
+  by held true times (the control is 1.6 to 1.7 times `ref-full` even with the right
+  history) and handicapped by hard omission (the control beats `ref-d20` in 37% of
+  periods); detectability is not additive (jointly omitted "undetectable" manoeuvres cost
+  20 or more in 44% of 39 periods checked).
+- **The recommendation is the rule's output, not the evidence's.** The second condition
+  counts manoeuvres at a 120 s match (0.18; 0.30 at 60 s, 0.11 at 240 s), while the cost
+  sits in the 100 periods with a miss above 40 (E4 3.08, 69% of the log sum).
+- **Wrong as written:** "the tuning seed differed from it by more than its intervals" (the
+  test's values lie inside the tuning intervals; about 1 standard error); "IMM ÷ control
+  4.8 to 16; EKF 5.6 to 22" (on 40% of periods; on common rows 3.75 to 10.5 and 4.1 to
+  9.6); "the same miss curve by band" on Annex B (below 40 only); "half-way point between
+  10 and 40" (near 20); shifted 2 "mostly attainable" (one clipped reference, 19
+  manoeuvres).
+- **Added:** of the 138 missed manoeuvres above 40 the true-prior search finds 66; E5 is
+  2.58 where it finds more and 1.07 elsewhere. The attainable part looks at least half a
+  prior problem.
+- **Not delivered, added:** the split under each way of fitting the reference; course and
+  speed in the estimands (attainable share 0.55 and 0.48 by the panel's recomputation);
+  a joint detectability; unit tests for `detect.py` and `run5.py`; period counts in the
+  paired tables.
