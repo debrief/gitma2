@@ -71,3 +71,31 @@ is not registered as a decision and the study reports the share only (spec 015's
 
 Tuning 342: Annex B 100, shifted 150, shifted 2 100, outliers 60. Validation 343 (L-a
 soundness only): 60 each. Test 344: Annex B 300, shifted 400, shifted 2 300, outliers 200.
+
+## As registered (2026-11-14, after the tuning run, before seeds 343 and 344)
+
+- **R5 is not registered as a decision rule.** On tuning seed 342 the attainable share at
+  threshold 20 is 0.32 [-0.08, 0.56] on 137 scored periods; at the test's size its
+  half-width is about 0.17, so the tuning value is one half-width from 0.5; and the share
+  runs from 0.66 at threshold 10 to below zero at 40. A rule would be decided by the
+  threshold and the sample. The study registers estimands, forecasts and the logic of the
+  recommendation instead; `study5.verdict` is still computed and printed, and is not the
+  outcome.
+- **Estimands** (shifted split, each at thresholds 10, 20 and 40, paired per period with
+  the median per-period ratio and the twice-as-bad shares beside):
+  E1 the share of whole true manoeuvres with detectability under the threshold;
+  E2 the control's miss rate by detectability band;
+  E3 `ref-dT` ÷ `ref-full`: what not being told the undetectable manoeuvres costs;
+  E4 control ÷ `ref-dT`: what remains for a system that found and timed every detectable
+  manoeuvre (an upper limit: the reference's times are the truth);
+  E5 control ÷ `true`: what knowing the targets' statistics is worth.
+  The same on Annex B and shifted 2 beside.
+- **The recommendation's logic, fixed now**: a proposer study (study L's trained models
+  inside the search) is recommended to the owner only if, on the test seed, E4 at
+  threshold 20 is separated from 1 with a lower limit above 1.10 **and** the control
+  misses more than a third of the manoeuvres above 40. Otherwise the recommendation is
+  to write the time-late track up, with what would add information (longer periods,
+  ownship manoeuvres chosen for observability, a hedged answer) named as the remedy. The
+  owner decides either way.
+- **Sizes**: validation 343: Annex B 60, shifted 60 (soundness only). Test 344: Annex B
+  300, shifted 500, shifted 2 200, outliers 150.

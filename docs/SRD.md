@@ -319,6 +319,22 @@ and recorded, not asked.
   the outlier gap, about half the correlated-error gap and little of the shifted-prior gap
   (`experiments/20261113-tl4-tuning/`). The criteria are sign tests against 1 with three
   seeds agreeing, with the power of each stated; no materiality line is registered.
+- **2026-11-14 (owner, recorded by the agent):** study L (spec 016) is decided by the panel
+  (`experiments/20261114-tl4/review.md`; five approve with findings): learning is shown on
+  no split and the classical controls stand; the loss was the learned model's untuned
+  manoeuvre detector, so what stops is that model with that read-out. The owner chose
+  option A: **the classical control (`ctl`, declared at an evidence margin of 1 with a
+  stated 1% chance of a quiet target) is the standing time-late system**, with its recorded
+  limits (nothing for a bias or a shifted prior; more single manoeuvres called quiet; its
+  correlated-error form knows the simulator's error family), and one classical study asks
+  whether the gap left under a shifted manoeuvre prior is identifiability (spec 017).
+  Nothing trained, no GPU run.
+- **2026-11-14 (agent, proposed; owner to merge):** spec 017's study is registered
+  (`experiments/20261114-tl5-decision/`) as estimands and forecasts, without a decision
+  rule: on tuning seed 342 the share of the gap a perfect detector could still win depends
+  on where "detectable" is drawn (0.66, 0.32 and below zero at χ² thresholds of 10, 20 and
+  40) and its interval is wide, so a rule would be decided by the threshold and the sample.
+  The logic of the recommendation on a learned proposer is fixed beforehand in the record.
 
 ## Annexes
 
