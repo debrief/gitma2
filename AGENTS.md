@@ -433,6 +433,15 @@ proposer inside the search, training through the arc layer, a larger budget. Wri
 and study whether the shifted-prior gap is identifiability (classical, CPU); only if it is not, the
 trained models as proposers inside the search. Seeds 338 to 341 used; 324, 325 unused; the next
 fresh seed is 342.
+**Owner 2026-11-14: option A (spec 017)**: the classical control `ctl` (declared at margin 1, quiet
+probability 0.01) is the standing time-late system; one classical study of whether the
+shifted-prior gap is identifiability, CPU only, nothing trained; what study L's record owes is made
+good. 017 (`specs/017-shifted-gap/`; in progress): `timelate/detect.py` (a true manoeuvre's
+detectability: the χ² its omission adds, times held; references told only the detectable ones),
+`run5.py` (plan key `runner: run5`: `run4`'s control unchanged, `ref-full`, `ref-dT`, the search
+under the split's own prior `true`, IMM and EKF as tracks, references on edited bearings),
+`study5.py` (the gap split into an attainable share and identifiability; the rule reads the
+attainable share at threshold 20 against 0.5). Seeds 342 tuning, 343 validation, 344 test.
 
 ## Stack (owner decisions, 2026-10-31)
 

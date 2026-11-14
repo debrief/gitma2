@@ -1,0 +1,61 @@
+{
+ "study": "spec 017: the standing time-late control and the shifted-prior gap",
+ "registered": "2026-11-14",
+ "owner_decision": "2026-11-14, option A",
+ "digests": {
+  "configs/timelate/tl-f.json": "0b29a95d72098648f86a13af9ba5e2dc08c0c4842ed00939d86c079ba07e0487",
+  "configs/timelate/runs/tl-f-val.json": "2795606275f9d210271ff8f410acb68cb887877319c837cd786afa658a6c6c6a",
+  "configs/timelate/runs/tl-f-test.json": "a06b9c76daaaf119ff7cbad0625578a38f15f22880a0d3ea055b956e27c1111b",
+  "configs/timelate/tl-ranges.json": "cb48fcabb5a51f76685cab482e23f01cb53c504406a1654c2ec1b664216a4784",
+  "configs/timelate/tl-broad.json": "2ff99a3a2abc3696114d1a234f166e22d4d6cf494dd28631d9dd0d495a0203a1",
+  "configs/timelate/tl-shift-ranges.json": "bc76abf0d5916f4a91909ebb6ef90e84438eae2ee1142e6607c21823d489081b",
+  "configs/timelate/tl-shift2-ranges.json": "1ce6b6edec93721eb64381c5d3a98c82a62e027d6386f476487147f141338b47",
+  "configs/timelate/tl-heldout.json": "aeedfe10ca841d95d1cf2026382c43afe59c548aef9f5fed9fe07e16d3832634",
+  "configs/gateh/conditions.json": "d260fd7538d2fbcbc8c25cfd402a091ed9d50bf254a79bfd2c6c5bcc4b634e15",
+  "configs/gateh/gh-a.json": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a"
+ },
+ "time_late_code_sha256": "b32247f8161055886f515ba6150d259063280d631900620f539dbdd457d8c4e3",
+ "control_code_sha256_as_study_L": "e5040f5e8df5bfea978594da2559d1073ab283bcedc53794e99fea6a77eb70a6",
+ "files": {
+  "src/tma2/timelate/study5.py": "b6abbc62b91322b6d8f7a4f4466acc964a71b9b7cfba427529ee830cf2cbab26",
+  "src/tma2/timelate/study4.py": "242cd6fc0acbb5d89b61e3cd0dc96fb48270d979d914a8b1157949b149b27d61",
+  "src/tma2/timelate/study.py": "a17c54155cf1cf8c2a65595faf3811fa6b4ab2b979275533db33d8388c6c3883",
+  "src/tma2/timelate/match.py": "fff96f28bee96c75361d7f0bf97624f5437a6beeb315129a7585be0428c9a7ab",
+  "src/tma2/cli/tlscore.py": "e8d1b68c8f68af896aa0fee703f3bd5a62ec8dfc79dd17b69fe6f4f653f0f0af",
+  "src/tma2/cli/tlsolve.py": "2b4078763be0e6b057f56ff096c96368d7f4fb6d7adf24ec248f79cb2d218707",
+  "scripts/research/tl5_tables.py": "7b03f0c1fab51d3b2cc8f31ee9c713fd27851023965898e8a802add566430b37",
+  ".github/workflows/timelate.yml": "e97b82c709b43721eb928fdfb6d572e2909f2a11d822218f6f8e9d6528d561ba"
+ },
+ "seeds": {
+  "tuning (spent)": 342,
+  "validation (soundness)": 343,
+  "test": 344
+ },
+ "decision_rule": "none. Research 'As registered': the attainable share's interval and its dependence on the threshold make a rule at this sample a coin's toss; estimands and forecasts are registered instead",
+ "statistic": "per period, the median relative range error over scored rows (30 s apart, known-history bound below 0.5); a ratio a ÷ b is the geometric mean over periods with a 95% period bootstrap (2,000 resamples, seed 17, percentile), reported with the median per-period ratio and the shares of periods over twice as bad on each side",
+ "estimands": {
+  "E1": "share of whole true manoeuvres with detectability under 10, 20, 40 (Wilson intervals), by split",
+  "E2": "share of whole true manoeuvres missed (matched within 120 s) by detectability band, for ctl-d1-q0.01, search3, true, c2",
+  "E3": "ref-dT ÷ ref-full at T = 10, 20, 40",
+  "E4": "ctl-d1-q0.01 ÷ ref-dT at T = 10, 20, 40 (an upper limit on what detection could win: the reference's times are the truth)",
+  "E5": "ctl-d1-q0.01 ÷ true",
+  "beside": "the attainable share (gap_split) at each threshold; imm and ekf read as tracks; on the outlier split the references fitted to edited bearings; efficiency against the bound; counts at 60, 120, 240 s"
+ },
+ "soundness": "validation seed 343, Annex B: history-fixed range efficiency on rows bounded below 0.05 within [0.8, 1.3]; at least 0.9 of true-history fits with a consistent cost; at most 0.25 of references drifting when free. Fails: the study stops before the test seed",
+ "recommendation_logic": "a proposer study (study L's trained models inside the search) is recommended only if, on the test seed's shifted split, E4 at threshold 20 has a lower limit above 1.10 AND the control misses more than a third of the manoeuvres with detectability above 40. Otherwise: write the time-late track up and name what would add information. The owner decides either way",
+ "forecasts (restatements of tuning seed 342, not independent predictions)": {
+  "E1 shifted": "0.24 / 0.33 / 0.47 under 10 / 20 / 40; Annex B 0.12 / 0.18 / 0.23",
+  "E2 shifted, control": "about 0.95 under 10, 0.65 at 10 to 20, 0.5 at 20 to 40, 0.3 at 40 to 100, 0.12 above 100",
+  "E3 shifted": "1.27 / 1.62 / 2.18",
+  "E4 shifted": "1.59 / 1.25 / 0.93; at 20 the lower limit is not above 1.10",
+  "E5 shifted": "1.0 (0.9 to 1.2): the true prior finds more manoeuvres and does not improve the track",
+  "recommendation": "no proposer study: E4's lower limit at 20 below 1.10 (about two chances in three), and the control's miss rate above 40 under a third (0.18 on tuning)"
+ },
+ "known_limits": [
+  "detectability and the references hold manoeuvre times at the truth: both flatter the references, so E4 is an upper limit and E3 a lower limit on identifiability",
+  "two close manoeuvres can each read undetectable while the pair is detectable",
+  "thresholds are in χ² and tied to the evidence's price under Annex B's prior",
+  "the control is study L's, unchanged, with its recorded limits; run4 has no unit test of its own",
+  "one simulator, one test seed"
+ ]
+}
