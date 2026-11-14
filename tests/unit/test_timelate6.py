@@ -138,3 +138,17 @@ def test_coverage_counts_rows_within_the_stated_spread() -> None:
     assert c["1"]["rows"] == 5 and c["1"]["within_2sd"] == 1.0 and c["1"]["within_1sd"] == 0.0
     assert c["0"]["periods"] == 2 and c["2+"]["rows"] == 0
     assert coverage(arr, periods, "absent", [1.0]) == {}
+
+
+def test_committed_tables_are_what_the_script_prints() -> None:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "tl6_tables", ROOT / "scripts/research/tl6_tables.py"
+    )
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    for t in sorted((ROOT / "experiments").glob("*-tl6*/tables.md")):
+        summary = json.loads((t.parent / "summary.json").read_text())
+        assert t.read_text() == mod.tables(summary), t
