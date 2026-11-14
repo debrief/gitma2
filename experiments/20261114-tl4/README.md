@@ -144,3 +144,51 @@ model did not close it either.**
 - It does **not** show that learning cannot help under a shifted prior: the model's own
   track is level with the control there, the read-out is what loses, and the gap to the
   reference (1.8) is open for both.
+
+## Corrections after the panel (2026-11-14; `review.md`, five approve with findings)
+
+The registered outcome stands. The following statements above are corrected; figures
+marked "panel" are the reviewers' recomputations and are in `review.md`, not in the
+generated files.
+
+- **"About 20% worse" is a tail.** The median per-period ratio of control to read-out is
+  1.00 on every split (`summary.json`, `median_ratio`); the read-out is over twice as bad
+  in 20% to 27% of periods and over twice as good in 9% to 13% (`learned.md`). The whole
+  loss is in the periods where the model declares fewer manoeuvres than the control;
+  where the counts agree the two are level (panel). The untuned threshold of 0.5 is
+  therefore the headline, not a footnote: **the registered comparison measured the
+  model's manoeuvre detector against the evidence search.**
+- **"The learned track stops" means this model with this read-out.** A search started
+  from the model was not registered; on tuning data it equals the control at a third of
+  the search time and does not beat it (panel).
+- **"Harm"** is the rule's word. The read-out is level with the control in the median
+  period and 1.8 times better than C″.
+- **The held-course "win" is not a learned track**: where both declare no manoeuvre the
+  two are the same fit; the 1.06 is the control's false manoeuvres in 23 of 299 periods.
+- **Reading 3 and the last "supports" bullet**: the own track is level with the control
+  under a shifted prior in range only (course 0.79, speed 0.77; panel), and the pooled
+  figure hides a win where the bound is loose and a loss by nearly three where it is
+  tight. "It never wins" is false by slice; the slices are post hoc.
+- **The control's claims are narrowed.** It is better with outliers and with correlated
+  errors of the generator's family and on quiet targets; under bias it is 1.00
+  [0.96, 1.05]. "At no cost on Annex B" becomes "no range cost separated over three seeds
+  (0.96 to 1.09)"; it calls a one-manoeuvre target quiet more often, markedly so with
+  correlated errors (0.29 against 0.05; `supplement.md`).
+- **The L-b table** gave the ratio for the declared control and the gap closed for the
+  undeclared one; on the outlier splits the "gap closed" is read against a reference
+  fitted to unedited bearings and means only that the control beats it. The 1.79 times
+  the reference on the shifted split is 1.7 to 2.1 by how the reference is fitted (panel).
+- **The mismatch splits** lie inside the model's training ranges (bias excepted, and bias
+  is the mildest held-out condition): the model lost in-distribution.
+- **Reading 4** quotes the model's own spans; the read-out's are 0.34 missed and 0.08
+  false on Annex B. **Reading 6**: on shifted 2 the hedged track is worse than the
+  declared one (0.96 [0.92, 1.00]), separated.
+- **"Every table is generated"** is not true of the medians table: its declared and hedged
+  control columns were taken from `summary.json` by hand (all correct).
+- **Addendum 2** is wrong that shard size can reach C″ only: the control's searches start
+  from C″'s track. Not measured.
+- **Not delivered, added to the list above**: a working prior-mismatch diagnostic (the one
+  computed is not a Bayes factor and is not cited); candidate calibration under the
+  broadened prior; the export check on the trained models; IMM and EKF tracks beside; the
+  weights' digests in the record; unit tests for the runner and the scorer.
+- **The three seeds** share the training stream and differ in initialisation only.

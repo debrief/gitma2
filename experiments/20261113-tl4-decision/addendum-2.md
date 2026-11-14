@@ -19,3 +19,9 @@ the criteria.)
 beside the controls) was run locally through bash against the three real checkpoints on
 three periods of the spent tuning seed 338; the checkpoints' digests equal the training
 records; no error figure was read from that check.
+
+**Correction, 2026-11-14 (panel).** The statement above that shard size reaches C″ only is
+wrong in principle: the control's searches start from C″'s track and transitions, so a
+last-bit difference there can reach `ctl`, a side of the criteria. Its size was not
+measured (that needs the test solved again in shards of 10); every losing side of L-c and
+L-d is at least 2.7 standard errors from 1.
