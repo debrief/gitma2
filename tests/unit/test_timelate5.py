@@ -177,3 +177,19 @@ def test_a_learned_track_needs_the_controls_validation_record(tmp_path: Path) ->
     (tmp_path / "summary.json").write_text(json.dumps(rec))
     with pytest.raises(SystemExit, match="not committed"):  # an untracked folder
         _require_controls_record(str(tmp_path), "abc")
+
+
+def test_a_record_s_tables_are_what_the_script_prints_for_its_summary() -> None:
+    import importlib.util
+    import json
+
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location(
+        "tl5_tables", root / "scripts/research/tl5_tables.py"
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    for t in sorted((root / "experiments").glob("*-tl5*/tables.md")):
+        summary = json.loads((t.parent / "summary.json").read_text())
+        assert t.read_text() == mod.tables(summary), t
