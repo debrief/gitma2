@@ -1,0 +1,146 @@
+{
+ "description": "Spec 017's registered study (2026-11-14): study L's control as registered, the detectability of each true manoeuvre, references told only the detectable ones, the search under the split's own prior, IMM and EKF beside. Bound by digest in the decision record; never edited after.",
+ "data_split": "train",
+ "splits": {
+  "man2": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "Annex B's manoeuvre statistics"
+  },
+  "shift": {
+   "ranges": "configs/timelate/tl-shift-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "shorter legs, smaller turns, faster turn rates, more speed changes"
+  },
+  "shift2": {
+   "ranges": "configs/timelate/tl-shift2-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "longer legs, larger and slower turns"
+  },
+  "man2-out": {
+   "ranges": "configs/timelate/tl-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "2% outlying bearings (10 sd)",
+   "condition": "out-central",
+   "edited_reference": true
+  }
+ },
+ "prior": "configs/timelate/tl-ranges.json",
+ "prior_broad": "configs/timelate/tl-broad.json",
+ "gh_plan": "configs/gateh/gh-a.json",
+ "references": {
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5"
+ },
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "systems": [
+   "search3",
+   "ctl"
+  ],
+  "temperatures": [
+   1
+  ],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 20,
+  "detect_thresholds": [
+   10,
+   20,
+   40
+  ]
+ },
+ "runner": "run5",
+ "reference": {
+  "sound": "history-fixed",
+  "tight_bound": 0.05
+ },
+ "study": {
+  "match_tolerance_s": 120.0,
+  "soundness_band": [
+   0.8,
+   1.3
+  ],
+  "convergence_min": 0.9,
+  "reference_flagged_max": 0.25
+ },
+ "shifted": {
+  "control": "ctl-d1-q0.01",
+  "systems": [
+   "ctl-d1-q0.01",
+   "search3",
+   "true",
+   "c2"
+  ],
+  "primary_threshold": 20
+ },
+ "comparisons": [
+  [
+   "ctl-d1-q0.01",
+   "true"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ref-full"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ref-d10"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ref-d20"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ref-d40"
+  ],
+  [
+   "ref-d10",
+   "ref-full"
+  ],
+  [
+   "ref-d20",
+   "ref-full"
+  ],
+  [
+   "ref-d40",
+   "ref-full"
+  ],
+  [
+   "true",
+   "ref-full"
+  ],
+  [
+   "imm",
+   "ctl-d1-q0.01"
+  ],
+  [
+   "ekf",
+   "ctl-d1-q0.01"
+  ],
+  [
+   "c2",
+   "ctl-d1-q0.01"
+  ],
+  [
+   "ref-full",
+   "ref-full-edit"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ref-full-edit"
+  ],
+  [
+   "ctl-d1-q0.01",
+   "ref-d20-edit"
+  ]
+ ]
+}
