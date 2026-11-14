@@ -192,3 +192,21 @@ generated files.
   broadened prior; the export check on the trained models; IMM and EKF tracks beside; the
   weights' digests in the record; unit tests for the runner and the scorer.
 - **The three seeds** share the training stream and differ in initialisation only.
+
+## Made good afterwards (spec 017, 2026-11-14)
+
+- **The weights scored** (`shard-headers.json`, from the test run's shard artefacts by the
+  workflow `headers/**`, results branch `results/headers-tl-e-test-43604889022`): all 241
+  shards scored the same three checkpoints, `9767a4a0…`, `ebd545a8…` and `802cdfcf…`, which
+  are the training records' (`experiments/20261114-tlm-runs/`); one plan digest, one code
+  digest, one commit, clean, 2,860 periods.
+- **The export check on the trained models**
+  (`experiments/20261114-tlm-runs/export-check.json`, `scripts/research/tlm_export_check.py`):
+  the ONNX export of each seed, run by onnxruntime on CPU on 32 periods of the training
+  stream's monitor slice, agrees with the trained model to 8.3e-5, 4.4e-5 and 3.4e-5 (the
+  toy model's test asks 1e-5; the bound here was set at 1e-4 before the check ran).
+- **Tests** for the split readings and the controls-record guard:
+  `tests/unit/test_timelate5.py`. `run_shard4` itself still has no unit test (a single
+  period takes about a minute); spec 017's runner calls it on every period it scores.
+- IMM and EKF tracks beside, and a reference fitted to edited bearings under outliers, are
+  in spec 017's runs, not added to this record.
