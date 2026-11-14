@@ -79,9 +79,9 @@ def test_paired_ratios_in_three_quantities_carry_their_period_counts() -> None:
     assert math.isclose(c["range"]["geometric_mean"], 2.0, rel_tol=1e-6)  # sqrt(4 × 1)
     assert math.isclose(c["range"]["median_ratio"], 2.0, rel_tol=1e-6)
     keep = ids < 6
-    assert math.isclose(
-        pair3(med, "ctl", "ada", keep)["range"]["geometric_mean"], 4.0, rel_tol=1e-6
-    )  # type: ignore[index]
+    first = pair3(med, "ctl", "ada", keep)
+    assert first is not None
+    assert math.isclose(first["range"]["geometric_mean"], 4.0, rel_tol=1e-6)
     assert pair3(med, "ctl", "absent") is None
     assert pair3(med, "ctl", "ada", ids < 3) is None  # too few periods to quote
 
@@ -115,8 +115,9 @@ def test_kind_of_period_reads_detectable_misses_only() -> None:
         int(kinds["bound_tight"].sum() + kinds["bound_middle"].sum() + kinds["bound_loose"].sum())
         == 4
     )
-    assert one_called_quiet(periods, "ctl")["rate"] == 2 / 3  # type: ignore[index]
-    assert any_false(periods, "ctl", 120.0)["rate"] == 0.25  # type: ignore[index]
+    quiet, false = one_called_quiet(periods, "ctl"), any_false(periods, "ctl", 120.0)
+    assert quiet is not None and false is not None
+    assert quiet["rate"] == 2 / 3 and false["rate"] == 0.25
 
 
 def test_coverage_counts_rows_within_the_stated_spread() -> None:
