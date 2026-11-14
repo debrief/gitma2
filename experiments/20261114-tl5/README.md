@@ -11,7 +11,7 @@ below are copied from them. Per-row errors: results branch
 **Decided by the panel, round 1 (`review.md`): five approve with findings.** Every number
 below reproduces and the logic's output stands, but the panel changed what it means; read
 "After the panel" at the end before quoting anything from the sections above it. Sentences
-the panel found wrong are struck through there, not silently edited here.
+the panel found wrong are listed there; the text above is left as first written.
 
 A registered study, not a gate: no pass or fail. The decision record
 (`experiments/20261114-tl5-decision/`) fixed five estimands and the logic of the

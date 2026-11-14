@@ -55,3 +55,8 @@ times are held, and the share stated); a split may come out mixed, which is a re
 - The true-prior search beside the control.
 - Track plots of periods with undetectable manoeuvres, chosen by a rule in the script.
 - All from committed experiment folders by a script named in the slides post.
+
+**Update, 2026-11-14 (evening).** Done. Validation on seed 343 passed soundness; the test
+on seed 344 was scored once and decided by the panel in one round. The result and what the
+panel made of it are in [the write-up](/blog/2026/11/14/shifted-gap) and
+[the slides](/blog/2026/11/14/shifted-gap-slides).
