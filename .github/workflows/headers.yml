@@ -1,0 +1,69 @@
+name: Shard headers of a finished run
+
+# Push `headers/<name>` with configs/headers/<name>.json: {"run_id": <a finished time-late run>}.
+# Downloads that run's shard artefacts and commits every shard's header (and, where a learned
+# track was scored, the header of the prediction shard with its weights' digest) to
+# results/headers-<name>-<this run id>. Spec 017 FR-008: study L's test record did not carry
+# the digests of the weights it scored.
+
+on:
+  push:
+    branches: ["headers/**"]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  headers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the shards
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NAME="${GITHUB_REF_NAME#headers/}"
+          test -f "configs/headers/$NAME.json"
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+          RUN_ID="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['run_id'])" "configs/headers/$NAME.json")"
+          echo "RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/shards"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern 'shard-*' --dir "$RUNNER_TEMP/shards"
+      - name: Collect the headers
+        run: |
+          mkdir -p "$RUNNER_TEMP/result"
+          python3 - "$RUNNER_TEMP/shards" "$RUNNER_TEMP/result/headers.json" "$RUN_ID" <<'PY'
+          import json, pathlib, sys
+          rows, weights = [], {}
+          for f in sorted(pathlib.Path(sys.argv[1]).rglob("*.json")):
+              j = json.loads(f.read_text())
+              if "header" not in j or "periods" not in j:
+                  continue
+              h = j["header"]
+              row = {"file": f.name, "split": h["split"], "ordinal_start": h["ordinal_start"],
+                     "ordinal_count": h["ordinal_count"], "plan_sha256": h["plan_sha256"],
+                     "search_code_sha256": h["search_code_sha256"], "git_commit": h["git_commit"],
+                     "git_dirty": h["git_dirty"], "dataset_digest": h["dataset_digest"],
+                     "learned": j.get("learned") or {}}
+              rows.append(row)
+              for name, lh in row["learned"].items():
+                  weights.setdefault(name, {}).setdefault(lh.get("weights_sha256"), 0)
+                  weights[name][lh.get("weights_sha256")] += 1
+          out = {"run_id": int(sys.argv[3]), "shards": len(rows), "weights_sha256_by_system": weights, "rows": rows}
+          pathlib.Path(sys.argv[2]).write_text(json.dumps(out, indent=1) + "\n")
+          print(json.dumps({"shards": len(rows), "weights": weights}, indent=1))
+          PY
+      - name: Push the results branch
+        run: |
+          DEST="experiments/headers-runs/$NAME-$GITHUB_RUN_ID"
+          BRANCH="results/headers-$NAME-$GITHUB_RUN_ID"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          mkdir -p "$DEST"
+          cp "$RUNNER_TEMP/result/headers.json" "$DEST/"
+          git add -f "$DEST"
+          git commit -m "Shard headers of run $RUN_ID ($NAME)"
+          git push origin "$BRANCH"
