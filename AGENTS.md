@@ -553,6 +553,23 @@ appears in 1.7 s. On the 24 G5 rows the demo's E equals Gate 2's committed predi
 2e-7. Slides `site/blog/2026-11-15-browser-viewer-slides.md`. The SRD's default plan is
 complete; what follows is the owner's choice. Seeds: none new; the next fresh seed is 348.
 
+021 (the carried model end to end in the browser, `specs/021-browser-segmenter/`; owner
+2026-11-15 option A; not a gate, nothing trained, no fresh seed): C's host code is ported to
+JavaScript (`site/static/viewer-data/js/`: `lsq`, `glr`, `codes` with NumPy's pairwise and
+float32 sums, `ownship`, `features`, `search`, `confirm`, `handover`, `pipeline`). The physics
+layer at confirmation's settings is its own graph (`viewer/layer_export.py`, `layer.onnx`; three
+legs in CI), and so is E-s (`es.onnx`). The page's live mode runs the whole model from bearings
+in a module worker. The dump (`tma2-viewer-dump`; `--install` writes the scenario files and
+graphs into the viewer data) and the 30 check scenarios are in `experiments/20261116-port/dump/`.
+Checks:
+- `conformance/onnx/port_node.mjs` and `port_summary.py` (CI job `browser-port`);
+- `viewer_leg.mjs --live all`.
+
+Record `experiments/20261116-port/`: segmentation identical on 1,770 of 1,770 rows; every
+nomination and decision identical; cost drops within 1.3e-4, against a smallest margin of 0.154;
+live mode 24 to 95 s an engagement, 181 of 181 rows identical. Slides
+`site/blog/2026-11-16-browser-segmenter-slides.md`. Not built: pasting a scenario (story 3).
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -943,3 +960,9 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   the name of a page's path (`/viewer` and `static/viewer/`): which one a host serves is
   ambiguous, so the data live in `static/viewer-data/`. Hooks after an early
   return break a React page: compute every `useBaseUrl` first.
+- Spec 021: compare a port by its decisions, not its intermediates. Least squares can land in
+  another minimum at one row (relative 75), and the GLR basis's 1e-6 cutoff is discontinuous,
+  yet every decision matched. A numba `np.sum`/`mean` and NumPy's pairwise sum differ in the last
+  bits, and a float32 pack column is averaged in float32: port the summation order (`codes.js`).
+  `onnxruntime-web`'s `ort.node.min.mjs` runs the same WASM build under Node, which is much
+  faster for development than a browser.

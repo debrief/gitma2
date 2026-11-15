@@ -17,4 +17,4 @@
 - [x] T007 `--install`: scenario files and graphs into the viewer data, and manifest digests.
   Unit tests in `tests/unit/test_viewer_dump.py`.
 - [ ] T008 Story 3, the pasted scenario (P3). Not done in this spec.
-- [ ] T009 Record, slides post, AGENTS.md, PR.
+- [x] T009 Record, slides post, AGENTS.md, PR.
