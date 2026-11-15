@@ -24,6 +24,9 @@ diagnostic, and three periods as tracks, good and bad.
 - **Challengers**: the standing control ÷ each attempt to beat it, on Annex B and busier
   targets: the learned model's read-out and its own track (spec 016), the search told the
   true statistics (017, 018), the prior adapted to the period, declared and hedged (018).
+- **Ladder**: development work on 130 used periods: the standing control ÷ the search
+  under the broadened prior taking on the true statistics a part at a time, and each part
+  alone; orange ticks are the same ratio without its ten best periods.
 - **Three periods as tracks**, chosen by a rule in the script: of the 20 stored shifted
   periods of spec 017's test, those where the standing control is best, median and worst
   against the old system.
@@ -35,5 +38,5 @@ uv run python scripts/research/tl_synthesis.py --out experiments/20261115-tl-syn
 ```
 
 The script reads only committed records (`experiments/20261114-tl4/`, `20261114-tl5/`,
-`20261115-tl6/`); each figure's `.json` sidecar names the inputs' digests and the commit.
+`20261115-tl6/`, `20261115-tl7-dev/`); each figure's `.json` sidecar names the inputs' digests and the commit.
 The data are test seeds 341, 344 and 347, 5-second bearings, generated in their CI runs.

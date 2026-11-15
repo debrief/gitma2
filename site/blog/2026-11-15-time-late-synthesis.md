@@ -97,8 +97,25 @@ Control ÷ challenger; above 1 the challenger is better.
 
 ## The last diagnostic
 
-*Pending: the diagnostic run on used periods of seed 347 is in progress. This section is
-written when it reports; the post is a draft until then.*
+Spec 018's panel left one thing confounded: the family of priors only refitted a shared
+set of candidate histories, and it lacked parts of the true statistics. One run on 130
+periods already used (seed 347; development work, not a result) separates the two.
+
+- **Refitting was not the handicap.** The family member nearest the truth, given a search
+  of its own, is 1.03 [0.91, 1.19] of the control; refitting shared candidates on the same
+  periods it was 1.03 [0.91, 1.19].
+- **No single part of the true prior buys its gain.** Taking on the truth's legs, turn
+  sizes, turn rates, speed changes and kinds of manoeuvre one at a time moves the ratio
+  from 0.98 to 1.11 [0.94, 1.32] by steps of a few per cent. Each part alone on the
+  broadened prior does nothing or costs a little (0.92 to 1.00).
+- **The gain is a tail at every step.** Without its ten best periods every one of them,
+  the true prior included (0.94), is behind the control.
+- **What the right prior changes steadily is the count**: manoeuvres missed fall from 0.52
+  to 0.36, with false ones near a half a period throughout. In course and speed it is
+  further ahead (1.21 and 1.24, not quite separated).
+
+So the right prior is worth having only whole, it cannot be assembled from one or two
+corrected statistics, and one period cannot say which whole prior is right.
 
 ## What was withdrawn or corrected along the way
 

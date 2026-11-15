@@ -239,6 +239,60 @@ def charts(data: dict[str, dict[str, Any]], fig_dir: Path) -> None:
         plt.close(fig)
         used["challengers.svg"] = summaries
 
+        dev = Path("experiments/20261115-tl7-dev/summary.json")
+        if (ROOT / dev).exists():
+            lad = json.loads((ROOT / dev).read_text())["splits"]["shift"]["ladder"]
+            steps = [
+                ("lad-0", "broadened\nprior"),
+                ("lad-1", "+ legs"),
+                ("lad-2", "+ turn\nsizes"),
+                ("lad-3", "+ turn\nrates"),
+                ("lad-4", "+ speed\nchanges"),
+                ("lad-5", "+ kinds:\nthe true prior"),
+            ]
+            alone = [
+                ("lad-1", "legs"),
+                ("one-angle", "turn sizes"),
+                ("one-rate", "turn rates"),
+                ("one-speed", "speed changes"),
+                ("one-kinds", "kinds"),
+            ]
+            fig, axes = plt.subplots(1, 2, figsize=(10.4, 3.9), sharey=True, width_ratios=[6, 5])
+            for ax, rows, title in (
+                (axes[0], steps, "taking on the true statistics a part at a time"),
+                (axes[1], alone, "each part alone on the broadened prior"),
+            ):
+                for i, (key, _lab) in enumerate(rows):
+                    v = (lad[key]["vs_control"] or {}).get("range")
+                    point(ax, i, v, purple, None)
+                    c = lad[key].get("concentration") or {}
+                    if c:
+                        ax.plot(i, c["ratio_without_top"], marker="_", color=orange, ms=12, mew=2)
+                ax.axhline(1.0, color="0.5", lw=0.8, ls="--")
+                ax.set_xticks(range(len(rows)), [r[1] for r in rows], fontsize=7.5)
+                ax.set_title(title, fontsize=9)
+            axes[0].plot([], [], "o", color=purple, ms=4, label="control ÷ search under this prior")
+            axes[0].plot(
+                [],
+                [],
+                marker="_",
+                color=orange,
+                ls="",
+                ms=10,
+                mew=2,
+                label="the same without its ten best periods",
+            )
+            axes[0].set_ylabel("standing control ÷ system, range")
+            axes[0].legend(frameon=False, fontsize=7)
+            fig.suptitle(
+                "Development work on 130 used periods (seed 347): no part carries the gain",
+                fontsize=10,
+            )
+            fig.tight_layout()
+            fig.savefig(fig_dir / "ladder.svg")
+            plt.close(fig)
+            used["ladder.svg"] = [dev]
+
         tr_path = Path("experiments/20261114-tl5/tracks.npz")
         z = np.load(ROOT / tr_path)
 
