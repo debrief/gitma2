@@ -62,8 +62,8 @@ finite where the record says the model answers.
    **Then** the estimate's trail from the ownship's zig to the chosen time and its marker at
    that time are shown, and the numeric estimate (range, bearing, course, speed) and its
    error against the truth are displayed.
-3. **Given** a time before the ownship's zig, **When** the reader selects it, **Then** no
-   estimate is drawn and the page says why (the state is undetermined before the zig).
+3. **Given** the time control, **Then** it starts at zig + 5 min (the first G5 row), and the
+   page says why no earlier estimate is drawn (the state is undetermined before the zig).
 
 ---
 
@@ -153,15 +153,15 @@ ellipse is.
 
 - **FR-001**: The viewer MUST run the carried E-w graph exactly as exported by the
   project's export of Gate 2's carried model (the carried weights named in
-  `experiments/20261107-g2-val/carried.json`). It MUST NOT re-export with other settings,
+  `experiments/20261107-g2-decision/carried.json`). It MUST NOT re-export with other settings,
   retrain, or alter weights.
 - **FR-002**: The demo data MUST be a small set of engagements (default six) from a seed
   already used and never a fresh one: generator 0.6.0 MAN2 scenarios at σ = 1°. The rule
   that chooses them is fixed in the plan and is not a choice by eye. They MUST span a quiet
   target, a target that manoeuvres once, a busy target, and at least one engagement where E
   is worse than C″.
-- **FR-003**: For each demo engagement and each scored time (every 60 s from the ownship's
-  zig to the end of the window), the demo data MUST carry the graph's host-side inputs:
+- **FR-003**: For each demo engagement and each scored time (every 60 s from the first G5 row,
+  zig + 5 min, to the end of the window), the demo data MUST carry the graph's host-side inputs:
   C's segmentation with E-s's evidence applied and C's hand-over, as the Python inference
   path builds them. It MUST also carry the Python ONNX runtime's outputs on those inputs.
 - **FR-004**: The demo data MUST carry the truth and, at the same times, the estimates of
