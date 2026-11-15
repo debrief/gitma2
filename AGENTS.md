@@ -534,14 +534,14 @@ evidence still judges. Seeds: none new; the next fresh seed is 348.
 the last item of the default plan; the owner said "continue" after PR 37; not a gate, nothing
 trained, no fresh seed): the page `site/src/pages/viewer.js` (`/viewer`, navbar "Viewer")
 runs Gate 2's carried E-w graph (`gate2.export`, carried weights) in ONNX Runtime Web 1.31.1
-(WASM, one thread, worker `site/static/viewer/worker.js`; the runtime is copied from
+(WASM, one thread, worker `site/static/viewer-data/worker.js`; the runtime is copied from
 `site/node_modules` by the site's prebuild into gitignored `static/ort/`). It runs on six
 engagements of used seed 319 chosen by `tma2.viewer.choose`: quiet, one manoeuvre and busy,
 counted over the shown span from zig + 5 min, plus the first where E's G5 median range error
 is worse than C″'s. `tma2-viewer-data` (`viewer/build.py`) builds the data: E's segmentation
 and hand-over in Gate 2's chunks of 16, the graph's inputs every 60 s, Python onnxruntime
 outputs, and one leg, IMM, C and C″ from Python. It takes about 26 min. The data, gzipped with
-a manifest of digests, are 1.2 MB in `site/static/viewer/`. Checks:
+a manifest of digests, are 1.2 MB in `site/static/viewer-data/`. Checks:
 - `conformance/onnx/viewer_python.py` (fresh Python run on the shipped inputs);
 - `viewer_leg.mjs` (the built page in Chromium, every row);
 - `cmp` of the page's graph with a fresh export, all in `ci.yml`'s `onnx-conformance`.
@@ -939,7 +939,7 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Spec 020: the browser runtime (onnxruntime-web WASM) can differ from Python's onnxruntime by
   more than the 1e-5 element-wise tolerance on an off-diagonal covariance element of an
   ill-conditioned row, while state and flags agree to 3e-6. Compare a covariance on its own
-  scale (|ΔP_ij| / √|P_ii P_jj|) and report the element-wise figure. A Docusaurus page path
-  that is also a static folder (`/viewer` and `static/viewer/`) is served as `viewer.html` by
-  GitHub Pages; a test server must prefer `<path>.html` over the folder. Hooks after an early
+  scale (|ΔP_ij| / √|P_ii P_jj|) and report the element-wise figure. Never give a static folder
+  the name of a page's path (`/viewer` and `static/viewer/`): which one a host serves is
+  ambiguous, so the data live in `static/viewer-data/`. Hooks after an early
   return break a React page: compute every `useBaseUrl` first.

@@ -133,3 +133,9 @@ def test_pack_round_trip_and_determinism() -> None:
 def test_gz_has_no_timestamp() -> None:
     assert gz(b"abc") == gz(b"abc")
     assert gz(b"abc")[4:8] == b"\x00\x00\x00\x00"
+
+
+def test_unusable_engagement_is_skipped() -> None:
+    pool = [(0, meta(0), 100), (1, meta(0), 100)]
+    picks, _ = choose(pool, lambda _j: False, usable=lambda j: j != 0)
+    assert picks[0].ordinal == 1 and picks[0].reason == QUIET

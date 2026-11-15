@@ -1,6 +1,6 @@
 """Spec 020 slides: figures from the viewer's shipped data and a conformance-leg result.
 
-    uv run python scripts/research/viewer_charts.py --data site/static/viewer \\
+    uv run python scripts/research/viewer_charts.py --data site/static/viewer-data \\
         --leg <viewer results.json> --out-dir site/static/img/<slug>
 
 * ``tracks.svg``: the busy engagement and the one where E loses to C″, at the last scored

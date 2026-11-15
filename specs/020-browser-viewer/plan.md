@@ -10,7 +10,7 @@ trained; no fresh seed (Gate 2's used test seed 319).
    segmentation (C's confirmation with E-s's evidence) and C's hand-over, and from them E-w's
    graph inputs. It runs Python's onnxruntime on them for the reference outputs. It adds the
    truth and the comparison estimates: one leg (plain batch least squares on the zig leg),
-   the frozen IMM, C and C″. All of this goes to `site/static/viewer/` with a manifest of
+   the frozen IMM, C and C″. All of this goes to `site/static/viewer-data/` with a manifest of
    digests. The graph itself is `gate2.export`'s output with the carried weights.
 2. A site page, `site/src/pages/viewer.js`, is a React page under Docusaurus. It loads
    onnxruntime-web 1.31.1, which the site's prebuild copies from `node_modules`, so the page
@@ -75,8 +75,8 @@ src/tma2/cli/viewer_data.py    tma2-viewer-data (pyproject script)
 tests/unit/test_viewer.py      rule, packing round trip, digests reproduce, sizes
 site/src/pages/viewer.js       the page
 site/src/components/viewer/    plot, table, digest panel
-site/static/viewer/            manifest.json, model.onnx, engagement-<i>.json.gz, rows-<i>.bin.gz
-site/static/viewer/worker.js   loads ort, runs rows (shared with the conformance leg)
+site/static/viewer-data/            manifest.json, model.onnx, engagement-<i>.json.gz, rows-<i>.bin.gz
+site/static/viewer-data/worker.js   loads ort, runs rows (shared with the conformance leg)
 site/scripts/prebuild.mjs      also copies ort.wasm.min.js and its wasm into build-time static
 conformance/onnx/viewer_leg.mjs   Playwright against the built page
 conformance/onnx/viewer_python.py fresh onnxruntime on the shipped inputs (FR-015)

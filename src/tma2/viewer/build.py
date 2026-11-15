@@ -169,6 +169,8 @@ class Builder:
         from tma2.segment.score import g5_rows
 
         g = self.engagement(j)
+        if not any(g.have_e):
+            return False
         g5 = set(g5_rows(g.meta, g.obs.shape[0]))
         e, c2 = [], []
         for q, k in enumerate(g.rows):
@@ -252,13 +254,15 @@ class Builder:
                         continue
                     res = run_layer(layer, [(d, k, inp)], ROWS)
                     ol.append(
-                        {
-                            "x_m": float(res.state[0, 0]),
-                            "y_m": float(res.state[0, 1]),
-                            "range_m": float(res.range[0]),
-                            "course_rad": float(res.course[0]),
-                            "speed_mps": float(res.speed[0]),
-                        }
+                        _plain(
+                            {
+                                "x_m": float(res.state[0, 0]),
+                                "y_m": float(res.state[0, 1]),
+                                "range_m": float(res.range[0]),
+                                "course_rad": float(res.course[0]),
+                                "speed_mps": float(res.speed[0]),
+                            }
+                        )
                     )
                 g.systems["one_leg"] = ol
                 # one row per sample from zig_index + 1 (references.imm.imm_predict)

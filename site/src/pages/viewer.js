@@ -134,11 +134,18 @@ class Engine {
           } else if (m.type === "error") reject(new Error(m.message));
         }
       };
-      this.worker.onerror = (e) => reject(new Error(e.message || "worker failed"));
+      this.worker.onerror = (e) => {
+        const err = new Error(e.message || "worker failed");
+        for (const p of this.pending.values()) p.reject(err); // a crash fails what is waiting
+        this.pending.clear();
+        this.failed = err;
+        reject(err);
+      };
     });
     this.worker.postMessage({ type: "init", ortBase, modelUrl });
   }
   run(feeds) {
+    if (this.failed) return Promise.reject(this.failed);
     const id = this.next++;
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
@@ -234,7 +241,7 @@ function fmt(v, d = 1) {
 }
 
 function Viewer() {
-  const base = useBaseUrl("/viewer/");
+  const base = useBaseUrl("/viewer-data/");
   const ortBase = useBaseUrl("/ort/");
   const gate2Url = useBaseUrl("/blog/2026/11/08/gate-2");
   const [manifest, setManifest] = useState(null);
@@ -301,8 +308,8 @@ function Viewer() {
 
   // run E in the browser: the current row first, then the rest in order
   useEffect(() => {
-    if (!eng || !values || !engine.current) return;
-    const my = ++job.current;
+    const my = ++job.current; // any earlier loop stops writing from here on
+    if (!eng || !values || !engine.current) return undefined;
     const R = eng.rows.length;
     const pos = new Map(eng.e_rows.map((qq, r) => [qq, r]));
     const state = new Array(R).fill(null);
@@ -318,6 +325,7 @@ function Viewer() {
         for (const qq of order) {
           if (job.current !== my) return;
           const res = await engine.current.run(feedsFor(eng, values, pos.get(qq)));
+          if (job.current !== my) return; // the engagement changed while this row ran
           state[qq] = Array.from(res.outputs.state);
           cov[qq] = Array.from(res.outputs.cov);
           flags[qq] = { plausible: res.outputs.plausible[0] === 1, cov_ok: res.outputs.cov_ok[0] === 1 };
@@ -327,9 +335,12 @@ function Viewer() {
           setProgress({ done: ms.length, total: order.length, ms: [...ms] });
         }
       } catch (err) {
-        setError(String(err.message || err));
+        if (job.current === my) setError(String(err.message || err));
       }
     })();
+    return () => {
+      job.current += 1;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eng, values, runtime]);
 
@@ -401,7 +412,7 @@ function Viewer() {
           if (!eng.e_rows.includes(q)) note = "no input: C's hand-over has no valid bearing";
           else if (!eRows || !eRows.state[q]) note = "computing…";
           else if (!ok) note = "no answer (implausible solve)";
-          if (eng.open[q]) note += (note ? "; " : "") + "C's last transition is still open";
+          if (eng.open[q]) note += (note ? "; " : "") + "the last transition (C with E-s's evidence) is still open";
         } else if (!ok) note = "no answer";
         return { s, r, ok, err, note };
       })

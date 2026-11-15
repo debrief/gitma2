@@ -76,6 +76,7 @@ try {
   await page.waitForTimeout(200);
   report.ellipse_on = await page.locator('[data-testid="ellipse"]').count();
   report.warning_visible = await page.locator('[data-testid="ellipse-warning"]').isVisible();
+  if (report.ellipse_on < 1) failures.push("the ellipse toggle drew no ellipse");
   if (!report.warning_visible) failures.push("ellipse shown without its warning");
   const shot = await page.screenshot({ fullPage: true });
   writeFileSync(outPath.replace(/\.json$/, ".png"), shot);

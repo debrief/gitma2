@@ -41,10 +41,13 @@ def manoeuvre_class(meta: dict[str, Any], start: int) -> str:
 def choose(
     candidates: Iterable[tuple[int, dict[str, Any], int]],
     e_loses: Callable[[int], bool],
+    usable: Callable[[int], bool] = lambda _j: True,
 ) -> tuple[list[Pick], list[str]]:
     """``candidates``: (ordinal, meta, first shown row) of the eligible engagements in ordinal
     order.
-    ``e_loses(ordinal)`` is asked only for engagements the LOSES slot still needs, in order.
+    ``e_loses(ordinal)`` is asked only for engagements the LOSES slot still needs, in order;
+    ``usable(ordinal)`` (E has an input at some shown row) is asked of each match before it is
+    taken.
     Returns the picks in ``ORDER``'s order and the slots left empty."""
     pool = list(candidates)
     taken: set[int] = set()
@@ -56,6 +59,7 @@ def choose(
             if j in taken:
                 continue
             ok = e_loses(j) if slot == LOSES else manoeuvre_class(meta, start) == slot
+            ok = ok and usable(j)
             if ok:
                 found = Pick(j, slot, shown_manoeuvres(meta, start))
                 break

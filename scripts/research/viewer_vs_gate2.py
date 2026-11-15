@@ -2,7 +2,7 @@
 
     git fetch origin results/g2predict-g2-a-test-42406326175
     git show FETCH_HEAD:experiments/g2predict-runs/g2-a-test-42406326175/e-s3.ndjson > <file>
-    uv run python scripts/research/viewer_vs_gate2.py site/static/viewer <file>
+    uv run python scripts/research/viewer_vs_gate2.py site/static/viewer-data <file>
 
 For each demo engagement, Python's onnxruntime outputs shipped with the viewer (E-w's graph on
 the builder's hand-over) against the torch rows Gate 2's run wrote (its chunked segmentation
@@ -70,7 +70,7 @@ def main() -> int:
             indent=1,
         )
     )
-    return 0
+    return 0 if out else 1  # nothing matched: the check did not run
 
 
 if __name__ == "__main__":

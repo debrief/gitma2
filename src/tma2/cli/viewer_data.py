@@ -3,7 +3,7 @@
     uv run python -m tma2.gate2.export --out <export> --plan configs/gate2/g2-a.json \\
         --weights experiments/20261107-g2-val/models/ew-s3/best.safetensors
     uv run tma2-viewer-data --split <seed 319 dir>/test.f32pack --export <export> \\
-        --out site/static/viewer
+        --out site/static/viewer-data
 
 Seed 319's test split (Gate 2's, used; generate it with the command in
 ``experiments/20261107-g2-decision/seed319-digests.json``). Refuses an export whose weights are
@@ -34,6 +34,9 @@ SEED319 = "experiments/20261107-g2-decision/seed319-digests.json"
 GATE2_POST = "/blog/2026/11/08/gate-2"
 GATE3_RECORD = "experiments/20261108-g3-val/"
 LIMIT = 200
+# Gate 2's g2predict cut seed 319's 4,983 σ = 1° ordinals into 16 shards of 312 and chunked each
+# from its own start; the builder's chunks (multiples of 16) match only within the first shard.
+MAX_LIMIT = 312
 
 
 def sha_file(path: Path) -> str:
@@ -47,6 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--limit", type=int, default=LIMIT)
     a = ap.parse_args(argv)
+    if not 0 < a.limit <= MAX_LIMIT:
+        ap.error(f"--limit must be in 1..{MAX_LIMIT}: beyond it the chunks are not Gate 2's")
 
     from tma2.segment.codeid import code_digest
     from tma2.viewer.build import SYSTEM_LABELS, Builder, pack_engagement, sha256
@@ -77,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     b = Builder(Path(a.split), export, ROOT / PLAN, ROOT / ES)
-    picks, missing = choose(b.candidates(a.limit), b.e_loses)
+    picks, missing = choose(b.candidates(a.limit), b.e_loses, lambda j: any(b.engagement(j).have_e))
     print(f"picked {[(p.ordinal, p.reason) for p in picks]}; missing {missing}", flush=True)
 
     out = Path(a.out)

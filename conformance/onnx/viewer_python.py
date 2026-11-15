@@ -1,6 +1,6 @@
 """The viewer's shipped data against a fresh Python onnxruntime run (spec 020 FR-015).
 
-    uv run python conformance/onnx/viewer_python.py site/static/viewer
+    uv run python conformance/onnx/viewer_python.py site/static/viewer-data
 
 Checks every file's digest against ``manifest.json``, then re-runs the shipped ``model.onnx``
 on every shipped row's inputs and compares with the shipped outputs (relative difference, as

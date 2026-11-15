@@ -20,7 +20,7 @@
   Done: the rule, packing round trip and reproducible gzip. The digests are checked by
   `conformance/onnx/viewer_python.py` in CI, not by a unit test. The size limits are not
   asserted anywhere: the data are 1.2 MB against SC-003's 15 MB.
-- [x] T005 Run the builder; commit `site/static/viewer/` and record which arrays vary, the
+- [x] T005 Run the builder; commit `site/static/viewer-data/` and record which arrays vary, the
   sizes and the time.
   Done: 1.2 MB, about 26 min. Shared across an engagement's rows: `bearing`, `own`, `t`,
   `sigma`, `valid` on all six engagements, and on the quiet one also `changepoint`, `code`,
@@ -30,7 +30,7 @@
 ## Phase 2: the page (US1, US2, US4)
 
 - [x] T006 Prebuild copies the runtime (R4); add the site dependency and the gitignore entry.
-- [x] T007 `site/static/viewer/worker.js`: load the graph, run one row, post outputs.
+- [x] T007 `site/static/viewer-data/worker.js`: load the graph, run one row, post outputs.
 - [x] T008 `site/src/pages/viewer.js` and its components:
   - engagement picker;
   - SVG track plot (ownship blue, target red, trails from the zig);
