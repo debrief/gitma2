@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     used: dict[str, list[Path]] = {}
     with plt.rc_context(STYLE):
         # 1. stage times of live mode
-        names = ["least squares", "GLR statistic", "search", "confirmation", "estimates"]
+        names = ["least squares", "GLR, O and E-s", "search", "confirmation", "estimates"]
         cols = ["#c7c7c7", "#9edae5", "#aec7e8", "#9467bd", "#2ca02c"]
         fig, ax = plt.subplots(figsize=(7.6, 3.4))
         for i, e in enumerate(live["live"]):
