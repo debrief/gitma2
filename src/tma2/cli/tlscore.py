@@ -167,6 +167,10 @@ def main(argv: list[str] | None = None) -> int:
             from tma2.timelate.study4 import soundness4
 
             sound = soundness4(reading, plan) if "man2" in reading else None
+            if adaptive and "criteria6" in plan:
+                from tma2.timelate.study6 import criteria6
+
+                extra_summary["criteria"] = criteria6(reading, plan)
             if "criteria" in plan and any(
                 f"{k}-arc" in r["systems"]
                 for r in reading.values()

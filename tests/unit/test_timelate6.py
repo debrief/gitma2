@@ -15,6 +15,7 @@ from tma2.timelate.study6 import (
     any_false,
     control_misses,
     coverage,
+    criteria6,
     family_readings,
     kinds_of_period,
     medians3,
@@ -193,3 +194,56 @@ def test_pooled_groups_use_the_member_their_evidence_prefers() -> None:
         extra["ada-pool6"][6:, 0], 0.08
     )
     assert np.allclose(extra["ada-pool1"], extra["ada-pool6"])
+
+
+def test_stated_spread_can_be_scaled() -> None:
+    arr = _arrays(n=2, rows=5)
+    n = arr["period"].size
+    arr["hrange_h"] = np.full(n, 10_150.0, dtype=np.float32)
+    arr["spread_h"] = np.full(n, 100.0, dtype=np.float32)
+    periods = [{"ordinal": i, "true": [], "true_cut": []} for i in range(2)]
+    assert coverage(arr, periods, "h", [1.0])["all"]["within_1sd"] == 0.0
+    scaled = coverage(arr, periods, "h", [1.0], scale=2.0)["all"]
+    assert scaled["within_1sd"] == 1.0 and math.isclose(scaled["median_relative_sd"], 0.02)
+
+
+def test_criteria_read_ratios_and_coverage() -> None:
+    plan = {
+        "adaptive_study": {"control": "c", "adaptive": "a", "hedged": "h"},
+        "criteria6": {
+            "gain_splits": ["shift"],
+            "harm_splits": ["man2"],
+            "coverage_splits": ["man2", "shift"],
+            "coverage_band": [0.9, 0.99],
+        },
+    }
+
+    def split(a: tuple[float, float], h: tuple[float, float], cov: float) -> dict[str, Any]:
+        def r(lo_hi: tuple[float, float]) -> dict[str, Any]:
+            return {"range": {"geometric_mean": 1.0, "lo": lo_hi[0], "hi": lo_hi[1]}}
+
+        return {
+            "comparisons3": {"c_over_a": r(a), "c_over_h": r(h)},
+            "coverage": {"all": {"within_2sd": cov}},
+        }
+
+    reading = {
+        "shift": split((1.02, 1.2), (0.9, 1.2), 0.95),
+        "man2": split((0.8, 0.97), (0.9, 1.1), 0.89),
+    }
+    out = criteria6(reading, plan)
+    d, h = out["systems"]["declared"], out["systems"]["hedged"]
+    assert d["gain_on"] == ["shift"] and d["harm_on"] == ["man2"] and "trade" in d["follows"]
+    assert h["gain_on"] == [] and h["follows"] == "the standing control stays"
+    assert out["spread"]["shift"]["honest"] and not out["spread"]["man2"]["honest"]
+    assert out["spread_honest"] is False
+    # a loss in course alone is harm, even with range level
+    reading["man2"] = split((0.9, 1.1), (0.9, 1.1), 0.95)
+    reading["man2"]["comparisons3"]["c_over_a"]["course"] = {"lo": 0.6, "hi": 0.9}
+    out = criteria6(reading, plan)
+    assert out["systems"]["declared"]["harm_on"] == ["man2"]
+    assert out["systems"]["declared"]["splits"]["man2"]["below_1"] == ["course"]
+    reading["man2"] = split((0.9, 1.1), (0.9, 1.1), 0.95)
+    out = criteria6(reading, plan)
+    assert out["systems"]["declared"]["follows"] == "proposed as the standing time-late output"
+    assert out["spread_honest"] is True

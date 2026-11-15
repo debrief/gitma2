@@ -45,3 +45,13 @@ tuning variances within about five hours of CI at 20 concurrent jobs.
 
 **R8. Quiet split.** Its own statistics allow no manoeuvre, so no true-prior search is
 run there (`no_true`); the reference is the one-leg fit told there is none.
+
+**R9. Second design (2026-11-15, after the first tuning run).** R1 and R2 as first written
+gained nothing: one period does not identify the rate, and the rate is not what the true
+statistics buy (`experiments/20261114-tl6-tuning/`). The registered design is a family of
+30 priors (leg mean × leg spread × largest turn) scored on one shared candidate set, the
+member chosen per period; members chosen by groups of periods are reported beside
+(`experiments/20261115-tl6-tuning2/`, `experiments/20261115-tl6-decision/`). R3's hedge
+gains the declaration's quiet probability and a spread factor of 1.95 from tuning. R6's
+conditions are as registered: gain in range, harm in range, course or speed, spread
+coverage in [0.90, 0.99].

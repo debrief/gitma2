@@ -101,16 +101,21 @@ def kinds_of_period(
 
 
 def coverage(
-    arr: dict[str, np.ndarray], periods: list[dict[str, Any]], hedge: str, levels: list[float]
+    arr: dict[str, np.ndarray],
+    periods: list[dict[str, Any]],
+    hedge: str,
+    levels: list[float],
+    scale: float = 1.0,
 ) -> dict[str, Any]:
     """Share of determined rows whose true range is within k stated sds of the mixture's
-    mean range, for each k; overall and by the period's number of whole true manoeuvres."""
+    mean range, for each k; overall and by the period's number of whole true manoeuvres.
+    The stated sd is ``scale`` times the mixture's (a setting chosen on tuning data)."""
     if f"spread_{hedge}" not in arr:
         return {}
     bound = arr["bound"].astype(np.float64)
     det = np.isfinite(bound[:, 0]) & (bound[:, 0] < UNDETERMINED)
     mean = arr[f"hrange_{hedge}"].astype(np.float64)
-    sd = arr[f"spread_{hedge}"].astype(np.float64)
+    sd = float(scale) * arr[f"spread_{hedge}"].astype(np.float64)
     true = arr["true_range"].astype(np.float64)
     ok = det & np.isfinite(mean) & np.isfinite(sd) & (sd > 0)
     z = np.abs(mean - true) / np.where(ok, sd, np.nan)
@@ -262,10 +267,78 @@ def study_split6(
         else [],
         "picked": {k: picks.count(k) / len(picks) for k in sorted(set(picks))},
     }
-    out["coverage"] = coverage(arr, periods, hedge, [float(x) for x in st["nominal_sd"]])
+    out["coverage"] = coverage(
+        arr,
+        periods,
+        hedge,
+        [float(x) for x in st["nominal_sd"]],
+        float(st.get("spread_scale", 1.0)),
+    )
     auto: dict[str, list[bool]] = {}
     for r in periods:
         for k, v in (r.get("auto") or {}).items():
             auto.setdefault(k, []).append(bool(v))
     out["auto_declares_share"] = {k: float(np.mean(v)) for k, v in sorted(auto.items())}
+    return out
+
+
+def criteria6(reading: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
+    """The registered conditions (decision record), each read from paired ratios of period
+    error or from the coverage of the stated spread; never from counts.
+
+    For each of the declared adaptive control and the hedged track, against the declared
+    standing control: a *gain* on a split when the interval of control ÷ system **in range**
+    is wholly above 1; *harm* when the interval in **range, course or speed** is wholly
+    below 1. The spread is *honest* on a split when the share of rows within two stated sds
+    lies in the registered band."""
+    c = plan["criteria6"]
+    st = plan["adaptive_study"]
+    control = st["control"]
+    lo, hi = (float(x) for x in c["coverage_band"])
+    out: dict[str, Any] = {"systems": {}, "spread": {}}
+    for label, system in (("declared", st["adaptive"]), ("hedged", st["hedged"])):
+        rows: dict[str, Any] = {}
+        for split in c["gain_splits"] + c["harm_splits"]:
+            if split not in reading:
+                continue
+            three = reading[split]["comparisons3"].get(f"{control}_over_{system}") or {}
+            v = three.get("range")
+            below = [q for q in QUANTITIES if three.get(q) and three[q]["hi"] < 1.0]
+            if v is None:
+                side = "absent"
+            elif below:
+                side = "harm"
+            else:
+                side = "gain" if v["lo"] > 1.0 else "not separated"
+            rows[split] = {
+                "ratio": v,
+                "course": three.get("course"),
+                "speed": three.get("speed"),
+                "below_1": below,
+                "side": side,
+            }
+        gain = [s for s in c["gain_splits"] if rows.get(s, {}).get("side") == "gain"]
+        harm = [
+            s for s in c["gain_splits"] + c["harm_splits"] if rows.get(s, {}).get("side") == "harm"
+        ]
+        if gain and not harm:
+            follows = "proposed as the standing time-late output"
+        elif gain:
+            follows = "a trade: reported, and the owner decides"
+        else:
+            follows = "the standing control stays"
+        out["systems"][label] = {
+            "system": system,
+            "splits": rows,
+            "gain_on": gain,
+            "harm_on": harm,
+            "follows": follows,
+        }
+    for split in c["coverage_splits"]:
+        cov = (reading.get(split) or {}).get("coverage", {}).get("all")
+        if not cov:
+            continue
+        share = float(cov["within_2sd"])
+        out["spread"][split] = {"within_2sd": share, "band": [lo, hi], "honest": lo <= share <= hi}
+    out["spread_honest"] = bool(out["spread"]) and all(v["honest"] for v in out["spread"].values())
     return out
