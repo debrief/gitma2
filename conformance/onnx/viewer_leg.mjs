@@ -16,6 +16,10 @@ const arg = (name, dflt) => {
 };
 const build = arg("--build", "../../site/build");
 const outPath = arg("--out", "viewer-results.json");
+// spec 021: engagements to run live ("all", "none", or a comma-separated list)
+const liveArg = arg("--live", "all");
+const LIVE_MIN_SAME = 0.95; // SC-001, over all live rows
+const LIVE_LIMIT_S = 600; // SC-003, the slowest engagement
 const BASE = "/gitma2/";
 const TOL = 1e-5;
 const FIRST_LIMIT_MS = 10000; // SC-002
@@ -113,6 +117,24 @@ try {
   const ms = all.rows.map((r) => r.ms).sort((a, b) => a - b);
   report.median_ms_per_row = ms[Math.floor(ms.length / 2)];
   report.per_row = all.rows;
+  // live mode: the whole model from bearings, against Python
+  const nEng = (await page.evaluate(() => window.__viewer.manifest().engagements.length)) | 0;
+  const liveIds = liveArg === "none" ? [] : liveArg === "all" ? [...Array(nEng).keys()] : liveArg.split(",").map(Number);
+  report.live = [];
+  for (const i of liveIds) {
+    const r = await page.evaluate((j) => window.__viewer.live(j), i);
+    console.error(`live ${i}: ${r.segmentation_same}/${r.rows} rows, ${r.seconds.toFixed(0)} s`);
+    report.live.push(r);
+  }
+  if (report.live.length) {
+    const rows = report.live.reduce((a, r) => a + r.rows, 0);
+    const same = report.live.reduce((a, r) => a + r.segmentation_same, 0);
+    report.live_rows = rows;
+    report.live_segmentation_same = same;
+    report.live_max_seconds = Math.max(...report.live.map((r) => r.seconds));
+    if (!(same >= LIVE_MIN_SAME * rows)) failures.push(`live segmentation identical on ${same} of ${rows} rows`);
+    if (!(report.live_max_seconds <= LIVE_LIMIT_S)) failures.push(`live mode took ${report.live_max_seconds} s`);
+  }
   report.digests = await page.evaluate(() => window.__viewer.digests());
   report.manifest_sha_files = Object.keys(await page.evaluate(() => window.__viewer.manifest().files));
   if (!(report.max_rel_diff <= TOL)) failures.push(`max relative difference ${report.max_rel_diff} > ${TOL}`);

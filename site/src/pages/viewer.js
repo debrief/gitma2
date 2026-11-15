@@ -14,6 +14,7 @@ const COLOURS = {
   imm: "#ff7f0e",
   c: "#9467bd",
   c2: "#8c564b",
+  live: "#17becf",
 };
 const OWN = "#1f77b4";
 const TGT = "#d62728";
@@ -115,8 +116,8 @@ function ellipse(cov) {
 // ---------- the compute engine (shared by the page and the conformance leg) ----------
 
 class Engine {
-  constructor(workerUrl, ortBase, modelUrl) {
-    this.worker = new Worker(workerUrl);
+  constructor(workerUrl, ortBase, models) {
+    this.worker = new Worker(workerUrl, { type: "module" });
     this.pending = new Map();
     this.next = 0;
     this.ready = new Promise((resolve, reject) => {
@@ -125,12 +126,15 @@ class Engine {
         if (m.type === "ready") {
           this.loadMs = m.loadMs;
           resolve();
-        } else if (m.type === "result" || m.type === "error") {
+        } else if (m.type === "progress") {
+          const p = this.pending.get(m.id);
+          if (p && p.onProgress) p.onProgress(m);
+        } else if (m.type === "result" || m.type === "live-done" || m.type === "error") {
           const p = this.pending.get(m.id);
           if (p) {
             this.pending.delete(m.id);
-            if (m.type === "result") p.resolve(m);
-            else p.reject(new Error(m.message));
+            if (m.type === "error") p.reject(new Error(m.message));
+            else p.resolve(m);
           } else if (m.type === "error") reject(new Error(m.message));
         }
       };
@@ -142,7 +146,17 @@ class Engine {
         reject(err);
       };
     });
-    this.worker.postMessage({ type: "init", ortBase, modelUrl });
+    this.worker.postMessage({ type: "init", ortBase, models });
+  }
+  // live mode (spec 021): the whole model from a scenario's arrays; cancel() stops it
+  live(scenario, onProgress) {
+    if (this.failed) return { done: Promise.reject(this.failed), cancel: () => {} };
+    const id = this.next++;
+    const done = new Promise((resolve, reject) => {
+      this.pending.set(id, { resolve, reject, onProgress });
+      this.worker.postMessage({ type: "live", id, scenario });
+    });
+    return { done, cancel: () => this.worker.postMessage({ type: "cancel", id }) };
   }
   run(feeds) {
     if (this.failed) return Promise.reject(this.failed);
@@ -152,6 +166,39 @@ class Engine {
       this.worker.postMessage({ type: "run", id, feeds });
     });
   }
+}
+
+// ---------- live mode (spec 021) ----------
+
+const sameIvs = (a, b) =>
+  JSON.stringify(a.map((iv) => [iv.kind, iv.start, iv.end, !!iv.open])) === JSON.stringify(b.map((iv) => [iv[0], iv[1], iv[2], !!iv[3]]));
+
+// Live results against Python: the segmentation against Python's E run alone (the scenario
+// file), the estimate against the shipped Python outputs (Gate 2's chunked segmentation).
+function compareLive(eng, values, scen, result) {
+  const rows = result.rows.length;
+  let segSame = 0, estSame = 0, estRows = 0, worst = 0;
+  const differ = [];
+  for (let q = 0; q < rows; q++) {
+    const k = result.rows[q];
+    const py = scen.python_e_intervals[String(k)];
+    const same = py && sameIvs(result.intervals[q], py);
+    if (same) segSame++;
+    else differ.push(k);
+    const r = eng.e_rows.indexOf(q);
+    const est = result.estimates[q];
+    if (r >= 0 && est) {
+      estRows++;
+      const pyo = pythonOutputs(eng, values, r);
+      let w = 0;
+      for (let i = 0; i < 4; i++) w = Math.max(w, Math.abs(est.state[i] - pyo.state[i]) / Math.max(Math.abs(pyo.state[i]), 1));
+      worst = Math.max(worst, w);
+      if (w <= 1e-5) estSame++;
+    }
+  }
+  const pyDec = scen.python_e_decisions.map((d) => [d[0], d[1], d[2], d[3], d[6]]);
+  const dec = result.decisions.map((d) => [d.row, d.start, d.length, d.source, d.accepted]);
+  return { rows, segmentation_same: segSame, rows_differ: differ, estimate_rows: estRows, estimate_same: estSame, estimate_max_rel: worst, decisions_same: JSON.stringify(dec) === JSON.stringify(pyDec), decisions: dec.length, min_abs_score: Math.min(...result.decisions.map((d) => Math.abs(d.score))) };
 }
 
 // ---------- plot ----------
@@ -256,6 +303,8 @@ function Viewer() {
   const [shown, setShown] = useState({ one_leg: false, imm: true, c: false, c2: true });
   const [showEllipse, setShowEllipse] = useState(false);
   const [runtime, setRuntime] = useState("loading the runtime…");
+  const [live, setLive] = useState(null); // {engIdx, status, progress, result, compare, seconds}
+  const liveRun = useRef(null);
   const engine = useRef(null);
   const job = useRef(0);
 
@@ -270,7 +319,16 @@ function Viewer() {
         setDigestState((s) => ({ ...s, "model.onnx": got === m.files["model.onnx"] }));
         if (got !== m.files["model.onnx"]) throw new Error(`model.onnx digest ${got.slice(0, 12)}… is not the manifest's`);
         const blobUrl = URL.createObjectURL(new Blob([model]));
-        engine.current = new Engine(base + "worker.js", window.location.origin + ortBase, blobUrl);
+        // spec 021's graphs: E-s's evidence and the physics layer at confirmation's settings
+        const models = { ew: blobUrl };
+        for (const [key, file] of [["es", "es.onnx"], ["layer", "layer.onnx"]]) {
+          if (!m.files[file]) continue;
+          const buf = await (await fetch(base + file)).arrayBuffer();
+          const ok = (await sha256Hex(buf)) === m.files[file];
+          setDigestState((st) => ({ ...st, [file]: ok }));
+          if (ok) models[key] = URL.createObjectURL(new Blob([buf]));
+        }
+        engine.current = new Engine(base + "worker.js", window.location.origin + ortBase, models);
         await engine.current.ready;
         setRuntime(`ONNX Runtime Web (WASM, one thread); graph loaded in ${fmt(engine.current.loadMs, 0)} ms`);
       } catch (e) {
@@ -279,6 +337,37 @@ function Viewer() {
       }
     })();
   }, [base, ortBase]);
+
+  // a live run belongs to its engagement: switching cancels it
+  useEffect(() => {
+    if (liveRun.current) liveRun.current.cancel();
+    liveRun.current = null;
+    setLive(null);
+  }, [engIdx]);
+
+  async function loadScenario(meta) {
+    const sc = await fetchGz(base + meta.scenario);
+    if ((await sha256Hex(sc.raw)) !== manifest.files[meta.scenario]) throw new Error(`${meta.scenario}: digest is not the manifest's`);
+    return JSON.parse(new TextDecoder().decode(sc.plain));
+  }
+
+  async function startLive() {
+    const meta = manifest.engagements[engIdx];
+    const mine = engIdx;
+    try {
+      const scen = await loadScenario(meta);
+      setLive({ engIdx: mine, status: "running", progress: null });
+      const t0 = performance.now();
+      const handle = engine.current.live(scen, (p) => setLive((l) => (l && l.engIdx === mine && l.status === "running" ? { ...l, progress: p } : l)));
+      liveRun.current = handle;
+      const res = await handle.done;
+      if (liveRun.current !== handle) return; // switched away
+      const compare = eng && values ? compareLive(eng, values, scen, res.result) : null;
+      setLive({ engIdx: mine, status: "done", result: res.result, compare, seconds: (performance.now() - t0) / 1000 });
+    } catch (err) {
+      setLive((l) => (l && l.engIdx === mine ? { ...l, status: "failed", error: String(err.message || err) } : l));
+    }
+  }
 
   // engagement data
   useEffect(() => {
@@ -388,6 +477,22 @@ function Viewer() {
         }
         return { rows: out, loadMs: engine.current.loadMs, userAgent: navigator.userAgent };
       },
+      // spec 021: live mode on engagement i, compared with Python
+      async live(i) {
+        const meta = manifest.engagements[i];
+        const js = await fetchGz(base + meta.json);
+        const bn = await fetchGz(base + meta.binary);
+        const e = JSON.parse(new TextDecoder().decode(js.plain));
+        const v = new Float64Array(bn.plain);
+        const scen = await loadScenario(meta);
+        await engine.current.ready;
+        const stages = [];
+        const t0 = performance.now();
+        const res = await engine.current.live(scen, (p) => {
+          if (!stages.length || stages[stages.length - 1].stage !== p.stage) stages.push({ stage: p.stage, seconds: p.seconds });
+        }).done;
+        return { engagement: i, ordinal: meta.ordinal, seconds: (performance.now() - t0) / 1000, stages, ...compareLive(e, v, scen, res.result) };
+      },
     };
   }, [manifest, digestState, base]);
 
@@ -399,11 +504,14 @@ function Viewer() {
   if (eng) {
     if (eRows) show.e = eng.rows.map((k, i) => (eRows.state[i] ? fromState(eRows.state[i], eng.own[k]) : null));
     for (const s of Object.keys(shown)) if (shown[s]) show[s] = eng.systems[s];
+    if (live && live.engIdx === engIdx && live.status === "done") {
+      show.live = live.result.estimates.map((x, i) => (x ? fromState(x.state, eng.own[live.result.rows[i]]) : null));
+    }
   }
   const k = eng ? eng.rows[q] : 0;
   const minutes = eng ? ((k - eng.zig_index) * eng.dt_s) / 60 : 0;
   const tableRows = eng
-    ? [["e", show.e], ...Object.keys(shown).map((s) => [s, eng.systems[s]])].map(([s, rows]) => {
+    ? [["e", show.e], ...(show.live ? [["live", show.live]] : []), ...Object.keys(shown).map((s) => [s, eng.systems[s]])].map(([s, rows]) => {
         const r = rows ? rows[q] : null;
         const ok = answered(r);
         const err = ok ? errors(r, eng.target[k], eng.own[k]) : null;
@@ -483,7 +591,7 @@ function Viewer() {
                     <tr key={s}>
                       <td>
                         <span style={{ color: COLOURS[s] }}>●</span>{" "}
-                        {s === "e" ? "E" : <label><input type="checkbox" checked={shown[s]} onChange={() => setShown({ ...shown, [s]: !shown[s] })} /> {manifest.systems[s].split(",")[0].split(" (")[0]}</label>}
+                        {s === "e" ? "E" : s === "live" ? "E live (all in your browser)" : <label><input type="checkbox" checked={shown[s]} onChange={() => setShown({ ...shown, [s]: !shown[s] })} /> {manifest.systems[s].split(",")[0].split(" (")[0]}</label>}
                         {note && <div><small>{note}</small></div>}
                       </td>
                       {ok ? (
@@ -509,6 +617,34 @@ function Viewer() {
                 <span key={s} style={{ display: "block" }}><span style={{ color: COLOURS[s] }}>●</span> {label}</span>
               ))}
             </small></p>
+            {meta.scenario && (
+              <div className="margin-vert--sm" data-testid="live-panel">
+                {!live || live.engIdx !== engIdx ? (
+                  <button className="button button--sm button--outline button--primary" onClick={startLive} disabled={!engine.current}>
+                    Run live: the whole model from bearings, in your browser
+                  </button>
+                ) : live.status === "running" ? (
+                  <p><small>
+                    Live: {live.progress ? live.progress.stage : "starting"}
+                    {live.progress && live.progress.stage === "confirmation" ? ` (${live.progress.decided} of ${live.progress.nominations} nominations decided)` : ""}
+                    {live.progress && live.progress.stage === "estimates" ? ` (${live.progress.done} of ${live.progress.of} rows)` : ""}
+                    {live.progress ? `, ${fmt(live.progress.seconds, 0)} s` : ""}.{" "}
+                    <button className="button button--sm button--link" onClick={() => { liveRun.current && liveRun.current.cancel(); liveRun.current = null; setLive(null); }}>cancel</button>
+                  </small></p>
+                ) : live.status === "failed" ? (
+                  <p><small>Live mode failed: {live.error}</small></p>
+                ) : (
+                  <p data-testid="live-summary"><small>
+                    Live, in {fmt(live.seconds, 0)} s: the segmenter C, E-s's evidence and E-w all ran here from the bearings.
+                    {live.compare && (
+                      <> Segmentation identical to Python's at {live.compare.segmentation_same} of {live.compare.rows} rows
+                      {live.compare.rows_differ.length ? ` (differs at rows ${live.compare.rows_differ.join(", ")})` : ""};
+                      estimate within 1e-5 of the shipped Python estimate at {live.compare.estimate_same} of {live.compare.estimate_rows} rows.</>
+                    )}
+                  </small></p>
+                )}
+              </div>
+            )}
             <label>
               <input type="checkbox" checked={showEllipse} onChange={() => setShowEllipse(!showEllipse)} data-testid="ellipse-toggle" /> show E's 1-σ
               position ellipse

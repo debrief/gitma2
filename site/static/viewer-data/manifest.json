@@ -21,7 +21,11 @@
    "nodes": 3008,
    "iterations": 100
   },
-  "window_rows": 720
+  "window_rows": 720,
+  "live_graphs": {
+   "es.onnx": "python -m tma2.segment.evidence_export --plan configs/gate2/g2-a.json --weights experiments/20261107-g2-val/models/es-s3/best.safetensors",
+   "layer.onnx": "python -m tma2.viewer.layer_export (PhysicsLayer() at C's confirmation settings)"
+  }
  },
  "data": {
   "seed": 319,
@@ -67,7 +71,8 @@
    "rows": 19,
    "e_rows": 19,
    "json": "engagement-0.json.gz",
-   "binary": "engagement-0.bin.gz"
+   "binary": "engagement-0.bin.gz",
+   "scenario": "scenario-0.json.gz"
   },
   {
    "id": 1,
@@ -78,7 +83,8 @@
    "rows": 23,
    "e_rows": 23,
    "json": "engagement-1.json.gz",
-   "binary": "engagement-1.bin.gz"
+   "binary": "engagement-1.bin.gz",
+   "scenario": "scenario-1.json.gz"
   },
   {
    "id": 2,
@@ -89,7 +95,8 @@
    "rows": 56,
    "e_rows": 56,
    "json": "engagement-2.json.gz",
-   "binary": "engagement-2.bin.gz"
+   "binary": "engagement-2.bin.gz",
+   "scenario": "scenario-2.json.gz"
   },
   {
    "id": 3,
@@ -100,7 +107,8 @@
    "rows": 32,
    "e_rows": 32,
    "json": "engagement-3.json.gz",
-   "binary": "engagement-3.bin.gz"
+   "binary": "engagement-3.bin.gz",
+   "scenario": "scenario-3.json.gz"
   },
   {
    "id": 4,
@@ -111,7 +119,8 @@
    "rows": 16,
    "e_rows": 16,
    "json": "engagement-4.json.gz",
-   "binary": "engagement-4.bin.gz"
+   "binary": "engagement-4.bin.gz",
+   "scenario": "scenario-4.json.gz"
   },
   {
    "id": 5,
@@ -122,7 +131,8 @@
    "rows": 35,
    "e_rows": 35,
    "json": "engagement-5.json.gz",
-   "binary": "engagement-5.bin.gz"
+   "binary": "engagement-5.bin.gz",
+   "scenario": "scenario-5.json.gz"
   }
  ],
  "files": {
@@ -138,7 +148,15 @@
   "engagement-4.json.gz": "8ca4a05fffb4f708062dc39ee1c36117b24aaec78277ddf5f075fcdcf1fdcdb3",
   "engagement-4.bin.gz": "cbf6cc107e5efb1382e1ab251fb4f2658f8ee07a62d58f2184d5e3a026e087cd",
   "engagement-5.json.gz": "24fdde1493c37d753a65458236b526a76fc0c858094209e0d3357a5337827d11",
-  "engagement-5.bin.gz": "62f335d7129e3428830b698dec5b1a77cee515daa23ca99d94b80396184de1fd"
+  "engagement-5.bin.gz": "62f335d7129e3428830b698dec5b1a77cee515daa23ca99d94b80396184de1fd",
+  "es.onnx": "04051632831e84164d6deabc69c62d8ddcf6c23c60315961c13b6a3dd13f2655",
+  "layer.onnx": "65f80c59426b9e32a5121d1bbc39d55e5d0259a38179a532d31446805b2a67de",
+  "scenario-0.json.gz": "256fc54ea86b88b68f1a488c3bb9ddf479b36105a583e2652c34a929323a24b5",
+  "scenario-1.json.gz": "cf30d1484c92630fa9020512829303e938fa0ee6489355d70a8c04cedc84ba15",
+  "scenario-2.json.gz": "8dfdba423bae2e783e89724ed56e1c990cbf179457dd5538dbc72ded0d6168d5",
+  "scenario-3.json.gz": "c461793bec0f875fd56f2c99be3feca6fa7b427aa1871d2f5c3ff9e2307ab78b",
+  "scenario-4.json.gz": "ee7222d28f9cdc0080b4925494f87f95c4f6073f4cc1dee5e35b46e3b649aa94",
+  "scenario-5.json.gz": "379c180c387eb78d096aaab00c7202fbb2352d5e99d39af624d385c109d7d86e"
  },
  "built": {
   "command": "tma2-viewer-data --split /home/user/data319/test.f32pack --export /tmp/claude-0/-home-user-gitma2/0b72a479-45f8-5810-8d27-02274f905c10/scratchpad/gate2-ew --out site/static/viewer",

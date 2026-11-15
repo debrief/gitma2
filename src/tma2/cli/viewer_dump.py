@@ -52,6 +52,50 @@ def _one(args: tuple[str, int, str]) -> tuple[int, float]:
     return j, time.time() - t0
 
 
+def install(dump: Path, viewer: Path, es_dir: Path, layer_dir: Path) -> None:
+    """Live mode's files (spec 021): per demo engagement a scenario file (the pack's arrays and
+    Python's E segmentation of the scenario alone), E-s's and the confirmation layer's graphs,
+    and their digests in the viewer's manifest. Each graph's export directory must hold its
+    ``python_leg.json`` within tolerance."""
+    import gzip
+    import hashlib
+    import shutil
+
+    man_path = viewer / "manifest.json"
+    man = json.loads(man_path.read_text())
+    for name, src in (("es.onnx", es_dir), ("layer.onnx", layer_dir)):
+        leg = json.loads((src / "python_leg.json").read_text())
+        if not all(v <= 1e-5 for v in leg["max_rel_diff"].values()):
+            raise SystemExit(f"{src}: python leg out of tolerance")
+        shutil.copyfile(src / "model.onnx", viewer / name)
+        man["files"][name] = hashlib.sha256((viewer / name).read_bytes()).hexdigest()
+    man["model"]["live_graphs"] = {
+        "es.onnx": "python -m tma2.segment.evidence_export --plan configs/gate2/g2-a.json "
+        "--weights experiments/20261107-g2-val/models/es-s3/best.safetensors",
+        "layer.onnx": "python -m tma2.viewer.layer_export (PhysicsLayer() at C's confirmation "
+        "settings)",
+    }
+    for e in man["engagements"]:
+        doc = json.loads(gzip.decompress((dump / f"scenario-{e['ordinal']}.json.gz").read_bytes()))
+        dt = float(doc["own"][1][0] - doc["own"][0][0])
+        scen = {
+            "ordinal": doc["ordinal"],
+            "zig_index": doc["zig_index"],
+            "sigma": doc["sigma"],
+            "dt_s": dt,
+            "own": doc["own"],
+            "obs": doc["obs"],
+            "python_e_intervals": doc["e"]["intervals"],
+            "python_e_decisions": doc["e"]["decisions"],
+        }
+        name = f"scenario-{e['id']}.json.gz"
+        text = json.dumps(scen, separators=(",", ":"), allow_nan=False)
+        (viewer / name).write_bytes(gzip.compress(text.encode(), compresslevel=9, mtime=0))
+        man["files"][name] = hashlib.sha256((viewer / name).read_bytes()).hexdigest()
+        e["scenario"] = name
+    man_path.write_text(json.dumps(man, indent=1) + "\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-viewer-dump", description=__doc__)
     ap.add_argument("--split", required=True)
@@ -59,7 +103,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--extra", type=int, default=24)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--only", help="comma-separated ordinals (development)")
+    ap.add_argument(
+        "--install",
+        nargs=3,
+        metavar=("VIEWER_DIR", "ES_EXPORT", "LAYER_EXPORT"),
+        help="instead of dumping: install live mode's files from the dump in --out",
+    )
     a = ap.parse_args(argv)
+    if a.install:
+        install(Path(a.out), Path(a.install[0]), Path(a.install[1]), Path(a.install[2]))
+        return 0
 
     from tma2.segment.score import iter_selected
     from tma2.viewer.build import eligible
