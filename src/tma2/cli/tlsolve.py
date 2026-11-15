@@ -37,6 +37,7 @@ REPAIR_FILES = (*STUDY_FILES, "match.py", "run3.py")  # spec 015
 CONTROL_FILES = (*REPAIR_FILES, "corr.py", "hedge.py", "learned.py", "run4.py")  # spec 016
 SHIFT_FILES = (*CONTROL_FILES, "detect.py", "run5.py")  # spec 017
 ADAPT_FILES = (*CONTROL_FILES, "detect.py", "adapt.py", "run6.py")  # spec 018
+LADDER_FILES = (*CONTROL_FILES, "adapt.py", "run7.py")  # spec 019
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -100,7 +101,8 @@ def main(argv: list[str] | None = None) -> int:
     ekf = parse_ekf_name(refs["ekf"]) if refs.get("ekf") else None
     run5 = plan.get("runner") == "run5"
     run6 = plan.get("runner") == "run6"
-    run4 = plan.get("runner") == "run4" or run5 or run6
+    run7 = plan.get("runner") == "run7"
+    run4 = plan.get("runner") == "run4" or run5 or run6 or run7
     run3 = plan.get("runner") == "run3"
     run2 = plan.get("runner") == "run2" or run3
     if run4 and plan["splits"][a.split].get("systems"):  # a split's own controls
@@ -132,6 +134,21 @@ def main(argv: list[str] | None = None) -> int:
             )
             settings = {**plan["settings"], "edited_reference": bool(sp.get("edited_reference"))}
             arrays, recs = run_shard5(periods, priors, c_params, c2, settings, imm, ekf)
+        elif run7:
+            from tma2.timelate.adapt import family as family7
+            from tma2.timelate.run7 import ladder, run_shard7
+
+            if learned:
+                raise SystemExit("runner run7 takes no --learned")
+            sp = plan["splits"][a.split]
+            true7 = ManoeuvrePrior.from_ranges(json.loads(Path(sp["ranges"]).read_text()), 3)
+            priors.update(ladder(priors["broad"], true7))
+            for m in plan["ladder"].get("members", []):
+                fam7 = family7(
+                    priors["broad"], [m["leg_mean_s"]], [m["sd_ratio"]], [m["angle_max_deg"]]
+                )
+                priors.update({f"mem-{k}": v for k, v in fam7.items()})
+            arrays, recs = run_shard7(periods, priors, c_params, c2, plan["settings"])
         elif run6:
             from tma2.timelate.adapt import family
             from tma2.timelate.run6 import run_shard6
@@ -164,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
             k: json.loads(Path(f"{v}.json").read_text())["header"] for k, v in shards.items()
         }
         extra = {
-            "runner": "run6" if run6 else ("run5" if run5 else "run4"),
+            "runner": plan.get("runner", "run4"),
             "prior_kinds": canonical_json(
                 {"v3": [3, plan["prior"]], "broad": [3, sha256_file(plan["prior_broad"])]}
             ),
@@ -216,7 +233,11 @@ def main(argv: list[str] | None = None) -> int:
         ordinal_count=len(periods),
         c_code_sha256=str(c2.get("code_sha256", "")),
         search_code_sha256=search_code_digest(
-            (ADAPT_FILES if run6 else (SHIFT_FILES if run5 else CONTROL_FILES))
+            (
+                LADDER_FILES
+                if run7
+                else (ADAPT_FILES if run6 else (SHIFT_FILES if run5 else CONTROL_FILES))
+            )
             if run4
             else (REPAIR_FILES if run3 else (STUDY_FILES if run2 else ()))
         ),
