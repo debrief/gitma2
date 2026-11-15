@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The time-late track as a whole (spec 019)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.7em; margin: 0 auto; }
+      .reveal .big { font-size: 1.5em; font-weight: 600; margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.7em">The time-late track as a whole</h1>
+          <p>What six studies established, and what they did not</p>
+          <p class="small">15 November 2026 · specs 013 to 019 · gitma2</p>
+        </section>
+
+        <section>
+          <h2>The question</h2>
+          <ul>
+            <li>After the fact: the target's whole track over a period of 40 to 120 minutes, and when it manoeuvred.</li>
+            <li>Every 5-second bearing of the period is available.</li>
+            <li>Six studies in five days, each registered before its fresh seed and decided by a panel of five.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What is standing</h2>
+          <svg viewBox="0 0 640 240" role="img" aria-label="The standing control: edit wild bearings, estimate error correlation, search histories with the arc model under two priors, declare by evidence margin">
+            <g font-size="11" text-anchor="middle">
+              <rect x="30" y="20" width="135" height="50" fill="#f3e9fb" stroke="#7b4fa3"/><text x="97" y="42">edit wild</text><text x="97" y="57">bearings</text>
+              <rect x="180" y="20" width="135" height="50" fill="#f3e9fb" stroke="#7b4fa3"/><text x="247" y="42">enlarge the sd if</text><text x="247" y="57">errors are correlated</text>
+              <rect x="330" y="20" width="135" height="50" fill="#f3e9fb" stroke="#7b4fa3"/><text x="397" y="42">search manoeuvre</text><text x="397" y="57">histories by evidence</text>
+              <rect x="480" y="20" width="135" height="50" fill="#f3e9fb" stroke="#7b4fa3"/><text x="547" y="42">declare at a margin;</text><text x="547" y="57">1% quiet target</text>
+              <path d="M165 45 H180 M315 45 H330 M465 45 H480" stroke="#555" fill="none"/>
+              <rect x="180" y="110" width="285" height="46" fill="#eee" stroke="#777"/><text x="322" y="130">arc model: turns and speed changes at constant rates</text><text x="322" y="146" font-size="9" fill="#555">Annex B's statistics and a broadened set, pooled</text>
+              <path d="M397 70 V110" stroke="#555" fill="none"/>
+              <text x="320" y="200" fill="#555">Nothing trained. It replaced the causal segmenter's answer read backwards (C″ as a track).</text>
+            </g>
+          </svg>
+        </section>
+
+        <section>
+          <h2>What it gained over the old system</h2>
+          <img src="/img/2026-11-15-time-late-synthesis-slides/gains.svg" alt="C double prime as a track over the standing control by split, two test seeds" />
+          <p class="small">2.1 to 2.4 on Annex B targets, 1.6 to 1.7 on busier targets, about 5 with wild bearings, level on held course.</p>
+        </section>
+
+        <section>
+          <h2>What remains</h2>
+          <img src="/img/2026-11-15-time-late-synthesis-slides/remaining.svg" alt="Standing control over a fit told the true history, by split, three test seeds" />
+          <p class="small">1.3 on Annex B targets; 1.8 to 2.1 on busier ones, where over a third of manoeuvres barely show in the bearings.</p>
+        </section>
+
+        <section>
+          <h2>The attempts to beat it</h2>
+          <img src="/img/2026-11-15-time-late-synthesis-slides/challengers.svg" alt="Standing control over each challenger on Annex B and shifted targets" />
+          <p class="small">A learned model, a prior chosen per period and a hedged track did not. The true statistics are worth about 15% on busier targets, in a tail.</p>
+        </section>
+
+        <section>
+          <h2>The last diagnostic</h2>
+          <p>Pending: the run on used periods of seed 347 is in progress.</p>
+        </section>
+
+        <section>
+          <h2>Three periods</h2>
+          <img src="/img/2026-11-15-time-late-synthesis-slides/tracks.svg" alt="Track plots of three shifted periods: the standing control at its best, median and worst against the old system" />
+          <p class="small">Chosen by rule from the stored periods of spec 017's test. The worst case is shown as plainly as the best.</p>
+        </section>
+
+        <section>
+          <h2>Corrected along the way</h2>
+          <ul>
+            <li>One reading withdrawn; one gate stopped at validation and re-registered.</li>
+            <li>The evidence's volumes wrong four times; the last unrepaired.</li>
+            <li>Four forecasts wrong; three rules that measured the wrong thing.</li>
+            <li>"Ceiling", "bound" and "limit" taken back for fits told the truth.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What was not achieved, and what comes next</h2>
+          <ul>
+            <li>No learned component beat the classical one on this consumer.</li>
+            <li>Never tested: a learned proposer inside the search; several periods of one target; ownship advice; real data.</li>
+            <li>The time-late track stops here unless the owner reopens it.</li>
+          </ul>
+          <p class="small">Account: /blog/2026/11/15/time-late-synthesis · table of record: experiments/20261115-tl-synthesis/tables.md</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
