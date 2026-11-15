@@ -39,7 +39,8 @@ def main(argv: list[str] | None = None) -> int:
     reading: dict[str, Any] = {}
     any_learned = False
     shifted = plan.get("runner") == "run5"
-    controls = plan.get("runner") == "run4" or shifted
+    adaptive = plan.get("runner") == "run6"
+    controls = plan.get("runner") == "run4" or shifted or adaptive
     repair = plan.get("runner") == "run3" or controls
     study = plan.get("runner") == "run2" or repair
     for split in plan["splits"]:
@@ -79,6 +80,10 @@ def main(argv: list[str] | None = None) -> int:
                     from tma2.timelate.study5 import study_split5
 
                     r2 = study_split5(arr, periods, plan)
+                elif adaptive:
+                    from tma2.timelate.study6 import study_split6
+
+                    r2 = study_split6(arr, periods, plan)
                 else:
                     r2 = study_split4(arr, periods, plan)
             else:
@@ -162,6 +167,10 @@ def main(argv: list[str] | None = None) -> int:
             from tma2.timelate.study4 import soundness4
 
             sound = soundness4(reading, plan) if "man2" in reading else None
+            if adaptive and "criteria6" in plan:
+                from tma2.timelate.study6 import criteria6
+
+                extra_summary["criteria"] = criteria6(reading, plan)
             if "criteria" in plan and any(
                 f"{k}-arc" in r["systems"]
                 for r in reading.values()

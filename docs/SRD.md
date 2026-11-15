@@ -335,6 +335,13 @@ and recorded, not asked.
   on where "detectable" is drawn (0.66, 0.32 and below zero at χ² thresholds of 10, 20 and
   40) and its interval is wide, so a rule would be decided by the threshold and the sample.
   The logic of the recommendation on a learned proposer is fixed beforehand in the record.
+- **2026-11-15 (agent, recording the owner's decision of 2026-11-14; proposed, owner to
+  merge):** after spec 017's panel the owner chose option B: a classical control whose manoeuvre prior adapts to the
+  period, and beside it a hedged track for the periods where the limit is identifiability
+  (spec 018; CPU only, nothing trained). Registered as a study with conditions that read
+  paired period error and the coverage of a stated spread (`experiments/20261115-tl6-decision/`).
+  The standing time-late system is unchanged unless that study's rule proposes otherwise
+  and the owner agrees.
 
 ## Annexes
 

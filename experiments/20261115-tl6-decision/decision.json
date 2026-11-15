@@ -1,0 +1,107 @@
+{
+ "study": "spec 018: a manoeuvre prior that adapts to the period, and a hedged track",
+ "registered": "2026-11-15",
+ "owner_decision": "2026-11-14, option B",
+ "digests": {
+  "configs/gateh/conditions.json": "d260fd7538d2fbcbc8c25cfd402a091ed9d50bf254a79bfd2c6c5bcc4b634e15",
+  "configs/gateh/gh-a.json": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a",
+  "configs/timelate/runs/tl-g-test.json": "e771e0ec30259479d7ca6f1cb34407ee6f97b867e91000337cfa8fe41803b9d7",
+  "configs/timelate/runs/tl-g-val.json": "e6ef7535d966d49ccc725d47ce0d7decd154232838f357781bdefe1896cad3e3",
+  "configs/timelate/tl-broad.json": "2ff99a3a2abc3696114d1a234f166e22d4d6cf494dd28631d9dd0d495a0203a1",
+  "configs/timelate/tl-g.json": "541aa8b4fc6ed89ee8086f7534859ff4885a06e68acb7020dcf499e363c35c75",
+  "configs/timelate/tl-heldout.json": "aeedfe10ca841d95d1cf2026382c43afe59c548aef9f5fed9fe07e16d3832634",
+  "configs/timelate/tl-quiet-ranges.json": "a964509642c46015db6c38dc7b6c774c3cf36d992d3be954a10627be1368782b",
+  "configs/timelate/tl-ranges.json": "cb48fcabb5a51f76685cab482e23f01cb53c504406a1654c2ec1b664216a4784",
+  "configs/timelate/tl-shift-ranges.json": "bc76abf0d5916f4a91909ebb6ef90e84438eae2ee1142e6607c21823d489081b",
+  "configs/timelate/tl-shift2-ranges.json": "1ce6b6edec93721eb64381c5d3a98c82a62e027d6386f476487147f141338b47"
+ },
+ "time_late_code_sha256": "710c74e0d3987357786e328e1f2596124a59fed0dae1e7bd1febe68afcef163f",
+ "control_code_sha256_as_study_L": "e5040f5e8df5bfea978594da2559d1073ab283bcedc53794e99fea6a77eb70a6",
+ "files": {
+  "src/tma2/timelate/adapt.py": "bf4a9f86c5b6f9234aff8c48d29a254298eb203c556d6cfa3cae9f773d921403",
+  "src/tma2/timelate/run6.py": "da7ade53d00018507ba0cec6f8a4658482b1f0feca1b3ee71b03928d683bbc13",
+  "src/tma2/timelate/study6.py": "8f359a1ba7173f5169ee68d265810d3eab88fe13b9a589449ab9c883eeb8950d",
+  "src/tma2/timelate/study5.py": "b6abbc62b91322b6d8f7a4f4466acc964a71b9b7cfba427529ee830cf2cbab26",
+  "src/tma2/timelate/study4.py": "242cd6fc0acbb5d89b61e3cd0dc96fb48270d979d914a8b1157949b149b27d61",
+  "src/tma2/timelate/study.py": "a17c54155cf1cf8c2a65595faf3811fa6b4ab2b979275533db33d8388c6c3883",
+  "src/tma2/timelate/match.py": "fff96f28bee96c75361d7f0bf97624f5437a6beeb315129a7585be0428c9a7ab",
+  "src/tma2/timelate/detect.py": "0f663e755e9ac991c4a62744cc1600db29a0d3bfd94c52c198cbf25ef956fa2f",
+  "src/tma2/cli/tlscore.py": "7ba426c13eb584526c11e5c7cc69eadfbfbe5532cbd9d178aa30205b1102c053",
+  "src/tma2/cli/tlsolve.py": "1f0afb9f239c2934c670d7d7072279c867d6ef72c641e7d287095e0237210bb5",
+  "scripts/research/tl6_tables.py": "972503646ff85f2caf16a3d61ee1fb480da6ead90c5593718492bad4d2a0fca5",
+  ".github/workflows/timelate.yml": "e97b82c709b43721eb928fdfb6d572e2909f2a11d822218f6f8e9d6528d561ba"
+ },
+ "seeds": {
+  "tuning": 345,
+  "validation": 346,
+  "test": 347
+ },
+ "sizes": {
+  "man2": {
+   "start": 0,
+   "periods": 300
+  },
+  "shift": {
+   "start": 0,
+   "periods": 400
+  },
+  "shift2": {
+   "start": 0,
+   "periods": 150
+  },
+  "quiet": {
+   "start": 0,
+   "periods": 200
+  },
+  "man2-out": {
+   "start": 0,
+   "periods": 100
+  },
+  "man2-corr": {
+   "start": 0,
+   "periods": 100
+  }
+ },
+ "systems": {
+  "control": "ctl-d1-q0.01: the standing control (study L), run unchanged through run4",
+  "adaptive, declared": "ada-d1-q0.01: a family of 30 priors on the broadened prior (leg mean 600/900/1350/2000/3000 s; leg sd 0.35 or 0.6 of the mean; largest turn 60/100/150 degrees), equal weights; the member with the most evidence in the period (sum over one shared candidate set refitted under each member); declared by the control's rule",
+  "adaptive, hedged": "ada-h1: the mean track of every member's candidates, weight = member weight x evidence with the quiet probability, temperature 1; stated sd of range = 1.95 x the mixture's sd (the factor from tuning seed 345)",
+  "beside": "the search told the split's own statistics (true; not a bound); the true-history reference with times held (ref-full; not a bound); members chosen by groups of 5, 20 and all periods (ada-poolN); the per-period choice of output (ada-a0.5, ada-a0.8); the standing control's own hedge (ctl-h1); hedges at temperatures 2 and 3; C'' as a track"
+ },
+ "statistic": "per period, the median error over scored rows (30 s apart, known-history bound on relative range below 0.5), in relative range, course and speed; a ratio a / b is the geometric mean over periods where both medians are finite, with a 95% period bootstrap (2,000 resamples, seed 17, percentile), reported with its period count, the median per-period ratio and the shares of periods over twice as bad on each side",
+ "soundness": "validation seed 346, Annex B: history-fixed range efficiency on rows bounded below 0.05 within [0.8, 1.3]; at least 0.9 of true-history fits with a consistent cost; at most 0.25 of references drifting when free. Fails: the study stops before the test seed",
+ "conditions": {
+  "gain": "for each of the declared adaptive control and the hedged track, on each of the shifted and shifted 2 splits: control / system in RANGE has an interval wholly above 1.00",
+  "harm": "for each, on each of the six splits: control / system in range, course OR speed has an interval wholly below 1.00 (a split with harm cannot count as a gain)",
+  "spread": "on each of Annex B and shifted: the share of scored rows whose true range is within two stated sds of the mixture's mean range lies in [0.90, 0.99]",
+  "what_follows": "per system: a gain on at least one split and harm on none: proposed to the owner as the standing time-late output (the hedged track only if the spread condition also holds on both splits). A gain with harm anywhere: a trade, reported with both sides; the owner decides. No gain: the standing control stays. The owner decides in every case; the rule fixes what is proposed."
+ },
+ "conditions_can_fire (tuning seed 345, not predictions)": {
+  "gain, declared, shifted": "1.10 [0.96, 1.27] on 132 periods; at about 360 scored periods the half-width is about 0.09: fires if the ratio is 1.10 or more, not if it is 1.05",
+  "gain, hedged, shifted": "1.16 [1.02, 1.33]; fires at tuning size already",
+  "gain, shifted 2": "1.03 and 1.04, intervals about +-0.12 on 73 periods; unlikely to fire",
+  "harm, declared, Annex B": "range 0.90 [0.77, 1.04], course 0.83 [0.68, 1.00] on 89 periods; at about 270 scored periods a ratio of 0.90 in range or 0.85 in course is separated",
+  "harm, hedged, Annex B": "course 0.74 [0.60, 0.90]: fires at tuning size already",
+  "harm, held course": "declared 0.91 [0.75, 1.04] range, speed 0.88 [0.74, 1.00]; at 200 periods either can fire",
+  "spread": "with the factor, 0.97 (Annex B) and 0.94 (shifted) on the rows the factor was fitted to; on a fresh seed either can leave [0.90, 0.99]"
+ },
+ "forecasts (from tuning seed 345; restatements, not independent predictions)": {
+  "declared": "a trade is the most likely outcome (about one half): a gain on shifted targets and harm on Annex B targets in course. No gain: about one third. A gain without harm: about one in six.",
+  "hedged": "a gain on shifted targets (about two thirds) with harm on Annex B targets in course (about three quarters): a trade.",
+  "spread": "holds on both splits: about one half.",
+  "groups": "choosing a member by groups of periods is level with choosing per period.",
+  "by kind": "the gain sits in the periods where the standing control misses a manoeuvre the bearings show (tuning: 1.53 there, 0.93 elsewhere)."
+ },
+ "reported_beside": "every comparison in range, course and speed with period counts; by kind of period (the control misses a whole true manoeuvre of detectability at least 20 at a 120 s match, or not; terciles of the period's median bound); the adaptive control's share of the true-prior search's gain; manoeuvres missed and false at 60, 120 and 240 s, periods with any false manoeuvre, one-manoeuvre targets called quiet, quiet targets given a manoeuvre; each fixed member; the member chosen and the inferred leg length; coverage by number of true manoeuvres; seconds per period",
+ "known_limits": [
+  "the first design (three rates, a search each) was tried on the tuning seed and gained nothing; this is the second design on the same seed, so the tuning figures flatter it by an unknown amount",
+  "the standing control contains Annex B's own prior and the family does not: on Annex B targets the comparison favours the control by construction",
+  "the family is built on the broadened prior's ranges for speed changes and turn rates; only leg length, its spread and the largest turn vary",
+  "a member's model evidence sums over one shared candidate set found by two searches: a lower limit, and the same histories for every member",
+  "the spread factor is one number fitted to pooled Annex B and shifted rows of the tuning seed; the spread is in range only; the hedged mean of mirror-image candidates is a track no target followed",
+  "the kind-of-period classing reads the truth and a 120 s tolerance; it is a reading, not something the system can use",
+  "prior version 3's recorded faults at the edges of its support apply to every system here",
+  "IMM, EKF and one leg are not re-run on these periods (spec 017 scored them on splits of the same kinds)",
+  "outlier and correlated-error splits are 100 periods each: only a large effect is separated there"
+ ]
+}
