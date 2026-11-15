@@ -4,9 +4,10 @@ Over the σ = 1° scenarios of a split in ordinal order (at most ``limit``), ski
 four G5 rows do not all fall inside the window: classes by the number of target manoeuvres that
 overlap the span the viewer shows, from the first G5 row (zig + 5 min) to the end of the window
 (quiet 0, one 1, busy 2 or more). Counting over the whole window left no quiet target in the
-first 200 ordinals of seed 319: MAN2 targets manoeuvre every 10 to 40 minutes. Picks, in this order: the first
-quiet, the first one, the first busy, the first engagement not yet picked in which E's median
-range error over its G5 rows is worse than C″'s, then the next one and the next busy. A class
+first 200 ordinals of seed 319: MAN2 targets manoeuvre every 10 to 40 minutes. Picks, in this
+order: the first quiet, the first one, the first busy, the first engagement not yet picked in
+which E's median range error over its G5 rows is worse than C″'s, then the next one and the
+next busy. A class
 that cannot be filled within ``limit`` is reported, never widened.
 """
 
