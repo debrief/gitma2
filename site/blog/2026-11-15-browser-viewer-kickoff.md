@@ -60,3 +60,12 @@ decided, and no fresh seed is used.
 - The browser's time per row and per engagement on the CI runner.
 - Data: Gate 2's test seed 319, the six chosen ordinals, and the manifest committed with the
   page.
+
+## Updates
+
+- 2026-11-15: done the same day.
+  - Classes are now counted over the span the page shows. Counted over the whole window, the
+    first 200 ordinals held no quiet target.
+  - One row of 181 exceeds 1e-5 element-wise in one covariance element in the browser, so the
+    check now compares the covariance on its own scale and reports the element-wise figure.
+  - See the [slides post](/blog/2026/11/15/browser-viewer-slides).
