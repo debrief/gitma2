@@ -342,6 +342,13 @@ and recorded, not asked.
   paired period error and the coverage of a stated spread (`experiments/20261115-tl6-decision/`).
   The standing time-late system is unchanged unless that study's rule proposes otherwise
   and the owner agrees.
+- **2026-11-15 (agent, recording the owner's decision of that day; proposed, owner to
+  merge):** spec 018's rule returned "the standing control stays". The owner chose option
+  B: the time-late track (specs 013 to 018) is written up as a whole after one diagnostic
+  on used seeds (spec 019; `site/blog/2026-11-15-time-late-synthesis.md`). The classical
+  control remains the standing time-late system with its recorded faults. No further
+  time-late study is planned; a learned time-late component is recorded as not shown, at a
+  small budget, with one direct model.
 
 ## Annexes
 

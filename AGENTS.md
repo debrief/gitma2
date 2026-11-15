@@ -505,6 +505,30 @@ periods, a spread for course and speed. Write-up `site/blog/2026-11-15-adaptive-
 and write up specs 013 to 018 as a whole with `ctl` standing; or one development diagnostic on
 spent seeds; or change the information (ownship advice, longer periods); no learned proposer or
 GPU run. Seeds 345 to 347 used; 324, 325 unused; the next fresh seed is 348.
+**Owner 2026-11-15: option B (spec 019)**: write up the time-late track as a whole after one
+diagnostic on used seeds. 019 (`specs/019-time-late-synthesis/`; done; no gate, no registered
+result, nothing trained, no new seed): `timelate/run7.py` (plan key `runner: run7`: a search of
+its own under a ladder of priors from the broadened one to a split's own statistics, parts
+`legs`, `angle`, `rate`, `speed`, `kinds`; each part alone; a family member with its own search),
+`study7.py`, `scripts/research/tl7_{tables,refit}.py`, `scripts/research/tl_synthesis.py` (the
+track's figures of record from the test records of specs 016 to 018:
+`experiments/20261115-tl-synthesis/tables.md`, with the reviewers' `review.md`). Diagnostic
+(`experiments/20261115-tl7-dev/`, 130 scored shifted periods of used seed 347; development work):
+a member's own search equals its refit of shared candidates (1.03 [0.91, 1.19] both), so spec
+018's family was not starved; along the ladder control ÷ system is 0.98, 1.05, 1.06, 1.12, 1.10,
+1.11 [0.94, 1.32] (legs first; legs, turn sizes and turn rates reach the whole prior's figure;
+the other parts alone do nothing); nothing separated; manoeuvres missed fall from 0.52 to 0.36.
+**The account** is `site/blog/2026-11-15-time-late-synthesis.md` (slides
+`2026-11-15-time-late-synthesis-slides.md`): the standing control and its known faults; C″ ÷
+control 2.1 to 2.4 Annex B, 1.6 to 1.7 busier, about 5 with wild bearings, level on held course;
+what remains by convention (undeclared control ÷ free reference 1.3 / 1.2 / 1.8 to 2.1; declared ÷
+times held 1.6 / 1.5 / 2.3 to 2.7); the challengers; what was withdrawn; what was never tested.
+Corrected by its reviewers: "ten best periods carry the gain" (spec 018's panel and this spec's
+first draft) is a one-sided statistic that reads spread as a tail (the true-prior search wins in
+53% of periods, twice as good in 20%, twice as bad in 13%; trimmed at both ends 1.10 unchanged).
+The time-late track stops here unless the owner reopens it; what would justify a learned
+approach again: real data, several periods of one target or ownship advice, or a proposer the
+evidence still judges. Seeds: none new; the next fresh seed is 348.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -872,6 +896,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   contains the split's own prior and the challenger cannot. When an interval's limit is within
   0.02 of the line, print three decimals. `timelate.yml` shards: about 45 minutes per ten
   shifted periods under `run6`, up to 130.
+- Spec 019 review: never drop only the best (or only the worst) cases to ask whether a gain is
+  a tail: with per-case log ratios of sd about 1, a true ratio of 1 reads 0.85 without its ten
+  best of 130. Trim both ends, and give the shares better, twice as good and twice as bad. In a
+  synthesis, quote each figure with its system (declared or undeclared) and its reference's
+  convention; state a control's known faults beside its gains; use a panel's wording for a null
+  ("not shown, at this budget"), not "no". A blog post that links a post not yet written fails
+  the site build: add both in one commit. `run7` costs about 450 s a period (eleven searches).
 - Modal: functions must be defined at module scope with the decorator; functions built in a loop
   with `serialized=True` cannot be imported in the container ("the 'modal_train' module is not
   available"), and Modal retries the failed start for as long as the client waits. Bound the

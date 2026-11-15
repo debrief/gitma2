@@ -61,6 +61,29 @@ def main(argv: list[str] | None = None) -> int:
         f"| The control across the two runs (spec 018's ÷ this) | {ci(cross(CTL, CTL))} |",
         f"| The true-prior search across the two runs (spec 018's `true` ÷ this run's `lad-5`) | {ci(cross('true', 'lad-5'))} |",
     ]
+    out += [
+        "",
+        "## How the gain is spread over periods (control ÷ system, range)",
+        "",
+        "(dropping only a system's ten best periods biases any ratio downward when the per-period ratios are widely spread; the symmetric trim drops the ten best and the ten worst)",
+        "",
+        "| System | Run | Periods | All | Without the ten best | Without the ten worst | Without both | System better | Over twice as good | Over twice as bad |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ]
+
+    def spread(med: dict[str, np.ndarray], name: str, run: str) -> str:
+        p, q = med[CTL][:, 0], med[name][:, 0]
+        ok = np.isfinite(p) & np.isfinite(q) & (p > 0) & (q > 0)
+        d = np.sort(np.log(p[ok]) - np.log(q[ok]))
+        g = lambda x: f"{float(np.exp(x.mean())):.2f}"  # noqa: E731
+        return (
+            f"| `{name}` | {run} | {d.size} | {g(d)} | {g(d[:-10])} | {g(d[10:])} | {g(d[10:-10])} | "
+            f"{np.mean(d > 0):.2f} | {np.mean(d > np.log(2)):.2f} | {np.mean(d < -np.log(2)):.2f} |"
+        )
+
+    for name in sorted(k for k in ma if k.startswith(("lad-", "one-", "mem-")) and k != "one-leg"):
+        out += [spread(ma, name, "this run, 130 used periods")]
+    out += [spread(mb, "true", "spec 018's test, all shifted periods")]
     text = "\n".join(out) + "\n"
     if a.out:
         Path(a.out).write_text(text)

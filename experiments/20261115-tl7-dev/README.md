@@ -74,3 +74,21 @@ gain; the whole prior does, by about a tenth in range, in about ten periods in 1
   total gain is near zero; the ratio without them is the usable figure.
 - About 450 seconds a period for the eleven searches; one shard of six periods took nearly
   three hours.
+
+## Corrected after review (2026-11-15)
+
+Three reviewers checked this record with the account. Two readings above are wrong as
+written; `supplement.md` now carries the figures.
+
+- **"The gain is a tail at every rung" is an artefact.** Dropping only a system's ten best
+  periods pulls any widely spread ratio below 1 (the per-period log ratios have an sd of
+  about 1). Trimmed of its ten best and ten worst periods the true prior is 1.14 (1.11
+  untrimmed); it is better than the control in 55% of periods, over twice as good in 25%
+  and over twice as bad in 13%. Neither typical nor a tail: two heavy tails that nearly
+  cancel. The same holds for spec 018's "ten periods of 355 carry 87%" (trimmed at both
+  ends: 1.10, unchanged).
+- **"No part carries the gain" and "only whole" over-read the ladder.** Legs are the
+  largest step (1.05), and legs, turn sizes and turn rates together reach the whole
+  prior's figure in range (1.12 against 1.11). "Each part alone" was the other four parts
+  without the legs. One order, 130 used periods, nothing separated: a direction, not a
+  decomposition.

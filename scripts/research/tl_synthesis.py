@@ -265,9 +265,8 @@ def charts(data: dict[str, dict[str, Any]], fig_dir: Path) -> None:
                 for i, (key, _lab) in enumerate(rows):
                     v = (lad[key]["vs_control"] or {}).get("range")
                     point(ax, i, v, purple, None)
-                    c = lad[key].get("concentration") or {}
-                    if c:
-                        ax.plot(i, c["ratio_without_top"], marker="_", color=orange, ms=12, mew=2)
+                    if v:
+                        ax.plot(i, v["median_ratio"], marker="_", color=orange, ms=12, mew=2)
                 ax.axhline(1.0, color="0.5", lw=0.8, ls="--")
                 ax.set_xticks(range(len(rows)), [r[1] for r in rows], fontsize=7.5)
                 ax.set_title(title, fontsize=9)
@@ -280,12 +279,12 @@ def charts(data: dict[str, dict[str, Any]], fig_dir: Path) -> None:
                 ls="",
                 ms=10,
                 mew=2,
-                label="the same without its ten best periods",
+                label="median per-period ratio",
             )
             axes[0].set_ylabel("standing control ÷ system, range")
             axes[0].legend(frameon=False, fontsize=7)
             fig.suptitle(
-                "Development work on 130 used periods (seed 347): no part carries the gain",
+                "Development work on 130 used periods (seed 347): nothing separated; the gain builds, legs first",
                 fontsize=10,
             )
             fig.tight_layout()

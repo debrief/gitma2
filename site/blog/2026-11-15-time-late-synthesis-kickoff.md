@@ -51,3 +51,9 @@ large effects; a synthesis invites tidy conclusions the panels did not allow.
   bearing error, from the committed test records of specs 013 to 018.
 - Track plots of example periods chosen by a rule, good and bad.
 - All from committed experiment folders by scripts named in the slides post.
+
+**Update, 2026-11-15 (evening).** Done. The diagnostic ran on 130 used periods: a search
+of its own did no better than a refit, and the true prior's gain builds along the ladder,
+legs first, with nothing separated. Three reviewers checked the account against the
+records and corrected it. [The account](/blog/2026/11/15/time-late-synthesis) and
+[the slides](/blog/2026/11/15/time-late-synthesis-slides).

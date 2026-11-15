@@ -141,3 +141,10 @@ Corrections to this record; the evidence is in `review.md`.
   and too narrow where the mixture is confident.
 - **Not delivered, added:** a family member with Annex B's prior; a search under each
   member; unit tests of the spread code and of `run6`; IMM, EKF and one leg here.
+
+**Note added 2026-11-15 (spec 019's review).** "Ten shifted periods of 355 carry 87% of the
+true-prior search's gain" (review finding 6) uses a statistic that drops only the best
+periods and reads any widely spread ratio as a tail. Trimmed of its ten best and ten worst
+periods the ratio is unchanged at 1.10; the true-prior search is better than the control
+in 53% of periods, over twice as good in 20% and over twice as bad in 13%
+(`experiments/20261115-tl7-dev/supplement.md`).
