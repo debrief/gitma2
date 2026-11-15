@@ -93,9 +93,9 @@ control misses a manoeuvre the bearings show (spec 017).
 
 **Beyond range.** The first candidate history is the true one in about 0.64 of Annex B
 periods. The candidates' stated probabilities are honest on average on Annex B targets
-and carry only a rank on busier ones. In course and speed the picture is the same as in
-range for the control against the old system, and less favourable for every challenger
-below.
+and carry only a rank on busier ones. In course and speed the control's gain over
+the old system is of the same size as in range; for the challengers below, course and
+speed are given where they differ.
 
 ## What was tried against the control
 
@@ -204,8 +204,8 @@ Never tested:
   a reference; a spread for course and speed; real data of any kind.
 
 Tested and left unremedied: a slowly varying bias (the control does nothing); the
-evidence's fault at the edges of the prior's support; whole engagements (60 periods in
-each of three studies; the control's standing there rests on those).
+evidence's fault at the edges of the prior's support. Thinly tested: whole engagements,
+on only 60 periods in each of three studies, and the control itself on 60.
 
 ## What it adds to the project's question
 
