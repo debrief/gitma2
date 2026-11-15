@@ -145,14 +145,14 @@ class Builder:
             for n, s in json.loads((export_dir / "manifest.json").read_text())["inputs"].items()
         }
         self.chunks: dict[int, dict[int, Engagement]] = {}
-        self._metas: list[tuple[int, dict[str, Any]]] | None = None
+        self._metas: list[tuple[int, dict[str, Any], int]] | None = None
 
-    def candidates(self, limit: int) -> list[tuple[int, dict[str, Any]]]:
+    def candidates(self, limit: int) -> list[tuple[int, dict[str, Any], int]]:
         from tma2.segment.score import iter_selected
 
         if self._metas is None:
             self._metas = [
-                (j, m)
+                (j, m, grid_rows(m, obs.shape[0])[0])
                 for j, m, _own, _tgt, obs in iter_selected(self.split, 0, limit)
                 if eligible(m, obs.shape[0])
             ]

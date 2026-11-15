@@ -13,20 +13,26 @@ from tma2.viewer.build import Engagement, answered, gz, pack_engagement, state_f
 from tma2.viewer.choose import BUSY, LOSES, ONE, ORDER, QUIET, choose, manoeuvre_class
 
 
-def meta(n: int) -> dict[str, object]:
-    return {"manoeuvres": [{"kind": "course"}] * n}
+def meta(n: int, before: int = 0) -> dict[str, object]:
+    """``n`` manoeuvres in the shown span (from row 100) and ``before`` ending before it."""
+    early = [{"kind": "speed", "start_index": 10, "end_index": 20}] * before
+    late = [{"kind": "course", "start_index": 150, "end_index": 160}] * n
+    return {"manoeuvres": early + late}
 
 
-def test_classes() -> None:
-    assert manoeuvre_class(meta(0)) == QUIET
-    assert manoeuvre_class(meta(1)) == ONE
-    assert manoeuvre_class(meta(2)) is None
-    assert manoeuvre_class(meta(3)) == BUSY
-    assert manoeuvre_class({"manoeuvres": None}) == QUIET
+def test_classes_count_the_shown_span_only() -> None:
+    assert manoeuvre_class(meta(0), 100) == QUIET
+    assert manoeuvre_class(meta(0, before=2), 100) == QUIET
+    assert manoeuvre_class(meta(1, before=1), 100) == ONE
+    assert manoeuvre_class(meta(2), 100) == BUSY
+    assert manoeuvre_class({"manoeuvres": None}, 100) == QUIET
+    # a manoeuvre still under way when the span starts counts
+    m = {"manoeuvres": [{"kind": "course", "start_index": 90, "end_index": 100}]}
+    assert manoeuvre_class(m, 100) == ONE
 
 
 def test_rule_order_and_loses_asked_lazily() -> None:
-    pool = [(0, meta(2)), (1, meta(1)), (2, meta(0)), (3, meta(4)), (4, meta(1)), (5, meta(3))]
+    pool = [(j, meta(n), 100) for j, n in ((0, 5), (1, 1), (2, 0), (3, 4), (4, 1), (5, 3))]
     asked: list[int] = []
 
     def loses(j: int) -> bool:
@@ -37,12 +43,12 @@ def test_rule_order_and_loses_asked_lazily() -> None:
     assert [(p.ordinal, p.reason) for p in picks] == [
         (2, QUIET),
         (1, ONE),
-        (3, BUSY),
+        (0, BUSY),
         (4, LOSES),
-        (5, BUSY),
+        (3, BUSY),
     ]
     assert missing == [ONE]  # the second "one" slot: ordinal 4 was taken by LOSES
-    assert asked == [0, 4]  # in order, stopping at the first that loses, never a taken one
+    assert asked == [3, 4]  # in order, stopping at the first that loses, never a taken one
     assert len(ORDER) == 6
 
 
