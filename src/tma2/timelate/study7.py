@@ -36,7 +36,11 @@ def study_split7(
     st = plan["ladder_study"]
     control, last = st["control"], st["true"]
     _ids, med, _b = medians3(arr)
-    systems = sorted(s for s in med if s.startswith(("lad-", "one-", "mem-")))
+    systems = sorted(
+        s
+        for s in med
+        if s.startswith(("lad-", "one-", "mem-")) and s != "one-leg"  # run4's own
+    )
     rows: dict[str, Any] = {}
     for s in systems:
         row: dict[str, Any] = {
