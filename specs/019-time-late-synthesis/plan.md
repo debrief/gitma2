@@ -40,7 +40,7 @@ No earlier runner, plan or record is edited.
 
 ## Steps
 
-1. Build and test `run7`/`study7`; smoke one period; run on CI (15 shards of 10 periods).
+1. Build and test `run7`/`study7`; smoke one period; run on CI (25 shards of 6 periods).
 2. While it runs: collect from each spec's committed `summary.json` the figures the account
    needs (`tl_synthesis.py`), so that no number is typed by hand.
 3. Record the diagnostic (`experiments/20261115-tl7-dev/`), with tables by script.
