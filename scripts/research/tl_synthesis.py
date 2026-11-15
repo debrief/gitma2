@@ -197,7 +197,7 @@ def charts(data: dict[str, dict[str, Any]], fig_dir: Path) -> None:
 
         by_split(
             old,
-            "The old system read as a track ÷ the standing control (three test seeds)",
+            "The old system read as a track ÷ the standing control (two test seeds)",
             "C″ ÷ control, range\n(above 1: the control is better)",
             "gains.svg",
             every,
