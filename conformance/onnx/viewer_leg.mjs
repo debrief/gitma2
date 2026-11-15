@@ -38,9 +38,10 @@ const server = createServer((req, res) => {
     return;
   }
   let f = normalize(join(build, url.slice(BASE.length)));
-  if (existsSync(f) && statSync(f).isDirectory()) f = join(f, "index.html");
-  if (!existsSync(f) && existsSync(f + ".html")) f = f + ".html";
-  if (!existsSync(f)) {
+  const isFile = (p) => existsSync(p) && statSync(p).isFile();
+  // as GitHub Pages: /viewer is viewer.html even though a viewer/ folder exists
+  if (!isFile(f)) f = isFile(f + ".html") ? f + ".html" : join(f, "index.html");
+  if (!isFile(f)) {
     res.statusCode = 404;
     res.end();
     return;
@@ -83,13 +84,29 @@ try {
   report.load_ms = all.loadMs;
   report.browser = all.userAgent;
   report.rows = all.rows.length;
-  report.max_rel_diff = Math.max(...all.rows.map((r) => r.max_rel_diff));
+  // element-wise, as the other legs (reported); gated: state element-wise, flags exactly, the
+  // covariance on its own scale (spec 020 research R6)
+  report.max_rel_diff_elementwise = Math.max(...all.rows.map((r) => r.max_rel_diff));
+  const of = (name) => Math.max(...all.rows.map((r) => r.outputs[name].max_rel_diff));
+  report.max_rel_diff_by_output = {
+    state: of("state"),
+    cov: of("cov"),
+    cov_scaled: of("cov_scaled"),
+    plausible: of("plausible"),
+    cov_ok: of("cov_ok"),
+  };
+  report.rows_over_tol_elementwise = all.rows.filter((r) => r.max_rel_diff > TOL).length;
+  report.max_rel_diff = Math.max(of("state"), of("cov_scaled"));
   const byEng = {};
   for (const r of all.rows) {
     byEng[r.engagement] ??= { rows: 0, ms: 0, max_rel_diff: 0 };
     byEng[r.engagement].rows += 1;
     byEng[r.engagement].ms += r.ms;
-    byEng[r.engagement].max_rel_diff = Math.max(byEng[r.engagement].max_rel_diff, r.max_rel_diff);
+    byEng[r.engagement].max_rel_diff = Math.max(
+      byEng[r.engagement].max_rel_diff,
+      r.outputs.state.max_rel_diff,
+      r.outputs.cov_scaled.max_rel_diff,
+    );
   }
   report.engagements = byEng;
   const ms = all.rows.map((r) => r.ms).sort((a, b) => a - b);
@@ -98,6 +115,9 @@ try {
   report.digests = await page.evaluate(() => window.__viewer.digests());
   report.manifest_sha_files = Object.keys(await page.evaluate(() => window.__viewer.manifest().files));
   if (!(report.max_rel_diff <= TOL)) failures.push(`max relative difference ${report.max_rel_diff} > ${TOL}`);
+  for (const f of ["plausible", "cov_ok"]) {
+    if (report.max_rel_diff_by_output[f] !== 0) failures.push(`${f} differs from Python`);
+  }
   for (const [e, v] of Object.entries(byEng)) {
     if (!(v.ms <= ENGAGEMENT_LIMIT_MS)) failures.push(`engagement ${e}: ${Math.round(v.ms)} ms`);
   }

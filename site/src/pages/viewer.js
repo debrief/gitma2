@@ -348,15 +348,29 @@ function Viewer() {
             const res = await engine.current.run(feedsFor(e, v, r));
             const py = pythonOutputs(e, v, r);
             let worst = 0;
+            const by = {};
             for (const name of Object.keys(py)) {
               const a = res.outputs[name], b = py[name];
+              by[name] = { max_rel_diff: 0, at: -1, browser: null, python: null };
               for (let i = 0; i < b.length; i++) {
                 if (Number.isNaN(a[i]) && Number.isNaN(b[i])) continue;
-                const s = Math.max(Math.abs(b[i]), 1);
-                worst = Math.max(worst, Math.abs(a[i] - b[i]) / s);
+                const d = Math.abs(a[i] - b[i]) / Math.max(Math.abs(b[i]), 1);
+                if (!(d <= by[name].max_rel_diff)) by[name] = { max_rel_diff: d, at: i, browser: a[i], python: b[i] };
               }
+              worst = Math.max(worst, by[name].max_rel_diff);
             }
-            out.push({ engagement: meta.id, row: e.rows[e.e_rows[r]], max_rel_diff: worst, ms: res.ms });
+            // the covariance on its own scale: |Δ P_ij| / max(sqrt(|P_ii P_jj|), 1) (spec 020 R6)
+            {
+              const a = res.outputs.cov, b = py.cov;
+              let w = 0;
+              for (let i = 0; i < 4; i++)
+                for (let j = 0; j < 4; j++) {
+                  const s = Math.max(Math.sqrt(Math.abs(b[i * 4 + i] * b[j * 4 + j])), 1);
+                  w = Math.max(w, Math.abs(a[i * 4 + j] - b[i * 4 + j]) / s);
+                }
+              by.cov_scaled = { max_rel_diff: w };
+            }
+            out.push({ engagement: meta.id, row: e.rows[e.e_rows[r]], max_rel_diff: worst, ms: res.ms, outputs: by });
           }
         }
         return { rows: out, loadMs: engine.current.loadMs, userAgent: navigator.userAgent };

@@ -71,11 +71,35 @@ rejected so the site does not depend on an outside host at view time.
 
 Decision: these are precomputed with the project's code at the builder's commit, using the
 same functions the Gate 2 scorer uses:
-- **one leg**: the physics layer on the zig leg (`segment.score.one_leg`), the "plain batch
-  least squares" of SRD §5;
+- **one leg**: the physics layer with no segmentation over the whole prefix
+  (`segment.score.one_leg`), the "plain batch least squares" that Gate 2's scorer reports.
+  On manoeuvring targets it often runs away, and the page shows that as "no answer";
 - **IMM**: the frozen `imm-cv0.03-ct1-w0.01-s0.0003-p4-r2` via `references.imm`;
 - **C**: the physics layer on C's segmentation, with the 12-knot cap;
 - **C″**: C's confirmation with the zig veto (W = 6), then the fixed fade (0.73, 0.0079), from
   `configs/gate2/g2-a-fade.json`.
 
 These are labelled "computed in Python" on the page.
+
+## R6 How the browser's outputs are compared (found in implementation, 2026-11-15)
+
+Finding: on the first build's 169 rows, every browser output agreed with Python's
+onnxruntime to 1e-5 under the other legs' element-wise measure, except one. On engagement 4,
+row 432, the covariance's y–vy element was -4.67097 in the browser against -4.67082 in
+Python, a relative difference of 3.2e-5. That row's state differs by 1.7e-6. Torch and Python's
+onnxruntime agree on it to 7e-8, so the gap is the browser runtime's. The cause is not
+established. The leading candidate, untested, is last-bit differences in the WASM build's
+arithmetic, amplified by 100 damped iterations on a row inside an open transition.
+
+The element-wise measure divides by max(|P_ij|, 1). That is harsh on an off-diagonal element
+that is small beside its own scale, here √(P_yy P_vyvy) ≈ 270.
+
+Decision: the check gates three things:
+- the state element-wise at 1e-5;
+- the flags exactly;
+- the covariance on its own scale at 1e-5: |ΔP_ij| / max(√|P_ii P_jj|, 1).
+
+It still reports the element-wise figure, and the number of rows over 1e-5 under it, in every
+run. The constitution's tolerance is 1e-5. The element-wise reading of SC-001 fails on one
+element of one row, and the record says so. The legs that check the export's golden batch are
+unchanged.

@@ -191,7 +191,7 @@ jobs:
           (cd site && npm ci && npm run build)
           mkdir -p conformance/onnx/viewer
           (cd conformance/onnx && node viewer_leg.mjs --build ../../site/build --out viewer/results.json)
-          python3 -c "import json; r = json.load(open('conformance/onnx/viewer/results.json')); print({k: r[k] for k in ('rows', 'max_rel_diff', 'first_estimate_ms', 'median_ms_per_row', 'load_ms')})" >> "$GITHUB_STEP_SUMMARY"
+          python3 -c "import json; r = json.load(open('conformance/onnx/viewer/results.json')); print({k: r[k] for k in ('rows', 'max_rel_diff', 'max_rel_diff_by_output', 'rows_over_tol_elementwise', 'first_estimate_ms', 'median_ms_per_row', 'load_ms')})" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance

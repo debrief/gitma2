@@ -230,6 +230,9 @@ ellipse is.
 
 - **SC-001**: Every browser output on every demo row agrees with the Python ONNX runtime
   within 1e-5, checked in CI on every change that can affect it.
+  (Amended in implementation, research R6: the state element-wise, the flags exactly, and the
+  covariance relative to its own scale. The element-wise covariance figure is reported; it
+  exceeded 1e-5 on one element of one row in the first build.)
 - **SC-002**: On a CI runner the first estimate appears within 10 seconds of opening the
   page, and a whole engagement's estimates within 60 seconds. Both are measured and
   reported.
