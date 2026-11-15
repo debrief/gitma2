@@ -17,22 +17,31 @@ implementation of the numerics, needing its own conformance check.
 A decision is a threshold on a cost difference. The plan reserved a near-threshold band of ten
 times the largest browser–Python difference in a cost drop.
 
-Measured, before any comparison was gated: cost drops agree to 1.6e-12 in absolute value, so the
-band would be about 2e-11. No decision on the 30 check scenarios fell inside it, or differed at
-all (`experiments/20261116-port/`). The band therefore excuses nothing in this record.
+Measured on the 30 check scenarios (`experiments/20261116-port/`):
+- On 29 scenarios the cost drops agree to 5e-9.
+- On ordinal 8 one drop differs by 1.3e-4. Its layer solve of 100 iterations took another path.
+  That decision's margin from its threshold is 1.78.
+
+So the band is 1.3e-3. The smallest margin of any decision is 0.154 (ordinal 22, E), and no
+decision falls inside the band or differs at all. The band therefore excuses nothing in this
+record.
 
 The job gates on two things: 95% of rows identical (SC-001) and identical nominations.
 
-## R3 The GLR statistic is discontinuous
+## R3 The GLR statistic is discontinuous, and least squares has more than one minimum
 
 The statistic's basis drops a column whose Gram–Schmidt remainder is below 1e-6. A
 least-squares state that differs by under a metre (an LM iteration path) can move the statistic
-at a row from 0.89 to 0.53 (ordinal 0, row 139).
+at a row from 0.89 to 0.53 (ordinal 0, row 139). Ported alone, on Python's own states, the
+statistic agrees to 5e-12.
 
-Ported alone, on Python's own states, the statistic agrees to 5e-12. Fed the browser's states it
-differs at a few rows. Those differences are far below the alarm threshold (4.67), and the
-nominations are identical on all 30 scenarios. The check therefore reads nominations, not raw
-statistic values.
+On ordinal 22 the per-row least squares lands in a different minimum at one row (relative
+difference 75). That reaches the innovations and so E-s's evidence, which differs by 0.50 at
+row 352, and the GLR statistic, which differs by 0.17.
+
+All of these are far from any threshold. Nominations, decisions and segmentations are identical
+on all 30 scenarios. The check therefore reads decisions, not raw values. A scenario where such
+a difference crosses a threshold would show up as a differing decision and be reported.
 
 ## R4 Search cost tables
 
