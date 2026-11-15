@@ -466,6 +466,45 @@ speed in the estimands, a joint detectability, unit tests for `detect.py`/`run5.
 (owner's choice): a manoeuvre prior that adapts to the period (classical, CPU; registered against
 `ctl`, true-prior search as ceiling, false manoeuvres on held course reported), a hedged track
 beside; no GPU proposer now. Seeds 342 to 344 used; 324, 325 unused; the next fresh seed is 345.
+**Owner 2026-11-14: option B (spec 018)**: a classical control whose manoeuvre prior adapts to
+the period, and a hedged track beside; CPU only, nothing trained.
+018 (`specs/018-adaptive-prior/`; done; a registered study; nothing trained): `timelate/adapt.py`
+(`family` of priors on the broadened prior, `rescore` of one shared candidate set, `rate_posterior`,
+`pooled_choice`, `range_sd` and `hedged_spread`: a mixture's Laplace sd of range), `run6.py` (plan
+key `runner: run6`; `run4`'s control unchanged; `fam-<member>`, `ada-d1-q0.01`, `ada-hT` with
+`hrange_`/`spread_` arrays, `ada-aP`, `true`, `ref-full`, `logz`), `study6.py` (paired ratios in
+range, course and speed with period counts, kinds of period, groups of periods, coverage,
+`criteria6`), `scripts/research/tl6_{tables,supplement,spread_scale,tracks,charts}.py`. First
+design (three rates, a search each) gained nothing on tuning seed 345
+(`experiments/20261114-tl6-tuning/`); second design (30 priors: leg mean, leg sd ratio, largest
+turn) on the same seed (`20261115-tl6-tuning2/`: shifted 1.10 [0.96, 1.27] declared, 1.16 hedged;
+Annex B 0.90). Decision `20261115-tl6-decision/` (plan `configs/timelate/tl-g.json` `541aa8b4…`,
+code `710c74e0…`, never edited; gain = control ÷ system in range wholly above 1 on a shifted split;
+harm = wholly below 1 in range, course or speed on any split; spread = two stated sds cover 0.90
+to 0.99), validation seed 346 (`20261115-tl6-val/`, soundness passed; 0.95 and 1.04 on shifted,
+reported), **test record `experiments/20261115-tl6/` (seed 347, 1,250 periods, scored once): no
+gain (shifted 1.00 [0.92, 1.08] declared, 1.00 [0.93, 1.08] hedged; shifted 2 1.01, 0.99); Annex B
+0.93 [0.85, 1.01]; the hedge reads as harm in course on shifted and outliers; spread 0.944 Annex
+B, 0.897 shifted: by the rule the standing control stays for both outputs; the forecast (a trade)
+was wrong. Decided by the panel, round 1** (`review.md`, five approve with findings). Narrowed:
+the period's evidence does not rank the priors by accuracy (posterior over 30 members nearly flat,
+largest 0.12 to 0.15; uncorrelated with a member's error on shifted; the chosen member is 1.9 × the
+best in hindsight and 3 to 5% better than a central fixed one); the null excludes gains above about
+8% (pooled over three seeds 1.01 [0.95, 1.08]); the Annex B cost is real pooled (0.91 [0.84, 0.98])
+and is the design's (the family lacks Annex B's own prior; a member with it was not run); the grid
+was set knowing the splits' statistics; choosing a member by groups of periods adds nothing; the
+true-prior search is 1.15 [1.07, 1.23] over three seeds and a tail (ten of 355 periods carry 87%),
+a reference and not a ceiling; the hedge costs about 10% in course everywhere as a tail and is not
+worth having; one spread factor does not transfer (1.95 on tuning, 2.68 on test; coverage 0.897
+[0.870, 0.923] by period bootstrap), the spread being honest where candidates disagree and too
+narrow where the mixture is confident. Recorded, not repaired: the member is chosen on plain
+evidences while the declaration uses the quiet probability; `hedged_spread` zeroes non-finite sds;
+no unit tests of `run6`/`range_sd`. Not delivered: a search under each member, IMM/EKF on these
+periods, a spread for course and speed. Write-up `site/blog/2026-11-15-adaptive-prior.md`, slides
+`2026-11-15-adaptive-prior-slides.md`. Panel's order (owner's choice): stop identifying the prior
+and write up specs 013 to 018 as a whole with `ctl` standing; or one development diagnostic on
+spent seeds; or change the information (ownship advice, longer periods); no learned proposer or
+GPU run. Seeds 345 to 347 used; 324, 325 unused; the next fresh seed is 348.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -821,6 +860,18 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   flattered even with the right structure; do not call an estimand built on it a bound. A filter
   with no state on early rows drops most periods from a paired period-median: report the period
   count beside every paired ratio. A test value inside the tuning interval is not a disagreement.
+- Spec 018 panel: a second design tuned on the same seed has no forecast value: spend a small
+  fresh seed on the direction before a five-hour test (validation's 60 periods already said it).
+  Before building a selector, check that the selection score ranks the candidates by error
+  within a case (the evidence did not rank the priors). Report a reference's gain with its
+  concentration (drop the ten best periods) and its losses; do not call it a ceiling. A factor
+  fitted on one seed is not a calibration: give coverage a period-bootstrap interval, and do not
+  register a band whose edge the tuning value sits on. A fixed member that refits shared
+  candidates is not a search under that prior. Splits that reuse the same periods under other
+  errors are not independent samples. A comparison is unfair by construction where the control
+  contains the split's own prior and the challenger cannot. When an interval's limit is within
+  0.02 of the line, print three decimals. `timelate.yml` shards: about 45 minutes per ten
+  shifted periods under `run6`, up to 130.
 - Modal: functions must be defined at module scope with the decorator; functions built in a loop
   with `serialized=True` cannot be imported in the container ("the 'modal_train' module is not
   available"), and Modal retries the failed start for as long as the client waits. Bound the

@@ -55,3 +55,10 @@ candidates is a track no target followed.
 - The hedged track's error beside the declared track's, and the coverage of its spread.
 - Track plots of periods chosen by a rule in the script.
 - All from committed experiment folders by a script named in the slides post.
+
+**Update, 2026-11-15.** Done. The first design gained nothing on the tuning seed; a second
+was registered. Validation on seed 346 passed soundness; the test on seed 347 was scored
+once and decided by the panel in one round: no gain, the standing control stays. The
+result and what the panel made of it are in
+[the write-up](/blog/2026/11/15/adaptive-prior) and
+[the slides](/blog/2026/11/15/adaptive-prior-slides).
