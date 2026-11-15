@@ -64,8 +64,9 @@ all of the effect.
   0.96], held course 1.08 [1.02, 1.14]. Groups of 5 and 20 are the same within their
   intervals. (One shifted period has a runaway evidence under every member; setting it
   aside changes no choice: `supplement.md`.)
-- **No fixed member beats the control on shifted targets** (the best is 0.98); on held
-  course the quietest members do (1.08 [1.02, 1.14]).
+- **No fixed member is separated from the control on shifted targets** (the best of 30 is
+  1.02 [0.94, 1.10]) or on Annex B targets (the best is 0.96 [0.87, 1.05]); on held course
+  the quietest members are better (1.08 [1.02, 1.14]).
 - **Manoeuvres.** Shifted, 120 s match: the adaptive control misses 0.46 (control 0.48,
   true statistics 0.39) with 0.45 false a period (0.38; 0.56). Held course: a manoeuvre
   given in 0.03 of periods against the control's 0.08. One-manoeuvre targets called quiet:
