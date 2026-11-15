@@ -201,7 +201,9 @@ function TrackPlot({ eng, q, show, eRows, showEllipse }) {
     }
   }
   const z = eng.zig_index;
-  const km = Math.pow(10, Math.floor(Math.log10(box.span / 4000))) * 1000;
+  const target = box.span / 5; // a round length near a fifth of the plot: 1, 2 or 5 × 10^n m
+  const p10 = Math.pow(10, Math.floor(Math.log10(target)));
+  const km = [5, 2, 1].map((f) => f * p10).find((v) => v <= target) || p10;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, background: "var(--ifm-background-surface-color)", border: "1px solid var(--ifm-color-emphasis-300)", borderRadius: 6 }} role="img" aria-label="Track plot">
       <defs>
@@ -433,7 +435,7 @@ function Viewer() {
 
       {eng ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "1.2rem" }}>
-          <div style={{ flex: "1 1 520px", minWidth: 0 }}>
+          <div style={{ flex: "1 1 100%", minWidth: 0, maxWidth: 680 }}>
             <TrackPlot eng={eng} q={q} show={show} eRows={eRows} showEllipse={showEllipse} />
             <div style={{ marginTop: "0.5rem" }}>
               <label htmlFor="t">
@@ -447,13 +449,13 @@ function Viewer() {
               {progress.ms.length ? `, median ${fmt(median(progress.ms), 0)} ms a row` : ""}.
             </small></p>
           </div>
-          <div style={{ flex: "1 1 360px", minWidth: 0 }}>
+          <div style={{ flex: "1 1 100%", minWidth: 0 }}>
             <p>
-              Engagement {meta.id + 1}: {meta.reason}; {eng.manoeuvres.length} target manoeuvre(s) in the window;
-              seed 319, ordinal {eng.ordinal}.
+              Engagement {meta.id + 1}: {meta.reason}. The target manoeuvres {meta.manoeuvres} time(s) while
+              estimates are shown ({eng.manoeuvres.length} in the whole window). Seed 319, ordinal {eng.ordinal}.
             </p>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ fontSize: "0.85rem" }}>
+              <table style={{ fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                 <thead>
                   <tr><th>system</th><th>range km</th><th>bearing °</th><th>course °</th><th>speed kt</th><th>range err %</th><th>course err °</th><th>speed err kt</th></tr>
                 </thead>

@@ -17,6 +17,9 @@ than least squares near unobservability, and beats a tuned IMM after a target tu
 the target manoeuvred, how much to trust each bearing, where to start) and lets a differentiable
 piecewise-constant-velocity batch solve do the numerics.
 
+**Try it:** the [browser viewer](/viewer) runs the carried model's exported graph in your
+browser on a few simulated engagements, beside the classical systems (spec 020).
+
 ## The gates
 
 | Gate | Question | Status |
