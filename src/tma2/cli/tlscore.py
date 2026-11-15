@@ -40,7 +40,8 @@ def main(argv: list[str] | None = None) -> int:
     any_learned = False
     shifted = plan.get("runner") == "run5"
     adaptive = plan.get("runner") == "run6"
-    controls = plan.get("runner") == "run4" or shifted or adaptive
+    laddered = plan.get("runner") == "run7"
+    controls = plan.get("runner") == "run4" or shifted or adaptive or laddered
     repair = plan.get("runner") == "run3" or controls
     study = plan.get("runner") == "run2" or repair
     for split in plan["splits"]:
@@ -84,6 +85,10 @@ def main(argv: list[str] | None = None) -> int:
                     from tma2.timelate.study6 import study_split6
 
                     r2 = study_split6(arr, periods, plan)
+                elif laddered:
+                    from tma2.timelate.study7 import study_split7
+
+                    r2 = study_split7(arr, periods, plan)
                 else:
                     r2 = study_split4(arr, periods, plan)
             else:
