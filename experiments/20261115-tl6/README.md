@@ -8,6 +8,11 @@ per-row errors); the figures below are copied from them. Per-row errors: results
 `results/timelate-tl-g-test-43677426621`. `tracks.npz` (`tl6_tracks.py`) holds the first
 20 shifted periods' tracks for the slides.
 
+**Decided by the panel, round 1 (`review.md`): five approve with findings.** The
+registered outcome below stands and every number reproduces; several sentences under
+"Against the forecasts" and "What else it shows" read noise as findings. They are left as
+first written and corrected in "After the panel" at the end: read that before quoting.
+
 A registered study. The decision record (`experiments/20261115-tl6-decision/`) fixed the
 conditions and what follows before seeds 346 and 347 existed.
 
@@ -105,3 +110,34 @@ all of the effect.
   runner was exercised by smoke runs and three CI runs only).
 - Why the true statistics help: the family varies leg length, its spread and the largest
   turn, and none of the three is it.
+
+## After the panel (round 1, 2026-11-15)
+
+Corrections to this record; the evidence is in `review.md`.
+
+- **What the null means.** The period's evidence does not rank the 30 priors by accuracy:
+  the posterior over members is nearly flat (largest probability 0.12 to 0.15 in the
+  median) and uncorrelated with a member's error on shifted targets. The choice avoids
+  bad members; it does not adapt.
+- **How tight the null is.** Gains above about 8% are excluded; pooled over three seeds
+  the declared control is 1.01 [0.95, 1.08] on shifted targets. "Flattered by all of the
+  effect" overstates it.
+- **Annex B.** Pooled over three seeds the declared control is 0.91 [0.84, 0.98]: a cost
+  the rule's output on this seed does not show. It comes from the family lacking Annex B's
+  own prior (0.89 where the control's first candidate is from that prior, 1.05 elsewhere).
+- **The family was not blind**: its grid was set after the first tuning run and sits near
+  the splits' own statistics. It still gained nothing.
+- **Wrong as written:** "no fixed member is separated from the control" (none is better;
+  9 of 30 are worse on shifted, 27 on Annex B); "the inferred rate barely moves" (it moves
+  by about half, widely scattered); "it loses where the bearings say most" (one seed's
+  tercile, a tail, not repeated on tuning); "worth less than spec 017 found" (three seeds
+  agree: pooled 1.15 [1.07, 1.23], a tail of ten periods); "none of the three is it" (the
+  members refit shared candidates and other dimensions of the prior were not varied);
+  "by three parts in a thousand" (shifted coverage is 0.897 [0.870, 0.923]).
+- **The hedge** costs about 10% in course on every split as a tail (pooled 0.90 [0.85,
+  0.95]); the shifted course cell's upper limit is 0.998 and flips with the bootstrap
+  seed; the outlier and correlated splits reuse the first Annex B periods.
+- **The spread** cannot be stated by one factor: it is honest where candidates disagree
+  and too narrow where the mixture is confident.
+- **Not delivered, added:** a family member with Annex B's prior; a search under each
+  member; unit tests of the spread code and of `run6`; IMM, EKF and one leg here.
