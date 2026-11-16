@@ -3,7 +3,8 @@
     python3 scripts/site/preview_index.py --index <gh-pages>/pr/index.json --pr N \\
         --title T --state open|merged|closed [--head SHA] [--posts-from FILE] [--url URL]
 
-``--posts-from`` is a list of changed paths (one a line, ``git diff --name-only``). Blog posts
+``--posts-from`` is a list of the PR's added or modified paths, one per line (removed files
+excluded by the caller). Blog posts
 among them (``site/blog/*.md`` or ``.mdx``, not templates) become links into the preview:
 ``YYYY-MM-DD-name.md`` → ``blog/YYYY/MM/DD/name`` unless the front matter sets a ``slug``. The
 title is the front matter's ``title``, read from the file as it is in the checkout. An entry is

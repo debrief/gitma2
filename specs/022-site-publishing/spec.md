@@ -90,16 +90,19 @@ still works and that the state reads "merged".
    the index records that commit.
 2. **Given** a PR is merged or closed, **Then** its preview stays, and its state in the index
    changes.
-3. **Given** a PR from a fork, **Then** no preview is built: the workflow needs write access,
-   and fork PRs do not get it.
+3. **Given** a PR from a fork, **Then** no preview is built and no index entry is made.
+4. **Given** the build, **Then** it runs the PR's code without write access, and the publishing
+   job runs no npm code (review finding 5).
 
 ### Edge Cases
 
 - Two deploys at once (a merge and a PR update): they must not overwrite each other.
   Deploys are serialised.
 - A PR that adds no blog post still gets a preview, listed with no post links.
-- Previews hold the viewer's 15 MB browser runtime each. Identical files are stored once in git,
-  so `gh-pages` grows by little per preview. The record reports the branch's size.
+- Size: GitHub Pages limits a published site to 1 GB, and every preview's files count, even if
+  git stores identical files once. Previews leave out the 15 MB browser runtime and load the
+  root's, so each costs about 12 MB. That allows roughly 80 previews before pruning is needed,
+  and pruning is the owner's decision.
 - Pages must serve from the `gh-pages` branch. If the repository's Pages setting is otherwise,
   the owner changes it. Nothing here can.
 
@@ -117,8 +120,11 @@ still works and that the state reads "merged".
     blog posts it adds or changes.
 
   On a closed PR it MUST update only the state, recording merged or closed.
-- **FR-003**: Deploys MUST be serialised (one at a time), and each MUST rebase on the branch's
-  latest state before pushing.
+- **FR-003**: Concurrent deploys MUST NOT lose each other's changes. Each deploy re-applies its
+  change to the branch's latest state until its push succeeds, regenerating the index rather
+  than merging it. A preview whose commit is no longer the PR's head is not published.
+  (Amended after review: a concurrency group cannot serialise runs, because GitHub cancels
+  queued runs in the same group.)
 - **FR-004**: The site MUST have a `/previews` page that reads the root's `pr/index.json` and
   lists the previews, newest first, with clickable links. On a preview build it MUST still read
   the root index.

@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "@theme/Layout";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 const KT = 0.514444;
 const COLOURS = {
@@ -295,7 +296,10 @@ function fmt(v, d = 1) {
 
 function Viewer() {
   const base = useBaseUrl("/viewer-data/");
-  const ortBase = useBaseUrl("/ort/");
+  const ownOrt = useBaseUrl("/ort/");
+  // PR previews do not carry the 15 MB runtime: they load the root site's (spec 022)
+  const { siteConfig } = useDocusaurusContext();
+  const ortBase = siteConfig.customFields.ortBase || ownOrt;
   const gate2Url = useBaseUrl("/blog/2026/11/08/gate-2");
   const [manifest, setManifest] = useState(null);
   const [digestState, setDigestState] = useState({});

@@ -8,5 +8,5 @@
 - [x] T005 `scripts/research/timelate_viewer_data.py` → `site/static/timelate-data/`,
   with a check against the record.
 - [x] T006 `site/src/pages/timelate.js`.
-- [ ] T007 Kickoff and slides posts, AGENTS.md, PR. Backfill previews for PRs 37 and 38 after
+- [x] T007 Kickoff and slides posts, AGENTS.md, PR. Backfill previews for PRs 37 and 38 after
   merge.

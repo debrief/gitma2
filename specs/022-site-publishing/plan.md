@@ -10,7 +10,9 @@
 - **`.github/workflows/pages.yml`**:
   - Triggers: `push` to `main`, `pull_request` (opened, reopened, synchronize, closed) and
     `workflow_dispatch` (pr, ref) for backfill.
-  - One concurrency group, `gh-pages`, never cancelled, so deploys run one at a time.
+  - Runs are not serialised (review): each publish re-applies its change on the latest branch
+    and retries. Superseded builds of one PR are cancelled. The `closed` state update runs under
+    `pull_request_target`, using the default branch's code.
   - Fork PRs are skipped.
   - Steps:
     1. Build the site with `SITE_BASE_URL`.

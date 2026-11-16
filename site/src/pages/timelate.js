@@ -27,7 +27,8 @@ const median = (a) => {
   return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2;
 };
 
-function Tracks({ p, shown, q }) {
+function Tracks({ p, shown, q: q0 }) {
+  const q = Math.min(q0, p.truth.length - 1); // a newly chosen shorter period renders before q resets
   const W = 640, H = 480, PAD = 26;
   const box = useMemo(() => {
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -77,7 +78,8 @@ function Tracks({ p, shown, q }) {
   );
 }
 
-function Timeline({ p, shown, q }) {
+function Timeline({ p, shown, q: q0 }) {
+  const q = Math.min(q0, p.truth.length - 1);
   const W = 640, ROW = 20, L = 130, T = p.seconds;
   const rows = [["truth", p.true_spans, TGT], ...["ctl-d1-q0.01", "c2", "learned-s1-arc"].filter((s) => shown[s]).map((s) => [SHORT[s], p.systems[s].declared || [], COLOURS[s]])];
   const x = (s) => L + (s / T) * (W - L - 10);
@@ -118,6 +120,7 @@ function Page() {
   const d = data[split];
   const p = d ? d.periods[Math.min(pi, d.periods.length - 1)] : null;
   useEffect(() => setQ(p ? Math.floor(p.truth.length / 2) : 0), [split, pi, p && p.ordinal]);
+  const qq = p ? Math.min(q, p.truth.length - 1) : 0;
   if (error) return <p>The time-late data could not be loaded: {error}</p>;
   if (!man) return <p>Loading…</p>;
   const pooled = d
@@ -132,7 +135,8 @@ function Page() {
         classical control: wild bearings are edited, error correlation is estimated, manoeuvre histories are searched
         by their evidence under two manoeuvre priors, and a history is declared at a margin. Nothing in it is learned.
         These periods come from spec 016's test record (<code>{man.record}</code>, seed {man.seed}, used). They are the
-        first 20 stored periods of each kind, not a selection. The figures of record are in{" "}
+        first 20 stored periods of each kind, not a selection. The three kinds are the same 20 engagements under
+        different conditions, so they are not independent samples. The figures of record are in{" "}
         <a href={account}>the time-late account</a> and its <a href={man.tables}>table of record</a>.
       </p>
       <p><small>{man.note}</small></p>
@@ -164,10 +168,10 @@ function Page() {
       {p && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "1.2rem" }}>
           <div style={{ flex: "1 1 100%", maxWidth: 660 }}>
-            <Tracks p={p} shown={shown} q={q} />
-            <label htmlFor="tlq" style={{ fontSize: "0.9rem" }}>Time: {Math.round((q * p.step_s) / 60)} of {Math.round(p.seconds / 60)} min</label>
-            <input id="tlq" type="range" min={0} max={p.truth.length - 1} value={q} onChange={(e) => setQ(Number(e.target.value))} style={{ width: "100%" }} />
-            <Timeline p={p} shown={shown} q={q} />
+            <Tracks p={p} shown={shown} q={qq} />
+            <label htmlFor="tlq" style={{ fontSize: "0.9rem" }}>Time: {Math.round((qq * p.step_s) / 60)} of {Math.round(p.seconds / 60)} min</label>
+            <input id="tlq" type="range" min={0} max={p.truth.length - 1} value={qq} onChange={(e) => setQ(Number(e.target.value))} style={{ width: "100%" }} />
+            <Timeline p={p} shown={shown} q={qq} />
           </div>
           <div style={{ flex: "1 1 100%" }}>
             <div style={{ overflowX: "auto" }}>
