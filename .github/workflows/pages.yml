@@ -9,7 +9,8 @@
 #
 # Two jobs: "build" runs the PR's code (npm) with a read-only token and no stored credential;
 # "publish" holds the write token and runs no npm code. Previews load the browser runtime from
-# the root site (SITE_ORT_BASE), so each costs about 12 MB of the Pages limit, not 27.
+# the root site (SITE_ORT_BASE) once the root has it, so each costs about 12 MB of the Pages
+# limit, not 27; before that, a preview carries its own copy.
 #
 # Runs are not serialised by a concurrency group (GitHub cancels queued runs in a group): the
 # publish step instead re-applies its change on the branch's latest state until its push
@@ -89,13 +90,21 @@ jobs:
       - name: Build the site
         env:
           SITE_BASE_URL: ${{ needs.plan.outputs.mode == 'main' && '/gitma2/' || format('/gitma2/pr/{0}/', needs.plan.outputs.pr) }}
-          SITE_ORT_BASE: ${{ needs.plan.outputs.mode == 'main' && '' || '/gitma2/ort/' }}
+          MODE: ${{ needs.plan.outputs.mode }}
         run: |
           set -euo pipefail
+          # a preview shares the root site's runtime when the root has published it; until then
+          # (or if the root's copy is missing) the preview carries its own
+          SITE_ORT_BASE=""
+          if [ "$MODE" != main ] && curl -sfI -o /dev/null https://debrief.github.io/gitma2/ort/ort.wasm.min.mjs; then
+            SITE_ORT_BASE=/gitma2/ort/
+          fi
+          export SITE_ORT_BASE
+          echo "runtime base: ${SITE_ORT_BASE:-own copy}"
           uv sync
           cd site && npm ci && npm run build
           git rev-parse HEAD > build/.commit
-          if [ "${{ needs.plan.outputs.mode }}" != main ]; then rm -rf build/ort; fi
+          if [ -n "$SITE_ORT_BASE" ]; then rm -rf build/ort; fi
       - uses: actions/upload-artifact@v4
         with:
           name: site
