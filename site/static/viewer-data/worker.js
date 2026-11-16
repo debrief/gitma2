@@ -15,7 +15,11 @@ const sessions = {};
 const cancelled = new Set();
 
 async function session(name) {
-  if (!sessions[name]) sessions[name] = ort.InferenceSession.create(urls[name], { executionProviders: ["wasm"] });
+  if (!urls[name]) throw new Error(`the ${name} graph is not available (missing or failed its digest)`);
+  if (!sessions[name]) {
+    sessions[name] = ort.InferenceSession.create(urls[name], { executionProviders: ["wasm"] });
+    sessions[name].catch(() => delete sessions[name]); // a failed load may be retried
+  }
   return sessions[name];
 }
 

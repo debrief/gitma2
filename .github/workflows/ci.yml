@@ -39,7 +39,7 @@ jobs:
           git diff --name-only "$BASE...HEAD" > "$RUNNER_TEMP/changed"
           wc -l < "$RUNNER_TEMP/changed"
           SITE='^(site/|schema/|scripts/data_dictionary\.py$|\.github/workflows/ci\.yml$)'
-          SAFE='^(docs/|specs/|experiments/|site/(?!static/viewer-data/|src/pages/viewer\.js$|package(-lock)?\.json$|scripts/prebuild\.mjs$)|configs/|tests/|scripts/research/|\.specify/|\.claude/|[^/]*\.md$|src/tma2/(headroom|calib|cli|report)/|\.github/workflows/(?!ci\.yml$))'
+          SAFE='^(docs/|specs/|experiments/(?!20261116-port/|20261107-g2-val/models/)|site/(?!static/viewer-data/|src/pages/viewer\.js$|package(-lock)?\.json$|scripts/prebuild\.mjs$)|configs/(?!segment/gs-plan\.json$|gate2/g2-a\.json$)|tests/|scripts/research/|\.specify/|\.claude/|[^/]*\.md$|src/tma2/(headroom|calib|cli|report)/|\.github/workflows/(?!ci\.yml$))'
           if grep -qE "$SITE" "$RUNNER_TEMP/changed"; then echo "site=true"; else echo "site=false"; fi | tee -a "$GITHUB_OUTPUT"
           if grep -vP "$SAFE" "$RUNNER_TEMP/changed" | grep -q .; then echo "onnx=true"; else echo "onnx=false"; fi | tee -a "$GITHUB_OUTPUT"
 
@@ -246,13 +246,17 @@ jobs:
           npm ci
           D=../../experiments/20261116-port/dump
           python3 -c "import json; o = json.load(open('$D/index.json'))['ordinals']; [print(','.join(map(str, o[i::4]))) for i in range(4)]" > "$RUNNER_TEMP/parts"
+          set -o pipefail
           i=0
+          pids=()
           while read -r p; do
             node port_node.mjs --dump "$D" --layer "$RUNNER_TEMP/layer/model.onnx" --es "$RUNNER_TEMP/es/model.onnx" --only "$p" --out "$RUNNER_TEMP/port-$i.json" > "$RUNNER_TEMP/port-$i.log" 2>&1 &
+            pids+=($!)
             i=$((i + 1))
           done < "$RUNNER_TEMP/parts"
-          wait
-          python3 port_summary.py "$RUNNER_TEMP/port-summary.json" "$RUNNER_TEMP"/port-[0-3].json | tee -a "$GITHUB_STEP_SUMMARY"
+          for pid in "${pids[@]}"; do wait "$pid"; done  # any shard that failed fails the step
+          N=$(python3 -c "import json; print(len(json.load(open('$D/index.json'))['ordinals']))")
+          python3 port_summary.py --expect "$N" "$RUNNER_TEMP/port-summary.json" "$RUNNER_TEMP"/port-0.json "$RUNNER_TEMP"/port-1.json "$RUNNER_TEMP"/port-2.json "$RUNNER_TEMP"/port-3.json | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

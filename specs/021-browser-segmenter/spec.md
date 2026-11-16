@@ -101,6 +101,21 @@ stated tolerances that is not a reported near-threshold decision.
 2. **Given** the check, **Then** at least 95% of all scored rows have identical segmentations.
    If fewer, the job fails, and the record says which decisions caused it.
 
+*Amended in implementation (research R3, review finding 3), after the first results.* The
+numeric tolerance in scenario 1 cannot hold for intermediates that are discontinuous by design:
+- least squares can find another minimum, which changed one row by a relative 75;
+- the GLR basis has a 1e-6 cutoff;
+- the search's fits stop at an iteration cap.
+
+The check therefore gates decisions:
+- every expected scenario is present;
+- nominations, search transitions and every confirmation decision are identical;
+- at least 95% of rows are identical.
+
+It reports the intermediates' differences, and every GLR row on the other side of the alarm
+threshold, without gating them. The near-threshold band applies to confirmation cost drops only.
+The GLR has no such band: a crossing there that changed a nomination would fail the gate.
+
 ---
 
 ### User Story 3 - A new engagement the page did not ship (Priority: P3)
@@ -203,7 +218,13 @@ it and the result equals Python's for that scenario, up to stories 1 and 2's tol
   Python's to spec 020's tolerances: state 1e-5, and covariance on its own scale 1e-5.
 - **SC-003**: On a CI runner, live mode finishes the busiest demo engagement within 10 minutes
   and the quietest within 2. The first scored row appears within 1 minute.
+  (Not met for the first row on the busiest engagement: about 77 s in this container. The first
+  estimate waits for the whole confirmation, so a streaming confirmation would be needed. It is
+  reported per engagement and not gated.)
 - **SC-004**: Every ported function has a Python-comparison unit check.
+  (Partly met. Every stage is compared with Python's dump on 30 scenarios. The hand-over arrays
+  are checked only through what they produce: the confirmation costs and E-w's estimates.
+  `pipeline.js` runs only in the six-engagement browser leg.)
 
 ## Assumptions
 

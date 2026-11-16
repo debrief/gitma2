@@ -192,6 +192,12 @@ function compareLive(eng, values, scen, result) {
       const pyo = pythonOutputs(eng, values, r);
       let w = 0;
       for (let i = 0; i < 4; i++) w = Math.max(w, Math.abs(est.state[i] - pyo.state[i]) / Math.max(Math.abs(pyo.state[i]), 1));
+      // the covariance on its own scale, as spec 020 R6
+      for (let i = 0; i < 4; i++)
+        for (let j = 0; j < 4; j++) {
+          const sc = Math.max(Math.sqrt(Math.abs(pyo.cov[i * 4 + i] * pyo.cov[j * 4 + j])), 1);
+          w = Math.max(w, Math.abs(est.cov[i * 4 + j] - pyo.cov[i * 4 + j]) / sc);
+        }
       worst = Math.max(worst, w);
       if (w <= 1e-5) estSame++;
     }
@@ -304,6 +310,8 @@ function Viewer() {
   const [showEllipse, setShowEllipse] = useState(false);
   const [runtime, setRuntime] = useState("loading the runtime…");
   const [live, setLive] = useState(null); // {engIdx, status, progress, result, compare, seconds}
+  const [engineReady, setEngineReady] = useState(false);
+  const [liveReady, setLiveReady] = useState(false); // E-s's and the layer's graphs passed their digests
   const liveRun = useRef(null);
   const engine = useRef(null);
   const job = useRef(0);
@@ -329,7 +337,9 @@ function Viewer() {
           if (ok) models[key] = URL.createObjectURL(new Blob([buf]));
         }
         engine.current = new Engine(base + "worker.js", window.location.origin + ortBase, models);
+        setLiveReady(Boolean(models.es && models.layer));
         await engine.current.ready;
+        setEngineReady(true);
         setRuntime(`ONNX Runtime Web (WASM, one thread); graph loaded in ${fmt(engine.current.loadMs, 0)} ms`);
       } catch (e) {
         setError(String(e.message || e));
@@ -352,20 +362,29 @@ function Viewer() {
   }
 
   async function startLive() {
+    if (liveRun.current) return; // one run at a time (a double click starts nothing more)
     const meta = manifest.engagements[engIdx];
     const mine = engIdx;
+    // the token is in place before anything is awaited, so a switch can cancel it at any point
+    const token = { cancelled: false, handle: null, cancel() { this.cancelled = true; if (this.handle) this.handle.cancel(); } };
+    liveRun.current = token;
+    const current = () => liveRun.current === token && !token.cancelled;
+    setLive({ engIdx: mine, status: "running", progress: null });
     try {
       const scen = await loadScenario(meta);
-      setLive({ engIdx: mine, status: "running", progress: null });
+      if (!current()) return;
       const t0 = performance.now();
-      const handle = engine.current.live(scen, (p) => setLive((l) => (l && l.engIdx === mine && l.status === "running" ? { ...l, progress: p } : l)));
-      liveRun.current = handle;
-      const res = await handle.done;
-      if (liveRun.current !== handle) return; // switched away
+      token.handle = engine.current.live(scen, (p) => {
+        if (current()) setLive((l) => (l && l.engIdx === mine && l.status === "running" ? { ...l, progress: p } : l));
+      });
+      const res = await token.handle.done;
+      if (!current()) return; // switched away or cancelled: nothing of it is drawn
       const compare = eng && values ? compareLive(eng, values, scen, res.result) : null;
       setLive({ engIdx: mine, status: "done", result: res.result, compare, seconds: (performance.now() - t0) / 1000 });
     } catch (err) {
-      setLive((l) => (l && l.engIdx === mine ? { ...l, status: "failed", error: String(err.message || err) } : l));
+      if (current()) setLive({ engIdx: mine, status: "failed", error: String(err.message || err) });
+    } finally {
+      if (liveRun.current === token) liveRun.current = null;
     }
   }
 
@@ -620,7 +639,7 @@ function Viewer() {
             {meta.scenario && (
               <div className="margin-vert--sm" data-testid="live-panel">
                 {!live || live.engIdx !== engIdx ? (
-                  <button className="button button--sm button--outline button--primary" onClick={startLive} disabled={!engine.current}>
+                  <button className="button button--sm button--outline button--primary" onClick={startLive} disabled={!engineReady || !liveReady}>
                     Run live: the whole model from bearings, in your browser
                   </button>
                 ) : live.status === "running" ? (
@@ -629,7 +648,7 @@ function Viewer() {
                     {live.progress && live.progress.stage === "confirmation" ? ` (${live.progress.decided} of ${live.progress.nominations} nominations decided)` : ""}
                     {live.progress && live.progress.stage === "estimates" ? ` (${live.progress.done} of ${live.progress.of} rows)` : ""}
                     {live.progress ? `, ${fmt(live.progress.seconds, 0)} s` : ""}.{" "}
-                    <button className="button button--sm button--link" onClick={() => { liveRun.current && liveRun.current.cancel(); liveRun.current = null; setLive(null); }}>cancel</button>
+                    <button className="button button--sm button--link" onClick={() => { if (liveRun.current) liveRun.current.cancel(); liveRun.current = null; setLive(null); }}>cancel</button>
                   </small></p>
                 ) : live.status === "failed" ? (
                   <p><small>Live mode failed: {live.error}</small></p>

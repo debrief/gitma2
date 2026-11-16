@@ -133,6 +133,13 @@ try {
     report.live_segmentation_same = same;
     report.live_max_seconds = Math.max(...report.live.map((r) => r.seconds));
     if (!(same >= LIVE_MIN_SAME * rows)) failures.push(`live segmentation identical on ${same} of ${rows} rows`);
+    // SC-002: where the segmentation matches, the live estimate matches the shipped one
+    for (const r of report.live) {
+      if (!r.decisions_same) failures.push(`live engagement ${r.engagement}: decisions differ from Python's`);
+      if (r.segmentation_same === r.rows && !(r.estimate_max_rel <= TOL)) failures.push(`live engagement ${r.engagement}: estimate differs by ${r.estimate_max_rel}`);
+    }
+    // SC-003's first scored row: reported (the first estimate waits for confirmation)
+    report.live_first_row_seconds = report.live.map((r) => (r.stages.find((x) => x.stage === "estimates") || {}).seconds);
     if (!(report.live_max_seconds <= LIVE_LIMIT_S)) failures.push(`live mode took ${report.live_max_seconds} s`);
   }
   report.digests = await page.evaluate(() => window.__viewer.digests());

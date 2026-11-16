@@ -52,12 +52,19 @@ function stack(per) {
   return feeds;
 }
 
+// yield to the worker's event loop so that a "cancel" message can arrive between synchronous stages
+const breathe = () => new Promise((r) => setTimeout(r, 0));
+
 export async function runLive(s, run, onProgress = () => {}, cancelled = () => false) {
   const P = PARAMS;
   const t0 = Date.now();
+  await breathe();
+  if (cancelled()) throw new Error("cancelled");
   const stage = (name, extra = {}) => onProgress({ stage: name, seconds: (Date.now() - t0) / 1000, ...extra });
   stage("least squares");
   const { state, ok } = lsStates(s, classicalPerTimestep(s));
+  await breathe();
+  if (cancelled()) throw new Error("cancelled");
   stage("GLR statistic");
   const g = glrStat(s, state, ok, P.glr_window);
   stage("ownship legs (O)");
@@ -68,13 +75,17 @@ export async function runLive(s, run, onProgress = () => {}, cancelled = () => f
   for (let c = 0; c < CHANNELS; c++) x.set(fe[c].subarray(0, s.n), c * ROWS);
   const ev = (await run("es", { features: { dtype: "float64", shape: [1, CHANNELS, ROWS], data: x } })).evidence.subarray(0, s.n);
   const rows = scoredRows(s);
+  await breathe();
+  if (cancelled()) throw new Error("cancelled");
   stage("search");
-  const sr = searchByPrefix(s, rows[0], P);
+  // segmenter.segment: the anchor is the first scored row, else the zig
+  const sr = searchByPrefix(s, rows.length ? rows[0] : s.zigIndex, P);
   const noms = sortNominations([...glrNominations(g, P.glr_threshold, P), ...searchNominations(sr.byPrefix, P)]);
   stage("confirmation", { nominations: noms.length, decided: 0 });
   let decided = 0;
   const layer = async (reqs) => {
-    if (cancelled()) throw new Error("cancelled");
+    await breathe();
+  if (cancelled()) throw new Error("cancelled");
     const per = reqs.map(([k, trs]) => {
       const inp = segmentationInputs(s, k, trs, "chord", false);
       if (inp === null) throw new Error(`no valid bearing on [0, ${k}]`);
@@ -89,7 +100,8 @@ export async function runLive(s, run, onProgress = () => {}, cancelled = () => f
   });
   const result = { rows, decisions: conf.decisions, intervals: [], estimates: [] };
   for (let q = 0; q < rows.length; q++) {
-    if (cancelled()) throw new Error("cancelled");
+    await breathe();
+  if (cancelled()) throw new Error("cancelled");
     const k = rows[q];
     const ivs = intervalsAt(conf, k, P);
     result.intervals.push(ivs);

@@ -106,10 +106,19 @@ for (const f of files) {
     if (!!ok[i] !== doc.ls_ok[i]) okDiff++;
     if (ok[i] && doc.ls_ok[i]) for (let j = 0; j < 4; j++) worst = Math.max(worst, rel(state[i][j], doc.ls_state[i][j]));
   }
-  Object.assign(r.stages.ls, { ok_differs: okDiff, max_rel: worst });
+  Object.assign(r.stages.ls, { ok_differs: okDiff, max_rel: worst, usable_rows: doc.ls_ok.filter(Boolean).length });
   t0 = performance.now();
   const g = glrStat(s, state, ok, 30);
   r.stages.glr = { ms: performance.now() - t0, ...cmpArr(g, doc.glr) };
+  // rows where the browser's statistic and Python's lie on different sides of the alarm
+  // threshold: a nomination can change there (spec 021 review, finding 2)
+  r.stages.glr.crossings = [];
+  for (let i = 0; i < s.n; i++) {
+    if ((g[i] > P.glr_threshold) !== (doc.glr[i] > P.glr_threshold)) r.stages.glr.crossings.push([i, g[i], doc.glr[i]]);
+  }
+  let absW = 0;
+  for (let i = 0; i < s.n; i++) absW = Math.max(absW, Math.abs(g[i] - doc.glr[i]));
+  r.stages.glr.max_abs = absW;
   // the GLR on Python's own LS states isolates the statistic from the fit
   const pyState = doc.ls_state.map((x) => Float64Array.from(x)), pyOk = Uint8Array.from(doc.ls_ok.map(Number));
   r.stages.glr_on_py_ls = cmpArr(glrStat(s, pyState, pyOk, 30), doc.glr);
@@ -138,6 +147,9 @@ for (const f of files) {
   if (layerSess) {
     const ev = await evidenceOf(fe, s.n);
     r.stages.evidence = cmpArr(ev, doc.evidence);
+    let evAbs = 0;
+    for (let i = 0; i < s.n; i++) evAbs = Math.max(evAbs, Math.abs(ev[i] - doc.evidence[i]));
+    r.stages.evidence.max_abs = evAbs;
     for (const [name, e] of [["c", null], ["e", ev]]) {
       t0 = performance.now();
       const conf = await confirmOne(s.n, noms.map((x) => ({ ...x })), P, e, layerFor(s));

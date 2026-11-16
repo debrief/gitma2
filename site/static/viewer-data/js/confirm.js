@@ -70,8 +70,23 @@ function free(c, e, acc, gap, lMax) {
   return true;
 }
 
-const argmin = (a) => a.reduce((b, v, i) => (v < a[b] ? i : b), 0);
-const argmax = (a) => a.reduce((b, v, i) => (v > a[b] ? i : b), 0);
+// np.argmin / np.argmax: the first NaN wins if there is one (spec 021 review, finding 7)
+function argmin(a) {
+  let b = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (Number.isNaN(a[i])) return i;
+    if (a[i] < a[b]) b = i;
+  }
+  return b;
+}
+function argmax(a) {
+  let b = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (Number.isNaN(a[i])) return i;
+    if (a[i] > a[b]) b = i;
+  }
+  return b;
+}
 
 // confirm one scenario of n rows; evidence: Float64Array or null; layer(requests) → costs
 export async function confirmOne(n, noms, p, evidence, layer, onDecision = null) {
