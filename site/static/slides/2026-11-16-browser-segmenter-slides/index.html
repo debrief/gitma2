@@ -49,7 +49,7 @@
         <section>
           <h2>Why: margins far above the differences</h2>
           <img src="../../img/2026-11-16-browser-segmenter-slides/margins.svg" alt="Largest cost-drop difference against smallest decision margin per scenario" />
-          <p class="small">Cost drops agree to 5 × 10⁻⁹ on 29 scenarios and 1.3 × 10⁻⁴ on one; the closest decision is 0.154 from its threshold. Intermediates do differ (one row's least squares lands elsewhere on ordinal 22), but nowhere near a threshold here.</p>
+          <p class="small">Cost drops agree to 5.4 × 10⁻⁹ on 29 scenarios and 1.3 × 10⁻⁴ on one; the closest decision is 0.152 from its threshold. Intermediates do differ: one row's least squares lands elsewhere (ordinal 22), cost tables by up to 22%, and the GLR statistic crosses its alarm threshold at one row of ordinal 1 without changing a nomination.</p>
         </section>
 
         <section>
@@ -63,7 +63,7 @@
           <ul>
             <li>Pasting a scenario of one's own (spec story 3) is not built.</li>
             <li>Identical here does not mean identical always: a decision near its threshold could flip; the check would report it with its margin.</li>
-            <li>Speed: confirmation dominates; batching or a hand port of the layer would cut it.</li>
+            <li>Speed: confirmation dominates, and the first row waits for it (77 s on the busiest engagement, over the one-minute target).</li>
           </ul>
           <p class="small">Page: /gitma2/viewer · record: experiments/20261116-port/ · spec: specs/021-browser-segmenter/</p>
         </section>

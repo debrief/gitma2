@@ -18,37 +18,69 @@ A decision is a threshold on a cost difference. The plan reserved a near-thresho
 times the largest browser–Python difference in a cost drop.
 
 Measured on the 30 check scenarios (`experiments/20261116-port/`):
-- On 29 scenarios the cost drops agree to 5e-9.
-- On ordinal 8 one drop differs by 1.3e-4. Its layer solve of 100 iterations took another path.
-  That decision's margin from its threshold is 1.78.
+- On 28 scenarios the cost drops agree to 2e-9.
+- On ordinal 23 they agree to 5.4e-9.
+- On ordinal 8 one drop differs by 1.3e-4: its 100-iteration layer solve took another path.
 
-So the band is 1.3e-3. The smallest margin of any decision is 0.154 (ordinal 22, E), and no
-decision falls inside the band or differs at all. The band therefore excuses nothing in this
-record.
+So the band is 1.3e-3. The smallest margin of any decision from its threshold is 0.152
+(ordinal 31, E). No decision differs, and none falls inside the band.
 
-The job gates on two things: 95% of rows identical (SC-001) and identical nominations.
+The CI job (`port_summary.py`) fails unless all of these hold:
+- every expected scenario is present;
+- nominations and search transitions are identical;
+- every confirmation decision is identical;
+- at least 95% of rows are identical.
+
+The band concerns confirmation only. Review finding 2 showed that the GLR statistic can cross
+its own threshold (R3), and that crossing has no band.
 
 ## R3 The GLR statistic is discontinuous, and least squares has more than one minimum
 
-The statistic's basis drops a column whose Gram–Schmidt remainder is below 1e-6. A
-least-squares state that differs by under a metre (an LM iteration path) can move the statistic
-at a row from 0.89 to 0.53 (ordinal 0, row 139). Ported alone, on Python's own states, the
-statistic agrees to 5e-12.
+Corrected after review. An earlier draft said every difference lay "far from any threshold";
+that was false.
+
+The statistic's basis drops a column whose Gram–Schmidt remainder is below 1e-6. Least-squares
+states that differ in the last digits, a metre or less, can move the statistic a long way.
+
+The largest absolute differences:
+
+| Ordinal | Absolute difference |
+| --- | --- |
+| 1 | 2.93 |
+| 7 | 2.07 |
+| 22 | 1.44 |
+| 15 | 1.02 |
+| 11 | 0.83 |
+
+On ordinal 1, row 256, the browser's value is 2.98 and Python's 5.91, on opposite sides of the
+alarm threshold of 4.67. Nominations stayed identical only because that row falls between
+retests of an episode that began at row 241. The same flip at an episode's start, or on the
+retest lattice, would change a nomination. The gate would then fail, which is the intended
+behaviour. The check now lists every such crossing; only that one occurs on the 30 scenarios.
+
+Ported alone, on Python's own states, the statistic agrees to 1e-12 on most scenarios and to
+7.6e-5 at worst (ordinal 31).
 
 On ordinal 22 the per-row least squares lands in a different minimum at one row (relative
-difference 75). That reaches the innovations and so E-s's evidence, which differs by 0.50 at
-row 352, and the GLR statistic, which differs by 0.17.
+difference 75). That moves E-s's evidence by 0.50 at row 352.
 
-All of these are far from any threshold. Nominations, decisions and segmentations are identical
-on all 30 scenarios. The check therefore reads decisions, not raw values. A scenario where such
-a difference crosses a threshold would show up as a differing decision and be reported.
+The least-squares comparison is vacuous on ordinals 8 and 16, which have no usable row.
 
 ## R4 Search cost tables
 
-Some cost-table entries differ by up to 3%: fits capped at 20 Levenberg–Marquardt iterations
-follow different paths from last-bit differences. The search's transitions on every prefix are
-identical on all 30 scenarios. These entries do not decide anything there, but they would on a
-scenario where two segmentations nearly tie.
+Corrected after review. Cost-table entries differ by up to 22%:
+
+| Ordinal | Largest difference |
+| --- | --- |
+| 30 | 22% |
+| 20 | 19% |
+| 23 | 9.5% |
+| 26 | 8.7% |
+
+These are fits capped at 20 Levenberg–Marquardt iterations that follow different paths from
+last-bit differences. The search's transitions on every prefix are identical on all 30
+scenarios, so these entries decided nothing there. They would on a scenario where two
+segmentations nearly tie.
 
 ## R5 Float32 arithmetic in O
 

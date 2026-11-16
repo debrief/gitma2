@@ -36,20 +36,24 @@ scenarios every decision matches Python's. Spec: `specs/021-browser-segmenter/`.
 - **Agreement**: identical segmentations on 1,770 of 1,770 scored rows, for C and for E.
 - **Margins**: the largest difference in a confirmation cost drop per scenario, against the
   smallest margin of any decision from its threshold.
-  - The differences are 5e-9 or less, except one of 1.3e-4.
-  - The margins are 0.154 or more.
+  - The differences are 5.4e-9 or less, except one of 1.3e-4.
+  - The margins are 0.152 or more.
 
   The gap explains the identity. It does not guarantee it: an engagement with a decision within
   1e-3 of its threshold could differ, and the check would say so.
 - **Stages**: live mode takes 24 to 95 s an engagement on one WASM thread. Confirmation is most
-  of it.
+  of it. The first row waits for confirmation: about 77 s on the busiest engagement, which misses
+  the spec's one-minute target for the first row.
 
 ## What was not achieved
 
 - Pasting a scenario of one's own (the spec's third story, P3) is not built.
 - Some intermediates differ without changing a decision:
   - one row's least squares on ordinal 22 lands in another minimum;
-  - search cost tables differ by up to 3% where fits hit their iteration cap.
+  - search cost tables differ by up to 22% where fits hit their iteration cap.
+  - the GLR statistic differs by up to 2.9. At one row (ordinal 1, row 256) it lies on the other
+    side of the alarm threshold from Python's. No nomination changed there, but one could on
+    another scenario, and the check would fail.
 
   These are recorded in the research notes, not hidden.
 

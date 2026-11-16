@@ -19,23 +19,32 @@ used seed 319.
 
 ## Readings
 
-- Segmentation: identical on 1,770 of 1,770 scored rows (30 scenarios, C and E). Nominations
-  and every confirmation decision are identical.
-- Near-threshold band (research R2): the largest cost-drop difference is 1.3e-4 (ordinal 8;
-  every other scenario is within 5e-9), so the band is 1.3e-3. The smallest decision margin is
-  0.154. Nothing fell inside the band.
-- Intermediates that differ without changing a decision (research R3 and R4):
-  - On ordinal 22, one row's least squares lands in another minimum. It differs by a relative
-    75 there, which moves E-s's evidence by 0.50 at row 352 and the GLR statistic by 0.17.
-  - Search cost-table entries differ by up to 3% (iteration-capped fits).
-- O's codes: identical on every row of every scenario.
-- Live mode in Chromium:
-  - segmentation identical to Python's on 181 of 181 rows of the six demo engagements;
-  - the estimate within 2.7e-6 of the shipped Gate 2 estimate on every row;
-  - 24 to 95 s an engagement on one thread, against SC-003's 10 minutes.
+Corrected after review (spec 021 review). An earlier draft overstated how far the differences
+lay from thresholds and understated the cost-table differences.
 
-  The busiest engagement took 95 s: about 5 s for least squares, 24 s for the search, 47 s for
-  confirmation and 18 s for E-w's estimates.
+- **Decisions.** Segmentation is identical on 1,770 of 1,770 scored rows (30 scenarios, C and
+  E). Nominations, search transitions and every confirmation decision are identical.
+- **Confirmation.** Cost drops agree to 5.4e-9, except one of 1.3e-4 on ordinal 8. The smallest
+  decision margin is 0.152 (ordinal 31, E). Nothing fell inside the band of 1.3e-3.
+- **GLR statistic.** It differs by up to 2.93 in absolute value (ordinal 1). At one row, ordinal
+  1's row 256, the two values lie either side of the alarm threshold: 2.98 in the browser, 5.91
+  in Python. Nominations stayed identical only because that row falls between retests. A
+  scenario where such a crossing falls on a nomination would fail the check (research R3).
+- **Least squares and evidence.** On ordinal 22 one row's least squares lands in another minimum
+  (relative 75), which moves E-s's evidence by 0.50 at row 352. The least-squares comparison is
+  vacuous on ordinals 8 and 16 (no usable row).
+- **Search cost tables.** Entries differ by up to 22% (ordinal 30), and by 19% on ordinal 20,
+  from iteration-capped fits. The transitions are identical.
+- **O.** Its codes are identical on every row of every scenario.
+- **Not compared directly.** The hand-over arrays are checked only through what they produce
+  (confirmation costs, E-w's estimates), and `pipeline.js` only in the six-engagement browser
+  leg.
+- **Live mode in Chromium** (`browser-live.json`): segmentation identical to Python's on 181 of
+  181 rows of the six demo engagements, and every decision identical. The live estimate is within
+  3.2e-6 of the shipped Gate 2 estimate on every row (state, and covariance on its own scale).
+  Each engagement takes 25 to 93 s on one thread, against SC-003's 10 minutes. The first scored
+  row appears only after confirmation: about 76 s on the busiest engagement (20 to 76 s across the six), which misses
+  SC-003's one-minute target for the first row (spec amended to say so).
 
 To regenerate:
 
