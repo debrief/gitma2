@@ -1,0 +1,146 @@
+# Publish the site to GitHub Pages (spec 022), from the gh-pages branch.
+#
+# - push to main: the site at the root of gh-pages; pr/ is left alone.
+# - pull_request (opened, reopened, synchronize) from this repository: the site at the PR's head,
+#   built with base URL /gitma2/pr/<n>/ and published at pr/<n>/. It is never deleted.
+# - pull_request closed: only the PR's state in pr/index.json changes (merged or closed).
+# - workflow_dispatch (pr, ref): build a preview for an earlier PR at a given commit (backfill).
+#
+# pr/index.json lists every preview, its state and the blog posts the PR adds or changes; the
+# site's /previews page reads it. Deploys run one at a time and rebase before pushing.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to build a preview for
+        required: true
+      ref:
+        description: commit or branch to build (for a merged PR, its merge commit or head)
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # fork PRs get no write token: no preview for them
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: What to do
+        id: what
+        run: |
+          set -euo pipefail
+          case "${{ github.event_name }}" in
+            push)
+              echo "mode=main" >> "$GITHUB_OUTPUT"; echo "ref=${{ github.sha }}" >> "$GITHUB_OUTPUT" ;;
+            pull_request)
+              N=${{ github.event.pull_request.number }}
+              echo "pr=$N" >> "$GITHUB_OUTPUT"
+              if [ "${{ github.event.action }}" = "closed" ]; then
+                echo "mode=state" >> "$GITHUB_OUTPUT"
+              else
+                echo "mode=preview" >> "$GITHUB_OUTPUT"; echo "ref=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+              fi ;;
+            workflow_dispatch)
+              echo "mode=preview" >> "$GITHUB_OUTPUT"; echo "pr=${{ inputs.pr }}" >> "$GITHUB_OUTPUT"
+              echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+      - name: The PR's title, state and changed files
+        if: steps.what.outputs.mode != 'main'
+        id: pr
+        run: |
+          set -euo pipefail
+          N=${{ steps.what.outputs.pr }}
+          gh api "repos/$REPO/pulls/$N" > "$RUNNER_TEMP/pr.json"
+          python3 - "$RUNNER_TEMP/pr.json" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          p = json.load(open(sys.argv[1]))
+          state = "merged" if p.get("merged_at") else p["state"]
+          print("state=" + ("open" if state == "open" else state))
+          print("url=" + p["html_url"])
+          PY
+          python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['title'])" "$RUNNER_TEMP/pr.json" > "$RUNNER_TEMP/title"
+          gh api --paginate "repos/$REPO/pulls/$N/files" -q '.[].filename' > "$RUNNER_TEMP/changed"
+      - uses: actions/checkout@v4
+        if: steps.what.outputs.mode != 'state'
+        with:
+          ref: ${{ steps.what.outputs.ref }}
+      - uses: actions/checkout@v4
+        if: steps.what.outputs.mode == 'state'
+      - uses: astral-sh/setup-uv@v6
+        if: steps.what.outputs.mode != 'state'
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        if: steps.what.outputs.mode != 'state'
+        with:
+          node-version: 22
+      - name: Build the site
+        if: steps.what.outputs.mode != 'state'
+        env:
+          SITE_BASE_URL: ${{ steps.what.outputs.mode == 'main' && '/gitma2/' || format('/gitma2/pr/{0}/', steps.what.outputs.pr) }}
+        run: |
+          uv sync
+          cd site && npm ci && npm run build
+          echo "${{ steps.what.outputs.ref }}" > build/.commit
+      - name: Check out gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: _gh
+          fetch-depth: 1
+      - name: Place the build and update the index
+        run: |
+          set -euo pipefail
+          MODE=${{ steps.what.outputs.mode }}
+          N=${{ steps.what.outputs.pr }}
+          touch _gh/.nojekyll
+          if [ "$MODE" = main ]; then
+            # the root site; previews (pr/) are excluded from both the copy and the deletion
+            rsync -a --delete --exclude '/pr/' --exclude '/.git' --exclude '/.nojekyll' site/build/ _gh/
+          elif [ "$MODE" = preview ]; then
+            mkdir -p "_gh/pr/$N"
+            rsync -a --delete site/build/ "_gh/pr/$N/"
+            python3 scripts/site/preview_index.py --index _gh/pr/index.json --pr "$N" \
+              --title "$(cat "$RUNNER_TEMP/title")" --state "${{ steps.pr.outputs.state }}" \
+              --head "${{ steps.what.outputs.ref }}" --url "${{ steps.pr.outputs.url }}" \
+              --posts-from "$RUNNER_TEMP/changed" --root .
+          else
+            python3 scripts/site/preview_index.py --index _gh/pr/index.json --pr "$N" \
+              --title "$(cat "$RUNNER_TEMP/title")" --state "${{ steps.pr.outputs.state }}" \
+              --url "${{ steps.pr.outputs.url }}"
+          fi
+      - name: Commit and push (rebase and retry if the branch moved)
+        working-directory: _gh
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "nothing to publish"; exit 0; fi
+          git commit -q -m "Pages: ${{ steps.what.outputs.mode }} ${{ steps.what.outputs.pr }} at ${{ steps.what.outputs.ref || github.sha }}"
+          for i in 1 2 3 4; do
+            if git push -q origin HEAD:gh-pages; then break; fi
+            [ "$i" = 4 ] && exit 1
+            sleep $((i * 5)); git pull -q --rebase origin gh-pages
+          done
+      - name: Links
+        run: |
+          B=https://debrief.github.io/gitma2
+          if [ "${{ steps.what.outputs.mode }}" = main ]; then echo "Published: $B/" >> "$GITHUB_STEP_SUMMARY";
+          else echo "Preview: $B/pr/${{ steps.what.outputs.pr }}/ · index: $B/previews" >> "$GITHUB_STEP_SUMMARY"; fi
