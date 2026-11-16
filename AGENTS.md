@@ -579,8 +579,11 @@ owner 2026-11-16 "A + B + PR previews"): `.github/workflows/pages.yml` publishes
 - `pr/index.json` (`scripts/site/preview_index.py`), updated on close;
 - a `workflow_dispatch` (pr, ref) to backfill earlier PRs.
 
-Deploys are serialised (concurrency group `gh-pages`). The site's `/previews` page reads the
-root index. `/timelate` shows spec 016's test-record tracks (20 periods each of man2, man2-out
+The workflow has three jobs. `build` runs the PR's code without write access, and previews
+leave out `ort/` and load the root's runtime. `publish` holds the write token. It re-applies its
+change on the latest `gh-pages` until its push succeeds, and skips a stale head. Closed-PR state
+updates run under `pull_request_target`, using main's code. The site's `/previews` page reads
+the root index. `/timelate` shows spec 016's test-record tracks (20 periods each of man2, man2-out
 and shift), with true and declared manoeuvres and per-period errors. Its data are built by
 `scripts/research/timelate_viewer_data.py` into `site/static/timelate-data/` and checked by
 `tests/unit/test_timelate_viewer_data.py`. Published site: `https://debrief.github.io/gitma2/`.
