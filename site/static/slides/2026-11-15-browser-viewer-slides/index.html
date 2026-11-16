@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The browser viewer (spec 020)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.7em">The carried model, running in a browser</h1>
+          <p>The exported graph in ONNX Runtime Web, checked row by row against Python</p>
+          <p class="small">15 November 2026 · spec 020 · gitma2</p>
+        </section>
+
+        <section>
+          <h2>What runs where</h2>
+          <svg viewBox="0 0 640 230" role="img" aria-label="Python builds C's segmentation with E-s's evidence and the hand-over; the browser runs E-w's exported graph on it">
+            <g font-size="11" text-anchor="middle">
+              <text x="160" y="16" fill="#555">ahead of time, in Python</text>
+              <text x="500" y="16" fill="#555">in your browser</text>
+              <rect x="20" y="30" width="130" height="50" fill="#eee" stroke="#777"/><text x="85" y="52">bearings</text><text x="85" y="67">(seed 319)</text>
+              <rect x="170" y="30" width="140" height="50" fill="#eee" stroke="#777"/><text x="240" y="52">C's segmentation</text><text x="240" y="67">with E-s's evidence</text>
+              <rect x="170" y="110" width="140" height="50" fill="#eee" stroke="#777"/><text x="240" y="132">C's hand-over:</text><text x="240" y="147">12 input arrays a row</text>
+              <rect x="400" y="110" width="200" height="50" fill="#e9f6ea" stroke="#2ca02c"/><text x="500" y="132">E-w's exported graph</text><text x="500" y="147">ONNX Runtime Web, WASM</text>
+              <rect x="400" y="180" width="200" height="40" fill="#fff" stroke="#2ca02c"/><text x="500" y="204">state, covariance, flags</text>
+              <path d="M150 55 H170 M240 80 V110 M310 135 H400 M500 160 V180" stroke="#555" fill="none"/>
+              <text x="355" y="128" font-size="9" fill="#555">shipped</text>
+              <text x="240" y="200" fill="#555">IMM, one leg, C, C″: also Python, shipped</text>
+            </g>
+          </svg>
+          <p class="small">C and its confirmation are host code; only E-w's graph gives a number the page can show.</p>
+        </section>
+
+        <section>
+          <h2>Six engagements, chosen by rule</h2>
+          <ul>
+            <li>Gate 2's used test seed 319; no fresh seed.</li>
+            <li>Quiet, one manoeuvre, busy, and the first where E loses to C″; then one more of each.</li>
+            <li>Every 60 s from zig + 5 min: 181 rows in all; 1.2 MB with the graph.</li>
+            <li>At the 24 G5 rows, the demo's E matches Gate 2's committed predictions to 2 × 10⁻⁷ in range.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Two of them as tracks</h2>
+          <img src="../../img/2026-11-15-browser-viewer-slides/tracks.svg" alt="Busy engagement and the engagement where E loses to C double prime, with E, C double prime and IMM trails" />
+          <p class="small">E's dashed ellipse is its stated 1-σ: overconfident (Gate 3, 95% coverage 0.60). The page shows it only with that warning.</p>
+        </section>
+
+        <section>
+          <h2>Range error, every engagement</h2>
+          <img src="../../img/2026-11-15-browser-viewer-slides/errors.svg" alt="Relative range error against minutes since the zig for each system on each engagement" />
+          <p class="small">E tracks C and C″ closely, ahead on some engagements and behind on others. On engagement 5 the one-leg fit is better late on. A demonstration, not a result: Gate 2's record is.</p>
+        </section>
+
+        <section>
+          <h2>The browser computes what Python computed</h2>
+          <img src="../../img/2026-11-15-browser-viewer-slides/conformance.svg" alt="Browser against Python, largest relative difference per row" />
+          <p class="small">State within 2.7 × 10⁻⁶, covariance on its own scale within 3.2 × 10⁻⁶, flags identical. One off-diagonal covariance element of one row is 3.2 × 10⁻⁵ element-wise: reported, cause not established.</p>
+        </section>
+
+        <section>
+          <h2>Fast enough on one thread</h2>
+          <img src="../../img/2026-11-15-browser-viewer-slides/timing.svg" alt="Milliseconds per row by engagement" />
+          <p class="small">About 0.27 s a row; the current time is computed first, the trail fills in behind.</p>
+        </section>
+
+        <section>
+          <h2>Not achieved, and next</h2>
+          <ul>
+            <li>C and its confirmation do not run in the browser: a port by hand from the algorithm note would be needed for live data.</li>
+            <li>The element-wise covariance check fails on one element of one row; the gate uses a scale-aware measure (spec 020 research R6).</li>
+            <li>No calibrated uncertainty to show: Gates 3 and 4 stopped.</li>
+            <li>The SRD's default plan is now complete; what follows is the owner's choice.</li>
+          </ul>
+          <p class="small">Page: /gitma2/viewer · data: site/static/viewer/manifest.json · record: experiments/20261115-viewer/</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

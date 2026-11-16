@@ -29,6 +29,7 @@ const config = {
         { to: "/glossary", label: "Glossary", position: "left" },
         { to: "/data-dictionary", label: "Data dictionary", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
+        { to: "/viewer", label: "Viewer", position: "left" },
         { href: "https://github.com/debrief/gitma2", label: "GitHub", position: "right" },
       ],
     },

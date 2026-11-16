@@ -530,6 +530,47 @@ The time-late track stops here unless the owner reopens it; what would justify a
 approach again: real data, several periods of one target or ownship advice, or a proposer the
 evidence still judges. Seeds: none new; the next fresh seed is 348.
 
+020 (browser viewer on the exported artefact, `specs/020-browser-viewer/`; SRD §1 and §7 step 5,
+the last item of the default plan; the owner said "continue" after PR 37; not a gate, nothing
+trained, no fresh seed): the page `site/src/pages/viewer.js` (`/viewer`, navbar "Viewer")
+runs Gate 2's carried E-w graph (`gate2.export`, carried weights) in ONNX Runtime Web 1.31.1
+(WASM, one thread, worker `site/static/viewer-data/worker.js`; the runtime is copied from
+`site/node_modules` by the site's prebuild into gitignored `static/ort/`). It runs on six
+engagements of used seed 319 chosen by `tma2.viewer.choose`: quiet, one manoeuvre and busy,
+counted over the shown span from zig + 5 min, plus the first where E's G5 median range error
+is worse than C″'s. `tma2-viewer-data` (`viewer/build.py`) builds the data: E's segmentation
+and hand-over in Gate 2's chunks of 16, the graph's inputs every 60 s, Python onnxruntime
+outputs, and one leg, IMM, C and C″ from Python. It takes about 26 min. The data, gzipped with
+a manifest of digests, are 1.2 MB in `site/static/viewer-data/`. Checks:
+- `conformance/onnx/viewer_python.py` (fresh Python run on the shipped inputs);
+- `viewer_leg.mjs` (the built page in Chromium, every row);
+- `cmp` of the page's graph with a fresh export, all in `ci.yml`'s `onnx-conformance`.
+
+Record `experiments/20261115-viewer/`: 181 rows; browser state within 2.7e-6, covariance
+within 3.2e-6 on its own scale; one off-diagonal element of one row is 3.2e-5 element-wise
+(research R6; cause not established); flags identical. At 0.27 s a row, the first estimate
+appears in 1.7 s. On the 24 G5 rows the demo's E equals Gate 2's committed predictions to
+2e-7. Slides `site/blog/2026-11-15-browser-viewer-slides.md`. The SRD's default plan is
+complete; what follows is the owner's choice. Seeds: none new; the next fresh seed is 348.
+
+021 (the carried model end to end in the browser, `specs/021-browser-segmenter/`; owner
+2026-11-15 option A; not a gate, nothing trained, no fresh seed): C's host code is ported to
+JavaScript (`site/static/viewer-data/js/`: `lsq`, `glr`, `codes` with NumPy's pairwise and
+float32 sums, `ownship`, `features`, `search`, `confirm`, `handover`, `pipeline`). The physics
+layer at confirmation's settings is its own graph (`viewer/layer_export.py`, `layer.onnx`; three
+legs in CI), and so is E-s (`es.onnx`). The page's live mode runs the whole model from bearings
+in a module worker. The dump (`tma2-viewer-dump`; `--install` writes the scenario files and
+graphs into the viewer data) and the 30 check scenarios are in `experiments/20261116-port/dump/`.
+Checks:
+- `conformance/onnx/port_node.mjs` and `port_summary.py` (CI job `browser-port`);
+- `viewer_leg.mjs --live all`.
+
+Record `experiments/20261116-port/`: segmentation identical on 1,770 of 1,770 rows; every
+nomination and decision identical; cost drops within 1.3e-4, against a smallest margin of 0.152; GLR crosses its threshold at one row
+(ordinal 1) without changing a nomination; cost tables differ by up to 22%;
+live mode 25 to 93 s an engagement, 181 of 181 rows identical. Slides
+`site/blog/2026-11-16-browser-segmenter-slides.md`. Not built: pasting a scenario (story 3).
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -913,3 +954,16 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
 - Modal rate-limits app creation: of five `modal run` jobs started within ten seconds, two were
   refused ("App create rate limit exceeded") before any container started. Launch GPU plans a
   minute apart, or re-run the refused workflow run (the plan and its digest are untouched).
+- Spec 020: the browser runtime (onnxruntime-web WASM) can differ from Python's onnxruntime by
+  more than the 1e-5 element-wise tolerance on an off-diagonal covariance element of an
+  ill-conditioned row, while state and flags agree to 3e-6. Compare a covariance on its own
+  scale (|ΔP_ij| / √|P_ii P_jj|) and report the element-wise figure. Never give a static folder
+  the name of a page's path (`/viewer` and `static/viewer/`): which one a host serves is
+  ambiguous, so the data live in `static/viewer-data/`. Hooks after an early
+  return break a React page: compute every `useBaseUrl` first.
+- Spec 021: compare a port by its decisions, not its intermediates. Least squares can land in
+  another minimum at one row (relative 75), and the GLR basis's 1e-6 cutoff is discontinuous,
+  yet every decision matched. A numba `np.sum`/`mean` and NumPy's pairwise sum differ in the last
+  bits, and a float32 pack column is averaged in float32: port the summation order (`codes.js`).
+  `onnxruntime-web`'s `ort.node.min.mjs` runs the same WASM build under Node, which is much
+  faster for development than a browser.

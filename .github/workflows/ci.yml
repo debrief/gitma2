@@ -17,7 +17,8 @@ jobs:
   # the base; anything else (push to main, manual run) runs everything.
   # - site: only the site's own files, the schema and the data-dictionary script feed the build.
   # - onnx-conformance: skipped only when every changed file is one the exports cannot read
-  #   (documents, records, configs, tests, the site, and packages no export imports). A file
+  #   (documents, records, configs, tests, the site but for the viewer's files (spec 020), and
+  #   packages no export imports). A file
   #   outside that list runs it, so a new package is covered until it is listed here.
   changes:
     runs-on: ubuntu-latest
@@ -38,7 +39,7 @@ jobs:
           git diff --name-only "$BASE...HEAD" > "$RUNNER_TEMP/changed"
           wc -l < "$RUNNER_TEMP/changed"
           SITE='^(site/|schema/|scripts/data_dictionary\.py$|\.github/workflows/ci\.yml$)'
-          SAFE='^(docs/|specs/|experiments/|site/|configs/|tests/|scripts/research/|\.specify/|\.claude/|[^/]*\.md$|src/tma2/(headroom|calib|cli|report)/|\.github/workflows/(?!ci\.yml$))'
+          SAFE='^(docs/|specs/|experiments/(?!20261116-port/|20261107-g2-val/models/)|site/(?!static/viewer-data/|src/pages/viewer\.js$|package(-lock)?\.json$|scripts/prebuild\.mjs$)|configs/(?!segment/gs-plan\.json$|gate2/g2-a\.json$)|tests/|scripts/research/|\.specify/|\.claude/|[^/]*\.md$|src/tma2/(headroom|calib|cli|report)/|\.github/workflows/(?!ci\.yml$))'
           if grep -qE "$SITE" "$RUNNER_TEMP/changed"; then echo "site=true"; else echo "site=false"; fi | tee -a "$GITHUB_OUTPUT"
           if grep -vP "$SAFE" "$RUNNER_TEMP/changed" | grep -q .; then echo "onnx=true"; else echo "onnx=false"; fi | tee -a "$GITHUB_OUTPUT"
 
@@ -182,6 +183,22 @@ jobs:
           uv run python -m tma2.gate2.export --out conformance/onnx/gate3-ew --plan configs/gate2/g2-a.json --weights $W/ew-s3/best.safetensors --calibration configs/gate3/g3-a.json
           (cd conformance/onnx && node wasm_leg.mjs --dir gate3-ew --out gate3-ew/results.json)
           uv run python conformance/onnx/java_leg.py conformance/onnx/gate3-ew conformance/onnx/gate3-ew/results.json
+      - name: C's confirmation layer export (spec 021), three legs
+        run: |
+          uv run python -m tma2.viewer.layer_export --out conformance/onnx/viewer-layer
+          (cd conformance/onnx && node wasm_leg.mjs --dir viewer-layer --out viewer-layer/results.json)
+          uv run python conformance/onnx/java_leg.py conformance/onnx/viewer-layer conformance/onnx/viewer-layer/results.json
+      - name: Browser viewer (specs 020, 021) - shipped data against fresh Python onnxruntime, then the built page in Chromium, every demo row to 1e-5 and live mode on every demo engagement
+        run: |
+          uv run python conformance/onnx/viewer_python.py site/static/viewer-data
+          # the page's graphs are the ones the steps above just exported (FR-001; spec 021 FR-002, FR-003)
+          cmp conformance/onnx/gate2-ew/model.onnx site/static/viewer-data/model.onnx
+          cmp conformance/onnx/gate2-es/model.onnx site/static/viewer-data/es.onnx
+          cmp conformance/onnx/viewer-layer/model.onnx site/static/viewer-data/layer.onnx
+          (cd site && npm ci && npm run build)
+          mkdir -p conformance/onnx/viewer
+          (cd conformance/onnx && node viewer_leg.mjs --build ../../site/build --out viewer/results.json)
+          python3 -c "import json; r = json.load(open('conformance/onnx/viewer/results.json')); print({k: r.get(k) for k in ('rows', 'max_rel_diff', 'max_rel_diff_by_output', 'rows_over_tol_elementwise', 'first_estimate_ms', 'median_ms_per_row', 'load_ms', 'live_rows', 'live_segmentation_same', 'live_max_seconds')})" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: onnx-conformance
@@ -197,6 +214,54 @@ jobs:
             conformance/onnx/gate2-*/python_leg.json
             conformance/onnx/gate3-*/results.json
             conformance/onnx/gate3-*/python_leg.json
+            conformance/onnx/viewer/results.json
+            conformance/onnx/viewer/results.png
+            conformance/onnx/viewer-layer/results.json
+            conformance/onnx/viewer-layer/python_leg.json
+
+  browser-port:
+    # spec 021: the JavaScript port of C's host code against Python's committed dump, stage by
+    # stage, on 30 scenarios of used seed 319, with the graphs exported fresh
+    needs: changes
+    if: needs.changes.outputs.onnx == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: uv sync
+      - name: Export E-s's graph and the confirmation layer
+        run: |
+          uv run python -m tma2.segment.evidence_export --out "$RUNNER_TEMP/es" --plan configs/gate2/g2-a.json --weights experiments/20261107-g2-val/models/es-s3/best.safetensors
+          uv run python -m tma2.viewer.layer_export --out "$RUNNER_TEMP/layer"
+          cmp "$RUNNER_TEMP/es/model.onnx" site/static/viewer-data/es.onnx
+          cmp "$RUNNER_TEMP/layer/model.onnx" site/static/viewer-data/layer.onnx
+      - name: Port against the dump (four processes)
+        working-directory: conformance/onnx
+        run: |
+          npm ci
+          D=../../experiments/20261116-port/dump
+          python3 -c "import json; o = json.load(open('$D/index.json'))['ordinals']; [print(','.join(map(str, o[i::4]))) for i in range(4)]" > "$RUNNER_TEMP/parts"
+          set -o pipefail
+          i=0
+          pids=()
+          while read -r p; do
+            node port_node.mjs --dump "$D" --layer "$RUNNER_TEMP/layer/model.onnx" --es "$RUNNER_TEMP/es/model.onnx" --only "$p" --out "$RUNNER_TEMP/port-$i.json" > "$RUNNER_TEMP/port-$i.log" 2>&1 &
+            pids+=($!)
+            i=$((i + 1))
+          done < "$RUNNER_TEMP/parts"
+          for pid in "${pids[@]}"; do wait "$pid"; done  # any shard that failed fails the step
+          N=$(python3 -c "import json; print(len(json.load(open('$D/index.json'))['ordinals']))")
+          python3 port_summary.py --expect "$N" "$RUNNER_TEMP/port-summary.json" "$RUNNER_TEMP"/port-0.json "$RUNNER_TEMP"/port-1.json "$RUNNER_TEMP"/port-2.json "$RUNNER_TEMP"/port-3.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-port
+          path: ${{ runner.temp }}/port-*
 
   p0:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'p0')
