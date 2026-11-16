@@ -581,8 +581,11 @@ function Viewer() {
             <TrackPlot eng={eng} q={q} show={show} eRows={eRows} showEllipse={showEllipse} />
             <div style={{ marginTop: "0.5rem" }}>
               <label htmlFor="t">
-                Time: zig + {fmt(minutes, 0)} min (row {k} of {eng.samples}); estimates start 5 minutes after the ownship's
-                zig, because before it the state is undetermined.
+                Time: zig + {fmt(minutes, 0)} min (row {k} of {eng.samples}). Each estimate uses every bearing from the start
+                of the window, before and after the ownship's zig. On one straight ownship leg the target's range cannot be
+                found from bearings alone; the zig adds a second viewpoint, and the two legs together fix it, much like
+                triangulation. Estimates are shown from 5 minutes after the zig, the rows Gate 2 scored; just after the
+                zig the new leg is still too short to pin range down.
               </label>
               <input id="t" type="range" min={0} max={eng.rows.length - 1} value={q} onChange={(ev) => setQ(Number(ev.target.value))} style={{ width: "100%" }} />
             </div>
