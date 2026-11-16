@@ -27,8 +27,11 @@ const median = (a) => {
   return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2;
 };
 
-function Tracks({ p, shown, q: q0 }) {
-  const q = Math.min(q0, p.truth.length - 1); // a newly chosen shorter period renders before q resets
+// Each system's track is one solution fitted to the whole period; ticks every 10 minutes along
+// every track let the reader match positions in time (spec 022, owner 2026-11-16: no
+// moment-by-moment view in time-late).
+const TICK_S = 600;
+function Tracks({ p, shown }) {
   const W = 640, H = 480, PAD = 26;
   const box = useMemo(() => {
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
@@ -41,7 +44,10 @@ function Tracks({ p, shown, q: q0 }) {
   const sx = (x) => PAD + ((x - box.x0) / box.span) * (W - 2 * PAD);
   const sy = (y) => H - PAD - ((y - box.y0) / box.span) * (H - 2 * PAD);
   const line = (pts) => pts.filter((r) => r && Number.isFinite(r[0])).map((r) => `${sx(r[0]).toFixed(1)},${sy(r[1]).toFixed(1)}`).join(" ");
-  const t = p.truth[q];
+  const every = Math.max(1, Math.round(TICK_S / p.step_s));
+  const ticks = (rows, col, key) =>
+    rows.map((r, i) => (i % every === 0 && r && Number.isFinite(r[0]) ? <circle key={`${key}-${i}`} cx={sx(r[0])} cy={sy(r[1])} r={2.4} fill={col} /> : null));
+  const first = p.truth[0], last = p.truth[p.truth.length - 1];
   // true manoeuvres drawn thick on the target track
   const inMan = (i) => p.true_spans.some(([a, b]) => i * p.step_s >= a && i * p.step_s <= b);
   const manSegs = [];
@@ -64,22 +70,20 @@ function Tracks({ p, shown, q: q0 }) {
         {Object.keys(COLOURS).filter((s) => shown[s]).map((s) => (
           <polyline key={s} points={line(p.systems[s].track)} fill="none" stroke={COLOURS[s]} strokeWidth={1.3} strokeDasharray={s === "history-best" ? "5 3" : undefined} />
         ))}
-        <circle cx={sx(t[4])} cy={sy(t[5])} r={4.5} fill={OWN} />
-        <circle cx={sx(t[0])} cy={sy(t[1])} r={4.5} fill={TGT} />
-        {Object.keys(COLOURS).filter((s) => shown[s]).map((s) => {
-          const r = p.systems[s].track[q];
-          return r && Number.isFinite(r[0]) ? <circle key={s} cx={sx(r[0])} cy={sy(r[1])} r={4} fill={COLOURS[s]} stroke="white" /> : null;
-        })}
+        {ticks(p.truth.map((r) => [r[4], r[5]]), OWN, "own")}
+        {ticks(p.truth, TGT, "tgt")}
+        {Object.keys(COLOURS).filter((s) => shown[s]).map((s) => ticks(p.systems[s].track, COLOURS[s], s))}
+        <circle cx={sx(first[0])} cy={sy(first[1])} r={5} fill="none" stroke={TGT} strokeWidth={1.5} />
+        <rect x={sx(last[0]) - 4} y={sy(last[1]) - 4} width={8} height={8} fill="none" stroke={TGT} strokeWidth={1.5} />
       </g>
       <line x1={W - PAD - bar * scale} y1={H - 10} x2={W - PAD} y2={H - 10} stroke="currentColor" />
       <text x={W - PAD} y={H - 14} textAnchor="end" fontSize={11} fill="currentColor">{bar >= 1000 ? `${bar / 1000} km` : `${bar} m`}</text>
-      <text x={PAD} y={16} fontSize={11} fill="currentColor">north up · thick red: the target's true manoeuvres</text>
+      <text x={PAD} y={16} fontSize={11} fill="currentColor">north up · thick red: true manoeuvres · dots every 10 min · ○ start, □ end</text>
     </svg>
   );
 }
 
-function Timeline({ p, shown, q: q0 }) {
-  const q = Math.min(q0, p.truth.length - 1);
+function Timeline({ p, shown }) {
   const W = 640, ROW = 20, L = 130, T = p.seconds;
   const rows = [["truth", p.true_spans, TGT], ...["ctl-d1-q0.01", "c2", "learned-s1-arc"].filter((s) => shown[s]).map((s) => [SHORT[s], p.systems[s].declared || [], COLOURS[s]])];
   const x = (s) => L + (s / T) * (W - L - 10);
@@ -92,7 +96,6 @@ function Timeline({ p, shown, q: q0 }) {
           {spans.map(([a, b], j) => <rect key={j} x={x(a)} y={i * ROW + 4} width={Math.max(x(b) - x(a), 2)} height={12} fill={col} opacity={0.75} />)}
         </g>
       ))}
-      <line x1={x(q * p.step_s)} y1={0} x2={x(q * p.step_s)} y2={rows.length * ROW} stroke="currentColor" strokeDasharray="2 2" />
       {[0, 0.25, 0.5, 0.75, 1].map((f) => (
         <text key={f} x={x(f * T)} y={rows.length * ROW + 18} textAnchor="middle" fontSize={10} fill="currentColor">{Math.round((f * T) / 60)} min</text>
       ))}
@@ -107,7 +110,6 @@ function Page() {
   const [split, setSplit] = useState("man2");
   const [data, setData] = useState({});
   const [pi, setPi] = useState(0);
-  const [q, setQ] = useState(0);
   const [shown, setShown] = useState({ "ctl-d1-q0.01": true, c2: true, "history-best": false, "learned-s1-arc": false });
   const [error, setError] = useState(null);
   useEffect(() => {
@@ -119,8 +121,6 @@ function Page() {
   }, [man, split, data, base]);
   const d = data[split];
   const p = d ? d.periods[Math.min(pi, d.periods.length - 1)] : null;
-  useEffect(() => setQ(p ? Math.floor(p.truth.length / 2) : 0), [split, pi, p && p.ordinal]);
-  const qq = p ? Math.min(q, p.truth.length - 1) : 0;
   if (error) return <p>The time-late data could not be loaded: {error}</p>;
   if (!man) return <p>Loading…</p>;
   const pooled = d
@@ -131,7 +131,9 @@ function Page() {
     <>
       <p>
         <strong>Time-late</strong> means after the fact: given every bearing of a period (20 to 120 minutes of
-        5-second bearings), estimate the target's whole track and when it manoeuvred. The standing system is a
+        5-second bearings), find the one track and manoeuvre history that best explain the whole period. Each track
+        below is a single solution fitted to all of the period's bearings at once, so what the later legs reveal about
+        range also fixes the early track; nothing is estimated moment by moment. The standing system is a
         classical control: wild bearings are edited, error correlation is estimated, manoeuvre histories are searched
         by their evidence under two manoeuvre priors, and a history is declared at a margin. Nothing in it is learned.
         These periods come from spec 016's test record (<code>{man.record}</code>, seed {man.seed}, used). They are the
@@ -168,10 +170,8 @@ function Page() {
       {p && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "1.2rem" }}>
           <div style={{ flex: "1 1 100%", maxWidth: 660 }}>
-            <Tracks p={p} shown={shown} q={qq} />
-            <label htmlFor="tlq" style={{ fontSize: "0.9rem" }}>Time: {Math.round((qq * p.step_s) / 60)} of {Math.round(p.seconds / 60)} min</label>
-            <input id="tlq" type="range" min={0} max={p.truth.length - 1} value={qq} onChange={(e) => setQ(Number(e.target.value))} style={{ width: "100%" }} />
-            <Timeline p={p} shown={shown} q={qq} />
+            <Tracks p={p} shown={shown} />
+            <Timeline p={p} shown={shown} />
           </div>
           <div style={{ flex: "1 1 100%" }}>
             <div style={{ overflowX: "auto" }}>

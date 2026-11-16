@@ -36,3 +36,10 @@ gives every pull request a persistent preview, listed in an index. Spec:
 ## How progress will be shown
 
 The PR for this task is the first with a preview. Its slides post links the published pages.
+
+## Updates
+
+- 2026-11-16, after the owner's review of the preview:
+  - The time-late page shows each system's solution whole, as one fit to all the period's
+    bearings. The time slider is gone; start and end markers and 10-minute ticks remain.
+  - The viewer says it is the real-time model and points to the time-late page.

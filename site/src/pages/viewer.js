@@ -301,6 +301,7 @@ function Viewer() {
   const { siteConfig } = useDocusaurusContext();
   const ortBase = siteConfig.customFields.ortBase || ownOrt;
   const gate2Url = useBaseUrl("/blog/2026/11/08/gate-2");
+  const timelateUrl = useBaseUrl("/timelate");
   const [manifest, setManifest] = useState(null);
   const [digestState, setDigestState] = useState({});
   const [error, setError] = useState(null);
@@ -553,6 +554,11 @@ function Viewer() {
   return (
     <div className="container margin-vert--lg" style={{ maxWidth: 1100 }}>
       <h1>Browser viewer: the carried model, running here</h1>
+      <div className="alert alert--info" role="note" style={{ marginBottom: "1rem" }}>
+        This page shows the <strong>real-time</strong> model: an estimate at each moment from the bearings received so far.
+        For <strong>time-late</strong> analysis, one solution fitted to a whole period of bearings, see{" "}
+        <a href={timelateUrl}>Time-late</a>.
+      </div>
       <p>
         This page runs the exported graph of Gate 2's carried model E in your browser and draws its estimate of a
         simulated target. The graph is E-w: learned per-bearing weights and a start correction feeding the declared
