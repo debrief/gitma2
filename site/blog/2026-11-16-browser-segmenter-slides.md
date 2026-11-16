@@ -41,8 +41,8 @@ scenarios every decision matches Python's. Spec: `specs/021-browser-segmenter/`.
 
   The gap explains the identity. It does not guarantee it: an engagement with a decision within
   1e-3 of its threshold could differ, and the check would say so.
-- **Stages**: live mode takes 24 to 95 s an engagement on one WASM thread. Confirmation is most
-  of it. The first row waits for confirmation: about 77 s on the busiest engagement, which misses
+- **Stages**: live mode takes 25 to 93 s an engagement on one WASM thread. Confirmation is most
+  of it. The first row waits for confirmation: about 76 s on the busiest engagement, which misses
   the spec's one-minute target for the first row.
 
 ## What was not achieved

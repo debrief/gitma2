@@ -218,7 +218,7 @@ it and the result equals Python's for that scenario, up to stories 1 and 2's tol
   Python's to spec 020's tolerances: state 1e-5, and covariance on its own scale 1e-5.
 - **SC-003**: On a CI runner, live mode finishes the busiest demo engagement within 10 minutes
   and the quietest within 2. The first scored row appears within 1 minute.
-  (Not met for the first row on the busiest engagement: about 77 s in this container. The first
+  (Not met for the first row on the busiest engagement: about 76 s in this container. The first
   estimate waits for the whole confirmation, so a streaming confirmation would be needed. It is
   reported per engagement and not gated.)
 - **SC-004**: Every ported function has a Python-comparison unit check.

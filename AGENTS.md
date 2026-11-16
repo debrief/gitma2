@@ -568,7 +568,7 @@ Checks:
 Record `experiments/20261116-port/`: segmentation identical on 1,770 of 1,770 rows; every
 nomination and decision identical; cost drops within 1.3e-4, against a smallest margin of 0.152; GLR crosses its threshold at one row
 (ordinal 1) without changing a nomination; cost tables differ by up to 22%;
-live mode 24 to 95 s an engagement, 181 of 181 rows identical. Slides
+live mode 25 to 93 s an engagement, 181 of 181 rows identical. Slides
 `site/blog/2026-11-16-browser-segmenter-slides.md`. Not built: pasting a scenario (story 3).
 
 ## Stack (owner decisions, 2026-10-31)
