@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktma2_site=self.webpackChunktma2_site||[]).push([[1903],{1912(t){t.exports=JSON.parse('{"blogBasePath":"/gitma2/pr/45/blog","blogTitle":"Blog","authorsListPath":"/gitma2/pr/45/blog/authors"}')}}]);

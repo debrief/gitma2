@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reporting progress: two posts per task</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .flow { display: flex; justify-content: center; gap: 0.6em; align-items: center; font-size: 0.75em; flex-wrap: wrap; }
+      .flow span { padding: 0.4em 0.8em; border: 2px solid #1f5fbf; border-radius: 8px; }
+      .flow span.new { border-color: #c6322e; background: #fff2f1; }
+      .flow em { font-style: normal; color: #888; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Reporting progress</h1>
+          <p>Two posts per task: a kickoff before, slides after</p>
+          <p class="small">8 November 2026 · process · gitma2</p>
+        </section>
+
+        <section>
+          <h2>Overview: what changes in the workflow</h2>
+          <div class="flow">
+            <span>specify</span><em>→</em><span class="new">kickoff post</span><em>→</em>
+            <span>plan · tasks</span><em>→</em><span>implement</span><em>→</em>
+            <span class="new">slides post</span><em>→</em><span>PR</span>
+          </div>
+          <ul style="margin-top: 1em">
+            <li>A task is a Spec Kit feature or a gate run; smaller changes add a dated paragraph.</li>
+            <li>Kickoff: where we are, where this task moves to, how progress will be shown.</li>
+            <li>Slides: illustrated overview, demonstration with charts and track plots, not achieved, next.</li>
+            <li>Bound in constitution 1.3.0; practice in AGENTS.md and the process page.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Overview: how a figure is made</h2>
+          <div class="two">
+            <ul>
+              <li><code>tma2-plot track</code> reads a truth split and any prediction files.</li>
+              <li>Ownship blue, target red, each estimator's trail from the zig, marks and 1-σ ellipses at named times.</li>
+              <li>A <code>.json</code> sidecar per figure: data digests, scenario, command, commit.</li>
+              <li>Pre-zig rows hidden; implausible rows masked.</li>
+            </ul>
+            <img src="../../img/2026-11-08-reporting/track-8.svg" alt="Track plot, scenario 8" />
+          </div>
+        </section>
+
+        <section>
+          <h2>Where our TMA thought the target was (7.7 km)</h2>
+          <img src="../../img/2026-11-08-reporting/track-8.svg" alt="Track plot: ownship (blue), target (red), batch LS, IMM and oracle estimates" />
+          <p class="small">Demo split, seed 316, MAN2 ranges, scenario 8. Marks 5 and 10 min after the zig. The single-model estimators sit 2–3 km north of the target after its early turn; the oracle, given the manoeuvre times, sits on it.</p>
+        </section>
+
+        <section>
+          <h2>Errors against time, scenario 8</h2>
+          <img src="../../img/2026-11-08-reporting/errors-8.svg" alt="Relative range, course and speed error against minutes after the zig" />
+          <p class="small">Log scale. Batch LS and the IMM stay near 30% range error; the oracle falls below 1%.</p>
+        </section>
+
+        <section>
+          <h2>A far engagement (28 km), where the IMM drifts</h2>
+          <img src="../../img/2026-11-08-reporting/track-0.svg" alt="Track plot, scenario 0" />
+          <p class="small">Over the hour after the zig the IMM's range error grows from 10% to 30%; batch LS settles near 1%. On quiet legs the manoeuvre model costs.</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>Static figures only: no animation of the estimate through time.</li>
+            <li>No metric chart from a committed scoring run yet.</li>
+            <li>SVGs are 70–85 KB each; long decks will want them optimised.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next</h2>
+          <ul>
+            <li>Owner merges constitution 1.3.0; the practice is adopted on the agent side meanwhile.</li>
+            <li>Spec 008 gets its kickoff post when next touched; Gate 3's slides post is the first for a gate.</li>
+          </ul>
+          <p class="small">Post: /blog/2026/11/08/reporting-slides · Figures: tma2-plot, sidecars next to each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
