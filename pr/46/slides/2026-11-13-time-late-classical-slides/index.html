@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Time-late, the classical follow-on (spec 014)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.7em; margin: 0 auto; }
+      .reveal .big { font-size: 1.5em; font-weight: 600; margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.7em">Time-late, the classical follow-on</h1>
+          <p>What the search is worth, what it gets wrong, and two faults the panel found</p>
+          <p class="small">13 November 2026 · spec 014 · gitma2 · nothing trained</p>
+        </section>
+
+        <section>
+          <h2>Where Gate T left us</h2>
+          <ul>
+            <li>A search over manoeuvre histories halved the track error of C″.</li>
+            <li>The panel: is that the search, or just a better model and a prior?</li>
+            <li>How much is left to win, and is any of it within reach?</li>
+            <li>What happens when the target never manoeuvres?</li>
+          </ul>
+          <p class="small">Owner's decision: classical work first, no GPU.</p>
+        </section>
+
+        <section>
+          <h2>Two controls split the gain</h2>
+          <svg viewBox="0 0 640 230" role="img" aria-label="Four systems in a row from C double prime to the search, each adding one ingredient">
+            <g font-size="12" text-anchor="middle">
+              <rect x="10" y="60" width="130" height="60" fill="#fdf1dc" stroke="#e8a33d"/><text x="75" y="85">C″ as a track</text><text x="75" y="103" font-size="10" fill="#555">causal, chord model</text>
+              <rect x="175" y="60" width="130" height="60" fill="#fdf1dc" stroke="#e8a33d"/><text x="240" y="85">C″ refitted</text><text x="240" y="103" font-size="10" fill="#555">+ arc model, prior, whole period</text>
+              <rect x="340" y="60" width="130" height="60" fill="#eee" stroke="#6c757d"/><text x="405" y="85">search, flat prior</text><text x="405" y="103" font-size="10" fill="#555">+ search, no statistics</text>
+              <rect x="505" y="60" width="125" height="60" fill="#f3e9fb" stroke="#7b4fa3"/><text x="567" y="85">search</text><text x="567" y="103" font-size="10" fill="#555">+ Annex B statistics</text>
+              <text x="75" y="145">0.078</text><text x="240" y="145">0.055</text><text x="405" y="145">0.043</text><text x="567" y="145">0.038</text>
+              <text x="320" y="185" font-size="11" fill="#555">median period range error, Annex B data, test seed 335</text>
+            </g>
+            <line x1="140" y1="90" x2="175" y2="90" stroke="#555"/><line x1="305" y1="90" x2="340" y2="90" stroke="#555"/><line x1="470" y1="90" x2="505" y2="90" stroke="#555"/>
+          </svg>
+          <p class="small">The refit keeps C″'s manoeuvres and adds everything but the search. The flat-prior search adds the search but knows nothing of how targets manoeuvre.</p>
+        </section>
+
+        <section>
+          <h2>Every system, three kinds of target</h2>
+          <img src="../../img/2026-11-13-time-late-classical-slides/systems.svg" alt="Median period range error of each system on Annex B, shifted-prior and held-course periods" />
+          <p class="small">C″ ÷ search: 2.13 on Annex B data, 1.53 under the shifted prior. On held course the informed search is the worst system.</p>
+        </section>
+
+        <section>
+          <h2>What was decided, and the forecasts</h2>
+          <table>
+            <thead><tr><th></th><th>Forecast</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>D1 share of the gain from the refit</td><td>0.75</td><td>0.43 [0.28, 0.58]</td></tr>
+              <tr><td>D2 wrong histories: ambiguous / search / evidence</td><td>0.45 / 0.10 / 0.45</td><td>0.53 / 0.08 / 0.39</td></tr>
+              <tr><td>D3 headroom, perfect search</td><td>inconclusive</td><td>1.04: not material</td></tr>
+              <tr><td>D3 headroom, perfect evidence as well</td><td>material</td><td>1.10 [1.04, 1.18]: inconclusive</td></tr>
+              <tr><td>D4 false manoeuvres on held course</td><td>0.80</td><td>0.76</td></tr>
+              <tr><td>D5 learned whole-period model</td><td>by the rule</td><td>no GPU budget</td></tr>
+            </tbody>
+          </table>
+          <p class="small">Three forecasts wrong, all as one tuning seed of 134 periods pointed. Panel: five approve with findings.</p>
+        </section>
+
+        <section>
+          <h2>Three seeds</h2>
+          <img src="../../img/2026-11-13-time-late-classical-slides/decided.svg" alt="The refit's share and the attainable headroom on tuning, validation and test seeds" />
+          <p class="small">The panel: "about half", not "under half" (0.39 to 0.58 by definition; 0.47 over three seeds). The headroom is on the 10% line: 1.05 to 1.20 by convention.</p>
+        </section>
+
+        <section>
+          <h2>Defect 1: the evidence rewards short manoeuvres</h2>
+          <div class="two">
+            <ul>
+              <li>The prior: a small change lasts 20 to 120 s.</li>
+              <li>The evidence allowed its duration about 600 s of room.</li>
+              <li>Each small, short manoeuvre gets a bonus it has not earned.</li>
+              <li>With a corrected volume the false rate on quiet targets is 0.47 to 0.57, not 0.76.</li>
+            </ul>
+            <svg viewBox="0 0 300 200" role="img" aria-label="A narrow prior density for duration beside a much wider assumed volume">
+              <line x1="20" y1="160" x2="290" y2="160" stroke="#555"/>
+              <rect x="40" y="60" width="36" height="100" fill="#f3e9fb" stroke="#7b4fa3"/>
+              <text x="58" y="50" font-size="10" text-anchor="middle">prior: 20–120 s</text>
+              <rect x="40" y="130" width="230" height="30" fill="none" stroke="#e8a33d" stroke-dasharray="4 3"/>
+              <text x="180" y="122" font-size="10" text-anchor="middle" fill="#b9770e">volume assumed: about 600 s</text>
+              <text x="155" y="180" font-size="10" text-anchor="middle" fill="#555">manoeuvre duration</text>
+            </svg>
+          </div>
+          <p class="small">Found by the panel's code reviewer. Recorded, not repaired: the code is registered.</p>
+        </section>
+
+        <section>
+          <h2>Defect 2: manoeuvres cut by the period's edge</h2>
+          <img src="../../img/2026-11-13-time-late-classical-slides/classes.svg" alt="Periods by class on each split" />
+          <p class="small">The classing counted manoeuvres the spec says to leave out. Without them: wrong histories 0.57 / 0.11 / 0.33, first candidate right in about 60%. And "ambiguous" means this approximate evidence was close, not that the bearings cannot decide.</p>
+        </section>
+
+        <section>
+          <h2>A target that never manoeuvres</h2>
+          <img src="../../img/2026-11-13-time-late-classical-slides/quiet.svg" alt="Share of held-course periods with a manoeuvre declared, by system and seed" />
+          <p class="small">Over an hour the search invents one almost always; under 30 minutes still 46%. The mixed prior fixes it, at a cost the first draft denied: it calls a once-manoeuvring target quiet in 20% of periods against 6%.</p>
+        </section>
+
+        <section>
+          <h2>Where the assumptions are wrong</h2>
+          <img src="../../img/2026-11-13-time-late-classical-slides/conditions.svg" alt="C double prime, the refit, the search and the true-history fit under independent, correlated and outlying errors" />
+          <p class="small">The rule for D5 reads the left group only. The gaps to the right are 1.5 to 1.6 and nothing, classical or learned, was built against them.</p>
+        </section>
+
+        <section>
+          <h2>The owner's thinning idea</h2>
+          <img src="../../img/2026-11-13-time-late-classical-slides/thinning.svg" alt="Cost against run time for each thinning form, clean and with outliers" />
+          <p class="small">Dropping loses; fixed normal points halve the run time at a cost not separated from zero or from 20%. The bearing-rate bins (orange) were set by noise: the idea is not yet tested.</p>
+        </section>
+
+        <section>
+          <h2>What was not achieved</h2>
+          <ul>
+            <li>A sound evidence: four volume errors so far, the last still in.</li>
+            <li>A prior that can be wrong, and a way to tell; a robust likelihood in the search.</li>
+            <li>A fair test of bearing-rate bins; the wild-bearing edit on its own.</li>
+            <li>A hedged track from the candidates; an IMM smoother.</li>
+            <li>Any real data: the fitting model is the simulator's own.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What comes next</h2>
+          <ul>
+            <li>Repair the evidence, the classing and the reference; register and run again.</li>
+            <li>Classical work against the real gaps: robust likelihood, correlated errors, a prior that can be wrong.</li>
+            <li>A hedged track as the control for any learned model.</li>
+            <li>Only then a learned model, on the shifted, quiet and mismatch splits.</li>
+          </ul>
+          <p class="small">The choice is the owner's; no GPU run before it. Write-up: /blog/2026/11/13/time-late-classical · record: experiments/20261112-tl2 (review.md)</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
