@@ -577,6 +577,8 @@ owner 2026-11-16 "A + B + PR previews"): `.github/workflows/pages.yml` publishes
 - the root on every push to `main`;
 - `pr/<n>/` for each same-repository PR at its head (`SITE_BASE_URL`), never deleted;
 - `pr/index.json` (`scripts/site/preview_index.py`), updated on close;
+- one comment on each PR linking its preview and changed posts, edited in place on every push
+  (marker `<!-- site-preview -->`, as argonautical's `site-publish.mjs`; issue 44);
 - a `workflow_dispatch` (pr, ref) to backfill earlier PRs.
 
 The workflow has three jobs. `build` runs the PR's code without write access, and previews

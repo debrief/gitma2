@@ -1,7 +1,8 @@
 """Maintain the PR preview index on the gh-pages branch (spec 022).
 
     python3 scripts/site/preview_index.py --index <gh-pages>/pr/index.json --pr N \\
-        --title T --state open|merged|closed [--head SHA] [--posts-from FILE] [--url URL]
+        --title T --state open|merged|closed [--head SHA] [--posts-from FILE] [--url URL] \\
+        [--comment FILE --site URL]
 
 ``--posts-from`` is a list of the PR's added or modified paths, one per line (removed files
 excluded by the caller). Blog posts
@@ -9,7 +10,8 @@ among them (``site/blog/*.md`` or ``.mdx``, not templates) become links into the
 ``YYYY-MM-DD-name.md`` → ``blog/YYYY/MM/DD/name`` unless the front matter sets a ``slug``. The
 title is the front matter's ``title``, read from the file as it is in the checkout. An entry is
 updated in place; a state-only update (``--state`` without ``--head``) keeps the build fields.
-Standard library only: the workflow runs it with the runner's Python.
+``--comment`` writes the PR comment that links the preview (issue 44): one comment per PR,
+found by its first line (``MARKER``) and edited in place by the workflow. Standard library only: the workflow runs it with the runner's Python.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+MARKER = "<!-- site-preview -->"
 POST = re.compile(r"^site/blog/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.mdx?$")
 
 
@@ -77,6 +80,32 @@ def update(
     return index
 
 
+def _md(s: str) -> str:
+    """Text safe inside a Markdown link label: no brackets, markup or HTML."""
+    return re.sub(r"[\\\[\]<>`*_|]", "", s).strip() or "post"
+
+
+def comment_body(entry: dict[str, Any], site: str) -> str:
+    """The preview comment for one index entry; ``site`` is the root URL with a trailing /."""
+    site = site.rstrip("/") + "/"
+    n = entry["number"]
+    base = f"{site}pr/{n}/"
+    lines = [MARKER, f"**Preview:** {base}", ""]
+    posts = entry.get("posts") or []
+    if posts:
+        lines.append("Posts added or changed in this PR:")
+        lines += [f"- [{_md(p['title'])}]({base}{p['path']})" for p in posts]
+        lines.append("")
+    head = str(entry.get("head", ""))[:7]
+    lines.append(f"Built from `{head}` · all previews: {site}previews")
+    lines += [
+        "",
+        "<sub>Rebuilt on every push to this PR and kept after it closes. "
+        "GitHub Pages can take a minute or two to update.</sub>",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--index", required=True)
@@ -87,6 +116,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--posts-from")
     ap.add_argument("--url")
     ap.add_argument("--root", default=".", help="checkout the post files are read from")
+    ap.add_argument("--comment", help="write the PR's preview comment to this file")
+    ap.add_argument("--site", default="https://debrief.github.io/gitma2/")
     a = ap.parse_args(argv)
     p = Path(a.index)
     index = json.loads(p.read_text()) if p.exists() else {"previews": []}
@@ -98,7 +129,10 @@ def main(argv: list[str] | None = None) -> int:
     index = update(index, a.pr, a.title, a.state, a.head, posts, a.url, now)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(index, indent=1) + "\n")
-    print(json.dumps(next(e for e in index["previews"] if e["number"] == a.pr)))
+    entry = next(e for e in index["previews"] if e["number"] == a.pr)
+    if a.comment:
+        Path(a.comment).write_text(comment_body(entry, a.site))
+    print(json.dumps(entry))
     return 0
 
 
