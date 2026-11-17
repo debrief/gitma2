@@ -38,6 +38,8 @@ def main(argv: list[str] | None = None) -> int:
     out.mkdir(parents=True, exist_ok=True)
     reading: dict[str, Any] = {}
     any_learned = False
+    if plan.get("runner") == "run8":
+        return _joined(a, plan, digest, g, out)
     shifted = plan.get("runner") == "run5"
     adaptive = plan.get("runner") == "run6"
     laddered = plan.get("runner") == "run7"
@@ -233,6 +235,65 @@ def main(argv: list[str] | None = None) -> int:
     for k, v in checks.items():
         print(k, json.dumps(v))
     return 3 if a.gate and failed else 0
+
+
+def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, out: Path) -> int:
+    """Spec 023 (runner run8): per split, paired per-period ratios and the readings of
+    ``study8``; the verdict by the registered rule where the plan names one."""
+    import numpy as np
+
+    from tma2.timelate.study8 import study_split8, verdict
+
+    reading: dict[str, Any] = {}
+    for split in plan["splits"]:
+        files = sorted(
+            Path(a.shards).glob(f"{split}.*.json"), key=lambda p: int(p.name.split(".")[1])
+        )
+        if not files:
+            continue
+        recs: list[dict[str, Any]] = []
+        headers = []
+        arrays: dict[str, list[Any]] = {}
+        for f in files:
+            j = json.loads(f.read_text())
+            if j["header"]["plan_sha256"] != digest:
+                raise SystemExit(f"{f}: made with another plan ({j['header']['plan_sha256'][:8]})")
+            headers.append(j["header"])
+            recs += j["periods"]
+            z = np.load(f.with_suffix(".npz"))
+            for k in z.files:
+                arrays.setdefault(k, []).append(z[k])
+        if len({r["ordinal"] for r in recs}) != len(recs):
+            raise SystemExit(f"{split}: an engagement appears in two shards")
+        arr = {k: np.concatenate(v) for k, v in arrays.items()}
+        r = study_split8(arr, recs)
+        r["verdict"] = verdict(r)
+        for key in ("dataset_digest", "seed", "search_code_sha256", "git_commit"):
+            r[key] = sorted({h[key] for h in headers})
+        r["git_dirty"] = any(h["git_dirty"] for h in headers)
+        r["condition"] = sorted({str(h.get("condition")) for h in headers})
+        reading[split] = r
+        payload: dict[str, Any] = dict(arr)
+        np.savez_compressed(out / f"{split}.errors.npz", **payload)
+        (out / f"{split}.periods.json").write_text(json.dumps(recs) + "\n")
+    summary = {
+        "plan": a.plan,
+        "plan_sha256": digest,
+        "scorer_git_commit": g.commit,
+        "scorer_git_dirty": g.dirty,
+        "splits": reading,
+    }
+    (out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    for split, r in reading.items():
+        aj = r["ratios"].get("alone/joint", {}).get("range", {})
+        nan = float("nan")
+        print(
+            f"{split}: {r['periods_scored']} periods; "
+            f"alone/joint {aj.get('value', nan):.2f} "
+            f"[{aj.get('lo', nan):.2f}, {aj.get('hi', nan):.2f}] "
+            f"-> {r['verdict']['outcome']}"
+        )
+    return 0
 
 
 def _require_controls_record(path: str | None, plan_digest: str) -> None:
