@@ -6,6 +6,7 @@ import Layout from "@theme/Layout";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import LongEngagements from "@site/src/components/LongEngagements";
+import { usePlotZoom, scaleBar, ZoomControls } from "../components/PlotZoom";
 
 const KT = 0.514444;
 const OWN = "#1f77b4";
@@ -42,8 +43,8 @@ function Tracks({ p, shown }) {
     const span = Math.max(x1 - x0, y1 - y0) * 1.2 + 2000;
     return { x0: (x0 + x1) / 2 - span / 2, y0: (y0 + y1) / 2 - span / 2, span };
   }, [p]);
-  const sx = (x) => PAD + ((x - box.x0) / box.span) * (W - 2 * PAD);
-  const sy = (y) => H - PAD - ((y - box.y0) / box.span) * (H - 2 * PAD);
+  const zoom = usePlotZoom(box, W, H, PAD);
+  const { sx, sy, scale } = zoom;
   const line = (pts) => pts.filter((r) => r && Number.isFinite(r[0])).map((r) => `${sx(r[0]).toFixed(1)},${sy(r[1]).toFixed(1)}`).join(" ");
   const every = Math.max(1, Math.round(TICK_S / p.step_s));
   const ticks = (rows, col, key) =>
@@ -58,11 +59,10 @@ function Tracks({ p, shown }) {
     else if (cur.length) { manSegs.push(cur); cur = []; }
   });
   if (cur.length) manSegs.push(cur);
-  const scale = (W - 2 * PAD) / box.span;
-  const target = box.span / 5, p10 = Math.pow(10, Math.floor(Math.log10(target)));
-  const bar = [5, 2, 1].map((f) => f * p10).find((v) => v <= target) || p10;
+  const bar = scaleBar(scale, W, PAD);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, border: "1px solid var(--ifm-color-emphasis-300)", borderRadius: 6, background: "var(--ifm-background-surface-color)" }} role="img" aria-label="Whole-period tracks">
+    <>
+    <svg viewBox={`0 0 ${W} ${H}`} {...zoom.svgProps} style={{ width: "100%", maxWidth: W, border: "1px solid var(--ifm-color-emphasis-300)", borderRadius: 6, background: "var(--ifm-background-surface-color)", ...zoom.svgProps.style }} role="img" aria-label="Whole-period tracks">
       <defs><clipPath id="tlclip"><rect x={PAD} y={PAD} width={W - 2 * PAD} height={H - 2 * PAD} /></clipPath></defs>
       <g clipPath="url(#tlclip)">
         <polyline points={line(p.truth.map((r) => [r[4], r[5]]))} fill="none" stroke={OWN} strokeWidth={1.5} />
@@ -77,10 +77,12 @@ function Tracks({ p, shown }) {
         <circle cx={sx(first[0])} cy={sy(first[1])} r={5} fill="none" stroke={TGT} strokeWidth={1.5} />
         <rect x={sx(last[0]) - 4} y={sy(last[1]) - 4} width={8} height={8} fill="none" stroke={TGT} strokeWidth={1.5} />
       </g>
-      <line x1={W - PAD - bar * scale} y1={H - 10} x2={W - PAD} y2={H - 10} stroke="currentColor" />
-      <text x={W - PAD} y={H - 14} textAnchor="end" fontSize={11} fill="currentColor">{bar >= 1000 ? `${bar / 1000} km` : `${bar} m`}</text>
+      <line x1={W - PAD - bar.m * scale} y1={H - 10} x2={W - PAD} y2={H - 10} stroke="currentColor" />
+      <text x={W - PAD} y={H - 14} textAnchor="end" fontSize={11} fill="currentColor">{bar.label}</text>
       <text x={PAD} y={16} fontSize={11} fill="currentColor">north up · thick red: true manoeuvres · dots every 10 min · ○ start, □ end</text>
     </svg>
+    <ZoomControls zoom={zoom} />
+    </>
   );
 }
 

@@ -8,6 +8,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import LongEngagements from "@site/src/components/LongEngagements";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { usePlotZoom, scaleBar, ZoomControls } from "../components/PlotZoom";
 
 const KT = 0.514444;
 const COLOURS = {
@@ -20,6 +21,7 @@ const COLOURS = {
 };
 const OWN = "#1f77b4";
 const TGT = "#d62728";
+const BRG = "#bcbd22";
 const MAX_RANGE = 100000;
 const MAX_SPEED = 25;
 
@@ -211,7 +213,7 @@ function compareLive(eng, values, scen, result) {
 
 // ---------- plot ----------
 
-function TrackPlot({ eng, q, show, eRows, showEllipse }) {
+function TrackPlot({ eng, q, show, eRows, showEllipse, bearings }) {
   const W = 640, H = 520, PAD = 30;
   const k = eng.rows[q];
   const box = useMemo(() => {
@@ -224,9 +226,8 @@ function TrackPlot({ eng, q, show, eRows, showEllipse }) {
     const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
     return { x0: cx - span / 2, y0: cy - span / 2, span };
   }, [eng]);
-  const sx = (x) => PAD + ((x - box.x0) / box.span) * (W - 2 * PAD);
-  const sy = (y) => H - PAD - ((y - box.y0) / box.span) * (H - 2 * PAD);
-  const scale = (W - 2 * PAD) / box.span;
+  const zoom = usePlotZoom(box, W, H, PAD);
+  const { sx, sy, scale } = zoom;
   const line = (pts) => pts.map((p) => `${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(" ");
   const trails = [];
   const markers = [];
@@ -263,15 +264,35 @@ function TrackPlot({ eng, q, show, eRows, showEllipse }) {
     }
   }
   const z = eng.zig_index;
-  const target = box.span / 5; // a round length near a fifth of the plot: 1, 2 or 5 × 10^n m
-  const p10 = Math.pow(10, Math.floor(Math.log10(target)));
-  const km = [5, 2, 1].map((f) => f * p10).find((v) => v <= target) || p10;
+  const bar = scaleBar(scale, W, PAD);
+  // measured bearings received up to row k: lines from ownship along each bearing (clockwise from
+  // north), long enough to leave the plot; the latest is drawn stronger
+  const bLines = [];
+  if (bearings) {
+    const len = 4 * box.span;
+    const valid = (i) => bearings[i][2] && Number.isFinite(bearings[i][1]);
+    let lastIdx = Math.min(k, bearings.length - 1);
+    while (lastIdx >= 0 && !valid(lastIdx)) lastIdx--;
+    const every = Math.max(1, Math.round(60 / eng.dt_s)); // one a minute, or the fan hides the tracks
+    for (let i = 0; i <= lastIdx; i++) {
+      if (!valid(i) || (i % every !== 0 && i !== lastIdx)) continue;
+      const b = bearings[i][1];
+      const [x, y] = eng.own[i];
+      const last = i === lastIdx;
+      bLines.push(
+        <line key={`b-${i}`} x1={sx(x)} y1={sy(y)} x2={sx(x + len * Math.sin(b))} y2={sy(y + len * Math.cos(b))}
+          stroke={BRG} strokeWidth={last ? 1.4 : 0.7} opacity={last ? 0.95 : 0.45} data-testid="bearing" />
+      );
+    }
+  }
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, background: "var(--ifm-background-surface-color)", border: "1px solid var(--ifm-color-emphasis-300)", borderRadius: 6 }} role="img" aria-label="Track plot">
+    <>
+    <svg viewBox={`0 0 ${W} ${H}`} {...zoom.svgProps} style={{ width: "100%", maxWidth: W, background: "var(--ifm-background-surface-color)", border: "1px solid var(--ifm-color-emphasis-300)", borderRadius: 6, ...zoom.svgProps.style }} role="img" aria-label="Track plot" data-testid="track-plot">
       <defs>
         <clipPath id="plotclip"><rect x={PAD} y={PAD} width={W - 2 * PAD} height={H - 2 * PAD} /></clipPath>
       </defs>
       <g clipPath="url(#plotclip)">
+        {bLines}
         <polyline points={line(eng.own)} fill="none" stroke={OWN} strokeWidth={1.6} />
         <polyline points={line(eng.target)} fill="none" stroke={TGT} strokeWidth={1.8} />
         <circle cx={sx(eng.own[z][0])} cy={sy(eng.own[z][1])} r={3} fill={OWN} />
@@ -282,10 +303,12 @@ function TrackPlot({ eng, q, show, eRows, showEllipse }) {
         {ell}
         {markers}
       </g>
-      <line x1={W - PAD - km * scale} y1={H - 12} x2={W - PAD} y2={H - 12} stroke="currentColor" />
-      <text x={W - PAD} y={H - 16} textAnchor="end" fontSize={11} fill="currentColor">{km / 1000} km</text>
-      <text x={PAD} y={18} fontSize={11} fill="currentColor">north up; small blue dot: ownship at its zig</text>
+      <line x1={W - PAD - bar.m * scale} y1={H - 12} x2={W - PAD} y2={H - 12} stroke="currentColor" />
+      <text x={W - PAD} y={H - 16} textAnchor="end" fontSize={11} fill="currentColor">{bar.label}</text>
+      <text x={PAD} y={18} fontSize={11} fill="currentColor">north up; small blue dot: ownship at its zig{bearings ? "; olive: measured bearings so far, one a minute" : ""}</text>
     </svg>
+    <ZoomControls zoom={zoom} />
+    </>
   );
 }
 
@@ -314,6 +337,8 @@ function Viewer() {
   const [progress, setProgress] = useState({ done: 0, total: 0, ms: [] });
   const [shown, setShown] = useState({ one_leg: false, imm: true, c: false, c2: true });
   const [showEllipse, setShowEllipse] = useState(false);
+  const [showBearings, setShowBearings] = useState(false);
+  const [bearings, setBearings] = useState(null); // {engIdx, obs} from the engagement's scenario file
   const [runtime, setRuntime] = useState("loading the runtime…");
   const [live, setLive] = useState(null); // {engIdx, status, progress, result, compare, seconds}
   const [engineReady, setEngineReady] = useState(false);
@@ -360,6 +385,18 @@ function Viewer() {
     liveRun.current = null;
     setLive(null);
   }, [engIdx]);
+
+  // the measured bearings live in the scenario file (spec 021); loaded when first shown
+  useEffect(() => {
+    if (!showBearings || !manifest || (bearings && bearings.engIdx === engIdx)) return undefined;
+    const meta = manifest.engagements[engIdx];
+    if (!meta.scenario) return undefined;
+    let stale = false;
+    loadScenario(meta)
+      .then((sc) => { if (!stale) setBearings({ engIdx, obs: sc.obs }); })
+      .catch((e) => { if (!stale) setBearings({ engIdx, obs: null, error: String(e.message || e) }); });
+    return () => { stale = true; };
+  }, [showBearings, engIdx, manifest]);
 
   async function loadScenario(meta) {
     const sc = await fetchGz(base + meta.scenario);
@@ -585,7 +622,16 @@ function Viewer() {
       {eng ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "1.2rem" }}>
           <div style={{ flex: "1 1 100%", minWidth: 0, maxWidth: 680 }}>
-            <TrackPlot eng={eng} q={q} show={show} eRows={eRows} showEllipse={showEllipse} />
+            <TrackPlot eng={eng} q={q} show={show} eRows={eRows} showEllipse={showEllipse}
+              bearings={showBearings && bearings && bearings.engIdx === engIdx ? bearings.obs : null} />
+            {meta.scenario && (
+              <label style={{ display: "block", fontSize: "0.9rem" }}>
+                <input type="checkbox" checked={showBearings} onChange={() => setShowBearings(!showBearings)} data-testid="bearings-toggle" />{" "}
+                show the measured bearings received so far (one a minute; the latest bold)
+                {showBearings && !(bearings && bearings.engIdx === engIdx) ? " (loading…)" : ""}
+                {showBearings && bearings && bearings.engIdx === engIdx && bearings.error ? ` (could not load: ${bearings.error})` : ""}
+              </label>
+            )}
             <div style={{ marginTop: "0.5rem" }}>
               <label htmlFor="t">
                 Time: zig + {fmt(minutes, 0)} min (row {k} of {eng.samples}). Each estimate uses every bearing from the start

@@ -43,8 +43,17 @@ The PR for this task is the first with a preview. Its slides post links the publ
   - The time-late page shows each system's solution whole, as one fit to all the period's
     bearings. The time slider is gone; start and end markers and 10-minute ticks remain.
   - The viewer says it is the real-time model and points to the time-late page.
-
 - 2026-11-17, issue 44: each PR now carries a comment linking its preview at `pr/<n>/`, the
   blog posts it adds or changes and the commit it was built from. One comment per PR, found by a
   hidden marker and edited in place on every push, as the argonautical repository does it. A
   backfill run publishes without commenting.
+- 2026-11-17, issue 41 (the owner's request):
+  - The track plots (the viewer, time-late and the long-engagement sections on both pages) zoom
+    with the mouse wheel about the cursor. A drag pans, a double click
+    resets, and buttons do the same for touch and keyboard users. Markers and line widths keep
+    their size; the scale bar follows the zoom.
+  - The viewer can show the measured bearings received so far, one a minute with the latest in
+    bold. They come from the engagement's scenario file, checked against the manifest's digest.
+    The time-late data carry no bearings, so that page has zoom only.
+  - Both plots now use one scale on both axes. Before, north–south was drawn at 0.79 (viewer)
+    and 0.73 (time-late) of east–west, which bent courses and squashed the 1-σ ellipse.
