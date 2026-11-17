@@ -1,0 +1,93 @@
+<!doctype html>
+<!-- Spec 023 slides (issue #42): the standing systems on 6 to 48 hour engagements.
+     Figures: site/static/img/2026-11-17-long-engagements-slides/, made by scripts/research/long_charts.py. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Longer engagements</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.85em; }
+      .reveal table { font-size: 0.6em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Longer engagements: 6 to 48 hours</h1>
+          <p class="small">2026-11-17 · spec 023, issue #42 · an investigation, not a gate · gitma2</p>
+        </section>
+
+        <section>
+          <h2>Overview: run what we have, on windows</h2>
+          <div class="two">
+            <ul>
+              <li>Every system was built for 40–120 minutes and one ownship zig</li>
+              <li>A new simulator (seed 348): Annex B targets, an ownship that turns every 20–40 min and keeps the target at 3–25 km</li>
+              <li>Real-time: the last 2 hours, every 10 min; IMM over everything</li>
+              <li>Time-late: ctl on 2-hour windows, stitched</li>
+            </ul>
+            <img src="../../img/2026-11-17-long-engagements-slides/windows.svg" alt="How each system reads a long engagement" />
+          </div>
+        </section>
+
+        <section>
+          <h2>Time-late over 48 hours</h2>
+          <img src="../../img/2026-11-17-long-engagements-slides/track-48h.svg" alt="48-hour engagement: truth, ctl and C'' stitched" />
+          <p class="small">Seed 348, engagement 3 (48 h; 106 target manoeuvres, 92 ownship turns). Ownship blue, target red.</p>
+        </section>
+
+        <section>
+          <h2>Time-late error against time</h2>
+          <img src="../../img/2026-11-17-long-engagements-slides/errors-timelate-48h.svg" alt="Relative range error against time, time-late" />
+          <p class="small">TL_SUMMARY</p>
+        </section>
+
+        <section>
+          <h2>Real-time error against time</h2>
+          <img src="../../img/2026-11-17-long-engagements-slides/errors-realtime-48h.svg" alt="Relative range error against time, real-time" />
+          <p class="small">RT_SUMMARY</p>
+        </section>
+
+        <section>
+          <h2>What it costs</h2>
+          <img src="../../img/2026-11-17-long-engagements-slides/cost.svg" alt="ctl run time against period length; bound memory against engagement length" />
+          <p class="small">COST_SUMMARY</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>One engagement per duration: anecdotes, not rates</li>
+            <li>The ownship steers on the true target; contact is never lost; one target throughout</li>
+            <li>No whole-engagement solve: ctl's search caps at ten manoeuvres and its run time grows faster than the period</li>
+            <li>E is not run in the browser on these engagements; the pages show Python's estimates</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>Recommended: carry state across windows (each window starts from the last one's solution and prior), then a fixed-lag time-late search</li>
+            <li>An incremental C (keep confirmed legs, drop old ones) so a real-time estimate costs the same at hour 48 as at hour 2</li>
+            <li>Realism before rates: ownship steering on its own solution, contact gaps, a second target</li>
+          </ul>
+          <p class="small">Research note: docs/research/12-long-engagements.md · Record: experiments/20261117-long/ · Figures: scripts/research/long_charts.py, sidecars next to each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
