@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "@theme/Layout";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import LongEngagements from "@site/src/components/LongEngagements";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 const KT = 0.514444;
@@ -718,6 +719,10 @@ export default function ViewerPage() {
       <BrowserOnly fallback={<div className="container margin-vert--lg"><p>The viewer needs JavaScript.</p></div>}>
         {() => <Viewer />}
       </BrowserOnly>
+      <div className="container margin-vert--lg" style={{ maxWidth: 1100 }}>
+        <h2 id="long">Long engagements: 6 to 48 hours</h2>
+        <BrowserOnly fallback={<p>This section needs JavaScript.</p>}>{() => <LongEngagements mode="realtime" />}</BrowserOnly>
+      </div>
     </Layout>
   );
 }
