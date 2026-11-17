@@ -1,5 +1,6 @@
-// Long engagements (spec 023, issue #42): the standing systems on one simulated engagement each
-// of 6, 12, 24 and 48 hours, precomputed in Python (scripts/research/long_viewer_data.py). Used by
+// Long engagements (specs 023 and 024, issue #42): the standing systems on one simulated engagement
+// each of 6, 12, 24 and 48 hours, in three sets (spec 023's engagements; realistic, contacts 1 and 2),
+// precomputed in Python (scripts/research/long2_viewer_data.py). Used by
 // /viewer (mode "realtime": estimates every 10 minutes from the bearings so far) and /timelate
 // (mode "timelate": one stitched track from 2-hour windows). The page computes no estimate.
 import React, { useEffect, useMemo, useState } from "react";
@@ -13,9 +14,12 @@ const COLOURS = {
   one_leg: "#7f7f7f",
   imm: "#17becf",
   "ctl-d1-q0.01": "#9467bd",
+  "ctl-carry": "#e377c2",
   "history-best": "#2ca02c",
+  "history-map": "#2ca02c",
 };
-const DEFAULT_SHOWN = { e: true, c2: true, one_leg: false, imm: true, "ctl-d1-q0.01": true, "history-best": false };
+const DEFAULT_SHOWN = { e: true, c2: true, one_leg: false, imm: true, "ctl-d1-q0.01": true, "ctl-carry": true, "history-best": false, "history-map": false };
+const DASHED = new Set(["history-best", "history-map"]);
 
 async function fetchJsonGz(url) {
   const res = await fetch(url);
@@ -62,7 +66,7 @@ function TrackPlot({ doc, part, systems, shown, mode }) {
         <polyline points={pts(doc.truth)} fill="none" stroke={TGT} strokeWidth={1.4} />
         {mode === "timelate" && systems.filter((s) => shown[s]).map((s) =>
           runs(part.systems[s].states).map((r, i) => (
-            <polyline key={`${s}-${i}`} points={pts(r)} fill="none" stroke={COLOURS[s]} strokeWidth={mode === "realtime" ? 1 : 1.2} opacity={0.85} strokeDasharray={s === "history-best" ? "5 3" : undefined} />
+            <polyline key={`${s}-${i}`} points={pts(r)} fill="none" stroke={COLOURS[s]} strokeWidth={mode === "realtime" ? 1 : 1.2} opacity={0.85} strokeDasharray={DASHED.has(s) ? "5 3" : undefined} />
           )),
         )}
         {mode === "realtime" && systems.filter((s) => shown[s]).map((s) =>
@@ -83,8 +87,10 @@ function Timeline({ doc, part, mode, shown }) {
   const W = 640, ROW = 18, L = 120, T = doc.hours * 3600;
   const x = (s) => L + (s / T) * (W - L - 10);
   const rows = [["ownship turns", doc.turns_s, OWN], ["target manoeuvres", doc.true_s, TGT]];
+  if (doc.gaps_s && doc.gaps_s.length) rows.push(["contact gaps", doc.gaps_s, "var(--ifm-color-emphasis-600)"]);
   if (mode === "timelate") {
-    for (const s of ["ctl-d1-q0.01", "c2"]) if (shown[s]) rows.push([`declared: ${s === "c2" ? "C″" : "ctl"}`, part.declared_s[s] || [], COLOURS[s]]);
+    const name = { "ctl-d1-q0.01": "ctl", "ctl-carry": "ctl-carry", c2: "C″" };
+    for (const s of ["ctl-d1-q0.01", "ctl-carry", "c2"]) if (shown[s] && part.declared_s[s]) rows.push([`declared: ${name[s]}`, part.declared_s[s] || [], COLOURS[s]]);
   }
   const H = rows.length * ROW + (mode === "timelate" ? 22 : 0) + 22;
   const step = doc.hours <= 12 ? 1 : doc.hours <= 24 ? 2 : 4;
@@ -146,9 +152,8 @@ function ErrorChart({ doc, part, systems, shown }) {
 
 export default function LongEngagements({ mode }) {
   const base = useBaseUrl("/long-data/");
-  const note = "https://github.com/debrief/gitma2/blob/main/docs/research/12-long-engagements.md";
-  const record = "https://github.com/debrief/gitma2/blob/main/experiments/20261117-long/tables.md";
   const [man, setMan] = useState(null);
+  const [set, setSet] = useState("base");
   const [which, setWhich] = useState(0);
   const [docs, setDocs] = useState({});
   const [shown, setShown] = useState(DEFAULT_SHOWN);
@@ -156,27 +161,38 @@ export default function LongEngagements({ mode }) {
   useEffect(() => {
     fetch(base + "manifest.json").then((r) => r.json()).then(setMan).catch((e) => setError(String(e)));
   }, [base]);
+  const engs = man ? (man.sets ? man.sets[set].engagements : man.engagements) : [];
+  const key = `${set}-${which}`;
   useEffect(() => {
-    if (!man || docs[which]) return;
-    const m = man.engagements[which];
-    fetchJsonGz(base + m.file).then((d) => setDocs((x) => ({ ...x, [which]: d }))).catch((e) => setError(String(e)));
-  }, [man, which, docs, base]);
+    if (!man || docs[key] || !engs[which]) return;
+    fetchJsonGz(base + engs[which].file).then((d) => setDocs((x) => ({ ...x, [key]: d }))).catch((e) => setError(String(e)));
+  }, [man, key, docs, base]);
   if (error) return <p>The long-engagement data could not be loaded: {error}</p>;
   if (!man) return <p>Loading the long engagements…</p>;
-  const doc = docs[which];
+  const gh = "https://github.com/debrief/gitma2/blob/main/";
+  const note = gh + man.note;
+  const record = gh + man.record + "tables.md";
+  const doc = docs[key];
   const systems = mode === "realtime" ? man.realtime_systems : man.timelate_systems;
   const part = doc ? doc[mode] : null;
   return (
     <div data-testid={`long-${mode}`}>
       <p>
         {mode === "realtime"
-          ? "The same real-time systems on much longer engagements: every 10 minutes, each system estimates the target from the bearings it has. E, C″ and one leg see only a recent window (E's exported graph takes exactly two hours of 10-second bearings; one leg the last 30 minutes); the IMM filters the whole engagement. C″'s zig veto is applied at every ownship turn."
-          : "The standing time-late control on much longer engagements. It was built for periods of 20 to 120 minutes, so it runs on a chain of 2-hour windows overlapping by 30 minutes; each part of the long track comes from the window whose centre is nearest."}{" "}
+          ? "The same real-time systems on much longer engagements: every 10 minutes, each system estimates the target from the bearings it has. E, C″ and one leg see only a recent window (E's exported graph takes exactly two hours of 10-second bearings; one leg the last 30 minutes); the IMM filters the whole engagement. C″'s zig veto is applied at every ownship turn. C (for C″, and E-s for E) confirms each two-hour block of estimates once and keeps the confirmed legs inside each estimate's window: the incremental C of spec 024."
+          : "The standing time-late control on much longer engagements. It was built for periods of 20 to 120 minutes, so it runs on a chain of 2-hour windows overlapping by 30 minutes; each part of the long track comes from the window whose centre is nearest. ctl-carry starts each window's search from the previous window's declared track and manoeuvres instead of from nothing."}{" "}
         One simulated engagement per duration (seed 348): a feasibility measurement, not a result. Computed in Python, not in your browser.
         The challenges are in the <a href={note}>research note</a>; the numbers in the <a href={record}>record's tables</a>.
       </p>
+      {man.sets && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", margin: "0.6rem 0" }}>
+          {Object.entries(man.sets).map(([k, v]) => (
+            <button key={k} className={`button button--sm ${k === set ? "button--primary" : "button--outline button--primary"}`} onClick={() => setSet(k)}>{v.label}</button>
+          ))}
+        </div>
+      )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", margin: "0.6rem 0" }}>
-        {man.engagements.map((m, i) => (
+        {engs.map((m, i) => (
           <button key={m.index} className={`button button--sm ${i === which ? "button--primary" : "button--secondary"}`} onClick={() => setWhich(i)}>{m.hours} hours</button>
         ))}
       </div>
@@ -210,9 +226,9 @@ export default function LongEngagements({ mode }) {
               </table>
             </div>
             <p><small>
-              {doc.hours} hours: {doc.summary.manoeuvres} target manoeuvres, {doc.summary.ownship_turns} ownship turns, range {fmt(doc.summary.range_km[0])} to {fmt(doc.summary.range_km[2])} km (median {fmt(doc.summary.range_km[1])}).{" "}
+              {doc.hours} hours: {doc.summary.manoeuvres} target manoeuvres, {doc.summary.ownship_turns} ownship turns, range {fmt(doc.summary.range_km[0])} to {fmt(doc.summary.range_km[2])} km (median {fmt(doc.summary.range_km[1])}){doc.summary.valid_share !== undefined ? `, bearings held ${fmt(100 * doc.summary.valid_share, 0)}% of the time` : ""}.{" "}
               {mode === "realtime"
-                ? `Run time per estimate on one CPU core: E ${fmt(part.seconds_per_evaluation.e)} s, C″ ${fmt(part.seconds_per_evaluation.c2)} s (C's confirmation over the two-hour window, re-run every time).`
+                ? `Run time per estimate on one CPU core: E ${fmt(part.seconds_per_evaluation.e)} s, C″ ${fmt(part.seconds_per_evaluation.c2)} s (the incremental C: one confirmation per two-hour block of estimates).`
                 : `${part.windows.length} windows, ${fmt(part.windows.reduce((a, w) => a + w.minutes, 0) / 60, 1)} CPU-hours in all.${part.windows_missing.length ? ` Windows ${part.windows_missing.join(", ")} did not finish.` : ""}`}{" "}
               Medians are over the rows each system answered.
             </small></p>

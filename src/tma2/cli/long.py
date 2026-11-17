@@ -3,6 +3,9 @@
     uv run tma2-long realtime --index 0 --out <dir>    # E, C″, one leg, IMM every 10 min
     uv run tma2-long timelate --index 0 --out <dir>    # ctl on a chain of 2-hour windows
     uv run tma2-long scaling --index 2 --out <dir>     # ctl on single periods of growing length
+    uv run tma2-long realtime-inc --index 0 --out <dir>   # spec 024: the incremental C
+    uv run tma2-long carry --index 0 --out <dir>          # spec 024: ctl and ctl carrying state
+    ... --config configs/long/realistic.json --contact 2  # spec 024: realism; the second contact
 
 The engagement is ``configs/long/long.json``'s ``index``-th (in order of duration). Writes
 ``<part>-<index>.npz`` (arrays) and ``<part>-<index>.json`` (provenance, timings, histories).
@@ -25,13 +28,18 @@ from tma2.data.provenance import read_git_provenance
 CONFIG = "configs/long/long.json"
 
 
-def _engagement(index: int, config: str) -> tuple[Any, dict[str, Any]]:
+def _engagement(index: int, config: str, contact: int = 1) -> tuple[Any, dict[str, Any]]:
     from tma2.long.sim import generate
 
     cfg = json.loads(Path(config).read_text())
     R = json.loads(Path(cfg["target_ranges"]).read_text())
     hours = [float(h) for h in cfg["hours"] for _ in range(int(cfg["engagements_per_duration"]))]
-    return generate(int(cfg["seed"]), index, hours[index], cfg, R), cfg
+    e = generate(int(cfg["seed"]), index, hours[index], cfg, R)
+    if contact == 2:
+        if e.other is None:
+            raise SystemExit(f"{config} has no second contact")
+        e = e.other
+    return e, cfg
 
 
 def _cpu() -> str:
@@ -46,10 +54,13 @@ def _cpu() -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-long", description=__doc__)
-    ap.add_argument("part", choices=("realtime", "timelate", "scaling"))
+    ap.add_argument("part", choices=("realtime", "realtime-inc", "timelate", "carry", "scaling"))
     ap.add_argument("--index", type=int, required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--config", default=CONFIG)
+    ap.add_argument("--contact", type=int, default=1, choices=(1, 2), help="spec 024 realism")
+    ap.add_argument("--block-s", type=float, default=7200.0, help="realtime-inc: block length")
+    ap.add_argument("--tag", default="", help="a name for the outputs (default: the config's)")
     ap.add_argument("--step-s", type=float, default=600.0, help="realtime: evaluation interval")
     ap.add_argument("--limit", type=int, default=0, help="realtime: first N evaluations only")
     ap.add_argument(
@@ -66,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
 
     g = read_git_provenance()  # before any output
     t0 = time.time()
-    e, cfg = _engagement(a.index, a.config)
+    e, cfg = _engagement(a.index, a.config, a.contact)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     head: dict[str, Any] = {
@@ -75,6 +86,7 @@ def main(argv: list[str] | None = None) -> int:
         "hours": e.meta["hours"],
         "seed": cfg["seed"],
         "config": a.config,
+        "contact": a.contact,
         "engagement": {k: v for k, v in e.meta.items() if k != "parameters"}
         | {
             "parameters": {
@@ -97,6 +109,56 @@ def main(argv: list[str] | None = None) -> int:
         arrays.update({f"state_{s}": v for s, v in r["states"].items()})
         head["seconds"] = r["seconds"]
         head["step_s"] = a.step_s
+    elif a.part == "realtime-inc":
+        from tma2.long.incremental import Incremental
+
+        i_sh, n_sh = (int(x) for x in a.shard.split("/"))
+        r = Incremental().run_incremental(
+            e, step_s=a.step_s, block_s=a.block_s, limit=a.limit, shard=(i_sh, n_sh)
+        )
+        head["shard"] = [i_sh, n_sh]
+        arrays = {"rows": r["rows"], "times_s": r["times_s"], "truth": r["truth"]}
+        arrays.update({f"state_{s}": v for s, v in r["states"].items()})
+        head["seconds"] = r["seconds"]
+        head["step_s"], head["block_s"] = a.step_s, a.block_s
+    elif a.part == "carry":
+        from tma2.long import carry as cm
+        from tma2.long.timelate import chain, settings_and_priors
+
+        s, priors, cp, c2 = settings_and_priors()
+        spans = chain(e, a.window_s, a.overlap_s)
+        i_sh, n_sh = (int(x) for x in a.shard.split("/"))
+        lo, hi = len(spans) * i_sh // n_sh, len(spans) * (i_sh + 1) // n_sh
+        if a.max_windows:
+            hi = min(hi, lo + a.max_windows)
+        wins = cm.run_chain(e, spans, lo, hi, s, priors, cp, c2)
+        for w in wins:
+            j = w["index"]
+            arrays[f"w{j}_rows"] = w["rows_abs"]
+            for k in cm.SYSTEMS:
+                arrays[f"w{j}_{k}"] = w["tracks"][k]
+        head["chain"] = spans
+        head["shard"] = [i_sh, n_sh]
+        head["systems"] = list(cm.SYSTEMS)
+        head["windows"] = [
+            {
+                k: w[k]
+                for k in (
+                    "index",
+                    "first",
+                    "rows",
+                    "seconds",
+                    "parts",
+                    "search_s",
+                    "bearings",
+                    "declared",
+                    "true",
+                )
+            }
+            for w in wins
+        ]
+        head["window_s"], head["overlap_s"] = a.window_s, a.overlap_s
+        head["settings"] = s
     elif a.part == "timelate":
         from tma2.long.timelate import SYSTEMS, chain, run_windows, settings_and_priors
 
@@ -130,7 +192,10 @@ def main(argv: list[str] | None = None) -> int:
         lengths = [float(x) for x in a.lengths.split(",")]
         head["scaling"] = scaling(e, lengths, a.start_s, s, priors, cp, c2)
     head["wall_s"] = time.time() - t0
+    tag = a.tag or Path(a.config).stem
     stem = f"{a.part}-{a.index}"
+    if tag != "long" or a.contact != 1:  # spec 023's names stay as they were
+        stem = f"{tag}-c{a.contact}-{stem}"
     if a.part == "scaling":
         stem += "-" + a.lengths.replace(",", "_")
     elif a.shard != "0/1":

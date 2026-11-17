@@ -32,6 +32,7 @@ from tma2.sim.prng import create_rng, derive_seed, gaussian, log_uniform, unifor
 H = 0.5  # integration grid, s
 TWO_PI = 2.0 * math.pi
 KINDS = ("course", "speed", "both")
+REALISM_STREAM = np.uint64(0x5EC0_24A1_7B3D_9F11)  # spec 024's realism draws: a stream of its own
 
 
 @dataclass
@@ -41,6 +42,7 @@ class Engagement:
     own: np.ndarray  # [S, 5] t, x, y, course, speed
     tgt: np.ndarray  # [S, 5]
     obs: np.ndarray  # [S, 3] t, bearing, valid
+    other: Engagement | None = None  # spec 024: the second contact (same ownship), if any
 
     @property
     def samples(self) -> int:
@@ -170,9 +172,14 @@ def _ownship(
     turn_rate: float,
     tx: np.ndarray,
     ty: np.ndarray,
+    belief: Any = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[tuple[float, float]]]:
     """The ownship on the fine grid, leg by leg; returns x, y, course, speed and the turns
-    (start, end) in seconds."""
+    (start, end) in seconds. ``belief(t, r, b)`` (spec 024), when given, replaces the true range
+    and bearing the next leg is planned on with what the ownship believes: (range, bearing), or
+    a flag saying the contact is lost; the ownship then closes on where it last believed the target
+    to be, at sprint speed, to regain it. The base stream ``s``
+    draws the same numbers either way, so the target and the bearing noise do not change."""
     course = np.empty(n)
     speed = np.empty(n)
     x = np.empty(n)
@@ -210,6 +217,10 @@ def _ownship(
         x[i1] = xs[-1] + v * math.sin(course[i1 - 1]) * H
         y[i1] = ys[-1] + v * math.cos(course[i1 - 1]) * H
         r, b = math.hypot(dx, dy), math.atan2(dx, dy)
+        if belief is not None:
+            r, b, lost = belief(i1 * H, r, b, x[i1], y[i1])
+            if lost:  # no contact: close along the last bearing it had, at sprint speed
+                r = float("inf")
         side = -side
         if r > osc["range_high_m"]:
             off = uniform(s, osc["close_offset_rad"]["min"], osc["close_offset_rad"]["max"])
@@ -237,7 +248,7 @@ def generate(
     seconds = hours * 3600.0
     samples = int(round(seconds / dt))
     n = int(round((samples - 1) * dt / H)) + 1
-    s = create_rng(derive_seed(np.uint64(seed), index))
+    s = create_rng(np.uint64(derive_seed(np.uint64(seed), index)))
     osc = config["ownship"]
     v_own = uniform(s, R["ownship_speed_mps"]["min"], R["ownship_speed_mps"]["max"])
     turn_rate = uniform(s, R["ownship_turn_rate_rad_s"]["min"], R["ownship_turn_rate_rad_s"]["max"])
@@ -249,7 +260,17 @@ def generate(
     dropout = uniform(s, R["dropout_fraction"]["min"], R["dropout_fraction"]["max"])
     plan = _target_plan(s, R, seconds, dt, v0)
     tx, ty, tc, tv = _target(plan, n, r0 * math.sin(b0), r0 * math.cos(b0), c0, v0)
-    ox, oy, oc, ov, turns = _ownship(s, osc, n, dt, v_own, turn_rate, tx, ty)
+    real = config.get("realism")
+    rr = (
+        create_rng(np.uint64(derive_seed(np.uint64(seed) ^ REALISM_STREAM, index)))
+        if real
+        else None
+    )
+    world = _World(rr, real, seconds, dt, sigma, R) if real else None
+    if world is not None:
+        world.start(r0 * math.sin(b0), r0 * math.cos(b0))
+    belief = world.belief if world is not None else None
+    ox, oy, oc, ov, turns = _ownship(s, osc, n, dt, v_own, turn_rate, tx, ty, belief)
 
     pick = np.round(np.arange(samples) * dt / H).astype(np.int64)
     t = np.arange(samples) * dt
@@ -299,7 +320,180 @@ def generate(
         "min_range_m": float(rng.min()),
         "max_range_m": float(rng.max()),
     }
-    return Engagement(index, meta, own, tgt, obs)
+    if world is None:
+        return Engagement(index, meta, own, tgt, obs)
+    # spec 024: what the ownship's sensor would lose, and a second contact
+    obs[:, 1:] = world.degrade(obs[:, 1:], rng, world.gaps[0])
+    meta["realism"] = {"config": real, "gaps_s": world.gaps[0], "steering": world.steering}
+    other = world.second(own, pick, n, plan_spans=_spans, dt=dt, samples=samples, meta=meta)
+    swaps = world.swap(obs, other.obs) if other is not None else 0
+    meta["realism"]["swapped_bearings"] = swaps
+    if other is not None:
+        other.meta["realism"]["swapped_bearings"] = swaps
+    meta["valid_share"] = float(obs[:, 2].mean())
+    return Engagement(index, meta, own, tgt, obs, other)
+
+
+def _spans(plan: list[dict[str, Any]], dt: float) -> list[dict[str, Any]]:
+    spans = []
+    for m in plan:
+        k = int(round(m["start_time_s"] / dt))
+        dur = abs(m["change"]) / m["rate"]
+        if m["kind"] == "both":
+            dur = max(dur, abs(m["change2"]) / m["rate2"])
+        spans.append({"kind": m["kind"], "start_index": k + 1, "end_index": k + turn_rows(dur, dt)})
+    return spans
+
+
+class _World:
+    """Spec 024's realism, all drawn from the realism stream ``rr`` in a fixed order:
+
+    * gaps: contact lost for 10–60 minutes at a Poisson rate per hour (each contact its own);
+    * detection: a bearing is reported with probability 1 / (1 + exp((r − r50) / width));
+    * steering: at each leg's start the ownship plans on the measured bearing (true + σ noise)
+      and a range belief (true × exp(sd · N(0, 1))); with no contact it closes along the last
+      bearing it measured, at sprint speed;
+    * a second target (Annex B's statistics, its own start), its bearings degraded the same
+      way; where both contacts are reported within ``swap_rad`` of each other, the two bearings
+      are swapped with probability one half (mis-association).
+    """
+
+    def __init__(
+        self,
+        rr: Any,
+        cfg: dict[str, Any],
+        seconds: float,
+        dt: float,
+        sigma: float,
+        R: dict[str, Any],
+    ) -> None:
+        self.rr, self.cfg, self.seconds, self.dt, self.sigma, self.R = (
+            rr,
+            cfg,
+            seconds,
+            dt,
+            sigma,
+            R,
+        )
+        g = cfg["gaps"]
+        self.gaps = [self._gaps(g), self._gaps(g)]
+        self.steering: dict[str, int] = {"planned": 0, "lost": 0}
+        self.datum = (0.0, 0.0)  # where the ownship last believed the target to be
+
+    def _gaps(self, g: dict[str, Any]) -> list[list[float]]:
+        out: list[list[float]] = []
+        t = 0.0
+        rate = float(g["per_hour"]) / 3600.0
+        while True:
+            t += -math.log(max(1e-300, 1.0 - uniform01(self.rr))) / rate
+            if t >= self.seconds:
+                return out
+            d = uniform(self.rr, float(g["min_s"]), float(g["max_s"]))
+            out.append([t, min(t + d, self.seconds)])
+            t += d
+
+    def p_detect(self, r: float) -> float:
+        d = self.cfg["detection"]
+        return 1.0 / (1.0 + math.exp((r - float(d["r50_m"])) / float(d["width_m"])))
+
+    def _lost(self, t: float, gaps: list[list[float]]) -> bool:
+        return any(a <= t < b for a, b in gaps)
+
+    def start(self, x: float, y: float) -> None:
+        """The contact at the engagement's start (it begins held): a belief of where it is."""
+        g1, g2 = gaussian(self.rr), gaussian(self.rr)
+        r, b = math.hypot(x, y), math.atan2(x, y)
+        sd = float(self.cfg["steering"]["range_belief_sd"])
+        rb, bb = r * math.exp(sd * g1), b + self.sigma * g2
+        self.datum = (rb * math.sin(bb), rb * math.cos(bb))
+
+    def belief(
+        self, t: float, r: float, b: float, ox: float, oy: float
+    ) -> tuple[float, float, bool]:
+        u, g1, g2 = uniform01(self.rr), gaussian(self.rr), gaussian(self.rr)  # always drawn
+        if self._lost(t, self.gaps[0]) or u > self.p_detect(r):
+            self.steering["lost"] += 1
+            dx, dy = self.datum[0] - ox, self.datum[1] - oy
+            return math.hypot(dx, dy), math.atan2(dx, dy), True
+        self.steering["planned"] += 1
+        sd = float(self.cfg["steering"]["range_belief_sd"])
+        rb, bb = r * math.exp(sd * g1), b + self.sigma * g2
+        self.datum = (ox + rb * math.sin(bb), oy + rb * math.cos(bb))
+        return rb, bb, False
+
+    def degrade(self, zv: np.ndarray, rng: np.ndarray, gaps: list[list[float]]) -> np.ndarray:
+        """[S, 2] bearing, valid with gaps and range-dependent detection applied."""
+        out = zv.copy()
+        for i in range(out.shape[0]):
+            u = uniform01(self.rr)
+            if self._lost(i * self.dt, gaps) or u > self.p_detect(float(rng[i])):
+                out[i] = (0.0, 0.0)
+        return out
+
+    def second(
+        self,
+        own: np.ndarray,
+        pick: np.ndarray,
+        n: int,
+        plan_spans: Any,
+        dt: float,
+        samples: int,
+        meta: dict[str, Any],
+    ) -> Engagement | None:
+        if not self.cfg.get("second_target"):
+            return None
+        R, rr = self.R, self.rr
+        r0 = log_uniform(rr, R["target_range0_m"]["min"], R["target_range0_m"]["max"])
+        b0, c0 = uniform(rr, 0.0, TWO_PI), uniform(rr, 0.0, TWO_PI)
+        v0 = uniform(rr, R["target_speed_mps"]["min"], R["target_speed_mps"]["max"])
+        dropout = uniform(rr, R["dropout_fraction"]["min"], R["dropout_fraction"]["max"])
+        plan = _target_plan(rr, R, self.seconds, dt, v0)
+        tx, ty, tc, tv = _target(plan, n, r0 * math.sin(b0), r0 * math.cos(b0), c0, v0)
+        t = own[:, 0]
+        tgt = np.stack([t, tx[pick], ty[pick], _wrap(tc[pick]), tv[pick]], axis=1)
+        z = np.empty(samples)
+        valid = np.empty(samples)
+        for i in range(samples):
+            g = gaussian(rr)
+            dropped = uniform01(rr) < dropout
+            b = math.atan2(tgt[i, 1] - own[i, 1], tgt[i, 2] - own[i, 2])
+            z[i] = 0.0 if dropped else float(_wrap(b + self.sigma * g))
+            valid[i] = 0.0 if dropped else 1.0
+        rng = np.hypot(tgt[:, 1] - own[:, 1], tgt[:, 2] - own[:, 2])
+        zv = self.degrade(np.stack([z, valid], axis=1), rng, self.gaps[1])
+        obs = np.stack([t, zv[:, 0], zv[:, 1]], axis=1)
+        m2 = {
+            **meta,
+            "contact": 2,
+            "parameters": {
+                **meta["parameters"],
+                "dropout_fraction": dropout,
+                "target_range0_m": r0,
+                "target_manoeuvres": plan,
+            },
+            "manoeuvres": plan_spans(plan, dt),
+            "mean_range_m": float(rng.mean()),
+            "min_range_m": float(rng.min()),
+            "max_range_m": float(rng.max()),
+            "realism": {**meta["realism"], "gaps_s": self.gaps[1]},
+            "valid_share": float(obs[:, 2].mean()),
+        }
+        return Engagement(int(meta["index"]), m2, own, tgt, obs)
+
+    def swap(self, a: np.ndarray, b: np.ndarray) -> int:
+        """Mis-association: swap the two contacts' bearings, with probability one half, where
+        both are reported within ``swap_rad`` of each other. Returns the number swapped."""
+        lim = float(self.cfg["swap_rad"])
+        n = 0
+        for i in range(a.shape[0]):
+            u = uniform01(self.rr)  # always drawn
+            if a[i, 2] == 0 or b[i, 2] == 0:
+                continue
+            d = (a[i, 1] - b[i, 1] + math.pi) % TWO_PI - math.pi
+            if abs(d) < lim and u < 0.5:
+                a[i, 1], b[i, 1] = b[i, 1], a[i, 1]
+                n += 1
+        return n
 
 
 def generate_all(config: dict[str, Any], R: dict[str, Any]) -> list[Engagement]:
