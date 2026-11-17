@@ -43,3 +43,8 @@ The PR for this task is the first with a preview. Its slides post links the publ
   - The time-late page shows each system's solution whole, as one fit to all the period's
     bearings. The time slider is gone; start and end markers and 10-minute ticks remain.
   - The viewer says it is the real-time model and points to the time-late page.
+
+- 2026-11-17, issue 44: each PR now carries a comment linking its preview at `pr/<n>/`, the
+  blog posts it adds or changes and the commit it was built from. One comment per PR, found by a
+  hidden marker and edited in place on every push, as the argonautical repository does it. A
+  backfill run publishes without commenting.

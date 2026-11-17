@@ -54,3 +54,23 @@ def test_cli_writes_index(tmp_path: Path) -> None:
     )  # fmt: skip
     data = json.loads(idx.read_text())
     assert data["previews"][0]["posts"][0]["title"] == "A post"
+
+
+def test_comment_links_preview_and_posts(tmp_path: Path) -> None:
+    """Issue 44: the PR comment names the preview, its changed posts and the commit."""
+    blog = tmp_path / "site/blog"
+    blog.mkdir(parents=True)
+    (blog / "2026-11-17-a.md").write_text('---\ntitle: "A [x] <b>"\n---\n')
+    changed = tmp_path / "changed"
+    changed.write_text("site/blog/2026-11-17-a.md\nsrc/x.py\n")
+    index = tmp_path / "gh/pr/index.json"
+    out = tmp_path / "comment.md"
+    args = ["--index", str(index), "--pr", "44", "--title", "T", "--state", "open"]
+    args += ["--head", "0123456789", "--posts-from", str(changed), "--root", str(tmp_path)]
+    assert pi.main([*args, "--comment", str(out), "--site", "https://e.io/g"]) == 0
+    body = out.read_text()
+    assert body.splitlines()[0] == pi.MARKER
+    assert "**Preview:** https://e.io/g/pr/44/" in body
+    assert "- [A x b](https://e.io/g/pr/44/blog/2026/11/17/a)" in body
+    assert "`0123456`" in body and "https://e.io/g/previews" in body
+    assert "Posts added" not in pi.comment_body({"number": 1, "head": "abc"}, "https://e.io/g/")
