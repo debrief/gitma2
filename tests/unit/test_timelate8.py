@@ -1,4 +1,4 @@
-"""Spec 023: layout, masked span and the paired readings."""
+"""Spec 025: layout, masked span and the paired readings."""
 
 from __future__ import annotations
 

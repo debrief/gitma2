@@ -1,6 +1,6 @@
 # Feature Specification: Time-late over several periods of one target, joined through the gaps
 
-**Feature Branch**: `023-joined-periods` (developed on `claude/keen-wozniak-77td7j`)
+**Feature Branch**: `025-joined-periods` (developed on `claude/keen-wozniak-77td7j`)
 
 **Created**: 2026-11-17
 
@@ -19,6 +19,13 @@ of the target's motion only. Classical, CPU only, nothing trained.
   owner merges).
 - The time-late account (`site/blog/2026-11-15-time-late-synthesis.md`, "What would justify
   more"): "the information (several periods of the same target ...)".
+
+**Relation to specs 023 and 024** (another session's line, found 2026-11-17): spec 023 ran
+`ctl` on long engagements in overlapping 2-hour windows; spec 024 (PR 47, open) adds contact
+gaps and `ctl-carry` (state carried from one window to the next). This spec is the registered
+study of one joint solve over several periods with gaps. Owner 2026-11-17, option A: keep it
+separate, number it 025, take fresh seeds 349 to 351, and score spec 024's carried-state
+`ctl` on the same engagements as a comparison once it is merged.
 
 **Owner decisions this spec implements**:
 - 2026-11-17: option C, motion continuity only (not a target-specific prior, not both).
@@ -155,7 +162,8 @@ was declared.
   gaps); the true history across the span fitted with its times held from neutral starts,
   and the same per period; C″ and one leg per period. The tuned IMM and EKF are not re-run:
   spec 017 scored them as tracks at 3.8 to 10.5 times the control's error on common rows,
-  and they have no state through a gap.
+  and they have no state through a gap. Once spec 024 is merged, its `ctl-carry` is run per
+  engagement on the same periods and gaps and reported beside the joint solve (a reading).
 
 **Scoring**
 
@@ -179,9 +187,9 @@ was declared.
 
 **Process**
 
-- **FR-012**: Seeds: 348 tuning, 349 validation (soundness: the span reference's range
+- **FR-012**: Seeds: 349 tuning, 350 validation (soundness: the span reference's range
   efficiency on tightly bounded rows within [0.8, 1.3], and the joint solve converging on
-  at least 95% of spans), 350 test. The test is scored once.
+  at least 95% of spans), 351 test. The test is scored once.
 - **FR-013**: The runner and study code MUST have unit tests, including the layout's
   independence from the generator's draws and a check that a joint solve of one period with
   no gaps reproduces `ctl` alone.
@@ -219,7 +227,7 @@ was declared.
   as before; the ownship's manoeuvres are given, not chosen.
 - The joint solve reuses `ctl`'s search, evidence and declaration with the bearings of the
   gaps absent; no setting is retuned on the decided seeds. Settings particular to spans
-  (how many manoeuvres a gap may hold) are chosen on tuning seed 348 only.
+  (how many manoeuvres a gap may hold) are chosen on tuning seed 349 only.
 - If the joint solve gains on Annex B targets without harm, it becomes the standing
   time-late system for data with gaps; if not shown, `ctl` per period stays and the result
   is written up. Either way nothing is trained and no GPU is used.

@@ -238,7 +238,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, out: Path) -> int:
-    """Spec 023 (runner run8): per split, paired per-period ratios and the readings of
+    """Spec 025 (runner run8): per split, paired per-period ratios and the readings of
     ``study8``; the verdict by the registered rule where the plan names one."""
     import numpy as np
 

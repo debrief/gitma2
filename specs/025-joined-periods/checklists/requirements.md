@@ -32,4 +32,4 @@
 ## Notes
 
 - System names (`ctl`, C″) are the project's registered systems, not implementation details.
-- Gap and period ranges are assumptions to be fixed on tuning seed 348 and registered.
+- Gap and period ranges are assumptions to be fixed on tuning seed 349 and registered.

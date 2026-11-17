@@ -1,4 +1,4 @@
-"""Spec 023's readings: paired per-period ratios with an engagement bootstrap (research R5).
+"""Spec 025's readings: paired per-period ratios with an engagement bootstrap (research R5).
 
 A period's figure is the median of its row errors over the rows scored for it; the ratio of
 two systems is taken per period and summarised by its geometric mean, with a 95% interval

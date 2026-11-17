@@ -1,4 +1,4 @@
-"""Several periods of one target, separated by gaps (spec 023, research R3).
+"""Several periods of one target, separated by gaps (spec 025, research R3).
 
 An engagement is laid out as two or three periods with gaps between them, from a stream of
 its own seeded from the engagement's seed, so the generator's draws are untouched and

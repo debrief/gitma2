@@ -38,7 +38,7 @@ CONTROL_FILES = (*REPAIR_FILES, "corr.py", "hedge.py", "learned.py", "run4.py") 
 SHIFT_FILES = (*CONTROL_FILES, "detect.py", "run5.py")  # spec 017
 ADAPT_FILES = (*CONTROL_FILES, "detect.py", "adapt.py", "run6.py")  # spec 018
 LADDER_FILES = (*CONTROL_FILES, "adapt.py", "run7.py")  # spec 019
-JOIN_FILES = (*CONTROL_FILES, "layout.py", "run8.py")  # spec 023
+JOIN_FILES = (*CONTROL_FILES, "layout.py", "run8.py")  # spec 025
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"split {a.split!r} is not in {a.plan}")
     prior = ManoeuvrePrior.from_ranges(json.loads(Path(plan["prior"]).read_text()))
     c_params, c2 = c_parameters(plan["gh_plan"])
-    # spec 023 lays whole engagements out as periods and gaps itself
+    # spec 025 lays whole engagements out as periods and gaps itself
     whole = bool(plan["splits"][a.split].get("whole", False)) or plan.get("runner") == "run8"
     periods = list(iter_periods(a.inp, a.start, a.count, whole=whole))
     if not periods:

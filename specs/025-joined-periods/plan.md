@@ -1,6 +1,6 @@
 # Implementation Plan: time-late over several periods of one target
 
-**Spec**: `specs/023-joined-periods/spec.md` · **Date**: 2026-11-17 · CPU only; nothing trained.
+**Spec**: `specs/025-joined-periods/spec.md` · **Date**: 2026-11-17 · CPU only; nothing trained.
 
 ## Summary
 
@@ -14,7 +14,7 @@ bound (R2), and compare by paired per-period ratios with an engagement bootstrap
 
 - Types once in LinkML: no schema change; `TimeLateShardHeader` already carries the plan
   digest and code digest; `runner: run8` is a plan key.
-- Seeded randomness only: seeds 348 tuning, 349 validation, 350 test; the layout from its
+- Seeded randomness only: seeds 349 tuning, 350 validation, 351 test; the layout from its
   own stream; bootstrap seeds fixed.
 - Reported estimate from a declared physics layer: every track is an arc-model fit (`ctl`).
 - References on the same rows: C″ and one leg per period, the true history across the span
@@ -42,10 +42,10 @@ runs/tl-j-{tune,val,test}.json
 ## Steps
 
 1. Build `layout`, `run8`, `study8`, the CLI wiring and tests; smoke-run two engagements.
-2. Tuning on seed 348 (CI, four splits, about 60 engagements each): ratios, variances,
+2. Tuning on seed 349 (CI, four splits, about 60 engagements each): ratios, variances,
    time; R4's checks (noise alone, a manoeuvre in a gap); the layout's ranges confirmed.
 3. Decision record: rule (FR-010), each outcome shown possible on tuning data, sizes from
    tuning variances, forecasts, what follows; plan bound by digest.
-4. Validation on seed 349 (soundness, FR-012; stops the study if it fails).
-5. Test on seed 350, once. Tables by script.
+4. Validation on seed 350 (soundness, FR-012; stops the study if it fails).
+5. Test on seed 351, once. Tables by script.
 6. Panel of five; corrections; write-up, slides, AGENTS.md; SRD §9 line (owner merges); PR.

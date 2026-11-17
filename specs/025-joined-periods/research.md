@@ -1,7 +1,9 @@
 # Research: time-late over several periods of one target
 
-Spec: `specs/023-joined-periods/spec.md`. Development data only (tuning seed 348); nothing
-here is a result.
+Spec: `specs/025-joined-periods/spec.md`. Development data only; nothing here is a result. The spike (R1) ran
+on seed 348 with the time-late generator before it was known that spec 023 (long
+engagements, another simulator) had used that seed; it is development work and nothing is
+decided on it. The study's seeds are 349 tuning, 350 validation, 351 test.
 
 ## R1. The joint solve needs no new search: `ctl` on the span, gap bearings marked missing
 

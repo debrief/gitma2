@@ -1,4 +1,4 @@
-"""One shard of spec 023: the standing control on several periods of one target.
+"""One shard of spec 025: the standing control on several periods of one target.
 
 Per engagement (``layout``: two or three periods with gaps), the control ``ctl`` declared at
 margin 1 with a 1% quiet probability (spec 016's ``ctl-d1-q0.01``, ``run4`` unchanged) is run

@@ -24,7 +24,7 @@ Spec `spec.md`, plan `plan.md`, research `research.md`. [P] can run in parallel.
       equals alone; bootstrap resamples engagements; study on a synthetic summary.
 - [ ] T007 Smoke run of two engagements locally; emulate the workflow's command builder.
 
-## Phase 2: tuning (seed 348)
+## Phase 2: tuning (seed 349)
 
 - [ ] T008 `configs/timelate/tl-j-draft.json`, `runs/tl-j-tune.json`; CI run; record in
       `experiments/20261117-tl8-tuning/` with tables.
@@ -34,10 +34,10 @@ Spec `spec.md`, plan `plan.md`, research `research.md`. [P] can run in parallel.
 
 - [ ] T010 Decision record `experiments/<date>-tl8-decision/` (rule, sizes, forecasts,
       what follows; plan `tl-j.json` bound by digest; code digest).
-- [ ] T011 Validation seed 349: soundness (FR-012); record.
+- [ ] T011 Validation seed 350: soundness (FR-012); record.
 
 ## Phase 4: test and report
 
-- [ ] T012 Test seed 350, scored once; record and tables by script.
+- [ ] T012 Test seed 351, scored once; record and tables by script.
 - [ ] T013 Panel of five (`review.md`); corrections.
 - [ ] T014 Write-up, slides post and deck, figures by script; AGENTS.md; SRD §9 line; PR.
