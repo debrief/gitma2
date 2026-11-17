@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "research"))
 from long_report import LABEL, RT, TL, build, plausible  # noqa: E402
 
 TRUTH_STEP_S = 120.0
+STITCH_STEP_S = 30.0  # the control's stored rows (score_every 6 at 5 s)
 
 
 def _r(a: np.ndarray, pos: int = 0, vel: int = 3) -> list[list[float | None]]:
@@ -90,7 +91,8 @@ def engagement_doc(g: dict[str, Any], f: dict[str, Any]) -> dict[str, Any]:
     if tl:
         A = tl["_arrays"]
         rows = A["rows"]
-        keep = np.flatnonzero(np.isin(rows, idx))
+        # stitched rows sit on each window's own grid (every 30 s): every fourth, about 2 min
+        keep = np.arange(0, rows.size, max(1, int(round(TRUTH_STEP_S / STITCH_STEP_S))))
         doc["timelate"] = {
             "times_s": [float(rows[i] * e.dt) for i in keep],
             "systems": {

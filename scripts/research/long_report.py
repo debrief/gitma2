@@ -86,7 +86,8 @@ def realtime(raw: Path, e: Any) -> dict[str, Any] | None:
         "evaluations": n,
         "systems": {s: stats(st[s], truth) for s in RT},
         "seconds_per_evaluation": {s: secs[s] / max(n, 1) for s in RT if s != "imm"},
-        "imm_seconds_whole": secs["imm"],
+        # every shard filters the whole engagement once: the mean over shards
+        "imm_seconds_whole": secs["imm"] / len(files),
         "cpu": sorted(cpu),
     }
     # by six-hour block of the engagement

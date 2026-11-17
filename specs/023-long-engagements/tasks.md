@@ -12,9 +12,9 @@
 - [x] T008 Kickoff post `site/blog/2026-11-17-long-engagements-kickoff.md`
 - [x] T009 Report `scripts/research/long_report.py`; page data `scripts/research/long_viewer_data.py`
 - [x] T010 Component `site/src/components/LongEngagements.js` on `/viewer` and `/timelate`
-- [ ] T011 CI run; record `experiments/20261117-long/` (raw outputs, `summary.json`, `tables.md`)
-- [ ] T012 Page data `site/static/long-data/` from the record
-- [ ] T013 Cost of the whole-engagement bound (`timelate.bound.period_bound`) on 2, 4, 6 hours
-- [ ] T014 Research note `docs/research/12-long-engagements.md`
-- [ ] T015 Figures `scripts/research/long_charts.py` → `site/static/img/2026-11-17-long-engagements-slides/`
-- [ ] T016 Slides post and deck; AGENTS.md entry; PR description
+- [x] T011 CI run; record `experiments/20261117-long/` (raw outputs, `summary.json`, `tables.md`)
+- [x] T012 Page data `site/static/long-data/` from the record
+- [x] T013 Cost of the whole-engagement bound (`timelate.bound.period_bound`) on 2 to 48 hours
+- [x] T014 Research note `docs/research/12-long-engagements.md`
+- [x] T015 Figures `scripts/research/long_charts.py` → `site/static/img/2026-11-17-long-engagements-slides/`
+- [x] T016 Slides post and deck; AGENTS.md entry; PR description

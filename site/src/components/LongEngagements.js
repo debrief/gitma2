@@ -60,13 +60,13 @@ function TrackPlot({ doc, part, systems, shown, mode }) {
       <g clipPath={`url(#lgclip-${mode})`}>
         <polyline points={pts(doc.truth.map((r) => [r[2], r[3]]))} fill="none" stroke={OWN} strokeWidth={1} opacity={0.8} />
         <polyline points={pts(doc.truth)} fill="none" stroke={TGT} strokeWidth={1.4} />
-        {systems.filter((s) => shown[s]).map((s) =>
+        {mode === "timelate" && systems.filter((s) => shown[s]).map((s) =>
           runs(part.systems[s].states).map((r, i) => (
             <polyline key={`${s}-${i}`} points={pts(r)} fill="none" stroke={COLOURS[s]} strokeWidth={mode === "realtime" ? 1 : 1.2} opacity={0.85} strokeDasharray={s === "history-best" ? "5 3" : undefined} />
           )),
         )}
         {mode === "realtime" && systems.filter((s) => shown[s]).map((s) =>
-          part.systems[s].states.map((r, i) => (inBox(r) ? <circle key={`${s}-p${i}`} cx={sx(r[0])} cy={sy(r[1])} r={1.6} fill={COLOURS[s]} /> : null)),
+          part.systems[s].states.map((r, i) => (inBox(r) ? <circle key={`${s}-p${i}`} cx={sx(r[0])} cy={sy(r[1])} r={1.8} fill={COLOURS[s]} opacity={0.8} /> : null)),
         )}
         {hourTicks.map((r, i) => <circle key={`t${i}`} cx={sx(r[0])} cy={sy(r[1])} r={2.2} fill={TGT} />)}
         <circle cx={sx(doc.truth[0][0])} cy={sy(doc.truth[0][1])} r={5} fill="none" stroke={TGT} strokeWidth={1.5} />
@@ -74,7 +74,7 @@ function TrackPlot({ doc, part, systems, shown, mode }) {
       </g>
       <line x1={W - PAD - bar * scale} y1={H - 8} x2={W - PAD} y2={H - 8} stroke="currentColor" />
       <text x={W - PAD} y={H - 12} textAnchor="end" fontSize={11} fill="currentColor">{bar >= 1000 ? `${bar / 1000} km` : `${bar} m`}</text>
-      <text x={PAD} y={15} fontSize={11} fill="currentColor">north up · red: target, blue: ownship · red dots every hour · ○ start, □ end</text>
+      <text x={PAD} y={15} fontSize={11} fill="currentColor">north up · red: target, blue: ownship · red dots every hour · ○ start, □ end{mode === "realtime" ? " · coloured dots: each estimate, every 10 min" : ""}</text>
     </svg>
   );
 }
