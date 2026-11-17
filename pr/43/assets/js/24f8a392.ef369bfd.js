@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktma2_site=self.webpackChunktma2_site||[]).push([[1390],{1596(e){e.exports=JSON.parse('{"metadata":{"permalink":"/gitma2/pr/43/blog/page/6","page":6,"postsPerPage":10,"totalPages":6,"totalCount":51,"previousPage":"/gitma2/pr/43/blog/page/5","blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
