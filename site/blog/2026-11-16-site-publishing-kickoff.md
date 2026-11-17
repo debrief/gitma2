@@ -48,7 +48,8 @@ The PR for this task is the first with a preview. Its slides post links the publ
   hidden marker and edited in place on every push, as the argonautical repository does it. A
   backfill run publishes without commenting.
 - 2026-11-17, issue 41 (the owner's request):
-  - Both track plots zoom with the mouse wheel about the cursor. A drag pans, a double click
+  - The track plots (the viewer, time-late and the long-engagement sections on both pages) zoom
+    with the mouse wheel about the cursor. A drag pans, a double click
     resets, and buttons do the same for touch and keyboard users. Markers and line widths keep
     their size; the scale bar follows the zoom.
   - The viewer can show the measured bearings received so far, one a minute with the latest in
