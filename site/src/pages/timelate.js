@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Layout from "@theme/Layout";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import LongEngagements from "@site/src/components/LongEngagements";
 import { usePlotZoom, scaleBar, ZoomControls } from "../components/PlotZoom";
 
 const KT = 0.514444;
@@ -214,6 +215,8 @@ export default function TimelatePage() {
       <div className="container margin-vert--lg" style={{ maxWidth: 1100 }}>
         <h1>Time-late TMA: the whole track after the fact</h1>
         <BrowserOnly fallback={<p>This page needs JavaScript.</p>}>{() => <Page />}</BrowserOnly>
+        <h2 id="long" style={{ marginTop: "2.5rem" }}>Long engagements: 6 to 48 hours</h2>
+        <BrowserOnly fallback={<p>This section needs JavaScript.</p>}>{() => <LongEngagements mode="timelate" />}</BrowserOnly>
       </div>
     </Layout>
   );

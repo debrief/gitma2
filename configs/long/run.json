@@ -1,0 +1,19 @@
+{
+  "description": "Spec 023's CI run: the standing systems on configs/long/long.json's four engagements (6, 12, 24, 48 hours; seed 348). Real-time every 10 min on a 2-hour window; time-late ctl on 2-hour windows overlapping by 30 min; ctl timed on single periods of 0.5 to 4 hours of the 24-hour engagement.",
+  "jobs": [
+    {"part": "realtime", "index": 0, "shards": 1},
+    {"part": "realtime", "index": 1, "shards": 2},
+    {"part": "realtime", "index": 2, "shards": 3},
+    {"part": "realtime", "index": 3, "shards": 6},
+    {"part": "timelate", "index": 0, "shards": 1},
+    {"part": "timelate", "index": 1, "shards": 2},
+    {"part": "timelate", "index": 2, "shards": 4},
+    {"part": "timelate", "index": 3, "shards": 8},
+    {"part": "scaling", "index": 2, "lengths": "1800,3600"},
+    {"part": "scaling", "index": 2, "lengths": "5400"},
+    {"part": "scaling", "index": 2, "lengths": "7200"},
+    {"part": "scaling", "index": 2, "lengths": "10800"},
+    {"part": "scaling", "index": 2, "lengths": "14400"},
+    {"part": "scaling", "index": 2, "lengths": "21600"}
+  ]
+}

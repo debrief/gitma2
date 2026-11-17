@@ -590,6 +590,27 @@ and shift), with true and declared manoeuvres and per-period errors. Its data ar
 `scripts/research/timelate_viewer_data.py` into `site/static/timelate-data/` and checked by
 `tests/unit/test_timelate_viewer_data.py`. Published site: `https://debrief.github.io/gitma2/`.
 
+023 (longer engagements, issue #42, `specs/023-long-engagements/`; an investigation, not a gate;
+nothing trained; fresh seed 348 used, the next is 349): a separate simulator
+(`src/tma2/long/sim.py`, `configs/long/long.json`; generator 0.6.0 untouched) of one engagement
+each of 6, 12, 24 and 48 hours (Annex B targets; an ownship turning at each 20–40 min leg and
+keeping the target at 3–25 km, steering on the true target). Systems on windows
+(`long/windows.py`: time from 0, positions from the ownship's at the window start; C″'s veto at
+every ownship turn): real-time E (the exported graph), C″ on the last 2 h and one leg on 30 min
+every 10 min, the IMM over everything (`long/realtime.py`); time-late `ctl` on 2-h windows
+overlapping 30 min, stitched mid-overlap on each window's own rows (`long/timelate.py`).
+`tma2-long {realtime,timelate,scaling}`, workflow `long.yml` (runs on changes to
+`configs/long/run.json`; results `results/long-<run id>`), record `experiments/20261117-long/`
+(`scripts/research/long_report.py`; page data `long_viewer_data.py` → `site/static/long-data/`;
+figures `long_charts.py`; bound cost `long_bound_cost.py`). Findings (four engagements,
+anecdotes): stitched `ctl` 1.6–2.7% median range error at every length, no seam penalty;
+real-time E and C″ 13–21%; the IMM degrades over 48 h (answers 81%); `ctl` on one period takes
+1 min (0.5 h) to 114 min (6 h) and caps at ten manoeuvres; real-time estimates cost 27–37 s
+each; the IMM over 48 h 426 s (cause not established); the whole-engagement bound 4.5 GB at
+48 h. Note `docs/research/12-long-engagements.md`; sections on `/viewer#long` and
+`/timelate#long`. Recommended next (owner's choice): carry state between windows, an
+incremental C, then scenario realism before a registered study.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -986,6 +1007,11 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   bits, and a float32 pack column is averaged in float32: port the summation order (`codes.js`).
   `onnxruntime-web`'s `ort.node.min.mjs` runs the same WASM build under Node, which is much
   faster for development than a browser.
+- Spec 023: a window cut to start after a target manoeuvre is off the global row grid; stitch
+  on each window's own rows, never on `arange(0, n, every)` (the 24/48-hour tracks answered 14%
+  and 4% of rows until fixed). A shard that recomputes a whole-engagement quantity reports it
+  once per shard: average, do not sum. GitHub artifact download URLs are signed for ten minutes:
+  fetch each one right after asking for it.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting
