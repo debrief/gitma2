@@ -1,0 +1,115 @@
+{
+ "what": "Spec 023 (issue #42): the standing systems on one simulated engagement each of 6, 12, 24 and 48 hours (seed 348), computed in Python on windows of the size each system was built for. A feasibility measurement, not a result.",
+ "engagements": [
+  {
+   "index": 0,
+   "hours": 6.0,
+   "file": "long-0.json.gz"
+  },
+  {
+   "index": 1,
+   "hours": 12.0,
+   "file": "long-1.json.gz"
+  },
+  {
+   "index": 2,
+   "hours": 24.0,
+   "file": "long-2.json.gz"
+  },
+  {
+   "index": 3,
+   "hours": 48.0,
+   "file": "long-3.json.gz"
+  }
+ ],
+ "labels": {
+  "e": "E (carried model)",
+  "c2": "C\u2033",
+  "one_leg": "one leg (30 min)",
+  "imm": "IMM",
+  "ctl-d1-q0.01": "standing control ctl",
+  "history-best": "true-history fit (reference)"
+ },
+ "realtime_systems": [
+  "e",
+  "c2",
+  "one_leg",
+  "imm"
+ ],
+ "timelate_systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "scaling": [
+  {
+   "seconds_long": 1800.0,
+   "true_manoeuvres": 2,
+   "declared": 2,
+   "run_s": 57.733648942,
+   "search_s": 28.57,
+   "cpu": "AMD EPYC 7763 64-Core Processor"
+  },
+  {
+   "seconds_long": 3600.0,
+   "true_manoeuvres": 3,
+   "declared": 3,
+   "run_s": 184.112977704,
+   "search_s": 142.21,
+   "cpu": "AMD EPYC 7763 64-Core Processor"
+  },
+  {
+   "seconds_long": 5400.0,
+   "true_manoeuvres": 4,
+   "declared": 4,
+   "run_s": 231.19122348,
+   "search_s": 138.23,
+   "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  {
+   "seconds_long": 7200.0,
+   "true_manoeuvres": 6,
+   "declared": 5,
+   "run_s": 548.42355116,
+   "search_s": 280.78,
+   "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz"
+  },
+  {
+   "seconds_long": 10800.0,
+   "true_manoeuvres": 9,
+   "declared": 9,
+   "run_s": 1679.065274681,
+   "search_s": 1167.7,
+   "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  {
+   "seconds_long": 14400.0,
+   "true_manoeuvres": 11,
+   "declared": 10,
+   "run_s": 2483.4377606010003,
+   "search_s": 1635.47,
+   "cpu": "Intel(R) Xeon(R) 6975P-C"
+  },
+  {
+   "seconds_long": 21600.0,
+   "true_manoeuvres": 16,
+   "declared": 10,
+   "run_s": 6833.5879898250005,
+   "search_s": 3520.5,
+   "cpu": "AMD EPYC 7763 64-Core Processor"
+  }
+ ],
+ "record": "experiments/20261117-long/",
+ "note": "docs/research/12-long-engagements.md",
+ "files": {
+  "long-0.json.gz": "e09d0d3ce0406847cb892486c90369d842d2c65c604eb17ac98afa771deac19a",
+  "long-1.json.gz": "a004dce12a7d4976cb0799f567b0a7b8b17a9dade587d47f36052f704070ad7c",
+  "long-2.json.gz": "cb07d494e44cccc41dad417ddd57d21e470af87831af8f12386d542e241c74e5",
+  "long-3.json.gz": "c9a3a1bd6d457a27b71fdd7e876a255dd8eaccfd79c91d26f7f7785d5d30f9bc"
+ },
+ "built": {
+  "script": "scripts/research/long_viewer_data.py",
+  "git_commit": "b06102f8ef5a30dbf6f2494777f5b7918bf739c2",
+  "git_dirty": true
+ }
+}

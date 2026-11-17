@@ -4,10 +4,62 @@
         <title>TMA via ML, second attempt Blog</title>
         <link>https://debrief.github.io/gitma2/pr/46/blog</link>
         <description>TMA via ML, second attempt Blog</description>
-        <lastBuildDate>Tue, 17 Nov 2026 13:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 17 Nov 2026 17:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
+        <item>
+            <title><![CDATA[Slides: longer engagements, 6 to 48 hours]]></title>
+            <link>https://debrief.github.io/gitma2/pr/46/blog/2026/11/17/long-engagements-slides</link>
+            <guid>https://debrief.github.io/gitma2/pr/46/blog/2026/11/17/long-engagements-slides</guid>
+            <pubDate>Tue, 17 Nov 2026 17:00:00 GMT</pubDate>
+            <description><![CDATA[Issue #42 asked what it would take to run our TMA on engagements of 6 to 48 hours. On four]]></description>
+            <content:encoded><![CDATA[<p>Issue #42 asked what it would take to run our TMA on engagements of 6 to 48 hours. On four
+simulated engagements (seed 348), every standing system ran to the end, on windows of the size
+it was built for. The time-late control keeps its accuracy at every length. Running it on a whole
+long period does not work as written, and several parts of the code assume one ownship zig. An
+investigation, not a gate. Spec: <code>specs/023-long-engagements/</code>.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/46/slides/2026-11-17-long-engagements-slides/index.html" title="Slides: 2026-11-17-long-engagements-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/46/slides/2026-11-17-long-engagements-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/17/long-engagements-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>A long-engagement simulator</strong> (<code>src/tma2/long/sim.py</code>), separate from generator 0.6.0, whose
+output stays byte-identical. The target follows Annex B's statistics. The ownship turns at the
+start of each 20–40 minute leg and keeps the target at 3–25 km, steering on the true target
+position.</li>
+<li class=""><strong>Windows</strong> (<code>src/tma2/long/windows.py</code>) in the form every estimator already reads, and C″'s zig
+veto applied at every ownship turn.</li>
+<li class=""><strong>Real-time and time-late runners</strong> (<code>src/tma2/long/realtime.py</code>, <code>timelate.py</code>), the
+<code>tma2-long</code> CLI and the <code>long.yml</code> workflow.</li>
+<li class=""><strong>Long-engagement sections</strong> on <a class="" href="https://debrief.github.io/gitma2/pr/46/viewer">the viewer</a> and <a class="" href="https://debrief.github.io/gitma2/pr/46/timelate">the time-late page</a>,
+precomputed in Python.</li>
+<li class=""><strong>Research note 12</strong> (<code>docs/research/12-long-engagements.md</code>) and the record
+<code>experiments/20261117-long/</code> (<code>tables.md</code> generated from <code>summary.json</code>).</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-found">What was found<a href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/17/long-engagements-slides#what-was-found" class="hash-link" aria-label="Direct link to What was found" title="Direct link to What was found" translate="no">​</a></h2>
+<table><thead><tr><th></th><th>6 h</th><th>12 h</th><th>24 h</th><th>48 h</th></tr></thead><tbody><tr><td>time-late <code>ctl</code>, median range error</td><td>2.0%</td><td>1.9%</td><td>2.7%</td><td>1.6%</td></tr><tr><td>time-late C″</td><td>20.5%</td><td>15.0%</td><td>8.5%</td><td>9.0%</td></tr><tr><td>real-time E, every 10 min</td><td>17.4%</td><td>17.5%</td><td>14.3%</td><td>20.9%</td></tr><tr><td>real-time C″</td><td>23.2%</td><td>17.1%</td><td>13.2%</td><td>19.9%</td></tr><tr><td>real-time IMM (answered)</td><td>19.0% (1.00)</td><td>35.2% (1.00)</td><td>15.0% (0.96)</td><td>30.9% (0.81)</td></tr></tbody></table>
+<ul>
+<li class=""><code>ctl</code> on one long period: 1 min for half an hour, 114 min for 6 hours, and at most ten
+manoeuvres (6 hours held 16).</li>
+<li class="">The real-time model re-solves its 2-hour window for every estimate: 27–37 s on one core.</li>
+<li class="">The IMM over the whole engagement took 426 s at 48 hours against 6 s at 6; the cause is not
+established.</li>
+<li class="">The Cramér–Rao bound over a whole engagement needs 4.5 GB at 48 hours.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/17/long-engagements-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
+<ul>
+<li class="">One engagement per duration: these are anecdotes, not rates.</li>
+<li class="">The scenario is kind: the ownship steers on the truth, contact is never lost, one target.</li>
+<li class="">No whole-engagement solve, and E does not run in the browser on these engagements.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/17/long-engagements-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
+<p>Recommended: carry state between windows (each window starts from the previous solution), then
+an incremental C so a real-time estimate costs the same at hour 48 as at hour 2; realism (an
+ownship steering on its own solution, contact gaps, a second target) before any registered study.
+The next fresh seed is 349.</p>
+<p>Figures: <code>scripts/research/long_charts.py</code>, with a sidecar beside each SVG.</p>]]></content:encoded>
+            <category>slides</category>
+            <category>spec-023</category>
+        </item>
         <item>
             <title><![CDATA[Kickoff: longer engagements, 6 to 48 hours]]></title>
             <link>https://debrief.github.io/gitma2/pr/46/blog/2026/11/17/long-engagements-kickoff</link>
@@ -1366,42 +1418,6 @@ period. See <a class="" href="https://debrief.github.io/gitma2/pr/46/blog/2026/1
 <a class="" href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/14/time-late-learned-slides">the slides</a>.</p>]]></content:encoded>
             <category>kickoff</category>
             <category>spec-016</category>
-        </item>
-        <item>
-            <title><![CDATA[Slides: time-late, the classical follow-on]]></title>
-            <link>https://debrief.github.io/gitma2/pr/46/blog/2026/11/13/time-late-classical-slides</link>
-            <guid>https://debrief.github.io/gitma2/pr/46/blog/2026/11/13/time-late-classical-slides</guid>
-            <pubDate>Fri, 13 Nov 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[The illustrated companion to the spec 014 write-up:]]></description>
-            <content:encoded><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/13/time-late-classical">the spec 014 write-up</a>:
-the controls that split the search's gain, the classes of wrong histories, a target that
-never manoeuvres, the owner's thinning idea, and the two code defects and narrowed claims
-from the review panel.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/46/slides/2026-11-13-time-late-classical-slides/index.html" title="Slides: 2026-11-13-time-late-classical-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/46/slides/2026-11-13-time-late-classical-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/13/time-late-classical-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Every system as a track</strong> on Annex B data, the shifted prior and held course (test seed
-335).</li>
-<li class=""><strong>The decided quantities on three seeds</strong>: the refit's share of the gain and the two
-attainable-headroom figures, with intervals and the 10% line.</li>
-<li class=""><strong>Why the first candidate is wrong</strong>: periods by class. The panel showed these shares
-move when manoeuvres cut by the period's edge are left out.</li>
-<li class=""><strong>A target that never manoeuvres</strong>: false-manoeuvre rate by system on three seeds. Part of
-the search's rate is a recorded defect in the evidence.</li>
-<li class=""><strong>Thinning</strong>: each form's cost against the search's run time, clean and with outliers
-(tuning seed 333). The orange points used a rule that broke bins on noise.</li>
-<li class=""><strong>Bearing errors the fits are not told about</strong>: correlated and outlying errors.</li>
-</ul>
-<p>There are no track plots: the per-period tracks are not stored, only their errors.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/pr/46/blog/2026/11/13/time-late-classical-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl2_charts.py --out-dir site/static/img/2026-11-13-time-late-classical-slides</span><br></div></code></pre></div></div>
-<p>The script reads only committed records (<code>experiments/20261112-tl2-tuning/</code>,
-<code>20261112-tl2-val/</code>, <code>20261112-tl2/</code>, <code>20261112-tl2-thin/</code>); each figure's <code>.json</code> sidecar
-names the inputs' digests and the commit. The data are seeds 333 (tuning), 334 (validation)
-and 335 (test), 5-second bearings, ranges files under <code>configs/timelate/</code>, generated in the
-CI runs.</p>]]></content:encoded>
-            <category>slides</category>
-            <category>spec-014</category>
         </item>
     </channel>
 </rss>
