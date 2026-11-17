@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -16,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture(scope="module")
-def cfg() -> tuple[dict, dict]:
+def cfg() -> tuple[dict[str, Any], dict[str, Any]]:
     c = json.loads((ROOT / "configs/long/long.json").read_text())
     r = json.loads((ROOT / c["target_ranges"]).read_text())
     return c, r
