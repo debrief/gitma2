@@ -193,19 +193,29 @@ must serve the <code>gh-pages</code> branch. It does today, since it serves the 
 <p>The PR for this task is the first with a preview. Its slides post links the published pages.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="updates">Updates<a href="https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-kickoff#updates" class="hash-link" aria-label="Direct link to Updates" title="Direct link to Updates" translate="no">​</a></h2>
 <ul>
-<li class="">
-<p>2026-11-16, after the owner's review of the preview:</p>
+<li class="">2026-11-16, after the owner's review of the preview:<!-- -->
 <ul>
 <li class="">The time-late page shows each system's solution whole, as one fit to all the period's
 bearings. The time slider is gone; start and end markers and 10-minute ticks remain.</li>
 <li class="">The viewer says it is the real-time model and points to the time-late page.</li>
 </ul>
 </li>
-<li class="">
-<p>2026-11-17, issue 44: each PR now carries a comment linking its preview at <code>pr/&lt;n&gt;/</code>, the
+<li class="">2026-11-17, issue 44: each PR now carries a comment linking its preview at <code>pr/&lt;n&gt;/</code>, the
 blog posts it adds or changes and the commit it was built from. One comment per PR, found by a
 hidden marker and edited in place on every push, as the argonautical repository does it. A
-backfill run publishes without commenting.</p>
+backfill run publishes without commenting.</li>
+<li class="">2026-11-17, issue 41 (the owner's request):<!-- -->
+<ul>
+<li class="">The track plots (the viewer, time-late and the long-engagement sections on both pages) zoom
+with the mouse wheel about the cursor. A drag pans, a double click
+resets, and buttons do the same for touch and keyboard users. Markers and line widths keep
+their size; the scale bar follows the zoom.</li>
+<li class="">The viewer can show the measured bearings received so far, one a minute with the latest in
+bold. They come from the engagement's scenario file, checked against the manifest's digest.
+The time-late data carry no bearings, so that page has zoom only.</li>
+<li class="">Both plots now use one scale on both axes. Before, north–south was drawn at 0.79 (viewer)
+and 0.73 (time-late) of east–west, which bent courses and squashed the 1-σ ellipse.</li>
+</ul>
 </li>
 </ul>]]></content>
         <category label="kickoff" term="kickoff"/>
