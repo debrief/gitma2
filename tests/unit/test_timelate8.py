@@ -17,7 +17,7 @@ def _engagement(n: int = 1440) -> Period:
     return Period(7, {"seed": "123", "manoeuvres": []}, own, tgt, obs, 0, n, 5.0)
 
 
-def test_layout_reproducible_and_inside():
+def test_layout_reproducible_and_inside() -> None:
     for seed in range(40):
         a = layout(np.uint64(seed), 1440, 5.0)
         b = layout(np.uint64(seed), 1440, 5.0)
@@ -33,7 +33,7 @@ def test_layout_reproducible_and_inside():
         ]
 
 
-def test_layout_drops_periods_that_do_not_fit():
+def test_layout_drops_periods_that_do_not_fit() -> None:
     short = [layout(np.uint64(s), 520, 5.0) for s in range(200)]
     assert any(x is None for x in short)
     for x in short:
@@ -42,13 +42,13 @@ def test_layout_drops_periods_that_do_not_fit():
     assert layout(np.uint64(1), 300, 5.0) is None
 
 
-def test_layout_does_not_touch_the_engagement_stream():
+def test_layout_does_not_touch_the_engagement_stream() -> None:
     # the layout's stream is its own: a different seed changes it, the same seed never does
     a = [layout(np.uint64(s), 1440, 5.0) for s in range(20)]
     assert len({x for x in a}) > 10
 
 
-def test_span_masks_exactly_the_gaps_and_copies():
+def test_span_masks_exactly_the_gaps_and_copies() -> None:
     x = _engagement()
     lay = Layout(100, ((100, 200), (400, 250), (800, 200)))
     m = span(x, lay, masked=True)
@@ -64,7 +64,7 @@ def test_span_masks_exactly_the_gaps_and_copies():
     assert p.first == 400 and p.rows == 250 and p.obs is x.obs
 
 
-def test_paired_resamples_engagements():
+def test_paired_resamples_engagements() -> None:
     # two engagements: one with two periods twice as good, one with one period level
     num = np.array([[2.0, 1, 1], [2.0, 1, 1], [1.0, 1, 1]])
     den = np.ones((3, 3))
@@ -76,7 +76,7 @@ def test_paired_resamples_engagements():
     assert r["twice_as_good"] == 0.0 and r["better"] == 2 / 3
 
 
-def test_period_table_uses_common_rows():
+def test_period_table_uses_common_rows() -> None:
     arr = {
         "eng": np.array([1, 1, 1, 2]),
         "period": np.array([0, 0, 1, 0], dtype=np.int8),
@@ -89,7 +89,7 @@ def test_period_table_uses_common_rows():
     assert t["dropped_rows_without_state"] == 1
 
 
-def test_gap_reading_and_verdict():
+def test_gap_reading_and_verdict() -> None:
     recs = [
         {"gaps": [{"true": 1, "declared": 1}, {"true": 0, "declared": 0}]},
         {"gaps": [{"true": 2, "declared": 0}, {"true": 0, "declared": 1}]},
