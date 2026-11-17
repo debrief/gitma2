@@ -169,10 +169,17 @@ def main(argv: list[str] | None = None) -> int:
         t = A["times"] / 3600
         for s in RT:
             err = row_errors(plausible(A["states"][s], A["truth"]), A["truth"])[:, 0]
-            ax.plot(t, np.minimum(err, 1.0), color=COL[s], lw=0.8, marker=".", ms=2, label=LABEL[s])
+            # a one-hour rolling median (six evaluations), NaN where fewer than three answered
+            med = np.full(err.size, np.nan)
+            for i in range(err.size):
+                w = err[max(0, i - 5) : i + 1]
+                w = w[np.isfinite(w)]
+                if w.size >= 3 and t[i] - t[max(0, i - 5)] <= 1.01:
+                    med[i] = np.median(w)
+            ax.plot(t, np.minimum(med, 1.0), color=COL[s], lw=1.0, label=LABEL[s])
         ax.set_ylim(0, 1.0)
         ax.set_xlabel("hours")
-        ax.set_ylabel("relative range error\n(clipped at 1)")
+        ax.set_ylabel("relative range error,\n1-hour rolling median")
         ax.legend(fontsize=7, ncol=4, loc="upper right")
         fig.tight_layout()
         p = out / f"errors-realtime-{tag}.svg"

@@ -122,23 +122,32 @@ def run_windows(
 
 
 def stitch(e: Engagement, wins: list[dict[str, Any]], every: int) -> dict[str, Any]:
-    """One long track per system: each row from the window whose centre is nearest."""
-    rows = np.arange(0, e.samples, every)
+    """One long track per system: each row from the window whose centre is nearest.
+
+    Rows are each window's own stored rows (every ``every``-th from its first row); a window
+    whose start moved off a manoeuvre is on its own grid, so the long track's rows are the
+    union of the rows each window keeps, not one global grid."""
     centres = np.array([w["first"] + w["rows"] / 2 for w in wins])
-    states = {s: np.full((rows.size, 4), np.nan) for s in SYSTEMS}
-    owner = np.full(rows.size, -1)
-    for q, k in enumerate(rows):
+
+    def nearest(k: int) -> int:
         cand = [j for j, w in enumerate(wins) if w["first"] <= k < w["first"] + w["rows"]]
-        if not cand:
-            continue
-        j = min(cand, key=lambda j: abs(centres[j] - k))
-        w = wins[j]
-        at = np.flatnonzero(w["rows_abs"] == k)
-        if at.size != 1:
-            continue
-        owner[q] = j
-        for s in SYSTEMS:
-            states[s][q] = w["tracks"][s][at[0]]
+        return min(cand, key=lambda j: abs(centres[j] - k)) if cand else -1
+
+    parts: list[tuple[int, int, int]] = []  # (row, window, position in the window's rows)
+    for j, w in enumerate(wins):
+        for q, k in enumerate(np.asarray(w["rows_abs"]).tolist()):
+            if nearest(int(k)) == j:
+                parts.append((int(k), j, q))
+    parts.sort()
+    rows = np.array([k for k, _j, _q in parts], dtype=np.int64)
+    owner = np.array([j for _k, j, _q in parts], dtype=np.int64)
+    states = {
+        s: np.array([wins[j]["tracks"][s][q] for _k, j, q in parts], dtype=np.float64).reshape(
+            -1, 4
+        )
+        for s in SYSTEMS
+    }
+    assert every > 0
     declared: dict[str, list[list[float]]] = {}
     dt = e.dt
     for s in ("ctl-d1-q0.01", "c2"):

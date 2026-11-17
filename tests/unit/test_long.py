@@ -95,3 +95,30 @@ def test_chain_covers(eng) -> None:  # type: ignore[no-untyped-def]
         assert b < a + n  # consecutive windows overlap
     for a, _n in spans:
         assert in_manoeuvre(eng, a) is None
+
+
+def test_stitch_off_grid(eng) -> None:  # type: ignore[no-untyped-def]
+    """Windows on different 6-row grids (a start moved off a manoeuvre) stitch without gaps,
+    each row from the window whose centre is nearest."""
+    from tma2.long.timelate import SYSTEMS, stitch
+
+    wins = []
+    for first, rows in ((0, 1440), (1081, 1440)):  # the second is off the first's grid
+        r = first + np.arange(0, rows, 6)
+        wins.append(
+            {
+                "first": first,
+                "rows": rows,
+                "rows_abs": r,
+                "declared": {"ctl-d1-q0.01": [], "c2": []},
+                "tracks": {s: np.column_stack([r, r, r, r]).astype(float) for s in SYSTEMS},
+            }
+        )
+    st = stitch(eng, wins, 6)
+    assert np.all(np.diff(st["rows"]) > 0)
+    assert st["rows"][0] == 0 and st["rows"][-1] >= 1081 + 1440 - 6
+    mid = 0.5 * ((0 + 1440 / 2) + (1081 + 1440 / 2))
+    assert np.all(st["owner"][st["rows"] < mid - 6] == 0)
+    assert np.all(st["owner"][st["rows"] > mid + 6] == 1)
+    assert np.all(st["states"]["c2"][:, 0] == st["rows"])  # each row's own state
+    assert np.allclose(st["truth"][:, 0], eng.tgt[st["rows"], 1])
