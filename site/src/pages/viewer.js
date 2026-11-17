@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "@theme/Layout";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 const KT = 0.514444;
 const COLOURS = {
@@ -295,8 +296,12 @@ function fmt(v, d = 1) {
 
 function Viewer() {
   const base = useBaseUrl("/viewer-data/");
-  const ortBase = useBaseUrl("/ort/");
+  const ownOrt = useBaseUrl("/ort/");
+  // PR previews do not carry the 15 MB runtime: they load the root site's (spec 022)
+  const { siteConfig } = useDocusaurusContext();
+  const ortBase = siteConfig.customFields.ortBase || ownOrt;
   const gate2Url = useBaseUrl("/blog/2026/11/08/gate-2");
+  const timelateUrl = useBaseUrl("/timelate");
   const [manifest, setManifest] = useState(null);
   const [digestState, setDigestState] = useState({});
   const [error, setError] = useState(null);
@@ -549,6 +554,11 @@ function Viewer() {
   return (
     <div className="container margin-vert--lg" style={{ maxWidth: 1100 }}>
       <h1>Browser viewer: the carried model, running here</h1>
+      <div className="alert alert--info" role="note" style={{ marginBottom: "1rem" }}>
+        This page shows the <strong>real-time</strong> model: an estimate at each moment from the bearings received so far.
+        For <strong>time-late</strong> analysis, one solution fitted to a whole period of bearings, see{" "}
+        <a href={timelateUrl}>Time-late</a>.
+      </div>
       <p>
         This page runs the exported graph of Gate 2's carried model E in your browser and draws its estimate of a
         simulated target. The graph is E-w: learned per-bearing weights and a start correction feeding the declared
@@ -577,8 +587,11 @@ function Viewer() {
             <TrackPlot eng={eng} q={q} show={show} eRows={eRows} showEllipse={showEllipse} />
             <div style={{ marginTop: "0.5rem" }}>
               <label htmlFor="t">
-                Time: zig + {fmt(minutes, 0)} min (row {k} of {eng.samples}); estimates start 5 minutes after the ownship's
-                zig, because before it the state is undetermined.
+                Time: zig + {fmt(minutes, 0)} min (row {k} of {eng.samples}). Each estimate uses every bearing from the start
+                of the window, before and after the ownship's zig. On one straight ownship leg the target's range cannot be
+                found from bearings alone; the zig adds a second viewpoint, and the two legs together fix it, much like
+                triangulation. Estimates are shown from 5 minutes after the zig, the rows Gate 2 scored; just after the
+                zig the new leg is still too short to pin range down.
               </label>
               <input id="t" type="range" min={0} max={eng.rows.length - 1} value={q} onChange={(ev) => setQ(Number(ev.target.value))} style={{ width: "100%" }} />
             </div>

@@ -1,0 +1,217 @@
+# Publish the site to GitHub Pages (spec 022), from the gh-pages branch.
+#
+# - push to main: the site at the root of gh-pages; pr/ is left alone.
+# - pull_request (opened, reopened, synchronize) from this repository: the site at the PR's head,
+#   built with base URL /gitma2/pr/<n>/ and published at pr/<n>/. It is never deleted.
+# - pull_request_target closed: only the PR's state in pr/index.json changes (merged or closed).
+#   This runs the default branch's code, never the PR's, so it also runs for a PR with conflicts.
+# - workflow_dispatch (pr, ref): build a preview for an earlier PR at a given commit (backfill).
+#
+# Two jobs: "build" runs the PR's code (npm) with a read-only token and no stored credential;
+# "publish" holds the write token and runs no npm code. Previews load the browser runtime from
+# the root site (SITE_ORT_BASE) once the root has it, so each costs about 12 MB of the Pages
+# limit, not 27; before that, a preview carries its own copy.
+#
+# Runs are not serialised by a concurrency group (GitHub cancels queued runs in a group): the
+# publish step instead re-applies its change on the branch's latest state until its push
+# succeeds, and a preview whose commit is no longer the PR's head is not published.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
+  pull_request_target:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to build a preview for
+        required: true
+      ref:
+        description: commit or branch to build (for a merged PR, its merge commit or head)
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  # superseded builds of one PR (or of main) are cancelled; different PRs run side by side
+  group: pages-${{ github.event_name }}-${{ github.event.pull_request.number || inputs.pr || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+
+jobs:
+  plan:
+    # fork PRs: no preview, and no index entry
+    if: github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.w.outputs.mode }}
+      pr: ${{ steps.w.outputs.pr }}
+      ref: ${{ steps.w.outputs.ref }}
+    steps:
+      - id: w
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_N: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          IN_PR: ${{ inputs.pr }}
+          IN_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          case "$EVENT" in
+            push) echo "mode=main" >> "$GITHUB_OUTPUT"; echo "ref=$GITHUB_SHA" >> "$GITHUB_OUTPUT" ;;
+            pull_request) echo "mode=preview" >> "$GITHUB_OUTPUT"; echo "pr=$PR_N" >> "$GITHUB_OUTPUT"; echo "ref=$PR_HEAD" >> "$GITHUB_OUTPUT" ;;
+            pull_request_target) echo "mode=state" >> "$GITHUB_OUTPUT"; echo "pr=$PR_N" >> "$GITHUB_OUTPUT" ;;
+            workflow_dispatch)
+              [[ "$IN_PR" =~ ^[0-9]+$ ]] || { echo "pr must be a number" >&2; exit 1; }
+              [[ "$IN_REF" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "bad ref" >&2; exit 1; }
+              echo "mode=preview" >> "$GITHUB_OUTPUT"; echo "pr=$IN_PR" >> "$GITHUB_OUTPUT"; echo "ref=$IN_REF" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.mode != 'state'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the site
+        env:
+          SITE_BASE_URL: ${{ needs.plan.outputs.mode == 'main' && '/gitma2/' || format('/gitma2/pr/{0}/', needs.plan.outputs.pr) }}
+          MODE: ${{ needs.plan.outputs.mode }}
+        run: |
+          set -euo pipefail
+          # a preview shares the root site's runtime when the root has published it; until then
+          # (or if the root's copy is missing) the preview carries its own
+          SITE_ORT_BASE=""
+          if [ "$MODE" != main ] && curl -sfI -o /dev/null https://debrief.github.io/gitma2/ort/ort.wasm.min.mjs; then
+            SITE_ORT_BASE=/gitma2/ort/
+          fi
+          export SITE_ORT_BASE
+          echo "runtime base: ${SITE_ORT_BASE:-own copy}"
+          uv sync
+          cd site && npm ci && npm run build
+          git rev-parse HEAD > build/.commit
+          if [ -n "$SITE_ORT_BASE" ]; then rm -rf build/ort; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site/build
+          include-hidden-files: true
+          retention-days: 3
+
+  publish:
+    needs: [plan, build]
+    # runs after build, or alone for a state update (build skipped)
+    if: always() && needs.plan.result == 'success' && (needs.build.result == 'success' || needs.plan.outputs.mode == 'state')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      # trusted code only: the default branch's scripts, never the PR's
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: trusted
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        if: needs.plan.outputs.mode != 'state'
+        with:
+          name: site
+          path: build
+      - name: The PR's title, state and posts
+        if: needs.plan.outputs.mode != 'main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ needs.plan.outputs.pr }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$REPO/pulls/$N" > "$RUNNER_TEMP/pr.json"
+          python3 - "$RUNNER_TEMP/pr.json" "$RUNNER_TEMP" <<'PY'
+          import json, sys, pathlib
+          p = json.load(open(sys.argv[1]))
+          out = pathlib.Path(sys.argv[2])
+          (out / "title").write_text(p["title"])
+          (out / "state").write_text("merged" if p.get("merged_at") else p["state"])
+          (out / "url").write_text(p["html_url"])
+          (out / "head").write_text(p["head"]["sha"])
+          PY
+          # added or changed files only: a removed post has no page to link
+          gh api --paginate "repos/$REPO/pulls/$N/files" -q '.[] | select(.status != "removed") | .filename' > "$RUNNER_TEMP/changed"
+          # post titles come from the PR head's own files, fetched without running anything
+          mkdir -p "$RUNNER_TEMP/posts"
+          for f in $(grep -E '^site/blog/[0-9]{4}-[0-9]{2}-[0-9]{2}-[^/]+\.mdx?$' "$RUNNER_TEMP/changed" || true); do
+            mkdir -p "$RUNNER_TEMP/posts/$(dirname "$f")"
+            gh api "repos/$REPO/contents/$f?ref=$(cat "$RUNNER_TEMP/head")" -q .content | base64 -d > "$RUNNER_TEMP/posts/$f" || true
+          done
+      - name: Publish (re-applied on the latest gh-pages until the push succeeds)
+        env:
+          MODE: ${{ needs.plan.outputs.mode }}
+          N: ${{ needs.plan.outputs.pr }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # bootstrap: until this workflow's script is on the default branch, take it from the
+          # commit being published (the same repository's, never a fork's)
+          SCRIPT=trusted/scripts/site/preview_index.py
+          if [ ! -f "$SCRIPT" ]; then
+            SCRIPT="$RUNNER_TEMP/preview_index.py"
+            gh api "repos/$REPO/contents/scripts/site/preview_index.py?ref=${{ needs.plan.outputs.ref || github.sha }}" -q .content | base64 -d > "$SCRIPT"
+          fi
+          git clone -q --depth 1 --branch gh-pages "https://x-access-token:${TOKEN}@github.com/${REPO}.git" gh
+          git -C gh config user.name "github-actions[bot]"
+          git -C gh config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # each command checks itself: set -e does not apply inside a function called from "||"
+          apply() {
+            touch gh/.nojekyll || return 1
+            if [ "$MODE" = main ]; then
+              rsync -a --delete --exclude '/pr/' --exclude '/.git' --exclude '/.nojekyll' build/ gh/ || return 1
+            else
+              args=(--index gh/pr/index.json --pr "$N" --title="$(cat "$RUNNER_TEMP/title")" --state "$(cat "$RUNNER_TEMP/state")" --url "$(cat "$RUNNER_TEMP/url")")
+              if [ "$MODE" = preview ]; then
+                built=$(cat build/.commit)
+                # a synchronize build that is no longer the head is not published (a newer run will be)
+                if [ "$EVENT" = pull_request ] && [ "$built" != "$(cat "$RUNNER_TEMP/head")" ]; then
+                  echo "built $built but the PR's head is now $(cat "$RUNNER_TEMP/head"): not publishing"; return 2
+                fi
+                mkdir -p "gh/pr/$N" || return 1
+                rsync -a --delete build/ "gh/pr/$N/" || return 1
+                args+=(--head "$built" --posts-from "$RUNNER_TEMP/changed" --root "$RUNNER_TEMP/posts")
+              fi
+              python3 "$SCRIPT" "${args[@]}" || return 1
+            fi
+          }
+          for i in 1 2 3 4 5; do
+            rc=0; apply || rc=$?
+            if [ "$rc" = 2 ]; then exit 0; fi
+            [ "$rc" = 0 ] || exit "$rc"
+            git -C gh add -A
+            if git -C gh diff --cached --quiet; then echo "nothing to publish"; exit 0; fi
+            git -C gh commit -q -m "Pages: $MODE ${N} ($EVENT)"
+            if git -C gh push -q origin HEAD:gh-pages; then break; fi
+            [ "$i" = 5 ] && exit 1
+            sleep $((i * 5))
+            # start again from the branch as it now is, and re-apply (the index is regenerated, not merged)
+            git -C gh fetch -q --depth 1 origin gh-pages
+            git -C gh reset -q --hard FETCH_HEAD
+          done
+          B=https://debrief.github.io/gitma2
+          if [ "$MODE" = main ]; then echo "Published: $B/" >> "$GITHUB_STEP_SUMMARY";
+          else echo "Preview: $B/pr/$N/ · index: $B/previews" >> "$GITHUB_STEP_SUMMARY"; fi

@@ -571,6 +571,23 @@ nomination and decision identical; cost drops within 1.3e-4, against a smallest 
 live mode 25 to 93 s an engagement, 181 of 181 rows identical. Slides
 `site/blog/2026-11-16-browser-segmenter-slides.md`. Not built: pasting a scenario (story 3).
 
+022 (publish the site, a time-late page, persistent PR previews, `specs/022-site-publishing/`;
+owner 2026-11-16 "A + B + PR previews"): `.github/workflows/pages.yml` publishes to the
+`gh-pages` branch:
+- the root on every push to `main`;
+- `pr/<n>/` for each same-repository PR at its head (`SITE_BASE_URL`), never deleted;
+- `pr/index.json` (`scripts/site/preview_index.py`), updated on close;
+- a `workflow_dispatch` (pr, ref) to backfill earlier PRs.
+
+The workflow has three jobs. `build` runs the PR's code without write access, and previews
+leave out `ort/` and load the root's runtime. `publish` holds the write token. It re-applies its
+change on the latest `gh-pages` until its push succeeds, and skips a stale head. Closed-PR state
+updates run under `pull_request_target`, using main's code. The site's `/previews` page reads
+the root index. `/timelate` shows spec 016's test-record tracks (20 periods each of man2, man2-out
+and shift), with true and declared manoeuvres and per-period errors. Its data are built by
+`scripts/research/timelate_viewer_data.py` into `site/static/timelate-data/` and checked by
+`tests/unit/test_timelate_viewer_data.py`. Published site: `https://debrief.github.io/gitma2/`.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -967,3 +984,7 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   bits, and a float32 pack column is averaged in float32: port the summation order (`codes.js`).
   `onnxruntime-web`'s `ort.node.min.mjs` runs the same WASM build under Node, which is much
   faster for development than a browser.
+- Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
+  from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
+  from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting
+  published material: owner-only.

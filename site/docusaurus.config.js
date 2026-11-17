@@ -4,7 +4,11 @@ const config = {
   title: "TMA via ML, second attempt",
   tagline: "Physics does the numerics, learning does the judgement",
   url: "https://debrief.github.io",
-  baseUrl: "/gitma2/",
+  // PR previews build at /gitma2/pr/<n>/ (spec 022, .github/workflows/pages.yml)
+  baseUrl: process.env.SITE_BASE_URL || "/gitma2/",
+  // previews are copies: keep them out of search indexes, and let them use the root's runtime
+  noIndex: Boolean(process.env.SITE_BASE_URL) && process.env.SITE_BASE_URL !== "/gitma2/",
+  customFields: { ortBase: process.env.SITE_ORT_BASE || "" },
   organizationName: "debrief",
   projectName: "gitma2",
   trailingSlash: false,
@@ -30,6 +34,8 @@ const config = {
         { to: "/data-dictionary", label: "Data dictionary", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
         { to: "/viewer", label: "Viewer", position: "left" },
+        { to: "/timelate", label: "Time-late", position: "left" },
+        { to: "/previews", label: "PR previews", position: "left" },
         { href: "https://github.com/debrief/gitma2", label: "GitHub", position: "right" },
       ],
     },
