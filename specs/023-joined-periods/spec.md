@@ -151,16 +151,20 @@ was declared.
   allowed in periods and in gaps, scored by the same kind of evidence (bearings in the
   periods only, the same priors and declaration rule as `ctl`). Its track over each period
   is that period's answer.
-- **FR-007**: Readings beside (not decided): `ctl` on the whole span with every bearing; the
-  true history across the span fitted with its times held from neutral starts, and the
-  same per period; the bound on each period's rows from the whole span's bearings; C″ per
-  period; one leg, the tuned IMM and EKF read as tracks where they have a state.
+- **FR-007**: Readings beside (not decided): `ctl` on the whole span with every bearing (no
+  gaps); the true history across the span fitted with its times held from neutral starts,
+  and the same per period; C″ and one leg per period. The tuned IMM and EKF are not re-run:
+  spec 017 scored them as tracks at 3.8 to 10.5 times the control's error on common rows,
+  and they have no state through a gap.
 
 **Scoring**
 
-- **FR-008**: Each period is scored as the time-late studies score a period (rows 30 s
-  apart where the period's known-history bound on relative range is below 0.5), on the
-  period's own rows only; gaps are not scored.
+- **FR-008**: Each period is scored on its own rows, 30 s apart, where the known-history
+  bound on relative range *from the bearings of the whole span* (periods only, gaps
+  without bearings) is below 0.5; gaps are not scored. Both systems are scored on the same
+  rows, so rows that only the joined data determine count against `ctl` alone; the ratio is
+  also reported on rows the period determines by itself (its own bound below 0.5), as spec
+  016 scored a period.
 - **FR-009**: The decided estimand is the paired per-period ratio of period median range
   error, `ctl` alone ÷ joint, geometric mean with a 95% engagement-bootstrap interval, on
   each registered split. Course and speed are reported the same way.
