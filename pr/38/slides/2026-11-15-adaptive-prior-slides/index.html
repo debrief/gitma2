@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A manoeuvre prior that adapts to the period (spec 018)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.7em; margin: 0 auto; }
+      .reveal .big { font-size: 1.5em; font-weight: 600; margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.7em">A manoeuvre prior that adapts to the period</h1>
+          <p>No gain, and why one period cannot choose its prior</p>
+          <p class="small">15 November 2026 · spec 018 · gitma2 · nothing trained</p>
+        </section>
+
+        <section>
+          <h2>Where spec 017 left us</h2>
+          <ul>
+            <li>On busier targets the standing control is 2.3 times a fit told the true history.</li>
+            <li>Two thirds of periods: manoeuvres the bearings barely show.</li>
+            <li>The rest: visible manoeuvres missed, half of them found when the search is told the targets' own statistics.</li>
+          </ul>
+          <p class="small">Owner's decision: a prior inferred from the period itself, and a hedged track beside it. Classical, CPU only.</p>
+        </section>
+
+        <section>
+          <h2>The design that was registered</h2>
+          <svg viewBox="0 0 640 250" role="img" aria-label="Two searches give one candidate set; thirty priors score it; the period's evidence chooses one to declare under; all thirty feed a hedged track">
+            <g font-size="11" text-anchor="middle">
+              <rect x="20" y="20" width="180" height="46" fill="#eee" stroke="#777"/><text x="110" y="40">two searches</text><text x="110" y="56" font-size="9" fill="#555">busiest and quietest prior</text>
+              <rect x="230" y="20" width="180" height="46" fill="#eee" stroke="#777"/><text x="320" y="40">one set of candidate histories</text><text x="320" y="56" font-size="9" fill="#555">shared by every prior</text>
+              <rect x="440" y="20" width="180" height="46" fill="#f3e9fb" stroke="#7b4fa3"/><text x="530" y="40">30 priors refit and score it</text><text x="530" y="56" font-size="9" fill="#555">leg length × spread × largest turn</text>
+              <path d="M200 43 H230 M410 43 H440 M530 66 V100 M530 100 H170 M170 100 V120 M530 100 V120" stroke="#555" fill="none"/>
+              <rect x="40" y="120" width="260" height="50" fill="#f3e9fb" stroke="#7b4fa3"/><text x="170" y="141">the prior with the most evidence</text><text x="170" y="157" font-size="9" fill="#555">declares the history (the control's own rule)</text>
+              <rect x="340" y="120" width="260" height="50" fill="#fdf1dc" stroke="#e8a33d"/><text x="470" y="141">every prior's candidates, weighted</text><text x="470" y="157" font-size="9" fill="#555">hedged track with a spread in range</text>
+              <text x="320" y="205" fill="#555">A first design (three rates, a search each) gained nothing on the tuning seed</text>
+              <text x="320" y="225" fill="#555">Conditions, plan and code bound by digest before the fresh seeds</text>
+            </g>
+          </svg>
+        </section>
+
+        <section>
+          <h2>The registered comparison</h2>
+          <img src="/img/2026-11-15-adaptive-prior-slides/verdict.svg" alt="Standing control over adaptive control, declared and hedged, and over the true-prior search, by split" />
+          <p class="small">Shifted targets: 1.00 [0.92, 1.08] declared, 1.00 hedged. No gain. The standing control stays.</p>
+        </section>
+
+        <section>
+          <h2>Range, course and speed</h2>
+          <img src="/img/2026-11-15-adaptive-prior-slides/quantities.svg" alt="Range, course and speed ratios on Annex B and shifted targets" />
+          <p class="small">The hedged track loses about a tenth in course. Annex B targets cost about 7% for both.</p>
+        </section>
+
+        <section>
+          <h2>Where a gain was expected</h2>
+          <img src="/img/2026-11-15-adaptive-prior-slides/kinds.svg" alt="Shifted targets by kind of period" />
+          <p class="small">Where the control misses a visible manoeuvre: adaptive 1.08, true statistics 1.47. The tuning seed said 1.53.</p>
+        </section>
+
+        <section>
+          <h2>Choosing the prior together adds nothing</h2>
+          <img src="/img/2026-11-15-adaptive-prior-slides/groups.svg" alt="Control over adaptive when the prior is chosen by one period, groups of 5, 20 and the whole split" />
+          <p class="small">A whole split picks a sensible prior and is no more accurate for it.</p>
+        </section>
+
+        <section>
+          <h2>The panel: one period cannot choose its prior</h2>
+          <table>
+            <tr><th>Reviewers' recomputation</th><th></th></tr>
+            <tr><td>Probability of the favourite among 30 priors, median</td><td>0.12 to 0.15</td></tr>
+            <tr><td>Correlation of a prior's probability with its error, shifted</td><td>−0.05</td></tr>
+            <tr><td>Chosen prior ÷ best in hindsight</td><td>1.9</td></tr>
+            <tr><td>Chosen prior against one sensible fixed prior</td><td>3 to 5% better</td></tr>
+            <tr><td>Declared, shifted, three seeds pooled</td><td>1.01 [0.95, 1.08]</td></tr>
+            <tr><td>Declared, Annex B, three seeds pooled</td><td>0.91 [0.84, 0.98]</td></tr>
+          </table>
+          <p class="small">The choice avoids bad priors; it does not adapt. Gains above about 8% are excluded.</p>
+        </section>
+
+        <section>
+          <h2>The hedged track's spread</h2>
+          <img src="/img/2026-11-15-adaptive-prior-slides/spread.svg" alt="Coverage of one and two stated standard deviations by split" />
+          <p class="small">Shifted: 0.897 [0.870, 0.923]. The factor from tuning was 1.95; this seed needs 2.68.</p>
+        </section>
+
+        <section>
+          <h2>Two periods</h2>
+          <img src="/img/2026-11-15-adaptive-prior-slides/tracks.svg" alt="Track plots of two shifted periods: ownship, target, standing control, adaptive declared and hedged" />
+          <p class="small">Chosen by rule: the hedged track at its best and worst against the control among the stored periods.</p>
+        </section>
+
+        <section>
+          <h2>What was not achieved</h2>
+          <ul>
+            <li>Any gain on busier targets; my forecast of a trade was wrong.</li>
+            <li>A family that contained Annex B's own prior: the cost there is the design's.</li>
+            <li>A spread fit to show: honest where candidates disagree, too narrow where the mixture is sure and wrong.</li>
+            <li>A search under each prior; tests of the runner; IMM and EKF on these periods.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What comes next</h2>
+          <ul>
+            <li>Recommended: stop identifying the prior; write up the time-late track, specs 013 to 018, as a whole.</li>
+            <li>Or: one diagnostic on spent seeds; or change the information (ownship advice, longer periods).</li>
+            <li>Not now: a learned proposer or any GPU run.</li>
+          </ul>
+          <p class="small">The choice is the owner's. Write-up: /blog/2026/11/15/adaptive-prior · record: experiments/20261115-tl6 (review.md)</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
