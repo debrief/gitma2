@@ -93,10 +93,17 @@ jobs:
           MODE: ${{ needs.plan.outputs.mode }}
         run: |
           set -euo pipefail
-          # a preview shares the root site's runtime when the root has published it; until then
-          # (or if the root's copy is missing) the preview carries its own
+          # backfill: a commit from before spec 022 has a fixed base URL; give it the preview's
+          # (in this checkout only), and keep its own runtime, which its viewer expects
+          CFG=site/docusaurus.config.js
+          if ! grep -q SITE_BASE_URL "$CFG"; then
+            sed -i 's#baseUrl: "/gitma2/"#baseUrl: process.env.SITE_BASE_URL || "/gitma2/"#' "$CFG"
+            grep -q SITE_BASE_URL "$CFG" || { echo "could not set the base URL in $CFG" >&2; exit 1; }
+          fi
+          # a preview shares the root site's runtime when the root has published it and its config
+          # can load it from there; otherwise the preview carries its own
           SITE_ORT_BASE=""
-          if [ "$MODE" != main ] && curl -sfI -o /dev/null https://debrief.github.io/gitma2/ort/ort.wasm.min.mjs; then
+          if [ "$MODE" != main ] && grep -q SITE_ORT_BASE "$CFG" && curl -sfI -o /dev/null https://debrief.github.io/gitma2/ort/ort.wasm.min.mjs; then
             SITE_ORT_BASE=/gitma2/ort/
           fi
           export SITE_ORT_BASE
