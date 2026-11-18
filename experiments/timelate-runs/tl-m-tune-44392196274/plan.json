@@ -1,0 +1,62 @@
+{
+ "description": "Spec 026 tuning draft (spent seed 353 only): spec 025's systems and the carry across gaps (run9). Not registered.",
+ "data_split": "train",
+ "prior": "configs/timelate/tl-ranges.json",
+ "prior_broad": "configs/timelate/tl-broad.json",
+ "gh_plan": "configs/gateh/gh-a.json",
+ "runner": "run9",
+ "splits": {
+  "man2": {
+   "ranges": "configs/timelate/tl-joined-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "Annex B targets, two or three periods with gaps"
+  },
+  "shift": {
+   "ranges": "configs/timelate/tl-joined-shift-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "shorter legs, smaller turns, more speed changes"
+  },
+  "man2-out": {
+   "ranges": "configs/timelate/tl-joined-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "2% outlying bearings (10 sd)",
+   "condition": "out-central"
+  },
+  "quiet": {
+   "ranges": "configs/timelate/tl-joined-quiet-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "what": "the target holds course"
+  }
+ },
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "store_tracks": 8,
+  "layout": {
+   "period_s": [
+    900,
+    1800
+   ],
+   "gap_s": [
+    300,
+    1800
+   ],
+   "counts": [
+    2,
+    3
+   ]
+  }
+ },
+ "soundness": {
+  "statistic": "engagement_geomean",
+  "min_rows": 10,
+  "tight_bound": 0.05,
+  "band": [
+   0.8,
+   1.5
+  ],
+  "answered_min": 0.95
+ }
+}
