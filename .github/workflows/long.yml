@@ -1,6 +1,7 @@
 name: Long engagements (spec 023)
 
-# Runs when configs/long/run.json changes on a push (any branch), or by hand:
+# Runs when configs/long/run.json changes on a push to any branch but main (a merge would re-run
+# the last study's whole plan), or by hand:
 #   jobs   [{part: realtime|realtime-inc|timelate|carry|carry2|jointpair|scaling, index, shards,
 #           lengths, config, contact, block_s, indices, pair}]: one CI job per shard (imm: --indices a-b)
 #          (scaling: one job per entry, its comma-separated period lengths in seconds)
@@ -10,6 +11,7 @@ name: Long engagements (spec 023)
 
 on:
   push:
+    branches-ignore: [main]
     paths: ["configs/long/run.json"]
   workflow_dispatch:
 
