@@ -82,6 +82,27 @@ try {
   report.warning_visible = await page.locator('[data-testid="ellipse-warning"]').isVisible();
   if (report.ellipse_on < 1) failures.push("the ellipse toggle drew no ellipse");
   if (!report.warning_visible) failures.push("ellipse shown without its warning");
+  // issue 41: bearings off by default and drawn when toggled; the wheel zooms the plot
+  report.bearings_default = await page.locator('[data-testid="bearing"]').count();
+  if (report.bearings_default !== 0) failures.push("bearings drawn by default");
+  await page.locator('[data-testid="bearings-toggle"]').check();
+  await page.waitForSelector('[data-testid="bearing"]', { timeout: 30000 }).catch(() => {});
+  report.bearings_on = await page.locator('[data-testid="bearing"]').count();
+  if (report.bearings_on < 1) failures.push("the bearings toggle drew no bearing");
+  await page.locator('[data-testid="bearings-toggle"]').uncheck();
+  const plot = page.locator('[data-testid="track-plot"]');
+  await plot.scrollIntoViewIfNeeded();
+  const before = await plot.locator("polyline").first().getAttribute("points");
+  const bb = await plot.boundingBox();
+  await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2);
+  await page.mouse.wheel(0, -300);
+  await page.waitForTimeout(200);
+  report.wheel_zooms = (await plot.locator("polyline").first().getAttribute("points")) !== before;
+  if (!report.wheel_zooms) failures.push("the mouse wheel did not zoom the plot");
+  await plot.dblclick();
+  await page.waitForTimeout(100);
+  report.zoom_resets = (await plot.locator("polyline").first().getAttribute("points")) === before;
+  if (!report.zoom_resets) failures.push("a double click did not reset the zoom");
   const shot = await page.screenshot({ fullPage: true });
   writeFileSync(outPath.replace(/\.json$/, ".png"), shot);
 

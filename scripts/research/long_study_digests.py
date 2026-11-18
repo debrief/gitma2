@@ -1,4 +1,4 @@
-"""Spec 025: the digests the decision record binds (experiments/20261118-ls-decision/).
+"""Spec 026: the digests the decision record binds (experiments/20261118-ls-decision/).
 
     uv run python scripts/research/long_study_digests.py
 

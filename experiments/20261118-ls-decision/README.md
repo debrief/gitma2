@@ -1,4 +1,4 @@
-# Spec 025: decision record (2026-11-18)
+# Spec 026: decision record (2026-11-18)
 
 Written after the tuning run on seed 349 (`experiments/20261118-ls-tuning/`) and **before
 seeds 350 and 351 exist**. `decision.json` binds the following by SHA-256 (`digests.json`,
@@ -61,3 +61,11 @@ Listed in `decision.json`. The two that matter most:
 - E2 matches range only, not the rest of the geometry.
 - CI jobs can run on different CPU families, and spec 024 showed that this moves `ctl` by
   kilometres on a window. E1 is paired within a job; E2 compares two jobs.
+
+**After merging main (2026-11-18).** This study was numbered spec 025 while it ran. Another
+session's spec 025 (joined periods) merged first, so this one is now spec 026. Bound files and
+raw outputs still say 025, and none of them was edited. The merge added new modules under
+`src/tma2/timelate/` (`layout.py`, `run8.py`, `study8.py`), and the code digest's glob picks them
+up, so at the merged commit it no longer equals `938ef9a2…`. No module the record bound was
+changed. Both sessions claimed seeds 349 and 350, each on its own simulator and stream; the
+engagements differ, but the claim was made twice. The next fresh seed is 354.

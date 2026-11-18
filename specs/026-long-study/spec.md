@@ -1,6 +1,6 @@
-# Feature Specification: Long engagements, a registered study (spec 025)
+# Feature Specification: Long engagements, a registered study (spec 026)
 
-**Feature Branch**: `025-long-study` (developed on `ccr-fd0a0c59-4nxg4k`, PR 47)
+**Feature Branch**: `026-long-study` (developed on `ccr-fd0a0c59-4nxg4k`, PR 47)
 
 **Created**: 2026-11-18
 

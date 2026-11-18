@@ -1,4 +1,4 @@
-# Spec 025: tuning run (seed 349; never a result)
+# Spec 026: tuning run (seed 349; never a result)
 
 CI run 44245933596 (AMD EPYC 7763; commit 99585de). There were 6 + 6 realistic engagements
 of 6 and 12 hours (`configs/long/study-tuning.json`). On both contacts it ran `ctl` and

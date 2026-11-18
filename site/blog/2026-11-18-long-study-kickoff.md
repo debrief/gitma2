@@ -1,7 +1,7 @@
 ---
 title: "Kickoff: long engagements, a registered study"
 date: 2026-11-18T04:00
-tags: [kickoff, spec-025]
+tags: [kickoff, spec-026]
 ---
 
 The owner chose note 13's registered study. On fresh seeds, with the questions fixed before
@@ -10,7 +10,7 @@ any result, it asks three things:
 - how much worse the standing control does on a contact the ownship does not tend;
 - whether the IMM drifts over twelve hours.
 
-Spec: `specs/025-long-study/`.
+Spec: `specs/026-long-study/`.
 
 <!-- truncate -->
 

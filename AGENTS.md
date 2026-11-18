@@ -577,6 +577,8 @@ owner 2026-11-16 "A + B + PR previews"): `.github/workflows/pages.yml` publishes
 - the root on every push to `main`;
 - `pr/<n>/` for each same-repository PR at its head (`SITE_BASE_URL`), never deleted;
 - `pr/index.json` (`scripts/site/preview_index.py`), updated on close;
+- one comment on each PR linking its preview and changed posts, edited in place on every push
+  (marker `<!-- site-preview -->`, as argonautical's `site-publish.mjs`; issue 44);
 - a `workflow_dispatch` (pr, ref) to backfill earlier PRs.
 
 The workflow has three jobs. `build` runs the PR's code without write access, and previews
@@ -629,9 +631,43 @@ contact 2 is held 10–22% beyond 6 h and at 6–8% where held. Note
 `docs/research/13-long-engagements-2.md` proposes a registered study (6- and 12-hour realistic
 engagements, seeds 349–351): the owner's choice.
 
-025 (long engagements, the registered study, `specs/025-long-study/`; owner on PR 47:
+
+025 (several periods of one target, joined through the gaps, `specs/025-joined-periods/`; owner
+2026-11-17 option C, motion continuity only; numbered 025 because 023/024 are another
+session's; a registered study, not a gate; nothing trained): `timelate/layout.py` (two or
+three periods of 15–30 min, gaps of 5–30 min, from an own stream), `run8.py` (plan key
+`runner: run8`: `ctl-d1-q0.01` unchanged alone per period, joint over the span with the gaps'
+bearings masked, full span; references `ref-span(-fixed)`, `ref-alone(-fixed)`), `study8.py`
+(paired per-period ratios, engagement bootstrap, by kind, gap events, soundness),
+`tma2-tlscore` `_joined`, `scripts/research/tl8_{tables,charts}.py`. Tuning seed 349
+(`experiments/20261117-tl8-tuning/`); first registration `20261118-tl8-decision/` stopped at
+validation seed 350 (`20261118-tl8-val/`: pooled-row soundness 0.75, a statistic with no power);
+owner 2026-11-18 option A: re-registered `20261118-tl8-decision2/` (plan
+`configs/timelate/tl-k.json` `bbba4603…`, code `ec046dc0…`, soundness = geometric mean over
+engagements), validation seed 352 passed (`20261118-tl8-val2/`, 1.13 [0.80, 1.62]), **test record
+`experiments/20261118-tl8/` (seed 353, scored once): alone ÷ joint gain on all four splits, no
+harm (Annex B 3.10 [2.22, 4.58], busier 1.97 [1.63, 2.39], wild bearings 2.72, held course
+12.8). Decided by the panel, round 1** (`review.md`, five approve with findings): within these
+conditions (≤ 2 h, gaps 5–30 min, association certain, Annex B gap manoeuvres) the joint solve
+is the standing time-late system for several periods of one target. Narrowed: mostly periods
+without their own ownship turn becoming answerable (alone's error there 0.46); where a period
+stands alone about 1.6 on Annex B and not shown on busier targets (1.06 own turn, 1.28 own
+rows); held course 12.8 is "one leg"; wild bearings is Annex B's engagements; one period in
+eight twice as bad joined, unflagged; gap manoeuvres 36% missed on busier targets, invented
+in about a fifth of quiet gaps; soundness is a gross-fault screen (an efficient reference
+reads 0.79 under its own model; runaway fits to 773). Not compared with spec 024's carried
+state. Write-up `site/blog/2026-11-18-joined-periods.md`, slides
+`2026-11-18-joined-periods-slides.md`. Panel's order (owner's choice): spec 024's `ctl-carry`
+on these engagements; a consistency flag and gap-manoeuvre markers; an uncertainty; a stress
+split with longer gaps. Seeds 349, 350, 352, 353 used (351 counted only); the next fresh seed
+is 354.
+
+026 (long engagements, the registered study, `specs/026-long-study/`; numbered 026 because
+spec 025 (joined periods) was merged first; owner on PR 47:
 "registered study"; not a gate; nothing trained; seeds 349 tuning, 350 validation, 351 test,
-all used; the next fresh seed is 352). `long/study.py` (E1 ctl ÷ ctl-carry per window on the
+all used; spec 025 ran in parallel on 349, 350, 352 and 353 of its own simulator (a different
+stream, so different engagements, but the seeds were claimed twice; 351 it counted only); the
+next fresh seed is 354). `long/study.py` (E1 ctl ÷ ctl-carry per window on the
 tended contact, non-inferior if the lower limit ≥ 0.95; E2 untended ÷ tended by range band;
 E3 IMM hours 6–12 ÷ 0–6; soundness S1–S3; bootstrap over engagements), `imm_states`,
 `tma2-long imm|study`, `configs/long/study-*.json`, run files `configs/long/runs/ls-*.json`;
@@ -1058,7 +1094,14 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   not the per-window segmenter: test equivalence at block length one and then check error by
   position in the block. A PR merged while its branch has new commits: open a new PR from the
   same branch rather than rebasing under a running CI job.
-- Spec 025 panel: a chained system's first window equals the control by construction; a
+- Spec 025: a fit's rows share one error, so a soundness statistic pooled over rows has the
+  power of the number of engagements, not of rows: register a per-engagement statistic with an
+  engagement interval, check its expected value under its own model (a geometric mean of
+  |z|/0.6745 is 0.79 for a perfect reference), and list runaway engagements. Never generate a
+  fresh seed locally before registering, even to count it. Splits built on the same seed with
+  a mismatch overlay are the same engagements. When rows are chosen by a bound the joined data
+  satisfy, report the ratio on rows each side determines alone beside it.
+- Spec 026 panel: a chained system's first window equals the control by construction; a
   per-window rule over all windows counts those as ties and moves the decision (E1 passed by
   0.008 with them, 0.0002 without). Exclude constructed ties in the registration, or report
   the rule without them beside. A median over answered rows cannot see a filter that stops

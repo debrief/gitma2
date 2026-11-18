@@ -1,4 +1,4 @@
-# Spec 025: validation (seed 350)
+# Spec 026: validation (seed 350)
 
 CI run 44257499250 (Intel Xeon 6975P-C; commit e27e183, the decision record's). It ran 10 + 10
 realistic engagements of 6 and 12 hours (`configs/long/study-val.json`). The digests are

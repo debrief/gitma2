@@ -1,7 +1,7 @@
 ---
 title: "Slides: long engagements, the registered study"
 date: 2026-11-18T15:30
-tags: [slides, spec-025]
+tags: [slides, spec-026]
 ---
 
 import Slides from "@site/src/components/Slides";
@@ -13,7 +13,7 @@ output:
 - E2, the untended contact: about 1.5 times worse where it is held;
 - E3, IMM drift: not shown.
 
-The panel narrowed all three. Spec: `specs/025-long-study/`.
+The panel narrowed all three. Spec: `specs/026-long-study/`.
 
 <!-- truncate -->
 

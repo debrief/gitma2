@@ -1,7 +1,7 @@
 ---
 title: "Long engagements: the registered study"
 date: 2026-11-18T15:00
-tags: [write-up, spec-025]
+tags: [write-up, spec-026]
 ---
 
 A registered study on fresh seeds: 60 realistic engagements of 6 and 12 hours, scored once.
@@ -11,7 +11,7 @@ Each rule returned what it was registered to return:
 - the IMM's drift is **not shown**.
 
 The review panel narrowed all three. The long-engagement track is recommended to stop here as a
-simulation study. Spec: `specs/025-long-study/`; record: `experiments/20261118-ls/`.
+simulation study. Spec: `specs/026-long-study/`; record: `experiments/20261118-ls/`.
 
 <!-- truncate -->
 

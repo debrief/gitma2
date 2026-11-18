@@ -1,4 +1,4 @@
-# Spec 025: review panel, round 1 (2026-11-18)
+# Spec 026: review panel, round 1 (2026-11-18)
 
 Three agent reviewers, each given the files and a brief, with no conclusions handed to them:
 - statistics and design;

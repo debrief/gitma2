@@ -1,4 +1,4 @@
-# Plan: spec 025
+# Plan: spec 026
 
 - `src/tma2/long/study.py`: the estimands (E1–E3, soundness), the bootstrap over engagements.
 - `src/tma2/long/realtime.py` `imm_states`: the IMM over a whole engagement, read every 10 min.

@@ -1,4 +1,4 @@
-"""Spec 025: the panel's readings beside the registered rules (experiments/20261118-ls/).
+"""Spec 026: the panel's readings beside the registered rules (experiments/20261118-ls/).
 
     uv run python scripts/research/long_study_supplement.py > experiments/20261118-ls/supplement.json
 

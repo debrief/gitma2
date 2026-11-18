@@ -1,4 +1,4 @@
-"""Spec 025 slides: SVG figures from the test record experiments/20261118-ls/.
+"""Spec 026 slides: SVG figures from the test record experiments/20261118-ls/.
 
     uv run python scripts/research/long_study_charts.py \\
         [--record experiments/20261118-ls] [--config configs/long/study-test.json] \\

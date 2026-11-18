@@ -349,6 +349,13 @@ and recorded, not asked.
   control remains the standing time-late system with its recorded faults. No further
   time-late study is planned; a learned time-late component is recorded as not shown, at a
   small budget, with one direct model.
+- **2026-11-18 (agent, recording the owner's decisions of 2026-11-17 and 2026-11-18; proposed,
+  owner to merge):** the owner chose to study several periods of one target linked by motion
+  continuity (option C; spec 025), and after its first registration stopped at validation,
+  to re-register (option A). Its test (seed 353), decided by the panel: within the simulated
+  conditions studied, `ctl` over the span with the gaps' bearings marked missing is the
+  standing time-late system for two or three periods of one target; `ctl` per period remains
+  the system for a single period. Comparison with carried state (spec 024) is outstanding.
 
 ## Annexes
 

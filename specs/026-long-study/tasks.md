@@ -1,4 +1,4 @@
-# Tasks: spec 025
+# Tasks: spec 026
 
 - [x] T001 Estimands and soundness (`long/study.py`), IMM runner, CLI parts, configs
 - [x] T002 Tuning run (seed 349); forecasts

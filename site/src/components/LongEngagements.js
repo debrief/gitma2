@@ -5,6 +5,7 @@
 // (mode "timelate": one stitched track from 2-hour windows). The page computes no estimate.
 import React, { useEffect, useMemo, useState } from "react";
 import useBaseUrl from "@docusaurus/useBaseUrl";
+import { usePlotZoom, scaleBar, ZoomControls } from "./PlotZoom";
 
 const OWN = "#1f77b4";
 const TGT = "#d62728";
@@ -41,13 +42,11 @@ function TrackPlot({ doc, part, systems, shown, mode }) {
     const span = Math.max(x1 - x0, y1 - y0) * 1.08 + 2000;
     return { x0: (x0 + x1) / 2 - span / 2, y0: (y0 + y1) / 2 - span / 2, span };
   }, [doc]);
-  const sx = (x) => PAD + ((x - box.x0) / box.span) * (W - 2 * PAD);
-  const sy = (y) => H - PAD - ((y - box.y0) / box.span) * (H - 2 * PAD);
+  const zoom = usePlotZoom(box, W, H, PAD);
+  const { sx, sy, scale } = zoom;
   const inBox = (r) => r && r[0] > box.x0 - box.span && r[0] < box.x0 + 2 * box.span && r[1] > box.y0 - box.span && r[1] < box.y0 + 2 * box.span;
   const pts = (rows) => rows.filter(inBox).map((r) => `${sx(r[0]).toFixed(1)},${sy(r[1]).toFixed(1)}`).join(" ");
-  const scale = (W - 2 * PAD) / box.span;
-  const target = box.span / 5, p10 = Math.pow(10, Math.floor(Math.log10(target)));
-  const bar = [5, 2, 1].map((f) => f * p10).find((v) => v <= target) || p10;
+  const bar = scaleBar(scale, W, PAD);
   // a line per run of answered rows, so gaps stay gaps
   const runs = (rows) => {
     const out = []; let cur = [];
@@ -59,7 +58,8 @@ function TrackPlot({ doc, part, systems, shown, mode }) {
   const every = Math.round(3600 / doc.dt_truth_s);
   for (let i = 0; i < doc.truth.length; i += every) hourTicks.push(doc.truth[i]);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, border: "1px solid var(--ifm-color-emphasis-300)", borderRadius: 6, background: "var(--ifm-background-surface-color)" }} role="img" aria-label="Long-engagement tracks">
+    <>
+    <svg viewBox={`0 0 ${W} ${H}`} {...zoom.svgProps} style={{ width: "100%", maxWidth: W, border: "1px solid var(--ifm-color-emphasis-300)", borderRadius: 6, background: "var(--ifm-background-surface-color)", ...zoom.svgProps.style }} role="img" aria-label="Long-engagement tracks">
       <defs><clipPath id={`lgclip-${mode}`}><rect x={PAD} y={PAD} width={W - 2 * PAD} height={H - 2 * PAD} /></clipPath></defs>
       <g clipPath={`url(#lgclip-${mode})`}>
         <polyline points={pts(doc.truth.map((r) => [r[2], r[3]]))} fill="none" stroke={OWN} strokeWidth={1} opacity={0.8} />
@@ -76,10 +76,12 @@ function TrackPlot({ doc, part, systems, shown, mode }) {
         <circle cx={sx(doc.truth[0][0])} cy={sy(doc.truth[0][1])} r={5} fill="none" stroke={TGT} strokeWidth={1.5} />
         <rect x={sx(doc.truth[doc.truth.length - 1][0]) - 4} y={sy(doc.truth[doc.truth.length - 1][1]) - 4} width={8} height={8} fill="none" stroke={TGT} strokeWidth={1.5} />
       </g>
-      <line x1={W - PAD - bar * scale} y1={H - 8} x2={W - PAD} y2={H - 8} stroke="currentColor" />
-      <text x={W - PAD} y={H - 12} textAnchor="end" fontSize={11} fill="currentColor">{bar >= 1000 ? `${bar / 1000} km` : `${bar} m`}</text>
+      <line x1={W - PAD - bar.m * scale} y1={H - 8} x2={W - PAD} y2={H - 8} stroke="currentColor" />
+      <text x={W - PAD} y={H - 12} textAnchor="end" fontSize={11} fill="currentColor">{bar.label}</text>
       <text x={PAD} y={15} fontSize={11} fill="currentColor">north up · red: target, blue: ownship · red dots every hour · ○ start, □ end{mode === "realtime" ? " · coloured dots: each estimate, every 10 min" : ""}</text>
     </svg>
+    <ZoomControls zoom={zoom} />
+    </>
   );
 }
 

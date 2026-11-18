@@ -1,4 +1,4 @@
-# Spec 025: test record (seed 351, scored once)
+# Spec 026: test record (seed 351, scored once)
 
 CI run 44280754516 (commit a37d36d; the shards ran on 7 CPU families, see `review.md`; the collect job on AMD EPYC 7763). Its code digest and run file are the
 decision record's (`experiments/20261118-ls-decision/`; digests re-checked unchanged). It ran
@@ -88,3 +88,11 @@ mean is narrowed:
 
 `study.json` records `git_dirty: true` because the record's folder was untracked when it ran;
 the scored code equals the bound digest.
+
+**After merging main (2026-11-18).** This study was numbered spec 025 while it ran. Another
+session's spec 025 (joined periods) merged first, so this one is now spec 026. Bound files and
+raw outputs still say 025, and none of them was edited. The merge added new modules under
+`src/tma2/timelate/` (`layout.py`, `run8.py`, `study8.py`), and the code digest's glob picks them
+up, so at the merged commit it no longer equals `938ef9a2…`. No module the record bound was
+changed. Both sessions claimed seeds 349 and 350, each on its own simulator and stream; the
+engagements differ, but the claim was made twice. The next fresh seed is 354.
