@@ -5,6 +5,8 @@
     uv run tma2-long scaling --index 2 --out <dir>     # ctl on single periods of growing length
     uv run tma2-long realtime-inc --index 0 --out <dir>   # spec 024: the incremental C
     uv run tma2-long carry --index 0 --out <dir>          # spec 024: ctl and ctl carrying state
+    uv run tma2-long carry2 --index 0 --out <dir>         # spec 027: and ctl carrying a prior
+    uv run tma2-long study27 --raw <dir> --config <study config> --out <dir>   # spec 027's study
     ... --config configs/long/realistic.json --contact 2  # spec 024: realism; the second contact
 
 The engagement is ``configs/long/long.json``'s ``index``-th (in order of duration). Writes
@@ -56,7 +58,18 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-long", description=__doc__)
     ap.add_argument(
         "part",
-        choices=("realtime", "realtime-inc", "timelate", "carry", "scaling", "imm", "study"),
+        choices=(
+            "realtime",
+            "realtime-inc",
+            "timelate",
+            "carry",
+            "carry2",
+            "jointpair",
+            "scaling",
+            "imm",
+            "study",
+            "study27",
+        ),
     )
     ap.add_argument("--indices", default="", help="imm: engagements a-b (inclusive)")
     ap.add_argument("--raw", default="", help="study: the run's outputs")
@@ -65,6 +78,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--config", default=CONFIG)
     ap.add_argument("--contact", type=int, default=1, choices=(1, 2), help="spec 024 realism")
     ap.add_argument("--block-s", type=float, default=7200.0, help="realtime-inc: block length")
+    ap.add_argument(
+        "--carry-settings", default="configs/long/carry2.json", help="carry2: scale, tail, alpha"
+    )
+    ap.add_argument("--pair", type=int, default=1, help="jointpair: windows pair-1 and pair")
     ap.add_argument("--tag", default="", help="a name for the outputs (default: the config's)")
     ap.add_argument("--step-s", type=float, default=600.0, help="realtime: evaluation interval")
     ap.add_argument("--limit", type=int, default=0, help="realtime: first N evaluations only")
@@ -95,6 +112,16 @@ def main(argv: list[str] | None = None) -> int:
                 {k: res[k] for k in ("soundness", "E1", "E2", "E3")}, indent=1, default=float
             )
         )
+        return 0
+    if a.part == "study27":
+        from tma2.long.study27 import score27
+
+        res = score27(Path(a.raw).resolve(), Path(a.config).resolve())
+        res["git_commit"], res["git_dirty"] = g.commit, g.dirty
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "study.json").write_text(json.dumps(res, indent=1, default=float) + "\n")
+        print(json.dumps(res["rule"], indent=1, default=float))
         return 0
     if a.part == "imm":
         from tma2.long.realtime import IMM, imm_states
@@ -203,6 +230,63 @@ def main(argv: list[str] | None = None) -> int:
         ]
         head["window_s"], head["overlap_s"] = a.window_s, a.overlap_s
         head["settings"] = s
+    elif a.part == "carry2":
+        from tma2.long import carry2 as c2m
+        from tma2.long.timelate import chain, settings_and_priors
+
+        s, priors, cp, c2 = settings_and_priors()
+        cs = json.loads(Path(a.carry_settings).read_text())
+        spans = chain(e, a.window_s, a.overlap_s)
+        if a.max_windows:
+            spans = spans[: a.max_windows]
+        wins = c2m.run_chain2(e, spans, s, priors, cp, c2, cs)
+        for w in wins:
+            j = w["index"]
+            arrays[f"w{j}_rows"] = w["rows_abs"]
+            for k in c2m.SYSTEMS2:
+                arrays[f"w{j}_{k}"] = w["tracks"][k]
+        head["chain"] = spans
+        head["systems"] = list(c2m.SYSTEMS2)
+        head["carry_settings"] = cs
+        head["windows"] = [
+            {
+                k: w[k]
+                for k in (
+                    "index",
+                    "first",
+                    "rows",
+                    "seconds",
+                    "parts",
+                    "search_s",
+                    "bearings",
+                    "declared",
+                    "true",
+                    "handed",
+                    "guard",
+                )
+            }
+            for w in wins
+        ]
+        head["window_s"], head["overlap_s"] = a.window_s, a.overlap_s
+        head["settings"] = s
+    elif a.part == "jointpair":
+        from tma2.long.timelate import SYSTEMS, chain, run_windows, settings_and_priors
+
+        s, priors, cp, c2 = settings_and_priors()
+        spans = chain(e, a.window_s, a.overlap_s)
+        (a0, _r0), (a1, r1) = spans[a.pair - 1], spans[a.pair]
+        wins = run_windows(e, [(a0, a1 + r1 - a0)], s, priors, cp, c2)
+        w = wins[0]
+        keep = np.asarray(w["rows_abs"]) >= a1
+        arrays["rows"] = np.asarray(w["rows_abs"])[keep]
+        for k in SYSTEMS:
+            arrays[k] = w["tracks"][k][keep]
+        head["pair"] = a.pair
+        head["union"] = [a0, a1 + r1 - a0]
+        head["second"] = [a1, r1]
+        head["seconds"] = w["seconds"]
+        head["parts"] = w["parts"]
+        head["declared"] = w["declared"]
     elif a.part == "timelate":
         from tma2.long.timelate import SYSTEMS, chain, run_windows, settings_and_priors
 
@@ -242,6 +326,8 @@ def main(argv: list[str] | None = None) -> int:
         stem = f"{tag}-c{a.contact}-{stem}"
     if a.part == "scaling":
         stem += "-" + a.lengths.replace(",", "_")
+    elif a.part == "jointpair":
+        stem += f"-p{a.pair}"
     elif a.shard != "0/1":
         stem += "-" + a.shard.replace("/", "of")
     if arrays:
