@@ -2,10 +2,61 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://debrief.github.io/gitma2/pr/47/blog</id>
     <title>TMA via ML, second attempt Blog</title>
-    <updated>2026-11-18T03:00:00.000Z</updated>
+    <updated>2026-11-18T04:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://debrief.github.io/gitma2/pr/47/blog"/>
     <subtitle>TMA via ML, second attempt Blog</subtitle>
+    <entry>
+        <title type="html"><![CDATA[Kickoff: long engagements, a registered study]]></title>
+        <id>https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-study-kickoff</id>
+        <link href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-study-kickoff"/>
+        <updated>2026-11-18T04:00:00.000Z</updated>
+        <summary type="html"><![CDATA[The owner chose note 13's registered study. On fresh seeds, with the questions fixed before]]></summary>
+        <content type="html"><![CDATA[<p>The owner chose note 13's registered study. On fresh seeds, with the questions fixed before
+any result, it asks three things:</p>
+<ul>
+<li class="">is carrying state between time-late windows no worse than solving each window cold;</li>
+<li class="">how much worse the standing control does on a contact the ownship does not tend;</li>
+<li class="">whether the IMM drifts over twelve hours.</li>
+</ul>
+<p>Spec: <code>specs/025-long-study/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-study-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<p><a class="" href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides">Spec 024</a> built the three recommendations of note 12
+on four engagements:</p>
+<ul>
+<li class="">carrying state was level in accuracy and cheaper in search;</li>
+<li class="">the incremental C was not adopted;</li>
+<li class="">an untended contact was three to five times worse where it could be solved at all.</li>
+</ul>
+<p>All of these are anecdotes from one engagement per length.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-study-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>E1</strong>: <code>ctl-carry</code> is non-inferior to <code>ctl</code> if the lower limit of the geometric mean of
+per-window ratios is at least 0.95. Read on the tended contact.</li>
+<li class=""><strong>E2</strong>: the cost of an untended contact, banded by range. A magnitude, with no rule.</li>
+<li class=""><strong>E3</strong>: the IMM's drift over 12 hours. Shown if the interval lies above 1.</li>
+<li class=""><strong>Plan</strong>:<!-- -->
+<ol>
+<li class="">a tuning run on seed 349, giving forecasts;</li>
+<li class="">the decision record, binding the plan and code by digest before seeds 350 and 351 exist;</li>
+<li class="">validation on seed 350, with soundness checks;</li>
+<li class="">the test on seed 351 (30 + 30 realistic engagements of 6 and 12 hours), scored once;</li>
+<li class="">the agent review panel, then the write-up.</li>
+</ol>
+</li>
+<li class=""><strong>Risks</strong>: E1 may be inconclusive at this size. E2 confounds geometry with tending, by
+design. E3 reads one IMM tuning.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-study-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<p>The slides post will carry:</p>
+<ul>
+<li class="">E1's per-window ratios against the 0.95 line;</li>
+<li class="">E2's ratio by range band;</li>
+<li class="">E3's error and share answered by 2-hour bin, with the intervals.</li>
+</ul>]]></content>
+        <category label="kickoff" term="kickoff"/>
+        <category label="spec-025" term="spec-025"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Slides: long engagements, carrying state, an incremental C, realism]]></title>
         <id>https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides</id>
@@ -1307,42 +1358,5 @@ choice is the owner's.</p>
 is 345. Nothing was trained and nothing spent.</p>]]></content>
         <category label="write-up" term="write-up"/>
         <category label="spec-017" term="spec-017"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Slides: time-late, classical controls and a learned model]]></title>
-        <id>https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned-slides</id>
-        <link href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned-slides"/>
-        <updated>2026-11-14T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The illustrated companion to the spec 016 write-up:]]></summary>
-        <content type="html"><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned">the spec 016 write-up</a>:
-the classical controls, the learned whole-period model, the registered comparison on a
-fresh seed, what the review panel found the loss was made of, and track plots.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/47/slides/2026-11-14-time-late-learned-slides/index.html" title="Slides: 2026-11-14-time-late-learned-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/47/slides/2026-11-14-time-late-learned-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>The registered comparison</strong>: declared control ÷ learned track for three training seeds
-on every criterion split, with intervals; the orange ticks are the median per-period
-ratio, which is 1.00 everywhere.</li>
-<li class=""><strong>Every system</strong> on every split: C″ as a track, the standing search, the classical
-control, the model's own track and its arc read-out, and the fit told the true history.</li>
-<li class=""><strong>What the classical control adds</strong>, on the tuning, validation and test seeds.</li>
-<li class=""><strong>Manoeuvres missed and false</strong>: the model's detector misses more and invents far fewer.</li>
-<li class=""><strong>Training</strong>: the monitor curve of the three seeds.</li>
-<li class=""><strong>Three periods as tracks.</strong> They are chosen by a rule in the script, not by eye: of the
-20 stored periods of the shifted split, the one where the learned track is worst against
-the control and the one where it is best; and the first stored outlier period with a
-true manoeuvre.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl4_charts.py --out-dir site/static/img/2026-11-14-time-late-learned-slides</span><br></div></code></pre></div></div>
-<p>The script reads only committed records (<code>experiments/20261113-tl4-tuning/</code>,
-<code>20261113-tl4-val/</code>, <code>20261114-tl4/</code>, <code>20261114-tlm-runs/</code>); each figure's <code>.json</code>
-sidecar names the inputs' digests and the commit. <code>experiments/20261114-tl4/tracks.npz</code>
-holds the tracks at scored rows for the first 20 periods of three splits, extracted from
-the results branch <code>results/timelate-tl-e-test-43563825793</code>. The data are seeds 338
-(tuning), 340 (validation) and 341 (test), 5-second bearings, ranges files under
-<code>configs/timelate/</code>, generated in the CI runs.</p>]]></content>
-        <category label="slides" term="slides"/>
-        <category label="spec-016" term="spec-016"/>
     </entry>
 </feed>
