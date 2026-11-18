@@ -5,4 +5,4 @@
 - [x] T003 Decision record (plan, run files, code by digest) before seeds 350 and 351 exist
 - [x] T004 Validation (seed 350): soundness
 - [x] T005 Test (seed 351), scored once
-- [ ] T006 Agent review panel; write-up and slides; AGENTS.md
+- [x] T006 Agent review panel; write-up and slides; AGENTS.md

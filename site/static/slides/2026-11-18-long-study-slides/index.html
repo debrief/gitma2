@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- Spec 025 slides: the registered study on long engagements.
+     Figures: site/static/img/2026-11-18-long-study-slides/, made by scripts/research/long_study_charts.py. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Long engagements: registered study</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 54vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.85em; }
+      .reveal table { font-size: 0.62em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">Long engagements: the registered study</h1>
+          <p class="small">2026-11-18 · spec 025 · seeds 349 (tuning), 350 (validation), 351 (test) · gitma2</p>
+        </section>
+
+        <section>
+          <h2>Registered before the seeds existed</h2>
+          <ul>
+            <li><b>E1</b>: carry against a cold start, tended contact: non-inferior if the lower limit ≥ 0.95</li>
+            <li><b>E2</b>: untended ÷ tended contact, banded by range: a magnitude</li>
+            <li><b>E3</b>: the IMM over 12 hours, late ÷ early: drift shown if the interval is above 1</li>
+          </ul>
+          <p class="small">60 realistic engagements of 6 and 12 hours on the test seed; a bootstrap over engagements; plan and code bound by digest.</p>
+        </section>
+
+        <section>
+          <h2>E1: non-inferior by 0.008</h2>
+          <img src="../../img/2026-11-18-long-study-slides/e1.svg" alt="ctl over ctl-carry per window with geometric means and intervals" />
+          <p class="small">1.017 [0.958, 1.082]. Without each chain's first window (carry = ctl there): 1.021 [0.9502, 1.100]. Where the two differ: 1.034 [0.923, 1.168]. At 12 h 1.005 [0.923, 1.096]; untended contact 0.942.</p>
+        </section>
+
+        <section>
+          <h2>E2: the untended contact, about 1.3–1.5×</h2>
+          <img src="../../img/2026-11-18-long-study-slides/e2.svg" alt="median error by range band, both contacts" />
+          <p class="small">On rows where it is held (61%). 2-km sub-bands: 1.34 [1.01, 1.87]. Residual geometry and detection thinning included; mis-association not exercised.</p>
+        </section>
+
+        <section>
+          <h2>E3: drift not shown, in answered rows</h2>
+          <img src="../../img/2026-11-18-long-study-slides/e3.svg" alt="IMM median error and share answered by 2-hour bin" />
+          <p class="small">The share answered falls from 0.91 to 0.74–0.79. With unanswered rows counted as failures: 1.26 [0.88, 1.80].</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>No accuracy gain from carrying state shown; only a cost saving (31% of the search where it runs)</li>
+            <li>E2 and E3 describe this simulator's realism, which is set by hand</li>
+            <li>Mis-association is barely exercised; the ownship steers on noisy truth, not on its estimate</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>Recommended: stop the long-engagement track here as a simulation study; keep ctl-carry as an optional cost measure for tended contacts up to 12 h</li>
+            <li>Reopen only with measured realism, an ownship steered by its own track, or association</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/18/long-study · Record: experiments/20261118-ls/ (review.md, supplement.json) · Figures: scripts/research/long_study_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

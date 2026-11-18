@@ -629,6 +629,28 @@ contact 2 is held 10–22% beyond 6 h and at 6–8% where held. Note
 `docs/research/13-long-engagements-2.md` proposes a registered study (6- and 12-hour realistic
 engagements, seeds 349–351): the owner's choice.
 
+025 (long engagements, the registered study, `specs/025-long-study/`; owner on PR 47:
+"registered study"; not a gate; nothing trained; seeds 349 tuning, 350 validation, 351 test,
+all used; the next fresh seed is 352). `long/study.py` (E1 ctl ÷ ctl-carry per window on the
+tended contact, non-inferior if the lower limit ≥ 0.95; E2 untended ÷ tended by range band;
+E3 IMM hours 6–12 ÷ 0–6; soundness S1–S3; bootstrap over engagements), `imm_states`,
+`tma2-long imm|study`, `configs/long/study-*.json`, run files `configs/long/runs/ls-*.json`;
+decision `experiments/20261118-ls-decision/` (digests by `scripts/research/long_study_digests.py`,
+code `938ef9a2…`). Tuning `20261118-ls-tuning/`, validation `20261118-ls-val/` (soundness
+passed), **test record `experiments/20261118-ls/` (60 engagements, scored once): E1 non-inferior
+1.017 [0.958, 1.082]; E2 1.47 [1.12, 2.05]; E3 drift not shown 1.06 [0.82, 1.31]. Panel round 1:
+three approve with findings** (`review.md`, `supplement.json` from
+`scripts/research/long_study_supplement.py`). Narrowed: E1 rests on level windows (each chain's
+first is ctl by construction): without them 1.021 [0.9502, 1.100], where the two differ 1.034
+[0.923, 1.168], 12 h 1.005, untended contact 0.942; adopted only as a cost measure (31% of the
+search where it runs) for tended contacts up to 12 h; E2 is this simulator's second contact
+(no range keeping, scored where detected; 2-km sub-bands 1.34 [1.01, 1.87]); E3 reads answered
+rows only (counting failures 1.26 [0.88, 1.80]; the share answered falls 0.91 to 0.74–0.79).
+Write-up `site/blog/2026-11-18-long-study.md`, slides `2026-11-18-long-study-slides.md`
+(figures `scripts/research/long_study_charts.py`). Panel's recommendation (owner's choice): stop
+the long-engagement track here as a simulation study; reopen only with measured realism, an
+ownship steered by its own track, or association.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1036,6 +1058,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   not the per-window segmenter: test equivalence at block length one and then check error by
   position in the block. A PR merged while its branch has new commits: open a new PR from the
   same branch rather than rebasing under a running CI job.
+- Spec 025 panel: a chained system's first window equals the control by construction; a
+  per-window rule over all windows counts those as ties and moves the decision (E1 passed by
+  0.008 with them, 0.0002 without). Exclude constructed ties in the registration, or report
+  the rule without them beside. A median over answered rows cannot see a filter that stops
+  answering: register the share answered as an outcome. Banding by range does not match range
+  inside a band. A CPU saving is the saving where the cheaper path runs, not over all windows.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting

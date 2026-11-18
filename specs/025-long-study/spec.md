@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-18
 
-**Status**: In progress: a registered study, not a gate. Nothing trained, no GPU.
+**Status**: Done: a registered study, not a gate. Nothing trained, no GPU. Test record `experiments/20261118-ls/`; panel round 1, three approve with findings.
 
 **Input**: Owner, 2026-11-18, on PR 47: "registered study". This is note 13's proposal.
 

@@ -1,6 +1,6 @@
 # Spec 025: test record (seed 351, scored once)
 
-CI run 44280754516 (AMD EPYC 7763; commit a37d36d). Its code digest and run file are the
+CI run 44280754516 (commit a37d36d; the shards ran on 7 CPU families, see `review.md`; the collect job on AMD EPYC 7763). Its code digest and run file are the
 decision record's (`experiments/20261118-ls-decision/`; digests re-checked unchanged). It ran
 30 + 30 realistic engagements of 6 and 12 hours (`configs/long/study-test.json`). On both
 contacts it ran `ctl` and `ctl-carry` on every window, and the frozen IMM on the 12-hour
@@ -8,7 +8,7 @@ engagements. Outputs are in `raw/`; `study.json` is `tma2-long study`'s output, 
 
 ## Soundness: passes
 
-- S1: 360 of 360 windows ran, with no engagement missing.
+- S1: 360 of 360 windows ran, with no engagement missing. One of them (engagement 19, window 3: 46 bearings, under the 60 the runner needs) gave no answer, which is why E1 has 359 windows.
 - S2: ctl ÷ the true-history fit is 1.36 (band [0.8, 4]).
 - S3: bearings held 0.849 (band [0.6, 0.95]).
 
@@ -28,8 +28,9 @@ E1's lower limit is 0.008 above the line.
 - the median ratio is 1.00;
 - carry is better in 98 windows, worse in 88 and level in 173;
 - twice better in 22, twice worse in 17;
-- search CPU is 5.84 h from the carry against 10.12 h from nothing (−42%), which is 12% of all
-  windows' 36.1 CPU hours.
+- search CPU: 5.84 h from the carry against 10.12 h from nothing over all windows. On the
+  windows that had a carried start (the first window of each chain has none) it is 5.84 h
+  against 8.50 h, a 31% saving, about 7% of all windows' CPU (`review.md` finding 5).
 
 **E1 by length**:
 - 6 h: 1.044 [0.997, 1.111], 119 windows;
@@ -72,6 +73,18 @@ The median does not rise, but the share answered falls from 0.91 to 0.74–0.79.
   where the forecast expected it to include 1.
 - **E3**: no drift shown, as forecast.
 
-## Panel
+## Panel (round 1: three approve with findings)
 
-`review.md`.
+`review.md`; the recomputed readings are in `supplement.json`. What the outputs may be taken to
+mean is narrowed:
+- **E1**: non-inferior by the rule, by 0.008. Without each chain's first window, where carry is
+  ctl by construction, it is 1.021 [0.9502, 1.100]. On the windows where the two differ, 1.034
+  [0.923, 1.168]: not shown within 5%. The adoption rests on cost (31% of the search), for the
+  tended contact on 6–12-hour engagements.
+- **E2**: about 1.3 to 1.5 on the rows where the untended contact is held (2-km sub-bands: 1.34
+  [1.01, 1.87]). Residual geometry and detection thinning are included.
+- **E3**: not shown in answered rows. With unanswered rows counted as failures, 1.26
+  [0.88, 1.80]. The IMM answers fewer rows later.
+
+`study.json` records `git_dirty: true` because the record's folder was untracked when it ran;
+the scored code equals the bound digest.
