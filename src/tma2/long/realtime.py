@@ -203,3 +203,36 @@ class RealTime:
         s[0] += ox
         s[1] += oy
         return s
+
+
+def imm_states(e5: Engagement, step_s: float = 600.0) -> dict[str, Any]:
+    """The frozen MAN2 IMM over the whole engagement (10-second bearings), read every
+    ``step_s`` from five minutes after the first ownship turn, as ``RealTime.run`` reads it
+    (spec 025's E3). States in the engagement's frame; NaN where the filter gives no answer."""
+    from tma2.detect.controls import parse_imm_name
+    from tma2.references.imm import imm_predict
+
+    e = thinned(e5, int(round(10.0 / e5.dt)))
+    dt = e.dt
+    first_eval = e.meta["ownship_turns"][0][1] + int(round(300 / dt))
+    ks = list(range(first_eval, e.samples, int(round(step_s / dt))))
+    out = np.full((len(ks), 4), np.nan)
+    d = bearing_data(e)
+    t1 = time.perf_counter()
+    pred = imm_predict(d, parse_imm_name(IMM))["rows"]
+    first = d.zig_index + 1
+    for q, k in enumerate(ks):
+        r = pred[k - first] if 0 <= k - first < len(pred) else None
+        if r is not None and r.get("converged") is not False and r.get("range_m"):
+            c, v = float(r["course_rad"]), float(r["speed_mps"])
+            out[q] = [r["x_m"], r["y_m"], v * math.sin(c), v * math.cos(c)]
+    truth = np.stack(
+        [e.tgt[ks, 1], e.tgt[ks, 2], e.tgt[ks, 3], e.tgt[ks, 4], e.own[ks, 1], e.own[ks, 2]],
+        axis=1,
+    )
+    return {
+        "times_s": e.own[ks, 0].copy(),
+        "truth": truth,
+        "state_imm": out,
+        "seconds": time.perf_counter() - t1,
+    }

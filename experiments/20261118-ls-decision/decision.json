@@ -1,0 +1,101 @@
+{
+ "study": "spec 025: long engagements, a registered study (E1 carry non-inferiority, E2 cost of an untended contact, E3 the IMM's drift)",
+ "registered": "2026-11-18",
+ "owner_decision": "2026-11-18, on PR 47: \"registered study\" (note 13's proposal)",
+ "written_after": "experiments/20261118-ls-tuning/ (seed 349); before seeds 350 and 351 have been generated",
+ "estimands_code": "src/tma2/long/study.py (in code_sha256)",
+ "digests": {
+  "configs/long/study-val.json": "e982a36048e3e13960f5aa871ea1fa700813c8f9d5625f5bf20f53f2984d162b",
+  "configs/long/study-test.json": "7866df422f8ff555c9912de26303db1c2d19a253017a442bf14a106c1acd13fd",
+  "configs/long/runs/ls-val.json": "6adae0af75a8eb26f7595bdcd34746e761c7fb8bf3e5fca9da0de7cf572c8e0b",
+  "configs/long/runs/ls-test.json": "c5f4d5ad8c963d5c278402b7f0f2a4f56d6cc864c876bf58d0f6843dab27fbd1",
+  "configs/timelate/tl-e.json": "82cd70ee700a19c417ea03022c2c6a70fc01f3adb8a5208f58f1ef2cef4f4647",
+  "configs/timelate/tl-ranges.json": "cb48fcabb5a51f76685cab482e23f01cb53c504406a1654c2ec1b664216a4784",
+  "configs/timelate/tl-broad.json": "2ff99a3a2abc3696114d1a234f166e22d4d6cf494dd28631d9dd0d495a0203a1",
+  "configs/gateh/gh-a.json": "26d8e8987a2f696fd72ea235c5183f9f53b1ec2a5623cbc4e646d32139d2d88a",
+  ".github/workflows/long.yml": "c9d506a0e34ad036c3d722d13491a8720537b743aded55c392d8f709bd600d85"
+ },
+ "code_sha256": "938ef9a292b04ec34b91f9d554f090af5fc95e410af8ebd35d3c2c92a7cd41b8",
+ "code_files": [
+  "src/tma2/cli/long.py",
+  "src/tma2/long/__init__.py",
+  "src/tma2/long/carry.py",
+  "src/tma2/long/incremental.py",
+  "src/tma2/long/realtime.py",
+  "src/tma2/long/sim.py",
+  "src/tma2/long/study.py",
+  "src/tma2/long/timelate.py",
+  "src/tma2/long/windows.py",
+  "src/tma2/sim/geometry.py",
+  "src/tma2/sim/prng.py",
+  "src/tma2/timelate/__init__.py",
+  "src/tma2/timelate/adapt.py",
+  "src/tma2/timelate/arc.py",
+  "src/tma2/timelate/bound.py",
+  "src/tma2/timelate/controls.py",
+  "src/tma2/timelate/corr.py",
+  "src/tma2/timelate/counts.py",
+  "src/tma2/timelate/detect.py",
+  "src/tma2/timelate/gate.py",
+  "src/tma2/timelate/hedge.py",
+  "src/tma2/timelate/learned.py",
+  "src/tma2/timelate/match.py",
+  "src/tma2/timelate/periods.py",
+  "src/tma2/timelate/points.py",
+  "src/tma2/timelate/prior.py",
+  "src/tma2/timelate/retest.py",
+  "src/tma2/timelate/run.py",
+  "src/tma2/timelate/run2.py",
+  "src/tma2/timelate/run3.py",
+  "src/tma2/timelate/run4.py",
+  "src/tma2/timelate/run5.py",
+  "src/tma2/timelate/run6.py",
+  "src/tma2/timelate/run7.py",
+  "src/tma2/timelate/score.py",
+  "src/tma2/timelate/search.py",
+  "src/tma2/timelate/smooth.py",
+  "src/tma2/timelate/study.py",
+  "src/tma2/timelate/study3.py",
+  "src/tma2/timelate/study4.py",
+  "src/tma2/timelate/study5.py",
+  "src/tma2/timelate/study6.py",
+  "src/tma2/timelate/study7.py",
+  "src/tma2/timelate/systems.py",
+  "src/tma2/timelate/thin.py",
+  "src/tma2/timelate/track.py"
+ ],
+ "c_code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+ "seeds": {
+  "tuning": 349,
+  "validation": 350,
+  "test": 351
+ },
+ "sizes": {
+  "validation": "10 + 10 engagements of 6 and 12 hours",
+  "test": "30 + 30"
+ },
+ "rules": {
+  "soundness (validation; a failure stops the study)": "S1 >= 95% of contact 1's planned windows ran and no engagement missing; S2 ctl / true-history fit (pooled median, contact 1) in [0.8, 4]; S3 contact 1's bearings held in [0.6, 0.95]",
+  "E1": "geometric mean over windows of (median error ctl / median error ctl-carry), contact 1, 95% bootstrap interval over engagements (2,000, seed 25); ctl-carry non-inferior if the lower limit >= 0.95; then carrying is adopted for long chains as a cost measure, otherwise not",
+  "E2": "geometric mean over range bands (2-10, 10-20, 20-40 km; >= 50 rows on both contacts) of median ctl error contact 2 / contact 1; a magnitude, no rule",
+  "E3": "IMM median error in hours 6-12 / hours 0-6 on the 12-hour engagements, contact 1; drift shown if the interval lies wholly above 1"
+ },
+ "conditions_can_fire": {
+  "E1": "tuning 1.054 [0.955, 1.177] on 12 engagements; at 60 the half-width is about 0.05, so the lower limit clears 0.95 if the estimate is above about 1.00 and fails below it",
+  "E3": "tuning 0.77 [0.51, 1.31] on 6 engagements; at 30 the half-width is about 0.18, so drift is shown if the estimate exceeds about 1.2"
+ },
+ "forecasts": {
+  "soundness": "passes (tuning: 72 of 72 windows; ctl / reference 1.40; bearings held 0.85)",
+  "E1": "non-inferior, about three in four: the per-window median ratio is 1.00 and the tuning mean 1.05 rests on a few windows twice better",
+  "E2": "about 1.2 to 1.4 with an interval including 1: once range is matched, most of spec 024's three-to-fivefold cost is geometry",
+  "E3": "no drift shown: tuning's early hours are worse, not its late ones"
+ },
+ "known_limits": [
+  "realism parameters are spec 024's choices, not measured",
+  "E2 confounds geometry with tending by design; banding by range removes only part of the geometry (bearing rate and ownship manoeuvres relative to the contact are not matched)",
+  "E3 reads one IMM tuning (MAN2's) and starts it after the first ownship turn; drift could be the tuning's",
+  "E1's 0.95 margin is a choice; the owner may set another before validation",
+  "the tuning seed's figures are restated in the forecasts; they are not independent predictions",
+  "CI runners' CPU family can differ between jobs (spec 024: kilometres on a window); E1 pairs ctl and ctl-carry within one job, E2 compares two jobs' outputs, E3 one job"
+ ]
+}

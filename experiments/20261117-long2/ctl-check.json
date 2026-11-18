@@ -1,0 +1,8 @@
+{
+ "what": "long.carry's ctl against run4's ctl-d1-q0.01 (spec 023's runner), window 1 of the 6-hour engagement (seed 348), both computed in one process on the session container",
+ "script": "scripts/research/long2_ctl_check.py",
+ "max_abs_difference_m_or_mps": 0.0009645235659263562,
+ "declared_manoeuvres": {"run4": 5, "long.carry": 5},
+ "run4_here_vs_ci_record_max_abs": 2491.186523437498,
+ "note": "The CI record (experiments/20261117-long/, AMD EPYC runners) differs from the same code run here by up to 2.5 km on this window: the search can take another path on another CPU family (AGENTS.md gotchas). Spec 024 compares ctl and ctl-carry within each CI job, never across machines."
+}

@@ -121,7 +121,13 @@ def run_windows(
     return out
 
 
-def stitch(e: Engagement, wins: list[dict[str, Any]], every: int) -> dict[str, Any]:
+def stitch(
+    e: Engagement,
+    wins: list[dict[str, Any]],
+    every: int,
+    systems: tuple[str, ...] = SYSTEMS,
+    declared_by: tuple[str, ...] = ("ctl-d1-q0.01", "c2"),
+) -> dict[str, Any]:
     """One long track per system: each row from the window whose centre is nearest.
 
     Rows are each window's own stored rows (every ``every``-th from its first row); a window
@@ -145,15 +151,15 @@ def stitch(e: Engagement, wins: list[dict[str, Any]], every: int) -> dict[str, A
         s: np.array([wins[j]["tracks"][s][q] for _k, j, q in parts], dtype=np.float64).reshape(
             -1, 4
         )
-        for s in SYSTEMS
+        for s in systems
     }
     assert every > 0
     declared: dict[str, list[list[float]]] = {}
     dt = e.dt
-    for s in ("ctl-d1-q0.01", "c2"):
+    for s in declared_by:
         keep = []
         for j, w in enumerate(wins):
-            for a, b in w["declared"][s]:
+            for a, b in w["declared"].get(s, []):
                 mid = int(round(0.5 * (a + b) / dt))
                 near = [i for i, x in enumerate(wins) if x["first"] <= mid < x["first"] + x["rows"]]
                 if near and min(near, key=lambda i: abs(centres[i] - mid)) == j:
