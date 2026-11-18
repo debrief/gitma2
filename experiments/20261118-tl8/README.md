@@ -17,12 +17,21 @@ geometric mean of per-period ratios, 95% interval from resampling engagements:
 | 2% wild bearings | 141 / 65 | **2.72 [2.04, 3.75]** | 2.88 [2.12, 4.04] | 2.93 [2.06, 4.27] | gain |
 | held course | 141 / 65 | **12.8 [8.5, 20.4]** | 13.8 [9.7, 19.9] | 11.1 [7.3, 17.3] | gain |
 
-No harm on any split in any quantity. By the decision record: **the joint solve (`ctl` over
-the span with the gaps' bearings marked missing) becomes the standing time-late system for
-several periods of one target; `ctl` per period stays the system for a single period.**
+No harm on any split in any quantity. **Decided by the panel, round 1 (`review.md`; five
+approve with findings), narrowed:** within these simulated conditions (two or three periods of
+15 to 30 min, gaps of 5 to 30 min, at most two hours, association certain, Annex B manoeuvres
+in the gaps), the joint solve (`ctl` over the span with the gaps' bearings marked missing) is
+the standing time-late system for several periods of one target; `ctl` per period stays the
+system for a single period. Most of the gain is periods without an ownship turn of their own
+becoming answerable; where a period stands alone, joining gains about 1.6 on Annex B and is
+not shown on busier targets. Wild bearings is the same engagements as Annex B, and held course
+shares 69 of 70 layouts with it: not independent replications. On busier targets 48 of 289
+periods (13 whole engagements) have no row under the span bound and are left out of both sides.
 
 Soundness on the test seed (reported; it was decided on validation): 1.09 [0.73, 1.84] over
-35 engagements; the joint solve answered every period.
+35 engagements; the joint solve answered every period. The check is a gross-fault screen, not
+an efficiency check: a perfectly efficient reference reads about 0.79 under its own model, and
+per-engagement values reach 773 on test (510 on validation); see `review.md`.
 
 ## Forecasts against outcomes
 
@@ -34,8 +43,8 @@ Soundness on the test seed (reported; it was decided on validation): 1.09 [0.73,
 | busier targets gain about 1.5 | 1.97: gain, larger than forecast |
 | busier: loss on periods with their own ownship turn | 1.13 [0.90, 1.43]: level, not a loss (wrong) |
 | busier: loss on gaps of 10 to 20 min | 2.08 [1.61, 2.66]: a gain (wrong; the tuning loss was noise at 20 periods) |
-| gaps cost about a factor of two | every bearing ÷ joint 0.61 Annex B (0.52 to 0.65): about 1.6 |
-| held course: joint declares a manoeuvre in under 0.15 of engagements | 0.17 (alone 0.14): wrong, narrowly |
+| gaps cost about a factor of two | every bearing ÷ joint 0.61 Annex B (0.52 to 0.65 across splits): about 1.6, wrong; on rows a period determines alone 0.86 [0.62, 1.18], not shown |
+| held course: joint declares a manoeuvre in under 0.15 of engagements | 0.17, 11 of 65 (about [0.09, 0.28]; alone 0.14): not separated from the forecast |
 
 ## What the figures say, and what they do not
 
@@ -50,8 +59,9 @@ Soundness on the test seed (reported; it was decided on validation): 1.09 [0.73,
   much worse joined.
 - **Gaps.** Of true manoeuvres inside gaps the joint solve declares 40 of 43 (Annex B), 83 of
   130 (busier: 36% missed), 34 of 43 (wild bearings); it declares one in 21% of quiet gaps
-  (Annex B) and 15% on held course. Periods next to a gap that held a manoeuvre gain less
-  (2.67 against 3.82 Annex B).
+  (Annex B) and 15% on held course. Periods next to a gap that held a manoeuvre gain less on
+  busier targets (ratio of ratios 1.73 [1.13, 2.73]) and wild bearings; on Annex B (2.67 against
+  3.82) the difference is not separated.
 - **What is left.** Joint ÷ the true history across the span: 1.71 Annex B, 2.03 busier
   (a reference with free times and the prior, not a bound).
 - **What the gaps cost.** Every bearing ÷ joint 0.61 Annex B, 0.65 busier.
