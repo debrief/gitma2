@@ -118,8 +118,25 @@ def test_soundness_reads_the_fixed_span_reference_on_tight_rows() -> None:
 
     b = np.array([[0.01, 1, 1], [0.02, 1, 1], [0.3, 1, 1]])
     e = np.array([[0.01 * Q, 0, 0, 0], [0.02 * Q, 0, 0, 0], [9.0, 0, 0, 0]])
-    arr = {"bound_span": b, "err_ref-span-fixed": e}
+    arr = {"bound_span": b, "err_ref-span-fixed": e, "eng": np.array([0, 0, 0])}
     r = soundness({"periods": 10, "joint_fell_back": 0}, arr, [])
     assert abs(r["reference_efficiency_tight"] - 1.0) < 1e-12 and r["pass"]
     r = soundness({"periods": 10, "joint_fell_back": 1}, arr, [])
     assert not r["pass"]  # 0.90 answered < 0.95
+
+
+def test_soundness_engagement_geomean_counts_engagements_not_rows() -> None:
+    from tma2.timelate.score import Q
+    from tma2.timelate.study8 import soundness
+
+    # engagement 0: 100 rows at efficiency 4; engagement 1: 10 rows at 0.25; engagement 2: 5 rows
+    eng = np.array([0] * 100 + [1] * 10 + [2] * 5)
+    b = np.full((eng.size, 3), 0.01)
+    eff = np.array([4.0] * 100 + [0.25] * 10 + [9.0] * 5)
+    e = np.zeros((eng.size, 4))
+    e[:, 0] = eff * 0.01 * Q
+    arr = {"bound_span": b, "err_ref-span-fixed": e, "eng": eng}
+    r = soundness({"periods": 3, "joint_fell_back": 0}, arr, [], statistic="engagement_geomean")
+    assert r["engagements"] == 2  # engagement 2 has fewer than 10 tight rows
+    assert abs(r["reference_efficiency_tight"] - 1.0) < 1e-9  # sqrt(4 * 0.25)
+    assert r["pooled_rows_median"] > 3.9  # the old statistic follows the long engagement

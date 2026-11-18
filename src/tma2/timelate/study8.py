@@ -238,21 +238,52 @@ def soundness(
     tight: float = 0.05,
     band: tuple[float, float] = (0.8, 1.3),
     converged_min: float = 0.95,
+    statistic: str = "pooled",
+    min_rows: int = 10,
 ) -> dict[str, Any]:
     """FR-012: the span reference with true times held (``ref-span-fixed``) has range
     efficiency within ``band`` on rows whose span bound is below ``tight``, and the joint solve
-    gives a track on at least ``converged_min`` of periods."""
+    gives a track on at least ``converged_min`` of periods.
+
+    ``statistic``: ``pooled`` (spec 025's first registration: the median over all tight rows)
+    or ``engagement_geomean`` (re-registration: each engagement with at least ``min_rows``
+    tight rows gives one efficiency, the median over its rows; the statistic is their
+    geometric mean, with a 95% interval from resampling engagements). A fit's rows share one
+    error, so an engagement is in effect one draw: the pooled median had no power at 20
+    engagements (experiments/20261118-tl8-val)."""
     b = arr["bound_span"][:, 0].astype(np.float64)
     e = arr["err_ref-span-fixed"][:, 0].astype(np.float64) if "err_ref-span-fixed" in arr else None
     eff = None
+    pooled = None
+    per: list[float] = []
+    interval = None
     if e is not None:
         ok = np.isfinite(b) & (b > 0) & (b < tight) & np.isfinite(e)
-        eff = float(np.median(e[ok] / b[ok]) / Q) if ok.any() else None
+        pooled = float(np.median(e[ok] / b[ok]) / Q) if ok.any() else None
+        eng = arr["eng"]
+        for i in np.unique(eng[ok]):
+            m = ok & (eng == i)
+            if int(m.sum()) >= min_rows:
+                per.append(float(np.median(e[m] / b[m]) / Q))
+        if statistic == "engagement_geomean":
+            lv = np.log(np.array([x for x in per if x > 0]))
+            if lv.size:
+                eff = float(np.exp(lv.mean()))
+                rng = np.random.default_rng(BOOT_SEED)
+                means = [lv[rng.integers(0, lv.size, lv.size)].mean() for _ in range(BOOT)]
+                lo, hi = np.quantile(means, [0.025, 0.975])
+                interval = [float(np.exp(lo)), float(np.exp(hi))]
+        else:
+            eff = pooled
     n = max(r["periods"], 1)
     answered = 1.0 - r["joint_fell_back"] / n
     ok_eff = eff is not None and band[0] <= eff <= band[1]
     return {
+        "statistic": statistic,
         "reference_efficiency_tight": eff,
+        "interval": interval,
+        "engagements": len(per),
+        "pooled_rows_median": pooled,
         "band": list(band),
         "joint_answered": answered,
         "converged_min": converged_min,

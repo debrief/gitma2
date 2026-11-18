@@ -277,6 +277,8 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
                 tight=float(sd.get("tight_bound", 0.05)),
                 band=(float(sd.get("band", [0.8, 1.3])[0]), float(sd.get("band", [0.8, 1.3])[1])),
                 converged_min=float(sd.get("answered_min", 0.95)),
+                statistic=str(sd.get("statistic", "pooled")),
+                min_rows=int(sd.get("min_rows", 10)),
             )
         for key in ("dataset_digest", "seed", "search_code_sha256", "git_commit"):
             r[key] = sorted({h[key] for h in headers})
