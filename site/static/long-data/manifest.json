@@ -1,34 +1,90 @@
 {
- "what": "Spec 023 (issue #42): the standing systems on one simulated engagement each of 6, 12, 24 and 48 hours (seed 348), computed in Python on windows of the size each system was built for. A feasibility measurement, not a result.",
- "engagements": [
-  {
-   "index": 0,
-   "hours": 6.0,
-   "file": "long-0.json.gz"
+ "what": "Specs 023 and 024 (issue #42): the standing systems on one simulated engagement each of 6, 12, 24 and 48 hours (seed 348), with the incremental C, time-late windows that carry state, and a realistic set (the ownship steering on what it measures, contact gaps, range-limited detection, a second contact). A feasibility measurement, not a result.",
+ "sets": {
+  "base": {
+   "label": "spec 023's engagements",
+   "engagements": [
+    {
+     "index": 0,
+     "hours": 6.0,
+     "file": "long-base-0.json.gz"
+    },
+    {
+     "index": 1,
+     "hours": 12.0,
+     "file": "long-base-1.json.gz"
+    },
+    {
+     "index": 2,
+     "hours": 24.0,
+     "file": "long-base-2.json.gz"
+    },
+    {
+     "index": 3,
+     "hours": 48.0,
+     "file": "long-base-3.json.gz"
+    }
+   ]
   },
-  {
-   "index": 1,
-   "hours": 12.0,
-   "file": "long-1.json.gz"
+  "real-c1": {
+   "label": "realistic, contact 1 (the one the ownship tends)",
+   "engagements": [
+    {
+     "index": 0,
+     "hours": 6.0,
+     "file": "long-real-c1-0.json.gz"
+    },
+    {
+     "index": 1,
+     "hours": 12.0,
+     "file": "long-real-c1-1.json.gz"
+    },
+    {
+     "index": 2,
+     "hours": 24.0,
+     "file": "long-real-c1-2.json.gz"
+    },
+    {
+     "index": 3,
+     "hours": 48.0,
+     "file": "long-real-c1-3.json.gz"
+    }
+   ]
   },
-  {
-   "index": 2,
-   "hours": 24.0,
-   "file": "long-2.json.gz"
-  },
-  {
-   "index": 3,
-   "hours": 48.0,
-   "file": "long-3.json.gz"
+  "real-c2": {
+   "label": "realistic, contact 2",
+   "engagements": [
+    {
+     "index": 0,
+     "hours": 6.0,
+     "file": "long-real-c2-0.json.gz"
+    },
+    {
+     "index": 1,
+     "hours": 12.0,
+     "file": "long-real-c2-1.json.gz"
+    },
+    {
+     "index": 2,
+     "hours": 24.0,
+     "file": "long-real-c2-2.json.gz"
+    },
+    {
+     "index": 3,
+     "hours": 48.0,
+     "file": "long-real-c2-3.json.gz"
+    }
+   ]
   }
- ],
+ },
  "labels": {
-  "e": "E (carried model)",
+  "ctl-d1-q0.01": "ctl",
+  "ctl-carry": "ctl-carry",
   "c2": "C\u2033",
+  "history-map": "true-history fit (reference)",
+  "e": "E",
   "one_leg": "one leg (30 min)",
-  "imm": "IMM",
-  "ctl-d1-q0.01": "standing control ctl",
-  "history-best": "true-history fit (reference)"
+  "imm": "IMM"
  },
  "realtime_systems": [
   "e",
@@ -38,78 +94,29 @@
  ],
  "timelate_systems": [
   "ctl-d1-q0.01",
+  "ctl-carry",
   "c2",
-  "history-best"
+  "history-map"
  ],
- "scaling": [
-  {
-   "seconds_long": 1800.0,
-   "true_manoeuvres": 2,
-   "declared": 2,
-   "run_s": 57.733648942,
-   "search_s": 28.57,
-   "cpu": "AMD EPYC 7763 64-Core Processor"
-  },
-  {
-   "seconds_long": 3600.0,
-   "true_manoeuvres": 3,
-   "declared": 3,
-   "run_s": 184.112977704,
-   "search_s": 142.21,
-   "cpu": "AMD EPYC 7763 64-Core Processor"
-  },
-  {
-   "seconds_long": 5400.0,
-   "true_manoeuvres": 4,
-   "declared": 4,
-   "run_s": 231.19122348,
-   "search_s": 138.23,
-   "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
-  },
-  {
-   "seconds_long": 7200.0,
-   "true_manoeuvres": 6,
-   "declared": 5,
-   "run_s": 548.42355116,
-   "search_s": 280.78,
-   "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz"
-  },
-  {
-   "seconds_long": 10800.0,
-   "true_manoeuvres": 9,
-   "declared": 9,
-   "run_s": 1679.065274681,
-   "search_s": 1167.7,
-   "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
-  },
-  {
-   "seconds_long": 14400.0,
-   "true_manoeuvres": 11,
-   "declared": 10,
-   "run_s": 2483.4377606010003,
-   "search_s": 1635.47,
-   "cpu": "Intel(R) Xeon(R) 6975P-C"
-  },
-  {
-   "seconds_long": 21600.0,
-   "true_manoeuvres": 16,
-   "declared": 10,
-   "run_s": 6833.5879898250005,
-   "search_s": 3520.5,
-   "cpu": "AMD EPYC 7763 64-Core Processor"
-  }
- ],
- "record": "experiments/20261117-long/",
- "note": "docs/research/12-long-engagements.md",
+ "record": "experiments/20261117-long2/",
+ "note": "docs/research/13-long-engagements-2.md",
  "files": {
-  "long-0.json.gz": "e09d0d3ce0406847cb892486c90369d842d2c65c604eb17ac98afa771deac19a",
-  "long-1.json.gz": "a004dce12a7d4976cb0799f567b0a7b8b17a9dade587d47f36052f704070ad7c",
-  "long-2.json.gz": "cb07d494e44cccc41dad417ddd57d21e470af87831af8f12386d542e241c74e5",
-  "long-3.json.gz": "c9a3a1bd6d457a27b71fdd7e876a255dd8eaccfd79c91d26f7f7785d5d30f9bc"
+  "long-base-0.json.gz": "2cf4ab16345fddd36a90e2bfa7d180ce61429842b0bc7080c2dc6fc2c28dce51",
+  "long-base-1.json.gz": "3cb18028d37348d33f1d457648bce5b84f8a25eac567aa34e1de16debcd8ab6b",
+  "long-base-2.json.gz": "a6f146bf6219d1dfc772e8c50f331b6e3c9f3d005677c9ef7b2ecd6d097e8162",
+  "long-base-3.json.gz": "1231c3e69beb4d6f47e9fa22beb30c98722f611ea2c8562ddab778113c74b9a2",
+  "long-real-c1-0.json.gz": "db5f96fefa727c770fead06c1096e7269e221a2107dd5918a8835a6370576d75",
+  "long-real-c1-1.json.gz": "4d50fbffdc79c8b2ec9c7c4b3ed91f898981541093d9652ac38c58028796dddb",
+  "long-real-c1-2.json.gz": "b6e06a9cdac67c0c2e016746e087ec1a03b814eab50e79b06928d6ca0d738c68",
+  "long-real-c1-3.json.gz": "e04c9d124884633f91c231fcb2bd0c30e17bcee24ec6d465a0b0b2668e611bb7",
+  "long-real-c2-0.json.gz": "76beb1c2bc650e399496c25ffd20e91ce626d56bdea062442c87429bd642b90b",
+  "long-real-c2-1.json.gz": "da9af58d84712ed5cca8e85d060105afa5fd4c5f98e631f4a9e2495fe14db514",
+  "long-real-c2-2.json.gz": "784f617b5a7eea675d98d414fca8ceccfd0d86352e6f6a1ee703d36e7dea9cd5",
+  "long-real-c2-3.json.gz": "c35bc126e7f91eaab46edc5b834fac8af46f41847719bd1d2115a1f2d2733b4f"
  },
  "built": {
-  "script": "scripts/research/long_viewer_data.py",
-  "git_commit": "b06102f8ef5a30dbf6f2494777f5b7918bf739c2",
+  "script": "scripts/research/long2_viewer_data.py",
+  "git_commit": "b577cac5c7d5a7e9b08bf99b4dac5901cc32c48f",
   "git_dirty": true
  }
 }

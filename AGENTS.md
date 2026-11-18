@@ -609,6 +609,26 @@ each; the IMM over 48 h 426 s (cause not established); the whole-engagement boun
 `/timelate#long`. Recommended next (owner's choice): carry state between windows, an
 incremental C, then scenario realism before a registered study.
 
+024 (long engagements, part 2, `specs/024-long-carry-incremental-realism/`; owner on PR 46:
+"implement 3 recommendations"; an investigation, not a gate; nothing trained; no new seed: 348
+with a realism stream, the next fresh seed is still 349). `long/carry.py` (`ctl-carry`: `ctl`
+with its start from nothing replaced by the previous window's declared track and manoeuvres;
+both solved per window; this `ctl` equals spec 023's runner within 1 mm on one machine,
+`experiments/20261117-long2/ctl-check.json`), `long/incremental.py` (one confirmation per
+2-hour block, cropped to each estimate's 720 rows; equals the per-window run for blocks of
+one), realism in `long/sim.py` `_World` (`configs/long/realistic.json`: steering on measured
+bearing and a ±30% range belief, closing on the last belief when lost; gaps; detection 50% at
+40 km; a second contact, `Engagement.other`, swapped within 1°). `tma2-long realtime-inc|carry
+--config --contact`; record `experiments/20261117-long2/` (CI run 44153682342;
+`scripts/research/long2_{report,viewer_data,charts,block_position,ctl_check}.py`). Findings:
+carry is level in accuracy (median window ratio 1.00; wins and losses mixed) and its start costs
+about 55% of the search it replaces; the incremental C is 1.7× cheaper and worse (E 29.8 / 35.6%
+against 14.3 / 20.9% at 24 / 48 h), the loss growing with an estimate's position in its block
+(cause not established; not adopted); realistic contact 1 keeps `ctl` at 1.5–2.2%, the untended
+contact 2 is held 10–22% beyond 6 h and at 6–8% where held. Note
+`docs/research/13-long-engagements-2.md` proposes a registered study (6- and 12-hour realistic
+engagements, seeds 349–351): the owner's choice.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1010,6 +1030,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   and 4% of rows until fixed). A shard that recomputes a whole-engagement quantity reports it
   once per shard: average, do not sum. GitHub artifact download URLs are signed for ten minutes:
   fetch each one right after asking for it.
+- Spec 024: a CPU-family difference moves `ctl`'s search by kilometres on a window (2.5 km
+  between EPYC 9V45 and the session container): compare systems within one job, never a run
+  against another run's record. A block-incremental segmenter that crops a longer history is
+  not the per-window segmenter: test equivalence at block length one and then check error by
+  position in the block. A PR merged while its branch has new commits: open a new PR from the
+  same branch rather than rebasing under a running CI job.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting

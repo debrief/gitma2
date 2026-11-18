@@ -1,0 +1,2022 @@
+{
+ "sets": {
+  "base": [
+   {
+    "index": 0,
+    "hours": 6.0,
+    "manoeuvres": 14,
+    "ownship_turns": 12,
+    "range_km": [
+     1.8955745412287,
+     15.024555409239643,
+     23.132731426658104
+    ],
+    "valid_share": 0.9280092592592593,
+    "timelate": {
+     "windows": 4,
+     "windows_planned": 4,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.015855012385287387,
+       "range_rel_q90": 0.12724109513206538,
+       "course_deg": 1.182468023876542,
+       "course_deg_q90": 11.141281184465628,
+       "speed_kt": 0.2820288926027518,
+       "speed_kt_q90": 0.8953605526843438
+      },
+      "ctl-carry": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.011491552158031382,
+       "range_rel_q90": 0.11300750346121331,
+       "course_deg": 0.9409140173204799,
+       "course_deg_q90": 11.141281184465628,
+       "speed_kt": 0.09429857182935039,
+       "speed_kt_q90": 0.2820288926027536
+      },
+      "c2": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.20506186999571718,
+       "range_rel_q90": 1.1046168626764954,
+       "course_deg": 11.07363511186018,
+       "course_deg_q90": 165.61721966773348,
+       "speed_kt": 1.5903074349311979,
+       "speed_kt_q90": 7.569751922814354
+      },
+      "history-map": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.005863935669108224,
+       "range_rel_q90": 0.021274136882114512,
+       "course_deg": 0.5603722609215217,
+       "course_deg_q90": 1.7391666437966684,
+       "speed_kt": 0.09809748105799002,
+       "speed_kt_q90": 0.2825178313672876
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 14,
+      "ctl-carry": 14,
+      "c2": 14
+     },
+     "true_manoeuvres": 14,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 1,
+      "carry_worse": 0,
+      "level": 3,
+      "twice_better": 1,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 0.5105102755658334,
+      "search_from_none_h": 0.15756353846027782,
+      "search_from_carry_h": 0.08638946021750005
+     },
+     "cpu": [
+      "AMD EPYC 9V74 80-Core Processor"
+     ]
+    },
+    "realtime": {
+     "evaluations": 33,
+     "systems": {
+      "e": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.2455682085319242,
+       "range_rel_q90": 0.9255999274944076,
+       "course_deg": 25.285635878668963,
+       "course_deg_q90": 102.75083458806918,
+       "speed_kt": 2.774966174091262,
+       "speed_kt_q90": 7.5890156050387425
+      },
+      "c2": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.19205875901880917,
+       "range_rel_q90": 0.5173288442205856,
+       "course_deg": 21.964714841363676,
+       "course_deg_q90": 106.57108400132597,
+       "speed_kt": 1.4333650473814066,
+       "speed_kt_q90": 7.751700301733679
+      },
+      "one_leg": {
+       "rows": 33,
+       "answered": 0.8484848484848485,
+       "range_rel": 0.1951721011405219,
+       "range_rel_q90": 0.5991734384486582,
+       "course_deg": 34.86711546067477,
+       "course_deg_q90": 140.89908922655266,
+       "speed_kt": 4.60581229975342,
+       "speed_kt_q90": 15.83808386497063
+      },
+      "imm": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.18964068719602098,
+       "range_rel_q90": 0.5347924885859264,
+       "course_deg": 27.143130783739615,
+       "course_deg_q90": 60.33940209134477,
+       "speed_kt": 3.5506856242870954,
+       "speed_kt_q90": 8.133233622687214
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 15.978729508666667,
+      "c2": 15.82854655281818,
+      "one_leg": 0.026779955787877483
+     },
+     "imm_seconds_whole": 8.981085048000004,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor"
+     ]
+    },
+    "realtime_per_window": {
+     "evaluations": 33,
+     "systems": {
+      "e": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.17350647678329353,
+       "range_rel_q90": 0.685630664936734,
+       "course_deg": 24.844083994985407,
+       "course_deg_q90": 96.58839578972513,
+       "speed_kt": 1.5018041660327912,
+       "speed_kt_q90": 3.559670506562165
+      },
+      "c2": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.2322907237115136,
+       "range_rel_q90": 0.758979532314929,
+       "course_deg": 21.310072958349853,
+       "course_deg_q90": 82.17415634918378,
+       "speed_kt": 1.1399826104486732,
+       "speed_kt_q90": 3.2782942835078472
+      },
+      "one_leg": {
+       "rows": 33,
+       "answered": 0.8484848484848485,
+       "range_rel": 0.1951721011405219,
+       "range_rel_q90": 0.5991734384486582,
+       "course_deg": 34.86711546067477,
+       "course_deg_q90": 140.89908922655266,
+       "speed_kt": 4.60581229975342,
+       "speed_kt_q90": 15.83808386497063
+      },
+      "imm": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.18964068719602098,
+       "range_rel_q90": 0.5347924885859264,
+       "course_deg": 27.143130783739615,
+       "course_deg_q90": 60.33940209134477,
+       "speed_kt": 3.5506856242870954,
+       "speed_kt_q90": 8.133233622687214
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 26.848657644393935,
+      "c2": 25.836602974787883,
+      "one_leg": 0.02007842545454037
+     },
+     "imm_seconds_whole": 5.8809056980000065,
+     "cpu": [
+      "AMD EPYC 9V45 96-Core Processor"
+     ],
+     "blocks": [
+      {
+       "from_h": 0.0,
+       "e": 0.17350647678329353,
+       "c2": 0.2322907237115136,
+       "one_leg": 0.1951721011405219,
+       "imm": 0.18964068719602098
+      }
+     ]
+    }
+   },
+   {
+    "index": 1,
+    "hours": 12.0,
+    "manoeuvres": 26,
+    "ownship_turns": 22,
+    "range_km": [
+     4.626568146332793,
+     20.363381855613362,
+     31.600605685710498
+    ],
+    "valid_share": 0.9111111111111111,
+    "timelate": {
+     "windows": 8,
+     "windows_planned": 8,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 1440,
+       "answered": 1.0,
+       "range_rel": 0.01855114766262266,
+       "range_rel_q90": 0.32987005465159064,
+       "course_deg": 1.3375769227881216,
+       "course_deg_q90": 19.85863943440151,
+       "speed_kt": 0.22672931992152576,
+       "speed_kt_q90": 2.891330234621096
+      },
+      "ctl-carry": {
+       "rows": 1440,
+       "answered": 1.0,
+       "range_rel": 0.019917153485236268,
+       "range_rel_q90": 0.11211553115811501,
+       "course_deg": 1.0200627688082866,
+       "course_deg_q90": 18.83368664040277,
+       "speed_kt": 0.24488684960193055,
+       "speed_kt_q90": 3.307160827536943
+      },
+      "c2": {
+       "rows": 1440,
+       "answered": 0.9909722222222223,
+       "range_rel": 0.15036271446740487,
+       "range_rel_q90": 0.3458700479033775,
+       "course_deg": 15.623617618454707,
+       "course_deg_q90": 54.1067146961006,
+       "speed_kt": 2.0950781320639824,
+       "speed_kt_q90": 4.865367719466006
+      },
+      "history-map": {
+       "rows": 1440,
+       "answered": 1.0,
+       "range_rel": 0.008273740859106107,
+       "range_rel_q90": 0.03186128662445855,
+       "course_deg": 0.6270829039223682,
+       "course_deg_q90": 3.375273075821777,
+       "speed_kt": 0.060782539013246074,
+       "speed_kt_q90": 0.7069874832373572
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 24,
+      "ctl-carry": 25,
+      "c2": 23
+     },
+     "true_manoeuvres": 26,
+     "window_ratio_ctl_over_carry": {
+      "median": 0.9864167683033455,
+      "carry_better": 2,
+      "carry_worse": 4,
+      "level": 2,
+      "twice_better": 1,
+      "twice_worse": 1
+     },
+     "seconds": {
+      "total_h": 0.7984790472258333,
+      "search_from_none_h": 0.22622241991583328,
+      "search_from_carry_h": 0.11552766740972206
+     },
+     "cpu": [
+      "AMD EPYC 9V74 80-Core Processor"
+     ]
+    },
+    "realtime": {
+     "evaluations": 68,
+     "systems": {
+      "e": {
+       "rows": 68,
+       "answered": 0.9411764705882353,
+       "range_rel": 0.2192225086707829,
+       "range_rel_q90": 0.5671062492017621,
+       "course_deg": 35.01811367118583,
+       "course_deg_q90": 87.89301301926444,
+       "speed_kt": 3.2181412883457154,
+       "speed_kt_q90": 8.597030873583114
+      },
+      "c2": {
+       "rows": 68,
+       "answered": 0.9705882352941176,
+       "range_rel": 0.21112767615882672,
+       "range_rel_q90": 0.5631727307347754,
+       "course_deg": 29.57690519179782,
+       "course_deg_q90": 79.5047168544807,
+       "speed_kt": 3.283781865423558,
+       "speed_kt_q90": 8.396832652421157
+      },
+      "one_leg": {
+       "rows": 68,
+       "answered": 0.8529411764705882,
+       "range_rel": 0.28809926617603376,
+       "range_rel_q90": 0.6403398629483327,
+       "course_deg": 25.59217986788567,
+       "course_deg_q90": 110.64311391175961,
+       "speed_kt": 3.795230741744896,
+       "speed_kt_q90": 10.848574098440729
+      },
+      "imm": {
+       "rows": 68,
+       "answered": 1.0,
+       "range_rel": 0.3517896539548139,
+       "range_rel_q90": 1.2283254561941908,
+       "course_deg": 22.261267896537106,
+       "course_deg_q90": 81.83553743344751,
+       "speed_kt": 5.0571794864169,
+       "speed_kt_q90": 14.936562735032636
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 18.302371372426474,
+      "c2": 17.982996006529415,
+      "one_leg": 0.02190728858823497
+     },
+     "imm_seconds_whole": 8.766957090000005,
+     "cpu": [
+      "INTEL(R) XEON(R) PLATINUM 8573C"
+     ]
+    },
+    "realtime_per_window": {
+     "evaluations": 68,
+     "systems": {
+      "e": {
+       "rows": 68,
+       "answered": 1.0,
+       "range_rel": 0.1753830426986444,
+       "range_rel_q90": 0.6403289257765674,
+       "course_deg": 18.01821943223161,
+       "course_deg_q90": 58.71789249423676,
+       "speed_kt": 3.2252210760924154,
+       "speed_kt_q90": 9.970602686378875
+      },
+      "c2": {
+       "rows": 68,
+       "answered": 1.0,
+       "range_rel": 0.1711864787891423,
+       "range_rel_q90": 0.5669049159819904,
+       "course_deg": 14.941790894260699,
+       "course_deg_q90": 59.882772821419096,
+       "speed_kt": 3.076633518907106,
+       "speed_kt_q90": 8.749447340696102
+      },
+      "one_leg": {
+       "rows": 68,
+       "answered": 0.8529411764705882,
+       "range_rel": 0.28809926617603376,
+       "range_rel_q90": 0.6403398629483327,
+       "course_deg": 25.59217986788567,
+       "course_deg_q90": 110.64311391175961,
+       "speed_kt": 3.795230741744896,
+       "speed_kt_q90": 10.848574098440729
+      },
+      "imm": {
+       "rows": 68,
+       "answered": 1.0,
+       "range_rel": 0.3517896539548139,
+       "range_rel_q90": 1.2283254561941908,
+       "course_deg": 22.261267896537106,
+       "course_deg_q90": 81.83553743344751,
+       "speed_kt": 5.0571794864169,
+       "speed_kt_q90": 14.936562735032636
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 34.37204454742647,
+      "c2": 33.58688903463235,
+      "one_leg": 0.02895475460295128
+     },
+     "imm_seconds_whole": 7.948161264000021,
+     "cpu": [
+      "INTEL(R) XEON(R) PLATINUM 8573C"
+     ],
+     "blocks": [
+      {
+       "from_h": 0.0,
+       "e": 0.1753830426986444,
+       "c2": 0.1670777730976892,
+       "one_leg": 0.38148053994861547,
+       "imm": 0.2603438561832456
+      },
+      {
+       "from_h": 6.0,
+       "e": 0.18157974597506438,
+       "c2": 0.2016482119015376,
+       "one_leg": 0.1557732105805106,
+       "imm": 0.3746353116770228
+      }
+     ]
+    }
+   },
+   {
+    "index": 2,
+    "hours": 24.0,
+    "manoeuvres": 58,
+    "ownship_turns": 50,
+    "range_km": [
+     0.9670599526346092,
+     18.219253052855493,
+     29.881701162332817
+    ],
+    "valid_share": 0.9184027777777778,
+    "timelate": {
+     "windows": 16,
+     "windows_planned": 16,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 2880,
+       "answered": 1.0,
+       "range_rel": 0.020925091230154073,
+       "range_rel_q90": 0.10428738664812073,
+       "course_deg": 1.467623639768473,
+       "course_deg_q90": 18.182198216292555,
+       "speed_kt": 0.28831134055324653,
+       "speed_kt_q90": 2.1565641677590337
+      },
+      "ctl-carry": {
+       "rows": 2880,
+       "answered": 1.0,
+       "range_rel": 0.021314327374004304,
+       "range_rel_q90": 0.10466422137390234,
+       "course_deg": 1.6901561927275583,
+       "course_deg_q90": 22.656001317633297,
+       "speed_kt": 0.23952256105241898,
+       "speed_kt_q90": 2.373599619421234
+      },
+      "c2": {
+       "rows": 2880,
+       "answered": 0.9753472222222223,
+       "range_rel": 0.08516869344480435,
+       "range_rel_q90": 0.31367616203240256,
+       "course_deg": 11.144758762593966,
+       "course_deg_q90": 54.2078543778761,
+       "speed_kt": 1.2533016410766782,
+       "speed_kt_q90": 6.355612056122452
+      },
+      "history-map": {
+       "rows": 2880,
+       "answered": 1.0,
+       "range_rel": 0.010200795457999132,
+       "range_rel_q90": 0.040676696745209885,
+       "course_deg": 1.0929657991211088,
+       "course_deg_q90": 8.206280796407407,
+       "speed_kt": 0.12978535938746763,
+       "speed_kt_q90": 0.947033940227007
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 56,
+      "ctl-carry": 55,
+      "c2": 49
+     },
+     "true_manoeuvres": 58,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 3,
+      "carry_worse": 7,
+      "level": 6,
+      "twice_better": 0,
+      "twice_worse": 1
+     },
+     "seconds": {
+      "total_h": 1.6607527661711112,
+      "search_from_none_h": 0.45580178844027763,
+      "search_from_carry_h": 0.2938773671858333
+     },
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor",
+      "AMD EPYC 9V45 96-Core Processor",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 141,
+     "systems": {
+      "e": {
+       "rows": 141,
+       "answered": 0.9290780141843972,
+       "range_rel": 0.29802612540510076,
+       "range_rel_q90": 0.9069277375592638,
+       "course_deg": 45.61250019101106,
+       "course_deg_q90": 101.713524545977,
+       "speed_kt": 2.9257253909723406,
+       "speed_kt_q90": 9.25291687785632
+      },
+      "c2": {
+       "rows": 141,
+       "answered": 0.9787234042553191,
+       "range_rel": 0.25627374474774045,
+       "range_rel_q90": 0.8189079484581967,
+       "course_deg": 32.967143662246784,
+       "course_deg_q90": 95.79512814863348,
+       "speed_kt": 2.392280434079128,
+       "speed_kt_q90": 9.062359123331133
+      },
+      "one_leg": {
+       "rows": 141,
+       "answered": 0.8652482269503546,
+       "range_rel": 0.20122200328791687,
+       "range_rel_q90": 0.7949418044527374,
+       "course_deg": 35.62165392392179,
+       "course_deg_q90": 101.86822326719559,
+       "speed_kt": 2.8745732705433564,
+       "speed_kt_q90": 10.3898569933355
+      },
+      "imm": {
+       "rows": 141,
+       "answered": 0.9645390070921985,
+       "range_rel": 0.15042818528046326,
+       "range_rel_q90": 0.6049011078477595,
+       "course_deg": 20.56642603513809,
+       "course_deg_q90": 83.86735292884296,
+       "speed_kt": 2.7672913285395495,
+       "speed_kt_q90": 7.943258989905971
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 20.973344921964543,
+      "c2": 20.691698669999997,
+      "one_leg": 0.02444749763120763
+     },
+     "imm_seconds_whole": 66.23272666649997,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor"
+     ]
+    },
+    "realtime_per_window": {
+     "evaluations": 141,
+     "systems": {
+      "e": {
+       "rows": 141,
+       "answered": 0.9929078014184397,
+       "range_rel": 0.14258071978748843,
+       "range_rel_q90": 0.7671933302209232,
+       "course_deg": 25.839808545121628,
+       "course_deg_q90": 92.72788450070061,
+       "speed_kt": 2.1537823612520777,
+       "speed_kt_q90": 8.482415009262157
+      },
+      "c2": {
+       "rows": 141,
+       "answered": 1.0,
+       "range_rel": 0.13164104776041236,
+       "range_rel_q90": 0.7376802647411759,
+       "course_deg": 19.33723061424791,
+       "course_deg_q90": 90.18733928884171,
+       "speed_kt": 1.458820050335264,
+       "speed_kt_q90": 7.472250662138886
+      },
+      "one_leg": {
+       "rows": 141,
+       "answered": 0.8652482269503546,
+       "range_rel": 0.20122200328791687,
+       "range_rel_q90": 0.7949418044527374,
+       "course_deg": 35.62165392392179,
+       "course_deg_q90": 101.86822327489352,
+       "speed_kt": 2.874573352159577,
+       "speed_kt_q90": 10.38985695280736
+      },
+      "imm": {
+       "rows": 141,
+       "answered": 0.9645390070921985,
+       "range_rel": 0.15042818528046326,
+       "range_rel_q90": 0.6049011078477595,
+       "course_deg": 20.56642603513809,
+       "course_deg_q90": 83.86735292884296,
+       "speed_kt": 2.7672913285395495,
+       "speed_kt_q90": 7.943258989905971
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 34.67805537816312,
+      "c2": 33.76969992586525,
+      "one_leg": 0.024538164652482163
+     },
+     "imm_seconds_whole": 56.58828269,
+     "cpu": [
+      "AMD EPYC 9V45 96-Core Processor",
+      "AMD EPYC 9V74 80-Core Processor",
+      "Intel(R) Xeon(R) 6975P-C"
+     ],
+     "blocks": [
+      {
+       "from_h": 0.0,
+       "e": 0.12935463736276878,
+       "c2": 0.08648008569418146,
+       "one_leg": 0.15768627532974422,
+       "imm": 0.2511769348407861
+      },
+      {
+       "from_h": 6.0,
+       "e": 0.2633924927663684,
+       "c2": 0.22929323233192278,
+       "one_leg": 0.1657600923059423,
+       "imm": 0.15008042065391397
+      },
+      {
+       "from_h": 12.0,
+       "e": 0.10110638496478985,
+       "c2": 0.07552291213904169,
+       "one_leg": 0.3105760786084495,
+       "imm": 0.12268961350250546
+      },
+      {
+       "from_h": 18.0,
+       "e": 0.29641367553053183,
+       "c2": 0.26304807559930515,
+       "one_leg": 0.19364602019541893,
+       "imm": 0.11170365659704663
+      }
+     ]
+    }
+   },
+   {
+    "index": 3,
+    "hours": 48.0,
+    "manoeuvres": 106,
+    "ownship_turns": 92,
+    "range_km": [
+     0.4468474659614447,
+     18.961916539496873,
+     40.05218308378338
+    ],
+    "valid_share": 0.9822337962962963,
+    "timelate": {
+     "windows": 32,
+     "windows_planned": 32,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 5763,
+       "answered": 1.0,
+       "range_rel": 0.016990654760543965,
+       "range_rel_q90": 0.11285718235786144,
+       "course_deg": 0.9456061749947512,
+       "course_deg_q90": 12.166358331175148,
+       "speed_kt": 0.32522179548379804,
+       "speed_kt_q90": 2.1486578009167183
+      },
+      "ctl-carry": {
+       "rows": 5763,
+       "answered": 1.0,
+       "range_rel": 0.017738371210083998,
+       "range_rel_q90": 0.10296211127247575,
+       "course_deg": 0.886097204711143,
+       "course_deg_q90": 14.569980862911896,
+       "speed_kt": 0.3480856117219492,
+       "speed_kt_q90": 2.2278484670040486
+      },
+      "c2": {
+       "rows": 5763,
+       "answered": 1.0,
+       "range_rel": 0.09019907741774151,
+       "range_rel_q90": 0.3652243676838842,
+       "course_deg": 4.200569368110711,
+       "course_deg_q90": 48.46439723873731,
+       "speed_kt": 1.3331738121109753,
+       "speed_kt_q90": 6.763600623046596
+      },
+      "history-map": {
+       "rows": 5763,
+       "answered": 1.0,
+       "range_rel": 0.011755647892047678,
+       "range_rel_q90": 0.04007161449240474,
+       "course_deg": 0.6500716238137019,
+       "course_deg_q90": 4.903188103917695,
+       "speed_kt": 0.19381752347123438,
+       "speed_kt_q90": 0.9121877962093937
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 100,
+      "ctl-carry": 99,
+      "c2": 104
+     },
+     "true_manoeuvres": 106,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 9,
+      "carry_worse": 9,
+      "level": 14,
+      "twice_better": 1,
+      "twice_worse": 2
+     },
+     "seconds": {
+      "total_h": 3.582474504770278,
+      "search_from_none_h": 1.0682666226913893,
+      "search_from_carry_h": 0.575433107082222
+     },
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor",
+      "AMD EPYC 9V45 96-Core Processor",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 284,
+     "systems": {
+      "e": {
+       "rows": 284,
+       "answered": 0.9471830985915493,
+       "range_rel": 0.35568711485237375,
+       "range_rel_q90": 0.9715379238083648,
+       "course_deg": 40.68504455515186,
+       "course_deg_q90": 114.78501790567864,
+       "speed_kt": 4.039846948579234,
+       "speed_kt_q90": 11.381876375002564
+      },
+      "c2": {
+       "rows": 284,
+       "answered": 0.9683098591549296,
+       "range_rel": 0.37211242596505223,
+       "range_rel_q90": 0.9071848444928382,
+       "course_deg": 34.799548163558896,
+       "course_deg_q90": 110.26160347805177,
+       "speed_kt": 4.457340830105739,
+       "speed_kt_q90": 11.50165117120718
+      },
+      "one_leg": {
+       "rows": 284,
+       "answered": 0.8274647887323944,
+       "range_rel": 0.3488530367012732,
+       "range_rel_q90": 0.9031932438222716,
+       "course_deg": 37.08315476780945,
+       "course_deg_q90": 135.28911765406525,
+       "speed_kt": 3.559646650655685,
+       "speed_kt_q90": 13.674556123992653
+      },
+      "imm": {
+       "rows": 284,
+       "answered": 0.8063380281690141,
+       "range_rel": 0.3086176188210001,
+       "range_rel_q90": 0.776190377777642,
+       "course_deg": 23.742192378663166,
+       "course_deg_q90": 78.61584029192899,
+       "speed_kt": 4.03112485237589,
+       "speed_kt_q90": 10.643503703124193
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 20.173820709834505,
+      "c2": 19.87239058801056,
+      "one_leg": 0.019462705559859184
+     },
+     "imm_seconds_whole": 466.5714518866667,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor",
+      "AMD EPYC 9V74 80-Core Processor",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime_per_window": {
+     "evaluations": 284,
+     "systems": {
+      "e": {
+       "rows": 284,
+       "answered": 0.9894366197183099,
+       "range_rel": 0.20892664102732134,
+       "range_rel_q90": 0.8265307359114634,
+       "course_deg": 21.13054032218882,
+       "course_deg_q90": 107.19228160463676,
+       "speed_kt": 2.6054372452452763,
+       "speed_kt_q90": 9.20708306384808
+      },
+      "c2": {
+       "rows": 284,
+       "answered": 0.9929577464788732,
+       "range_rel": 0.1993827991043135,
+       "range_rel_q90": 0.7675308939415948,
+       "course_deg": 19.666730411049638,
+       "course_deg_q90": 92.46034280024834,
+       "speed_kt": 2.4087517824585367,
+       "speed_kt_q90": 8.40668422268553
+      },
+      "one_leg": {
+       "rows": 284,
+       "answered": 0.8274647887323944,
+       "range_rel": 0.3488530367012732,
+       "range_rel_q90": 0.9031932432803499,
+       "course_deg": 37.08315476780945,
+       "course_deg_q90": 135.28911761031299,
+       "speed_kt": 3.5596466508732147,
+       "speed_kt_q90": 13.674556123992218
+      },
+      "imm": {
+       "rows": 284,
+       "answered": 0.8063380281690141,
+       "range_rel": 0.3086176188210001,
+       "range_rel_q90": 0.776190377777642,
+       "course_deg": 23.742192378663166,
+       "course_deg_q90": 78.61584029192899,
+       "speed_kt": 4.03112485237589,
+       "speed_kt_q90": 10.643503703124193
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 37.19995690529578,
+      "c2": 36.196415256707745,
+      "one_leg": 0.025618409031693146
+     },
+     "imm_seconds_whole": 425.8831816801667,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor",
+      "AMD EPYC 9V45 96-Core Processor",
+      "Intel(R) Xeon(R) 6975P-C"
+     ],
+     "blocks": [
+      {
+       "from_h": 0.0,
+       "e": 0.12521513171582152,
+       "c2": 0.12255435694759424,
+       "one_leg": 0.24964844162920813,
+       "imm": 0.3519930122737501
+      },
+      {
+       "from_h": 6.0,
+       "e": 0.23468380870664557,
+       "c2": 0.21267455753911402,
+       "one_leg": 0.164146076075548,
+       "imm": 0.3947918025134708
+      },
+      {
+       "from_h": 12.0,
+       "e": 0.14619868713715123,
+       "c2": 0.1468835267362229,
+       "one_leg": 0.33608562016885923,
+       "imm": 0.14550456981012883
+      },
+      {
+       "from_h": 18.0,
+       "e": 0.43884083263094376,
+       "c2": 0.530930325609366,
+       "one_leg": 0.5013949477691858,
+       "imm": 0.2579601192870916
+      },
+      {
+       "from_h": 24.0,
+       "e": 0.590299213991036,
+       "c2": 0.5425735144996392,
+       "one_leg": 0.5345500009675245,
+       "imm": 0.22979404427850914
+      },
+      {
+       "from_h": 30.0,
+       "e": 0.33948912817953664,
+       "c2": 0.28783468884364427,
+       "one_leg": 0.48304998538650423,
+       "imm": 0.26629430048335645
+      },
+      {
+       "from_h": 36.0,
+       "e": 0.06254807752118163,
+       "c2": 0.0870211582275337,
+       "one_leg": 0.3362848377415232,
+       "imm": 0.7774814570090453
+      },
+      {
+       "from_h": 42.0,
+       "e": 0.11087773229935768,
+       "c2": 0.09672248624068892,
+       "one_leg": 0.19520715955525056,
+       "imm": 0.6074175323985509
+      }
+     ]
+    }
+   }
+  ],
+  "real-c1": [
+   {
+    "index": 0,
+    "hours": 6.0,
+    "manoeuvres": 14,
+    "ownship_turns": 12,
+    "range_km": [
+     1.8955745412287,
+     14.236865188040897,
+     22.09760825027789
+    ],
+    "valid_share": 0.6668981481481482,
+    "gaps": 2,
+    "steering": {
+     "planned": 9,
+     "lost": 3
+    },
+    "swapped_bearings": 0,
+    "timelate": {
+     "windows": 4,
+     "windows_planned": 4,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.0171825299801179,
+       "range_rel_q90": 0.5447386902649625,
+       "course_deg": 3.8879681353691073,
+       "course_deg_q90": 60.51223089536692,
+       "speed_kt": 0.10561640385017022,
+       "speed_kt_q90": 0.6721094988198565
+      },
+      "ctl-carry": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.016060393106652124,
+       "range_rel_q90": 0.3528925764976095,
+       "course_deg": 4.066838750821348,
+       "course_deg_q90": 60.512230893657154,
+       "speed_kt": 0.10561640385017022,
+       "speed_kt_q90": 0.6721094980937142
+      },
+      "c2": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.0748909961409212,
+       "range_rel_q90": 0.34580043881969297,
+       "course_deg": 8.991230669776602,
+       "course_deg_q90": 60.476972338646775,
+       "speed_kt": 0.6849100110868922,
+       "speed_kt_q90": 3.120999616391132
+      },
+      "history-map": {
+       "rows": 720,
+       "answered": 1.0,
+       "range_rel": 0.010150164490270515,
+       "range_rel_q90": 0.32767928623159165,
+       "course_deg": 1.798319902667865,
+       "course_deg_q90": 72.71945695882238,
+       "speed_kt": 0.11319287076652886,
+       "speed_kt_q90": 0.6683466190416483
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 11,
+      "ctl-carry": 11,
+      "c2": 10
+     },
+     "true_manoeuvres": 14,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0000000001550644,
+      "carry_better": 2,
+      "carry_worse": 0,
+      "level": 2,
+      "twice_better": 1,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 0.1980566821725,
+      "search_from_none_h": 0.045883022108333386,
+      "search_from_carry_h": 0.03106122906388895
+     },
+     "cpu": [
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 33,
+     "systems": {
+      "e": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.17257586747546616,
+       "range_rel_q90": 1.1163526196965885,
+       "course_deg": 36.33843700635417,
+       "course_deg_q90": 125.81198839916127,
+       "speed_kt": 1.2393404961574497,
+       "speed_kt_q90": 6.2552455837028935
+      },
+      "c2": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.16571212865069207,
+       "range_rel_q90": 0.9584289868503856,
+       "course_deg": 35.20455355078465,
+       "course_deg_q90": 117.69154669537433,
+       "speed_kt": 2.0331496200603634,
+       "speed_kt_q90": 7.17944992341288
+      },
+      "one_leg": {
+       "rows": 33,
+       "answered": 0.7272727272727273,
+       "range_rel": 0.19083109920108554,
+       "range_rel_q90": 0.511493694703218,
+       "course_deg": 40.026028089293405,
+       "course_deg_q90": 135.28512341000788,
+       "speed_kt": 3.019611989257598,
+       "speed_kt_q90": 8.719016920177364
+      },
+      "imm": {
+       "rows": 33,
+       "answered": 0.8484848484848485,
+       "range_rel": 0.22908956095575167,
+       "range_rel_q90": 0.6286192161515677,
+       "course_deg": 34.55439352598352,
+       "course_deg_q90": 122.85394688819032,
+       "speed_kt": 4.801386748520187,
+       "speed_kt_q90": 7.3273145900548124
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 8.770187915424245,
+      "c2": 8.916713940242424,
+      "one_leg": 0.018698540272728707
+     },
+     "imm_seconds_whole": 14.26248554499999,
+     "cpu": [
+      "INTEL(R) XEON(R) PLATINUM 8573C"
+     ]
+    }
+   },
+   {
+    "index": 1,
+    "hours": 12.0,
+    "manoeuvres": 26,
+    "ownship_turns": 22,
+    "range_km": [
+     5.987302944798821,
+     19.49702821559847,
+     35.33515778230894
+    ],
+    "valid_share": 0.8231481481481482,
+    "gaps": 1,
+    "steering": {
+     "planned": 20,
+     "lost": 2
+    },
+    "swapped_bearings": 8,
+    "timelate": {
+     "windows": 8,
+     "windows_planned": 8,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 1440,
+       "answered": 1.0,
+       "range_rel": 0.021247586935384415,
+       "range_rel_q90": 0.1276533527892976,
+       "course_deg": 1.8016458361579846,
+       "course_deg_q90": 18.777863411983837,
+       "speed_kt": 0.12092250715670029,
+       "speed_kt_q90": 3.257201236635532
+      },
+      "ctl-carry": {
+       "rows": 1440,
+       "answered": 1.0,
+       "range_rel": 0.014093956465712997,
+       "range_rel_q90": 0.1199035702170847,
+       "course_deg": 1.385939848951837,
+       "course_deg_q90": 18.52896569037697,
+       "speed_kt": 0.08435934256335921,
+       "speed_kt_q90": 2.451728417075638
+      },
+      "c2": {
+       "rows": 1440,
+       "answered": 0.9951388888888889,
+       "range_rel": 0.19296327107393177,
+       "range_rel_q90": 0.3612028638129023,
+       "course_deg": 15.834104536642805,
+       "course_deg_q90": 55.55515570074728,
+       "speed_kt": 1.3565921889107455,
+       "speed_kt_q90": 6.281818251562681
+      },
+      "history-map": {
+       "rows": 1440,
+       "answered": 1.0,
+       "range_rel": 0.007461419005091115,
+       "range_rel_q90": 0.14416169750680682,
+       "course_deg": 0.8922813661510346,
+       "course_deg_q90": 13.131829433387397,
+       "speed_kt": 0.097107722722206,
+       "speed_kt_q90": 1.9168180092471108
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 24,
+      "ctl-carry": 25,
+      "c2": 25
+     },
+     "true_manoeuvres": 26,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 3,
+      "carry_worse": 2,
+      "level": 3,
+      "twice_better": 1,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 0.8627365701930556,
+      "search_from_none_h": 0.22187516713388894,
+      "search_from_carry_h": 0.18018032767805542
+     },
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 68,
+     "systems": {
+      "e": {
+       "rows": 68,
+       "answered": 0.9852941176470589,
+       "range_rel": 0.20165388609756693,
+       "range_rel_q90": 0.5077757010850942,
+       "course_deg": 33.43961109759252,
+       "course_deg_q90": 85.86628647482019,
+       "speed_kt": 2.6530860248657877,
+       "speed_kt_q90": 9.664979351376552
+      },
+      "c2": {
+       "rows": 68,
+       "answered": 1.0,
+       "range_rel": 0.19575574821512465,
+       "range_rel_q90": 0.7009303894621886,
+       "course_deg": 26.347448120164856,
+       "course_deg_q90": 70.85441007857317,
+       "speed_kt": 2.6950602273968496,
+       "speed_kt_q90": 7.616426358884098
+      },
+      "one_leg": {
+       "rows": 68,
+       "answered": 0.8235294117647058,
+       "range_rel": 0.2737503226103328,
+       "range_rel_q90": 0.7292635001020509,
+       "course_deg": 29.254869597310744,
+       "course_deg_q90": 78.92562225601208,
+       "speed_kt": 3.5683423149035045,
+       "speed_kt_q90": 9.736579822912454
+      },
+      "imm": {
+       "rows": 68,
+       "answered": 1.0,
+       "range_rel": 0.28175736944597696,
+       "range_rel_q90": 0.663498584044125,
+       "course_deg": 12.571757928463636,
+       "course_deg_q90": 46.873321407995384,
+       "speed_kt": 3.7587364614718535,
+       "speed_kt_q90": 9.838420569014502
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 18.32972510211764,
+      "c2": 17.854992676411765,
+      "one_leg": 0.022410152147064284
+     },
+     "imm_seconds_whole": 9.027373265000001,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor"
+     ]
+    }
+   },
+   {
+    "index": 2,
+    "hours": 24.0,
+    "manoeuvres": 58,
+    "ownship_turns": 50,
+    "range_km": [
+     0.9878499395439247,
+     16.019705507446364,
+     34.37036610222161
+    ],
+    "valid_share": 0.8480902777777778,
+    "gaps": 4,
+    "steering": {
+     "planned": 47,
+     "lost": 3
+    },
+    "swapped_bearings": 0,
+    "timelate": {
+     "windows": 16,
+     "windows_planned": 16,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 2880,
+       "answered": 1.0,
+       "range_rel": 0.02162766854984797,
+       "range_rel_q90": 0.09844247446887885,
+       "course_deg": 2.7047984071550433,
+       "course_deg_q90": 24.488349104721685,
+       "speed_kt": 0.2186462313205632,
+       "speed_kt_q90": 2.8240253407972906
+      },
+      "ctl-carry": {
+       "rows": 2880,
+       "answered": 1.0,
+       "range_rel": 0.02055526714476231,
+       "range_rel_q90": 0.0805477206652874,
+       "course_deg": 1.8567552984143518,
+       "course_deg_q90": 19.448986030761,
+       "speed_kt": 0.2221612183523007,
+       "speed_kt_q90": 2.2417419619910275
+      },
+      "c2": {
+       "rows": 2880,
+       "answered": 1.0,
+       "range_rel": 0.0702708019044253,
+       "range_rel_q90": 0.33603876551150796,
+       "course_deg": 11.23693208968777,
+       "course_deg_q90": 49.7653119075029,
+       "speed_kt": 1.1678732601815576,
+       "speed_kt_q90": 5.139575793364662
+      },
+      "history-map": {
+       "rows": 2880,
+       "answered": 1.0,
+       "range_rel": 0.010196796134190216,
+       "range_rel_q90": 0.051553664013048554,
+       "course_deg": 1.0642150065951324,
+       "course_deg_q90": 9.179177549547807,
+       "speed_kt": 0.09015115839496465,
+       "speed_kt_q90": 0.6055346421264587
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 56,
+      "ctl-carry": 55,
+      "c2": 52
+     },
+     "true_manoeuvres": 58,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 6,
+      "carry_worse": 2,
+      "level": 8,
+      "twice_better": 2,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 2.181336494434722,
+      "search_from_none_h": 0.599347033365833,
+      "search_from_carry_h": 0.44576252800388894
+     },
+     "cpu": [
+      "AMD EPYC 9V74 80-Core Processor",
+      "INTEL(R) XEON(R) PLATINUM 8573C",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 141,
+     "systems": {
+      "e": {
+       "rows": 141,
+       "answered": 0.9645390070921985,
+       "range_rel": 0.28952579383602794,
+       "range_rel_q90": 0.9077355949417676,
+       "course_deg": 50.18317831538489,
+       "course_deg_q90": 113.07890324538204,
+       "speed_kt": 2.885502043664859,
+       "speed_kt_q90": 9.79596464431115
+      },
+      "c2": {
+       "rows": 141,
+       "answered": 0.950354609929078,
+       "range_rel": 0.24163398959141769,
+       "range_rel_q90": 0.7800788949774307,
+       "course_deg": 41.88076824872382,
+       "course_deg_q90": 109.32500815717822,
+       "speed_kt": 2.945632715863842,
+       "speed_kt_q90": 9.133385154692572
+      },
+      "one_leg": {
+       "rows": 141,
+       "answered": 0.900709219858156,
+       "range_rel": 0.22185316017855403,
+       "range_rel_q90": 0.8691013522811529,
+       "course_deg": 40.22487218316249,
+       "course_deg_q90": 103.89846844406226,
+       "speed_kt": 3.0452366095593706,
+       "speed_kt_q90": 12.042608097218979
+      },
+      "imm": {
+       "rows": 141,
+       "answered": 0.8226950354609929,
+       "range_rel": 0.22367324192808602,
+       "range_rel_q90": 0.6354290002755574,
+       "course_deg": 20.919954555959933,
+       "course_deg_q90": 85.73448273683735,
+       "speed_kt": 2.613856686686887,
+       "speed_kt_q90": 9.429628364829947
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 14.373135665624115,
+      "c2": 14.240114701283687,
+      "one_leg": 0.016942838056736766
+     },
+     "imm_seconds_whole": 49.598892381,
+     "cpu": [
+      "AMD EPYC 9V74 80-Core Processor",
+      "Intel(R) Xeon(R) 6973P-C"
+     ]
+    }
+   },
+   {
+    "index": 3,
+    "hours": 48.0,
+    "manoeuvres": 106,
+    "ownship_turns": 92,
+    "range_km": [
+     0.523145695449935,
+     20.20810675168562,
+     79.54618134013607
+    ],
+    "valid_share": 0.8284143518518519,
+    "gaps": 3,
+    "steering": {
+     "planned": 76,
+     "lost": 16
+    },
+    "swapped_bearings": 2,
+    "timelate": {
+     "windows": 32,
+     "windows_planned": 32,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 5763,
+       "answered": 0.9678986638903349,
+       "range_rel": 0.014534615597900001,
+       "range_rel_q90": 0.1437350484217145,
+       "course_deg": 0.9767343525848439,
+       "course_deg_q90": 17.883289290280732,
+       "speed_kt": 0.19814297604985442,
+       "speed_kt_q90": 2.551166175748005
+      },
+      "ctl-carry": {
+       "rows": 5763,
+       "answered": 0.9678986638903349,
+       "range_rel": 0.018391215486486603,
+       "range_rel_q90": 0.21277922200667437,
+       "course_deg": 1.0837621823131847,
+       "course_deg_q90": 17.145657647664024,
+       "speed_kt": 0.200708339429539,
+       "speed_kt_q90": 3.7955315287458946
+      },
+      "c2": {
+       "rows": 5763,
+       "answered": 0.9678986638903349,
+       "range_rel": 0.08294410296855574,
+       "range_rel_q90": 0.4270876203369511,
+       "course_deg": 5.805899112860774,
+       "course_deg_q90": 67.11035680903136,
+       "speed_kt": 1.240325327299904,
+       "speed_kt_q90": 5.50869543435399
+      },
+      "history-map": {
+       "rows": 5763,
+       "answered": 0.9678986638903349,
+       "range_rel": 0.017074444030349908,
+       "range_rel_q90": 0.087110642417745,
+       "course_deg": 0.6813886753676838,
+       "course_deg_q90": 28.947301820374687,
+       "speed_kt": 0.1687946546701399,
+       "speed_kt_q90": 1.7153005929920129
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 100,
+      "ctl-carry": 101,
+      "c2": 94
+     },
+     "true_manoeuvres": 106,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 11,
+      "carry_worse": 7,
+      "level": 13,
+      "twice_better": 3,
+      "twice_worse": 3
+     },
+     "seconds": {
+      "total_h": 3.939079887423056,
+      "search_from_none_h": 1.3308602755477776,
+      "search_from_carry_h": 0.655331017521111
+     },
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor",
+      "AMD EPYC 9V74 80-Core Processor",
+      "Intel(R) Xeon(R) 6973P-C",
+      "Intel(R) Xeon(R) 6975P-C",
+      "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz"
+     ]
+    },
+    "realtime": {
+     "evaluations": 284,
+     "systems": {
+      "e": {
+       "rows": 284,
+       "answered": 0.9190140845070423,
+       "range_rel": 0.3168107365417004,
+       "range_rel_q90": 0.7953567871682596,
+       "course_deg": 41.59146482686969,
+       "course_deg_q90": 132.4918315892285,
+       "speed_kt": 3.615360623488301,
+       "speed_kt_q90": 11.429659717169317
+      },
+      "c2": {
+       "rows": 284,
+       "answered": 0.9295774647887324,
+       "range_rel": 0.2930018448612253,
+       "range_rel_q90": 0.7845238438923351,
+       "course_deg": 36.78767671909846,
+       "course_deg_q90": 130.12944737698848,
+       "speed_kt": 3.896536188244692,
+       "speed_kt_q90": 9.655738576458528
+      },
+      "one_leg": {
+       "rows": 284,
+       "answered": 0.7359154929577465,
+       "range_rel": 0.27358327596315063,
+       "range_rel_q90": 0.7780992027385624,
+       "course_deg": 37.48153029063034,
+       "course_deg_q90": 133.8896767735437,
+       "speed_kt": 2.9509757144179694,
+       "speed_kt_q90": 12.117713831464133
+      },
+      "imm": {
+       "rows": 284,
+       "answered": 0.8661971830985915,
+       "range_rel": 0.4014771350840123,
+       "range_rel_q90": 1.1982720781609835,
+       "course_deg": 22.717935684768626,
+       "course_deg_q90": 119.5218864448214,
+       "speed_kt": 5.048926224077604,
+       "speed_kt_q90": 17.417901381252197
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 19.46209951558803,
+      "c2": 19.051882110697182,
+      "one_leg": 0.02071256471831187
+     },
+     "imm_seconds_whole": 438.4759466246667,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor"
+     ]
+    }
+   }
+  ],
+  "real-c2": [
+   {
+    "index": 0,
+    "hours": 6.0,
+    "manoeuvres": 14,
+    "ownship_turns": 12,
+    "range_km": [
+     7.380505636765818,
+     27.19026365924195,
+     39.23451638410735
+    ],
+    "valid_share": 0.8150462962962963,
+    "gaps": 0,
+    "steering": {
+     "planned": 9,
+     "lost": 3
+    },
+    "swapped_bearings": 0,
+    "timelate": {
+     "windows": 4,
+     "windows_planned": 4,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 721,
+       "answered": 1.0,
+       "range_rel": 0.06932449727979847,
+       "range_rel_q90": 0.7048409182145939,
+       "course_deg": 10.70230736840605,
+       "course_deg_q90": 123.98260713231832,
+       "speed_kt": 1.222041483726092,
+       "speed_kt_q90": 9.73565471458506
+      },
+      "ctl-carry": {
+       "rows": 721,
+       "answered": 1.0,
+       "range_rel": 0.08230591419363087,
+       "range_rel_q90": 0.745751909424632,
+       "course_deg": 10.769763780027876,
+       "course_deg_q90": 124.0749462754553,
+       "speed_kt": 1.223986531993619,
+       "speed_kt_q90": 10.3912078981407
+      },
+      "c2": {
+       "rows": 721,
+       "answered": 1.0,
+       "range_rel": 0.08115746458259125,
+       "range_rel_q90": 0.44799445789440145,
+       "course_deg": 8.300525676118072,
+       "course_deg_q90": 137.94837383616638,
+       "speed_kt": 1.6968128791423218,
+       "speed_kt_q90": 10.225609967231469
+      },
+      "history-map": {
+       "rows": 721,
+       "answered": 1.0,
+       "range_rel": 0.018047588867305394,
+       "range_rel_q90": 0.07708836844525749,
+       "course_deg": 1.7606879816714203,
+       "course_deg_q90": 9.658560507397288,
+       "speed_kt": 0.2849837082036542,
+       "speed_kt_q90": 1.6873465353351897
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 12,
+      "ctl-carry": 13,
+      "c2": 11
+     },
+     "true_manoeuvres": 14,
+     "window_ratio_ctl_over_carry": {
+      "median": 0.9704128676455602,
+      "carry_better": 1,
+      "carry_worse": 2,
+      "level": 1,
+      "twice_better": 0,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 0.32677555579972223,
+      "search_from_none_h": 0.11243535793000001,
+      "search_from_carry_h": 0.04595912931166671
+     },
+     "cpu": [
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 33,
+     "systems": {
+      "e": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.1808621255433226,
+       "range_rel_q90": 0.6766632145200779,
+       "course_deg": 39.187295550216184,
+       "course_deg_q90": 105.25834026209694,
+       "speed_kt": 2.4917187027673844,
+       "speed_kt_q90": 11.494975714810174
+      },
+      "c2": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.13221207389522405,
+       "range_rel_q90": 0.6734816208781862,
+       "course_deg": 41.81977006356835,
+       "course_deg_q90": 136.37780977979068,
+       "speed_kt": 2.4446256020749315,
+       "speed_kt_q90": 9.632911242890204
+      },
+      "one_leg": {
+       "rows": 33,
+       "answered": 0.9090909090909091,
+       "range_rel": 0.2830667713379831,
+       "range_rel_q90": 0.982147507178044,
+       "course_deg": 66.41219385610752,
+       "course_deg_q90": 127.59098222316119,
+       "speed_kt": 6.856051405096612,
+       "speed_kt_q90": 34.55468380301773
+      },
+      "imm": {
+       "rows": 33,
+       "answered": 1.0,
+       "range_rel": 0.19391733935831784,
+       "range_rel_q90": 0.44544529272682726,
+       "course_deg": 41.220369579183476,
+       "course_deg_q90": 136.6981341384337,
+       "speed_kt": 2.740837343462065,
+       "speed_kt_q90": 5.730165019020966
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 12.069308936757572,
+      "c2": 11.79094332318182,
+      "one_leg": 0.02613071963636423
+     },
+     "imm_seconds_whole": 8.930678659000002,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor"
+     ]
+    }
+   },
+   {
+    "index": 1,
+    "hours": 12.0,
+    "manoeuvres": 26,
+    "ownship_turns": 22,
+    "range_km": [
+     9.16039496609659,
+     55.170670600835535,
+     81.90446424217427
+    ],
+    "valid_share": 0.22280092592592593,
+    "gaps": 2,
+    "steering": {
+     "planned": 20,
+     "lost": 2
+    },
+    "swapped_bearings": 8,
+    "timelate": {
+     "windows": 8,
+     "windows_planned": 8,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 1440,
+       "answered": 0.5111111111111111,
+       "range_rel": 0.05917134231142668,
+       "range_rel_q90": 0.1392432019521202,
+       "course_deg": 3.6030077622889216,
+       "course_deg_q90": 75.47717490831752,
+       "speed_kt": 1.8094070547338985,
+       "speed_kt_q90": 3.339008747992339
+      },
+      "ctl-carry": {
+       "rows": 1440,
+       "answered": 0.5111111111111111,
+       "range_rel": 0.05917134231142668,
+       "range_rel_q90": 0.1392432019521202,
+       "course_deg": 3.6030077622889216,
+       "course_deg_q90": 75.47717497336251,
+       "speed_kt": 1.8094070547338985,
+       "speed_kt_q90": 3.339008722376297
+      },
+      "c2": {
+       "rows": 1440,
+       "answered": 0.5111111111111111,
+       "range_rel": 0.08919838284887119,
+       "range_rel_q90": 0.18376659363340736,
+       "course_deg": 9.44299772660108,
+       "course_deg_q90": 81.14677581437465,
+       "speed_kt": 1.6043118136892436,
+       "speed_kt_q90": 3.628662227656859
+      },
+      "history-map": {
+       "rows": 1440,
+       "answered": 0.5111111111111111,
+       "range_rel": 0.024196665136947737,
+       "range_rel_q90": 0.1760090241053079,
+       "course_deg": 3.2063693864021,
+       "course_deg_q90": 78.86920270608749,
+       "speed_kt": 1.3476465836564118,
+       "speed_kt_q90": 10.99547980852061
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 10,
+      "ctl-carry": 10,
+      "c2": 7
+     },
+     "true_manoeuvres": 26,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 1,
+      "carry_worse": 0,
+      "level": 3,
+      "twice_better": 0,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 0.23390667060222223,
+      "search_from_none_h": 0.06589621192694445,
+      "search_from_carry_h": 0.028053447638611145
+     },
+     "cpu": [
+      "AMD EPYC 9V45 96-Core Processor",
+      "AMD EPYC 9V74 80-Core Processor"
+     ]
+    },
+    "realtime": {
+     "evaluations": 68,
+     "systems": {
+      "e": {
+       "rows": 68,
+       "answered": 0.5441176470588235,
+       "range_rel": 0.10489180699317792,
+       "range_rel_q90": 0.2997829845973576,
+       "course_deg": 38.23854199938882,
+       "course_deg_q90": 83.74138092793513,
+       "speed_kt": 3.1898679206112597,
+       "speed_kt_q90": 5.82438307152397
+      },
+      "c2": {
+       "rows": 68,
+       "answered": 0.5441176470588235,
+       "range_rel": 0.0976262946279402,
+       "range_rel_q90": 0.2587268716342286,
+       "course_deg": 34.394700971065795,
+       "course_deg_q90": 86.34385578308753,
+       "speed_kt": 3.304991861036495,
+       "speed_kt_q90": 6.253580118858295
+      },
+      "one_leg": {
+       "rows": 68,
+       "answered": 0.27941176470588236,
+       "range_rel": 0.34005669135504624,
+       "range_rel_q90": 0.7174074610406748,
+       "course_deg": 48.74427243612078,
+       "course_deg_q90": 152.86733580515843,
+       "speed_kt": 2.8967021326186067,
+       "speed_kt_q90": 13.817612866955667
+      },
+      "imm": {
+       "rows": 68,
+       "answered": 1.0,
+       "range_rel": 0.11646888130893993,
+       "range_rel_q90": 0.6455779966566569,
+       "course_deg": 53.75073247799814,
+       "course_deg_q90": 126.4489335960221,
+       "speed_kt": 5.137656019872706,
+       "speed_kt_q90": 9.442041114946154
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 2.1181847231911766,
+      "c2": 2.071594062352941,
+      "one_leg": 0.010002043338235133
+     },
+     "imm_seconds_whole": 9.828682886999985,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor"
+     ]
+    }
+   },
+   {
+    "index": 2,
+    "hours": 24.0,
+    "manoeuvres": 53,
+    "ownship_turns": 50,
+    "range_km": [
+     2.0804354371871634,
+     54.179020804284555,
+     110.73038734106318
+    ],
+    "valid_share": 0.19733796296296297,
+    "gaps": 4,
+    "steering": {
+     "planned": 47,
+     "lost": 3
+    },
+    "swapped_bearings": 0,
+    "timelate": {
+     "windows": 16,
+     "windows_planned": 16,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 2880,
+       "answered": 0.5107638888888889,
+       "range_rel": 0.0726057065747069,
+       "range_rel_q90": 0.2646521133771383,
+       "course_deg": 10.92323498532637,
+       "course_deg_q90": 77.48708963881826,
+       "speed_kt": 2.6349779531453357,
+       "speed_kt_q90": 5.903761262777539
+      },
+      "ctl-carry": {
+       "rows": 2880,
+       "answered": 0.5107638888888889,
+       "range_rel": 0.06675968293206769,
+       "range_rel_q90": 0.23934891829131247,
+       "course_deg": 8.931496306382188,
+       "course_deg_q90": 80.37826722151111,
+       "speed_kt": 2.7743016209481484,
+       "speed_kt_q90": 5.999931198602762
+      },
+      "c2": {
+       "rows": 2880,
+       "answered": 0.5107638888888889,
+       "range_rel": 0.15766290546057715,
+       "range_rel_q90": 0.41792664464231627,
+       "course_deg": 33.861484985676945,
+       "course_deg_q90": 114.43470582512373,
+       "speed_kt": 2.475534324359113,
+       "speed_kt_q90": 7.809865155539751
+      },
+      "history-map": {
+       "rows": 2880,
+       "answered": 0.5107638888888889,
+       "range_rel": 0.034760107197290335,
+       "range_rel_q90": 0.3046749699306047,
+       "course_deg": 7.792577358553659,
+       "course_deg_q90": 91.30831641290585,
+       "speed_kt": 1.16725977570437,
+       "speed_kt_q90": 4.1543820588969265
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 23,
+      "ctl-carry": 25,
+      "c2": 18
+     },
+     "true_manoeuvres": 53,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0,
+      "carry_better": 2,
+      "carry_worse": 1,
+      "level": 5,
+      "twice_better": 0,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 0.5229231562152777,
+      "search_from_none_h": 0.1576187381838889,
+      "search_from_carry_h": 0.06606672015444452
+     },
+     "cpu": [
+      "AMD EPYC 9V45 96-Core Processor",
+      "AMD EPYC 9V74 80-Core Processor",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 141,
+     "systems": {
+      "e": {
+       "rows": 141,
+       "answered": 0.3617021276595745,
+       "range_rel": 0.1927496271056705,
+       "range_rel_q90": 0.5376495800452991,
+       "course_deg": 50.75184274856966,
+       "course_deg_q90": 97.67708489284684,
+       "speed_kt": 3.1233358230592647,
+       "speed_kt_q90": 7.4856629940853185
+      },
+      "c2": {
+       "rows": 141,
+       "answered": 0.3617021276595745,
+       "range_rel": 0.10650616580695832,
+       "range_rel_q90": 0.5300861487690055,
+       "course_deg": 34.042565891542104,
+       "course_deg_q90": 135.66756165877442,
+       "speed_kt": 2.631983694344593,
+       "speed_kt_q90": 9.877118639879127
+      },
+      "one_leg": {
+       "rows": 141,
+       "answered": 0.23404255319148937,
+       "range_rel": 0.34285344642242477,
+       "range_rel_q90": 0.8915500633486684,
+       "course_deg": 61.74270653892727,
+       "course_deg_q90": 111.15831623213458,
+       "speed_kt": 6.485218451817383,
+       "speed_kt_q90": 17.486748126017957
+      },
+      "imm": {
+       "rows": 141,
+       "answered": 0.4326241134751773,
+       "range_rel": 0.28622876493304816,
+       "range_rel_q90": 0.9734492923769895,
+       "course_deg": 83.82759595894518,
+       "course_deg_q90": 133.46070492076322,
+       "speed_kt": 11.335405260884054,
+       "speed_kt_q90": 15.421900640754348
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 2.976869653397163,
+      "c2": 2.8884028606950354,
+      "one_leg": 0.008526652120568785
+     },
+     "imm_seconds_whole": 49.433402241999985,
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor"
+     ]
+    }
+   },
+   {
+    "index": 3,
+    "hours": 48.0,
+    "manoeuvres": 101,
+    "ownship_turns": 92,
+    "range_km": [
+     2.948790250327939,
+     147.40526591951712,
+     232.94124412058338
+    ],
+    "valid_share": 0.1015625,
+    "gaps": 4,
+    "steering": {
+     "planned": 76,
+     "lost": 16
+    },
+    "swapped_bearings": 2,
+    "timelate": {
+     "windows": 32,
+     "windows_planned": 32,
+     "systems": {
+      "ctl-d1-q0.01": {
+       "rows": 5761,
+       "answered": 0.13192154139906268,
+       "range_rel": 0.08403875694208018,
+       "range_rel_q90": 0.6809419895548956,
+       "course_deg": 4.274546562272935,
+       "course_deg_q90": 141.73103898003603,
+       "speed_kt": 0.722508929706857,
+       "speed_kt_q90": 9.115502608653948
+      },
+      "ctl-carry": {
+       "rows": 5761,
+       "answered": 0.13192154139906268,
+       "range_rel": 0.052741471126059564,
+       "range_rel_q90": 0.633723386393899,
+       "course_deg": 2.470485150301369,
+       "course_deg_q90": 108.70435071852792,
+       "speed_kt": 0.4365114029346804,
+       "speed_kt_q90": 5.795201855833067
+      },
+      "c2": {
+       "rows": 5761,
+       "answered": 0.13192154139906268,
+       "range_rel": 0.13537238660938955,
+       "range_rel_q90": 0.5334437925515654,
+       "course_deg": 13.580841724236562,
+       "course_deg_q90": 97.35597678773644,
+       "speed_kt": 2.903716654491532,
+       "speed_kt_q90": 6.019945922341911
+      },
+      "history-map": {
+       "rows": 5761,
+       "answered": 0.13192154139906268,
+       "range_rel": 0.045035944550303575,
+       "range_rel_q90": 0.10683128324081033,
+       "course_deg": 1.8601082551227293,
+       "course_deg_q90": 57.08923641703488,
+       "speed_kt": 0.13624966440728892,
+       "speed_kt_q90": 1.7929752912299861
+      }
+     },
+     "declared": {
+      "ctl-d1-q0.01": 15,
+      "ctl-carry": 15,
+      "c2": 11
+     },
+     "true_manoeuvres": 101,
+     "window_ratio_ctl_over_carry": {
+      "median": 1.0186877020093845,
+      "carry_better": 2,
+      "carry_worse": 1,
+      "level": 1,
+      "twice_better": 1,
+      "twice_worse": 0
+     },
+     "seconds": {
+      "total_h": 0.37384027675805553,
+      "search_from_none_h": 0.1677829910266667,
+      "search_from_carry_h": 0.048744088954444466
+     },
+     "cpu": [
+      "AMD EPYC 7763 64-Core Processor",
+      "AMD EPYC 9V45 96-Core Processor",
+      "AMD EPYC 9V74 80-Core Processor",
+      "INTEL(R) XEON(R) PLATINUM 8573C",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    },
+    "realtime": {
+     "evaluations": 284,
+     "systems": {
+      "e": {
+       "rows": 284,
+       "answered": 0.15140845070422534,
+       "range_rel": 0.3411188928683878,
+       "range_rel_q90": 0.7716117272513124,
+       "course_deg": 25.696124273903184,
+       "course_deg_q90": 91.13707443318201,
+       "speed_kt": 5.191578910440645,
+       "speed_kt_q90": 8.691020191129763
+      },
+      "c2": {
+       "rows": 284,
+       "answered": 0.15140845070422534,
+       "range_rel": 0.3736301664800342,
+       "range_rel_q90": 0.8056393975090999,
+       "course_deg": 23.484865374251992,
+       "course_deg_q90": 125.61551297051066,
+       "speed_kt": 7.10775232971849,
+       "speed_kt_q90": 11.049531023592193
+      },
+      "one_leg": {
+       "rows": 284,
+       "answered": 0.09859154929577464,
+       "range_rel": 0.42423786520602735,
+       "range_rel_q90": 0.9776872184252079,
+       "course_deg": 40.699603046693284,
+       "course_deg_q90": 131.69881860519138,
+       "speed_kt": 5.209797682561053,
+       "speed_kt_q90": 10.500716604948668
+      },
+      "imm": {
+       "rows": 284,
+       "answered": 0.09154929577464789,
+       "range_rel": 0.24063190250225025,
+       "range_rel_q90": 1.9938695000860724,
+       "course_deg": 28.588250677934216,
+       "course_deg_q90": 101.64034764413026,
+       "speed_kt": 3.402455621346344,
+       "speed_kt_q90": 8.786460904701778
+      }
+     },
+     "seconds_per_evaluation": {
+      "e": 0.9897851458415492,
+      "c2": 0.9718905829507045,
+      "one_leg": 0.0014861562394366636
+     },
+     "imm_seconds_whole": 124.946749635,
+     "cpu": [
+      "AMD EPYC 9V45 96-Core Processor",
+      "INTEL(R) XEON(R) PLATINUM 8573C",
+      "Intel(R) Xeon(R) 6975P-C"
+     ]
+    }
+   }
+  ]
+ }
+}

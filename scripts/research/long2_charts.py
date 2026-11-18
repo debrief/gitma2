@@ -70,6 +70,7 @@ def main(argv: list[str] | None = None) -> int:
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.ticker
 
     from tma2.timelate.score import row_errors
 
@@ -98,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     ax.axhline(1.0, color="#444", lw=0.8)
     ax.set_yscale("log")
     ax.set_yticks([0.25, 0.5, 1, 2, 4], ["0.25", "0.5", "1", "2", "4"])
+    ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_xticks(xt, xl)
     ax.set_ylabel("ctl ÷ ctl-carry\n(above 1: carry better)")
     for name in ("base", "real-c1", "real-c2"):
