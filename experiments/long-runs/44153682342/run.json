@@ -1,0 +1,173 @@
+{
+ "description": "Spec 024's CI run: on spec 023's engagements (configs/long/long.json) and the realistic ones (configs/long/realistic.json, contacts 1 and 2), ctl and ctl-carry on chains of 2-hour windows, and the incremental real-time run (2-hour blocks). Seed 348; an investigation, never a gate result.",
+ "jobs": [
+  {
+   "part": "carry",
+   "index": 0,
+   "shards": 1,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 1,
+   "shards": 2,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 2,
+   "shards": 4,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 3,
+   "shards": 8,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 0,
+   "shards": 1,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 1,
+   "shards": 1,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 2,
+   "shards": 2,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 3,
+   "shards": 3,
+   "config": "configs/long/long.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 0,
+   "shards": 1,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 1,
+   "shards": 2,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 2,
+   "shards": 4,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 3,
+   "shards": 8,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 0,
+   "shards": 1,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 1,
+   "shards": 1,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 2,
+   "shards": 2,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "realtime-inc",
+   "index": 3,
+   "shards": 3,
+   "config": "configs/long/realistic.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 0,
+   "shards": 1,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 1,
+   "shards": 2,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 2,
+   "shards": 4,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 3,
+   "shards": 8,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  },
+  {
+   "part": "realtime-inc",
+   "index": 0,
+   "shards": 1,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  },
+  {
+   "part": "realtime-inc",
+   "index": 1,
+   "shards": 1,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  },
+  {
+   "part": "realtime-inc",
+   "index": 2,
+   "shards": 2,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  },
+  {
+   "part": "realtime-inc",
+   "index": 3,
+   "shards": 3,
+   "config": "configs/long/realistic.json",
+   "contact": 2
+  }
+ ]
+}
