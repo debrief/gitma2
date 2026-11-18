@@ -4,10 +4,71 @@
         <title>TMA via ML, second attempt Blog</title>
         <link>https://debrief.github.io/gitma2/pr/47/blog</link>
         <description>TMA via ML, second attempt Blog</description>
-        <lastBuildDate>Tue, 17 Nov 2026 19:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 18 Nov 2026 03:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
+        <item>
+            <title><![CDATA[Slides: long engagements, carrying state, an incremental C, realism]]></title>
+            <link>https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides</link>
+            <guid>https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides</guid>
+            <pubDate>Wed, 18 Nov 2026 03:00:00 GMT</pubDate>
+            <description><![CDATA[Note 12's three recommendations, built and measured on the same four engagements. Carrying state]]></description>
+            <content:encoded><![CDATA[<p>Note 12's three recommendations, built and measured on the same four engagements. Carrying state
+between time-late windows makes the search cheaper but not more accurate. The incremental C
+is 1.7 times cheaper but loses accuracy, so it is not adopted. With realism, the contact the
+ownship tends keeps its accuracy, and a contact it does not tend drifts away and is three to five times
+worse where it can be solved at all. An investigation, not a gate. Spec: <code>specs/024-long-carry-incremental-realism/</code>.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/47/slides/2026-11-18-long-engagements-2-slides/index.html" title="Slides: 2026-11-18-long-engagements-2-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/47/slides/2026-11-18-long-engagements-2-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<ul>
+<li class=""><strong><code>ctl-carry</code></strong> (<code>src/tma2/long/carry.py</code>): the standing control with its start from nothing
+replaced by the previous window's declared track and manoeuvres. It is solved beside <code>ctl</code>
+on every window, and that <code>ctl</code> equals spec 023's runner within 1 mm.</li>
+<li class=""><strong>An incremental C</strong> (<code>src/tma2/long/incremental.py</code>): one confirmation per 2-hour block of
+estimates, cropped to each estimate's window. With blocks of one it equals the per-window run.</li>
+<li class=""><strong>Realism</strong> (<code>configs/long/realistic.json</code>): the ownship steers on what it measures; contact
+gaps; detection fading with range; a second contact with mis-association where the two cross.
+It is drawn from its own random stream, so contact 1 is spec 023's target.</li>
+<li class="">A set selector on the long-engagement sections of <a class="" href="https://debrief.github.io/gitma2/pr/47/viewer">the viewer</a> and
+<a class="" href="https://debrief.github.io/gitma2/pr/47/timelate">the time-late page</a>, research note 13, and the record <code>experiments/20261117-long2/</code>.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-found">What was found<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides#what-was-found" class="hash-link" aria-label="Direct link to What was found" title="Direct link to What was found" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Carry</strong>: the median ratio of <code>ctl</code> to <code>ctl-carry</code> per window is 1.00 in every set. Wins and
+losses are mixed: 15 to 20 on spec 023's engagements, 22 to 11 on realistic contact 1. The
+start from the carry costs about 55% of the search it replaces.</li>
+<li class=""><strong>Incremental C</strong>: E and C″ cost 32–42 s an estimate against 53–73 s per window. Median range
+error is worse at 24 and 48 hours (E 29.8% and 35.6% against 14.3% and 20.9%).<!-- -->
+<ul>
+<li class="">The first estimate of each block matches the per-window run.</li>
+<li class="">The later ones are 2 to 4 times worse.</li>
+<li class="">The cause lies in the longer history before the crop and is not established.</li>
+</ul>
+</li>
+<li class=""><strong>Realism</strong>:<!-- -->
+<ul>
+<li class="">Contact 1 is held 67–85% of the time, and <code>ctl</code> stays at 1.5–2.2% (spec 023's: 1.6–2.1%).</li>
+<li class="">Contact 2 drifts to a median 27–147 km and is held 10–22% of the time beyond 6 hours. On the windows
+with at least five minutes of its bearings, <code>ctl</code> is at 6–8%, and the true-history fit is at 2–4.5%.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
+<ul>
+<li class="">No accuracy gain from carrying state, and the incremental C is not usable as built.</li>
+<li class="">Mis-association is barely exercised (0–8 swapped bearings an engagement).</li>
+<li class="">One engagement per length: these are anecdotes, not rates.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/18/long-engagements-2-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
+<p>Recommended: a registered study on 6- and 12-hour realistic engagements (seeds 349 to 351,
+about 160 CPU-hours). It would test carry non-inferiority, the cost of an untended contact and
+the IMM's drift. Or measure shorter incremental blocks on tuning data first, or stop the
+long-engagement track here.</p>
+<p>Figures: <code>scripts/research/long2_charts.py</code>, with a sidecar beside each SVG.</p>]]></content:encoded>
+            <category>slides</category>
+            <category>spec-024</category>
+        </item>
         <item>
             <title><![CDATA[Kickoff: long engagements, carrying state, an incremental C, realism]]></title>
             <link>https://debrief.github.io/gitma2/pr/47/blog/2026/11/17/long-engagements-2-kickoff</link>
@@ -1284,117 +1345,6 @@ the results branch <code>results/timelate-tl-e-test-43563825793</code>. The data
 (tuning), 340 (validation) and 341 (test), 5-second bearings, ranges files under
 <code>configs/timelate/</code>, generated in the CI runs.</p>]]></content:encoded>
             <category>slides</category>
-            <category>spec-016</category>
-        </item>
-        <item>
-            <title><![CDATA[Time-late, classical controls and a learned model: the controls stand, and what the learned model's loss is made of]]></title>
-            <link>https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned</link>
-            <guid>https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned</guid>
-            <pubDate>Sat, 14 Nov 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[The owner asked for two things at once: the classical controls the last panel wanted, and a]]></description>
-            <content:encoded><![CDATA[<p>The owner asked for two things at once: the classical controls the last panel wanted, and a
-learned whole-period model trained in parallel under a plan fixed before any result. Both
-are done. On a fresh test seed the learned model's reported track beats the classical
-control on no split and loses to it on clean data, so by the registered rule the classical
-controls stand and the learned track stops. The review panel approved that outcome and
-changed what it means: the loss is not a typical period, it is the model's untuned
-manoeuvre detector, and the comparison we registered was narrower than "learned against
-classical". The illustrated companion is
-<a class="" href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned-slides">the slides post</a>.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
-<p><strong>Classical controls</strong>, nothing trained, composed from the search spec 015 left standing:</p>
-<ul>
-<li class="">wild bearings edited out before the search;</li>
-<li class="">one larger bearing sd when the bearings' second differences show the errors are
-correlated in time;</li>
-<li class="">the search run under Annex B's manoeuvre prior and a broadened one, pooled;</li>
-<li class="">a manoeuvre declared only when it is worth an evidence margin of 1, with a stated 1%
-chance that the target never manoeuvres;</li>
-<li class="">a hedged track: the probability-weighted mean of the candidates.</li>
-</ul>
-<p>Settings came from a tuning seed. The combined control is not told which condition it is
-in.</p>
-<p><strong>A learned model</strong>: a bidirectional transformer reading a whole period of 5-second
-bearings and giving the target's state every 30 seconds and a manoeuvre probability. Three
-seeds, 12.5 million simulated periods each (Annex B, randomised manoeuvre statistics,
-quiet targets, correlated errors and outliers), a T4 each, $14 in all. Its reported track
-is the arc model fitted to the bearings at the manoeuvres the model declares.</p>
-<p>The plan, the training mix, the criteria and the code were bound by digest before the first
-training run and before the validation and test seeds existed. The scorer refused to score
-a learned track until the controls' own validation was on record.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-registered-outcome-test-seed-341-2860-periods">The registered outcome (test seed 341, 2,860 periods)<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned#the-registered-outcome-test-seed-341-2860-periods" class="hash-link" aria-label="Direct link to The registered outcome (test seed 341, 2,860 periods)" title="Direct link to The registered outcome (test seed 341, 2,860 periods)" translate="no">​</a></h2>
-<p>Declared control ÷ learned track, paired per period, three seeds (above 1: the learned
-track is better):</p>
-<table><thead><tr><th>Split</th><th>Ratio</th><th>Verdict</th></tr></thead><tbody><tr><td>Shifted prior</td><td>0.82, 0.80, 0.82</td><td>not shown</td></tr><tr><td>Shifted prior 2</td><td>0.87, 0.87, 0.94</td><td>not shown</td></tr><tr><td>Correlated errors</td><td>0.83, 0.83, 0.84</td><td>not shown</td></tr><tr><td>Outliers</td><td>0.78, 0.77, 0.81</td><td>not shown</td></tr><tr><td>Bias, absent from training</td><td>0.98, 1.00, 0.97</td><td>not shown</td></tr><tr><td>Annex B</td><td>0.82, 0.81, 0.82</td><td>harm</td></tr><tr><td>Held course</td><td>1.06, 1.06, 1.06</td><td>no harm</td></tr></tbody></table>
-<p>Learning is shown on no split and there is harm on Annex B data: <strong>the classical controls
-stand as the time-late system, and the learned track stops.</strong> The forecast written before
-training said this was the most likely outcome.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-classical-controls-did">What the classical controls did<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned#what-the-classical-controls-did" class="hash-link" aria-label="Direct link to What the classical controls did" title="Direct link to What the classical controls did" translate="no">​</a></h2>
-<p>Against the search they started from, the declared control is 1.68 [1.46, 1.94] better
-with 2% outliers, 2.44 [2.03, 3.00] with 5%, 1.33 [1.16, 1.53] with correlated errors and
-1.70 [1.48, 1.95] on targets that never manoeuvre (false manoeuvres in 8% of periods
-against 49%). These replicate across the tuning, validation and test seeds. This is the
-result the panel says is worth carrying.</p>
-<p>It has limits the first record understated. Under a slowly varying bias it does nothing
-(1.00). On clean data its range error is not separated from the search's over three seeds
-(0.96 to 1.09). It calls a one-manoeuvre target quiet more often, markedly so with
-correlated errors (0.29 against 0.05). Its correlated-error form knows the simulator's
-error family. And under a shifted manoeuvre prior it gains nothing (1.03): the control is
-still 1.7 to 2.1 times a fit told the true history, whichever way that reference is fitted.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-learned-models-loss-is-made-of">What the learned model's loss is made of<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned#what-the-learned-models-loss-is-made-of" class="hash-link" aria-label="Direct link to What the learned model's loss is made of" title="Direct link to What the learned model's loss is made of" translate="no">​</a></h2>
-<p>Five reviewers recomputed the outcome and it holds: all 42 ratios reproduce, no verdict is
-near its boundary, the registration held. Then they took the 20% apart.</p>
-<p><strong>The typical period is a tie.</strong> The median per-period ratio is 1.00 on every split. Where
-the model declares the same number of manoeuvres as the control, the two tracks are level
-(0.95 on Annex B, 1.01 under the shifted prior), because the read-out is then the same
-classical fit. Where the model declares fewer, in a quarter to a half of periods, its
-track is about twice as bad. The whole loss is there.</p>
-<p><strong>So the registered comparison measured a detector.</strong> The model's manoeuvre probability
-was thresholded at 0.5, a value never tuned, while the control's margin and quiet
-probability were tuned. That asymmetry was in the registration and was mine. A reviewer
-tried the obvious repairs on spent tuning data: a lower threshold makes the read-out worse
-(the fit can no more remove a false manoeuvre than add a missed one), and a broader prior
-changes nothing. Starting the control's own search from the model's answer equals the
-control at a third of the search time, and does not beat it.</p>
-<p><strong>The model as an estimator</strong> (its own output, reported beside and deciding nothing) is
-0.71 of the control on Annex B data. Under the shifted prior it is level in range, 1.01,
-but behind in course and speed (0.79, 0.77), and the level figure is a cancellation: it
-beats the control where the bearings determine little and is nearly three times worse
-where they determine much. That is the signature of an estimator that leans on what it
-learned about targets in general, which this project has now seen three times.</p>
-<p><strong>The "mismatch" was the classical side's only.</strong> The shifted, correlated and outlier
-conditions all lie inside the model's training ranges. The model lost in-distribution.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-delivered">What was not delivered<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned#what-was-not-delivered" class="hash-link" aria-label="Direct link to What was not delivered" title="Direct link to What was not delivered" translate="no">​</a></h2>
-<ul>
-<li class="">A working prior-mismatch diagnostic: the one computed is not a Bayes factor and fires on
-quiet targets, not on a shifted prior.</li>
-<li class="">A Huber cost and a whitened fit (editing and an effective sd stand in), and the repair
-of the evidence at the edges of the prior's support.</li>
-<li class="">The export check on the trained models (it ran on a toy), IMM and EKF tracks beside, and
-the weights' digests in the test record.</li>
-<li class="">Unit tests for the runner and the scorer.</li>
-<li class="">Two launches of the GPU pilot failed at start-up on a launcher form that had never been
-run; the ledger under-counts a run whose container is replaced (39 cents against the
-owner's dashboard).</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-this-does-and-does-not-show">What this does and does not show<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned#what-this-does-and-does-not-show" class="hash-link" aria-label="Direct link to What this does and does not show" title="Direct link to What this does and does not show" translate="no">​</a></h2>
-<p>It shows that a small direct model, trained on the simulator, does not beat an evidence
-search that knows the motion model, in or out of the conditions it was trained on, and
-that classical editing and an honest bearing sd remove most of the damage from outliers
-and correlated errors.</p>
-<p>It does not show that learning cannot help the time-late consumer. A learned proposer
-inside the search, the model's probabilities as a prior, training through the arc model,
-and a larger budget were not tested. Nor does it show that the shifted-prior gap can be
-closed by anything: busier targets with smaller turns may simply not be identifiable from
-bearings, and that is the cheapest next thing to find out.</p>
-<p>Across specs 012 to 016 the founding question stands at "not shown, at small budgets, with
-direct models". Each large gain so far has gone to a classical element.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="records">Records<a href="https://debrief.github.io/gitma2/pr/47/blog/2026/11/14/time-late-learned#records" class="hash-link" aria-label="Direct link to Records" title="Direct link to Records" translate="no">​</a></h2>
-<p><code>experiments/20261113-tl4-tuning/</code>, <code>-tl4-decision/</code> (two addenda), <code>-tl4-val/</code>,
-<code>experiments/20261114-tlm-runs/</code>, and the test record <code>experiments/20261114-tl4/</code>
-(<code>review.md</code>). Seeds 338 to 341 are used; the next fresh seed is 342. GPU spending in
-November stands at about $41 of the owner's $50.</p>]]></content:encoded>
-            <category>write-up</category>
             <category>spec-016</category>
         </item>
     </channel>
