@@ -229,3 +229,32 @@ def verdict(r: dict[str, Any]) -> dict[str, Any]:
         "harm": harm,
         "outcome": "harm" if harm else ("gain" if gain else "not shown"),
     }
+
+
+def soundness(
+    r: dict[str, Any],
+    arr: dict[str, np.ndarray],
+    periods: list[dict[str, Any]],
+    tight: float = 0.05,
+    band: tuple[float, float] = (0.8, 1.3),
+    converged_min: float = 0.95,
+) -> dict[str, Any]:
+    """FR-012: the span reference with true times held (``ref-span-fixed``) has range
+    efficiency within ``band`` on rows whose span bound is below ``tight``, and the joint solve
+    gives a track on at least ``converged_min`` of periods."""
+    b = arr["bound_span"][:, 0].astype(np.float64)
+    e = arr["err_ref-span-fixed"][:, 0].astype(np.float64) if "err_ref-span-fixed" in arr else None
+    eff = None
+    if e is not None:
+        ok = np.isfinite(b) & (b > 0) & (b < tight) & np.isfinite(e)
+        eff = float(np.median(e[ok] / b[ok]) / Q) if ok.any() else None
+    n = max(r["periods"], 1)
+    answered = 1.0 - r["joint_fell_back"] / n
+    ok_eff = eff is not None and band[0] <= eff <= band[1]
+    return {
+        "reference_efficiency_tight": eff,
+        "band": list(band),
+        "joint_answered": answered,
+        "converged_min": converged_min,
+        "pass": bool(ok_eff and answered >= converged_min),
+    }

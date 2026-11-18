@@ -242,7 +242,7 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
     ``study8``; the verdict by the registered rule where the plan names one."""
     import numpy as np
 
-    from tma2.timelate.study8 import study_split8, verdict
+    from tma2.timelate.study8 import soundness, study_split8, verdict
 
     reading: dict[str, Any] = {}
     for split in plan["splits"]:
@@ -268,6 +268,16 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
         arr = {k: np.concatenate(v) for k, v in arrays.items()}
         r = study_split8(arr, recs)
         r["verdict"] = verdict(r)
+        if split == "man2":
+            sd = plan.get("soundness") or {}
+            r["soundness"] = soundness(
+                r,
+                arr,
+                recs,
+                tight=float(sd.get("tight_bound", 0.05)),
+                band=(float(sd.get("band", [0.8, 1.3])[0]), float(sd.get("band", [0.8, 1.3])[1])),
+                converged_min=float(sd.get("answered_min", 0.95)),
+            )
         for key in ("dataset_digest", "seed", "search_code_sha256", "git_commit"):
             r[key] = sorted({h[key] for h in headers})
         r["git_dirty"] = any(h["git_dirty"] for h in headers)
@@ -281,9 +291,11 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
         "plan_sha256": digest,
         "scorer_git_commit": g.commit,
         "scorer_git_dirty": g.dirty,
+        "soundness": (reading.get("man2") or {}).get("soundness"),
         "splits": reading,
     }
     (out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    print("soundness", json.dumps(summary["soundness"]))
     for split, r in reading.items():
         aj = r["ratios"].get("alone/joint", {}).get("range", {})
         nan = float("nan")
@@ -293,7 +305,8 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
             f"[{aj.get('lo', nan):.2f}, {aj.get('hi', nan):.2f}] "
             f"-> {r['verdict']['outcome']}"
         )
-    return 0
+    sound = summary["soundness"]
+    return 3 if a.gate and sound is not None and not sound["pass"] else 0
 
 
 def _require_controls_record(path: str | None, plan_digest: str) -> None:

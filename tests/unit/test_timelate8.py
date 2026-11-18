@@ -110,3 +110,16 @@ def test_gap_reading_and_verdict() -> None:
         }
     }
     assert verdict(harm)["outcome"] == "harm"
+
+
+def test_soundness_reads_the_fixed_span_reference_on_tight_rows() -> None:
+    from tma2.timelate.score import Q
+    from tma2.timelate.study8 import soundness
+
+    b = np.array([[0.01, 1, 1], [0.02, 1, 1], [0.3, 1, 1]])
+    e = np.array([[0.01 * Q, 0, 0, 0], [0.02 * Q, 0, 0, 0], [9.0, 0, 0, 0]])
+    arr = {"bound_span": b, "err_ref-span-fixed": e}
+    r = soundness({"periods": 10, "joint_fell_back": 0}, arr, [])
+    assert abs(r["reference_efficiency_tight"] - 1.0) < 1e-12 and r["pass"]
+    r = soundness({"periods": 10, "joint_fell_back": 1}, arr, [])
+    assert not r["pass"]  # 0.90 answered < 0.95

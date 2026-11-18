@@ -10,7 +10,8 @@ three ways on the same bearings:
 
 Beside, from the same calls: C″ and one leg per period (``c2``, ``one-leg``), and the true
 history fitted with the prior (``history-best``) per period (``ref-alone``) and across the
-masked span (``ref-span``).
+masked span (``ref-span``); and the true history fitted to the bearings alone with its times
+held (``history-fixed``: ``ref-alone-fixed``, ``ref-span-fixed``), the soundness reference.
 
 Each period is scored at rows 30 s apart from its own start (``score_every`` rows). Arrays per
 scored row: ``eng``, ``period`` (index in the engagement), ``bound_span`` [3] (the
@@ -36,7 +37,17 @@ from .run4 import run_shard4
 from .score import row_errors, truth_rows
 
 CTL = "ctl-d1-q0.01"
-SYSTEMS = ("alone", "joint", "full", "c2", "one-leg", "ref-alone", "ref-span")
+SYSTEMS = (
+    "alone",
+    "joint",
+    "full",
+    "c2",
+    "one-leg",
+    "ref-alone",
+    "ref-span",
+    "ref-alone-fixed",
+    "ref-span-fixed",
+)
 
 
 def control_settings(settings: dict[str, Any]) -> dict[str, Any]:
@@ -167,6 +178,9 @@ def run_shard8(
                 "one-leg": tr_a[i]["one-leg"],
                 "ref-alone": tr_a[i]["history-best"],
                 "ref-span": tr_j["history-best"][off : off + n],
+                # bearings only, true times held: the soundness reference (spec 016's L-a)
+                "ref-alone-fixed": tr_a[i]["history-fixed"],
+                "ref-span-fixed": tr_j["history-fixed"][off : off + n],
             }
             for s in SYSTEMS:
                 errs[s].append(row_errors(tracks[s], tr)[pick].astype(np.float32))
