@@ -29,3 +29,9 @@ times, which the bound assumes known, so it is not the soundness reference. `run
 stores the true history fitted to the bearings with its times held (`ref-span-fixed`, spec
 016's L-a reference); a second tuning run on the same seed (Annex B only) measures it before
 the decision record (`runs/tl-j-tune2.json`).
+
+Second run (`second/`, CI run 44218268911, Annex B, same 45 engagements): soundness reference
+`ref-span-fixed` at range efficiency 1.28 on rows with a span bound under 0.05; the joint
+solve answered every period. Alone ÷ joint 3.03 [2.12, 4.37] against 3.27 in the first run on
+the same engagements: last-bit differences between CI machines change declared histories on
+about a quarter of engagements (alone and joint of one engagement always share a job).
