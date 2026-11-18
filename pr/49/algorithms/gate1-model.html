@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-algorithms/gate1-model" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Gate 1 model | TMA via ML, second attempt</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="robots" content="noindex, nofollow"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://debrief.github.io/gitma2/pr/49/algorithms/gate1-model"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Gate 1 model | TMA via ML, second attempt"><meta data-rh="true" name="description" content="Sources:"><meta data-rh="true" property="og:description" content="Sources:"><link data-rh="true" rel="canonical" href="https://debrief.github.io/gitma2/pr/49/algorithms/gate1-model"><link data-rh="true" rel="alternate" href="https://debrief.github.io/gitma2/pr/49/algorithms/gate1-model" hreflang="en"><link data-rh="true" rel="alternate" href="https://debrief.github.io/gitma2/pr/49/algorithms/gate1-model" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Gate 1 model","item":"https://debrief.github.io/gitma2/pr/49/algorithms/gate1-model"}]}</script><link rel="alternate" type="application/rss+xml" href="/gitma2/pr/49/blog/rss.xml" title="TMA via ML, second attempt RSS Feed">
+<link rel="alternate" type="application/atom+xml" href="/gitma2/pr/49/blog/atom.xml" title="TMA via ML, second attempt Atom Feed"><link rel="stylesheet" href="/gitma2/pr/49/assets/css/styles.9ec013ba.css">
+<script src="/gitma2/pr/49/assets/js/runtime~main.c2144278.js" defer="defer"></script>
+<script src="/gitma2/pr/49/assets/js/main.3a4945b5.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/gitma2/pr/49/"><b class="navbar__title text--truncate">gitma2</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/gitma2/pr/49/">Welcome</a><a class="navbar__item navbar__link" href="/gitma2/pr/49/glossary">Glossary</a><a class="navbar__item navbar__link" href="/gitma2/pr/49/data-dictionary">Data dictionary</a><a class="navbar__item navbar__link" href="/gitma2/pr/49/blog">Blog</a><a class="navbar__item navbar__link" href="/gitma2/pr/49/viewer">Viewer</a><a class="navbar__item navbar__link" href="/gitma2/pr/49/timelate">Time-late</a><a class="navbar__item navbar__link" href="/gitma2/pr/49/previews">PR previews</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/debrief/gitma2" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/gitma2/pr/49/"><span class="linkLabel_WmDU">Welcome</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/gitma2/pr/49/glossary"><span class="linkLabel_WmDU">Glossary</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/gitma2/pr/49/data-dictionary"><span class="linkLabel_WmDU">Data dictionary</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/gitma2/pr/49/process/reporting"><span class="categoryLinkLabel_W154">Process</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/gitma2/pr/49/algorithms/physics-layer"><span class="categoryLinkLabel_W154">Algorithms</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/physics-layer"><span class="linkLabel_WmDU">Physics layer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/gitma2/pr/49/algorithms/gate1-model"><span class="linkLabel_WmDU">Gate 1 model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/least-squares"><span class="linkLabel_WmDU">Batch least squares</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/ekf-imm"><span class="linkLabel_WmDU">EKF and IMM</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/crb"><span class="linkLabel_WmDU">Cramér–Rao bound and efficiency</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/detector"><span class="linkLabel_WmDU">Steady-leg detector</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/segmentation"><span class="linkLabel_WmDU">Steady-leg segmentation (C, O, L)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/gate2-model"><span class="linkLabel_WmDU">Gate 2 model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/49/algorithms/calibration"><span class="linkLabel_WmDU">Uncertainty calibration</span></a></li></ul></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/gitma2/pr/49/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Algorithms</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Gate 1 model</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>The Gate 1 model</h1></header>
+<p>Sources:</p>
+<ul>
+<li class=""><code>src/tma2/models/</code> (rows, model, loss, train, predict, export);</li>
+<li class="">the physics layer it drives: <a class="" href="/gitma2/pr/49/algorithms/physics-layer">physics layer</a>.</li>
+</ul>
+<p>Requirements: SRD §4 and §5 (Gate 1), constitution principles III and VI, and spec 003.</p>
+<p>The model is a small causal transformer that reads the bearing history and supplies three
+inputs that physics cannot know. The <a class="" href="/gitma2/pr/49/algorithms/physics-layer">physics layer</a> produces the estimate,
+with no knots: Gate 1&#x27;s data is constant velocity. The last layer of every head starts at zero,
+so the untrained model is batch least squares from the classical grid start (tested).</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="inputs-and-features">Inputs and features<a href="#inputs-and-features" class="hash-link" aria-label="Direct link to Inputs and features" title="Direct link to Inputs and features" translate="no">​</a></h2>
+<p>One window of R = 240 rows (40 min at 10 s) gives these inputs:</p>
+<ul>
+<li class="">bearings z, with valid flags v;</li>
+<li class="">ownship positions (oₓ, o_y) and times t;</li>
+<li class="">the noise σ;</li>
+<li class="">the row k whose state is wanted.</li>
+</ul>
+<p>Samples after k are ignored.</p>
+<p>Each row has seven features. Every scale is fixed: no statistic is taken from the data.</p>
+<ul>
+<li class="">sin z · v and cos z · v;</li>
+<li class="">v;</li>
+<li class="">(oₓ − oₓ,₀) / 10 km and (o_y − o_y,₀) / 10 km;</li>
+<li class="">t / 1 h;</li>
+<li class="">σ / 2°.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="encoder">Encoder<a href="#encoder" class="hash-link" aria-label="Direct link to Encoder" title="Direct link to Encoder" translate="no">​</a></h2>
+<p>A linear embedding to width W = 64 is followed by two pre-norm blocks and a final layer norm.
+Each block is written out in standard operators, so an independent port can reproduce it. With
+h the [R, W] activations, LN the layer norm and 4 heads of size d = 16:</p>
+<ul>
+<li class=""><strong>Attention.</strong> Q, K, V = LN(h)·W_q, LN(h)·W_k, LN(h)·W_v, then
+h ← h + W_o · concat_heads softmax(QKᵀ/√d + M)·V.
+M is −∞ where key j &gt; query i (causal), and 0 elsewhere.</li>
+<li class=""><strong>Feed-forward.</strong> h ← h + W₂ · relu(W₁ · LN(h)), with an inner width of 128.</li>
+</ul>
+<p>The time-late control (d) uses no causal mask. It masks padded rows as keys instead.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="heads">Heads<a href="#heads" class="hash-link" aria-label="Direct link to Heads" title="Direct link to Heads" translate="no">​</a></h2>
+<p>Each head is Linear(W, W) → ReLU → Linear(·), and its last layer is zero-initialised.</p>
+<ul>
+<li class=""><strong>Per-bearing log-weight</strong>, from row i&#x27;s activation: ℓ_i = 2 tanh(·), so each bearing&#x27;s
+weight exp(ℓ_i) lies in [e⁻², e²].</li>
+<li class=""><strong>Initial-state correction</strong>, from row k&#x27;s activation: (Δ log range, Δ course, Δ log speed),
+applied to the grid start&#x27;s state at row k.<!-- -->
+<ul>
+<li class="">Range from ownship is multiplied by exp(Δ log range).</li>
+<li class="">The velocity is rotated clockwise by Δ course and scaled by exp(Δ log speed).</li>
+<li class="">The corrected state at k is mapped back to the window-start state θ₀ = (p_k − u t_k, u),
+which starts the solve.</li>
+</ul>
+</li>
+<li class=""><strong>Covariance log-scale</strong>, from row k&#x27;s activation: s = 2 tanh(·). The reported covariance is
+the layer&#x27;s covariance × e^(2s).</li>
+</ul>
+<p>The grid start is gitma&#x27;s coarse grid along the first valid bearing up to k:</p>
+<ul>
+<li class="">12 log-spaced ranges from 1 to 40 km;</li>
+<li class="">8 courses;</li>
+<li class="">speeds of 2, 5 and 9 m/s;</li>
+<li class="">the candidate with the lowest cost is chosen, the first one on ties.</li>
+</ul>
+<p>The exported graph computes it in tensor operations (<code>grid_start_tensor</code>). It equals the numba
+version to 1e-14.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="physics">Physics<a href="#physics" class="hash-link" aria-label="Direct link to Physics" title="Direct link to Physics" translate="no">​</a></h2>
+<p>The <a class="" href="/gitma2/pr/49/algorithms/physics-layer">physics layer</a> runs with M = 0 knots and the log-weights ℓ, from θ₀, for
+K = 100 damped Gauss–Newton iterations in double precision. The output is the state
+(x, y, vₓ, v_y) at row k and its covariance σ²(JᵀJ)⁻¹ mapped to row k, plus two flags:</p>
+<ul>
+<li class=""><code>cov_ok</code>: the covariance is valid;</li>
+<li class=""><code>plausible</code>: the solution is plausible.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="loss">Loss<a href="#loss" class="hash-link" aria-label="Direct link to Loss" title="Direct link to Loss" translate="no">​</a></h2>
+<p>The loss is computed on scored rows whose covariance is valid. The errors of (log range, vₓ,
+v_y) at row k are divided by the row&#x27;s full-window Cramér–Rao standard deviations, computed from
+the truth, giving e. The loss is</p>
+<p>L = mean(min(‖e‖², 100)) + 1.0 · mean(min(Σ β-NLL, 100)) + 0.1 · mean(min(‖e_init‖², 100))</p>
+<p>where:</p>
+<ul>
+<li class="">β-NLL = stopgrad(v^β) · (½ log v + e²/2v), with β = 0.5;</li>
+<li class="">v is the calibrated variance ÷ the bound&#x27;s variance, per component;</li>
+<li class="">e_init is the same normalised error of the corrected initial state.</li>
+</ul>
+<p>The initial-state head gets no gradient through the converged solve (below), so the auxiliary
+term trains it.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="gradient-through-the-solve">Gradient through the solve<a href="#gradient-through-the-solve" class="hash-link" aria-label="Direct link to Gradient through the solve" title="Direct link to Gradient through the solve" translate="no">​</a></h2>
+<p><strong>Training.</strong> The forward pass runs the K iterations without a tape to the solution θ*. One
+Newton step with the exact Hessian H = JᵀJ + Σ r ∇²r is then taken from θ* (detached), with the
+gradient flowing through r and J. This step&#x27;s derivative with respect to the inputs is the
+implicit-function gradient −H⁻¹ ∂(Jᵀr)/∂inputs at the optimum.</p>
+<ul>
+<li class="">It was checked against finite differences of the converged solution (research R1).</li>
+<li class="">Where H is not positive definite, the step falls back to Gauss–Newton.</li>
+<li class="">Inference has no Newton step.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="training-data">Training data<a href="#training-data" class="hash-link" aria-label="Direct link to Training data" title="Direct link to Training data" translate="no">​</a></h2>
+<p>Scenarios are generated on the fly from the training seed 310.</p>
+<ul>
+<li class=""><strong>Noise draws.</strong> Each scenario gets two noise draws. Draw 0 is the generator&#x27;s own bearings;
+draw 1 is truth + σ·N(0, 1), seeded by (seed, scenario, draw), with the scenario&#x27;s own dropout
+pattern.</li>
+<li class=""><strong>Scored rows.</strong> Each scenario contributes three per epoch: the gate rows zig + 5 and
+zig + 10 min, and one random post-zig row.</li>
+<li class=""><strong>Batches and optimiser.</strong> Batches hold 64 scenarios. Adam is used with a learning rate of
+1e-3 and gradient-norm clipping.</li>
+<li class=""><strong>Determinism.</strong> Every random choice is a pure function of (seed, epoch, batch). The
+validation loss is the mean normalised squared error on fixed validation rows. Early stopping
+uses patience 4.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="export">Export<a href="#export" class="hash-link" aria-label="Direct link to Export" title="Direct link to Export" translate="no">​</a></h2>
+<p>The whole model exports to one ONNX graph:</p>
+<ul>
+<li class=""><strong>Inputs:</strong> bearing, valid, ox, oy and t of shape [B, 240], sigma [B], and k [B] as int64.</li>
+<li class=""><strong>Outputs:</strong> state, cov, cov_ok and plausible.</li>
+</ul>
+<p>The K iterations are a single ONNX <code>Loop</code>: the eager layer calls a TorchScript-scripted
+iteration function while tracing. The graph has about 1,500 nodes and loads in under a second.
+CI checks the graph against PyTorch in double in three runtimes, to 1e-5 (measured: 1.5e-9 in
+Python, 1.5e-9 in Java, 2.4e-9 in the browser).</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="controls-spec-003-fr-017">Controls (spec 003 FR-017)<a href="#controls-spec-003-fr-017" class="hash-link" aria-label="Direct link to Controls (spec 003 FR-017)" title="Direct link to Controls (spec 003 FR-017)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>(a) Direct head.</strong> The same encoder regresses the corrections and three log-variances at row
+k, with no physics layer. It is never carried.</li>
+<li class=""><strong>(c) Shuffled labels.</strong> Truths are permuted within each batch. It runs through the physics
+layer, so it stays near least squares and cannot fall to naive level. It must score no better than
+least squares on the same rows (constitution 1.2.0; Gate 1 decision amendment 1).</li>
+<li class=""><strong>(d) Time-late.</strong> An unmasked encoder and a solve over the whole window, reporting row k. It
+must score at least as well as the causal model.</li>
+</ul></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/gitma2/pr/49/algorithms/physics-layer"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Physics layer</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/gitma2/pr/49/algorithms/least-squares"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Batch least squares</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#inputs-and-features" class="table-of-contents__link toc-highlight">Inputs and features</a></li><li><a href="#encoder" class="table-of-contents__link toc-highlight">Encoder</a></li><li><a href="#heads" class="table-of-contents__link toc-highlight">Heads</a></li><li><a href="#physics" class="table-of-contents__link toc-highlight">Physics</a></li><li><a href="#loss" class="table-of-contents__link toc-highlight">Loss</a></li><li><a href="#gradient-through-the-solve" class="table-of-contents__link toc-highlight">Gradient through the solve</a></li><li><a href="#training-data" class="table-of-contents__link toc-highlight">Training data</a></li><li><a href="#export" class="table-of-contents__link toc-highlight">Export</a></li><li><a href="#controls-spec-003-fr-017" class="table-of-contents__link toc-highlight">Controls (spec 003 FR-017)</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Mock data only; nothing above OFFICIAL. Apache-2.0.</div></div></div></footer></div>
+</body>
+</html>
