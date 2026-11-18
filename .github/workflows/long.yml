@@ -2,7 +2,7 @@ name: Long engagements (spec 023)
 
 # Runs when configs/long/run.json changes on a push (any branch), or by hand:
 #   jobs   [{part: realtime|realtime-inc|timelate|carry|scaling, index, shards, lengths,
-#           config, contact, block_s}]: one CI job per shard
+#           config, contact, block_s, indices}]: one CI job per shard (imm: --indices a-b)
 #          (scaling: one job per entry, its comma-separated period lengths in seconds)
 # Each job runs `tma2-long <part> --index <i> --shard <s>/<n>`; a collect job commits every
 # output to results/long-<run id> (experiments/long-runs/<run id>/). CPU only; no secrets.
@@ -39,8 +39,10 @@ jobs:
                       extra += ["--contact", str(j["contact"])]
                   if "block_s" in j:
                       extra += ["--block-s", str(j["block_s"])]
+                  if "indices" in j:
+                      extra += ["--indices", j["indices"]]
                   stem = j["config"].rsplit("/", 1)[-1].removesuffix(".json") if "config" in j else "long"
-                  tag = f"{stem}-c{j.get('contact', 1)}-{j['part']}-{j['index']}-{s}" + (f"-{j['lengths']}" if "lengths" in j else "")
+                  tag = f"{stem}-c{j.get('contact', 1)}-{j['part']}-{j.get('indices', j['index'])}-{s}" + (f"-{j['lengths']}" if "lengths" in j else "")
                   m.append({"part": j["part"], "index": j["index"], "shard": f"{s}/{j.get('shards', 1)}", "tag": tag, "extra": " ".join(extra)})
           print("jobs=" + json.dumps({"include": m}))
           PY

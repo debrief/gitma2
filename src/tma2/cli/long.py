@@ -54,8 +54,13 @@ def _cpu() -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-long", description=__doc__)
-    ap.add_argument("part", choices=("realtime", "realtime-inc", "timelate", "carry", "scaling"))
-    ap.add_argument("--index", type=int, required=True)
+    ap.add_argument(
+        "part",
+        choices=("realtime", "realtime-inc", "timelate", "carry", "scaling", "imm", "study"),
+    )
+    ap.add_argument("--indices", default="", help="imm: engagements a-b (inclusive)")
+    ap.add_argument("--raw", default="", help="study: the run's outputs")
+    ap.add_argument("--index", type=int, default=0)
     ap.add_argument("--out", required=True)
     ap.add_argument("--config", default=CONFIG)
     ap.add_argument("--contact", type=int, default=1, choices=(1, 2), help="spec 024 realism")
@@ -77,6 +82,45 @@ def main(argv: list[str] | None = None) -> int:
 
     g = read_git_provenance()  # before any output
     t0 = time.time()
+    if a.part == "study":
+        from tma2.long.study import score
+
+        res = score(Path(a.raw).resolve(), Path(a.config).resolve())
+        res["git_commit"], res["git_dirty"] = g.commit, g.dirty
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "study.json").write_text(json.dumps(res, indent=1, default=float) + "\n")
+        print(
+            json.dumps(
+                {k: res[k] for k in ("soundness", "E1", "E2", "E3")}, indent=1, default=float
+            )
+        )
+        return 0
+    if a.part == "imm":
+        from tma2.long.realtime import IMM, imm_states
+
+        lo, hi = (int(x) for x in a.indices.split("-"))
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        tag = a.tag or Path(a.config).stem
+        for i in range(lo, hi + 1):
+            e, _cfg = _engagement(i, a.config, a.contact)
+            r = imm_states(e)
+            np.savez_compressed(
+                out / f"{tag}-c{a.contact}-imm-{i}.npz",
+                times_s=r["times_s"],
+                truth=r["truth"],
+                state_imm=r["state_imm"],
+            )
+            print(json.dumps({"part": "imm", "index": i, "seconds": round(r["seconds"], 1)}))
+        (out / f"{tag}-c{a.contact}-imm-{lo}-{hi}.json").write_text(
+            json.dumps(
+                {"imm": IMM, "git_commit": g.commit, "git_dirty": g.dirty, "cpu_model": _cpu()},
+                indent=1,
+            )
+            + "\n"
+        )
+        return 0
     e, cfg = _engagement(a.index, a.config, a.contact)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
