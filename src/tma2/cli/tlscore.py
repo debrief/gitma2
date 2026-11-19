@@ -38,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     out.mkdir(parents=True, exist_ok=True)
     reading: dict[str, Any] = {}
     any_learned = False
-    if plan.get("runner") in ("run8", "run9"):
+    if plan.get("runner") in ("run8", "run9", "run10"):
         return _joined(a, plan, digest, g, out)
     shifted = plan.get("runner") == "run5"
     adaptive = plan.get("runner") == "run6"
@@ -244,8 +244,10 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
 
     from tma2.timelate.study8 import soundness, study_split8, verdict
     from tma2.timelate.study9 import study_split9, verdict9
+    from tma2.timelate.study10 import study_split10
 
-    carry = plan.get("runner") == "run9"
+    cprior = plan.get("runner") == "run10"
+    carry = plan.get("runner") == "run9" or cprior
 
     reading: dict[str, Any] = {}
     for split in plan["splits"]:
@@ -269,7 +271,10 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
         if len({r["ordinal"] for r in recs}) != len(recs):
             raise SystemExit(f"{split}: an engagement appears in two shards")
         arr = {k: np.concatenate(v) for k, v in arrays.items()}
-        r = study_split9(arr, recs) if carry else study_split8(arr, recs)
+        if cprior:
+            r = study_split10(arr, recs)
+        else:
+            r = study_split9(arr, recs) if carry else study_split8(arr, recs)
         r["verdict"] = verdict(r)
         if carry:
             r["verdict_carry"] = verdict9(r)
@@ -320,6 +325,13 @@ def _joined(a: argparse.Namespace, plan: dict[str, Any], digest: str, g: Any, ou
                     f"[{d.get('lo', nan):.2f}, {d.get('hi', nan):.2f}]"
                 )
             print(f"  -> {r['verdict_carry']}")
+        if "cprior" in r:
+            for c in ("cprior/joint", "alone/cprior", "carry/cprior"):
+                d = r["cprior"]["ratios"][c]["range"]
+                print(
+                    f"  {c} {d.get('value', nan):.3f} "
+                    f"[{d.get('lo', nan):.3f}, {d.get('hi', nan):.3f}]"
+                )
     sound = summary["soundness"]
     return 3 if a.gate and sound is not None and not sound["pass"] else 0
 
