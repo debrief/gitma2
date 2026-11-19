@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The carried model end to end in the browser (spec 021)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">The carried model, end to end, in a browser</h1>
+          <p>From bearings to estimate with nothing prepared in Python</p>
+          <p class="small">16 November 2026 · spec 021 · gitma2</p>
+        </section>
+
+        <section>
+          <h2>What now runs in the browser</h2>
+          <svg viewBox="0 0 640 220" role="img" aria-label="Pipeline: least squares, GLR and O, E-s graph, search, confirmation with the layer graph, E-w graph">
+            <g font-size="10.5" text-anchor="middle">
+              <rect x="10" y="30" width="110" height="46" fill="#fff6d5" stroke="#b8860b"/><text x="65" y="50">least squares,</text><text x="65" y="64">GLR, O</text>
+              <rect x="135" y="30" width="110" height="46" fill="#e9f6ea" stroke="#2ca02c"/><text x="190" y="50">E-s evidence</text><text x="190" y="64">(graph)</text>
+              <rect x="260" y="30" width="110" height="46" fill="#fff6d5" stroke="#b8860b"/><text x="315" y="50">search,</text><text x="315" y="64">nominations</text>
+              <rect x="385" y="30" width="110" height="46" fill="#fff6d5" stroke="#b8860b"/><text x="440" y="50">confirmation</text><text x="440" y="64">and hand-over</text>
+              <rect x="510" y="30" width="120" height="46" fill="#e9f6ea" stroke="#2ca02c"/><text x="570" y="50">E-w estimate</text><text x="570" y="64">(graph)</text>
+              <rect x="385" y="120" width="110" height="40" fill="#e9f6ea" stroke="#2ca02c"/><text x="440" y="138">physics layer</text><text x="440" y="152">(graph)</text>
+              <path d="M120 53 H135 M245 53 H260 M370 53 H385 M495 53 H510 M440 76 V120" stroke="#555" fill="none"/>
+              <text x="320" y="200" fill="#555">yellow: ported to JavaScript from C's frozen Python · green: exported ONNX graphs</text>
+            </g>
+          </svg>
+          <p class="small">About 1,700 lines of Python, ported stage by stage and checked against a dump of every intermediate.</p>
+        </section>
+
+        <section>
+          <h2>Identical decisions, 30 scenarios</h2>
+          <img src="../../img/2026-11-16-browser-segmenter-slides/agreement.svg" alt="Identical rows per check scenario" />
+          <p class="small">1,770 of 1,770 scored rows; every nomination and every confirmation decision the same as Python's.</p>
+        </section>
+
+        <section>
+          <h2>Why: margins far above the differences</h2>
+          <img src="../../img/2026-11-16-browser-segmenter-slides/margins.svg" alt="Largest cost-drop difference against smallest decision margin per scenario" />
+          <p class="small">Cost drops agree to 5.4 × 10⁻⁹ on 29 scenarios and 1.3 × 10⁻⁴ on one; the closest decision is 0.152 from its threshold. Intermediates do differ: one row's least squares lands elsewhere (ordinal 22), cost tables by up to 22%, and the GLR statistic crosses its alarm threshold at one row of ordinal 1 without changing a nomination.</p>
+        </section>
+
+        <section>
+          <h2>Live mode on the page</h2>
+          <img src="../../img/2026-11-16-browser-segmenter-slides/stages.svg" alt="Seconds per stage of live mode for each demo engagement" />
+          <p class="small">25 to 93 s per engagement on one thread; segmentation identical to Python's on 181 of 181 rows; estimates within 2.7 × 10⁻⁶ of the shipped ones.</p>
+        </section>
+
+        <section>
+          <h2>Not achieved, and next</h2>
+          <ul>
+            <li>Pasting a scenario of one's own (spec story 3) is not built.</li>
+            <li>Identical here does not mean identical always: a decision near its threshold could flip; the check would report it with its margin.</li>
+            <li>Speed: confirmation dominates, and the first row waits for it (76 s on the busiest engagement, over the one-minute target).</li>
+          </ul>
+          <p class="small">Page: /gitma2/viewer · record: experiments/20261116-port/ · spec: specs/021-browser-segmenter/</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

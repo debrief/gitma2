@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Carrying state across gaps, against joining through them</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">Carrying state across gaps, against joining through them</h1>
+          <p class="small">2026-11-19 · spec 027 · gitma2 · nothing trained</p>
+        </section>
+        <section>
+          <h2>The question</h2>
+          <ul>
+            <li>Spec 025: one solve over several periods of a target (joint) beats each period alone</li>
+            <li>The cheaper habit: solve period by period, handing each answer on</li>
+            <li>The carry tested: the previous period's declared state, run forward through the gap, as a start for the next period's own search</li>
+            <li>A start, not information: nothing from the earlier period enters the fit's likelihood or prior</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Joining beats this carry; the carry barely moves <code>ctl</code> alone</h2>
+          <img src="../../img/2026-11-19-carry-across-gaps-slides/verdict.svg" alt="carry ÷ joint and alone ÷ carry by split" />
+          <p class="small">Annex B (decides): carry ÷ joint 2.33 [1.66, 3.43]; alone ÷ carry 1.07 [0.88, 1.34], not shown. Busier: 1.351 [0.993, 1.820], not separated (a knife edge); carrying helps 1.29 [1.09, 1.54].</p>
+        </section>
+        <section>
+          <h2>Most periods end at the same answer</h2>
+          <img src="../../img/2026-11-19-carry-across-gaps-slides/ties.svg" alt="share of later periods tied, better, worse" />
+          <p class="small">Where the carry differs it is a different minimum of the period's own fit, not information the evidence endorses.</p>
+        </section>
+        <section>
+          <h2>Where it moves anything: periods without their own ownship turn</h2>
+          <img src="../../img/2026-11-19-carry-across-gaps-slides/kinds.svg" alt="alone ÷ carry with and without an own ownship turn" />
+          <p class="small">Busier without an own turn 1.72 [1.20, 2.48]; Annex B with one 0.91 [0.78, 1.02] (no harm shown, not "no cost").</p>
+        </section>
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>A carried prior (state and covariance through the gap): untested, so nothing is said about carrying in general</li>
+            <li>The panel withdrew the first record's recommendation of the carry: not the rule's output</li>
+            <li>No unit test of the carry chain; IMM/EKF tracks</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Next (owner's choice)</h2>
+          <ul>
+            <li>A carried prior, scored on spent seeds first</li>
+            <li>A per-period consistency flag and markers on inferred gap manoeuvres</li>
+            <li>An uncertainty for the joined track; longer gaps</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/19/carry-across-gaps · Record: experiments/20261119-tl9 · Figures: scripts/research/tl9_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

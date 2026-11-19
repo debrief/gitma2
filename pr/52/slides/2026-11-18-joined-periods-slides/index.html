@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Several periods of one target, joined through the gaps</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.6em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">Time-late over several periods of one target, joined through the gaps</h1>
+          <p class="small">2026-11-18 · spec 025 · gitma2 · nothing trained</p>
+        </section>
+
+        <section>
+          <h2>The idea</h2>
+          <div class="two">
+            <ul>
+              <li>Contact comes and goes: two or three periods (15–30 min) with gaps (5–30 min) of no bearings</li>
+              <li>Solve each period alone (the standing control <code>ctl</code>), or one solve over the whole span, the track continuous through the gaps</li>
+              <li>The joint solve is <code>ctl</code> unchanged: the gaps' bearings are marked missing</li>
+            </ul>
+            <img src="../../img/2026-11-18-joined-periods-slides/track.svg" alt="One Annex B engagement: truth, ownship, ctl alone per period, joint solve dashed through the gaps" />
+          </div>
+          <p class="small">Engagement chosen by rule (median engagement among the stored three-period ones), test seed 353.</p>
+        </section>
+
+        <section>
+          <h2>The registered verdict: gain on all four splits, no harm</h2>
+          <img src="../../img/2026-11-18-joined-periods-slides/verdict.svg" alt="alone ÷ joint by split, registered rows and own rows" />
+          <p class="small">Green: the registered rows (span bound below 0.5). Grey: rows the period determines alone. Annex B 3.10 [2.22, 4.58]; busier 1.97 [1.63, 2.39]; busier on own rows 1.28 [0.95, 1.75] (not shown).</p>
+        </section>
+
+        <section>
+          <h2>Where the gain comes from: periods without their own ownship turn</h2>
+          <img src="../../img/2026-11-18-joined-periods-slides/kinds.svg" alt="alone ÷ joint for periods with and without an ownship turn of their own" />
+          <p class="small">The one by-kind difference real on every split (panel). With an own turn: 1.65 Annex B, 1.13 [0.90, 1.43] busier.</p>
+        </section>
+
+        <section>
+          <h2>Manoeuvres hidden in the gaps</h2>
+          <img src="../../img/2026-11-18-joined-periods-slides/gaps.svg" alt="gap manoeuvres found and missed; invented in quiet gaps" />
+          <p class="small">Found 40 of 43 (Annex B), 83 of 130 (busier). Invented in about a fifth of quiet gaps; nothing in the output marks an inferred gap manoeuvre.</p>
+        </section>
+
+        <section>
+          <h2>What the panel narrowed</h2>
+          <ul>
+            <li>Mostly "an answer where alone had none" (alone's median range error there 0.46); where a period stands alone: about 1.6 Annex B, not shown on busier targets</li>
+            <li>Held course 12.8 is "the span is one leg": not a measure of reach</li>
+            <li>Wild bearings is the same engagements as Annex B: not an independent replication</li>
+            <li>One period in eight is twice as bad joined, unflagged</li>
+            <li>Soundness: a gross-fault screen, not an efficiency check (re-registered after the first had no power)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>No comparison with carrying state between windows (spec 024)</li>
+            <li>No flag for a failed join; no stated uncertainty</li>
+            <li>Gaps over 30 min, association across a gap, several targets: untested</li>
+            <li>IMM/EKF tracks, a test of the runner's slicing, a re-measure of run-to-run variation</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (owner's choice)</h2>
+          <ul>
+            <li>Score spec 024's carried state on these engagements</li>
+            <li>A per-period consistency flag and gap-manoeuvre markers, then an uncertainty for the joined track</li>
+            <li>A stress split with longer, busier gaps</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/18/joined-periods · Record: experiments/20261118-tl8 · Figures: scripts/research/tl8_charts.py, sidecars next to each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
