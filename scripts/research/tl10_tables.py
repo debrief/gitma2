@@ -116,8 +116,86 @@ def main(argv: list[str] | None = None) -> int:
     rec = Path(args[0])
     tl8_tables.main([str(rec)])
     p = rec / "tables.md"
-    p.write_text(p.read_text() + section(rec))
+    extra = variants_section(rec) if _has_variants(rec) else ""
+    p.write_text(p.read_text() + section(rec) + extra)
     return 0
+
+
+def _has_variants(rec: Path) -> bool:
+    sp = json.loads((rec / "summary.json").read_text())["splits"]
+    return any("variants" in r.get("cprior", {}) for r in sp.values())
+
+
+def _variant_coverage(rec: Path, split: str, name: str) -> dict[str, float]:
+    periods = json.loads((rec / f"{split}.periods.json").read_text())
+    md, ch = [], []
+    for e in periods:
+        for q in (e.get("cv") or {}).get(name, []):
+            if "truth_md2" in q:
+                md.append(q["truth_md2"])
+            if "chose_carried" in q:
+                ch.append(q["chose_carried"])
+    a = np.array(md)
+    return {
+        "n": float(a.size),
+        "in95": float(np.mean(a < CHI2_4_95)) if a.size else float("nan"),
+        "med": float(np.median(a)) if a.size else float("nan"),
+        "carried": float(np.mean(ch)) if ch else float("nan"),
+    }
+
+
+def variant_rows(rec: Path) -> list[dict[str, Any]]:
+    """One row per (split, variant): the readings the choice rule uses."""
+    sp = json.loads((rec / "summary.json").read_text())["splits"]
+    rows = []
+    for s_, r in sp.items():
+        c = r["cprior"]
+        named = {"cprior": None, **{k: k for k in c.get("variants", {})}}
+        for name in named:
+            if name == "cprior":
+                rat = c["ratios"]["alone/cprior"]["range"]
+                vj = c["ratios"]["cprior/joint"]["range"]
+                own = c["by_kind"]["own_turn"]["alone/cprior"]["range"]
+                noown = c["by_kind"]["no_own_turn"]["alone/cprior"]["range"]
+                cov = _coverage(rec, s_)
+                cov = {"in95": cov["in95"], "med": cov["med"], "carried": 1.0}
+            else:
+                v = c["variants"][name]
+                key = f"cv-{name}"
+                rat = v["ratios"][f"alone/{key}"]["range"]
+                vj = v["ratios"][f"{key}/joint"]["range"]
+                own = v["by_kind"]["own_turn"][f"alone/{key}"]["range"]
+                noown = v["by_kind"]["no_own_turn"][f"alone/{key}"]["range"]
+                cov = _variant_coverage(rec, s_, name)
+            rows.append(
+                {
+                    "split": s_,
+                    "variant": name,
+                    "alone_v": rat,
+                    "v_joint": vj,
+                    "own": own,
+                    "no_own": noown,
+                    **{k: cov[k] for k in ("in95", "med", "carried")},
+                }
+            )
+    return rows
+
+
+def variants_section(rec: Path) -> str:
+    rows = variant_rows(rec)
+    out = [
+        "",
+        "## Refinements (range; periods after an engagement's first)",
+        "",
+        "| split | variant | alone ÷ v | v ÷ joint | alone ÷ v, own turn | alone ÷ v, no own turn | inside 95% (4 dof) | median d² | carried part chosen |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for x in rows:
+        out.append(
+            f"| {x['split']} | {x['variant']} | {_r(x['alone_v'])} | {_r(x['v_joint'])} | {_r(x['own'])} "
+            f"| {_r(x['no_own'])} | {x['in95']:.3f} | {x['med']:.2f} | {x['carried']:.2f} |"
+        )
+    return "\n".join(out) + "\n"
 
 
 if __name__ == "__main__":
