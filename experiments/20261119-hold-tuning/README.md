@@ -30,8 +30,10 @@ Scored with:
 | more | 0 | | | |
 
 The "more" class is empty: with 1-hour windows and legs of at least an hour, a window holds at
-most one turn. The harm check on "more" is therefore vacuous. Here, as in validation and test,
-71% of windows are answered by both systems.
+most one turn. The harm check on "more" is therefore vacuous. Here 71% of windows are answered by both systems.
+
+*Corrected after the panel:* this sentence first said "as in validation and test". That could
+not have been known when it was written, and it was false: the test answered 0.80.
 
 **ctl ÷ ctl-prior** (geometric mean, engagement interval, median, share better):
 

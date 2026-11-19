@@ -28,6 +28,23 @@ was scored.
 
 ## The rule's output: **gain** (no harm)
 
+**What is compared.** A turn-free 1-hour window given its predecessor's state is compared with
+the same 1-hour window alone. The windows were shortened from 2 hours so that turn-free windows
+exist. Two comparisons were **not** tested:
+- `ctl` on its standing 2-hour windows;
+- a joint solve over two consecutive windows.
+
+**Classes** (windows / handed on / scored):
+
+| class | windows | handed on | scored |
+|---|---|---|---|
+| held | 219 | 183 | 176 |
+| one turn | 441 | 382 | 354 |
+
+The 36 held windows that were not handed on are windows where contact was lost: median range
+68 km, previous window unanswered in 97% of them, `ctl` answers 6. Counted as ties, held is
+2.34 [2.01, 2.75].
+
 ctl ÷ ctl-prior is a geometric mean over windows of per-window median error; above 1 favours the
 prior. Chains' first windows and windows with no hand-over are excluded. The interval is a
 bootstrap over engagements.
@@ -100,15 +117,60 @@ that and gains about 22% more.
 - **Answered:** `ctl` 0.835, `ctl-prior` 0.838.
 - **Cost:** the prior's two searches took 7.1 of 22.7 runner-hours.
 
-## What this supports
+## Panel sensitivities and limits
 
-Where the ownship holds course for an hour or two, carrying the previous window's state and
-uncertainty into the next window's fit and evidence roughly halves the median range error. This
-holds on the tended contact of this simulator's realistic engagements:
-- in turn-free 1-hour windows, a geometric mean of 2.4, median 2.1, with 76% of windows better;
-- in windows with one ownship turn, a smaller gain of 1.2.
+The panel's sensitivities are in `supplement.json` (`scripts/research/hold_supplement.py`) and
+`review.md`. None changes the outcome.
+
+**Weighting:**
+- Each engagement weighted equally: held 2.31.
+- The median engagement: 2.20.
+- Share of engagements above 1: 86%.
+
+**By window median true range:**
+
+| range | held | one turn |
+|---|---|---|
+| < 15 km | 1.66 [1.34, 2.09] (42 windows) | 1.02 [0.81, 1.33] |
+| 15–25 km | 2.15 [1.52, 3.01] (55) | 1.23 [0.98, 1.51] |
+| > 25 km | 3.19 [2.50, 4.07] (79) | 1.28 [1.06, 1.53] |
+
+**Other readings:**
+- **Gaps:** a hand-over after a gap still gains: held 1.95 [1.39, 2.78] (44 windows), against
+  2.59 for contiguous hand-overs.
+- **Coverage:** the 0.945 is a pass of the soundness band, not a calibration. The median NEES
+  is 0.74 against χ²(4)'s 3.36, so the region is too wide for most hand-overs and too narrow for
+  a few.
+- **One-turn windows:** reported, not decided. The median is 1.12, and 18% of windows are twice
+  as bad.
+- **`ctl-carry`'s scope:** the carried start alone costs 11% on one-turn windows (0.89). Spec
+  026's adoption of `ctl-carry` as a cost measure therefore holds only for 2-hour windows with
+  several turns. Recommended: no `ctl-carry` without the prior.
 
 **Limits:**
-- one simulator family, with held legs as the only change;
-- 1-hour windows, chosen so that turn-free windows exist;
-- the hand-over defect spec 028's panel recorded is kept.
+- One simulator family (spec 024's simulated realism), contact 1 only, 1-hour windows.
+- Hand-overs never fall inside a target manoeuvre: the window chain moves each start past a true
+  manoeuvre (inherited from spec 023). Held windows that were moved gain 1.71 (14 windows),
+  against 2.49.
+- Spec 028's hand-over defect is kept. Held windows after held windows gain most (2.98, 27
+  windows), and this is not separable from the defect.
+
+## What this supports
+
+Knowledge of the previous track usefully constrains this leg's solution where the leg alone
+cannot resolve range. This is supported:
+- in this simulator;
+- for the tended contact;
+- on 1-hour windows;
+- against the same window alone.
+
+On turn-free windows ctl ÷ ctl-prior is 2.41 [2.06, 2.83]. The median window improves by 2.15
+and 76% of windows are better. The seeds agree: tuning 2.10, validation 1.91, test 2.41. The
+median error falls from 0.227 to 0.074. On windows with one turn the shift is smaller, 1.22, and
+is reported, not decided.
+
+**Not measured or not tested:**
+- whether the prior narrows the set of manoeuvre histories;
+- whether a 2-hour window or a joint solve over consecutive windows would do as well.
+
+**Panel:** round 1, three reviewers, each approve with findings (`review.md`).
