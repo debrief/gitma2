@@ -356,6 +356,12 @@ and recorded, not asked.
   conditions studied, `ctl` over the span with the gaps' bearings marked missing is the
   standing time-late system for two or three periods of one target; `ctl` per period remains
   the system for a single period. Comparison with carried state (spec 024) is outstanding.
+- **2026-11-19 (agent, recording the owner's decision of 2026-11-18; proposed, owner to
+  merge):** the owner chose a registered comparison of carrying state across gaps with
+  spec 025's joint solve (option B; spec 026). Decided by the panel: joining is better on
+  Annex B; a carried start (the previous declared state as a start for the period's own
+  search) shows no effect there and is not recommended; the joint solve stays the standing
+  time-late system for several periods of one target. A carried prior is untested.
 
 ## Annexes
 
