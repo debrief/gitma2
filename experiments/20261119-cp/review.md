@@ -1,4 +1,4 @@
-# Spec 027 test record: agent review panel, round 1
+# Spec 028 test record: agent review panel, round 1
 
 Three reviewers each read the record, the registration and the code on their own:
 statistics and registration fidelity, code correctness, and interpretation. All three approve

@@ -1,4 +1,4 @@
-# Spec 027 decision record: the previous window as a prior
+# Spec 028 decision record: the previous window as a prior
 
 This record was registered on 2026-11-19, before seeds 355 and 356 existed. It is a registered
 study, not a gate: nothing is trained and nothing runs on GPU. Run on CI, `tma2-long carry2`
@@ -65,3 +65,17 @@ These are written now, before seed 355 exists.
   statement about the untended contact and about windows near gaps.
 - **Coverage:** the carried prior is overconfident even at scale 4 (0.90 for a stated 0.95).
 - **What is carried:** the hand-over carries one state, not a second-best manoeuvre history.
+
+**After merging main (2026-11-19).** This study was registered and run as spec 027. Another
+session's spec 027, carrying state across gaps (PR 49), merged first, so this one is now
+spec 028. Its folder moved from `specs/027-carry-prior/` to `specs/028-carry-prior/`.
+
+- **Bound files:** the spec and plan are unchanged; their contents still match the bound
+  digests under the new path. Configs, code and raw outputs still say 027 and were not edited.
+- **Code digest:**
+  - The merge added three modules under `src/tma2/timelate/`: `carry.py`, `run9.py` and
+    `study9.py`. The code digest's glob picks them up, so at the merged commit it no longer
+    equals `09a7edae…`.
+  - Over the bound file list, the digest still equals `09a7edae…`, so no bound module changed.
+- **Seeds:** that study had skipped seeds 354–359 to stay clear of this one, which used
+  354–356. Seeds 357–359 are unused; the next fresh seed is 362.

@@ -687,8 +687,30 @@ Write-up `site/blog/2026-11-18-long-study.md`, slides `2026-11-18-long-study-sli
 the long-engagement track here as a simulation study; reopen only with measured realism, an
 ownship steered by its own track, or association.
 
+027 (carrying state across gaps against joining through them, `specs/027-carry-across-gaps/`;
+owner 2026-11-18 option B; registered as spec 026, renumbered 027 because the long-engagement study merged first as 026; a registered study; nothing trained): `timelate/carry.py`
+(`solve_ctl`: `ctl` line for line, its start from nothing optionally replaced by a carried
+state; equals `ctl` without one, `scripts/research/tl9_ctl_equivalence.py`), `run9.py` (plan
+key `runner: run9`: `run8` per engagement, then the carry chain), `study9.py` (carry ÷ joint,
+alone ÷ carry over later periods); tables in `tl8_tables.py`, figures `tl9_charts.py`. Tuning
+on spent seed 353 (`experiments/20261118-tl9-tuning/`), decision `20261118-tl9-decision/`
+(plan `configs/timelate/tl-m.json` `0f1a8cae…`, code `cee4a319…`), validation seed 360
+passed (`20261118-tl9-val/`), **test record `experiments/20261119-tl9/` (seed 361): joining
+better on Annex B (carry ÷ joint 2.33 [1.66, 3.43]), wild bearings and held course; busier not
+separated (1.351 [0.993, 1.820]); carrying not shown on Annex B (1.07), helps on busier (1.29);
+no harm. Decided by the panel, round 1** (`review.md`, five approve with findings): the joint
+solve stays standing; the first record's carry recommendation is withdrawn (not the rule's
+output); this is a carried start, not carried information (about half of periods tie with
+`ctl` alone; the busier gain is a quarter of periods without their own turn), so nothing is
+said about a carried prior. Write-up `site/blog/2026-11-19-carry-across-gaps.md`, slides
+`2026-11-19-carry-across-gaps-slides.md`. Panel's order (owner's choice): a carried prior
+(state and covariance through the gap, a prior in the evidence) on spent seeds first; a
+consistency flag; an uncertainty; longer gaps. Seeds 360, 361 used; 354 to 359 skipped to stay clear of PR 47
+(spec 028 then used 354–356; 357–359 unused); the next fresh seed is 362.
 
-027 (the previous window as a prior, `specs/027-carry-prior/`; owner 2026-11-18 after PR 47; a
+
+028 (the previous window as a prior, `specs/028-carry-prior/`; registered and run as 027,
+renumbered because the carry-across-gaps study merged first as 027; owner 2026-11-18 after PR 47; a
 registered study, not a gate; nothing trained). Code:
 - `long/carried.py`: `CarriedPrior`; `joint_fit_c`, `log_evidence_c` and the copied search,
   equal to the originals with no prior; `hand_on` (the state at the next window's first row,
@@ -719,8 +741,8 @@ this size; no harm.** Weak geometry is 1.105 [0.963, 1.273]: clustered by engage
 Write-up `site/blog/2026-11-19-carry-prior.md`, slides `2026-11-19-carry-prior-slides.md`.
 Recommended (owner's choice): adopt `ctl-prior` with its guard for tended contacts up to 12 h
 and close the track. Alternatives: an ownship holding course for 1–2 h (the owner's case), or a
-registered joint solve over consecutive windows. Seeds 354–356 used; the next fresh seed is
-357.
+registered joint solve over consecutive windows. Seeds 354–356 used (357–359 unused); the
+next fresh seed is 362.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -1142,7 +1164,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   the rule without them beside. A median over answered rows cannot see a filter that stops
   answering: register the share answered as an outcome. Banding by range does not match range
   inside a band. A CPU saving is the saving where the cheaper path runs, not over all windows.
-- Spec 027 panel: when a chained system falls back to the control where nothing was handed on,
+- Spec 027: a carried start can only change which minimum a period's own fit lands in; a
+  comparison of it with a joint solve is decided by construction. Before registering, ask
+  what information each side's likelihood actually holds. Report ties (unchanged periods)
+  beside any ratio whose median is 1.00. A recommendation conditioned on the deciding split
+  must not be drawn from a secondary split.
+- Spec 028 panel: when a chained system falls back to the control where nothing was handed on,
   those windows are constructed ties too: exclude them in the registration. Bootstrap units are
   engagements, not (engagement, contact) chains: two contacts share an ownship. A hand-over
   refit started from the full-window fit can keep the overlap's information on a flat valley:

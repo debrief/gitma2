@@ -1,4 +1,4 @@
-"""Spec 027 slides: SVG figures from the test record experiments/20261119-cp/.
+"""Spec 028 slides: SVG figures from the test record experiments/20261119-cp/.
 
     uv run python scripts/research/cp_charts.py \\
         [--record experiments/20261119-cp] [--config configs/long/cp-test.json] \\

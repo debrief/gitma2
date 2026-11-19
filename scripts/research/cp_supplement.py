@@ -1,4 +1,4 @@
-"""Spec 027: readings beside the registered rule (experiments/20261119-cp/), decided by nothing.
+"""Spec 028: readings beside the registered rule (experiments/20261119-cp/), decided by nothing.
 
     uv run python scripts/research/cp_supplement.py > experiments/20261119-cp/supplement.json
 

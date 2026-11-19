@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Carrying the previous window as a prior (spec 027)
+# Specification Quality Checklist: Carrying the previous window as a prior (spec 028)
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-18

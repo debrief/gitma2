@@ -1,4 +1,4 @@
-# Spec 027 test record (seed 356): the previous window as a prior
+# Spec 028 test record (seed 356): the previous window as a prior
 
 ## Run and scoring
 

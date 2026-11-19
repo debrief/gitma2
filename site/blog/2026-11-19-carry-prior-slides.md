@@ -1,7 +1,7 @@
 ---
 title: "Slides: the previous window as a prior"
 date: 2026-11-19T12:30
-tags: [slides, spec-027]
+tags: [slides, spec-028]
 ---
 
 import Slides from "@site/src/components/Slides";
@@ -10,7 +10,7 @@ These slides are the illustrated companion to
 [the write-up](/blog/2026/11/19/carry-prior). The registered rule's output is **not shown, at
 this size**, with no harm. Beside the rule, carrying the previous window's state as a prior
 gives a small average shift: about 10% in geometric mean and 3% in the median window. Spec:
-`specs/027-carry-prior/`.
+`specs/028-carry-prior/`.
 
 <!-- truncate -->
 

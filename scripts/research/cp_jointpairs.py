@@ -1,4 +1,4 @@
-"""Spec 027 (FR-012, reported only): spec 025's joint solve over two consecutive windows
+"""Spec 028 (FR-012, reported only): spec 025's joint solve over two consecutive windows
 against ``ctl-prior`` on the second window, on the tuning seed.
 
     uv run python scripts/research/cp_jointpairs.py [--raw experiments/20261118-cp-tuning/raw]

@@ -1,4 +1,4 @@
-# Tasks: spec 027
+# Tasks: spec 028
 
 - [x] T001 `long/carried.py` (carried prior, fit, evidence, search, hand-on, widening, guard) and unit tests (equality with no prior; hand-on recovers a known state)
 - [x] T002 `long/carry2.py` runner and its equality test with `carry.solve_window`; CLI part `carry2`

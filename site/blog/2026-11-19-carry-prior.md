@@ -1,7 +1,7 @@
 ---
 title: "Long engagements: the previous window as a prior"
 date: 2026-11-19T12:00
-tags: [write-up, spec-027]
+tags: [write-up, spec-028]
 ---
 
 Spec 026 found that handing the previous 2-hour window's track to the next window as a starting
@@ -14,7 +14,7 @@ That estimate enters the next window's fit and the evidence that ranks manoeuvre
 
 The registered rule's output is **not shown, at this size**, with **no harm** anywhere. Beside
 the rule, the prior gives a small average shift: about 10% in geometric mean and 3% in the
-median window. Spec: `specs/027-carry-prior/`. Record: `experiments/20261119-cp/`.
+median window. Spec: `specs/028-carry-prior/`. Record: `experiments/20261119-cp/`.
 
 <!-- truncate -->
 

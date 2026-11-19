@@ -1,4 +1,4 @@
-# Spec 027 validation (seed 355): soundness passed
+# Spec 028 validation (seed 355): soundness passed
 
 ## Run and scoring
 

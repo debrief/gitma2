@@ -1,7 +1,7 @@
 ---
 title: "Kickoff: carrying the previous window as a prior"
 date: 2026-11-18T22:00
-tags: [kickoff, spec-027]
+tags: [kickoff, spec-028]
 ---
 
 Spec 026's `ctl-carry` gave each 2-hour window the previous window's track as a starting guess.
@@ -9,7 +9,7 @@ It found the same answers faster but no better ones, because nothing in the fit 
 The owner expected knowledge of the previous track to narrow the hypotheses for the next window.
 This study tests that expectation directly. The previous window's estimate and its uncertainty
 enter the next window's fit, and the evidence that ranks manoeuvre histories, as a prior.
-Spec: `specs/027-carry-prior/`.
+Spec: `specs/028-carry-prior/`.
 
 <!-- truncate -->
 

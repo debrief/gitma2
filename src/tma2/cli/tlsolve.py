@@ -39,6 +39,7 @@ SHIFT_FILES = (*CONTROL_FILES, "detect.py", "run5.py")  # spec 017
 ADAPT_FILES = (*CONTROL_FILES, "detect.py", "adapt.py", "run6.py")  # spec 018
 LADDER_FILES = (*CONTROL_FILES, "adapt.py", "run7.py")  # spec 019
 JOIN_FILES = (*CONTROL_FILES, "layout.py", "run8.py")  # spec 025
+CARRY_FILES = (*JOIN_FILES, "carry.py", "run9.py")  # spec 026
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -94,7 +95,10 @@ def main(argv: list[str] | None = None) -> int:
     prior = ManoeuvrePrior.from_ranges(json.loads(Path(plan["prior"]).read_text()))
     c_params, c2 = c_parameters(plan["gh_plan"])
     # spec 025 lays whole engagements out as periods and gaps itself
-    whole = bool(plan["splits"][a.split].get("whole", False)) or plan.get("runner") == "run8"
+    whole = bool(plan["splits"][a.split].get("whole", False)) or plan.get("runner") in (
+        "run8",
+        "run9",
+    )
     periods = list(iter_periods(a.inp, a.start, a.count, whole=whole))
     if not periods:
         raise SystemExit(f"no σ = 1° periods at {a.start} in {a.inp}")
@@ -104,7 +108,8 @@ def main(argv: list[str] | None = None) -> int:
     run5 = plan.get("runner") == "run5"
     run6 = plan.get("runner") == "run6"
     run7 = plan.get("runner") == "run7"
-    run8 = plan.get("runner") == "run8"
+    run9 = plan.get("runner") == "run9"
+    run8 = plan.get("runner") == "run8" or run9
     run4 = plan.get("runner") == "run4" or run5 or run6 or run7 or run8
     run3 = plan.get("runner") == "run3"
     run2 = plan.get("runner") == "run2" or run3
@@ -139,10 +144,12 @@ def main(argv: list[str] | None = None) -> int:
             arrays, recs = run_shard5(periods, priors, c_params, c2, settings, imm, ekf)
         elif run8:
             from tma2.timelate.run8 import run_shard8
+            from tma2.timelate.run9 import run_shard9
 
             if learned:
-                raise SystemExit("runner run8 takes no --learned")
-            arrays, recs = run_shard8(periods, priors, c_params, c2, plan["settings"])
+                raise SystemExit("runners run8 and run9 take no --learned")
+            shard = run_shard9 if run9 else run_shard8
+            arrays, recs = shard(periods, priors, c_params, c2, plan["settings"])
         elif run7:
             from tma2.timelate.adapt import family as family7
             from tma2.timelate.run7 import ladder, run_shard7
@@ -243,7 +250,9 @@ def main(argv: list[str] | None = None) -> int:
         c_code_sha256=str(c2.get("code_sha256", "")),
         search_code_sha256=search_code_digest(
             (
-                JOIN_FILES
+                CARRY_FILES
+                if run9
+                else JOIN_FILES
                 if run8
                 else LADDER_FILES
                 if run7

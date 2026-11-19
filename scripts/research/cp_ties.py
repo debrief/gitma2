@@ -1,4 +1,4 @@
-"""Spec 027 panel (reviewer 2, finding 1): the rule without constructed ties.
+"""Spec 028 panel (reviewer 2, finding 1): the rule without constructed ties.
 
     uv run python scripts/research/cp_ties.py > experiments/20261119-cp/ties.json
 

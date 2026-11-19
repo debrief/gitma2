@@ -1,4 +1,4 @@
-"""Spec 027: the digests the decision record binds (experiments/20261119-cp-decision/).
+"""Spec 028: the digests the decision record binds (experiments/20261119-cp-decision/).
 
     uv run python scripts/research/cp_digests.py
 
@@ -24,8 +24,8 @@ FILES = [
     "configs/timelate/tl-broad.json",
     "configs/gateh/gh-a.json",
     ".github/workflows/long.yml",
-    "specs/027-carry-prior/spec.md",
-    "specs/027-carry-prior/plan.md",
+    "specs/028-carry-prior/spec.md",
+    "specs/028-carry-prior/plan.md",
 ]
 CODE_GLOBS = ["src/tma2/long/*.py", "src/tma2/timelate/*.py", "src/tma2/cli/long.py"]
 CODE_FILES = ["src/tma2/sim/prng.py", "src/tma2/sim/geometry.py"]
