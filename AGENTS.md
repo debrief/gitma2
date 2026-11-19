@@ -687,6 +687,41 @@ Write-up `site/blog/2026-11-18-long-study.md`, slides `2026-11-18-long-study-sli
 the long-engagement track here as a simulation study; reopen only with measured realism, an
 ownship steered by its own track, or association.
 
+
+027 (the previous window as a prior, `specs/027-carry-prior/`; owner 2026-11-18 after PR 47; a
+registered study, not a gate; nothing trained). Code:
+- `long/carried.py`: `CarriedPrior`; `joint_fit_c`, `log_evidence_c` and the copied search,
+  equal to the originals with no prior; `hand_on` (the state at the next window's first row,
+  refitted on the bearings before it, with a Laplace covariance); `widen`; `guard`, a χ²(4)
+  test.
+- `long/carry2.py`: `ctl-prior` beside `ctl` and `ctl-carry` in one job, run by
+  `tma2-long carry2`.
+- `long/study27.py` (`tma2-long study27`) and `tma2-long jointpair`.
+
+Seeds and settings: 354 tuning (`experiments/20261118-cp-tuning/`). Decision record
+`20261119-cp-decision/`: scale 4, tail 1,200 s, α 0.001, code `09a7edae…`. Validation 355
+(`20261119-cp-val/`): soundness passed.
+
+**Test record `experiments/20261119-cp/` (seed 356, 60 engagements, scored once): not shown, at
+this size; no harm.** Weak geometry is 1.105 [0.963, 1.273]: clustered by engagement
+[0.951, 1.279], without the 13 constructed ties 1.112. Other 1.14 [1.035, 1.27]; contact 1 1.11
+[1.006, 1.22]; ctl-carry ÷ ctl-prior 1.14–1.22.
+
+**Panel round 1** (`review.md`): three approve with findings. Narrowings:
+- The owner's case, a window with no useful ownship manoeuvre, never occurs in this simulator;
+  the weak split is the untended contact plus windows near gaps.
+- Beside the rule there is an average shift with many losses (median window 1.03).
+- "Narrows the permutations" is not shown either way.
+- The registered settings were extrapolated, not run as a chain.
+- `hand_on`'s refit starts from the full-window fit, so it can keep overlap information.
+  Recorded, not repaired.
+
+Write-up `site/blog/2026-11-19-carry-prior.md`, slides `2026-11-19-carry-prior-slides.md`.
+Recommended (owner's choice): adopt `ctl-prior` with its guard for tended contacts up to 12 h
+and close the track. Alternatives: an ownship holding course for 1–2 h (the owner's case), or a
+registered joint solve over consecutive windows. Seeds 354–356 used; the next fresh seed is
+357.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1107,6 +1142,18 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   the rule without them beside. A median over answered rows cannot see a filter that stops
   answering: register the share answered as an outcome. Banding by range does not match range
   inside a band. A CPU saving is the saving where the cheaper path runs, not over all windows.
+- Spec 027 panel: when a chained system falls back to the control where nothing was handed on,
+  those windows are constructed ties too: exclude them in the registration. Bootstrap units are
+  engagements, not (engagement, contact) chains: two contacts share an ownship. A hand-over
+  refit started from the full-window fit can keep the overlap's information on a flat valley:
+  start it neutrally. Register the soundness check on the population the rule decides (the
+  coverage check covered contact 1 while the decided split was mostly contact 2), and run the
+  registered settings as a chain on tuning rather than extrapolating a grid. "Same history"
+  needs matched times and kinds, not equal counts. Check that each clause of a split can fire
+  in the simulator before registering it.
+- `long.yml`: a results branch whose history carries workflow edits is refused to the Actions
+  token, so the collect step pushes an orphan branch. Pushes to main are ignored: merging a PR
+  that changes `configs/long/run.json` re-ran the last study's whole plan.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting

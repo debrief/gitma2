@@ -6,6 +6,6 @@
 - [x] T004 Configs (study, settings, run files); tuning run on CI (seed 354); settings chosen; split size checked
 - [x] T005 Joint-solve pairs on tuning (reported only)
 - [x] T006 Decision record with digests and forecasts, before seeds 355 and 356 exist
-- [ ] T007 Validation (seed 355): soundness and coverage
-- [ ] T008 Test (seed 356), scored once
-- [ ] T009 Agent review panel; write-up and slides; AGENTS.md; PR
+- [x] T007 Validation (seed 355): soundness and coverage
+- [x] T008 Test (seed 356), scored once
+- [x] T009 Agent review panel; write-up and slides; AGENTS.md; PR

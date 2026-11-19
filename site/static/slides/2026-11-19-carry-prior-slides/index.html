@@ -1,0 +1,87 @@
+<!doctype html>
+<!-- Spec 027 slides: the previous window as a prior.
+     Figures: site/static/img/2026-11-19-carry-prior-slides/, made by scripts/research/cp_charts.py. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The previous window as a prior</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 54vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.85em; }
+      .reveal table { font-size: 0.62em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">The previous window as a prior</h1>
+          <p class="small">2026-11-19 · spec 027 · seeds 354 (tuning), 355 (validation), 356 (test) · gitma2</p>
+        </section>
+
+        <section>
+          <h2>The question</h2>
+          <ul>
+            <li>Spec 026: the previous track as a <b>starting guess</b> gave no change in accuracy</li>
+            <li>The owner: the previous track should constrain the permutations for the next leg</li>
+            <li>So: hand on the <b>state and its uncertainty</b>, and put them in the fit and the evidence</li>
+          </ul>
+          <p class="small">The carried estimate uses only bearings before the hand-over, is widened for unseen manoeuvres, and is checked by a χ²(4) guard.</p>
+        </section>
+
+        <section>
+          <h2>Registered rule: not shown, no harm</h2>
+          <img src="../../img/2026-11-19-carry-prior-slides/splits.svg" alt="ctl over ctl-prior by split in range, course and speed, with ctl-carry over ctl-prior" />
+          <p class="small">Weak geometry 1.105 [0.963, 1.273] (clustered by engagement [0.951, 1.279]). No upper limit below 1 anywhere.</p>
+        </section>
+
+        <section>
+          <h2>An average shift, with many losses</h2>
+          <img src="../../img/2026-11-19-carry-prior-slides/windows.svg" alt="per-window ratios by split" />
+          <p class="small">Median window 1.03 and 44% of windows worse; trimmed 10% at both ends, other 1.10 [1.03, 1.19]. Gain not concentrated where the declared count changed.</p>
+        </section>
+
+        <section>
+          <h2>The carried uncertainty</h2>
+          <img src="../../img/2026-11-19-carry-prior-slides/coverage.svg" alt="coverage of the carried 95% region by contact on tuning, validation and test" />
+          <p class="small">Tended contact 0.953 on test. Untended contact 0.76 on validation, 0.90 on test: the decided split's prior was overconfident.</p>
+        </section>
+
+        <section>
+          <h2>One window where the prior helped</h2>
+          <img src="../../img/2026-11-19-carry-prior-slides/track.svg" alt="truth, ownship, ctl and ctl-prior tracks and the carried ellipse" />
+          <p class="small">The best tended-contact window of the test, shown as an example, not as typical.</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>The owner's case (no useful ownship manoeuvre in a window) never occurs in this simulator</li>
+            <li>Whether the prior narrows the set of histories: not tested</li>
+            <li>Hand-over defect recorded (the refit starts from the full window's fit)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>Recommended: adopt ctl-prior with its guard for tended contacts up to 12 h, then close the track</li>
+            <li>Or: an ownship holding course for 1–2 h, which answers the owner's question directly</li>
+            <li>Or: a registered joint solve over consecutive windows (1.7× on 12 tuning pairs, 3× the time)</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/19/carry-prior · Record: experiments/20261119-cp/ · Figures: scripts/research/cp_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
