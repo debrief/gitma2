@@ -19,12 +19,17 @@ The median per-period ratio of alone ÷ carry is 1.00 on every split: in the typ
 carried start ends at `ctl` alone's answer. Carry ÷ joint has median 1.83 (Annex B) and 1.27
 (busier); joining is twice as bad in 13% and 24% of those periods.
 
-By the decision record: **joining is better on Annex B, so the joint solve stays the standing
-system for several periods of one target; the carry is the cheaper, weaker alternative.**
-Carrying helps without harm only on busier targets (and by the same rule is not shown on Annex
-B), so it is recommended, where a joint solve is not available, as a start that costs nothing
-and sometimes helps, not as a replacement. On busier targets the comparison with joining is
-not separated (lower limit 0.993).
+**Decided by the panel, round 1 (`review.md`; five approve with findings), narrowed.** By the
+registered rule joining is better than this carry on Annex B, wild bearings and held course;
+on busier targets the two are not separated in range (lower limit 0.993, within bootstrap
+noise of 1; joining is better in course and speed there). The joint solve stays the standing
+system for several periods of one target, within spec 025's conditions. A carried start shows
+no effect on Annex B (not shown; it excludes gains above about a third), and so by the rule is
+not recommended. The busier-target "helps" (about a quarter of periods, almost all without an
+ownship turn of their own; about half of periods are exact ties) is an observation, not an
+outcome. This carry is a start for the period's own search, not carried information: a
+carried prior was not tested. 7 Annex B engagements (10 busier, 4 and 4 elsewhere) hold no
+two-period layout; 70 of 75 later Annex B periods (92 of 107 busier) have scored rows.
 
 Soundness on the test seed (reported; decided on validation): 1.13 [0.83, 1.58] over 40
 engagements; joint and carry answered every period; the first period's carry equals `ctl`
@@ -36,8 +41,8 @@ alone (errors agree to 0.008, float32 rounding of the stored tracks).
 |---|---|
 | joining better on every split | right on Annex B, wild bearings, held course; **wrong on busier** (not separated, 1.351 [0.993, 1.820]) |
 | Annex B carry ÷ joint about 2.2 | 2.33: right |
-| busier about 1.6 | 1.35 |
-| wild bearings about 3, held course about 4 | 3.57; 10.5 (larger) |
+| busier about 1.6 | 1.35: lower (wrong) |
+| wild bearings about 3, held course about 4 | 3.57 right; 10.5 (wrong, larger) |
 | carrying not shown on Annex B (about 1.0) | 1.07: right |
 | carrying possibly helps on busier (about 1.1) | 1.29, helps: right in direction, larger |
 | possible harm in held-course speed | 1.118 [0.868, 1.525]: no harm |

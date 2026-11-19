@@ -64,3 +64,8 @@ busier targets (about 1.1); a harm reading in speed on held course is possible (
 
 - Tuning used spent seed 353 (spec 025's test engagements), not a fresh seed.
 - Seeds 360 and 361 were chosen clear of PR 47's registrations (350, 351).
+
+## Recorded after the test (panel round 1)
+
+- The soundness band [0.6, 1.6] has a geometric centre of 0.98, not 0.79 as written above.
+- Seeds 354 to 359 are unused (skipped to stay clear of PR 47's numbering).
