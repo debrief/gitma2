@@ -1,19 +1,732 @@
 {
-  "description": "Spec 023's CI run: the standing systems on configs/long/long.json's four engagements (6, 12, 24, 48 hours; seed 348). Real-time every 10 min on a 2-hour window; time-late ctl on 2-hour windows overlapping by 30 min; ctl timed on single periods of 0.5 to 4 hours of the 24-hour engagement.",
-  "jobs": [
-    {"part": "realtime", "index": 0, "shards": 1},
-    {"part": "realtime", "index": 1, "shards": 2},
-    {"part": "realtime", "index": 2, "shards": 3},
-    {"part": "realtime", "index": 3, "shards": 6},
-    {"part": "timelate", "index": 0, "shards": 1},
-    {"part": "timelate", "index": 1, "shards": 2},
-    {"part": "timelate", "index": 2, "shards": 4},
-    {"part": "timelate", "index": 3, "shards": 8},
-    {"part": "scaling", "index": 2, "lengths": "1800,3600"},
-    {"part": "scaling", "index": 2, "lengths": "5400"},
-    {"part": "scaling", "index": 2, "lengths": "7200"},
-    {"part": "scaling", "index": 2, "lengths": "10800"},
-    {"part": "scaling", "index": 2, "lengths": "14400"},
-    {"part": "scaling", "index": 2, "lengths": "21600"}
-  ]
+ "description": "Spec 025's registered study, test (seed 351): ctl and ctl-carry on every window of both contacts of 30 + 30 realistic engagements of 6 and 12 hours; the IMM on the 12-hour ones. Copied to configs/long/run.json to launch; bound by digest in experiments/20261118-ls-decision/.",
+ "jobs": [
+  {
+   "part": "carry",
+   "index": 0,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 1,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 2,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 3,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 4,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 5,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 6,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 7,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 8,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 9,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 10,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 11,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 12,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 13,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 14,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 15,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 16,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 17,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 18,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 19,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 20,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 21,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 22,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 23,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 24,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 25,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 26,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 27,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 28,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 29,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 30,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 31,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 32,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 33,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 34,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 35,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 36,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 37,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 38,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 39,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 40,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 41,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 42,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 43,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 44,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 45,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 46,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 47,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 48,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 49,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 50,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 51,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 52,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 53,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 54,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 55,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 56,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 57,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 58,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 59,
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  },
+  {
+   "part": "carry",
+   "index": 0,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 1,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 2,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 3,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 4,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 5,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 6,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 7,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 8,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 9,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 10,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 11,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 12,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 13,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 14,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 15,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 16,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 17,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 18,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 19,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 20,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 21,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 22,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 23,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 24,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 25,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 26,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 27,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 28,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 29,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 30,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 31,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 32,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 33,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 34,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 35,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 36,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 37,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 38,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 39,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 40,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 41,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 42,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 43,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 44,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 45,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 46,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 47,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 48,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 49,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 50,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 51,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 52,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 53,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 54,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 55,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 56,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 57,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 58,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "carry",
+   "index": 59,
+   "config": "configs/long/study-test.json",
+   "contact": 2
+  },
+  {
+   "part": "imm",
+   "index": 0,
+   "indices": "30-59",
+   "config": "configs/long/study-test.json",
+   "contact": 1
+  }
+ ]
 }

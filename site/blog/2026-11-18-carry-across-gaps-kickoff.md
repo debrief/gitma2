@@ -1,7 +1,7 @@
 ---
 title: "Kickoff: carrying state across gaps, against joining through them"
 date: 2026-11-18
-tags: [kickoff, spec-026]
+tags: [kickoff, spec-027]
 ---
 
 Spec 025 showed that one solve over several periods of a target beats solving each alone. The
@@ -21,7 +21,7 @@ fresh seeds (owner, option B). Nothing is trained.
 
 ## Where this task moves to
 
-- Spec `specs/026-carry-across-gaps/`. Carry: each later period starts its search from the
+- Spec `specs/027-carry-across-gaps/`. Carry: each later period starts its search from the
   previous period's declared state, run forward at constant velocity through the gap.
 - Registered: carry ÷ joint (is joining better?) and alone ÷ carry (does carrying help?),
   per split, with engagement intervals.

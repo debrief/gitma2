@@ -611,6 +611,27 @@ each; the IMM over 48 h 426 s (cause not established); the whole-engagement boun
 `/timelate#long`. Recommended next (owner's choice): carry state between windows, an
 incremental C, then scenario realism before a registered study.
 
+024 (long engagements, part 2, `specs/024-long-carry-incremental-realism/`; owner on PR 46:
+"implement 3 recommendations"; an investigation, not a gate; nothing trained; no new seed: 348
+with a realism stream, the next fresh seed is still 349). `long/carry.py` (`ctl-carry`: `ctl`
+with its start from nothing replaced by the previous window's declared track and manoeuvres;
+both solved per window; this `ctl` equals spec 023's runner within 1 mm on one machine,
+`experiments/20261117-long2/ctl-check.json`), `long/incremental.py` (one confirmation per
+2-hour block, cropped to each estimate's 720 rows; equals the per-window run for blocks of
+one), realism in `long/sim.py` `_World` (`configs/long/realistic.json`: steering on measured
+bearing and a ±30% range belief, closing on the last belief when lost; gaps; detection 50% at
+40 km; a second contact, `Engagement.other`, swapped within 1°). `tma2-long realtime-inc|carry
+--config --contact`; record `experiments/20261117-long2/` (CI run 44153682342;
+`scripts/research/long2_{report,viewer_data,charts,block_position,ctl_check}.py`). Findings:
+carry is level in accuracy (median window ratio 1.00; wins and losses mixed) and its start costs
+about 55% of the search it replaces; the incremental C is 1.7× cheaper and worse (E 29.8 / 35.6%
+against 14.3 / 20.9% at 24 / 48 h), the loss growing with an estimate's position in its block
+(cause not established; not adopted); realistic contact 1 keeps `ctl` at 1.5–2.2%, the untended
+contact 2 is held 10–22% beyond 6 h and at 6–8% where held. Note
+`docs/research/13-long-engagements-2.md` proposes a registered study (6- and 12-hour realistic
+engagements, seeds 349–351): the owner's choice.
+
+
 025 (several periods of one target, joined through the gaps, `specs/025-joined-periods/`; owner
 2026-11-17 option C, motion continuity only; numbered 025 because 023/024 are another
 session's; a registered study, not a gate; nothing trained): `timelate/layout.py` (two or
@@ -641,8 +662,33 @@ on these engagements; a consistency flag and gap-manoeuvre markers; an uncertain
 split with longer gaps. Seeds 349, 350, 352, 353 used (351 counted only); the next fresh seed
 is 354.
 
-026 (carrying state across gaps against joining through them, `specs/026-carry-across-gaps/`;
-owner 2026-11-18 option B; a registered study; nothing trained): `timelate/carry.py`
+026 (long engagements, the registered study, `specs/026-long-study/`; numbered 026 because
+spec 025 (joined periods) was merged first; owner on PR 47:
+"registered study"; not a gate; nothing trained; seeds 349 tuning, 350 validation, 351 test,
+all used; spec 025 ran in parallel on 349, 350, 352 and 353 of its own simulator (a different
+stream, so different engagements, but the seeds were claimed twice; 351 it counted only); the
+next fresh seed is 354). `long/study.py` (E1 ctl ÷ ctl-carry per window on the
+tended contact, non-inferior if the lower limit ≥ 0.95; E2 untended ÷ tended by range band;
+E3 IMM hours 6–12 ÷ 0–6; soundness S1–S3; bootstrap over engagements), `imm_states`,
+`tma2-long imm|study`, `configs/long/study-*.json`, run files `configs/long/runs/ls-*.json`;
+decision `experiments/20261118-ls-decision/` (digests by `scripts/research/long_study_digests.py`,
+code `938ef9a2…`). Tuning `20261118-ls-tuning/`, validation `20261118-ls-val/` (soundness
+passed), **test record `experiments/20261118-ls/` (60 engagements, scored once): E1 non-inferior
+1.017 [0.958, 1.082]; E2 1.47 [1.12, 2.05]; E3 drift not shown 1.06 [0.82, 1.31]. Panel round 1:
+three approve with findings** (`review.md`, `supplement.json` from
+`scripts/research/long_study_supplement.py`). Narrowed: E1 rests on level windows (each chain's
+first is ctl by construction): without them 1.021 [0.9502, 1.100], where the two differ 1.034
+[0.923, 1.168], 12 h 1.005, untended contact 0.942; adopted only as a cost measure (31% of the
+search where it runs) for tended contacts up to 12 h; E2 is this simulator's second contact
+(no range keeping, scored where detected; 2-km sub-bands 1.34 [1.01, 1.87]); E3 reads answered
+rows only (counting failures 1.26 [0.88, 1.80]; the share answered falls 0.91 to 0.74–0.79).
+Write-up `site/blog/2026-11-18-long-study.md`, slides `2026-11-18-long-study-slides.md`
+(figures `scripts/research/long_study_charts.py`). Panel's recommendation (owner's choice): stop
+the long-engagement track here as a simulation study; reopen only with measured realism, an
+ownship steered by its own track, or association.
+
+027 (carrying state across gaps against joining through them, `specs/027-carry-across-gaps/`;
+owner 2026-11-18 option B; registered as spec 026, renumbered 027 because the long-engagement study merged first as 026; a registered study; nothing trained): `timelate/carry.py`
 (`solve_ctl`: `ctl` line for line, its start from nothing optionally replaced by a carried
 state; equals `ctl` without one, `scripts/research/tl9_ctl_equivalence.py`), `run9.py` (plan
 key `runner: run9`: `run8` per engagement, then the carry chain), `study9.py` (carry ÷ joint,
@@ -1063,6 +1109,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   and 4% of rows until fixed). A shard that recomputes a whole-engagement quantity reports it
   once per shard: average, do not sum. GitHub artifact download URLs are signed for ten minutes:
   fetch each one right after asking for it.
+- Spec 024: a CPU-family difference moves `ctl`'s search by kilometres on a window (2.5 km
+  between EPYC 9V45 and the session container): compare systems within one job, never a run
+  against another run's record. A block-incremental segmenter that crops a longer history is
+  not the per-window segmenter: test equivalence at block length one and then check error by
+  position in the block. A PR merged while its branch has new commits: open a new PR from the
+  same branch rather than rebasing under a running CI job.
 - Spec 025: a fit's rows share one error, so a soundness statistic pooled over rows has the
   power of the number of engagements, not of rows: register a per-engagement statistic with an
   engagement interval, check its expected value under its own model (a geometric mean of
@@ -1070,7 +1122,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   fresh seed locally before registering, even to count it. Splits built on the same seed with
   a mismatch overlay are the same engagements. When rows are chosen by a bound the joined data
   satisfy, report the ratio on rows each side determines alone beside it.
-- Spec 026: a carried start can only change which minimum a period's own fit lands in; a
+- Spec 026 panel: a chained system's first window equals the control by construction; a
+  per-window rule over all windows counts those as ties and moves the decision (E1 passed by
+  0.008 with them, 0.0002 without). Exclude constructed ties in the registration, or report
+  the rule without them beside. A median over answered rows cannot see a filter that stops
+  answering: register the share answered as an outcome. Banding by range does not match range
+  inside a band. A CPU saving is the saving where the cheaper path runs, not over all windows.
+- Spec 027: a carried start can only change which minimum a period's own fit lands in; a
   comparison of it with a joint solve is decided by construction. Before registering, ask
   what information each side's likelihood actually holds. Report ties (unchanged periods)
   beside any ratio whose median is 1.00. A recommendation conditioned on the deciding split

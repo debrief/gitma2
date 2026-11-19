@@ -1,4 +1,4 @@
-# Spec 026 test record (seed 361): carrying state across gaps, against joining through them
+# Spec 027 test record (seed 361): carrying state across gaps, against joining through them
 
 CI run 44440932257 (`timelate/tl-m-test` at c151052), plan `configs/timelate/tl-m.json`
 (`0f1a8cae…`, registered in `experiments/20261118-tl9-decision/`), code `cee4a319…`, clean tree
@@ -54,3 +54,10 @@ alone (errors agree to 0.008, float32 rounding of the stored tracks).
 - IMM and EKF tracks (as spec 025).
 - A carry that also moves manoeuvres across the gap, or carries uncertainty (only a state is
   carried).
+
+## Renumbered (2026-11-19)
+
+This study was registered and run as spec 026. The long-engagement registered study (PR 47) was
+merged to main first as spec 026, so this one is spec 027 (`specs/027-carry-across-gaps/`). The
+bound plan `configs/timelate/tl-m.json` and the code (`carry.py`, `run9.py`) keep the words
+"spec 026": they are bound by digest and are not edited.

@@ -1,4 +1,4 @@
-# Spec 026 tuning (spent seed 353): the carry across gaps
+# Spec 027 tuning (spent seed 353): the carry across gaps
 
 Development data (spec 025's test engagements); nothing here is a result. CI run 44392196274
 (`timelate/tl-m-tune` at bc9e203), draft plan `configs/timelate/tl-m-draft.json`, code

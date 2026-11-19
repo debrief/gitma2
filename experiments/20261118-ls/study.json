@@ -1,0 +1,235 @@
+{
+ "config": "/home/user/gitma2/configs/long/study-test.json",
+ "seed": 351,
+ "soundness": {
+  "S1_windows_ran": {
+   "planned": 360,
+   "ran": 360,
+   "engagements_missing": 0,
+   "pass": true
+  },
+  "S2_ctl_over_reference": {
+   "value": 1.3623833220542965,
+   "band": [
+    0.8,
+    4.0
+   ],
+   "pass": true
+  },
+  "S3_bearings_held": {
+   "value": 0.8493653549382716,
+   "band": [
+    0.6,
+    0.95
+   ],
+   "pass": true
+  },
+  "pass": true
+ },
+ "E1": {
+  "engagements": 60,
+  "windows": 359,
+  "gm_ctl_over_carry": 1.0174439929179677,
+  "interval": [
+   0.9584852423037469,
+   1.0822301334881714
+  ],
+  "non_inferior": true,
+  "median": 1.0,
+  "better": 98,
+  "worse": 88,
+  "level": 173,
+  "twice_better": 22,
+  "twice_worse": 17,
+  "cpu_h": {
+   "search_from_none": 10.121831906791389,
+   "search_from_carry": 5.837610608366667,
+   "windows_total": 36.1068097420175
+  }
+ },
+ "E1_contact2_reported": {
+  "engagements": 60,
+  "windows": 216,
+  "gm_ctl_over_carry": 0.9418758076377509,
+  "interval": [
+   0.8801548512139381,
+   1.0074495388389972
+  ],
+  "non_inferior": false,
+  "median": 1.0,
+  "better": 40,
+  "worse": 47,
+  "level": 129,
+  "twice_better": 7,
+  "twice_worse": 16,
+  "cpu_h": {
+   "search_from_none": 4.580840592800556,
+   "search_from_carry": 2.2199806891016673,
+   "windows_total": 16.838207992947222
+  }
+ },
+ "E2": {
+  "engagements": 60,
+  "gm_c2_over_c1": 1.4658196424273058,
+  "interval": [
+   1.1188079901101005,
+   2.0522278878849374
+  ],
+  "bands": [
+   {
+    "band_km": [
+     2.0,
+     10.0
+    ],
+    "rows_c1": 13065,
+    "rows_c2": 3759,
+    "median_c1": 0.008878330805525698,
+    "median_c2": 0.01124106110015777,
+    "used": true
+   },
+   {
+    "band_km": [
+     10.0,
+     20.0
+    ],
+    "rows_c1": 27803,
+    "rows_c2": 7901,
+    "median_c1": 0.013522172007175513,
+    "median_c2": 0.02022436789340115,
+    "used": true
+   },
+   {
+    "band_km": [
+     20.0,
+     40.0
+    ],
+    "rows_c1": 22136,
+    "rows_c2": 15452,
+    "median_c1": 0.02306284045730642,
+    "median_c2": 0.038357466950558944,
+    "used": true
+   }
+  ]
+ },
+ "E3": {
+  "engagements": 30,
+  "late_over_early": 1.0564665176742005,
+  "interval": [
+   0.8193203209171761,
+   1.3087181558843317
+  ],
+  "drift_shown": false,
+  "bins": [
+   {
+    "hours": [
+     0,
+     2
+    ],
+    "answered": 0.9122137404580153,
+    "median": 0.2461384824133845
+   },
+   {
+    "hours": [
+     2,
+     4
+    ],
+    "answered": 0.8666666666666667,
+    "median": 0.18414748163060507
+   },
+   {
+    "hours": [
+     4,
+     6
+    ],
+    "answered": 0.8444444444444444,
+    "median": 0.26313099028878234
+   },
+   {
+    "hours": [
+     6,
+     8
+    ],
+    "answered": 0.8055555555555556,
+    "median": 0.2638380860916365
+   },
+   {
+    "hours": [
+     8,
+     10
+    ],
+    "answered": 0.7416666666666667,
+    "median": 0.24690180695261998
+   },
+   {
+    "hours": [
+     10,
+     12
+    ],
+    "answered": 0.7888888888888889,
+    "median": 0.20522574294634
+   }
+  ]
+ },
+ "by_duration": {
+  "6h": {
+   "E1": {
+    "engagements": 30,
+    "windows": 119,
+    "gm_ctl_over_carry": 1.0437120338167258,
+    "interval": [
+     0.9971090870547074,
+     1.1108735902301998
+    ],
+    "non_inferior": true,
+    "median": 1.0,
+    "better": 28,
+    "worse": 24,
+    "level": 67,
+    "twice_better": 5,
+    "twice_worse": 1,
+    "cpu_h": {
+     "search_from_none": 3.1497381562905558,
+     "search_from_carry": 1.8431706449141676,
+     "windows_total": 11.474520747776111
+    }
+   },
+   "median_error": {
+    "ctl-d1-q0.01": 0.015573007209743665,
+    "ctl-carry": 0.016037334093518704,
+    "c2": 0.07416314819895606,
+    "history-map": 0.01024408822243844
+   }
+  },
+  "12h": {
+   "E1": {
+    "engagements": 30,
+    "windows": 240,
+    "gm_ctl_over_carry": 1.0046656374423877,
+    "interval": [
+     0.9232828471011245,
+     1.0962896606712398
+    ],
+    "non_inferior": false,
+    "median": 1.0,
+    "better": 70,
+    "worse": 64,
+    "level": 106,
+    "twice_better": 17,
+    "twice_worse": 16,
+    "cpu_h": {
+     "search_from_none": 6.972093750500833,
+     "search_from_carry": 3.9944399634525003,
+     "windows_total": 24.63228899424139
+    }
+   },
+   "median_error": {
+    "ctl-d1-q0.01": 0.01457554915805836,
+    "ctl-carry": 0.014247241696740244,
+    "c2": 0.06612183954073414,
+    "history-map": 0.011338058378733553
+   }
+  }
+ },
+ "git_commit": "a37d36d5ba82ace7e18d672f115867f38eda2fc9",
+ "git_dirty": true
+}

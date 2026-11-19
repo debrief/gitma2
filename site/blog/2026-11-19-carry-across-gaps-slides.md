@@ -1,12 +1,12 @@
 ---
 title: "Slides: carrying state across gaps, against joining through them"
 date: 2026-11-19
-tags: [slides, spec-026]
+tags: [slides, spec-027]
 ---
 
 import Slides from "@site/src/components/Slides";
 
-The illustrated companion to [the spec 026 write-up](/blog/2026/11/19/carry-across-gaps): the
+The illustrated companion to [the spec 027 write-up](/blog/2026/11/19/carry-across-gaps): the
 registered comparison, how often the carry changes anything, and where.
 
 <!-- truncate -->

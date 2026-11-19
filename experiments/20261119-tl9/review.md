@@ -1,4 +1,4 @@
-# Spec 026: panel review, round 1 (2026-11-19)
+# Spec 027: panel review, round 1 (2026-11-19)
 
 Five independent reviewers read the spec, the decision record, the tuning, validation and
 test records and the code at the registered commit, and recomputed from the per-row errors:

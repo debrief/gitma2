@@ -1,4 +1,4 @@
-# Spec 026 validation (seed 360): soundness passed
+# Spec 027 validation (seed 360): soundness passed
 
 CI run 44421330406 (`timelate/tl-m-val` at c151052), plan `configs/timelate/tl-m.json`
 (`0f1a8cae…`, registered in `experiments/20261118-tl9-decision/`), code `cee4a319…`, clean

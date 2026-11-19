@@ -69,3 +69,10 @@ busier targets (about 1.1); a harm reading in speed on held course is possible (
 
 - The soundness band [0.6, 1.6] has a geometric centre of 0.98, not 0.79 as written above.
 - Seeds 354 to 359 are unused (skipped to stay clear of PR 47's numbering).
+
+## Renumbered (2026-11-19)
+
+This study was registered and run as spec 026. The long-engagement registered study (PR 47) was
+merged to main first as spec 026, so this one is spec 027 (`specs/027-carry-across-gaps/`). The
+bound plan `configs/timelate/tl-m.json` and the code (`carry.py`, `run9.py`) keep the words
+"spec 026": they are bound by digest and are not edited.

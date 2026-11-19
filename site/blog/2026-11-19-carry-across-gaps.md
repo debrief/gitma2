@@ -1,7 +1,7 @@
 ---
 title: "Carrying state across gaps: a carried start does not substitute for joining"
 date: 2026-11-19
-tags: [write-up, spec-026]
+tags: [write-up, spec-027]
 ---
 
 Spec 025 showed that one solve over several periods of a target beats solving each period
@@ -109,4 +109,4 @@ The panel's order:
 
 Records: decision `experiments/20261118-tl9-decision/`, tuning `20261118-tl9-tuning/`,
 validation `20261118-tl9-val/`, test `20261119-tl9/` with the panel's `review.md`. Spec
-`specs/026-carry-across-gaps/`.
+`specs/027-carry-across-gaps/`.
