@@ -326,6 +326,8 @@ def main(argv: list[str] | None = None) -> int:
             a1, r1 = spans[j]
             if turns_in(e, a1, r1) != 0:
                 continue
+            if a.max_windows and len(done) >= a.max_windows:
+                break
             a0 = spans[j - 1][0]
             w = run_windows(e, [(a0, a1 + r1 - a0)], s, priors, cp, c2)[0]
             keep = np.asarray(w["rows_abs"]) >= a1
