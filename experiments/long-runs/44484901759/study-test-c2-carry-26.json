@@ -1,0 +1,418 @@
+{
+ "part": "carry",
+ "index": 26,
+ "hours": 6.0,
+ "seed": 351,
+ "config": "configs/long/study-test.json",
+ "contact": 2,
+ "engagement": {
+  "seed": "15586400901635056293",
+  "dataset_seed": 351,
+  "index": 26,
+  "hours": 6.0,
+  "samples": 4320,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 449,
+    "end_index": 473
+   },
+   {
+    "kind": "course",
+    "start_index": 894,
+    "end_index": 964
+   },
+   {
+    "kind": "both",
+    "start_index": 1059,
+    "end_index": 1092
+   },
+   {
+    "kind": "course",
+    "start_index": 1608,
+    "end_index": 1640
+   },
+   {
+    "kind": "course",
+    "start_index": 1862,
+    "end_index": 1921
+   },
+   {
+    "kind": "course",
+    "start_index": 2461,
+    "end_index": 2475
+   },
+   {
+    "kind": "course",
+    "start_index": 2816,
+    "end_index": 2824
+   },
+   {
+    "kind": "both",
+    "start_index": 2948,
+    "end_index": 2956
+   },
+   {
+    "kind": "course",
+    "start_index": 3349,
+    "end_index": 3373
+   },
+   {
+    "kind": "course",
+    "start_index": 3720,
+    "end_index": 3737
+   },
+   {
+    "kind": "course",
+    "start_index": 4047,
+    "end_index": 4088
+   },
+   {
+    "kind": "course",
+    "start_index": 4228,
+    "end_index": 4269
+   }
+  ],
+  "ownship_turns": [
+   [
+    367,
+    383
+   ],
+   [
+    804,
+    829
+   ],
+   [
+    1273,
+    1302
+   ],
+   [
+    1565,
+    1588
+   ],
+   [
+    2023,
+    2044
+   ],
+   [
+    2313,
+    2341
+   ],
+   [
+    2759,
+    2777
+   ],
+   [
+    3204,
+    3226
+   ],
+   [
+    3587,
+    3614
+   ],
+   [
+    3894,
+    3915
+   ],
+   [
+    4257,
+    4280
+   ]
+  ],
+  "zig_index": 383,
+  "turn_start_index": 367,
+  "mean_range_m": 71129.79829398365,
+  "min_range_m": 3358.938321825921,
+  "max_range_m": 124320.4530857926,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     12248.432592029954,
+     13818.30378617999
+    ]
+   ],
+   "steering": {
+    "planned": 11,
+    "lost": 0
+   },
+   "swapped_bearings": 13
+  },
+  "contact": 2,
+  "valid_share": 0.1875,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.0879342307789953,
+   "ownship_speed_mps": 6.1797735319006435,
+   "ownship_turn_rate_rad_s": 0.02166110985799652,
+   "target_range0_m": 4095.516051325715
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 2240.0,
+   "change": 1.4971660855784448,
+   "rate": 0.012137117570408744
+  },
+  {
+   "kind": "course",
+   "start_time_s": 4465.0,
+   "change": -1.8184913609000795,
+   "rate": 0.0051513731890202655
+  },
+  {
+   "kind": "both",
+   "start_time_s": 5290.0,
+   "change": 1.2225568617777616,
+   "rate": 0.010801148869979117,
+   "change2": -2.6778274960228785,
+   "rate2": 0.015974226480131852
+  },
+  {
+   "kind": "course",
+   "start_time_s": 8035.0,
+   "change": -1.3744323586255434,
+   "rate": 0.008371290097852275
+  },
+  {
+   "kind": "course",
+   "start_time_s": 9305.0,
+   "change": 1.5968923085063293,
+   "rate": 0.0054113109278966795
+  },
+  {
+   "kind": "course",
+   "start_time_s": 12300.0,
+   "change": 1.1399031667668336,
+   "rate": 0.015554150099504234
+  },
+  {
+   "kind": "course",
+   "start_time_s": 14075.0,
+   "change": -0.5744074954402834,
+   "rate": 0.014259353346039325
+  },
+  {
+   "kind": "both",
+   "start_time_s": 14735.0,
+   "change": -0.5306097908972897,
+   "rate": 0.0119813371890518,
+   "change2": -1.4578369035542227,
+   "rate2": 0.03435784138432378
+  },
+  {
+   "kind": "course",
+   "start_time_s": 16740.0,
+   "change": 0.6587582675273742,
+   "rate": 0.005354417530172292
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18595.0,
+   "change": -1.0103235421265246,
+   "rate": 0.011295923762323638
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20230.0,
+   "change": 1.1053659297543061,
+   "rate": 0.005350057744075297
+  },
+  {
+   "kind": "course",
+   "start_time_s": 21135.0,
+   "change": -2.0391719485784434,
+   "rate": 0.00981984389864416
+  }
+ ],
+ "git_commit": "bc550ea944e39301dea9fd03442878b2f13d2f9c",
+ "git_dirty": false,
+ "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+ "chain": [
+  [
+   0,
+   1440
+  ],
+  [
+   1093,
+   1440
+  ],
+  [
+   2173,
+   1440
+  ],
+  [
+   3253,
+   1067
+  ]
+ ],
+ "shard": [
+  0,
+  1
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "ctl-carry",
+  "c2",
+  "history-map"
+ ],
+ "windows": [
+  {
+   "index": 0,
+   "first": 0,
+   "rows": 1440,
+   "seconds": 184.612644112,
+   "parts": {
+    "c2": 55.58,
+    "starts": 6.2,
+    "c2/v3": 28.26,
+    "c2/broad": 11.17,
+    "none/v3": 36.68,
+    "none/broad": 36.37,
+    "declare": 1.06,
+    "reference": 9.29,
+    "total": 184.61
+   },
+   "search_s": {
+    "c2": 39.43032531699998,
+    "none": 73.04927092300002,
+    "carry": 0.0
+   },
+   "bearings": 809,
+   "declared": {
+    "c2": [
+     [
+      2205.0,
+      2295.0
+     ],
+     [
+      4285.0,
+      4565.0
+     ],
+     [
+      4735.0,
+      5095.0
+     ]
+    ],
+    "ctl-d1-q0.01": [
+     [
+      2157.8311728752788,
+      2425.1947920547473
+     ],
+     [
+      4480.376008930435,
+      4770.521365676902
+     ],
+     [
+      5365.739913417166,
+      5430.339511153531
+     ]
+    ],
+    "ctl-carry": [
+     [
+      2157.8311728752788,
+      2425.1947920547473
+     ],
+     [
+      4480.376008930435,
+      4770.521365676902
+     ],
+     [
+      5365.739913417166,
+      5430.339511153531
+     ]
+    ]
+   },
+   "true": [
+    [
+     2240.0,
+     2365.0
+    ],
+    [
+     4465.0,
+     4820.0
+    ],
+    [
+     5290.0,
+     5460.0
+    ]
+   ]
+  },
+  {
+   "index": 1,
+   "first": 1093,
+   "rows": 1440,
+   "seconds": 4.1963000001032924e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 5,
+   "declared": {},
+   "true": []
+  },
+  {
+   "index": 2,
+   "first": 2173,
+   "rows": 1440,
+   "seconds": 2.732199999400109e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": []
+  },
+  {
+   "index": 3,
+   "first": 3253,
+   "rows": 1067,
+   "seconds": 2.2924999996121187e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": []
+  }
+ ],
+ "window_s": 7200.0,
+ "overlap_s": 1800.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 189.6250696182251
+}
