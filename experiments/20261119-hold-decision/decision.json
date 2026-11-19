@@ -1,0 +1,25 @@
+{
+  "study": "spec 029: the carried prior where the ownship holds course (not a gate)",
+  "registered": "2026-11-19, before seeds 363 and 364 exist (generated only in their CI runs)",
+  "seeds": {"tuning": 362, "validation": 363, "test": 364, "next_fresh": 365},
+  "configs": {"validation": "configs/long/hold-val.json", "test": "configs/long/hold-test.json", "carry_settings": "configs/long/carry2.json", "runs": ["configs/long/runs/hold-val.json", "configs/long/runs/hold-test.json"]},
+  "data": "realistic engagements (configs/long/realistic.json realism) with ownship legs 3600-7200 s; 6 and 12 hours; contact 1 only; 1-hour windows overlapping 15 min",
+  "settings": {"scale": 4.0, "tail_s": 1200, "alpha": 0.001},
+  "systems": ["ctl-d1-q0.01 (ctl)", "ctl-carry", "ctl-prior", "ctl-prior-noguard (reported)", "c2 and history-map (references)"],
+  "classes": "held = no ownship turn overlaps the window's rows; one = exactly one; more = two or more (empty on tuning); each chain's first window and every window with no hand-over excluded",
+  "estimand": "geometric mean over windows of ctl ÷ ctl-prior, per-window median range error; 95% interval from 2,000 bootstrap resamples over engagements (seed 29)",
+  "rule": {
+    "gain": "lower limit on held windows above 1 (range)",
+    "harm": "upper limit below 1 on held, one or more (where non-empty), in range, course or speed",
+    "otherwise": "not shown, at this size"
+  },
+  "soundness_on_validation": {
+    "S1": "at least 95% of planned windows ran and no engagement missing",
+    "S2": "per-engagement geometric mean of ctl ÷ the true-history fit in [0.8, 4]",
+    "S3": "coverage of the carried 95% region on hand-overs into held windows in [0.80, 0.99]",
+    "on_failure": "the study stops before the test"
+  },
+  "scorer": "tma2-long study29 --raw <dir> --config <config> --out <dir>",
+  "code_sha256": "c39cb031138e6b3cbb034e801de43bb499b9d2144c1b6822abd3b548d64622d4",
+  "digests": "digests.json (scripts/research/hold_digests.py)"
+}
