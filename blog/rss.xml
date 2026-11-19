@@ -4,10 +4,231 @@
         <title>TMA via ML, second attempt Blog</title>
         <link>https://debrief.github.io/gitma2/blog</link>
         <description>TMA via ML, second attempt Blog</description>
-        <lastBuildDate>Thu, 19 Nov 2026 12:30:00 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 19 Nov 2026 22:30:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
+        <item>
+            <title><![CDATA[Slides: the carried prior where the ownship holds course]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides</guid>
+            <pubDate>Thu, 19 Nov 2026 22:30:00 GMT</pubDate>
+            <description><![CDATA[These slides are the illustrated companion to the write-up.]]></description>
+            <content:encoded><![CDATA[<p>These slides are the illustrated companion to <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course">the write-up</a>.
+The ownship holds each leg for 1–2 hours. On 1-hour windows with no ownship turn, the previous
+window's state, carried as a prior, gives ctl ÷ ctl-prior <strong>2.41 [2.06, 2.83]</strong>, against the
+same window alone. The registered rule says gain, with no harm. Spec: <code>specs/029-held-course/</code>.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-19-held-course-slides/index.html" title="Slides: 2026-11-19-held-course-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-19-held-course-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Configs:</strong> <code>configs/long/hold-{tuning,val,test}.json</code>, which hold the ownship's legs to
+1–2 h.</li>
+<li class=""><strong>CI:</strong> <code>long.yml</code> passes the window length and overlap through.</li>
+<li class=""><strong>The scorer:</strong> <code>src/tma2/long/study29.py</code>, run by <code>tma2-long study29</code>. It classifies windows
+by ownship turns, applies the rule, and reads coverage and soundness.</li>
+<li class=""><strong>Scripts:</strong> <code>scripts/research/hold_{digests,supplement,charts}.py</code>.</li>
+<li class=""><strong>Records:</strong>
+<ul>
+<li class="">tuning: <code>experiments/20261119-hold-tuning/</code>;</li>
+<li class="">decision: <code>20261119-hold-decision/</code>;</li>
+<li class="">validation: <code>20261119-hold-val/</code>;</li>
+<li class="">test: <code>20261119-hold/</code>, with <code>review.md</code> and <code>supplement.json</code>.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Untested comparisons:</strong> <code>ctl</code> on 2-hour windows, and a joint solve over consecutive windows.</li>
+<li class=""><strong>Not measured:</strong> whether the prior narrows the set of manoeuvre histories.</li>
+<li class=""><strong>Untested settings:</strong> the untended contact, and real data.</li>
+<li class=""><strong>Kept defect:</strong> spec 028's hand-over defect.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Recommended:</strong> adopt <code>ctl-prior</code> with its guard for the tended contact. Then run one
+registered comparison against 2-hour <code>ctl</code> and a joint solve, on held-course engagements.</li>
+<li class=""><strong>Alternatives:</strong>
+<ul>
+<li class="">repair the hand-over;</li>
+<li class="">the untended contact under held course;</li>
+<li class="">close the track.</li>
+</ul>
+</li>
+</ul>
+<p>Figures: <code>scripts/research/hold_charts.py</code>, with a sidecar beside each SVG.</p>]]></content:encoded>
+            <category>slides</category>
+            <category>spec-029</category>
+        </item>
+        <item>
+            <title><![CDATA[Long engagements: the carried prior where the ownship holds course]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/19/held-course</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/19/held-course</guid>
+            <pubDate>Thu, 19 Nov 2026 22:00:00 GMT</pubDate>
+            <description><![CDATA[The owner's hypothesis was that knowledge of the previous track can usefully constrain the]]></description>
+            <content:encoded><![CDATA[<p>The owner's hypothesis was that knowledge of the previous track can usefully constrain the
+solution for the next leg. Spec 028 could not test it, because its ownship never held course
+long enough to leave a window blind. This study makes the ownship hold each leg for one to
+two hours.</p>
+<p><strong>Result:</strong></p>
+<ul>
+<li class="">The registered rule says <strong>gain</strong>, with no harm.</li>
+<li class="">On 1-hour windows that contain no ownship turn, carrying the previous window's state as a
+prior gives ctl ÷ ctl-prior <strong>2.41 [2.06, 2.83]</strong>. The median window improves 2.15-fold.</li>
+<li class="">The comparison is against the same window solved alone.</li>
+</ul>
+<p>Spec: <code>specs/029-held-course/</code>. Record: <code>experiments/20261119-hold/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-design">The design<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course#the-design" class="hash-link" aria-label="Direct link to The design" title="Direct link to The design" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Engagements:</strong> spec 024's simulated realism, with ownship legs of 1–2 h, the tended contact
+only.</li>
+<li class=""><strong>Windows:</strong>
+<ul>
+<li class="">With such legs, no 2-hour window is free of turns. Holds long enough to change that lose
+the target beyond detection.</li>
+<li class="">So windows are 1 hour, overlapping 15 minutes. That gives about 30% of windows with no
+ownship turn.</li>
+</ul>
+</li>
+<li class=""><strong>Systems:</strong> spec 028's <code>ctl-prior</code>, at its registered settings, is compared with <code>ctl</code> on the
+same windows. <code>ctl-prior</code> carries the previous window's state and uncertainty, fitted on
+bearings before the hand-over, into the next window's fit and evidence, with a guard.</li>
+<li class=""><strong>Rule</strong> (registered before seeds 363 and 364 existed):<!-- -->
+<ul>
+<li class=""><strong>Gain</strong> if the lower limit on turn-free windows is above 1.</li>
+<li class=""><strong>Harm</strong> if any class's upper limit is below 1.</li>
+<li class="">Windows where nothing was handed on are excluded, and the bootstrap is over engagements.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-happened">What happened<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course#what-happened" class="hash-link" aria-label="Direct link to What happened" title="Direct link to What happened" translate="no">​</a></h2>
+<p>Test: seed 364, 60 engagements of 6 and 12 hours, scored once.</p>
+<table><thead><tr><th>windows</th><th>ctl ÷ ctl-prior, range</th><th>median window</th><th>better</th></tr></thead><tbody><tr><td><strong>no ownship turn (registered)</strong></td><td><strong>2.41 [2.06, 2.83]</strong></td><td>2.15</td><td>76%</td></tr><tr><td>one ownship turn</td><td>1.22 [1.06, 1.40]</td><td>1.12</td><td>59%</td></tr></tbody></table>
+<ul>
+<li class=""><strong>Course and speed</strong> on turn-free windows: 1.96 and 2.24.</li>
+<li class=""><strong>Median range error</strong> on turn-free windows: from 22.7% to 7.4%.</li>
+<li class=""><strong>Agreement across seeds:</strong> tuning 2.10, validation 1.91, test 2.41.</li>
+<li class=""><strong>The prior's own effect:</strong> the carried start alone does little (1.14) and costs 11% on
+one-turn windows. The prior does the work: ctl-carry ÷ ctl-prior is 2.12.</li>
+<li class=""><strong>Guard:</strong> it fell back on 0.9% of windows.</li>
+<li class=""><strong>Soundness:</strong> all checks passed; held-window coverage was 0.945.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-panel-narrowed">What the panel narrowed<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course#what-the-panel-narrowed" class="hash-link" aria-label="Direct link to What the panel narrowed" title="Direct link to What the panel narrowed" translate="no">​</a></h2>
+<p>Three reviewers, each approve with findings (<code>experiments/20261119-hold/review.md</code>):</p>
+<ul>
+<li class=""><strong>The comparator is a window chosen to be blind.</strong> The result says the predecessor's state
+beats the same 1-hour window alone. Two comparisons were <strong>not</strong> tested: <code>ctl</code> on its usual
+2-hour windows, and a joint solve over consecutive windows.</li>
+<li class=""><strong>The mechanism is range observability.</strong> The previous track constrains this leg's solution
+where the leg alone cannot resolve range. Whether it narrows the set of manoeuvre histories
+was not measured.</li>
+<li class=""><strong>The gain grows with range:</strong> 1.66 under 15 km, 2.15 at 15–25 km, 3.19 beyond 25 km. Holding
+course pushes range up, so the pooled figure depends on this simulator's range mix. On
+one-turn windows the gain is not separated from 1 under 15 km.</li>
+<li class=""><strong>The excluded turn-free windows are windows where contact was lost.</strong> Counted as ties, the
+result is 2.34.</li>
+<li class=""><strong>The coverage figure (0.945) passes the band but is not a calibration.</strong> The region is too
+wide for most hand-overs.</li>
+<li class=""><strong>Limits:</strong>
+<ul>
+<li class="">one simulator, contact 1 only, 1-hour windows;</li>
+<li class="">hand-overs never fall inside a target manoeuvre, because windows are placed by truth;</li>
+<li class="">spec 028's hand-over defect is kept.</li>
+</ul>
+</li>
+<li class=""><strong><code>ctl-carry</code> should not be used without the prior.</strong></li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-it-means-for-the-owners-question">What it means for the owner's question<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course#what-it-means-for-the-owners-question" class="hash-link" aria-label="Direct link to What it means for the owner's question" title="Direct link to What it means for the owner's question" translate="no">​</a></h2>
+<p>The previous track helps a great deal exactly where the owner expected: where the leg's own
+bearings cannot fix range. In this simulator, on the tended contact, the median error on such
+windows falls by about two-thirds. Spec 028's small average shift was the same mechanism in
+windows that rarely needed it.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="next-the-owners-choice">Next (the owner's choice)<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course#next-the-owners-choice" class="hash-link" aria-label="Direct link to Next (the owner's choice)" title="Direct link to Next (the owner's choice)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Recommended default:</strong>
+<ul>
+<li class="">Adopt <code>ctl-prior</code> with its guard as the standing chained time-late system for the tended
+contact.</li>
+<li class="">Next, one registered comparison on held-course engagements, each system on its own
+windows: <code>ctl-prior</code> on 1-hour windows, <code>ctl</code> on 2-hour windows, and a joint solve over two
+consecutive windows, with a reference told the truth over the span. This asks whether the
+prior is a cheap substitute for using the bearings themselves.</li>
+</ul>
+</li>
+<li class=""><strong>Alternatives:</strong>
+<ul>
+<li class="">repair the hand-over (a neutral refit start) and rerun on spent seeds;</li>
+<li class="">the untended contact under held course;</li>
+<li class="">close the long-engagement track here.</li>
+</ul>
+</li>
+</ul>
+<p>Slides: <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides">the slides post</a>.</p>]]></content:encoded>
+            <category>write-up</category>
+            <category>spec-029</category>
+        </item>
+        <item>
+            <title><![CDATA[Kickoff: the carried prior where the ownship holds course]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff</guid>
+            <pubDate>Thu, 19 Nov 2026 14:00:00 GMT</pubDate>
+            <description><![CDATA[Spec 028 carried the previous window's state and uncertainty]]></description>
+            <content:encoded><![CDATA[<p><a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior">Spec 028</a> carried the previous window's state and uncertainty
+into the next window as a prior. It found a small average shift and no harm, but it could not
+test the owner's own case. In that simulator the ownship turned every 20–40 minutes, so every
+window could resolve the target from its own bearings. The owner asked to test the ownship
+holding course. This study does that. Spec: <code>specs/029-held-course/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Standing time-late system:</strong> <code>ctl</code>. <code>ctl-prior</code> is recommended for adoption, scoped as "a
+small refinement, no harm shown".</li>
+<li class=""><strong>Spec 028's registered split showed no gain:</strong> 1.105 [0.963, 1.273]. That split was mostly
+the untended contact. The owner's case never occurred.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Engagements:</strong> realistic engagements where the ownship holds each leg for 1–2 hours,
+tended contact only.</li>
+<li class=""><strong>Windows:</strong> 1-hour windows overlapping 15 minutes. With 2-hour windows no window is free of
+ownship turns.</li>
+<li class=""><strong>Turn-free windows:</strong> about 30% of windows contain no ownship turn (measured on spent seed
+354).</li>
+<li class=""><strong>Rule:</strong>
+<ul>
+<li class="">Gain if ctl ÷ ctl-prior on turn-free windows has its lower limit above 1, with a
+bootstrap over engagements.</li>
+<li class="">Harm if any class's upper limit is below 1, in range, course or speed.</li>
+<li class="">Windows where nothing was handed on are excluded.</li>
+</ul>
+</li>
+<li class=""><strong>Plan:</strong>
+<ol>
+<li class="">tuning on seed 362 checks the split and the carried prior's coverage;</li>
+<li class="">the decision record;</li>
+<li class="">validation on seed 363;</li>
+<li class="">test on seed 364, scored once;</li>
+<li class="">the panel, then the write-up.</li>
+</ol>
+</li>
+<li class=""><strong>Risks:</strong>
+<ul>
+<li class="">Holding course costs range keeping: the target drifts to 50 km at the 95th percentile,
+beyond detection, so geometry and detection mix.</li>
+<li class="">The carried prior's settings were set on 2-hour windows.</li>
+<li class="">The hand-over defect spec 028's panel found stays in.</li>
+</ul>
+</li>
+<li class=""><strong>Stop:</strong> soundness or coverage outside its band on validation.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<ul>
+<li class="">ctl ÷ ctl-prior by class (no turn, one turn, more), with intervals.</li>
+<li class="">Per-window ratios.</li>
+<li class="">Coverage of the carried prior on turn-free windows.</li>
+<li class="">A track plot of a turn-free window.</li>
+</ul>]]></content:encoded>
+            <category>kickoff</category>
+            <category>spec-029</category>
+        </item>
         <item>
             <title><![CDATA[Slides: the previous window as a prior]]></title>
             <link>https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior-slides</link>
@@ -1039,214 +1260,6 @@ record's figures. The page says so.</li>
 </ul>]]></content:encoded>
             <category>slides</category>
             <category>spec-022</category>
-        </item>
-        <item>
-            <title><![CDATA[Kickoff: publish the site, a time-late page, persistent PR previews]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-kickoff</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-kickoff</guid>
-            <pubDate>Mon, 16 Nov 2026 19:00:00 GMT</pubDate>
-            <description><![CDATA[The site has been built in CI but never published. This task publishes it to GitHub Pages on]]></description>
-            <content:encoded><![CDATA[<p>The site has been built in CI but never published. This task publishes it to GitHub Pages on
-every merge. It adds a time-late page that shows the standing system's whole-period tracks, and
-gives every pull request a persistent preview, listed in an index. Spec:
-<code>specs/022-site-publishing/</code>.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class=""><a class="" href="https://debrief.github.io/gitma2/blog/2026/11/16/browser-segmenter-slides">Specs 020 and 021</a> put the carried model in the
-browser. The <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/15/time-late-synthesis">time-late account</a> closed the time-late
-track with a classical control standing.</li>
-<li class="">None of this is online. <code>gh-pages</code> holds only the first commit's README.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Acceptance:</strong>
-<ul>
-<li class="">after a merge, the root, the blog, <code>/viewer</code>, <code>/timelate</code> and <code>/previews</code> return 200;</li>
-<li class="">a PR's preview and its post links work while it is open and after it is merged;</li>
-<li class="">the time-late page's errors equal the record's, recomputed.</li>
-</ul>
-</li>
-<li class=""><strong>Plan:</strong>
-<ul>
-<li class="">a <code>pages.yml</code> workflow deploys to <code>gh-pages</code>: the root on <code>main</code>, and <code>pr/&lt;n&gt;/</code> for each
-same-repository PR;</li>
-<li class="">an index file and a <code>/previews</code> page;</li>
-<li class="">the time-late page, from spec 016's test record;</li>
-<li class="">a manual backfill for earlier PRs.</li>
-</ul>
-</li>
-<li class=""><strong>Risks:</strong> the branch grows by a site per PR, though git stores identical files once. Pages
-must serve the <code>gh-pages</code> branch. It does today, since it serves the README.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<p>The PR for this task is the first with a preview. Its slides post links the published pages.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="updates">Updates<a href="https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-kickoff#updates" class="hash-link" aria-label="Direct link to Updates" title="Direct link to Updates" translate="no">​</a></h2>
-<ul>
-<li class="">2026-11-16, after the owner's review of the preview:<!-- -->
-<ul>
-<li class="">The time-late page shows each system's solution whole, as one fit to all the period's
-bearings. The time slider is gone; start and end markers and 10-minute ticks remain.</li>
-<li class="">The viewer says it is the real-time model and points to the time-late page.</li>
-</ul>
-</li>
-<li class="">2026-11-17, issue 44: each PR now carries a comment linking its preview at <code>pr/&lt;n&gt;/</code>, the
-blog posts it adds or changes and the commit it was built from. One comment per PR, found by a
-hidden marker and edited in place on every push, as the argonautical repository does it. A
-backfill run publishes without commenting.</li>
-<li class="">2026-11-17, issue 41 (the owner's request):<!-- -->
-<ul>
-<li class="">The track plots (the viewer, time-late and the long-engagement sections on both pages) zoom
-with the mouse wheel about the cursor. A drag pans, a double click
-resets, and buttons do the same for touch and keyboard users. Markers and line widths keep
-their size; the scale bar follows the zoom.</li>
-<li class="">The viewer can show the measured bearings received so far, one a minute with the latest in
-bold. They come from the engagement's scenario file, checked against the manifest's digest.
-The time-late data carry no bearings, so that page has zoom only.</li>
-<li class="">Both plots now use one scale on both axes. Before, north–south was drawn at 0.79 (viewer)
-and 0.73 (time-late) of east–west, which bent courses and squashed the 1-σ ellipse.</li>
-</ul>
-</li>
-</ul>]]></content:encoded>
-            <category>kickoff</category>
-            <category>spec-022</category>
-        </item>
-        <item>
-            <title><![CDATA[Slides: the carried model end to end in the browser]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/16/browser-segmenter-slides</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/16/browser-segmenter-slides</guid>
-            <pubDate>Mon, 16 Nov 2026 00:30:00 GMT</pubDate>
-            <description><![CDATA[The viewer can now run Gate 2's carried model live, from bearings alone. The]]></description>
-            <content:encoded><![CDATA[<p>The <a class="" href="https://debrief.github.io/gitma2/viewer">viewer</a> can now run Gate 2's carried model live, from bearings alone. The
-classical segmenter C, E-s's evidence and E-w's estimate all run in the browser. On 30 check
-scenarios every decision matches Python's. Spec: <code>specs/021-browser-segmenter/</code>. Record:
-<code>experiments/20261116-port/</code>.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-16-browser-segmenter-slides/index.html" title="Slides: 2026-11-16-browser-segmenter-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-16-browser-segmenter-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/blog/2026/11/16/browser-segmenter-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
-<ul>
-<li class="">A JavaScript port of C's host code from its frozen Python (<code>site/static/viewer-data/js/</code>):<!-- -->
-<ul>
-<li class="">the per-row least squares and the GLR statistic;</li>
-<li class="">the ownship segmenter O and E-s's features;</li>
-<li class="">the search, its Levenberg–Marquardt segment costs and the dynamic programme;</li>
-<li class="">nominations, confirmation, intervals and the hand-over.</li>
-</ul>
-</li>
-<li class="">The physics layer at confirmation's settings, exported as its own graph. Its three-runtime
-conformance passes, with cost agreeing to 7e-15 in the browser.</li>
-<li class="">A live mode on the page: a module worker runs the whole pipeline with progress and a cancel,
-draws the live trail beside the others, and compares it with Python.</li>
-<li class="">The checks:<!-- -->
-<ul>
-<li class="">a committed dump of every intermediate for 30 scenarios of used seed 319;</li>
-<li class="">a Node comparison stage by stage (CI job <code>browser-port</code>);</li>
-<li class="">live mode on every demo engagement in Chromium (<code>viewer_leg.mjs</code>).</li>
-</ul>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/blog/2026/11/16/browser-segmenter-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
-<ul>
-<li class="">
-<p><strong>Agreement</strong>: identical segmentations on 1,770 of 1,770 scored rows, for C and for E.</p>
-</li>
-<li class="">
-<p><strong>Margins</strong>: the largest difference in a confirmation cost drop per scenario, against the
-smallest margin of any decision from its threshold.</p>
-<ul>
-<li class="">The differences are 5.4e-9 or less, except one of 1.3e-4.</li>
-<li class="">The margins are 0.152 or more.</li>
-</ul>
-<p>The gap explains the identity. It does not guarantee it: an engagement with a decision within
-1e-3 of its threshold could differ, and the check would say so.</p>
-</li>
-<li class="">
-<p><strong>Stages</strong>: live mode takes 25 to 93 s an engagement on one WASM thread. Confirmation is most
-of it. The first row waits for confirmation: about 76 s on the busiest engagement, which misses
-the spec's one-minute target for the first row.</p>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/blog/2026/11/16/browser-segmenter-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
-<ul>
-<li class="">
-<p>Pasting a scenario of one's own (the spec's third story, P3) is not built.</p>
-</li>
-<li class="">
-<p>Some intermediates differ without changing a decision:</p>
-<ul>
-<li class="">one row's least squares on ordinal 22 lands in another minimum;</li>
-<li class="">search cost tables differ by up to 22% where fits hit their iteration cap.</li>
-<li class="">the GLR statistic differs by up to 2.9. At one row (ordinal 1, row 256) it lies on the other
-side of the alarm threshold from Python's. No nomination changed there, but one could on
-another scenario, and the check would fail.</li>
-</ul>
-<p>These are recorded in the research notes, not hidden.</p>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next">What comes next<a href="https://debrief.github.io/gitma2/blog/2026/11/16/browser-segmenter-slides#what-comes-next" class="hash-link" aria-label="Direct link to What comes next" title="Direct link to What comes next" translate="no">​</a></h2>
-<p>The owner's choice. The remaining options from spec 020's write-up are real data, several
-periods of one target, and ownship advice.</p>]]></content:encoded>
-            <category>slides</category>
-            <category>spec-021</category>
-        </item>
-        <item>
-            <title><![CDATA[Kickoff: the carried model end to end in the browser]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/15/browser-segmenter-kickoff</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/15/browser-segmenter-kickoff</guid>
-            <pubDate>Sun, 15 Nov 2026 22:00:00 GMT</pubDate>
-            <description><![CDATA[The owner chose to port the classical segmenter C to JavaScript, so that the]]></description>
-            <content:encoded><![CDATA[<p>The owner chose to port the classical segmenter C to JavaScript, so that the
-<a class="" href="https://debrief.github.io/gitma2/viewer">viewer</a> runs the carried model from bearings alone, with nothing prepared in Python.
-Spec: <code>specs/021-browser-segmenter/</code>. Nothing is trained, no gate, no fresh seed.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/15/browser-segmenter-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class=""><a class="" href="https://debrief.github.io/gitma2/blog/2026/11/15/browser-viewer-slides">Spec 020's viewer</a> runs E-w's exported graph in the
-browser, on C's hand-over shipped from Python. CI checks it against Python to 3e-6 on 181
-rows.</li>
-<li class="">The carried model is still <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/08/gate-2">Gate 2's E</a>: E-s's evidence, C's
-confirmation, and E-w into the physics layer. E-s and E-w are exported graphs. C is Python.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/15/browser-segmenter-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class="">SRD §1 (the viewer) and constitution VI (the browser as a runtime).</li>
-<li class="">Acceptance:<!-- -->
-<ul>
-<li class="">on at least 30 scenarios of seed 319, the browser's segmentation equals Python's on at
-least 95% of scored rows;</li>
-<li class="">every difference is traced to a decision near its threshold;</li>
-<li class="">the live estimate matches Python's where the segmentation does;</li>
-<li class="">the busiest demo engagement finishes in under 10 minutes on a CI runner.</li>
-</ul>
-</li>
-<li class="">Plan:<!-- -->
-<ol>
-<li class="">Export the physics layer as a cost graph, with three-runtime conformance.</li>
-<li class="">Port C's host code to JavaScript: LS states, GLR, search, confirmation, hand-over.</li>
-<li class="">Write a Python dump of every intermediate and a headless comparison, stage by stage.</li>
-<li class="">Add a live mode on the page, and pasted scenarios if time allows.</li>
-<li class="">Slides.</li>
-</ol>
-</li>
-<li class="">Risks:<!-- -->
-<ul>
-<li class=""><strong>Speed.</strong> C's confirmation needs about 600 physics-layer rows on a busy engagement,
-about 2.5 minutes in the browser, and E's segmentation as much again.</li>
-<li class=""><strong>Fragile decisions.</strong> A threshold decision can flip on last-bit differences, so the
-claim is "identical except near the threshold", with the margins reported.</li>
-</ul>
-</li>
-<li class="">Stop condition: if the port cannot reach 95% identical rows for reasons other than
-near-threshold decisions, the record says so and the page keeps the shipped mode as its
-default.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/15/browser-segmenter-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">Each stage's agreement with Python (statistic, costs, decisions) on the check scenarios.</li>
-<li class="">The share of identical rows.</li>
-<li class="">Every near-threshold decision with its margin.</li>
-<li class="">Stage times per engagement.</li>
-<li class="">A track plot from live mode beside the shipped one.</li>
-</ul>]]></content:encoded>
-            <category>kickoff</category>
-            <category>spec-021</category>
         </item>
     </channel>
 </rss>
