@@ -91,7 +91,10 @@ jobs:
           BRANCH="results/long-$GITHUB_RUN_ID"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH"
+          # an orphan branch holding only the results: a branch whose history carries this
+          # workflow's own edits is refused to the Actions token (no `workflows` permission)
+          git checkout --orphan "$BRANCH"
+          git rm -rq --cached .
           mkdir -p "$DEST"
           cp -r "$RUNNER_TEMP/out/." "$DEST/"
           cp configs/long/run.json "$DEST/run.json"
