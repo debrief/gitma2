@@ -744,6 +744,44 @@ and close the track. Alternatives: an ownship holding course for 1–2 h (the ow
 registered joint solve over consecutive windows. Seeds 354–356 used (357–359 unused); the
 next fresh seed is 362.
 
+
+029 (the carried prior where the ownship holds course, `specs/029-held-course/`; owner
+2026-11-19 "test the ownship holding course option"; a registered study, not a gate; nothing
+trained).
+- **Design:** spec 024's realism with ownship legs of 1–2 h (`configs/long/hold-*.json`), contact
+  1 only, 1-hour windows overlapping 15 min. No 2-hour window is turn-free at those legs.
+  `long.yml` passes `window_s`/`overlap_s` through.
+- **System:** spec 028's `ctl-prior`, unchanged.
+- **Scorer:** `long/study29.py` (`tma2-long study29`). Classes by ownship turns overlapping a
+  window: held, one, more (more is empty). Excludes windows with no hand-over and bootstraps over
+  engagements.
+- **Records:** tuning 362 (`experiments/20261119-hold-tuning/`); decision
+  `20261119-hold-decision/` (code `c39cb031…`); validation 363 (`20261119-hold-val/`, soundness
+  passed).
+
+**Test record `experiments/20261119-hold/` (seed 364, 60 engagements, scored once): gain, no
+harm.**
+- Held windows: ctl ÷ ctl-prior 2.41 [2.06, 2.83], median 2.15, 76% of windows better. Seeds:
+  2.10, 1.91, 2.41.
+- One turn: 1.22 [1.06, 1.40].
+- Median error on held windows: 0.227 → 0.074.
+
+**Panel round 1** (`review.md`, three approve with findings). Narrowings:
+- The comparison is against the same 1-hour window alone; 2-hour `ctl` and a joint solve were not
+  tested.
+- The mechanism is range observability; history counts were not measured.
+- The gain grows with range: 1.66 under 15 km, 3.19 beyond 25.
+- Excluded held windows are windows where contact was lost (as ties 2.34).
+- Coverage 0.945 passes the band but is not a calibration (median NEES 0.74).
+- Hand-overs never fall inside a target manoeuvre: windows are placed by truth.
+- The carried start alone costs 11% on one-turn windows: no `ctl-carry` without the prior.
+
+Supplement: `scripts/research/hold_supplement.py`. Write-up `site/blog/2026-11-19-held-course.md`,
+slides `2026-11-19-held-course-slides.md`. Recommended (owner's choice): adopt `ctl-prior` for the
+tended contact. Then register `ctl-prior` (1 h) against `ctl` (2 h) and a joint solve on
+held-course engagements, with a reference told the truth over the span. Seeds 362–364 used; the
+next fresh seed is 365.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1178,6 +1216,15 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   registered settings as a chain on tuning rather than extrapolating a grid. "Same history"
   needs matched times and kinds, not equal counts. Check that each clause of a split can fire
   in the simulator before registering it.
+- Spec 029 panel: a window shortened so that it is blind makes its control blind too. A gain
+  against the same window alone is "more data beats no data". Register the comparison against
+  the control's standing configuration (2-hour windows, a joint solve) beside it. A reference
+  fitted on the window alone is no ceiling for a system that carries information in: in chained
+  designs it reads as soundness only. A carried start without its prior can cost (0.89 on
+  one-turn windows), so do not carry a start alone. `timelate.chain` moves each window start past
+  a true manoeuvre, so hand-overs are never inside one: state it as a limit of every chained
+  study. Coverage within a band is not calibration: report the median NEES beside it. Never write
+  in a tuning record what validation or test will show.
 - `long.yml`: a results branch whose history carries workflow edits is refused to the Actions
   token, so the collect step pushes an orphan branch. Pushes to main are ignored: merging a PR
   that changes `configs/long/run.json` re-ran the last study's whole plan.
