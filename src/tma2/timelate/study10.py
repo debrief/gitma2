@@ -13,9 +13,13 @@ from .study9 import study_split9
 COMPARISONS = (("cprior", "joint"), ("alone", "cprior"), ("carry", "cprior"), ("carry", "joint"))
 
 
-def _block(t: dict[str, Any], sel: np.ndarray | None = None) -> dict[str, Any]:
+def _block(
+    t: dict[str, Any],
+    sel: np.ndarray | None = None,
+    comparisons: tuple[tuple[str, str], ...] = COMPARISONS,
+) -> dict[str, Any]:
     out: dict[str, Any] = {}
-    for a, b in COMPARISONS:
+    for a, b in comparisons:
         na, nb, eng = t[a], t[b], t["eng"]
         if sel is not None:
             na, nb, eng = na[sel], nb[sel], eng[sel]
@@ -35,7 +39,7 @@ def _ties(t: dict[str, Any], a: str, b: str) -> dict[str, float]:
 
 
 def study_split10(arr: dict[str, np.ndarray], periods: list[dict[str, Any]]) -> dict[str, Any]:
-    base = {k: v for k, v in arr.items() if k != "err_cprior"}
+    base = {k: v for k, v in arr.items() if k != "err_cprior" and not k.startswith("err_cv-")}
     out = study_split9(base, periods)
     later = ~arr["carry_first"].astype(bool)
     span = arr["bound_span"][:, 0].astype(np.float64)
@@ -61,4 +65,25 @@ def study_split10(arr: dict[str, np.ndarray], periods: list[dict[str, Any]]) -> 
         "ties_alone": _ties(t, "alone", "cprior"),
         "ties_joint": _ties(t, "cprior", "joint"),
     }
+    variants = [k[4:] for k in arr if k.startswith("err_cv-")]
+    if variants:
+        systems_v = [*systems, *variants]
+        tv = period_table(arr, rows, systems_v)
+        tv_own = period_table(arr, rows_own, systems_v)
+        keys_v = list(zip(tv["eng"].tolist(), tv["period"].tolist(), strict=True))
+        fv = [facts.get((int(e), int(p)), {}) for e, p in keys_v]
+        own_v = np.array([bool(x) and x["own_turn"] for x in fv], dtype=bool)
+        out["cprior"]["variants"] = {}
+        for v in variants:
+            cmp = ((v, "joint"), ("alone", v), ("cprior", v))
+            out["cprior"]["variants"][v[3:]] = {
+                "periods_scored": int(tv["eng"].size),
+                "ratios": _block(tv, None, cmp),
+                "ratios_own_rows": _block(tv_own, None, cmp),
+                "by_kind": {
+                    "own_turn": {"periods": int(own_v.sum()), **_block(tv, own_v, cmp)},
+                    "no_own_turn": {"periods": int((~own_v).sum()), **_block(tv, ~own_v, cmp)},
+                },
+                "ties_alone": _ties(tv, "alone", v),
+            }
     return out
