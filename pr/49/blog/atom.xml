@@ -2,10 +2,377 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://debrief.github.io/gitma2/pr/49/blog</id>
     <title>TMA via ML, second attempt Blog</title>
-    <updated>2026-11-18T00:00:00.000Z</updated>
+    <updated>2026-11-19T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://debrief.github.io/gitma2/pr/49/blog"/>
     <subtitle>TMA via ML, second attempt Blog</subtitle>
+    <entry>
+        <title type="html"><![CDATA[Slides: carrying state across gaps, against joining through them]]></title>
+        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps-slides</id>
+        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps-slides"/>
+        <updated>2026-11-19T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[The illustrated companion to the spec 027 write-up: the]]></summary>
+        <content type="html"><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps">the spec 027 write-up</a>: the
+registered comparison, how often the carry changes anything, and where.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/49/slides/2026-11-19-carry-across-gaps-slides/index.html" title="Slides: 2026-11-19-carry-across-gaps-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/49/slides/2026-11-19-carry-across-gaps-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Verdict</strong>: carry ÷ joint and alone ÷ carry in range on every split, periods after an
+engagement's first, with 95% engagement intervals.</li>
+<li class=""><strong>Ties</strong>: the share of later periods where the carry is within 1% of <code>ctl</code> alone, better or
+worse.</li>
+<li class=""><strong>Kinds</strong>: alone ÷ carry for periods with and without an ownship turn of their own.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl9_charts.py --record experiments/20261119-tl9 --out-dir site/static/img/2026-11-19-carry-across-gaps-slides</span><br></div></code></pre></div></div>
+<p>The script reads only the committed record (results branch
+<code>results/timelate-tl-m-test-44440932257</code>, seed 361); each figure's <code>.json</code> sidecar names the
+inputs' digests and the commit.</p>]]></content>
+        <category label="slides" term="slides"/>
+        <category label="spec-027" term="spec-027"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Carrying state across gaps: a carried start does not substitute for joining]]></title>
+        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps</id>
+        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps"/>
+        <updated>2026-11-19T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Spec 025 showed that one solve over several periods of a target beats solving each period]]></summary>
+        <content type="html"><![CDATA[<p>Spec 025 showed that one solve over several periods of a target beats solving each period
+alone. The cheaper habit is to solve period by period and hand each answer on to the next.
+This registered study measured that habit against the joint solve. By the rule registered
+beforehand, joining is better on Annex B targets, and the carry shows no effect over solving
+alone there. The review panel approved and narrowed the result. What was tested is a carried
+<em>start</em>, not carried information, so the study says nothing yet about carrying a prior.
+Nothing was trained. The illustrated companion is
+<a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps-slides">the slides post</a>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<p>The carry solves each period in order, on that period's own bearings. In the standing control
+<code>ctl</code>, the search starts from two places: C″'s answer and a start from nothing. The carry
+replaces the start from nothing with the previous period's declared state at its last row, run
+forward at constant velocity through the gap. Everything else is <code>ctl</code>, as spec 024 designed
+its carry for overlapping windows. With no carried state the code reproduces <code>ctl</code> exactly,
+and every run checks this on each engagement's first period. Spec 024's own carry was not run:
+it carries over rows that windows share, and across a gap there are none.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-it-was-decided">How it was decided<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps#how-it-was-decided" class="hash-link" aria-label="Direct link to How it was decided" title="Direct link to How it was decided" translate="no">​</a></h2>
+<p>All comparisons are over periods after an engagement's first, on spec 025's rows. Each is a
+per-period ratio of period median range error, with a 95% interval from resampling
+engagements.</p>
+<ul>
+<li class=""><strong>Carry ÷ joint</strong>: "joining better" if the interval is wholly above 1, "carry better" if
+wholly below.</li>
+<li class=""><strong>Alone ÷ carry</strong>: "carrying helps" if the interval is wholly above 1; "carrying harms" if
+the interval is wholly below 1 in range, course or speed.</li>
+</ul>
+<p>Annex B decides.</p>
+<ul>
+<li class=""><strong>Seeds</strong>: tuning on spent seed 353, validation 360 (soundness passed), test 361, scored
+once.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-result">The result<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps#the-result" class="hash-link" aria-label="Direct link to The result" title="Direct link to The result" translate="no">​</a></h2>
+<table><thead><tr><th>split</th><th>carry ÷ joint</th><th>alone ÷ carry</th></tr></thead><tbody><tr><td>Annex B (decides)</td><td><strong>2.33 [1.66, 3.43]</strong>: joining better</td><td>1.07 [0.88, 1.34]: not shown</td></tr><tr><td>busier targets</td><td>1.351 [0.993, 1.820]: not separated</td><td>1.29 [1.09, 1.54]: helps</td></tr><tr><td>2% wild bearings</td><td>3.57 [2.21, 5.68]: joining better</td><td>1.10: not shown</td></tr><tr><td>held course</td><td>10.5 [5.5, 19.8]: joining better</td><td>1.27: not shown</td></tr></tbody></table>
+<p>No harm on any split in any quantity. The joint solve stays the standing system for several
+periods of one target, within spec 025's conditions.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-it-means-as-the-panel-narrowed-it">What it means, as the panel narrowed it<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps#what-it-means-as-the-panel-narrowed-it" class="hash-link" aria-label="Direct link to What it means, as the panel narrowed it" title="Direct link to What it means, as the panel narrowed it" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Joining had to win.</strong> Nothing from the earlier period enters the period's likelihood or
+prior; only where the search starts changes. Even the per-period fit told the true
+manoeuvre history is 8.4 times worse than joining on these rows (Annex B). So the study
+shows where the information is. It does not show what carrying, done properly, is worth.</li>
+<li class=""><strong>The carry rarely changes the answer.</strong> About half of later periods end exactly where <code>ctl</code>
+alone does. On busier targets the carry helps in about a quarter of periods, about twice as
+good there, almost all where the period has no ownship turn of its own (1.72). That is a
+different minimum of a poorly determined fit, not an answer the bearings endorse.</li>
+<li class=""><strong>No harm shown, which is not the same as no cost.</strong> Annex B periods with their own turn read
+0.91 [0.78, 1.02]. A wrong carried state replaces the start from nothing, which is the
+carry's only way to do harm.</li>
+<li class=""><strong>Busier targets.</strong> The range interval misses "joining better" by 0.007; joining is better in
+course and speed. For a busier period that stands alone, neither joining (spec 025: 1.06)
+nor carrying is shown to help.</li>
+<li class=""><strong>No recommendation.</strong> The first record recommended the carry where a joint solve is
+unavailable. The rule recommends it only if it helps on Annex B, which it does not, so the
+recommendation is withdrawn.</li>
+<li class=""><strong>What "not shown" excludes.</strong> On Annex B the interval rules out harm worse than about 12% and
+gains above about a third, and nothing smaller.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="forecasts">Forecasts<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps#forecasts" class="hash-link" aria-label="Direct link to Forecasts" title="Direct link to Forecasts" translate="no">​</a></h2>
+<p>Right:</p>
+<ul>
+<li class="">joining better on Annex B (about 2.2; 2.33);</li>
+<li class="">carrying not shown on Annex B;</li>
+<li class="">carrying helping a little on busier targets (1.29, larger than forecast).</li>
+</ul>
+<p>Wrong:</p>
+<ul>
+<li class="">joining better on busier targets (not separated, by a hair);</li>
+<li class="">held course about 4 (it was 10.5);</li>
+<li class="">a harm in held-course speed (none).</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-done">What was not done<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps#what-was-not-done" class="hash-link" aria-label="Direct link to What was not done" title="Direct link to What was not done" translate="no">​</a></h2>
+<ul>
+<li class="">A carried prior.</li>
+<li class="">A test of the carry chain in the unit tests.</li>
+<li class="">IMM and EKF tracks.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-next-the-owners-choice">What next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/19/carry-across-gaps#what-next-the-owners-choice" class="hash-link" aria-label="Direct link to What next (the owner's choice)" title="Direct link to What next (the owner's choice)" translate="no">​</a></h2>
+<p>The panel's order:</p>
+<ol>
+<li class=""><strong>A carried prior.</strong> The previous period's state and covariance, widened through the gap by
+Annex B's manoeuvre rates, used as a prior in the period's evidence. Scored on spent seeds
+first, this decides whether joining is needed at all.</li>
+<li class=""><strong>A consistency flag.</strong> A per-period flag for a failed join, and markers on inferred gap
+manoeuvres.</li>
+<li class=""><strong>An uncertainty.</strong> A stated uncertainty for the joined track.</li>
+<li class=""><strong>Longer gaps.</strong> Gaps longer than 30 minutes.</li>
+</ol>
+<p>Records: decision <code>experiments/20261118-tl9-decision/</code>, tuning <code>20261118-tl9-tuning/</code>,
+validation <code>20261118-tl9-val/</code>, test <code>20261119-tl9/</code> with the panel's <code>review.md</code>. Spec
+<code>specs/027-carry-across-gaps/</code>.</p>]]></content>
+        <category label="write-up" term="write-up"/>
+        <category label="spec-027" term="spec-027"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Slides: long engagements, the registered study]]></title>
+        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-slides</id>
+        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-slides"/>
+        <updated>2026-11-18T15:30:00.000Z</updated>
+        <summary type="html"><![CDATA[These slides are the illustrated companion to]]></summary>
+        <content type="html"><![CDATA[<p>These slides are the illustrated companion to
+<a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study">the registered study's write-up</a>. Each rule gave its registered
+output:</p>
+<ul>
+<li class="">E1, carrying state: non-inferior by 0.008;</li>
+<li class="">E2, the untended contact: about 1.5 times worse where it is held;</li>
+<li class="">E3, IMM drift: not shown.</li>
+</ul>
+<p>The panel narrowed all three. Spec: <code>specs/026-long-study/</code>.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/49/slides/2026-11-18-long-study-slides/index.html" title="Slides: 2026-11-18-long-study-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/49/slides/2026-11-18-long-study-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>The estimands</strong> (<code>src/tma2/long/study.py</code>): E1 to E3, the soundness checks and a bootstrap
+over engagements. They were registered in <code>experiments/20261118-ls-decision/</code> with the run
+files and code bound by digest.</li>
+<li class=""><strong>An IMM runner</strong> over whole engagements (<code>long/realtime.py</code> <code>imm_states</code>), with the CLI
+parts <code>tma2-long imm</code> and <code>tma2-long study</code>.</li>
+<li class=""><strong>The study configs</strong> <code>configs/long/study-{tuning,val,test}.json</code> (seeds 349, 350, 351).</li>
+<li class=""><strong>The records</strong>: tuning, validation and test (<code>experiments/20261118-ls*</code>), the panel's
+<code>review.md</code> and <code>supplement.json</code> (<code>scripts/research/long_study_supplement.py</code>).</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
+<ul>
+<li class="">No accuracy gain from carrying state was shown.</li>
+<li class="">E2 and E3 describe this simulator, whose realism is set by hand.</li>
+<li class="">Mis-association is not exercised.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
+<p>Recommended: stop the long-engagement track here as a simulation study, and keep <code>ctl-carry</code> as
+an optional cost measure for tended contacts up to 12 hours. Reopen it only with measured
+realism, an ownship steered by its own track, or association.</p>
+<p>Figures: <code>scripts/research/long_study_charts.py</code>, with a sidecar beside each SVG.</p>]]></content>
+        <category label="slides" term="slides"/>
+        <category label="spec-026" term="spec-026"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Long engagements: the registered study]]></title>
+        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study</id>
+        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study"/>
+        <updated>2026-11-18T15:00:00.000Z</updated>
+        <summary type="html"><![CDATA[A registered study on fresh seeds: 60 realistic engagements of 6 and 12 hours, scored once.]]></summary>
+        <content type="html"><![CDATA[<p>A registered study on fresh seeds: 60 realistic engagements of 6 and 12 hours, scored once.
+Each rule returned what it was registered to return:</p>
+<ul>
+<li class="">carrying state between time-late windows is <strong>non-inferior</strong>, by 0.008;</li>
+<li class="">the contact the ownship does not tend is <strong>about 1.5 times worse</strong> where it is held;</li>
+<li class="">the IMM's drift is <strong>not shown</strong>.</li>
+</ul>
+<p>The review panel narrowed all three. The long-engagement track is recommended to stop here as a
+simulation study. Spec: <code>specs/026-long-study/</code>; record: <code>experiments/20261118-ls/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-registered">What was registered<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study#what-was-registered" class="hash-link" aria-label="Direct link to What was registered" title="Direct link to What was registered" translate="no">​</a></h2>
+<p>Before seeds 350 and 351 existed, the decision record (<code>experiments/20261118-ls-decision/</code>)
+bound the estimands, the run files and the code by digest.</p>
+<ul>
+<li class=""><strong>E1</strong>: on the tended contact, the per-window ratio of <code>ctl</code>'s median range error to
+<code>ctl-carry</code>'s. Carry is non-inferior if the geometric mean's 95% interval has a lower limit
+of at least 0.95.</li>
+<li class=""><strong>E2</strong>: on the untended contact against the tended one, in range bands. A magnitude.</li>
+<li class=""><strong>E3</strong>: the IMM's median error in hours 6–12 against hours 0–6. Drift is shown if the interval
+lies above 1.</li>
+<li class=""><strong>Soundness</strong>, on validation (seed 350): windows ran; <code>ctl</code> is sane against the true-history
+fit; bearings are held a realistic share of the time. It passed.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-test-returned-seed-351">What the test returned (seed 351)<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study#what-the-test-returned-seed-351" class="hash-link" aria-label="Direct link to What the test returned (seed 351)" title="Direct link to What the test returned (seed 351)" translate="no">​</a></h2>
+<table><thead><tr><th></th><th>estimate</th><th>95% interval</th><th>rule's output</th></tr></thead><tbody><tr><td>E1</td><td>1.017</td><td>[0.958, 1.082]</td><td>non-inferior</td></tr><tr><td>E2</td><td>1.47</td><td>[1.12, 2.05]</td><td>a magnitude</td></tr><tr><td>E3</td><td>1.06</td><td>[0.82, 1.31]</td><td>not shown</td></tr></tbody></table>
+<p>Soundness passed again: 360 of 360 windows ran; <code>ctl</code> ÷ the reference was 1.36; bearings were
+held 0.85 of the time.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-it-may-be-taken-to-mean-panel-round-1">What it may be taken to mean (panel, round 1)<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study#what-it-may-be-taken-to-mean-panel-round-1" class="hash-link" aria-label="Direct link to What it may be taken to mean (panel, round 1)" title="Direct link to What it may be taken to mean (panel, round 1)" translate="no">​</a></h2>
+<p><strong>E1: the rule's yes rests on level windows.</strong></p>
+<ul>
+<li class="">60 of the 359 windows are each chain's first, where <code>ctl-carry</code> <em>is</em> <code>ctl</code>, and 113 more come
+out identical.</li>
+<li class="">Without the first windows the estimate is 1.021 [0.9502, 1.100], 0.0002 above the line.</li>
+<li class="">Where the two systems differ, it is 1.034 [0.923, 1.168]: not shown to be within 5%.</li>
+<li class="">At 12 hours alone it is 1.005 [0.923, 1.096]. On the untended contact it is 0.942
+[0.880, 1.007], twice worse in 16 windows and twice better in 7.</li>
+<li class="">Carrying is therefore adopted only as a cost measure, and only for the tended contact on 6–12
+hour engagements. It saves 31% of the search where it runs, about 7% of all CPU. It is not
+recommended for an untended contact.</li>
+</ul>
+<p><strong>E2: a description of this simulator, not "the cost of an untended contact".</strong></p>
+<ul>
+<li class="">The second target has no range keeping. It is scored only where it is detected, which is 61%
+of its rows.</li>
+<li class="">Within a band it sits farther out than the tended one. In 2-km sub-bands the ratio is 1.34
+[1.01, 1.87].</li>
+<li class="">Bearing rate and ownship manoeuvres are not matched. Mis-association is not exercised: 314
+swapped bearings in about 389,000.</li>
+<li class="">The forecast of 1.2–1.4 assumed range banding would remove most of the geometry. It did not.</li>
+</ul>
+<p><strong>E3: says nothing about failures.</strong></p>
+<ul>
+<li class="">The share of rows the IMM answers falls from 0.91 to 0.74–0.79.</li>
+<li class="">With unanswered rows counted as failures, the ratio is 1.26 [0.88, 1.80]. The interval does
+not exclude a 30% rise.</li>
+<li class="">What is shown is fewer answers later on, not a stable error.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="known-limits">Known limits<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study#known-limits" class="hash-link" aria-label="Direct link to Known limits" title="Direct link to Known limits" translate="no">​</a></h2>
+<ul>
+<li class="">The realism parameters (gaps, detection, the steering error) are spec 024's choices, not
+measured. The ownship steers on a fresh noisy draw of the truth, not on any estimator's
+track.</li>
+<li class="">The shards ran on seven CPU families. E2 compares two jobs.</li>
+<li class="">The panel's minor findings, all in <code>review.md</code>:<!-- -->
+<ul>
+<li class="">S1 counted one window that gave no answer;</li>
+<li class="">the weighting is by window;</li>
+<li class="">provenance details.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
+<p>Recommended: <strong>stop the long-engagement track here as a simulation study</strong>, with <code>ctl-carry</code>
+recorded as an optional cost measure for tended contacts up to 12 hours. More registered
+studies on hand-set realism would measure the parameters, not the systems.</p>
+<p>Reopen the track only with one of three things:</p>
+<ul>
+<li class="">measured gap, detection and association statistics;</li>
+<li class="">an ownship steered by the estimator's own track;</li>
+<li class="">a tracker that handles association.</li>
+</ul>
+<p>The slides: <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-slides">long engagements: the registered study, slides</a>.</p>]]></content>
+        <category label="write-up" term="write-up"/>
+        <category label="spec-026" term="spec-026"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Kickoff: long engagements, a registered study]]></title>
+        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-kickoff</id>
+        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-kickoff"/>
+        <updated>2026-11-18T04:00:00.000Z</updated>
+        <summary type="html"><![CDATA[The owner chose note 13's registered study. On fresh seeds, with the questions fixed before]]></summary>
+        <content type="html"><![CDATA[<p>The owner chose note 13's registered study. On fresh seeds, with the questions fixed before
+any result, it asks three things:</p>
+<ul>
+<li class="">is carrying state between time-late windows no worse than solving each window cold;</li>
+<li class="">how much worse the standing control does on a contact the ownship does not tend;</li>
+<li class="">whether the IMM drifts over twelve hours.</li>
+</ul>
+<p>Spec: <code>specs/026-long-study/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<p><a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-engagements-2-slides">Spec 024</a> built the three recommendations of note 12
+on four engagements:</p>
+<ul>
+<li class="">carrying state was level in accuracy and cheaper in search;</li>
+<li class="">the incremental C was not adopted;</li>
+<li class="">an untended contact was three to five times worse where it could be solved at all.</li>
+</ul>
+<p>All of these are anecdotes from one engagement per length.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>E1</strong>: <code>ctl-carry</code> is non-inferior to <code>ctl</code> if the lower limit of the geometric mean of
+per-window ratios is at least 0.95. Read on the tended contact.</li>
+<li class=""><strong>E2</strong>: the cost of an untended contact, banded by range. A magnitude, with no rule.</li>
+<li class=""><strong>E3</strong>: the IMM's drift over 12 hours. Shown if the interval lies above 1.</li>
+<li class=""><strong>Plan</strong>:<!-- -->
+<ol>
+<li class="">a tuning run on seed 349, giving forecasts;</li>
+<li class="">the decision record, binding the plan and code by digest before seeds 350 and 351 exist;</li>
+<li class="">validation on seed 350, with soundness checks;</li>
+<li class="">the test on seed 351 (30 + 30 realistic engagements of 6 and 12 hours), scored once;</li>
+<li class="">the agent review panel, then the write-up.</li>
+</ol>
+</li>
+<li class=""><strong>Risks</strong>: E1 may be inconclusive at this size. E2 confounds geometry with tending, by
+design. E3 reads one IMM tuning.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-study-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<p>The slides post will carry:</p>
+<ul>
+<li class="">E1's per-window ratios against the 0.95 line;</li>
+<li class="">E2's ratio by range band;</li>
+<li class="">E3's error and share answered by 2-hour bin, with the intervals.</li>
+</ul>]]></content>
+        <category label="kickoff" term="kickoff"/>
+        <category label="spec-026" term="spec-026"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Slides: long engagements, carrying state, an incremental C, realism]]></title>
+        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-engagements-2-slides</id>
+        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-engagements-2-slides"/>
+        <updated>2026-11-18T03:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Note 12's three recommendations, built and measured on the same four engagements. Carrying state]]></summary>
+        <content type="html"><![CDATA[<p>Note 12's three recommendations, built and measured on the same four engagements. Carrying state
+between time-late windows makes the search cheaper but not more accurate. The incremental C
+is 1.7 times cheaper but loses accuracy, so it is not adopted. With realism, the contact the
+ownship tends keeps its accuracy, and a contact it does not tend drifts away and is three to five times
+worse where it can be solved at all. An investigation, not a gate. Spec: <code>specs/024-long-carry-incremental-realism/</code>.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/49/slides/2026-11-18-long-engagements-2-slides/index.html" title="Slides: 2026-11-18-long-engagements-2-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/49/slides/2026-11-18-long-engagements-2-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-engagements-2-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<ul>
+<li class=""><strong><code>ctl-carry</code></strong> (<code>src/tma2/long/carry.py</code>): the standing control with its start from nothing
+replaced by the previous window's declared track and manoeuvres. It is solved beside <code>ctl</code>
+on every window, and that <code>ctl</code> equals spec 023's runner within 1 mm.</li>
+<li class=""><strong>An incremental C</strong> (<code>src/tma2/long/incremental.py</code>): one confirmation per 2-hour block of
+estimates, cropped to each estimate's window. With blocks of one it equals the per-window run.</li>
+<li class=""><strong>Realism</strong> (<code>configs/long/realistic.json</code>): the ownship steers on what it measures; contact
+gaps; detection fading with range; a second contact with mis-association where the two cross.
+It is drawn from its own random stream, so contact 1 is spec 023's target.</li>
+<li class="">A set selector on the long-engagement sections of <a class="" href="https://debrief.github.io/gitma2/pr/49/viewer">the viewer</a> and
+<a class="" href="https://debrief.github.io/gitma2/pr/49/timelate">the time-late page</a>, research note 13, and the record <code>experiments/20261117-long2/</code>.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-found">What was found<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-engagements-2-slides#what-was-found" class="hash-link" aria-label="Direct link to What was found" title="Direct link to What was found" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Carry</strong>: the median ratio of <code>ctl</code> to <code>ctl-carry</code> per window is 1.00 in every set. Wins and
+losses are mixed: 15 to 20 on spec 023's engagements, 22 to 11 on realistic contact 1. The
+start from the carry costs about 55% of the search it replaces.</li>
+<li class=""><strong>Incremental C</strong>: E and C″ cost 32–42 s an estimate against 53–73 s per window. Median range
+error is worse at 24 and 48 hours (E 29.8% and 35.6% against 14.3% and 20.9%).<!-- -->
+<ul>
+<li class="">The first estimate of each block matches the per-window run.</li>
+<li class="">The later ones are 2 to 4 times worse.</li>
+<li class="">The cause lies in the longer history before the crop and is not established.</li>
+</ul>
+</li>
+<li class=""><strong>Realism</strong>:<!-- -->
+<ul>
+<li class="">Contact 1 is held 67–85% of the time, and <code>ctl</code> stays at 1.5–2.2% (spec 023's: 1.6–2.1%).</li>
+<li class="">Contact 2 drifts to a median 27–147 km and is held 10–22% of the time beyond 6 hours. On the windows
+with at least five minutes of its bearings, <code>ctl</code> is at 6–8%, and the true-history fit is at 2–4.5%.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-engagements-2-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
+<ul>
+<li class="">No accuracy gain from carrying state, and the incremental C is not usable as built.</li>
+<li class="">Mis-association is barely exercised (0–8 swapped bearings an engagement).</li>
+<li class="">One engagement per length: these are anecdotes, not rates.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/long-engagements-2-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
+<p>Recommended: a registered study on 6- and 12-hour realistic engagements (seeds 349 to 351,
+about 160 CPU-hours). It would test carry non-inferiority, the cost of an untended contact and
+the IMM's drift. Or measure shorter incremental blocks on tuning data first, or stop the
+long-engagement track here.</p>
+<p>Figures: <code>scripts/research/long2_charts.py</code>, with a sidecar beside each SVG.</p>]]></content>
+        <category label="slides" term="slides"/>
+        <category label="spec-024" term="spec-024"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Kickoff: carrying state across gaps, against joining through them]]></title>
         <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/carry-across-gaps-kickoff</id>
@@ -26,7 +393,7 @@ nothing to carry, so it is not this comparison.</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/18/carry-across-gaps-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
 <ul>
-<li class="">Spec <code>specs/026-carry-across-gaps/</code>. Carry: each later period starts its search from the
+<li class="">Spec <code>specs/027-carry-across-gaps/</code>. Carry: each later period starts its search from the
 previous period's declared state, run forward at constant velocity through the gap.</li>
 <li class="">Registered: carry ÷ joint (is joining better?) and alone ÷ carry (does carrying help?),
 per split, with engagement intervals.</li>
@@ -41,7 +408,7 @@ that uses the period's own bearings, so a period without its own turn may stay u
 determines alone; one engagement's tracks with all three systems.</li>
 </ul>]]></content>
         <category label="kickoff" term="kickoff"/>
-        <category label="spec-026" term="spec-026"/>
+        <category label="spec-027" term="spec-027"/>
     </entry>
     <entry>
         <title type="html"><![CDATA[Slides: time-late over several periods of one target, joined through the gaps]]></title>
@@ -188,6 +555,50 @@ spent seeds for whether the flag finds the twice-as-bad periods.</li>
 <code>20261117-tl8-tuning/</code>. Spec <code>specs/025-joined-periods/</code>.</p>]]></content>
         <category label="write-up" term="write-up"/>
         <category label="spec-025" term="spec-025"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Kickoff: long engagements, carrying state, an incremental C, realism]]></title>
+        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/17/long-engagements-2-kickoff</id>
+        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/17/long-engagements-2-kickoff"/>
+        <updated>2026-11-17T19:00:00.000Z</updated>
+        <summary type="html"><![CDATA[The owner asked for note 12's three recommendations to be implemented. They are: carry state]]></summary>
+        <content type="html"><![CDATA[<p>The owner asked for note 12's three recommendations to be implemented. They are: carry state
+between time-late windows, make C incremental, and make the long engagements more realistic.
+Spec: <code>specs/024-long-carry-incremental-realism/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/17/long-engagements-2-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<ul>
+<li class=""><a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/17/long-engagements-slides">Spec 023</a> ran the standing systems on 6 to 48 hour
+engagements, on windows. The time-late control held 1.6–2.7% median range error. Each
+real-time estimate re-ran C over its 2-hour window (27–37 s). The scenario was kind: the ownship
+steered on the truth, contact was never lost, and there was one target.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/17/long-engagements-2-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Carry</strong>: each time-late window also starts its search from the previous window's declared
+history, in place of the start from nothing. It is compared with <code>ctl</code> on every window.</li>
+<li class=""><strong>Incremental C</strong>: one confirmation per 2-hour block of estimates. Each estimate keeps the
+confirmed legs inside its 2-hour window. For blocks of one estimate this equals spec 023's run.</li>
+<li class=""><strong>Realism</strong>, from a random stream of its own, so the first target is spec 023's:<!-- -->
+<ul>
+<li class="">the ownship steers on measured bearings and a range belief with 30% error;</li>
+<li class="">contact gaps, and detection that fades beyond about 40 km;</li>
+<li class="">a second target that the ownship does not manoeuvre for, with bearings mis-associated where
+the two contacts cross.</li>
+</ul>
+</li>
+<li class=""><strong>Risks:</strong> the second contact may be held too rarely to score, and one engagement per length
+gives anecdotes, not rates. A registered study is proposed afterwards, not run.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/17/long-engagements-2-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<p>The slides post will carry:</p>
+<ul>
+<li class=""><code>ctl</code> and <code>ctl-carry</code> error and run time by window;</li>
+<li class="">the incremental run's cost per estimate beside spec 023's;</li>
+<li class="">each engagement's realistic tracks for both contacts;</li>
+<li class="">error against time with the gaps marked.</li>
+</ul>]]></content>
+        <category label="kickoff" term="kickoff"/>
+        <category label="spec-024" term="spec-024"/>
     </entry>
     <entry>
         <title type="html"><![CDATA[Slides: longer engagements, 6 to 48 hours]]></title>
@@ -930,434 +1341,5 @@ Write-ups: <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11
 <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior">a prior that adapts</a>.</p>]]></content>
         <category label="write-up" term="write-up"/>
         <category label="spec-019" term="spec-019"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Kickoff: the browser viewer on the exported artefact]]></title>
-        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/browser-viewer-kickoff</id>
-        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/browser-viewer-kickoff"/>
-        <updated>2026-11-15T18:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The time-late track is closed, and one item of the SRD's default plan is left: a browser]]></summary>
-        <content type="html"><![CDATA[<p>The time-late track is closed, and one item of the SRD's default plan is left: a browser
-viewer on the exported artefact. This task puts a page on this site that runs the carried
-model's exported graph in the reader's browser, on a handful of simulated engagements, beside
-the classical systems. Spec: <code>specs/020-browser-viewer/</code>. Nothing is trained, nothing is
-decided, and no fresh seed is used.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/browser-viewer-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class="">The last estimator gate is <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/08/gate-2">Gate 2</a>, decided by the panel. E beats
-C by a small margin, and the classical C″ (zig veto and fixed fade) takes most of that. Gates
-3 and 4 stopped at validation, so no calibration is carried. E's raw covariance is
-overconfident: 95% coverage is 0.60.</li>
-<li class="">Carried: E (C's segmentation, E-s's evidence, E-w's weights and start correction into the
-physics layer). E-w and E-s are exported to ONNX and agree with Python to 1e-5 in Python, the
-browser runtime and Java (CI). C, and the confirmation that uses E-s's evidence, are Python.</li>
-<li class="">The time-late track ended with a <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis">synthesis</a>. Its
-classical control stands, and it is not an exported artefact.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/browser-viewer-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class="">SRD §1 ("a browser viewer on that artefact") and §7 step 5; constitution VI (browser demos
-run the exported graph in ONNX Runtime Web).</li>
-<li class="">Acceptance:<!-- -->
-<ul>
-<li class="">every browser output on every demo row agrees with Python's ONNX runtime to 1e-5, checked
-in CI;</li>
-<li class="">the page shows the digests of what it runs;</li>
-<li class="">the covariance ellipse is off by default and never shown without the Gate 3 warning;</li>
-<li class="">the data stay under 15 MB.</li>
-</ul>
-</li>
-<li class="">Plan:<!-- -->
-<ol>
-<li class="">Choose six engagements from Gate 2's used test seed by a fixed rule: quiet, one
-manoeuvre, busy, and one where E loses to C″.</li>
-<li class="">Write a Python command that builds, for every 60 s from the zig, E-w's inputs from C's
-hand-over, Python's outputs, and the comparison estimates (batch least squares, IMM, C,
-C″), with a manifest of digests.</li>
-<li class="">Build a site page that loads the graph in the browser runtime and draws the track plot
-with a time control.</li>
-<li class="">Add a headless conformance job in CI.</li>
-<li class="">Write the slides post.</li>
-</ol>
-</li>
-<li class="">Risks: E-w's graph (100 iterations in one loop, 720 rows, double precision) may be slow in
-a browser. CI's conformance leg runs it, but the time per row on an ordinary laptop is
-unknown. If a whole engagement takes over a minute, the page computes the current time first
-and fills the trail in behind. The stop condition is a mismatch over 1e-5 that cannot be
-traced to stale data: that would be a conformance failure of the carried model itself, and
-is reported as such.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/browser-viewer-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">Track plots of two demo engagements (the busy one, and the one where E loses to C″), with
-E's trail beside batch least squares, the IMM and C″, made by <code>tma2-plot</code> from the shipped
-data.</li>
-<li class="">A chart of the browser's disagreement with Python on every demo row, against the 1e-5 line.</li>
-<li class="">The browser's time per row and per engagement on the CI runner.</li>
-<li class="">Data: Gate 2's test seed 319, the six chosen ordinals, and the manifest committed with the
-page.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="updates">Updates<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/browser-viewer-kickoff#updates" class="hash-link" aria-label="Direct link to Updates" title="Direct link to Updates" translate="no">​</a></h2>
-<ul>
-<li class="">2026-11-15: done the same day.<!-- -->
-<ul>
-<li class="">Classes are now counted over the span the page shows. Counted over the whole window, the
-first 200 ordinals held no quiet target.</li>
-<li class="">One row of 181 exceeds 1e-5 element-wise in one covariance element in the browser, so the
-check now compares the covariance on its own scale and reports the element-wise figure.</li>
-<li class="">See the <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/browser-viewer-slides">slides post</a>.</li>
-</ul>
-</li>
-</ul>]]></content>
-        <category label="kickoff" term="kickoff"/>
-        <category label="spec-020" term="spec-020"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Kickoff: one last diagnostic, and the time-late track written up as a whole]]></title>
-        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis-kickoff</id>
-        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis-kickoff"/>
-        <updated>2026-11-15T14:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The owner has chosen option B after spec 018: write up the time-late track (specs 013 to]]></summary>
-        <content type="html"><![CDATA[<p>The owner has chosen option B after spec 018: write up the time-late track (specs 013 to
-018) as a whole, with the classical control standing, after one diagnostic on periods
-already used. Spec: <code>specs/019-time-late-synthesis/</code>. Nothing is trained, no GPU is used
-and no new seed is generated.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<p><a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior">Spec 018</a> was decided by its panel in one round. A
-control that chooses among 30 manoeuvre priors by one period's evidence gains nothing on
-busier targets; the standing control stays. The search told the targets' own statistics is
-about 1.15 better over three seeds, in a minority of periods. One thing was left
-confounded: the family's members refitted shared candidates while the true prior had its
-own search, and the family differed from the truth in parts never varied.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<p>SRD §1 and §5; a line in §9 records the decision (proposed; the owner merges).</p>
-<ol>
-<li class=""><strong>A ladder of priors.</strong> From the broadened prior to the true one, taking on the busier
-targets' own statistics a part at a time (legs, turn sizes, turn rates, speed changes,
-kinds of manoeuvre), each with a search of its own; and each part alone. On 150 shifted
-periods of seed 347, already used: development work, not a result.</li>
-<li class=""><strong>Search against refit.</strong> The family member nearest the truth, given its own search,
-against spec 018's refit of the same periods.</li>
-<li class=""><strong>The account.</strong> One post covering specs 013 to 018: the standing system, each result
-as its panel left it, what was withdrawn, the forecasts that were wrong, what was never
-tested, and what the work adds to the project's founding question.</li>
-<li class="">Independent reviewers check the account against the records; slides; PR.</li>
-</ol>
-<p>The time-late track ends here unless the diagnostic shows something the owner wants
-pursued.</p>
-<p>Risks: the parts of a prior may interact, so that no rung "carries" the gain (both the
-ladder and the single parts are run for that reason); 150 used periods separate only
-large effects; a synthesis invites tidy conclusions the panels did not allow.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">The ladder: each rung against the standing control, with the share of its gain in the
-ten best periods.</li>
-<li class="">Search of its own against refit for the nearest member.</li>
-<li class="">The track's gains in one chart: old system, search, control, by kind of target and
-bearing error, from the committed test records of specs 013 to 018.</li>
-<li class="">Track plots of example periods chosen by a rule, good and bad.</li>
-<li class="">All from committed experiment folders by scripts named in the slides post.</li>
-</ul>
-<p><strong>Update, 2026-11-15 (evening).</strong> Done. The diagnostic ran on 130 used periods: a search
-of its own did no better than a refit, and the true prior's gain builds along the ladder,
-legs first, with nothing separated. Three reviewers checked the account against the
-records and corrected it. <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis">The account</a> and
-<a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/time-late-synthesis-slides">the slides</a>.</p>]]></content>
-        <category label="kickoff" term="kickoff"/>
-        <category label="spec-019" term="spec-019"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Slides: a manoeuvre prior that adapts to the period, and a hedged track]]></title>
-        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior-slides</id>
-        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior-slides"/>
-        <updated>2026-11-15T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The illustrated companion to the spec 018 write-up:]]></summary>
-        <content type="html"><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior">the spec 018 write-up</a>:
-the family of priors, the registered comparison on a fresh seed, where a gain was
-expected, the hedged track's spread, what the review panel found, and two periods as
-tracks.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/49/slides/2026-11-15-adaptive-prior-slides/index.html" title="Slides: 2026-11-15-adaptive-prior-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/49/slides/2026-11-15-adaptive-prior-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Verdict</strong>: the standing control ÷ the adaptive control (declared, hedged) and ÷ the
-search told the true statistics, in range, on every split, with intervals and period
-counts. Grey ticks are median per-period ratios.</li>
-<li class=""><strong>Quantities</strong>: the same in range, course and speed on Annex B and shifted targets.</li>
-<li class=""><strong>Kinds</strong>: shifted targets by kind of period: where the standing control misses a
-manoeuvre the bearings show, where it does not, and by how tight the bound is.</li>
-<li class=""><strong>Groups</strong>: the prior chosen by one period, by groups of 5 and 20, and by the whole split.</li>
-<li class=""><strong>Spread</strong>: the share of rows within one and two stated sds of the hedged track's range,
-against the registered band.</li>
-<li class=""><strong>Two periods as tracks</strong>, chosen by a rule in the script: of the 20 stored shifted
-periods, the one where the hedged track is best against the control and the one where
-it is worst.</li>
-</ul>
-<p>The panel's readings (how flat the choice among priors is, the pooled figures over three
-seeds) are the reviewers' recomputations; they are on a slide as a table and in
-<code>experiments/20261115-tl6/review.md</code>, not in a generated figure.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl6_tracks.py &lt;results folder&gt; experiments/20261115-tl6</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl6_charts.py --record experiments/20261115-tl6 --out-dir site/static/img/2026-11-15-adaptive-prior-slides</span><br></div></code></pre></div></div>
-<p>The charts read only the committed record; each figure's <code>.json</code> sidecar names the inputs'
-digests and the commit. <code>tracks.npz</code> holds the first 20 shifted periods' tracks, extracted
-from the results branch <code>results/timelate-tl-g-test-43677426621</code>. The data are seed 347,
-5-second bearings, ranges files under <code>configs/timelate/</code>, generated in the CI run.</p>]]></content>
-        <category label="slides" term="slides"/>
-        <category label="spec-018" term="spec-018"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[A manoeuvre prior that adapts to the period: no gain, and why one period cannot choose its prior]]></title>
-        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior</id>
-        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior"/>
-        <updated>2026-11-15T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Spec 017 said the closable part of the gap on busier targets was largely the prior's. The]]></summary>
-        <content type="html"><![CDATA[<p>Spec 017 said the closable part of the gap on busier targets was largely the prior's. The
-owner chose to try the classical remedy: a control that infers how the target manoeuvres
-from the period itself, with a hedged track beside it. It is done, on a fresh seed, with
-nothing trained. The adaptive control gains nothing on busier targets, so by the rule
-registered beforehand the standing control stays. My forecast, written from the tuning
-seed, said otherwise and was wrong. The illustrated companion is
-<a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior-slides">the slides post</a>.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
-<p><strong>Two designs, both on the tuning seed.</strong> The first ran a search under each of three
-manoeuvre rates and let the period's evidence choose. It gained nothing: one period did
-not identify the rate. The second, which was registered, uses a family of 30 priors (how
-long the legs are, how regular, how large the turns), scores one shared set of candidate
-histories under each, and declares under the member with the most evidence. Beside it, a
-hedged track: the weighted mean of every member's candidates, with a stated spread in
-range.</p>
-<p>The plan, code and conditions were bound by digest before the validation and test seeds
-existed. The conditions read paired period error and coverage, not counts: a lesson from
-the last panel.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-registered-outcome-test-seed-347-1250-periods">The registered outcome (test seed 347, 1,250 periods)<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#the-registered-outcome-test-seed-347-1250-periods" class="hash-link" aria-label="Direct link to The registered outcome (test seed 347, 1,250 periods)" title="Direct link to The registered outcome (test seed 347, 1,250 periods)" translate="no">​</a></h2>
-<p>Standing control ÷ system, in range (above 1: the system is better):</p>
-<table><thead><tr><th>Split (scored periods)</th><th>Adaptive, declared</th><th>Adaptive, hedged</th></tr></thead><tbody><tr><td>Shifted (355)</td><td>1.00 [0.92, 1.08]</td><td>1.00 [0.93, 1.08]</td></tr><tr><td>Shifted 2 (137)</td><td>1.01 [0.92, 1.11]</td><td>0.99 [0.89, 1.09]</td></tr><tr><td>Annex B (273)</td><td>0.93 [0.85, 1.01]</td><td>0.92 [0.84, 1.01]</td></tr><tr><td>Held course (172)</td><td>1.05 [0.98, 1.13]</td><td>1.02 [0.94, 1.12]</td></tr><tr><td>Outliers (93)</td><td>0.95 [0.79, 1.16]</td><td>0.94 [0.79, 1.11]</td></tr><tr><td>Correlated (93)</td><td>0.85 [0.71, 1.00]</td><td>0.89 [0.74, 1.06]</td></tr></tbody></table>
-<p>No gain on either busier-target split for either output. The hedged track reads as harm
-in course on two splits. Its stated spread covers 0.94 of rows on Annex B targets and 0.90
-on shifted, at the edge of the registered band. <strong>The standing control stays.</strong></p>
-<p>On the tuning seed the same comparison was 1.10 and 1.16 on shifted targets. I forecast a
-trade from that. The 60-period validation seed had already shown 0.95 and 1.04.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-panel-made-of-it">What the panel made of it<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#what-the-panel-made-of-it" class="hash-link" aria-label="Direct link to What the panel made of it" title="Direct link to What the panel made of it" translate="no">​</a></h2>
-<p>Five reviewers recomputed all 36 cells and the registration; all approved with findings.
-The outcome stands. Several of my secondary sentences did not.</p>
-<p><strong>What the null means.</strong> The evidence of one period does not rank these priors by how
-accurate they are. Its preference among the 30 members is nearly flat (the favourite has
-a probability of about 0.13), and on shifted targets a member's probability and its error
-are uncorrelated. The member chosen is 1.9 times worse than the member that would have
-been best in hindsight, and only 3 to 5% better than one sensible fixed member. The choice
-avoids bad priors. It does not adapt. A period holds two to five manoeuvres: too few to
-say what kind of target made them.</p>
-<p><strong>How tight the null is.</strong> The test could have detected a gain of 12%. Pooled over three
-seeds the declared control is 1.01 [0.95, 1.08]: gains above about 8% are excluded, small
-ones are not. I wrote that the tuning seed had flattered the design "by all of the
-effect"; that overstates what one test shows.</p>
-<p><strong>The cost on Annex B targets is real and is the design's.</strong> Pooled over three seeds:
-0.91 [0.84, 0.98]. The standing control searches under Annex B's own prior; my family did
-not include it. Where the control's answer came from that prior the adaptive control is
-0.89; elsewhere 1.05.</p>
-<p><strong>The family was not blind.</strong> I set its grid after the first tuning run had told me what
-the first grid lacked, and it sits close to the test splits' own statistics. That favoured
-it. It gained nothing all the same.</p>
-<p><strong>The reference it was chasing is a tail.</strong> The search told the true statistics is 1.10
-here, 1.15 [1.07, 1.23] over three seeds. Ten shifted periods of 355 carry 87% of that
-gain, and in 13% of periods it is over twice as bad as the control. I had called it a
-ceiling. It is not one.</p>
-<p><strong>The hedge is not worth having as built.</strong> It costs about 10% in course on every split,
-as a tail, and is level in range. Its spread cannot be stated by one factor: the factor
-that gave 95% coverage on the tuning seed was 1.95 and on the test seed would be 2.68,
-both set by about twenty periods. The spread is honest where the candidates disagree and
-too narrow where the mixture is confident and wrong.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-wrong-in-the-first-record">What was wrong in the first record<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#what-was-wrong-in-the-first-record" class="hash-link" aria-label="Direct link to What was wrong in the first record" title="Direct link to What was wrong in the first record" translate="no">​</a></h2>
-<ul>
-<li class="">"The true statistics are worth less than spec 017 found": sampling. Three seeds agree.</li>
-<li class="">"The inferred rate barely moves": it moves, by about half the true difference, widely
-scattered per period.</li>
-<li class="">"It loses where the bearings say most": one seed's subgroup, a tail, not repeated.</li>
-<li class="">"None of the three is it": the members refit shared candidates and other parts of the
-prior were never varied.</li>
-<li class="">"Not honest by three parts in a thousand": shifted coverage is 0.897 [0.870, 0.923].</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-delivered">What was not delivered<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#what-was-not-delivered" class="hash-link" aria-label="Direct link to What was not delivered" title="Direct link to What was not delivered" translate="no">​</a></h2>
-<p>A family member with Annex B's own prior; a search under each member; unit tests of the
-runner and the spread code; the tuned IMM and EKF on these periods; a spread for course
-and speed; a per-period rule for choosing between declared and hedged output that does
-anything.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-this-does-and-does-not-show">What this does and does not show<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#what-this-does-and-does-not-show" class="hash-link" aria-label="Direct link to What this does and does not show" title="Direct link to What this does and does not show" translate="no">​</a></h2>
-<p>It shows that this evidence, on one period, cannot tell which of a family of manoeuvre
-priors is the right one, and that a hedged mean of candidates is no better than the
-declared history. On quiet targets the adaptive control invents fewer manoeuvres (3% of
-periods against 8%), a gain not separated in error and reversed on the tuning seed.</p>
-<p>It does not show that priors cannot be adapted: a longer history of the same target, a
-different evidence, or a family that contained the truth's other dimensions were not
-tested. It does not show a learned model would fail, though a model facing the same two
-to five manoeuvres has the same information.</p>
-<p>Across specs 013 to 018 the time-late picture is steady. The arc model and Annex B's
-statistics brought a factor of two over the old system. Editing and an honest bearing sd
-removed most of the damage from bad bearings. On targets unlike Annex B's, about two
-thirds of the remaining gap is manoeuvres the bearings do not show, and the rest has now
-resisted a learned model and a classical one.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next">What comes next<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#what-comes-next" class="hash-link" aria-label="Direct link to What comes next" title="Direct link to What comes next" translate="no">​</a></h2>
-<p>The panel's recommendation, which I adopt as mine: <strong>stop trying to identify the prior,
-and write up the time-late track (specs 013 to 018) as a whole</strong>, with the classical
-control standing. The alternatives are in the question put to the owner. A learned
-proposer or any GPU run would be over-reach.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="records">Records<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior#records" class="hash-link" aria-label="Direct link to Records" title="Direct link to Records" translate="no">​</a></h2>
-<p><code>experiments/20261114-tl6-tuning/</code>, <code>experiments/20261115-tl6-tuning2/</code>, <code>-tl6-decision/</code>,
-<code>-tl6-val/</code> and the test record <code>experiments/20261115-tl6/</code> (<code>review.md</code>). Seeds 345 to
-347 are used; the next fresh seed is 348. Nothing was trained and nothing spent.</p>]]></content>
-        <category label="write-up" term="write-up"/>
-        <category label="spec-018" term="spec-018"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Kickoff: a manoeuvre prior that adapts to the period, and a hedged track]]></title>
-        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/adaptive-prior-kickoff</id>
-        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/adaptive-prior-kickoff"/>
-        <updated>2026-11-14T22:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The owner has chosen option B after spec 017: a classical control whose manoeuvre prior is]]></summary>
-        <content type="html"><![CDATA[<p>The owner has chosen option B after spec 017: a classical control whose manoeuvre prior is
-inferred from the period itself, and beside it a hedged track for the periods where the
-bearings cannot decide. Spec: <code>specs/018-adaptive-prior/</code>. Nothing is trained and no GPU
-is used.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/adaptive-prior-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<p><a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap">Spec 017</a> was decided by its panel in one round. On targets
-busier than Annex B says, the standing control is 2.3 times a fit told the true history,
-and that gap is two things. In about two thirds of periods the limit is manoeuvres the
-bearings barely show. In under a third the control misses manoeuvres the bearings do show;
-about half of those are found by the same search when it is told the targets' own
-statistics (1.17 better overall, at the price of more false manoeuvres). The control
-stands as the time-late system. Open: a system that is not told the statistics.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/adaptive-prior-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<p>SRD §1 and §5; a line in §9 records the owner's decision (proposed; the owner merges).</p>
-<ol>
-<li class=""><strong>An adaptive prior.</strong> The search runs under several manoeuvre rates and the period's
-own evidence weighs them, so a busy target is recognised as busy. Not told the split.</li>
-<li class=""><strong>Its price.</strong> Annex B targets, targets that never manoeuvre, outliers and correlated
-errors: range, course and speed error, false manoeuvres, one-manoeuvre targets called
-quiet.</li>
-<li class=""><strong>A hedged track.</strong> The probability-weighted mean of the candidate histories, across
-rates too, with a stated spread, and a check that the spread covers the truth as often
-as it says.</li>
-<li class=""><strong>Registration</strong> before the fresh seeds (346 validation, 347 test): conditions that can
-come out either way at the planned size and that read cost, not counts.</li>
-<li class="">Panel, write-up, slides.</li>
-</ol>
-<p>If the adaptive control gains on busier targets without harm elsewhere, it is proposed as
-the standing system. If it gains with harm, the owner decides. If it does not gain, the
-standing control stays. The hedged track becomes an output only if its spread is honest.</p>
-<p>Risks: the inferred rate may follow noise, outliers or correlated errors and invent
-manoeuvres on quiet targets; the gain available is small (the ceiling is about 1.17 and
-sits in a minority of periods), so the test may not separate it; a mean of mirror-image
-candidates is a track no target followed.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/adaptive-prior-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">The inferred rate against the true rate, by split (tuning seed 345, then test 347).</li>
-<li class="">Adaptive control ÷ standing control and ÷ the true-prior search on every split, pooled
-and by kind of period, with period counts.</li>
-<li class="">Manoeuvres missed and false for each, at three matching tolerances.</li>
-<li class="">The hedged track's error beside the declared track's, and the coverage of its spread.</li>
-<li class="">Track plots of periods chosen by a rule in the script.</li>
-<li class="">All from committed experiment folders by a script named in the slides post.</li>
-</ul>
-<p><strong>Update, 2026-11-15.</strong> Done. The first design gained nothing on the tuning seed; a second
-was registered. Validation on seed 346 passed soundness; the test on seed 347 was scored
-once and decided by the panel in one round: no gain, the standing control stays. The
-result and what the panel made of it are in
-<a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior">the write-up</a> and
-<a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/15/adaptive-prior-slides">the slides</a>.</p>]]></content>
-        <category label="kickoff" term="kickoff"/>
-        <category label="spec-018" term="spec-018"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Kickoff: the standing time-late control, and is the shifted-prior gap identifiability?]]></title>
-        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-kickoff</id>
-        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-kickoff"/>
-        <updated>2026-11-14T18:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The owner has chosen the panel's recommendation after study L: the classical control]]></summary>
-        <content type="html"><![CDATA[<p>The owner has chosen the panel's recommendation after study L: the classical control
-becomes the standing time-late system, and one cheap classical study asks whether the gap
-left under a shifted manoeuvre prior can be closed by anyone. Spec:
-<code>specs/017-shifted-gap/</code>. Nothing is trained and no GPU is used.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<p><a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/time-late-learned">Study L</a> was decided by its panel in one round. The
-classical control stands: it removes most of the damage from outliers and correlated
-bearing errors and from quiet targets. The learned model's reported track beat it nowhere,
-and the panel showed that loss was the model's untuned manoeuvre detector. Open for every
-system: on targets that manoeuvre more often and less sharply than Annex B says, the
-control's error is 1.7 to 2.1 times that of a fit told the true history, with half the
-manoeuvres missed.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<p>SRD §1 and §5; a line in §9 records the standing system (proposed; the owner merges).</p>
-<ol>
-<li class=""><strong>Detectability.</strong> For every true manoeuvre, how much worse the bearings are fitted
-when it is left out of the true history. No search, no evidence approximation.</li>
-<li class=""><strong>The gap, split.</strong> A reference told only the detectable manoeuvres. The part of the
-gap that remains for it is identifiability; the part between it and the control is what
-a better search or evidence could win.</li>
-<li class=""><strong>The true prior.</strong> The control's search given the shifted targets' own statistics: what
-knowing them is worth.</li>
-<li class=""><strong>Registration</strong> of the rule, thresholds and sizes before the fresh seeds (343
-validation, 344 test), with the rule's power stated.</li>
-<li class=""><strong>What study L's record owes</strong>: the scored weights' digests, the export check on the
-trained models, IMM and EKF tracks beside, a reference fitted to edited bearings, tests
-for the runner and scorer.</li>
-<li class="">Panel, write-up, slides.</li>
-</ol>
-<p>If the gap is mostly identifiability, the learned-proposer idea is not taken and the
-time-late track is written up. If it is mostly attainable, a proposer study using the
-three trained models is proposed to the owner.</p>
-<p>Risks: "detectable" depends on a threshold (three are registered and the result is given
-at each); the reference told the true history drifts in a quarter of shifted periods (its
-times are held, and the share stated); a split may come out mixed, which is a result.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">The distribution of detectability for Annex B and shifted manoeuvres, and the control's
-miss rate against it (tuning 342, then test 344).</li>
-<li class="">The gap as two stacked parts per split and threshold, with intervals.</li>
-<li class="">The true-prior search beside the control.</li>
-<li class="">Track plots of periods with undetectable manoeuvres, chosen by a rule in the script.</li>
-<li class="">All from committed experiment folders by a script named in the slides post.</li>
-</ul>
-<p><strong>Update, 2026-11-14 (evening).</strong> Done. Validation on seed 343 passed soundness; the test
-on seed 344 was scored once and decided by the panel in one round. The result and what the
-panel made of it are in <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap">the write-up</a> and
-<a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-slides">the slides</a>.</p>]]></content>
-        <category label="kickoff" term="kickoff"/>
-        <category label="spec-017" term="spec-017"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Slides: what the shifted-prior gap is made of]]></title>
-        <id>https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-slides</id>
-        <link href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-slides"/>
-        <updated>2026-11-14T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The illustrated companion to the spec 017 write-up: how]]></summary>
-        <content type="html"><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap">the spec 017 write-up</a>: how
-detectable the busier targets' manoeuvres are, what the control misses, the gap as a chain
-of references, what the review panel found, and two periods as tracks.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/49/slides/2026-11-14-shifted-gap-slides/index.html" title="Slides: 2026-11-14-shifted-gap-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/49/slides/2026-11-14-shifted-gap-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Detectable</strong>: the share of true manoeuvres whose omission adds less than 10, 20 and 40
-to the χ² of the true history's fit, by split.</li>
-<li class=""><strong>Missed</strong>: on the shifted split, the share of manoeuvres each system misses, by
-detectability band. The search under the targets' own prior misses fewer at every band.</li>
-<li class=""><strong>Chain</strong>: the control against the reference told every manoeuvre, the cost of not being
-told the ones under 20, the control against that reference, and the control against the
-true-prior search. Grey ticks are median per-period ratios.</li>
-<li class=""><strong>Share</strong>: the attainable share of the control's gap at each threshold, by split (under
-outliers, against references fitted to the edited bearings).</li>
-<li class=""><strong>Two periods as tracks</strong>, chosen by a rule in the script: of the 20 stored shifted
-periods with at least two whole true manoeuvres, the one with the largest share under 20
-and the one with the smallest.</li>
-</ul>
-<p>The panel's split of the gap into two kinds of period is in the write-up and
-<code>experiments/20261114-tl5/review.md</code>; it is the reviewers' recomputation, shown on a slide
-as a table and not as a generated figure.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/pr/49/blog/2026/11/14/shifted-gap-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl5_tracks.py &lt;results folder&gt; experiments/20261114-tl5</span><br></div><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl5_charts.py --record experiments/20261114-tl5 --out-dir site/static/img/2026-11-14-shifted-gap-slides</span><br></div></code></pre></div></div>
-<p>The charts read only the committed record; each figure's <code>.json</code> sidecar names the inputs'
-digests and the commit. <code>tracks.npz</code> holds the first 20 shifted periods' tracks, extracted
-from the results branch <code>results/timelate-tl-f-test-43618868241</code>. The data are seed 344,
-5-second bearings, ranges files under <code>configs/timelate/</code>, generated in the CI run.</p>]]></content>
-        <category label="slides" term="slides"/>
-        <category label="spec-017" term="spec-017"/>
     </entry>
 </feed>
