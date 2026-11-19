@@ -151,6 +151,66 @@ def tables(summary: dict[str, Any]) -> str:
             v = e.get(k, {}).get("range")
             cells.append("—" if v is None else f"{v:.2f}")
         out.append(f"| {s} | " + " | ".join(cells) + " |")
+    if any("carry" in r for r in sp.values()):  # spec 026
+        out += ["", "## Carry across gaps (spec 026; periods after an engagement's first)", ""]
+        for c, label in (
+            ("carry/joint", "carry ÷ joint (above 1: joining better)"),
+            ("alone/carry", "alone ÷ carry (above 1: carrying helps)"),
+            ("alone/joint", "alone ÷ joint on the same later periods"),
+        ):
+            out += [
+                f"### {label}",
+                "",
+                "| split | range | course | speed | median (range) | periods / engagements |",
+                "|---|---|---|---|---|---|",
+            ]
+            for s_, r in sp.items():
+                d = r["carry"]["ratios"][c]
+                rg = d["range"]
+                out.append(
+                    f"| {s_} | "
+                    + " | ".join(_r(d[q]) for q in QUANT)
+                    + f" | {rg.get('median', float('nan')):.2f} | {rg.get('periods', 0)} / {rg.get('engagements', 0)} |"
+                )
+            out.append("")
+        out += [
+            "### On rows the period determines alone",
+            "",
+            "| split | carry ÷ joint | alone ÷ carry |",
+            "|---|---|---|",
+        ]
+        for s_, r in sp.items():
+            d = r["carry"]["ratios_own_rows"]
+            out.append(
+                f"| {s_} | {_r(d['carry/joint']['range'])} | {_r(d['alone/carry']['range'])} |"
+            )
+        out += [
+            "",
+            "### By kind of period (range)",
+            "",
+            "| split | kind | periods | carry ÷ joint | alone ÷ carry |",
+            "|---|---|---|---|---|",
+        ]
+        for s_, r in sp.items():
+            for k, b in r["carry"]["by_kind"].items():
+                out.append(
+                    f"| {s_} | {k} | {b['periods']} | {_r(b['carry/joint']['range'])} | {_r(b['alone/carry']['range'])} |"
+                )
+        out += [
+            "",
+            "| split | later periods | fell back | first period: carry ÷ alone max abs difference in errors |",
+            "|---|---|---|---|",
+        ]
+        for s_, r in sp.items():
+            c = r["carry"]
+            out.append(
+                f"| {s_} | {c['later_periods']} | {c['fell_back']} | {c['first_period_max_diff']:.2g} |"
+            )
+        out += [
+            "",
+            "Verdicts (spec 026's rule): "
+            + "; ".join(f"{s_}: {r.get('verdict_carry')}" for s_, r in sp.items()),
+        ]
     return "\n".join(out) + "\n"
 
 
