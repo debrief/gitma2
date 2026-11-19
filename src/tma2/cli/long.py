@@ -7,6 +7,7 @@
     uv run tma2-long carry --index 0 --out <dir>          # spec 024: ctl and ctl carrying state
     uv run tma2-long carry2 --index 0 --out <dir>         # spec 027: and ctl carrying a prior
     uv run tma2-long study27 --raw <dir> --config <study config> --out <dir>   # spec 027's study
+    uv run tma2-long study29 --raw <dir> --config <hold config> --out <dir>    # spec 029's study
     ... --config configs/long/realistic.json --contact 2  # spec 024: realism; the second contact
 
 The engagement is ``configs/long/long.json``'s ``index``-th (in order of duration). Writes
@@ -69,6 +70,7 @@ def main(argv: list[str] | None = None) -> int:
             "imm",
             "study",
             "study27",
+            "study29",
         ),
     )
     ap.add_argument("--indices", default="", help="imm: engagements a-b (inclusive)")
@@ -122,6 +124,17 @@ def main(argv: list[str] | None = None) -> int:
         out.mkdir(parents=True, exist_ok=True)
         (out / "study.json").write_text(json.dumps(res, indent=1, default=float) + "\n")
         print(json.dumps(res["rule"], indent=1, default=float))
+        return 0
+    if a.part == "study29":
+        from tma2.long.study29 import score29
+
+        res = score29(Path(a.raw).resolve(), Path(a.config).resolve())
+        res["git_commit"], res["git_dirty"] = g.commit, g.dirty
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "study.json").write_text(json.dumps(res, indent=1, default=float) + "\n")
+        print(json.dumps({k: res[k] for k in ("soundness", "classes")}, indent=1, default=float))
+        print(res["rule"]["outcome"])
         return 0
     if a.part == "imm":
         from tma2.long.realtime import IMM, imm_states
