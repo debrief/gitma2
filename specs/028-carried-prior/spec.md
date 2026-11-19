@@ -60,3 +60,10 @@ a study on fresh seeds.
   Gaussian proves too blunt.
 - The previous period's Laplace covariance is known to be overconfident where its fit is
   wrong (Gate 3's lesson); the smoke run on three engagements already shows it.
+
+## Registration (2026-11-19, owner: register k4)
+
+After the development run (`experiments/20261119-tl10-dev/`) and the refinement
+(`experiments/20261119-tl10-refine/`), the carried prior with its covariance inflated 4× in sd (k4)
+is registered against `ctl` alone: decision record `experiments/20261119-tl10-decision/`, plan
+`configs/timelate/tl-o.json`, validation seed 362, test seed 363.
