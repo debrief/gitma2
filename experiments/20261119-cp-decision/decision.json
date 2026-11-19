@@ -1,0 +1,24 @@
+{
+  "study": "spec 027: the previous window as a prior (not a gate)",
+  "registered": "2026-11-19, before seeds 355 and 356 exist (they are generated only in their CI runs)",
+  "seeds": {"tuning": 354, "validation": 355, "test": 356, "next_fresh": 357},
+  "configs": {"validation": "configs/long/cp-val.json", "test": "configs/long/cp-test.json", "carry_settings": "configs/long/carry2.json", "runs": ["configs/long/runs/cp-val.json", "configs/long/runs/cp-test.json"]},
+  "settings": {"scale": 4.0, "tail_s": 1200, "alpha": 0.001},
+  "systems": ["ctl-d1-q0.01 (ctl)", "ctl-carry", "ctl-prior", "ctl-prior-noguard (reported)", "c2 and history-map (references)"],
+  "classes": "weak = every contact-2 window, and a contact-1 window whose hand-over is within 30 min of a contact gap or which holds at most one ownship turn; other = the rest of contact 1; each chain's first window excluded everywhere",
+  "estimand": "geometric mean over windows of ctl ÷ ctl-prior, per-window median range error; 95% interval from 2,000 bootstrap resamples over engagements (seed 27)",
+  "rule": {
+    "gain": "lower limit on the weak split above 1 (range)",
+    "harm": "upper limit below 1 on weak, other, contact 1 or contact 2, in range, course or speed",
+    "otherwise": "not shown, at this size"
+  },
+  "soundness_on_validation": {
+    "S1": "at least 95% of planned windows ran and no engagement missing",
+    "S2": "per-engagement geometric mean of ctl ÷ the true-history fit in [0.8, 4]",
+    "coverage": "contact-1 coverage of the carried 95% region in [0.80, 0.99]",
+    "on_failure": "the study stops before the test"
+  },
+  "scorer": "tma2-long study27 --raw <dir> --config <config> --out <dir>",
+  "code_sha256": "09a7edae00d500f79ca8922a135f92526f84d4b3e5a8a4e6a02c0c68ad63536b",
+  "digests": "digests.json (scripts/research/cp_digests.py)"
+}

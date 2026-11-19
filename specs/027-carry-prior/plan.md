@@ -88,7 +88,7 @@
 
 1. Code and unit tests.
 2. Tuning run (seed 354) on CI; choose the settings; check the split's size.
-3. Decision record (`experiments/20261118-cp-decision/`): plan, configs, run files and code
+3. Decision record (`experiments/20261119-cp-decision/`): plan, configs, run files and code
    by digest, plus forecasts.
 4. Validation (seed 355): soundness and coverage.
 5. Test (seed 356), scored once.

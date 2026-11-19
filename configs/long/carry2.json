@@ -1,6 +1,6 @@
 {
-  "description": "Spec 027: the carried prior's settings for the tuning run (scale of the Laplace covariance, tail_s of unseen manoeuvre time, alpha of the guard's chi-square(4) test). The decision record binds the values for validation and test.",
-  "scale": 2.0,
-  "tail_s": 600,
+  "description": "Spec 027: the carried prior's settings, chosen on tuning seed 354 by plan.md's rule (the scale and tail whose contact-1 coverage of the carried 95% region is nearest 0.95, ties to the larger scale: scale 4, tail 1200 s, coverage 0.90; alpha stays 0.001, fall-back rate 2.3%). The tuning run itself used scale 2, tail 600, alpha 0.001 (recorded in its raw headers). Bound by digest in experiments/20261119-cp-decision/.",
+  "scale": 4.0,
+  "tail_s": 1200,
   "alpha": 0.001
 }
