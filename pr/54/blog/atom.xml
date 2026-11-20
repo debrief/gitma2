@@ -2,10 +2,184 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://debrief.github.io/gitma2/pr/54/blog</id>
     <title>TMA via ML, second attempt Blog</title>
-    <updated>2026-11-20T14:00:00.000Z</updated>
+    <updated>2026-11-20T23:45:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://debrief.github.io/gitma2/pr/54/blog"/>
     <subtitle>TMA via ML, second attempt Blog</subtitle>
+    <entry>
+        <title type="html"><![CDATA[Slides: the carried prior where the ownship's legs outlast the window]]></title>
+        <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-slides</id>
+        <link href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-slides"/>
+        <updated>2026-11-20T23:45:00.000Z</updated>
+        <summary type="html"><![CDATA[These slides are the illustrated companion to the write-up. On]]></summary>
+        <content type="html"><![CDATA[<p>These slides are the illustrated companion to <a class="" href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs">the write-up</a>. On
+blind 2-hour windows, <code>ctl</code> ÷ <code>ctl-prior</code> is <strong>1.54 [1.16, 2.03]</strong> ("ctl-prior better"). Against
+a joint solve over the same past bearings it is 1.11 (not separated). There is no harm. Spec:
+<code>specs/032-long-legs/</code>.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/54/slides/2026-11-20-long-legs-slides/index.html" title="Slides: 2026-11-20-long-legs-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/54/slides/2026-11-20-long-legs-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>The scorer:</strong> <code>src/tma2/long/study32.py</code>, run by <code>tma2-long study32</code>.</li>
+<li class=""><strong><code>jointheld</code></strong> always writes its <code>.npz</code>.</li>
+<li class=""><strong>Configs:</strong> <code>configs/long/legs-{tuning,val,test}.json</code> and run files
+<code>configs/long/runs/legs-*.json</code>.</li>
+<li class=""><strong>Scripts:</strong> <code>scripts/research/legs_{digests,charts}.py</code>.</li>
+<li class=""><strong>Tests:</strong> <code>tests/unit/test_long_study32.py</code>.</li>
+<li class=""><strong>Records:</strong>
+<ul>
+<li class="">tuning: <code>experiments/20261120-legs-tuning/</code>;</li>
+<li class="">decision: <code>20261120-legs-decision/</code>;</li>
+<li class="">validation: <code>20261120-legs-val/</code>;</li>
+<li class="">test: <code>20261120-legs/</code>, with <code>review.md</code>.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Unscored:</strong> the windows where contact was lost (half the blind windows).</li>
+<li class=""><strong>Untested:</strong> ordinary ranges with the ownship holding course, and chains of blind windows.</li>
+<li class=""><strong>Not calibrated:</strong> the carried uncertainty, which is not a stated uncertainty.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Recommended:</strong> adopt 2-hour <code>ctl-prior</code> for the tended contact, and close the track with a
+synthesis.</li>
+<li class=""><strong>Alternatives:</strong>
+<ul>
+<li class="">an E2 study at ordinary ranges;</li>
+<li class="">repair the hand-over;</li>
+<li class="">lost-contact prediction.</li>
+</ul>
+</li>
+</ul>
+<p>Figures: <code>scripts/research/legs_charts.py</code>, with a sidecar beside each SVG.</p>]]></content>
+        <category label="slides" term="slides"/>
+        <category label="spec-032" term="spec-032"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Long engagements: the carried prior where the ownship's legs outlast the window]]></title>
+        <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs</id>
+        <link href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs"/>
+        <updated>2026-11-20T23:30:00.000Z</updated>
+        <summary type="html"><![CDATA[The owner's hypothesis: knowledge of the previous track can usefully constrain the solution for]]></summary>
+        <content type="html"><![CDATA[<p>The owner's hypothesis: knowledge of the previous track can usefully constrain the solution for
+the next leg. <a class="" href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/held-comparators">Spec 031</a> found that with ownship legs of 1–2 h,
+the standing 2-hour window always contains a turn, so the prior had nothing to rescue. This study
+makes the ownship hold each leg for 2–4 h, so some standing 2-hour windows are blind.</p>
+<p><strong>The result:</strong> on blind 2-hour windows, <code>ctl</code> ÷ <code>ctl-prior</code> is <strong>1.54 [1.16, 2.03]</strong>, and the
+registered rule reads <strong>"ctl-prior better"</strong>. Against a joint solve over the same past bearings it
+is <strong>1.11 [0.84, 1.45], not separated</strong>. The prior does no harm on windows with one turn; it helps
+there too, at 1.26.</p>
+<p>Spec: <code>specs/032-long-legs/</code>. Record: <code>experiments/20261120-legs/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-design">The design<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs#the-design" class="hash-link" aria-label="Direct link to The design" title="Direct link to The design" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Engagements:</strong> spec 024's realism, with ownship legs of 2–4 h, contact 1, and 6- and 12-hour
+engagements.</li>
+<li class=""><strong>Windows:</strong> the standing configuration, 2-hour windows overlapping 30 min.</li>
+<li class=""><strong>Systems on blind (turn-free) windows:</strong>
+<ul>
+<li class=""><code>ctl</code>, the window solved alone;</li>
+<li class=""><code>ctl-prior</code>, which carries the previous window's state and covariance as a prior, with spec
+028's guard;</li>
+<li class="">a joint solve: <code>ctl</code> on the window and the one before it, 3.5 h of past bearings.</li>
+</ul>
+</li>
+<li class=""><strong>Estimands:</strong>
+<ul>
+<li class=""><strong>E1</strong> = <code>ctl</code> ÷ <code>ctl-prior</code>; <strong>E2</strong> = joint ÷ <code>ctl-prior</code>.</li>
+<li class=""><strong>Harm</strong> is read on one-turn windows.</li>
+<li class="">Each is a geometric mean of per-window median range error, with a bootstrap over engagements.</li>
+</ul>
+</li>
+<li class=""><strong>Registration:</strong> before seeds 367 and 368 existed. The test was raised to 50 + 50 engagements
+on tuning's yield (<code>experiments/20261120-legs-decision/</code>).</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-happened">What happened<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs#what-happened" class="hash-link" aria-label="Direct link to What happened" title="Direct link to What happened" translate="no">​</a></h2>
+<p>Test: seed 368, 100 engagements, scored once. Soundness passed.</p>
+<table><thead><tr><th>reading</th><th>range</th><th>median</th><th><code>ctl-prior</code> better</th><th>twice as good / twice as bad</th></tr></thead><tbody><tr><td><strong>E1</strong> <code>ctl</code> ÷ <code>ctl-prior</code></td><td><strong>1.537 [1.156, 2.029]</strong></td><td>1.25</td><td>59%</td><td>38% / 18%</td></tr><tr><td><strong>E2</strong> joint ÷ <code>ctl-prior</code></td><td>1.113 [0.840, 1.445]</td><td>1.24</td><td>61%</td><td>24% / 19%</td></tr><tr><td>harm (one-turn windows)</td><td>1.259 [1.056, 1.500]</td><td>1.21</td><td>60%</td><td>31% / 16%</td></tr></tbody></table>
+<ul>
+<li class="">
+<p><strong>Median range error on decided blind windows:</strong></p>
+<table><thead><tr><th>system</th><th>median error</th></tr></thead><tbody><tr><td><code>ctl</code></td><td>16.7%</td></tr><tr><td>joint</td><td>12.8%</td></tr><tr><td><code>ctl-prior</code></td><td>10.4%</td></tr><tr><td>reference told the true history</td><td>3.3%</td></tr></tbody></table>
+</li>
+<li class="">
+<p><strong>The prior does the work, not the carried start:</strong> <code>ctl-carry</code> ÷ <code>ctl-prior</code> is 1.52.</p>
+</li>
+<li class="">
+<p><strong>The forecasts came true:</strong> E1 "better" (probability 0.45), E2 "not separated" (0.5), no harm
+(0.95).</p>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-panel-narrowed">What the panel narrowed<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs#what-the-panel-narrowed" class="hash-link" aria-label="Direct link to What the panel narrowed" title="Direct link to What the panel narrowed" translate="no">​</a></h2>
+<p>Three reviewers each approved with findings (<code>experiments/20261120-legs/review.md</code>). Every decided
+number was reproduced independently.</p>
+<ul>
+<li class=""><strong>Half the blind windows are outside the claim.</strong>
+<ul>
+<li class="">Holding a 2–4 h leg opens the range, often beyond detection. 80 of 165 blind windows were
+lost to contact (median 72 km) and are unscored.</li>
+<li class="">The claim covers the 85 where contact held: median 37 km, about half the bearings detected.</li>
+</ul>
+</li>
+<li class=""><strong>It is a far-range effect.</strong>
+<ul>
+<li class="">E1 is about 2.2 beyond 35 km and about 1.0 under; at 15–25 km it is 0.82.</li>
+<li class="">Range and contact loss move together here and cannot be separated.</li>
+</ul>
+</li>
+<li class=""><strong>E1 is "more data beats no data".</strong> E2 is the fair comparison, and the compact hand-over is
+not shown to lose to keeping the bearings, nor to beat them.</li>
+<li class=""><strong>The prior comes from a window that saw a turn</strong> in 83 of 85 cases. Chains of blind windows are
+untested.</li>
+<li class=""><strong>Seeds move.</strong>
+<ul>
+<li class="">E1 was 1.32, 0.87 and 1.54 across the three seeds; pooled, it is 1.37 [1.05, 1.80].</li>
+<li class="">The joint solve against <code>ctl</code> flipped between seeds; pooled, it is not separated.</li>
+</ul>
+</li>
+<li class=""><strong>The carried uncertainty is not calibrated.</strong> It is too wide in the core and too narrow in the
+tail, and covers 0.79 across a turn.</li>
+<li class=""><strong>Limits:</strong>
+<ul>
+<li class="">windows are placed past true manoeuvres;</li>
+<li class="">spec 028's hand-over defect is kept;</li>
+<li class="">one simulator, contact 1.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-it-means-for-the-owners-question">What it means for the owner's question<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs#what-it-means-for-the-owners-question" class="hash-link" aria-label="Direct link to What it means for the owner's question" title="Direct link to What it means for the owner's question" translate="no">​</a></h2>
+<p><strong>A qualified yes.</strong></p>
+<ul>
+<li class="">Where the ownship holds course through the whole window and the target is far, the previous
+track constrains the next window far better than the window alone: about twice as well beyond
+35 km.</li>
+<li class="">It does about as well as re-solving the previous bearings, and needs only four numbers and a
+covariance.</li>
+</ul>
+<p>At ordinary ranges the benefit is not shown. Where contact is lost, nothing in this design answers
+well.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="next-the-owners-choice">Next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs#next-the-owners-choice" class="hash-link" aria-label="Direct link to Next (the owner's choice)" title="Direct link to Next (the owner's choice)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Recommended default:</strong>
+<ul>
+<li class="">Adopt 2-hour <code>ctl-prior</code> with its guard as the standing chained system for the tended
+contact, up to 12 h, within the limits above.</li>
+<li class="">Keep the joint solve as the equal alternative where the bearings are kept.</li>
+<li class="">Close the long-engagement track with one synthesis of specs 023 to 032.</li>
+</ul>
+</li>
+<li class=""><strong>Alternatives:</strong>
+<ul>
+<li class="">an E2 study at ordinary ranges (15–25 km, range kept while holding course);</li>
+<li class="">repair the hand-over and the process-noise shape, then check coverage across a turn;</li>
+<li class="">predict through lost-contact windows and score both systems there.</li>
+</ul>
+</li>
+</ul>
+<p>Slides: <a class="" href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-slides">the slides post</a>.</p>]]></content>
+        <category label="write-up" term="write-up"/>
+        <category label="spec-032" term="spec-032"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Kickoff: the carried prior where the ownship's legs outlast the 2-hour window]]></title>
         <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-kickoff</id>
@@ -1300,103 +1474,5 @@ design. E3 reads one IMM tuning.</li>
 </ul>]]></content>
         <category label="kickoff" term="kickoff"/>
         <category label="spec-026" term="spec-026"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Slides: long engagements, carrying state, an incremental C, realism]]></title>
-        <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/long-engagements-2-slides</id>
-        <link href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/long-engagements-2-slides"/>
-        <updated>2026-11-18T03:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Note 12's three recommendations, built and measured on the same four engagements. Carrying state]]></summary>
-        <content type="html"><![CDATA[<p>Note 12's three recommendations, built and measured on the same four engagements. Carrying state
-between time-late windows makes the search cheaper but not more accurate. The incremental C
-is 1.7 times cheaper but loses accuracy, so it is not adopted. With realism, the contact the
-ownship tends keeps its accuracy, and a contact it does not tend drifts away and is three to five times
-worse where it can be solved at all. An investigation, not a gate. Spec: <code>specs/024-long-carry-incremental-realism/</code>.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/54/slides/2026-11-18-long-engagements-2-slides/index.html" title="Slides: 2026-11-18-long-engagements-2-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/54/slides/2026-11-18-long-engagements-2-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/long-engagements-2-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
-<ul>
-<li class=""><strong><code>ctl-carry</code></strong> (<code>src/tma2/long/carry.py</code>): the standing control with its start from nothing
-replaced by the previous window's declared track and manoeuvres. It is solved beside <code>ctl</code>
-on every window, and that <code>ctl</code> equals spec 023's runner within 1 mm.</li>
-<li class=""><strong>An incremental C</strong> (<code>src/tma2/long/incremental.py</code>): one confirmation per 2-hour block of
-estimates, cropped to each estimate's window. With blocks of one it equals the per-window run.</li>
-<li class=""><strong>Realism</strong> (<code>configs/long/realistic.json</code>): the ownship steers on what it measures; contact
-gaps; detection fading with range; a second contact with mis-association where the two cross.
-It is drawn from its own random stream, so contact 1 is spec 023's target.</li>
-<li class="">A set selector on the long-engagement sections of <a class="" href="https://debrief.github.io/gitma2/pr/54/viewer">the viewer</a> and
-<a class="" href="https://debrief.github.io/gitma2/pr/54/timelate">the time-late page</a>, research note 13, and the record <code>experiments/20261117-long2/</code>.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-found">What was found<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/long-engagements-2-slides#what-was-found" class="hash-link" aria-label="Direct link to What was found" title="Direct link to What was found" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Carry</strong>: the median ratio of <code>ctl</code> to <code>ctl-carry</code> per window is 1.00 in every set. Wins and
-losses are mixed: 15 to 20 on spec 023's engagements, 22 to 11 on realistic contact 1. The
-start from the carry costs about 55% of the search it replaces.</li>
-<li class=""><strong>Incremental C</strong>: E and C″ cost 32–42 s an estimate against 53–73 s per window. Median range
-error is worse at 24 and 48 hours (E 29.8% and 35.6% against 14.3% and 20.9%).<!-- -->
-<ul>
-<li class="">The first estimate of each block matches the per-window run.</li>
-<li class="">The later ones are 2 to 4 times worse.</li>
-<li class="">The cause lies in the longer history before the crop and is not established.</li>
-</ul>
-</li>
-<li class=""><strong>Realism</strong>:<!-- -->
-<ul>
-<li class="">Contact 1 is held 67–85% of the time, and <code>ctl</code> stays at 1.5–2.2% (spec 023's: 1.6–2.1%).</li>
-<li class="">Contact 2 drifts to a median 27–147 km and is held 10–22% of the time beyond 6 hours. On the windows
-with at least five minutes of its bearings, <code>ctl</code> is at 6–8%, and the true-history fit is at 2–4.5%.</li>
-</ul>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/long-engagements-2-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
-<ul>
-<li class="">No accuracy gain from carrying state, and the incremental C is not usable as built.</li>
-<li class="">Mis-association is barely exercised (0–8 swapped bearings an engagement).</li>
-<li class="">One engagement per length: these are anecdotes, not rates.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/long-engagements-2-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
-<p>Recommended: a registered study on 6- and 12-hour realistic engagements (seeds 349 to 351,
-about 160 CPU-hours). It would test carry non-inferiority, the cost of an untended contact and
-the IMM's drift. Or measure shorter incremental blocks on tuning data first, or stop the
-long-engagement track here.</p>
-<p>Figures: <code>scripts/research/long2_charts.py</code>, with a sidecar beside each SVG.</p>]]></content>
-        <category label="slides" term="slides"/>
-        <category label="spec-024" term="spec-024"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Kickoff: carrying state across gaps, against joining through them]]></title>
-        <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/carry-across-gaps-kickoff</id>
-        <link href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/carry-across-gaps-kickoff"/>
-        <updated>2026-11-18T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Spec 025 showed that one solve over several periods of a target beats solving each alone. The]]></summary>
-        <content type="html"><![CDATA[<p>Spec 025 showed that one solve over several periods of a target beats solving each alone. The
-cheaper thing an analyst would do instead is to solve period by period and hand each answer on
-to the next. This task measures that carry against the joint solve, as a registered study on
-fresh seeds (owner, option B). Nothing is trained.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/carry-across-gaps-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class=""><a class="" href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/joined-periods">Spec 025</a>: the joint solve gains on every split (Annex B
-3.10 [2.22, 4.58]), mostly by making periods without their own ownship turn answerable; its
-panel asked first for a comparison with carrying state.</li>
-<li class="">Spec 024 (another session) built <code>ctl-carry</code> for overlapping windows; across a gap it has
-nothing to carry, so it is not this comparison.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/carry-across-gaps-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class="">Spec <code>specs/027-carry-across-gaps/</code>. Carry: each later period starts its search from the
-previous period's declared state, run forward at constant velocity through the gap.</li>
-<li class="">Registered: carry ÷ joint (is joining better?) and alone ÷ carry (does carrying help?),
-per split, with engagement intervals.</li>
-<li class="">Plan: build the carry and test that without a carried start it equals <code>ctl</code>; tune on spent
-seed 353; decision record; validation seed 360; test seed 361; panel; write-up.</li>
-<li class="">Risk: a manoeuvre in the gap makes the carried state wrong, and a carry can only start a fit
-that uses the period's own bearings, so a period without its own turn may stay unanswerable.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/carry-across-gaps-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">Charts of carry ÷ joint and alone ÷ carry by split, by kind of period and on rows a period
-determines alone; one engagement's tracks with all three systems.</li>
-</ul>]]></content>
-        <category label="kickoff" term="kickoff"/>
-        <category label="spec-027" term="spec-027"/>
     </entry>
 </feed>
