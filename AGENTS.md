@@ -782,6 +782,26 @@ tended contact. Then register `ctl-prior` (1 h) against `ctl` (2 h) and a joint 
 held-course engagements, with a reference told the truth over the span. Seeds 362–364 used; the
 next fresh seed is 365.
 
+030 (the carried prior against longer windows, `specs/030-held-comparators/`; owner 2026-11-19
+"run the comparison against 2-hour ctl and joint solve"; a registered study, not a gate; nothing
+trained). On spec 029's held-course engagements, 1-hour `ctl-prior` (a) against (b) `ctl` and
+`ctl-prior` on 2-hour windows (stitched) and (c) a joint solve (`ctl` on each turn-free hour's union
+with the hour before; `tma2-long jointheld`); scorer `long/study30.py` (`tma2-long study30`; D1 2-hour
+ctl, D2 joint, D3 2-hour ctl-prior, each ÷ (a) on held windows); `long.yml` passes `tag`; run files
+`configs/long/runs/cmp-*.json`. Tuning on spent seed 364 (`experiments/20261119-cmp-tuning/`),
+decision `20261120-cmp-decision/` (code `e7a1870b…`), validation 365 (`20261120-cmp-val/`, soundness
+passed), **test record `experiments/20261120-cmp/` (seed 366, 179 decided windows): "ctl-prior worse"
+on all three: D1 0.730 [0.579, 0.917], D2 0.774 [0.632, 0.954], D3 0.488 [0.386, 0.619]; forecasts for
+D1/D2 wrong in direction. Panel round 1** (`review.md`, three approve with findings): D2 is the clean
+comparison (same past, no later bearings); D1/D3 include an ownship turn in 98% of windows and a median
+29 min of later bearings; averages with wide spread ((a) better in about 4 in 10, twice as bad in a
+third); 2-hour ctl-prior over 2-hour ctl is supplement only (1.49, median 1.14); cost about 2.1× per
+engagement-hour for the whole job. Spec 029's 1-hour recommendation withdrawn; spec 028's `ctl-prior`
+on 2-hour windows stands. Write-up `site/blog/2026-11-20-held-comparators.md`, slides
+`2026-11-20-held-comparators-slides.md` (figures `scripts/research/cmp_charts.py`). Recommended
+(owner's choice): close the long-engagement track with a synthesis; or legs longer than the window;
+or reopen with new information. Seeds 365, 366 used; the next fresh seed is 367.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1225,6 +1245,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   a true manoeuvre, so hand-overs are never inside one: state it as a limit of every chained
   study. Coverage within a band is not calibration: report the median NEES beside it. Never write
   in a tuning record what validation or test will show.
+- Spec 030 panel: a stitched longer-window track scored on a shorter window's rows also uses
+  later bearings and the next ownship turn: state the latency and the data horizon, and take the
+  comparator with the same past (the joint solve) as the clean one. Never compare a system from
+  one run with systems from another in tuning either (the tuning flip, D1 1.30, was two CPU
+  families). A part that writes no `.npz` when it has nothing to do makes S1 unable to tell
+  "nothing to do" from "lost": always write the file. Give the cost per engagement-hour, not per
+  window, when windows advance at different rates.
 - `long.yml`: a results branch whose history carries workflow edits is refused to the Actions
   token, so the collect step pushes an orphan branch. Pushes to main are ignored: merging a PR
   that changes `configs/long/run.json` re-ran the last study's whole plan.
