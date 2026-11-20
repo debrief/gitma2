@@ -832,6 +832,27 @@ on 2-hour windows stands. Write-up `site/blog/2026-11-20-held-comparators.md`, s
 (owner's choice): close the long-engagement track with a synthesis; or legs longer than the window;
 or reopen with new information. Seeds 365, 366 used; the next fresh seed is 367.
 
+032 (the carried prior where the ownship's legs outlast the window, `specs/032-long-legs/`; owner
+2026-11-20 "test ownship legs longer than the 2-hour window"; a registered study, not a gate;
+nothing trained). Spec 024's realism with ownship legs of 2–4 h (`configs/long/legs-*.json`),
+contact 1, standing 2-hour windows; on blind (turn-free) windows E1 = `ctl` ÷ `ctl-prior`, E2 =
+joint solve (`jointheld` at 7200/1800: 3.5 h of past bearings) ÷ `ctl-prior`, harm on one-turn
+windows; scorer `long/study32.py` (`tma2-long study32`); `jointheld` always writes its npz. Tuning
+on spent seed 366 (`experiments/20261120-legs-tuning/`), decision `20261120-legs-decision/` (code
+`babd25bc…`; test raised to 50 + 50 on tuning's yield), validation 367 (`20261120-legs-val/`,
+soundness passed), **test record `experiments/20261120-legs/` (seed 368, 85 decided blind windows):
+E1 "ctl-prior better" 1.537 [1.156, 2.029]; E2 not separated 1.113 [0.840, 1.445]; no harm (one-turn
+1.26). Panel round 1** (`review.md`, three approve with findings): half the blind windows lost
+contact (median 72 km) and are unscored (answered: joint 0.99, `ctl-prior` 0.52); a far-range effect
+(about 2.2 beyond 35 km, about 1.0 under; range and contact loss inseparable); E1 is "more data
+beats no data", E2 the fair comparison is level; the prior came from a window with a turn in 83 of
+85; seeds swung (E1 1.32, 0.87, 1.54; pooled 1.37); carried region not calibrated (median d² 0.94
+against 3.36; one-turn coverage 0.79). Write-up `site/blog/2026-11-20-long-legs.md`, slides
+`2026-11-20-long-legs-slides.md` (figures `scripts/research/legs_charts.py`). Recommended (owner's
+choice): adopt 2-hour `ctl-prior` with its guard for the tended contact up to 12 h, joint solve as
+the equal alternative; close the long-engagement track with a synthesis. Seeds 367, 368 used; the
+next fresh seed is 369.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1282,6 +1303,11 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   families). A part that writes no `.npz` when it has nothing to do makes S1 unable to tell
   "nothing to do" from "lost": always write the file. Give the cost per engagement-hour, not per
   window, when windows advance at different rates.
+- Spec 032 panel: a design that holds the ownship's course long enough to blind a window also
+  opens the range, so half the blind windows lost contact and fell outside the claim; register
+  each system's answered share and read the effect by range band. Range and contact loss move
+  together in this simulator. A tuning yield of decided windows is a forecast too: 120 planned,
+  85 came.
 - `long.yml`: a results branch whose history carries workflow edits is refused to the Actions
   token, so the collect step pushes an orphan branch. Pushes to main are ignored: merging a PR
   that changes `configs/long/run.json` re-ran the last study's whole plan.
