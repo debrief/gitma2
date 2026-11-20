@@ -1,0 +1,4107 @@
+{
+ "plan": "configs/timelate/tl-q-hold-dev.json",
+ "plan_sha256": "012b3c7f7e2f9ed05b5d7326b7425a19b133275d4eb9a0a5bafefecbfcbb9772",
+ "scorer_git_commit": "91dc5ac4f95a3a56c8fe64aa4a6ea8316222f51c",
+ "scorer_git_dirty": false,
+ "soundness": null,
+ "splits": {
+  "long": {
+   "engagements": 40,
+   "engagements_skipped": 0,
+   "periods": 123,
+   "joint_fell_back": 0,
+   "scored_rows": 3867,
+   "scored_rows_own": 1586,
+   "periods_scored": 92,
+   "periods_scored_own": 36,
+   "dropped_rows_without_state": 0,
+   "ratios": {
+    "alone/joint": {
+     "range": {
+      "value": 1.3421293849414337,
+      "lo": 1.00648291025197,
+      "hi": 1.842682264990621,
+      "median": 1.1464600208197946,
+      "better": 0.5760869565217391,
+      "twice_as_good": 0.3695652173913043,
+      "twice_as_bad": 0.25,
+      "periods": 92,
+      "engagements": 35
+     },
+     "course": {
+      "value": 1.3133202249802733,
+      "lo": 0.9596940905702221,
+      "hi": 1.769966683529543,
+      "median": 1.2033047176462501,
+      "better": 0.5543478260869565,
+      "twice_as_good": 0.34782608695652173,
+      "twice_as_bad": 0.22826086956521738,
+      "periods": 92,
+      "engagements": 35
+     },
+     "speed": {
+      "value": 1.4694484250813,
+      "lo": 1.0248357093367626,
+      "hi": 2.091161877938702,
+      "median": 1.3102943052881515,
+      "better": 0.5760869565217391,
+      "twice_as_good": 0.40217391304347827,
+      "twice_as_bad": 0.20652173913043478,
+      "periods": 92,
+      "engagements": 35
+     }
+    },
+    "full/joint": {
+     "range": {
+      "value": 0.33061085752329666,
+      "lo": 0.21900955889375937,
+      "hi": 0.4787272236036425,
+      "median": 0.31569090348395995,
+      "better": 0.30434782608695654,
+      "twice_as_good": 0.08695652173913043,
+      "twice_as_bad": 0.6086956521739131,
+      "periods": 92,
+      "engagements": 35
+     },
+     "course": {
+      "value": 0.3603816526376437,
+      "lo": 0.26734844912237277,
+      "hi": 0.48043500048255067,
+      "median": 0.417237601306156,
+      "better": 0.29347826086956524,
+      "twice_as_good": 0.15217391304347827,
+      "twice_as_bad": 0.5108695652173914,
+      "periods": 92,
+      "engagements": 35
+     },
+     "speed": {
+      "value": 0.3073746159055624,
+      "lo": 0.189575236616927,
+      "hi": 0.4725109903096614,
+      "median": 0.31658290138224815,
+      "better": 0.22826086956521738,
+      "twice_as_good": 0.08695652173913043,
+      "twice_as_bad": 0.5760869565217391,
+      "periods": 92,
+      "engagements": 35
+     }
+    },
+    "joint/ref-span": {
+     "range": {
+      "value": 2.338681113826428,
+      "lo": 1.5483890180045097,
+      "hi": 3.5689833872562313,
+      "median": 2.175109310060011,
+      "better": 0.7391304347826086,
+      "twice_as_good": 0.5217391304347826,
+      "twice_as_bad": 0.16304347826086957,
+      "periods": 92,
+      "engagements": 35
+     },
+     "course": {
+      "value": 2.8412760100189334,
+      "lo": 1.9129612873592141,
+      "hi": 4.268976184577739,
+      "median": 2.467918377521821,
+      "better": 0.7282608695652174,
+      "twice_as_good": 0.5543478260869565,
+      "twice_as_bad": 0.16304347826086957,
+      "periods": 92,
+      "engagements": 35
+     },
+     "speed": {
+      "value": 2.51485588071324,
+      "lo": 1.5252234378075804,
+      "hi": 4.229285677107106,
+      "median": 2.212079283579194,
+      "better": 0.6956521739130435,
+      "twice_as_good": 0.532608695652174,
+      "twice_as_bad": 0.15217391304347827,
+      "periods": 92,
+      "engagements": 35
+     }
+    },
+    "c2/joint": {
+     "range": {
+      "value": 2.254617527654641,
+      "lo": 1.6628698537322388,
+      "hi": 3.015671964002353,
+      "median": 2.4671109748856344,
+      "better": 0.7282608695652174,
+      "twice_as_good": 0.5760869565217391,
+      "twice_as_bad": 0.15217391304347827,
+      "periods": 92,
+      "engagements": 35
+     },
+     "course": {
+      "value": 2.3669244138186745,
+      "lo": 1.742035107255371,
+      "hi": 3.1389086776843405,
+      "median": 2.459757434537332,
+      "better": 0.7282608695652174,
+      "twice_as_good": 0.5760869565217391,
+      "twice_as_bad": 0.13043478260869565,
+      "periods": 92,
+      "engagements": 35
+     },
+     "speed": {
+      "value": 2.17353663387094,
+      "lo": 1.4746041018405964,
+      "hi": 3.263613359072941,
+      "median": 1.8244638744093125,
+      "better": 0.6521739130434783,
+      "twice_as_good": 0.5,
+      "twice_as_bad": 0.13043478260869565,
+      "periods": 92,
+      "engagements": 35
+     }
+    },
+    "alone/ref-alone": {
+     "range": {
+      "value": 0.7109904878402935,
+      "lo": 0.48702124538704195,
+      "hi": 0.983687020280548,
+      "median": 0.950369489142162,
+      "better": 0.43478260869565216,
+      "twice_as_good": 0.18478260869565216,
+      "twice_as_bad": 0.31521739130434784,
+      "periods": 92,
+      "engagements": 35
+     },
+     "course": {
+      "value": 1.0527255507675881,
+      "lo": 0.7865448305808668,
+      "hi": 1.4639142084616494,
+      "median": 0.9926482724330306,
+      "better": 0.41304347826086957,
+      "twice_as_good": 0.21739130434782608,
+      "twice_as_bad": 0.25,
+      "periods": 92,
+      "engagements": 35
+     },
+     "speed": {
+      "value": 0.9841164903333728,
+      "lo": 0.7406152482197575,
+      "hi": 1.318828737488379,
+      "median": 0.9999887088325996,
+      "better": 0.43478260869565216,
+      "twice_as_good": 0.2717391304347826,
+      "twice_as_bad": 0.25,
+      "periods": 92,
+      "engagements": 35
+     }
+    },
+    "one-leg/joint": {
+     "range": {
+      "value": 2.0639438992577515,
+      "lo": 1.5014708670625327,
+      "hi": 2.919277011404345,
+      "median": 2.0482316333308233,
+      "better": 0.717391304347826,
+      "twice_as_good": 0.5108695652173914,
+      "twice_as_bad": 0.17391304347826086,
+      "periods": 92,
+      "engagements": 35
+     },
+     "course": {
+      "value": 2.3572970493439014,
+      "lo": 1.6785197691943055,
+      "hi": 3.306979716054603,
+      "median": 2.2904905769932373,
+      "better": 0.7065217391304348,
+      "twice_as_good": 0.5652173913043478,
+      "twice_as_bad": 0.13043478260869565,
+      "periods": 92,
+      "engagements": 35
+     },
+     "speed": {
+      "value": 2.5217862049061917,
+      "lo": 1.755813040248807,
+      "hi": 3.754174151342117,
+      "median": 2.3592352513211745,
+      "better": 0.6956521739130435,
+      "twice_as_good": 0.5760869565217391,
+      "twice_as_bad": 0.17391304347826086,
+      "periods": 92,
+      "engagements": 35
+     }
+    }
+   },
+   "ratios_own_rows": {
+    "alone/joint": {
+     "range": {
+      "value": 0.8867595614864948,
+      "lo": 0.5749780371356816,
+      "hi": 1.484353317552024,
+      "median": 0.702462454079373,
+      "better": 0.3888888888888889,
+      "twice_as_good": 0.2777777777777778,
+      "twice_as_bad": 0.3888888888888889,
+      "periods": 36,
+      "engagements": 27
+     },
+     "course": {
+      "value": 0.9093797003503382,
+      "lo": 0.5888580497713358,
+      "hi": 1.5263357314619164,
+      "median": 0.9197745814497539,
+      "better": 0.4166666666666667,
+      "twice_as_good": 0.25,
+      "twice_as_bad": 0.2222222222222222,
+      "periods": 36,
+      "engagements": 27
+     },
+     "speed": {
+      "value": 1.050023083253422,
+      "lo": 0.6314746354195858,
+      "hi": 1.9583890498762988,
+      "median": 0.9320204032465489,
+      "better": 0.4722222222222222,
+      "twice_as_good": 0.2777777777777778,
+      "twice_as_bad": 0.3055555555555556,
+      "periods": 36,
+      "engagements": 27
+     }
+    },
+    "full/joint": {
+     "range": {
+      "value": 0.5049124016549378,
+      "lo": 0.29293048440329983,
+      "hi": 0.8316842595894202,
+      "median": 0.47823346679533973,
+      "better": 0.3611111111111111,
+      "twice_as_good": 0.1111111111111111,
+      "twice_as_bad": 0.5277777777777778,
+      "periods": 36,
+      "engagements": 27
+     },
+     "course": {
+      "value": 0.5287378909522995,
+      "lo": 0.3289242622202296,
+      "hi": 0.7888135669182748,
+      "median": 0.7775541709842747,
+      "better": 0.3888888888888889,
+      "twice_as_good": 0.1388888888888889,
+      "twice_as_bad": 0.3888888888888889,
+      "periods": 36,
+      "engagements": 27
+     },
+     "speed": {
+      "value": 0.4730247103535635,
+      "lo": 0.2774474147214917,
+      "hi": 0.7370866411690491,
+      "median": 0.5384144348244865,
+      "better": 0.3333333333333333,
+      "twice_as_good": 0.1388888888888889,
+      "twice_as_bad": 0.5,
+      "periods": 36,
+      "engagements": 27
+     }
+    },
+    "joint/ref-span": {
+     "range": {
+      "value": 2.475117215044005,
+      "lo": 1.3601702647055254,
+      "hi": 4.30223531756226,
+      "median": 2.4658207472737566,
+      "better": 0.75,
+      "twice_as_good": 0.5555555555555556,
+      "twice_as_bad": 0.16666666666666666,
+      "periods": 36,
+      "engagements": 27
+     },
+     "course": {
+      "value": 2.458391031129926,
+      "lo": 1.418204920494049,
+      "hi": 4.135470980772549,
+      "median": 2.251581091787757,
+      "better": 0.7222222222222222,
+      "twice_as_good": 0.5555555555555556,
+      "twice_as_bad": 0.1388888888888889,
+      "periods": 36,
+      "engagements": 27
+     },
+     "speed": {
+      "value": 2.822971962166137,
+      "lo": 1.520081090387215,
+      "hi": 5.053083226389574,
+      "median": 3.2267633927105104,
+      "better": 0.7777777777777778,
+      "twice_as_good": 0.6111111111111112,
+      "twice_as_bad": 0.16666666666666666,
+      "periods": 36,
+      "engagements": 27
+     }
+    },
+    "c2/joint": {
+     "range": {
+      "value": 1.9225851317181646,
+      "lo": 1.145343854208076,
+      "hi": 3.2458791033372454,
+      "median": 1.9737003846241414,
+      "better": 0.6666666666666666,
+      "twice_as_good": 0.5,
+      "twice_as_bad": 0.16666666666666666,
+      "periods": 36,
+      "engagements": 27
+     },
+     "course": {
+      "value": 2.3138867399340186,
+      "lo": 1.4486441102735694,
+      "hi": 3.8998117593483452,
+      "median": 2.5220622861245197,
+      "better": 0.7777777777777778,
+      "twice_as_good": 0.5833333333333334,
+      "twice_as_bad": 0.08333333333333333,
+      "periods": 36,
+      "engagements": 27
+     },
+     "speed": {
+      "value": 2.291840229772808,
+      "lo": 1.3093401950997967,
+      "hi": 4.141251104971374,
+      "median": 1.7465496741789548,
+      "better": 0.6388888888888888,
+      "twice_as_good": 0.5,
+      "twice_as_bad": 0.1388888888888889,
+      "periods": 36,
+      "engagements": 27
+     }
+    },
+    "alone/ref-alone": {
+     "range": {
+      "value": 1.0665029565354,
+      "lo": 0.7450287664389075,
+      "hi": 1.5872437151970455,
+      "median": 1.0,
+      "better": 0.4722222222222222,
+      "twice_as_good": 0.2222222222222222,
+      "twice_as_bad": 0.2777777777777778,
+      "periods": 36,
+      "engagements": 27
+     },
+     "course": {
+      "value": 1.2761501167081826,
+      "lo": 0.9284963059692416,
+      "hi": 1.9209922046514614,
+      "median": 1.087786293563094,
+      "better": 0.5277777777777778,
+      "twice_as_good": 0.2777777777777778,
+      "twice_as_bad": 0.16666666666666666,
+      "periods": 36,
+      "engagements": 27
+     },
+     "speed": {
+      "value": 1.2143271375592872,
+      "lo": 0.731683908439422,
+      "hi": 2.083970563036817,
+      "median": 0.999999921523625,
+      "better": 0.4444444444444444,
+      "twice_as_good": 0.3055555555555556,
+      "twice_as_bad": 0.2222222222222222,
+      "periods": 36,
+      "engagements": 27
+     }
+    },
+    "one-leg/joint": {
+     "range": {
+      "value": 2.4396717903281258,
+      "lo": 1.4162303263300313,
+      "hi": 4.541780654302862,
+      "median": 2.713793513694629,
+      "better": 0.6944444444444444,
+      "twice_as_good": 0.5555555555555556,
+      "twice_as_bad": 0.1388888888888889,
+      "periods": 36,
+      "engagements": 27
+     },
+     "course": {
+      "value": 2.3583455837309777,
+      "lo": 1.3839567693672463,
+      "hi": 4.306485733079599,
+      "median": 2.3850299985931143,
+      "better": 0.75,
+      "twice_as_good": 0.6111111111111112,
+      "twice_as_bad": 0.1111111111111111,
+      "periods": 36,
+      "engagements": 27
+     },
+     "speed": {
+      "value": 3.0009213737968508,
+      "lo": 1.5974418378648423,
+      "hi": 6.506792626541564,
+      "median": 2.45106727094224,
+      "better": 0.6944444444444444,
+      "twice_as_good": 0.5555555555555556,
+      "twice_as_bad": 0.19444444444444445,
+      "periods": 36,
+      "engagements": 27
+     }
+    }
+   },
+   "by_kind": {
+    "own_turn": {
+     "periods": 20,
+     "alone/joint": {
+      "range": {
+       "value": 1.1639447823731472,
+       "lo": 0.6451669629434031,
+       "hi": 1.9195421958549777,
+       "median": 0.8713431284768061,
+       "better": 0.4,
+       "twice_as_good": 0.35,
+       "twice_as_bad": 0.3,
+       "periods": 20,
+       "engagements": 14
+      },
+      "course": {
+       "value": 1.2444594298696812,
+       "lo": 0.8019536035272472,
+       "hi": 1.8693404668746572,
+       "median": 1.1562437488772426,
+       "better": 0.6,
+       "twice_as_good": 0.3,
+       "twice_as_bad": 0.15,
+       "periods": 20,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 1.6688395418025403,
+       "lo": 0.955262339732272,
+       "hi": 3.1125288162393434,
+       "median": 1.3740378662710997,
+       "better": 0.6,
+       "twice_as_good": 0.45,
+       "twice_as_bad": 0.15,
+       "periods": 20,
+       "engagements": 14
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.4098366248116155,
+       "lo": 0.22870355202059975,
+       "hi": 0.691233688890055,
+       "median": 0.46097283965060604,
+       "better": 0.35,
+       "twice_as_good": 0.05,
+       "twice_as_bad": 0.55,
+       "periods": 20,
+       "engagements": 14
+      },
+      "course": {
+       "value": 0.44233912595248365,
+       "lo": 0.25180023459480433,
+       "hi": 0.7583433646164318,
+       "median": 0.6334897525232873,
+       "better": 0.35,
+       "twice_as_good": 0.05,
+       "twice_as_bad": 0.4,
+       "periods": 20,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 0.3809319870480845,
+       "lo": 0.20564703741276522,
+       "hi": 0.7104776900822901,
+       "median": 0.32330861657698917,
+       "better": 0.25,
+       "twice_as_good": 0.05,
+       "twice_as_bad": 0.6,
+       "periods": 20,
+       "engagements": 14
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 2.242893967812089,
+       "lo": 1.1938033185660062,
+       "hi": 4.5338452834839895,
+       "median": 2.247795613273142,
+       "better": 0.75,
+       "twice_as_good": 0.55,
+       "twice_as_bad": 0.15,
+       "periods": 20,
+       "engagements": 14
+      },
+      "course": {
+       "value": 2.8434780877264574,
+       "lo": 1.4826105283633306,
+       "hi": 6.1669410695540146,
+       "median": 2.373603878017053,
+       "better": 0.75,
+       "twice_as_good": 0.55,
+       "twice_as_bad": 0.15,
+       "periods": 20,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 3.124952392442763,
+       "lo": 1.2074426182702047,
+       "hi": 7.1165349549286745,
+       "median": 3.7526508451898795,
+       "better": 0.75,
+       "twice_as_good": 0.6,
+       "twice_as_bad": 0.2,
+       "periods": 20,
+       "engagements": 14
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 1.5133751729068234,
+       "lo": 0.6826449724828468,
+       "hi": 2.7792334965107983,
+       "median": 1.2425706918172503,
+       "better": 0.55,
+       "twice_as_good": 0.4,
+       "twice_as_bad": 0.2,
+       "periods": 20,
+       "engagements": 14
+      },
+      "course": {
+       "value": 1.8194982383523186,
+       "lo": 1.2222682091016273,
+       "hi": 2.6335968936564873,
+       "median": 1.9132580721074428,
+       "better": 0.7,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.1,
+       "periods": 20,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 2.5318948442502234,
+       "lo": 1.3013957368081308,
+       "hi": 5.088178732918235,
+       "median": 2.5571314105461607,
+       "better": 0.65,
+       "twice_as_good": 0.55,
+       "twice_as_bad": 0.1,
+       "periods": 20,
+       "engagements": 14
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 0.9938024938103981,
+       "lo": 0.7696848917596708,
+       "hi": 1.3421884743576928,
+       "median": 1.0000193557502606,
+       "better": 0.55,
+       "twice_as_good": 0.15,
+       "twice_as_bad": 0.15,
+       "periods": 20,
+       "engagements": 14
+      },
+      "course": {
+       "value": 0.9976596832160141,
+       "lo": 0.6506413867865574,
+       "hi": 1.5747421375699666,
+       "median": 0.9999999518982895,
+       "better": 0.4,
+       "twice_as_good": 0.2,
+       "twice_as_bad": 0.1,
+       "periods": 20,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 1.2085102044320755,
+       "lo": 0.7933760942158392,
+       "hi": 2.0273715328657436,
+       "median": 1.0128465796610868,
+       "better": 0.5,
+       "twice_as_good": 0.25,
+       "twice_as_bad": 0.15,
+       "periods": 20,
+       "engagements": 14
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 2.1031959392474624,
+       "lo": 0.7996393585973381,
+       "hi": 5.07403664241633,
+       "median": 1.317719114872356,
+       "better": 0.6,
+       "twice_as_good": 0.45,
+       "twice_as_bad": 0.2,
+       "periods": 20,
+       "engagements": 14
+      },
+      "course": {
+       "value": 2.718183865815697,
+       "lo": 1.3779809539128358,
+       "hi": 6.121303472448903,
+       "median": 2.572209848296947,
+       "better": 0.7,
+       "twice_as_good": 0.6,
+       "twice_as_bad": 0.1,
+       "periods": 20,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 2.0319428681856797,
+       "lo": 0.9435032607882047,
+       "hi": 4.882455097140281,
+       "median": 2.1113773871936172,
+       "better": 0.6,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.2,
+       "periods": 20,
+       "engagements": 14
+      }
+     }
+    },
+    "no_own_turn": {
+     "periods": 72,
+     "alone/joint": {
+      "range": {
+       "value": 1.3962985142756394,
+       "lo": 1.027423373530089,
+       "hi": 2.012051931841324,
+       "median": 1.2161382978671444,
+       "better": 0.625,
+       "twice_as_good": 0.375,
+       "twice_as_bad": 0.2361111111111111,
+       "periods": 72,
+       "engagements": 32
+      },
+      "course": {
+       "value": 1.3331156411208869,
+       "lo": 0.9170975313841143,
+       "hi": 1.95259148045065,
+       "median": 1.21118020265191,
+       "better": 0.5416666666666666,
+       "twice_as_good": 0.3611111111111111,
+       "twice_as_bad": 0.25,
+       "periods": 72,
+       "engagements": 32
+      },
+      "speed": {
+       "value": 1.4184181597529404,
+       "lo": 0.9844331857557403,
+       "hi": 2.0827474805012463,
+       "median": 1.2583461067851325,
+       "better": 0.5694444444444444,
+       "twice_as_good": 0.3888888888888889,
+       "twice_as_bad": 0.2222222222222222,
+       "periods": 72,
+       "engagements": 32
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.3114599489601691,
+       "lo": 0.21330389490228324,
+       "hi": 0.46871853769930005,
+       "median": 0.2815294172621485,
+       "better": 0.2916666666666667,
+       "twice_as_good": 0.09722222222222222,
+       "twice_as_bad": 0.625,
+       "periods": 72,
+       "engagements": 32
+      },
+      "course": {
+       "value": 0.34044149017801417,
+       "lo": 0.2387406026993049,
+       "hi": 0.483280323879476,
+       "median": 0.402497898059752,
+       "better": 0.2777777777777778,
+       "twice_as_good": 0.18055555555555555,
+       "twice_as_bad": 0.5416666666666666,
+       "periods": 72,
+       "engagements": 32
+      },
+      "speed": {
+       "value": 0.2895908398535794,
+       "lo": 0.16662476996622838,
+       "hi": 0.48721127321124025,
+       "median": 0.31239303592388723,
+       "better": 0.2222222222222222,
+       "twice_as_good": 0.09722222222222222,
+       "twice_as_bad": 0.5694444444444444,
+       "periods": 72,
+       "engagements": 32
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 2.366007310961493,
+       "lo": 1.4726871851811862,
+       "hi": 3.8937322600389943,
+       "median": 2.175109310060011,
+       "better": 0.7361111111111112,
+       "twice_as_good": 0.5138888888888888,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 72,
+       "engagements": 32
+      },
+      "course": {
+       "value": 2.84066462447158,
+       "lo": 1.7397126225959065,
+       "hi": 4.580018199835505,
+       "median": 2.4895895154370464,
+       "better": 0.7222222222222222,
+       "twice_as_good": 0.5555555555555556,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 72,
+       "engagements": 32
+      },
+      "speed": {
+       "value": 2.367610404590188,
+       "lo": 1.3183108530944416,
+       "hi": 4.284467362835534,
+       "median": 2.0708714352022195,
+       "better": 0.6805555555555556,
+       "twice_as_good": 0.5138888888888888,
+       "twice_as_bad": 0.1388888888888889,
+       "periods": 72,
+       "engagements": 32
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 2.5186250040396105,
+       "lo": 1.9261486252290891,
+       "hi": 3.3886052300114637,
+       "median": 2.658357100877152,
+       "better": 0.7777777777777778,
+       "twice_as_good": 0.625,
+       "twice_as_bad": 0.1388888888888889,
+       "periods": 72,
+       "engagements": 32
+      },
+      "course": {
+       "value": 2.5463359912332932,
+       "lo": 1.8420358768233183,
+       "hi": 3.580085896032038,
+       "median": 2.8751222678705117,
+       "better": 0.7361111111111112,
+       "twice_as_good": 0.5972222222222222,
+       "twice_as_bad": 0.1388888888888889,
+       "periods": 72,
+       "engagements": 32
+      },
+      "speed": {
+       "value": 2.0833211094120787,
+       "lo": 1.4482812790335708,
+       "hi": 3.080020865473774,
+       "median": 1.6317036556917965,
+       "better": 0.6527777777777778,
+       "twice_as_good": 0.4861111111111111,
+       "twice_as_bad": 0.1388888888888889,
+       "periods": 72,
+       "engagements": 32
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 0.6478356160327626,
+       "lo": 0.389205930312063,
+       "hi": 0.9569400727214616,
+       "median": 0.8945652410250295,
+       "better": 0.4027777777777778,
+       "twice_as_good": 0.19444444444444445,
+       "twice_as_bad": 0.3611111111111111,
+       "periods": 72,
+       "engagements": 32
+      },
+      "course": {
+       "value": 1.06855401627108,
+       "lo": 0.7310321753006829,
+       "hi": 1.5746706743501704,
+       "median": 0.9308925866326179,
+       "better": 0.4166666666666667,
+       "twice_as_good": 0.2222222222222222,
+       "twice_as_bad": 0.2916666666666667,
+       "periods": 72,
+       "engagements": 32
+      },
+      "speed": {
+       "value": 0.9295391206557627,
+       "lo": 0.6637208763306064,
+       "hi": 1.3185486423376915,
+       "median": 0.9384469958126817,
+       "better": 0.4166666666666667,
+       "twice_as_good": 0.2777777777777778,
+       "twice_as_bad": 0.2777777777777778,
+       "periods": 72,
+       "engagements": 32
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 2.0531711509227986,
+       "lo": 1.547106622586293,
+       "hi": 2.7920225732314456,
+       "median": 2.1167189197820715,
+       "better": 0.75,
+       "twice_as_good": 0.5277777777777778,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 72,
+       "engagements": 32
+      },
+      "course": {
+       "value": 2.2658425303063154,
+       "lo": 1.5837319697994616,
+       "hi": 3.2880834291678718,
+       "median": 2.0913080159929565,
+       "better": 0.7083333333333334,
+       "twice_as_good": 0.5555555555555556,
+       "twice_as_bad": 0.1388888888888889,
+       "periods": 72,
+       "engagements": 32
+      },
+      "speed": {
+       "value": 2.6777061958723154,
+       "lo": 1.8688654732341652,
+       "hi": 3.9159726785771167,
+       "median": 2.3592352513211745,
+       "better": 0.7222222222222222,
+       "twice_as_good": 0.5972222222222222,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 72,
+       "engagements": 32
+      }
+     }
+    },
+    "gap_under_10min": {
+     "periods": 0,
+     "alone/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "full/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     }
+    },
+    "gap_10_to_20min": {
+     "periods": 0,
+     "alone/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "full/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "course": {
+       "periods": 0,
+       "engagements": 0
+      },
+      "speed": {
+       "periods": 0,
+       "engagements": 0
+      }
+     }
+    },
+    "gap_over_20min": {
+     "periods": 92,
+     "alone/joint": {
+      "range": {
+       "value": 1.3421293849414337,
+       "lo": 1.00648291025197,
+       "hi": 1.842682264990621,
+       "median": 1.1464600208197946,
+       "better": 0.5760869565217391,
+       "twice_as_good": 0.3695652173913043,
+       "twice_as_bad": 0.25,
+       "periods": 92,
+       "engagements": 35
+      },
+      "course": {
+       "value": 1.3133202249802733,
+       "lo": 0.9596940905702221,
+       "hi": 1.769966683529543,
+       "median": 1.2033047176462501,
+       "better": 0.5543478260869565,
+       "twice_as_good": 0.34782608695652173,
+       "twice_as_bad": 0.22826086956521738,
+       "periods": 92,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.4694484250813,
+       "lo": 1.0248357093367626,
+       "hi": 2.091161877938702,
+       "median": 1.3102943052881515,
+       "better": 0.5760869565217391,
+       "twice_as_good": 0.40217391304347827,
+       "twice_as_bad": 0.20652173913043478,
+       "periods": 92,
+       "engagements": 35
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.33061085752329666,
+       "lo": 0.21900955889375937,
+       "hi": 0.4787272236036425,
+       "median": 0.31569090348395995,
+       "better": 0.30434782608695654,
+       "twice_as_good": 0.08695652173913043,
+       "twice_as_bad": 0.6086956521739131,
+       "periods": 92,
+       "engagements": 35
+      },
+      "course": {
+       "value": 0.3603816526376437,
+       "lo": 0.26734844912237277,
+       "hi": 0.48043500048255067,
+       "median": 0.417237601306156,
+       "better": 0.29347826086956524,
+       "twice_as_good": 0.15217391304347827,
+       "twice_as_bad": 0.5108695652173914,
+       "periods": 92,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 0.3073746159055624,
+       "lo": 0.189575236616927,
+       "hi": 0.4725109903096614,
+       "median": 0.31658290138224815,
+       "better": 0.22826086956521738,
+       "twice_as_good": 0.08695652173913043,
+       "twice_as_bad": 0.5760869565217391,
+       "periods": 92,
+       "engagements": 35
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 2.338681113826428,
+       "lo": 1.5483890180045097,
+       "hi": 3.5689833872562313,
+       "median": 2.175109310060011,
+       "better": 0.7391304347826086,
+       "twice_as_good": 0.5217391304347826,
+       "twice_as_bad": 0.16304347826086957,
+       "periods": 92,
+       "engagements": 35
+      },
+      "course": {
+       "value": 2.8412760100189334,
+       "lo": 1.9129612873592141,
+       "hi": 4.268976184577739,
+       "median": 2.467918377521821,
+       "better": 0.7282608695652174,
+       "twice_as_good": 0.5543478260869565,
+       "twice_as_bad": 0.16304347826086957,
+       "periods": 92,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 2.51485588071324,
+       "lo": 1.5252234378075804,
+       "hi": 4.229285677107106,
+       "median": 2.212079283579194,
+       "better": 0.6956521739130435,
+       "twice_as_good": 0.532608695652174,
+       "twice_as_bad": 0.15217391304347827,
+       "periods": 92,
+       "engagements": 35
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 2.254617527654641,
+       "lo": 1.6628698537322388,
+       "hi": 3.015671964002353,
+       "median": 2.4671109748856344,
+       "better": 0.7282608695652174,
+       "twice_as_good": 0.5760869565217391,
+       "twice_as_bad": 0.15217391304347827,
+       "periods": 92,
+       "engagements": 35
+      },
+      "course": {
+       "value": 2.3669244138186745,
+       "lo": 1.742035107255371,
+       "hi": 3.1389086776843405,
+       "median": 2.459757434537332,
+       "better": 0.7282608695652174,
+       "twice_as_good": 0.5760869565217391,
+       "twice_as_bad": 0.13043478260869565,
+       "periods": 92,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 2.17353663387094,
+       "lo": 1.4746041018405964,
+       "hi": 3.263613359072941,
+       "median": 1.8244638744093125,
+       "better": 0.6521739130434783,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.13043478260869565,
+       "periods": 92,
+       "engagements": 35
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 0.7109904878402935,
+       "lo": 0.48702124538704195,
+       "hi": 0.983687020280548,
+       "median": 0.950369489142162,
+       "better": 0.43478260869565216,
+       "twice_as_good": 0.18478260869565216,
+       "twice_as_bad": 0.31521739130434784,
+       "periods": 92,
+       "engagements": 35
+      },
+      "course": {
+       "value": 1.0527255507675881,
+       "lo": 0.7865448305808668,
+       "hi": 1.4639142084616494,
+       "median": 0.9926482724330306,
+       "better": 0.41304347826086957,
+       "twice_as_good": 0.21739130434782608,
+       "twice_as_bad": 0.25,
+       "periods": 92,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 0.9841164903333728,
+       "lo": 0.7406152482197575,
+       "hi": 1.318828737488379,
+       "median": 0.9999887088325996,
+       "better": 0.43478260869565216,
+       "twice_as_good": 0.2717391304347826,
+       "twice_as_bad": 0.25,
+       "periods": 92,
+       "engagements": 35
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 2.0639438992577515,
+       "lo": 1.5014708670625327,
+       "hi": 2.919277011404345,
+       "median": 2.0482316333308233,
+       "better": 0.717391304347826,
+       "twice_as_good": 0.5108695652173914,
+       "twice_as_bad": 0.17391304347826086,
+       "periods": 92,
+       "engagements": 35
+      },
+      "course": {
+       "value": 2.3572970493439014,
+       "lo": 1.6785197691943055,
+       "hi": 3.306979716054603,
+       "median": 2.2904905769932373,
+       "better": 0.7065217391304348,
+       "twice_as_good": 0.5652173913043478,
+       "twice_as_bad": 0.13043478260869565,
+       "periods": 92,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 2.5217862049061917,
+       "lo": 1.755813040248807,
+       "hi": 3.754174151342117,
+       "median": 2.3592352513211745,
+       "better": 0.6956521739130435,
+       "twice_as_good": 0.5760869565217391,
+       "twice_as_bad": 0.17391304347826086,
+       "periods": 92,
+       "engagements": 35
+      }
+     }
+    },
+    "gap_manoeuvre": {
+     "periods": 90,
+     "alone/joint": {
+      "range": {
+       "value": 1.3729514542519545,
+       "lo": 1.02286332896701,
+       "hi": 1.885843097701675,
+       "median": 1.1464600208197946,
+       "better": 0.5777777777777777,
+       "twice_as_good": 0.36666666666666664,
+       "twice_as_bad": 0.24444444444444444,
+       "periods": 90,
+       "engagements": 34
+      },
+      "course": {
+       "value": 1.3390732775215688,
+       "lo": 0.9739751100199993,
+       "hi": 1.8112431334053503,
+       "median": 1.2033047176462501,
+       "better": 0.5555555555555556,
+       "twice_as_good": 0.34444444444444444,
+       "twice_as_bad": 0.2222222222222222,
+       "periods": 90,
+       "engagements": 34
+      },
+      "speed": {
+       "value": 1.4413248197391964,
+       "lo": 1.0361526338273248,
+       "hi": 2.1086615155824986,
+       "median": 1.2894143738417259,
+       "better": 0.5666666666666667,
+       "twice_as_good": 0.3888888888888889,
+       "twice_as_bad": 0.2111111111111111,
+       "periods": 90,
+       "engagements": 34
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.32881426598451197,
+       "lo": 0.21779836099520852,
+       "hi": 0.47806964703121685,
+       "median": 0.295910448132581,
+       "better": 0.3111111111111111,
+       "twice_as_good": 0.08888888888888889,
+       "twice_as_bad": 0.6,
+       "periods": 90,
+       "engagements": 34
+      },
+      "course": {
+       "value": 0.35673338840249014,
+       "lo": 0.262803164097959,
+       "hi": 0.47287336165333405,
+       "median": 0.417237601306156,
+       "better": 0.3,
+       "twice_as_good": 0.15555555555555556,
+       "twice_as_bad": 0.5111111111111111,
+       "periods": 90,
+       "engagements": 34
+      },
+      "speed": {
+       "value": 0.3072640159560082,
+       "lo": 0.1878061092901599,
+       "hi": 0.4839338189469994,
+       "median": 0.3227369294984796,
+       "better": 0.23333333333333334,
+       "twice_as_good": 0.08888888888888889,
+       "twice_as_bad": 0.5666666666666667,
+       "periods": 90,
+       "engagements": 34
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 2.307658670892258,
+       "lo": 1.5231192149793056,
+       "hi": 3.523208709743657,
+       "median": 2.175109310060011,
+       "better": 0.7333333333333333,
+       "twice_as_good": 0.5222222222222223,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 90,
+       "engagements": 34
+      },
+      "course": {
+       "value": 2.6917870739143086,
+       "lo": 1.7754247717453135,
+       "hi": 3.9368272973558613,
+       "median": 2.358696901511775,
+       "better": 0.7222222222222222,
+       "twice_as_good": 0.5444444444444444,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 90,
+       "engagements": 34
+      },
+      "speed": {
+       "value": 2.50997234363425,
+       "lo": 1.5152551934247773,
+       "hi": 4.329407229951392,
+       "median": 2.1087635089100223,
+       "better": 0.6888888888888889,
+       "twice_as_good": 0.5222222222222223,
+       "twice_as_bad": 0.15555555555555556,
+       "periods": 90,
+       "engagements": 34
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 2.3456712790600114,
+       "lo": 1.751791176006683,
+       "hi": 3.1197135441205273,
+       "median": 2.4671109748856344,
+       "better": 0.7333333333333333,
+       "twice_as_good": 0.5777777777777777,
+       "twice_as_bad": 0.14444444444444443,
+       "periods": 90,
+       "engagements": 34
+      },
+      "course": {
+       "value": 2.43578431399015,
+       "lo": 1.8167771553968588,
+       "hi": 3.2685672293139296,
+       "median": 2.650391869837214,
+       "better": 0.7333333333333333,
+       "twice_as_good": 0.5777777777777777,
+       "twice_as_bad": 0.12222222222222222,
+       "periods": 90,
+       "engagements": 34
+      },
+      "speed": {
+       "value": 2.1395314157531398,
+       "lo": 1.474227862380259,
+       "hi": 3.241932922417709,
+       "median": 1.6317036556917965,
+       "better": 0.6444444444444445,
+       "twice_as_good": 0.4888888888888889,
+       "twice_as_bad": 0.13333333333333333,
+       "periods": 90,
+       "engagements": 34
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 0.7076447311822844,
+       "lo": 0.48011859509181587,
+       "hi": 0.9683879818735623,
+       "median": 0.950369489142162,
+       "better": 0.43333333333333335,
+       "twice_as_good": 0.17777777777777778,
+       "twice_as_bad": 0.3111111111111111,
+       "periods": 90,
+       "engagements": 34
+      },
+      "course": {
+       "value": 1.0622431489375495,
+       "lo": 0.7814997373373839,
+       "hi": 1.442989674124117,
+       "median": 0.9926482724330306,
+       "better": 0.4111111111111111,
+       "twice_as_good": 0.2111111111111111,
+       "twice_as_bad": 0.24444444444444444,
+       "periods": 90,
+       "engagements": 34
+      },
+      "speed": {
+       "value": 0.9653146017658899,
+       "lo": 0.7184588652995674,
+       "hi": 1.2831706196859949,
+       "median": 0.9999887088325996,
+       "better": 0.43333333333333335,
+       "twice_as_good": 0.26666666666666666,
+       "twice_as_bad": 0.24444444444444444,
+       "periods": 90,
+       "engagements": 34
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 2.143084929074007,
+       "lo": 1.5405891302035009,
+       "hi": 3.012768878216137,
+       "median": 2.0482316333308233,
+       "better": 0.7222222222222222,
+       "twice_as_good": 0.5111111111111111,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 90,
+       "engagements": 34
+      },
+      "course": {
+       "value": 2.4256571575750394,
+       "lo": 1.74548614795126,
+       "hi": 3.3786024528851963,
+       "median": 2.3833110146925316,
+       "better": 0.7111111111111111,
+       "twice_as_good": 0.5666666666666667,
+       "twice_as_bad": 0.12222222222222222,
+       "periods": 90,
+       "engagements": 34
+      },
+      "speed": {
+       "value": 2.4905440025016263,
+       "lo": 1.7101326749075711,
+       "hi": 3.7352579774026187,
+       "median": 2.295590489606791,
+       "better": 0.6888888888888889,
+       "twice_as_good": 0.5666666666666667,
+       "twice_as_bad": 0.17777777777777778,
+       "periods": 90,
+       "engagements": 34
+      }
+     }
+    },
+    "no_gap_manoeuvre": {
+     "periods": 2,
+     "alone/joint": {
+      "range": {
+       "value": 0.4831239271879602,
+       "lo": 0.4831239271879602,
+       "hi": 0.4831239271879602,
+       "median": 0.4831239271879602,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "course": {
+       "value": 0.5480922216874189,
+       "lo": 0.5480922216874189,
+       "hi": 0.5480922216874189,
+       "median": 0.5480922216874189,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "speed": {
+       "value": 3.5060334752248283,
+       "lo": 3.5060334752248283,
+       "hi": 3.5060334752248283,
+       "median": 3.5060334752248283,
+       "better": 1.0,
+       "twice_as_good": 1.0,
+       "twice_as_bad": 0.0,
+       "periods": 2,
+       "engagements": 1
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.4224816301603084,
+       "lo": 0.4224816301603084,
+       "hi": 0.4224816301603084,
+       "median": 0.4224816301603084,
+       "better": 0.0,
+       "twice_as_good": 0.0,
+       "twice_as_bad": 1.0,
+       "periods": 2,
+       "engagements": 1
+      },
+      "course": {
+       "value": 0.5696574526210482,
+       "lo": 0.5696574526210482,
+       "hi": 0.5696574526210482,
+       "median": 0.5696574526210482,
+       "better": 0.0,
+       "twice_as_good": 0.0,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "speed": {
+       "value": 0.31239303592388723,
+       "lo": 0.31239303592388723,
+       "hi": 0.31239303592388723,
+       "median": 0.31239303592388723,
+       "better": 0.0,
+       "twice_as_good": 0.0,
+       "twice_as_bad": 1.0,
+       "periods": 2,
+       "engagements": 1
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 4.265261332774166,
+       "lo": 4.265261332774166,
+       "hi": 4.265261332774166,
+       "median": 4.265261332774166,
+       "better": 1.0,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.0,
+       "periods": 2,
+       "engagements": 1
+      },
+      "course": {
+       "value": 32.34341518342383,
+       "lo": 32.34341518342383,
+       "hi": 32.34341518342383,
+       "median": 32.34341518342383,
+       "better": 1.0,
+       "twice_as_good": 1.0,
+       "twice_as_bad": 0.0,
+       "periods": 2,
+       "engagements": 1
+      },
+      "speed": {
+       "value": 2.7447358789519645,
+       "lo": 2.7447358789519645,
+       "hi": 2.7447358789519645,
+       "median": 2.7447358789519645,
+       "better": 1.0,
+       "twice_as_good": 1.0,
+       "twice_as_bad": 0.0,
+       "periods": 2,
+       "engagements": 1
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 0.3796039023324047,
+       "lo": 0.3796039023324047,
+       "hi": 0.3796039023324047,
+       "median": 0.3796039023324047,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "course": {
+       "value": 0.6512302769856726,
+       "lo": 0.6512302769856726,
+       "hi": 0.6512302769856726,
+       "median": 0.6512302769856726,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "speed": {
+       "value": 4.419165951405901,
+       "lo": 4.419165951405901,
+       "hi": 4.419165951405901,
+       "median": 4.419165951405901,
+       "better": 1.0,
+       "twice_as_good": 1.0,
+       "twice_as_bad": 0.0,
+       "periods": 2,
+       "engagements": 1
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 0.8791173995417885,
+       "lo": 0.8791173995417885,
+       "hi": 0.8791173995417885,
+       "median": 0.8791173995417885,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "course": {
+       "value": 0.7021344692749916,
+       "lo": 0.7021344692749916,
+       "hi": 0.7021344692749916,
+       "median": 0.7021344692749916,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "speed": {
+       "value": 2.3444448388302526,
+       "lo": 2.3444448388302526,
+       "hi": 2.3444448388302526,
+       "median": 2.3444448388302526,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 0.3796039023324047,
+       "lo": 0.3796039023324047,
+       "hi": 0.3796039023324047,
+       "median": 0.3796039023324047,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "course": {
+       "value": 0.6512302769856726,
+       "lo": 0.6512302769856726,
+       "hi": 0.6512302769856726,
+       "median": 0.6512302769856726,
+       "better": 0.5,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.5,
+       "periods": 2,
+       "engagements": 1
+      },
+      "speed": {
+       "value": 4.419165951405901,
+       "lo": 4.419165951405901,
+       "hi": 4.419165951405901,
+       "median": 4.419165951405901,
+       "better": 1.0,
+       "twice_as_good": 1.0,
+       "twice_as_bad": 0.0,
+       "periods": 2,
+       "engagements": 1
+      }
+     }
+    },
+    "span_bound_tight": {
+     "periods": 24,
+     "alone/joint": {
+      "range": {
+       "value": 1.601195980775153,
+       "lo": 0.8456702776753052,
+       "hi": 2.8545889678924707,
+       "median": 1.1573647617776883,
+       "better": 0.5416666666666666,
+       "twice_as_good": 0.4583333333333333,
+       "twice_as_bad": 0.2916666666666667,
+       "periods": 24,
+       "engagements": 14
+      },
+      "course": {
+       "value": 1.875081847229847,
+       "lo": 0.9373216996806656,
+       "hi": 3.768752716720043,
+       "median": 0.9983532265733428,
+       "better": 0.5,
+       "twice_as_good": 0.3333333333333333,
+       "twice_as_bad": 0.20833333333333334,
+       "periods": 24,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 1.8155981492008801,
+       "lo": 0.9468912721998857,
+       "hi": 3.3603441144114887,
+       "median": 1.3195878115327737,
+       "better": 0.625,
+       "twice_as_good": 0.4583333333333333,
+       "twice_as_bad": 0.20833333333333334,
+       "periods": 24,
+       "engagements": 14
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.2863572953726979,
+       "lo": 0.12377432670205948,
+       "hi": 0.621388320268085,
+       "median": 0.29179178673784517,
+       "better": 0.2916666666666667,
+       "twice_as_good": 0.041666666666666664,
+       "twice_as_bad": 0.625,
+       "periods": 24,
+       "engagements": 14
+      },
+      "course": {
+       "value": 0.3713305122599729,
+       "lo": 0.1489553697574148,
+       "hi": 0.8205942279164932,
+       "median": 0.47454081895304984,
+       "better": 0.20833333333333334,
+       "twice_as_good": 0.20833333333333334,
+       "twice_as_bad": 0.5,
+       "periods": 24,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 0.35487535648620827,
+       "lo": 0.17554649838351932,
+       "hi": 0.7184970114639236,
+       "median": 0.2386843217309931,
+       "better": 0.3333333333333333,
+       "twice_as_good": 0.08333333333333333,
+       "twice_as_bad": 0.625,
+       "periods": 24,
+       "engagements": 14
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 4.467126349395695,
+       "lo": 1.6534368072678431,
+       "hi": 10.663408403383507,
+       "median": 4.921067362877631,
+       "better": 0.7916666666666666,
+       "twice_as_good": 0.6666666666666666,
+       "twice_as_bad": 0.125,
+       "periods": 24,
+       "engagements": 14
+      },
+      "course": {
+       "value": 3.7813099996190798,
+       "lo": 1.4547792188284205,
+       "hi": 9.76058476985825,
+       "median": 2.601689574858106,
+       "better": 0.75,
+       "twice_as_good": 0.5416666666666666,
+       "twice_as_bad": 0.125,
+       "periods": 24,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 7.575341286789756,
+       "lo": 2.8693609381393634,
+       "hi": 19.36018692206694,
+       "median": 5.921928224478079,
+       "better": 0.875,
+       "twice_as_good": 0.6666666666666666,
+       "twice_as_bad": 0.0,
+       "periods": 24,
+       "engagements": 14
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 2.2869556722458584,
+       "lo": 1.2070421204649389,
+       "hi": 3.9234127615097263,
+       "median": 2.6161870005280394,
+       "better": 0.6666666666666666,
+       "twice_as_good": 0.5416666666666666,
+       "twice_as_bad": 0.25,
+       "periods": 24,
+       "engagements": 14
+      },
+      "course": {
+       "value": 2.8147993508829012,
+       "lo": 1.5266914023339773,
+       "hi": 5.360564964523751,
+       "median": 3.083697936167839,
+       "better": 0.75,
+       "twice_as_good": 0.5833333333333334,
+       "twice_as_bad": 0.20833333333333334,
+       "periods": 24,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 2.130231966909997,
+       "lo": 1.089466269328463,
+       "hi": 4.102560203689586,
+       "median": 1.8696024932414268,
+       "better": 0.6666666666666666,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 24,
+       "engagements": 14
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 1.2988432674536712,
+       "lo": 0.8109896517325695,
+       "hi": 2.097998374116396,
+       "median": 1.0132333080904756,
+       "better": 0.5,
+       "twice_as_good": 0.25,
+       "twice_as_bad": 0.20833333333333334,
+       "periods": 24,
+       "engagements": 14
+      },
+      "course": {
+       "value": 1.8023313022451672,
+       "lo": 0.9456301615275887,
+       "hi": 3.2155974835299297,
+       "median": 1.067289766822202,
+       "better": 0.5,
+       "twice_as_good": 0.3333333333333333,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 24,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 1.5423495420399198,
+       "lo": 0.869075735908963,
+       "hi": 2.8838469009570575,
+       "median": 1.0,
+       "better": 0.4583333333333333,
+       "twice_as_good": 0.3333333333333333,
+       "twice_as_bad": 0.20833333333333334,
+       "periods": 24,
+       "engagements": 14
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 3.1518408374862545,
+       "lo": 1.5627551317202477,
+       "hi": 6.256547784832079,
+       "median": 3.216827898972022,
+       "better": 0.7916666666666666,
+       "twice_as_good": 0.6666666666666666,
+       "twice_as_bad": 0.20833333333333334,
+       "periods": 24,
+       "engagements": 14
+      },
+      "course": {
+       "value": 3.978403056685431,
+       "lo": 1.7884258381561569,
+       "hi": 8.663806343983918,
+       "median": 3.175177950645398,
+       "better": 0.7916666666666666,
+       "twice_as_good": 0.6666666666666666,
+       "twice_as_bad": 0.16666666666666666,
+       "periods": 24,
+       "engagements": 14
+      },
+      "speed": {
+       "value": 1.9396209487580882,
+       "lo": 0.8884608096250379,
+       "hi": 4.395418041472968,
+       "median": 1.6105780442697917,
+       "better": 0.6666666666666666,
+       "twice_as_good": 0.4583333333333333,
+       "twice_as_bad": 0.20833333333333334,
+       "periods": 24,
+       "engagements": 14
+      }
+     }
+    },
+    "span_bound_middle": {
+     "periods": 40,
+     "alone/joint": {
+      "range": {
+       "value": 0.9987455033496299,
+       "lo": 0.6962646770882426,
+       "hi": 1.3803686780188555,
+       "median": 0.9933829075786526,
+       "better": 0.5,
+       "twice_as_good": 0.25,
+       "twice_as_bad": 0.325,
+       "periods": 40,
+       "engagements": 24
+      },
+      "course": {
+       "value": 0.878644796104637,
+       "lo": 0.527012883982477,
+       "hi": 1.4210552666152503,
+       "median": 1.21118020265191,
+       "better": 0.525,
+       "twice_as_good": 0.225,
+       "twice_as_bad": 0.275,
+       "periods": 40,
+       "engagements": 24
+      },
+      "speed": {
+       "value": 1.3033290158409834,
+       "lo": 0.7801089982406618,
+       "hi": 2.117472401647329,
+       "median": 1.1603134894006237,
+       "better": 0.55,
+       "twice_as_good": 0.375,
+       "twice_as_bad": 0.225,
+       "periods": 40,
+       "engagements": 24
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.3408865369963906,
+       "lo": 0.20427662962941576,
+       "hi": 0.5472811020429098,
+       "median": 0.2913277137529348,
+       "better": 0.3,
+       "twice_as_good": 0.125,
+       "twice_as_bad": 0.625,
+       "periods": 40,
+       "engagements": 24
+      },
+      "course": {
+       "value": 0.3700795587207805,
+       "lo": 0.24600796416563556,
+       "hi": 0.5647711653189721,
+       "median": 0.4095956670734649,
+       "better": 0.35,
+       "twice_as_good": 0.125,
+       "twice_as_bad": 0.525,
+       "periods": 40,
+       "engagements": 24
+      },
+      "speed": {
+       "value": 0.28088841514918256,
+       "lo": 0.13716404341487623,
+       "hi": 0.5071852806764923,
+       "median": 0.3227369294984796,
+       "better": 0.2,
+       "twice_as_good": 0.075,
+       "twice_as_bad": 0.525,
+       "periods": 40,
+       "engagements": 24
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 1.6637626660914357,
+       "lo": 1.0437694548682117,
+       "hi": 2.609890354821002,
+       "median": 1.6290534788152964,
+       "better": 0.675,
+       "twice_as_good": 0.4,
+       "twice_as_bad": 0.175,
+       "periods": 40,
+       "engagements": 24
+      },
+      "course": {
+       "value": 2.2828306940978913,
+       "lo": 1.286364602981723,
+       "hi": 3.9222716081232156,
+       "median": 2.0392626485935343,
+       "better": 0.7,
+       "twice_as_good": 0.525,
+       "twice_as_bad": 0.2,
+       "periods": 40,
+       "engagements": 24
+      },
+      "speed": {
+       "value": 1.7036148540224059,
+       "lo": 0.9752263607792914,
+       "hi": 3.0036434623789505,
+       "median": 1.7762735962454457,
+       "better": 0.625,
+       "twice_as_good": 0.475,
+       "twice_as_bad": 0.225,
+       "periods": 40,
+       "engagements": 24
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 2.335007827674223,
+       "lo": 1.440020812458372,
+       "hi": 3.526739544196705,
+       "median": 2.766225645419716,
+       "better": 0.75,
+       "twice_as_good": 0.625,
+       "twice_as_bad": 0.1,
+       "periods": 40,
+       "engagements": 24
+      },
+      "course": {
+       "value": 2.0659333368442314,
+       "lo": 1.2272145737587485,
+       "hi": 3.2199893835336493,
+       "median": 2.3218787095794227,
+       "better": 0.7,
+       "twice_as_good": 0.55,
+       "twice_as_bad": 0.1,
+       "periods": 40,
+       "engagements": 24
+      },
+      "speed": {
+       "value": 2.4058937037134767,
+       "lo": 1.3188571362290649,
+       "hi": 4.192983059326209,
+       "median": 2.0587121053820234,
+       "better": 0.7,
+       "twice_as_good": 0.55,
+       "twice_as_bad": 0.1,
+       "periods": 40,
+       "engagements": 24
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 0.46948217477433496,
+       "lo": 0.21431007890653872,
+       "hi": 0.7910562930880833,
+       "median": 0.9287062837309208,
+       "better": 0.4,
+       "twice_as_good": 0.2,
+       "twice_as_bad": 0.425,
+       "periods": 40,
+       "engagements": 24
+      },
+      "course": {
+       "value": 0.8419342396674285,
+       "lo": 0.45977950365798675,
+       "hi": 1.4680014656045854,
+       "median": 0.9354031233910678,
+       "better": 0.375,
+       "twice_as_good": 0.2,
+       "twice_as_bad": 0.375,
+       "periods": 40,
+       "engagements": 24
+      },
+      "speed": {
+       "value": 0.7229375661698857,
+       "lo": 0.4766203432120989,
+       "hi": 1.0498605001426784,
+       "median": 0.8543131230366465,
+       "better": 0.35,
+       "twice_as_good": 0.225,
+       "twice_as_bad": 0.275,
+       "periods": 40,
+       "engagements": 24
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 1.7502661502263128,
+       "lo": 1.0629581037695668,
+       "hi": 2.884572904826681,
+       "median": 1.7584539723862638,
+       "better": 0.65,
+       "twice_as_good": 0.475,
+       "twice_as_bad": 0.175,
+       "periods": 40,
+       "engagements": 24
+      },
+      "course": {
+       "value": 1.789307169317383,
+       "lo": 0.9989004050249198,
+       "hi": 2.9312512430681146,
+       "median": 2.0683442397774163,
+       "better": 0.65,
+       "twice_as_good": 0.525,
+       "twice_as_bad": 0.125,
+       "periods": 40,
+       "engagements": 24
+      },
+      "speed": {
+       "value": 2.615969399756844,
+       "lo": 1.5522204038780951,
+       "hi": 4.325511482228769,
+       "median": 3.1215195724640847,
+       "better": 0.7,
+       "twice_as_good": 0.625,
+       "twice_as_bad": 0.175,
+       "periods": 40,
+       "engagements": 24
+      }
+     }
+    },
+    "span_bound_loose": {
+     "periods": 28,
+     "alone/joint": {
+      "range": {
+       "value": 1.7596913750931167,
+       "lo": 1.0177111236738297,
+       "hi": 3.394560713075509,
+       "median": 1.6578953748377,
+       "better": 0.7142857142857143,
+       "twice_as_good": 0.4642857142857143,
+       "twice_as_bad": 0.10714285714285714,
+       "periods": 28,
+       "engagements": 18
+      },
+      "course": {
+       "value": 1.7186260638652018,
+       "lo": 1.0394163213501364,
+       "hi": 2.873810560225769,
+       "median": 2.2530299497894823,
+       "better": 0.6428571428571429,
+       "twice_as_good": 0.5357142857142857,
+       "twice_as_bad": 0.17857142857142858,
+       "periods": 28,
+       "engagements": 18
+      },
+      "speed": {
+       "value": 1.4549282184283132,
+       "lo": 0.8244445828735852,
+       "hi": 2.674676588261234,
+       "median": 1.4467843739825497,
+       "better": 0.5714285714285714,
+       "twice_as_good": 0.39285714285714285,
+       "twice_as_bad": 0.17857142857142858,
+       "periods": 28,
+       "engagements": 18
+      }
+     },
+     "full/joint": {
+      "range": {
+       "value": 0.3579487052230378,
+       "lo": 0.18330301037747027,
+       "hi": 0.6380610882433473,
+       "median": 0.40978166008524464,
+       "better": 0.32142857142857145,
+       "twice_as_good": 0.07142857142857142,
+       "twice_as_bad": 0.5714285714285714,
+       "periods": 28,
+       "engagements": 18
+      },
+      "course": {
+       "value": 0.33817902483035545,
+       "lo": 0.19648126457809753,
+       "hi": 0.5696588767998958,
+       "median": 0.5059219643179084,
+       "better": 0.2857142857142857,
+       "twice_as_good": 0.14285714285714285,
+       "twice_as_bad": 0.5,
+       "periods": 28,
+       "engagements": 18
+      },
+      "speed": {
+       "value": 0.3090875566836601,
+       "lo": 0.15935501326983584,
+       "hi": 0.6437321171206333,
+       "median": 0.32116205504848455,
+       "better": 0.17857142857142858,
+       "twice_as_good": 0.10714285714285714,
+       "twice_as_bad": 0.6071428571428571,
+       "periods": 28,
+       "engagements": 18
+      }
+     },
+     "joint/ref-span": {
+      "range": {
+       "value": 2.184346005952268,
+       "lo": 1.31634384929962,
+       "hi": 3.708877363688166,
+       "median": 2.254832823877054,
+       "better": 0.7857142857142857,
+       "twice_as_good": 0.5714285714285714,
+       "twice_as_bad": 0.17857142857142858,
+       "periods": 28,
+       "engagements": 18
+      },
+      "course": {
+       "value": 3.040102944462206,
+       "lo": 1.5733906682655494,
+       "hi": 5.629997841845956,
+       "median": 3.528538471888527,
+       "better": 0.75,
+       "twice_as_good": 0.6071428571428571,
+       "twice_as_bad": 0.14285714285714285,
+       "periods": 28,
+       "engagements": 18
+      },
+      "speed": {
+       "value": 1.7047775043637718,
+       "lo": 1.065419419859251,
+       "hi": 2.926223461107543,
+       "median": 2.034406898265363,
+       "better": 0.6428571428571429,
+       "twice_as_good": 0.5,
+       "twice_as_bad": 0.17857142857142858,
+       "periods": 28,
+       "engagements": 18
+      }
+     },
+     "c2/joint": {
+      "range": {
+       "value": 2.118532786349034,
+       "lo": 1.1780753470233563,
+       "hi": 3.9495080453835785,
+       "median": 2.2639263691078493,
+       "better": 0.75,
+       "twice_as_good": 0.5357142857142857,
+       "twice_as_bad": 0.14285714285714285,
+       "periods": 28,
+       "engagements": 18
+      },
+      "course": {
+       "value": 2.477742557859754,
+       "lo": 1.4954547838420265,
+       "hi": 4.217056463361259,
+       "median": 2.650391869837214,
+       "better": 0.75,
+       "twice_as_good": 0.6071428571428571,
+       "twice_as_bad": 0.10714285714285714,
+       "periods": 28,
+       "engagements": 18
+      },
+      "speed": {
+       "value": 1.9126914653844727,
+       "lo": 1.2288927097121742,
+       "hi": 3.309268082734165,
+       "median": 1.36975277868518,
+       "better": 0.5714285714285714,
+       "twice_as_good": 0.42857142857142855,
+       "twice_as_bad": 0.14285714285714285,
+       "periods": 28,
+       "engagements": 18
+      }
+     },
+     "alone/ref-alone": {
+      "range": {
+       "value": 0.7674462096133111,
+       "lo": 0.49201283351483566,
+       "hi": 1.0419204090631133,
+       "median": 0.90970474449778,
+       "better": 0.42857142857142855,
+       "twice_as_good": 0.10714285714285714,
+       "twice_as_bad": 0.25,
+       "periods": 28,
+       "engagements": 18
+      },
+      "course": {
+       "value": 0.9136500868456402,
+       "lo": 0.6774658351957333,
+       "hi": 1.2047068018477638,
+       "median": 0.9476043298879024,
+       "better": 0.39285714285714285,
+       "twice_as_good": 0.14285714285714285,
+       "twice_as_bad": 0.14285714285714285,
+       "periods": 28,
+       "engagements": 18
+      },
+      "speed": {
+       "value": 1.040250293787953,
+       "lo": 0.6871015088107008,
+       "hi": 1.593013550231423,
+       "median": 1.0403288651803475,
+       "better": 0.5357142857142857,
+       "twice_as_good": 0.2857142857142857,
+       "twice_as_bad": 0.25,
+       "periods": 28,
+       "engagements": 18
+      }
+     },
+     "one-leg/joint": {
+      "range": {
+       "value": 1.8170838785709638,
+       "lo": 1.0888611661045724,
+       "hi": 3.1799786701391755,
+       "median": 1.7381011497836625,
+       "better": 0.75,
+       "twice_as_good": 0.42857142857142855,
+       "twice_as_bad": 0.14285714285714285,
+       "periods": 28,
+       "engagements": 18
+      },
+      "course": {
+       "value": 2.2316829658312343,
+       "lo": 1.4374004198551247,
+       "hi": 3.7077346819265493,
+       "median": 2.0828761397586764,
+       "better": 0.7142857142857143,
+       "twice_as_good": 0.5357142857142857,
+       "twice_as_bad": 0.10714285714285714,
+       "periods": 28,
+       "engagements": 18
+      },
+      "speed": {
+       "value": 2.996857150609285,
+       "lo": 1.701437518623433,
+       "hi": 6.148629637041791,
+       "median": 3.2426869329764845,
+       "better": 0.7142857142857143,
+       "twice_as_good": 0.6071428571428571,
+       "twice_as_bad": 0.14285714285714285,
+       "periods": 28,
+       "engagements": 18
+      }
+     }
+    }
+   },
+   "efficiency_span_bound": {
+    "alone": {
+     "range": 2.8968216826202147,
+     "course_deg": 3.496564315768691,
+     "speed_kt": 2.952950803656308
+    },
+    "joint": {
+     "range": 2.382227785443102,
+     "course_deg": 2.6158545845425802,
+     "speed_kt": 2.079369230829388
+    },
+    "full": {
+     "range": 0.9794938479831886,
+     "course_deg": 0.867091708982637,
+     "speed_kt": 0.741121514251267
+    },
+    "c2": {
+     "range": 5.750608746091862,
+     "course_deg": 7.344983788230115,
+     "speed_kt": 5.201572518938293
+    },
+    "one-leg": {
+     "range": 4.925270839565139,
+     "course_deg": 6.650205428407257,
+     "speed_kt": 5.493627160241385
+    },
+    "ref-alone": {
+     "range": 3.2258442263296896,
+     "course_deg": 3.0661527631963623,
+     "speed_kt": 3.158924866059059
+    },
+    "ref-span": {
+     "range": 1.0351152448460523,
+     "course_deg": 0.9557997186619167,
+     "speed_kt": 0.9875663563042173
+    },
+    "ref-alone-fixed": {
+     "range": 3.2006109475563203,
+     "course_deg": 2.7055680020820834,
+     "speed_kt": 3.2710338289620045
+    },
+    "ref-span-fixed": {
+     "range": 1.0967976557235253,
+     "course_deg": 1.013658493804981,
+     "speed_kt": 0.9894870820324704
+    }
+   },
+   "medians": {
+    "alone": 0.24393710494041443,
+    "joint": 0.1699381023645401,
+    "full": 0.04973071813583374,
+    "c2": 0.47600314021110535,
+    "one-leg": 0.43066195398569107,
+    "ref-alone": 0.28805049508810043,
+    "ref-span": 0.0765905249863863,
+    "ref-alone-fixed": 0.2829265296459198,
+    "ref-span-fixed": 0.07913999632000923
+   },
+   "gaps": {
+    "gaps": 83,
+    "with_true_manoeuvre": 82,
+    "found": 78,
+    "missed": 4,
+    "invented": 0,
+    "invented_share": 0.0,
+    "found_share": 0.9512195121951219
+   },
+   "false_manoeuvres": {
+    "engagements": 40,
+    "alone_any": 0.85,
+    "joint_any": 1.0,
+    "joint_in_period": 0.925,
+    "joint_in_gap": 0.95,
+    "full_any": 1.0
+   },
+   "carry": {
+    "periods_scored": 69,
+    "periods_scored_own": 25,
+    "fell_back": 0,
+    "later_periods": 83,
+    "first_period_max_diff": 0.003662109375,
+    "ratios": {
+     "carry/joint": {
+      "range": {
+       "value": 1.215408851101923,
+       "lo": 0.8503628190147027,
+       "hi": 1.7671401455788418,
+       "median": 1.0146063464345474,
+       "better": 0.5362318840579711,
+       "twice_as_good": 0.3333333333333333,
+       "twice_as_bad": 0.2608695652173913,
+       "periods": 69,
+       "engagements": 35
+      },
+      "course": {
+       "value": 1.3479634005213577,
+       "lo": 0.9139014862715916,
+       "hi": 2.0262169484163106,
+       "median": 1.2363734385127114,
+       "better": 0.5507246376811594,
+       "twice_as_good": 0.37681159420289856,
+       "twice_as_bad": 0.21739130434782608,
+       "periods": 69,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.4309612645273437,
+       "lo": 1.0208892106681489,
+       "hi": 1.9947667480034645,
+       "median": 1.3588073224470147,
+       "better": 0.5942028985507246,
+       "twice_as_good": 0.391304347826087,
+       "twice_as_bad": 0.21739130434782608,
+       "periods": 69,
+       "engagements": 35
+      }
+     },
+     "alone/carry": {
+      "range": {
+       "value": 1.109110170420804,
+       "lo": 0.9078952369609883,
+       "hi": 1.3973059796897014,
+       "median": 0.9999999671980764,
+       "better": 0.391304347826087,
+       "twice_as_good": 0.11594202898550725,
+       "twice_as_bad": 0.08695652173913043,
+       "periods": 69,
+       "engagements": 35
+      },
+      "course": {
+       "value": 1.0408227537807133,
+       "lo": 0.9050696112183256,
+       "hi": 1.1841396482941704,
+       "median": 1.0,
+       "better": 0.463768115942029,
+       "twice_as_good": 0.07246376811594203,
+       "twice_as_bad": 0.07246376811594203,
+       "periods": 69,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.0401001729449826,
+       "lo": 0.8776920044933201,
+       "hi": 1.2565277026593324,
+       "median": 1.0,
+       "better": 0.43478260869565216,
+       "twice_as_good": 0.08695652173913043,
+       "twice_as_bad": 0.043478260869565216,
+       "periods": 69,
+       "engagements": 35
+      }
+     },
+     "alone/joint": {
+      "range": {
+       "value": 1.3480223179766075,
+       "lo": 0.99015957646729,
+       "hi": 1.9095939191469917,
+       "median": 1.1327655074961758,
+       "better": 0.5942028985507246,
+       "twice_as_good": 0.36231884057971014,
+       "twice_as_bad": 0.21739130434782608,
+       "periods": 69,
+       "engagements": 35
+      },
+      "course": {
+       "value": 1.402990978526254,
+       "lo": 0.9795455100668091,
+       "hi": 2.005819857174255,
+       "median": 1.2526102307632234,
+       "better": 0.5507246376811594,
+       "twice_as_good": 0.36231884057971014,
+       "twice_as_bad": 0.2318840579710145,
+       "periods": 69,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.488343058712461,
+       "lo": 1.0345101179704703,
+       "hi": 2.1037948700931675,
+       "median": 1.358808165483582,
+       "better": 0.6086956521739131,
+       "twice_as_good": 0.42028985507246375,
+       "twice_as_bad": 0.18840579710144928,
+       "periods": 69,
+       "engagements": 35
+      }
+     }
+    },
+    "ratios_own_rows": {
+     "carry/joint": {
+      "range": {
+       "value": 0.8424534677676905,
+       "lo": 0.49275447194117183,
+       "hi": 1.5510823593776708,
+       "median": 0.7947497285765963,
+       "better": 0.4,
+       "twice_as_good": 0.24,
+       "twice_as_bad": 0.4,
+       "periods": 25,
+       "engagements": 20
+      },
+      "course": {
+       "value": 0.7950233789706663,
+       "lo": 0.5645535740826966,
+       "hi": 1.1966231620221341,
+       "median": 0.7626812796151359,
+       "better": 0.36,
+       "twice_as_good": 0.24,
+       "twice_as_bad": 0.24,
+       "periods": 25,
+       "engagements": 20
+      },
+      "speed": {
+       "value": 0.9465451887611351,
+       "lo": 0.48628436233732475,
+       "hi": 2.0691410432682305,
+       "median": 1.0080255981576867,
+       "better": 0.52,
+       "twice_as_good": 0.28,
+       "twice_as_bad": 0.28,
+       "periods": 25,
+       "engagements": 20
+      }
+     },
+     "alone/carry": {
+      "range": {
+       "value": 0.9699575279118797,
+       "lo": 0.6545652277791119,
+       "hi": 1.430999098095877,
+       "median": 0.9999999080479809,
+       "better": 0.4,
+       "twice_as_good": 0.04,
+       "twice_as_bad": 0.04,
+       "periods": 25,
+       "engagements": 20
+      },
+      "course": {
+       "value": 0.8902886516519306,
+       "lo": 0.6184259019157536,
+       "hi": 1.1228479611640738,
+       "median": 1.0,
+       "better": 0.4,
+       "twice_as_good": 0.0,
+       "twice_as_bad": 0.04,
+       "periods": 25,
+       "engagements": 20
+      },
+      "speed": {
+       "value": 1.0255440063325836,
+       "lo": 0.5684670107252308,
+       "hi": 1.764569566599095,
+       "median": 1.0,
+       "better": 0.4,
+       "twice_as_good": 0.12,
+       "twice_as_bad": 0.04,
+       "periods": 25,
+       "engagements": 20
+      }
+     },
+     "alone/joint": {
+      "range": {
+       "value": 0.8171440829767396,
+       "lo": 0.5124419658310642,
+       "hi": 1.4837169432297375,
+       "median": 0.7947500440247302,
+       "better": 0.4,
+       "twice_as_good": 0.24,
+       "twice_as_bad": 0.36,
+       "periods": 25,
+       "engagements": 20
+      },
+      "course": {
+       "value": 0.7078002920955563,
+       "lo": 0.4306854003230762,
+       "hi": 1.176798060671805,
+       "median": 0.9169695965696584,
+       "better": 0.36,
+       "twice_as_good": 0.24,
+       "twice_as_bad": 0.24,
+       "periods": 25,
+       "engagements": 20
+      },
+      "speed": {
+       "value": 0.9707237450569262,
+       "lo": 0.5620143674056656,
+       "hi": 1.9396223564105175,
+       "median": 0.9348162270263026,
+       "better": 0.48,
+       "twice_as_good": 0.28,
+       "twice_as_bad": 0.28,
+       "periods": 25,
+       "engagements": 20
+      }
+     }
+    },
+    "by_kind": {
+     "own_turn": {
+      "periods": 16,
+      "carry/joint": {
+       "range": {
+        "value": 1.1850083439131176,
+        "lo": 0.5590246596472972,
+        "hi": 2.4947254769724543,
+        "median": 0.8713428957331024,
+        "better": 0.375,
+        "twice_as_good": 0.3125,
+        "twice_as_bad": 0.3125,
+        "periods": 16,
+        "engagements": 12
+       },
+       "course": {
+        "value": 1.3146219920515958,
+        "lo": 0.736146399026879,
+        "hi": 2.27069410645107,
+        "median": 1.35439729898063,
+        "better": 0.625,
+        "twice_as_good": 0.3125,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       },
+       "speed": {
+        "value": 1.8916577132559413,
+        "lo": 0.9230156082630506,
+        "hi": 3.975931948180749,
+        "median": 1.7876175999597432,
+        "better": 0.625,
+        "twice_as_good": 0.5,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       }
+      },
+      "alone/carry": {
+       "range": {
+        "value": 1.000007104324856,
+        "lo": 0.9999797963522459,
+        "hi": 1.0000459269312278,
+        "median": 0.9999999835990381,
+        "better": 0.375,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 0.0,
+        "periods": 16,
+        "engagements": 12
+       },
+       "course": {
+        "value": 0.9999961923771413,
+        "lo": 0.9999681445319883,
+        "hi": 1.0000180746545058,
+        "median": 1.0,
+        "better": 0.375,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 0.0,
+        "periods": 16,
+        "engagements": 12
+       },
+       "speed": {
+        "value": 1.0000486736220437,
+        "lo": 0.9999818567391072,
+        "hi": 1.000182620784302,
+        "median": 1.0,
+        "better": 0.3125,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 0.0,
+        "periods": 16,
+        "engagements": 12
+       }
+      },
+      "alone/joint": {
+       "range": {
+        "value": 1.1850167625973498,
+        "lo": 0.5590244677331783,
+        "hi": 2.494741437343595,
+        "median": 0.8713431284768061,
+        "better": 0.375,
+        "twice_as_good": 0.3125,
+        "twice_as_bad": 0.3125,
+        "periods": 16,
+        "engagements": 12
+       },
+       "course": {
+        "value": 1.3146169864668482,
+        "lo": 0.7361540398311712,
+        "hi": 2.2706583682195483,
+        "median": 1.3542847358339984,
+        "better": 0.625,
+        "twice_as_good": 0.3125,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       },
+       "speed": {
+        "value": 1.8917497870885125,
+        "lo": 0.9230036461507876,
+        "hi": 3.976359182605931,
+        "median": 1.7876181545000178,
+        "better": 0.625,
+        "twice_as_good": 0.5,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       }
+      }
+     },
+     "no_own_turn": {
+      "periods": 53,
+      "carry/joint": {
+       "range": {
+        "value": 1.2247387171620094,
+        "lo": 0.7955945170515294,
+        "hi": 1.8441561538655276,
+        "median": 1.0485831758394286,
+        "better": 0.5849056603773585,
+        "twice_as_good": 0.33962264150943394,
+        "twice_as_bad": 0.24528301886792453,
+        "periods": 53,
+        "engagements": 30
+       },
+       "course": {
+        "value": 1.358193931738157,
+        "lo": 0.8121216152484336,
+        "hi": 2.192554384984061,
+        "median": 1.1406377606602416,
+        "better": 0.5283018867924528,
+        "twice_as_good": 0.39622641509433965,
+        "twice_as_bad": 0.24528301886792453,
+        "periods": 53,
+        "engagements": 30
+       },
+       "speed": {
+        "value": 1.3153301268289765,
+        "lo": 0.9158454748636837,
+        "hi": 1.8487483206283815,
+        "median": 1.3469285361644734,
+        "better": 0.5849056603773585,
+        "twice_as_good": 0.3584905660377358,
+        "twice_as_bad": 0.24528301886792453,
+        "periods": 53,
+        "engagements": 30
+       }
+      },
+      "alone/carry": {
+       "range": {
+        "value": 1.1443293067391198,
+        "lo": 0.8739065541465418,
+        "hi": 1.5442953946283011,
+        "median": 0.9999999398796607,
+        "better": 0.39622641509433965,
+        "twice_as_good": 0.1509433962264151,
+        "twice_as_bad": 0.11320754716981132,
+        "periods": 53,
+        "engagements": 30
+       },
+       "course": {
+        "value": 1.053472242073733,
+        "lo": 0.8804598798646375,
+        "hi": 1.2534751491854832,
+        "median": 1.0,
+        "better": 0.49056603773584906,
+        "twice_as_good": 0.09433962264150944,
+        "twice_as_bad": 0.09433962264150944,
+        "periods": 53,
+        "engagements": 30
+       },
+       "speed": {
+        "value": 1.0525035155484261,
+        "lo": 0.8344629509852248,
+        "hi": 1.3464039795746234,
+        "median": 1.0,
+        "better": 0.4716981132075472,
+        "twice_as_good": 0.11320754716981132,
+        "twice_as_bad": 0.05660377358490566,
+        "periods": 53,
+        "engagements": 30
+       }
+      },
+      "alone/joint": {
+       "range": {
+        "value": 1.4015044071465612,
+        "lo": 0.9820189256327502,
+        "hi": 2.01530056971653,
+        "median": 1.2115694043498753,
+        "better": 0.660377358490566,
+        "twice_as_good": 0.37735849056603776,
+        "twice_as_bad": 0.18867924528301888,
+        "periods": 53,
+        "engagements": 30
+       },
+       "course": {
+        "value": 1.4308196064391352,
+        "lo": 0.913168702464529,
+        "hi": 2.1986652588361633,
+        "median": 1.2526102307632234,
+        "better": 0.5283018867924528,
+        "twice_as_good": 0.37735849056603776,
+        "twice_as_bad": 0.2641509433962264,
+        "periods": 53,
+        "engagements": 30
+       },
+       "speed": {
+        "value": 1.3843895825942552,
+        "lo": 0.9394202208110631,
+        "hi": 1.9798474737593852,
+        "median": 1.323339072624907,
+        "better": 0.6037735849056604,
+        "twice_as_good": 0.39622641509433965,
+        "twice_as_bad": 0.20754716981132076,
+        "periods": 53,
+        "engagements": 30
+       }
+      }
+     },
+     "gap_manoeuvre": {
+      "periods": 68,
+      "carry/joint": {
+       "range": {
+        "value": 1.268212494005211,
+        "lo": 0.8949070375180874,
+        "hi": 1.8318267045141081,
+        "median": 1.014857812928942,
+        "better": 0.5441176470588235,
+        "twice_as_good": 0.3382352941176471,
+        "twice_as_bad": 0.25,
+        "periods": 68,
+        "engagements": 34
+       },
+       "course": {
+        "value": 1.3927740891625635,
+        "lo": 0.9199461280939776,
+        "hi": 2.125696142240673,
+        "median": 1.2444653693768382,
+        "better": 0.5588235294117647,
+        "twice_as_good": 0.38235294117647056,
+        "twice_as_bad": 0.20588235294117646,
+        "periods": 68,
+        "engagements": 34
+       },
+       "speed": {
+        "value": 1.419197493914649,
+        "lo": 1.0320536573723658,
+        "hi": 1.987330662023072,
+        "median": 1.3528548916100074,
+        "better": 0.5882352941176471,
+        "twice_as_good": 0.38235294117647056,
+        "twice_as_bad": 0.22058823529411764,
+        "periods": 68,
+        "engagements": 34
+       }
+      },
+      "alone/carry": {
+       "range": {
+        "value": 1.1108005363159486,
+        "lo": 0.9066905744936663,
+        "hi": 1.4164947986396492,
+        "median": 0.9999999684332548,
+        "better": 0.39705882352941174,
+        "twice_as_good": 0.11764705882352941,
+        "twice_as_bad": 0.08823529411764706,
+        "periods": 68,
+        "engagements": 34
+       },
+       "course": {
+        "value": 1.0414353599022164,
+        "lo": 0.9056982328754533,
+        "hi": 1.1958861300001564,
+        "median": 1.0,
+        "better": 0.47058823529411764,
+        "twice_as_good": 0.07352941176470588,
+        "twice_as_bad": 0.07352941176470588,
+        "periods": 68,
+        "engagements": 34
+       },
+       "speed": {
+        "value": 1.0407017240150365,
+        "lo": 0.8703769136419981,
+        "hi": 1.2694860304758482,
+        "median": 1.0,
+        "better": 0.4411764705882353,
+        "twice_as_good": 0.08823529411764706,
+        "twice_as_bad": 0.04411764705882353,
+        "periods": 68,
+        "engagements": 34
+       }
+      },
+      "alone/joint": {
+       "range": {
+        "value": 1.4087311185035751,
+        "lo": 1.0391229671721223,
+        "hi": 1.9680175751027693,
+        "median": 1.1464600208197946,
+        "better": 0.6029411764705882,
+        "twice_as_good": 0.36764705882352944,
+        "twice_as_bad": 0.20588235294117646,
+        "periods": 68,
+        "engagements": 34
+       },
+       "course": {
+        "value": 1.450484184809496,
+        "lo": 1.0120024573299808,
+        "hi": 2.0875738728123627,
+        "median": 1.2754124947478764,
+        "better": 0.5588235294117647,
+        "twice_as_good": 0.36764705882352944,
+        "twice_as_bad": 0.22058823529411764,
+        "periods": 68,
+        "engagements": 34
+       },
+       "speed": {
+        "value": 1.4769612786347945,
+        "lo": 1.0372429671284618,
+        "hi": 2.106825106538545,
+        "median": 1.340956351857209,
+        "better": 0.6029411764705882,
+        "twice_as_good": 0.4117647058823529,
+        "twice_as_bad": 0.19117647058823528,
+        "periods": 68,
+        "engagements": 34
+       }
+      }
+     },
+     "no_gap_manoeuvre": {
+      "periods": 1,
+      "carry/joint": {
+       "range": {
+        "value": 0.06741978660655483,
+        "lo": 0.06741978660655483,
+        "hi": 0.06741978660655483,
+        "median": 0.06741978660655483,
+        "better": 0.0,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 1.0,
+        "periods": 1,
+        "engagements": 1
+       },
+       "course": {
+        "value": 0.14584877538370464,
+        "lo": 0.14584877538370464,
+        "hi": 0.14584877538370464,
+        "median": 0.14584877538370464,
+        "better": 0.0,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 1.0,
+        "periods": 1,
+        "engagements": 1
+       },
+       "speed": {
+        "value": 2.5084805936891943,
+        "lo": 2.5084805936891943,
+        "hi": 2.5084805936891943,
+        "median": 2.5084805936891943,
+        "better": 1.0,
+        "twice_as_good": 1.0,
+        "twice_as_bad": 0.0,
+        "periods": 1,
+        "engagements": 1
+       }
+      },
+      "alone/carry": {
+       "range": {
+        "value": 0.9999999134843021,
+        "lo": 0.9999999134843021,
+        "hi": 0.9999999134843021,
+        "median": 0.9999999134843021,
+        "better": 0.0,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 0.0,
+        "periods": 1,
+        "engagements": 1
+       },
+       "course": {
+        "value": 0.9999999308369292,
+        "lo": 0.9999999308369292,
+        "hi": 0.9999999308369292,
+        "median": 0.9999999308369292,
+        "better": 0.0,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 0.0,
+        "periods": 1,
+        "engagements": 1
+       },
+       "speed": {
+        "value": 1.0,
+        "lo": 1.0,
+        "hi": 1.0,
+        "median": 1.0,
+        "better": 0.0,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 0.0,
+        "periods": 1,
+        "engagements": 1
+       }
+      },
+      "alone/joint": {
+       "range": {
+        "value": 0.06741978077368493,
+        "lo": 0.06741978077368493,
+        "hi": 0.06741978077368493,
+        "median": 0.06741978077368493,
+        "better": 0.0,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 1.0,
+        "periods": 1,
+        "engagements": 1
+       },
+       "course": {
+        "value": 0.14584876529635543,
+        "lo": 0.14584876529635543,
+        "hi": 0.14584876529635543,
+        "median": 0.14584876529635543,
+        "better": 0.0,
+        "twice_as_good": 0.0,
+        "twice_as_bad": 1.0,
+        "periods": 1,
+        "engagements": 1
+       },
+       "speed": {
+        "value": 2.5084805936891943,
+        "lo": 2.5084805936891943,
+        "hi": 2.5084805936891943,
+        "median": 2.5084805936891943,
+        "better": 1.0,
+        "twice_as_good": 1.0,
+        "twice_as_bad": 0.0,
+        "periods": 1,
+        "engagements": 1
+       }
+      }
+     }
+    }
+   },
+   "cprior": {
+    "periods_scored": 69,
+    "periods_scored_own": 25,
+    "ratios": {
+     "cprior/joint": {
+      "range": {
+       "value": 1.602876232334932,
+       "lo": 1.1522941318895008,
+       "hi": 2.1748267390455633,
+       "median": 1.4488523042324872,
+       "better": 0.6666666666666666,
+       "twice_as_good": 0.36231884057971014,
+       "twice_as_bad": 0.14492753623188406,
+       "periods": 69,
+       "engagements": 35
+      },
+      "course": {
+       "value": 1.706984101652394,
+       "lo": 1.1691257701612012,
+       "hi": 2.468847426461213,
+       "median": 1.294480820164889,
+       "better": 0.6376811594202898,
+       "twice_as_good": 0.42028985507246375,
+       "twice_as_bad": 0.21739130434782608,
+       "periods": 69,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.4094362080779896,
+       "lo": 0.9794521597440802,
+       "hi": 1.9939474002928583,
+       "median": 1.6582654129067738,
+       "better": 0.6231884057971014,
+       "twice_as_good": 0.42028985507246375,
+       "twice_as_bad": 0.2028985507246377,
+       "periods": 69,
+       "engagements": 35
+      }
+     },
+     "alone/cprior": {
+      "range": {
+       "value": 0.8410021252938068,
+       "lo": 0.6359330473380664,
+       "hi": 1.1415335185165516,
+       "median": 0.9568661861737182,
+       "better": 0.43478260869565216,
+       "twice_as_good": 0.2028985507246377,
+       "twice_as_bad": 0.2463768115942029,
+       "periods": 69,
+       "engagements": 35
+      },
+      "course": {
+       "value": 0.8219121532345447,
+       "lo": 0.6359077218982822,
+       "hi": 1.0841062925774492,
+       "median": 0.9773824358548082,
+       "better": 0.4927536231884058,
+       "twice_as_good": 0.2318840579710145,
+       "twice_as_bad": 0.2898550724637681,
+       "periods": 69,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.055984691029099,
+       "lo": 0.7927052666426149,
+       "hi": 1.4829809316615579,
+       "median": 0.988168210999615,
+       "better": 0.4927536231884058,
+       "twice_as_good": 0.2463768115942029,
+       "twice_as_bad": 0.17391304347826086,
+       "periods": 69,
+       "engagements": 35
+      }
+     },
+     "carry/cprior": {
+      "range": {
+       "value": 0.7582674361147773,
+       "lo": 0.5568749546761006,
+       "hi": 1.0324659420802185,
+       "median": 0.9284781348855541,
+       "better": 0.43478260869565216,
+       "twice_as_good": 0.17391304347826086,
+       "twice_as_bad": 0.30434782608695654,
+       "periods": 69,
+       "engagements": 35
+      },
+      "course": {
+       "value": 0.7896754276835402,
+       "lo": 0.5870622699109501,
+       "hi": 1.0873219856016743,
+       "median": 0.9985656976622158,
+       "better": 0.4927536231884058,
+       "twice_as_good": 0.15942028985507245,
+       "twice_as_bad": 0.2753623188405797,
+       "periods": 69,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.0152721040696884,
+       "lo": 0.7505603845931993,
+       "hi": 1.3919839159978544,
+       "median": 1.0023366609136926,
+       "better": 0.5217391304347826,
+       "twice_as_good": 0.2318840579710145,
+       "twice_as_bad": 0.14492753623188406,
+       "periods": 69,
+       "engagements": 35
+      }
+     },
+     "carry/joint": {
+      "range": {
+       "value": 1.215408851101923,
+       "lo": 0.8503628190147027,
+       "hi": 1.7671401455788418,
+       "median": 1.0146063464345474,
+       "better": 0.5362318840579711,
+       "twice_as_good": 0.3333333333333333,
+       "twice_as_bad": 0.2608695652173913,
+       "periods": 69,
+       "engagements": 35
+      },
+      "course": {
+       "value": 1.3479634005213577,
+       "lo": 0.9139014862715916,
+       "hi": 2.0262169484163106,
+       "median": 1.2363734385127114,
+       "better": 0.5507246376811594,
+       "twice_as_good": 0.37681159420289856,
+       "twice_as_bad": 0.21739130434782608,
+       "periods": 69,
+       "engagements": 35
+      },
+      "speed": {
+       "value": 1.4309612645273437,
+       "lo": 1.0208892106681489,
+       "hi": 1.9947667480034645,
+       "median": 1.3588073224470147,
+       "better": 0.5942028985507246,
+       "twice_as_good": 0.391304347826087,
+       "twice_as_bad": 0.21739130434782608,
+       "periods": 69,
+       "engagements": 35
+      }
+     }
+    },
+    "ratios_own_rows": {
+     "cprior/joint": {
+      "range": {
+       "value": 1.3104418723845086,
+       "lo": 0.7602829917136922,
+       "hi": 2.3261372161551614,
+       "median": 1.3056117546770123,
+       "better": 0.64,
+       "twice_as_good": 0.32,
+       "twice_as_bad": 0.2,
+       "periods": 25,
+       "engagements": 20
+      },
+      "course": {
+       "value": 1.1889330686820434,
+       "lo": 0.742137125847075,
+       "hi": 2.0038360323078477,
+       "median": 1.0145406016129643,
+       "better": 0.52,
+       "twice_as_good": 0.36,
+       "twice_as_bad": 0.32,
+       "periods": 25,
+       "engagements": 20
+      },
+      "speed": {
+       "value": 1.2383663936471232,
+       "lo": 0.7338442871464684,
+       "hi": 2.1456200546271673,
+       "median": 1.4542389393585504,
+       "better": 0.6,
+       "twice_as_good": 0.32,
+       "twice_as_bad": 0.24,
+       "periods": 25,
+       "engagements": 20
+      }
+     },
+     "alone/cprior": {
+      "range": {
+       "value": 0.6235637766136443,
+       "lo": 0.425413977229671,
+       "hi": 0.9679257373560791,
+       "median": 0.8773080230113371,
+       "better": 0.36,
+       "twice_as_good": 0.12,
+       "twice_as_bad": 0.36,
+       "periods": 25,
+       "engagements": 20
+      },
+      "course": {
+       "value": 0.5953239175020738,
+       "lo": 0.4131921891320507,
+       "hi": 0.9278512032642907,
+       "median": 0.7679777790641279,
+       "better": 0.36,
+       "twice_as_good": 0.12,
+       "twice_as_bad": 0.36,
+       "periods": 25,
+       "engagements": 20
+      },
+      "speed": {
+       "value": 0.7838744252402067,
+       "lo": 0.4554451845143981,
+       "hi": 1.3919709421248356,
+       "median": 0.988168210999615,
+       "better": 0.48,
+       "twice_as_good": 0.2,
+       "twice_as_bad": 0.28,
+       "periods": 25,
+       "engagements": 20
+      }
+     },
+     "carry/cprior": {
+      "range": {
+       "value": 0.6428774030508837,
+       "lo": 0.3940364553773418,
+       "hi": 1.0564735881481842,
+       "median": 0.9284781348855541,
+       "better": 0.4,
+       "twice_as_good": 0.16,
+       "twice_as_bad": 0.32,
+       "periods": 25,
+       "engagements": 20
+      },
+      "course": {
+       "value": 0.6686864045694061,
+       "lo": 0.4417137543323306,
+       "hi": 1.0405246267316546,
+       "median": 0.8898596084899443,
+       "better": 0.4,
+       "twice_as_good": 0.16,
+       "twice_as_bad": 0.32,
+       "periods": 25,
+       "engagements": 20
+      },
+      "speed": {
+       "value": 0.7643498673873547,
+       "lo": 0.38789278233621344,
+       "hi": 1.388033758645889,
+       "median": 1.0496381725976254,
+       "better": 0.56,
+       "twice_as_good": 0.2,
+       "twice_as_bad": 0.24,
+       "periods": 25,
+       "engagements": 20
+      }
+     },
+     "carry/joint": {
+      "range": {
+       "value": 0.8424534677676905,
+       "lo": 0.49275447194117183,
+       "hi": 1.5510823593776708,
+       "median": 0.7947497285765963,
+       "better": 0.4,
+       "twice_as_good": 0.24,
+       "twice_as_bad": 0.4,
+       "periods": 25,
+       "engagements": 20
+      },
+      "course": {
+       "value": 0.7950233789706663,
+       "lo": 0.5645535740826966,
+       "hi": 1.1966231620221341,
+       "median": 0.7626812796151359,
+       "better": 0.36,
+       "twice_as_good": 0.24,
+       "twice_as_bad": 0.24,
+       "periods": 25,
+       "engagements": 20
+      },
+      "speed": {
+       "value": 0.9465451887611351,
+       "lo": 0.48628436233732475,
+       "hi": 2.0691410432682305,
+       "median": 1.0080255981576867,
+       "better": 0.52,
+       "twice_as_good": 0.28,
+       "twice_as_bad": 0.28,
+       "periods": 25,
+       "engagements": 20
+      }
+     }
+    },
+    "by_kind": {
+     "own_turn": {
+      "periods": 16,
+      "cprior/joint": {
+       "range": {
+        "value": 1.3360055757925986,
+        "lo": 0.7036236004972186,
+        "hi": 2.372383475785333,
+        "median": 1.2758308368776468,
+        "better": 0.5625,
+        "twice_as_good": 0.375,
+        "twice_as_bad": 0.1875,
+        "periods": 16,
+        "engagements": 12
+       },
+       "course": {
+        "value": 1.5035439905466024,
+        "lo": 0.9403206707471449,
+        "hi": 2.2524030590425785,
+        "median": 1.2267206018139942,
+        "better": 0.5625,
+        "twice_as_good": 0.375,
+        "twice_as_bad": 0.3125,
+        "periods": 16,
+        "engagements": 12
+       },
+       "speed": {
+        "value": 1.56024915634215,
+        "lo": 1.0417411940381645,
+        "hi": 2.4215558251088276,
+        "median": 1.6959944390299646,
+        "better": 0.6875,
+        "twice_as_good": 0.375,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       }
+      },
+      "alone/cprior": {
+       "range": {
+        "value": 0.8869848929293028,
+        "lo": 0.43764939269584496,
+        "hi": 1.8325060560446138,
+        "median": 0.9992132472921387,
+        "better": 0.5,
+        "twice_as_good": 0.25,
+        "twice_as_bad": 0.25,
+        "periods": 16,
+        "engagements": 12
+       },
+       "course": {
+        "value": 0.8743455427525795,
+        "lo": 0.5373034824724527,
+        "hi": 1.5688272169543251,
+        "median": 1.0005328693031836,
+        "better": 0.5625,
+        "twice_as_good": 0.1875,
+        "twice_as_bad": 0.1875,
+        "periods": 16,
+        "engagements": 12
+       },
+       "speed": {
+        "value": 1.2124664701139998,
+        "lo": 0.7765949025572281,
+        "hi": 2.2196500171349327,
+        "median": 1.0127359099968414,
+        "better": 0.5625,
+        "twice_as_good": 0.25,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       }
+      },
+      "carry/cprior": {
+       "range": {
+        "value": 0.8869785915452483,
+        "lo": 0.437655740363775,
+        "hi": 1.8324809646270648,
+        "median": 0.9992131970542643,
+        "better": 0.5,
+        "twice_as_good": 0.25,
+        "twice_as_bad": 0.25,
+        "periods": 16,
+        "engagements": 12
+       },
+       "course": {
+        "value": 0.8743488719433307,
+        "lo": 0.5373083913024365,
+        "hi": 1.5688237669755425,
+        "median": 1.0005328693031836,
+        "better": 0.5625,
+        "twice_as_good": 0.1875,
+        "twice_as_bad": 0.1875,
+        "periods": 16,
+        "engagements": 12
+       },
+       "speed": {
+        "value": 1.2124074578516335,
+        "lo": 0.7765950317165551,
+        "hi": 2.2193681633301603,
+        "median": 1.0127358558501534,
+        "better": 0.5625,
+        "twice_as_good": 0.25,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       }
+      },
+      "carry/joint": {
+       "range": {
+        "value": 1.1850083439131176,
+        "lo": 0.5590246596472972,
+        "hi": 2.4947254769724543,
+        "median": 0.8713428957331024,
+        "better": 0.375,
+        "twice_as_good": 0.3125,
+        "twice_as_bad": 0.3125,
+        "periods": 16,
+        "engagements": 12
+       },
+       "course": {
+        "value": 1.3146219920515958,
+        "lo": 0.736146399026879,
+        "hi": 2.27069410645107,
+        "median": 1.35439729898063,
+        "better": 0.625,
+        "twice_as_good": 0.3125,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       },
+       "speed": {
+        "value": 1.8916577132559413,
+        "lo": 0.9230156082630506,
+        "hi": 3.975931948180749,
+        "median": 1.7876175999597432,
+        "better": 0.625,
+        "twice_as_good": 0.5,
+        "twice_as_bad": 0.125,
+        "periods": 16,
+        "engagements": 12
+       }
+      }
+     },
+     "no_own_turn": {
+      "periods": 53,
+      "cprior/joint": {
+       "range": {
+        "value": 1.693466985438374,
+        "lo": 1.2116576020410672,
+        "hi": 2.3740418405013917,
+        "median": 1.6048130026915992,
+        "better": 0.6981132075471698,
+        "twice_as_good": 0.3584905660377358,
+        "twice_as_bad": 0.1320754716981132,
+        "periods": 53,
+        "engagements": 30
+       },
+       "course": {
+        "value": 1.7736481277214509,
+        "lo": 1.0881204620845735,
+        "hi": 2.7150118200701927,
+        "median": 1.319634889428745,
+        "better": 0.660377358490566,
+        "twice_as_good": 0.4339622641509434,
+        "twice_as_bad": 0.18867924528301888,
+        "periods": 53,
+        "engagements": 30
+       },
+       "speed": {
+        "value": 1.3668396402385212,
+        "lo": 0.8829081082536107,
+        "hi": 2.056560614264759,
+        "median": 1.6441537375600603,
+        "better": 0.6037735849056604,
+        "twice_as_good": 0.4339622641509434,
+        "twice_as_bad": 0.22641509433962265,
+        "periods": 53,
+        "engagements": 30
+       }
+      },
+      "alone/cprior": {
+       "range": {
+        "value": 0.827594762223112,
+        "lo": 0.6022044631845285,
+        "hi": 1.1301451921668066,
+        "median": 0.9208029901200774,
+        "better": 0.41509433962264153,
+        "twice_as_good": 0.18867924528301888,
+        "twice_as_bad": 0.24528301886792453,
+        "periods": 53,
+        "engagements": 30
+       },
+       "course": {
+        "value": 0.8067099578974908,
+        "lo": 0.5944701415770165,
+        "hi": 1.1282846522547807,
+        "median": 0.9463450542275913,
+        "better": 0.4716981132075472,
+        "twice_as_good": 0.24528301886792453,
+        "twice_as_bad": 0.32075471698113206,
+        "periods": 53,
+        "engagements": 30
+       },
+       "speed": {
+        "value": 1.0128397961539009,
+        "lo": 0.6962981929812762,
+        "hi": 1.4989454923695043,
+        "median": 0.9807093267839556,
+        "better": 0.4716981132075472,
+        "twice_as_good": 0.24528301886792453,
+        "twice_as_bad": 0.18867924528301888,
+        "periods": 53,
+        "engagements": 30
+       }
+      },
+      "carry/cprior": {
+       "range": {
+        "value": 0.7232138138464929,
+        "lo": 0.504605017449106,
+        "hi": 0.9880762794902922,
+        "median": 0.877308903713454,
+        "better": 0.41509433962264153,
+        "twice_as_good": 0.1509433962264151,
+        "twice_as_bad": 0.32075471698113206,
+        "periods": 53,
+        "engagements": 30
+       },
+       "course": {
+        "value": 0.7657628988016837,
+        "lo": 0.5283226741948875,
+        "hi": 1.0877604328538801,
+        "median": 0.9732147227244956,
+        "better": 0.4716981132075472,
+        "twice_as_good": 0.1509433962264151,
+        "twice_as_bad": 0.3018867924528302,
+        "periods": 53,
+        "engagements": 30
+       },
+       "speed": {
+        "value": 0.9623148817950905,
+        "lo": 0.655804437321454,
+        "hi": 1.4127422484627832,
+        "median": 1.0023366609136926,
+        "better": 0.5094339622641509,
+        "twice_as_good": 0.22641509433962265,
+        "twice_as_bad": 0.1509433962264151,
+        "periods": 53,
+        "engagements": 30
+       }
+      },
+      "carry/joint": {
+       "range": {
+        "value": 1.2247387171620094,
+        "lo": 0.7955945170515294,
+        "hi": 1.8441561538655276,
+        "median": 1.0485831758394286,
+        "better": 0.5849056603773585,
+        "twice_as_good": 0.33962264150943394,
+        "twice_as_bad": 0.24528301886792453,
+        "periods": 53,
+        "engagements": 30
+       },
+       "course": {
+        "value": 1.358193931738157,
+        "lo": 0.8121216152484336,
+        "hi": 2.192554384984061,
+        "median": 1.1406377606602416,
+        "better": 0.5283018867924528,
+        "twice_as_good": 0.39622641509433965,
+        "twice_as_bad": 0.24528301886792453,
+        "periods": 53,
+        "engagements": 30
+       },
+       "speed": {
+        "value": 1.3153301268289765,
+        "lo": 0.9158454748636837,
+        "hi": 1.8487483206283815,
+        "median": 1.3469285361644734,
+        "better": 0.5849056603773585,
+        "twice_as_good": 0.3584905660377358,
+        "twice_as_bad": 0.24528301886792453,
+        "periods": 53,
+        "engagements": 30
+       }
+      }
+     }
+    },
+    "ties_alone": {
+     "within_1pct": 0.057971014492753624,
+     "better": 0.4057971014492754,
+     "worse": 0.5362318840579711
+    },
+    "ties_joint": {
+     "within_1pct": 0.0,
+     "better": 0.6666666666666666,
+     "worse": 0.3333333333333333
+    },
+    "variants": {
+     "k4": {
+      "periods_scored": 69,
+      "ratios": {
+       "cv-k4/joint": {
+        "range": {
+         "value": 1.2880478421366501,
+         "lo": 0.9153387978789219,
+         "hi": 1.833149489288118,
+         "median": 1.183411664017664,
+         "better": 0.6086956521739131,
+         "twice_as_good": 0.3333333333333333,
+         "twice_as_bad": 0.21739130434782608,
+         "periods": 69,
+         "engagements": 35
+        },
+        "course": {
+         "value": 1.2809258053117278,
+         "lo": 0.8910846949507136,
+         "hi": 1.8570381966154885,
+         "median": 1.236214228670943,
+         "better": 0.5652173913043478,
+         "twice_as_good": 0.34782608695652173,
+         "twice_as_bad": 0.2318840579710145,
+         "periods": 69,
+         "engagements": 35
+        },
+        "speed": {
+         "value": 1.2212071901262627,
+         "lo": 0.8124464699312768,
+         "hi": 1.756616043477427,
+         "median": 1.4795745167569494,
+         "better": 0.6086956521739131,
+         "twice_as_good": 0.391304347826087,
+         "twice_as_bad": 0.2608695652173913,
+         "periods": 69,
+         "engagements": 35
+        }
+       },
+       "alone/cv-k4": {
+        "range": {
+         "value": 1.0465623045029677,
+         "lo": 0.8074111218714459,
+         "hi": 1.3891577934801709,
+         "median": 0.9750168627883252,
+         "better": 0.463768115942029,
+         "twice_as_good": 0.15942028985507245,
+         "twice_as_bad": 0.18840579710144928,
+         "periods": 69,
+         "engagements": 35
+        },
+        "course": {
+         "value": 1.0952944914594955,
+         "lo": 0.8266431109254766,
+         "hi": 1.4119298288680737,
+         "median": 0.9950355971116478,
+         "better": 0.463768115942029,
+         "twice_as_good": 0.2463768115942029,
+         "twice_as_bad": 0.18840579710144928,
+         "periods": 69,
+         "engagements": 35
+        },
+        "speed": {
+         "value": 1.2187473761586505,
+         "lo": 0.9061330713016912,
+         "hi": 1.7075884879559036,
+         "median": 1.0198755357919636,
+         "better": 0.5797101449275363,
+         "twice_as_good": 0.21739130434782608,
+         "twice_as_bad": 0.15942028985507245,
+         "periods": 69,
+         "engagements": 35
+        }
+       },
+       "cprior/cv-k4": {
+        "range": {
+         "value": 1.2444229009972454,
+         "lo": 0.9557533457799468,
+         "hi": 1.6357543217719934,
+         "median": 1.0876185356504435,
+         "better": 0.5797101449275363,
+         "twice_as_good": 0.3188405797101449,
+         "twice_as_bad": 0.15942028985507245,
+         "periods": 69,
+         "engagements": 35
+        },
+        "course": {
+         "value": 1.3326174666587967,
+         "lo": 0.9193857310806517,
+         "hi": 1.8695210842407726,
+         "median": 1.0718311707690318,
+         "better": 0.5217391304347826,
+         "twice_as_good": 0.2898550724637681,
+         "twice_as_bad": 0.2028985507246377,
+         "periods": 69,
+         "engagements": 35
+        },
+        "speed": {
+         "value": 1.154133565109673,
+         "lo": 0.8706972307550587,
+         "hi": 1.48365359457095,
+         "median": 1.0252741148250601,
+         "better": 0.5362318840579711,
+         "twice_as_good": 0.2608695652173913,
+         "twice_as_bad": 0.2028985507246377,
+         "periods": 69,
+         "engagements": 35
+        }
+       }
+      },
+      "ratios_own_rows": {
+       "cv-k4/joint": {
+        "range": {
+         "value": 0.8899511261321692,
+         "lo": 0.5474154929896617,
+         "hi": 1.6692001956268994,
+         "median": 1.0171714240002139,
+         "better": 0.56,
+         "twice_as_good": 0.28,
+         "twice_as_bad": 0.28,
+         "periods": 25,
+         "engagements": 20
+        },
+        "course": {
+         "value": 0.9224444947391899,
+         "lo": 0.6348624690177571,
+         "hi": 1.5146562041030813,
+         "median": 0.9215445148207798,
+         "better": 0.36,
+         "twice_as_good": 0.16,
+         "twice_as_bad": 0.2,
+         "periods": 25,
+         "engagements": 20
+        },
+        "speed": {
+         "value": 1.002469611168723,
+         "lo": 0.5417023459129174,
+         "hi": 2.0051222042261276,
+         "median": 1.0123394080765418,
+         "better": 0.52,
+         "twice_as_good": 0.36,
+         "twice_as_bad": 0.32,
+         "periods": 25,
+         "engagements": 20
+        }
+       },
+       "alone/cv-k4": {
+        "range": {
+         "value": 0.9181898409726638,
+         "lo": 0.739391262235097,
+         "hi": 1.1124718074409414,
+         "median": 0.9399934332785383,
+         "better": 0.44,
+         "twice_as_good": 0.12,
+         "twice_as_bad": 0.16,
+         "periods": 25,
+         "engagements": 20
+        },
+        "course": {
+         "value": 0.7673093569664355,
+         "lo": 0.5506862242232872,
+         "hi": 1.0937997978478091,
+         "median": 0.9461951799411502,
+         "better": 0.4,
+         "twice_as_good": 0.2,
+         "twice_as_bad": 0.28,
+         "periods": 25,
+         "engagements": 20
+        },
+        "speed": {
+         "value": 0.9683323406933142,
+         "lo": 0.5622208542203284,
+         "hi": 1.56166256300746,
+         "median": 1.0198755357919636,
+         "better": 0.56,
+         "twice_as_good": 0.24,
+         "twice_as_bad": 0.2,
+         "periods": 25,
+         "engagements": 20
+        }
+       },
+       "cprior/cv-k4": {
+        "range": {
+         "value": 1.4724874590359147,
+         "lo": 0.9526433383901421,
+         "hi": 2.102180961655354,
+         "median": 1.071451997044362,
+         "better": 0.64,
+         "twice_as_good": 0.32,
+         "twice_as_bad": 0.08,
+         "periods": 25,
+         "engagements": 20
+        },
+        "course": {
+         "value": 1.288893885174305,
+         "lo": 0.9038456496166308,
+         "hi": 1.8142505855350324,
+         "median": 0.933249339792051,
+         "better": 0.48,
+         "twice_as_good": 0.28,
+         "twice_as_bad": 0.2,
+         "periods": 25,
+         "engagements": 20
+        },
+        "speed": {
+         "value": 1.2353156443349753,
+         "lo": 0.8436591965876277,
+         "hi": 1.7576609063708921,
+         "median": 1.0340198551936088,
+         "better": 0.52,
+         "twice_as_good": 0.28,
+         "twice_as_bad": 0.12,
+         "periods": 25,
+         "engagements": 20
+        }
+       }
+      },
+      "by_kind": {
+       "own_turn": {
+        "periods": 16,
+        "cv-k4/joint": {
+         "range": {
+          "value": 1.2800488225853595,
+          "lo": 0.5908057818246689,
+          "hi": 2.6924944337202437,
+          "median": 1.0841258176750044,
+          "better": 0.5625,
+          "twice_as_good": 0.3125,
+          "twice_as_bad": 0.25,
+          "periods": 16,
+          "engagements": 12
+         },
+         "course": {
+          "value": 1.4291171512142316,
+          "lo": 0.9508125282540429,
+          "hi": 2.1655927545215197,
+          "median": 0.982652311855737,
+          "better": 0.5,
+          "twice_as_good": 0.375,
+          "twice_as_bad": 0.125,
+          "periods": 16,
+          "engagements": 12
+         },
+         "speed": {
+          "value": 1.2498554290145696,
+          "lo": 0.49639232159419394,
+          "hi": 2.8298833292658876,
+          "median": 1.3582659439373306,
+          "better": 0.5625,
+          "twice_as_good": 0.4375,
+          "twice_as_bad": 0.25,
+          "periods": 16,
+          "engagements": 12
+         }
+        },
+        "alone/cv-k4": {
+         "range": {
+          "value": 0.9257590348811305,
+          "lo": 0.7636125320608148,
+          "hi": 1.088586410732384,
+          "median": 1.0000234937069616,
+          "better": 0.5625,
+          "twice_as_good": 0.0625,
+          "twice_as_bad": 0.0625,
+          "periods": 16,
+          "engagements": 12
+         },
+         "course": {
+          "value": 0.919880490798043,
+          "lo": 0.6614207240703667,
+          "hi": 1.3899997083119957,
+          "median": 0.9975232720206721,
+          "better": 0.5,
+          "twice_as_good": 0.125,
+          "twice_as_bad": 0.125,
+          "periods": 16,
+          "engagements": 12
+         },
+         "speed": {
+          "value": 1.513574884880914,
+          "lo": 0.9843938965422755,
+          "hi": 2.4425364313507703,
+          "median": 1.078146434457069,
+          "better": 0.625,
+          "twice_as_good": 0.375,
+          "twice_as_bad": 0.0625,
+          "periods": 16,
+          "engagements": 12
+         }
+        },
+        "cprior/cv-k4": {
+         "range": {
+          "value": 1.0437145460547526,
+          "lo": 0.5076033245611582,
+          "hi": 2.033514725645605,
+          "median": 1.0008108843803047,
+          "better": 0.5,
+          "twice_as_good": 0.25,
+          "twice_as_bad": 0.1875,
+          "periods": 16,
+          "engagements": 12
+         },
+         "course": {
+          "value": 1.0520788930908394,
+          "lo": 0.687046460263093,
+          "hi": 1.5808482577787217,
+          "median": 0.9059524180769705,
+          "better": 0.3125,
+          "twice_as_good": 0.1875,
+          "twice_as_bad": 0.3125,
+          "periods": 16,
+          "engagements": 12
+         },
+         "speed": {
+          "value": 1.2483437044973318,
+          "lo": 0.7134168411809501,
+          "hi": 2.345677020190622,
+          "median": 0.9888460639827615,
+          "better": 0.4375,
+          "twice_as_good": 0.25,
+          "twice_as_bad": 0.1875,
+          "periods": 16,
+          "engagements": 12
+         }
+        }
+       },
+       "no_own_turn": {
+        "periods": 53,
+        "cv-k4/joint": {
+         "range": {
+          "value": 1.2904724490233601,
+          "lo": 0.8987969886463065,
+          "hi": 1.830007686285519,
+          "median": 1.2050990995794242,
+          "better": 0.6226415094339622,
+          "twice_as_good": 0.33962264150943394,
+          "twice_as_bad": 0.20754716981132076,
+          "periods": 53,
+          "engagements": 30
+         },
+         "course": {
+          "value": 1.239284770358756,
+          "lo": 0.7860031030834135,
+          "hi": 1.9909352161795548,
+          "median": 1.277709664575524,
+          "better": 0.5849056603773585,
+          "twice_as_good": 0.33962264150943394,
+          "twice_as_bad": 0.2641509433962264,
+          "periods": 53,
+          "engagements": 30
+         },
+         "speed": {
+          "value": 1.2126883999632747,
+          "lo": 0.8243871606645097,
+          "hi": 1.7309117264096088,
+          "median": 1.4795745167569494,
+          "better": 0.6226415094339622,
+          "twice_as_good": 0.37735849056603776,
+          "twice_as_bad": 0.2641509433962264,
+          "periods": 53,
+          "engagements": 30
+         }
+        },
+        "alone/cv-k4": {
+         "range": {
+          "value": 1.0860397741983807,
+          "lo": 0.7692588030766483,
+          "hi": 1.5762057019493778,
+          "median": 0.9399934332785383,
+          "better": 0.4339622641509434,
+          "twice_as_good": 0.18867924528301888,
+          "twice_as_bad": 0.22641509433962265,
+          "periods": 53,
+          "engagements": 30
+         },
+         "course": {
+          "value": 1.1545527232009252,
+          "lo": 0.8036632128865664,
+          "hi": 1.5846627373321052,
+          "median": 0.994763964180939,
+          "better": 0.4528301886792453,
+          "twice_as_good": 0.2830188679245283,
+          "twice_as_bad": 0.20754716981132076,
+          "periods": 53,
+          "engagements": 30
+         },
+         "speed": {
+          "value": 1.1415872227656998,
+          "lo": 0.778638597736615,
+          "hi": 1.7320124646318926,
+          "median": 1.0193067689108666,
+          "better": 0.5660377358490566,
+          "twice_as_good": 0.16981132075471697,
+          "twice_as_bad": 0.18867924528301888,
+          "periods": 53,
+          "engagements": 30
+         }
+        },
+        "cprior/cv-k4": {
+         "range": {
+          "value": 1.3122844945043215,
+          "lo": 0.9820868729639013,
+          "hi": 1.7798568180262633,
+          "median": 1.1202099531658023,
+          "better": 0.6037735849056604,
+          "twice_as_good": 0.33962264150943394,
+          "twice_as_bad": 0.1509433962264151,
+          "periods": 53,
+          "engagements": 30
+         },
+         "course": {
+          "value": 1.4311868992047758,
+          "lo": 0.9304822394958863,
+          "hi": 2.1586234161409235,
+          "median": 1.1401473669152076,
+          "better": 0.5849056603773585,
+          "twice_as_good": 0.32075471698113206,
+          "twice_as_bad": 0.16981132075471697,
+          "periods": 53,
+          "engagements": 30
+         },
+         "speed": {
+          "value": 1.1271152921722636,
+          "lo": 0.8393883556319811,
+          "hi": 1.492442886103793,
+          "median": 1.1218560946300284,
+          "better": 0.5660377358490566,
+          "twice_as_good": 0.2641509433962264,
+          "twice_as_bad": 0.20754716981132076,
+          "periods": 53,
+          "engagements": 30
+         }
+        }
+       }
+      },
+      "ties_alone": {
+       "within_1pct": 0.08695652173913043,
+       "better": 0.4057971014492754,
+       "worse": 0.5072463768115942
+      }
+     }
+    }
+   },
+   "verdict": {
+    "gain": true,
+    "harm": false,
+    "outcome": "gain"
+   },
+   "verdict_carry": {
+    "carry_vs_joint": "not separated",
+    "alone_vs_carry": "not shown"
+   },
+   "dataset_digest": [
+    "73113c5f4dd971a894e56791360cfe4a4ca6a3268eba95a76db4144b11794922"
+   ],
+   "seed": [
+    348
+   ],
+   "search_code_sha256": [
+    "16c808dbad86b81218eeea30bcf041f8b0c045d0d23fea9253ae19f39941b216"
+   ],
+   "git_commit": [
+    "91dc5ac4f95a3a56c8fe64aa4a6ea8316222f51c"
+   ],
+   "git_dirty": false,
+   "condition": [
+    "clean"
+   ]
+  }
+ }
+}
