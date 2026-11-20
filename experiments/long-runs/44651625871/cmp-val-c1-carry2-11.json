@@ -1,0 +1,945 @@
+{
+ "part": "carry2",
+ "index": 11,
+ "hours": 12.0,
+ "seed": 365,
+ "config": "configs/long/cmp-val.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "2707963069614218868",
+  "dataset_seed": 365,
+  "index": 11,
+  "hours": 12.0,
+  "samples": 8640,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 274,
+    "end_index": 288
+   },
+   {
+    "kind": "course",
+    "start_index": 658,
+    "end_index": 666
+   },
+   {
+    "kind": "course",
+    "start_index": 1008,
+    "end_index": 1019
+   },
+   {
+    "kind": "course",
+    "start_index": 1292,
+    "end_index": 1308
+   },
+   {
+    "kind": "course",
+    "start_index": 1551,
+    "end_index": 1580
+   },
+   {
+    "kind": "course",
+    "start_index": 1836,
+    "end_index": 1845
+   },
+   {
+    "kind": "course",
+    "start_index": 2161,
+    "end_index": 2177
+   },
+   {
+    "kind": "course",
+    "start_index": 2335,
+    "end_index": 2413
+   },
+   {
+    "kind": "course",
+    "start_index": 2565,
+    "end_index": 2579
+   },
+   {
+    "kind": "course",
+    "start_index": 2765,
+    "end_index": 2789
+   },
+   {
+    "kind": "course",
+    "start_index": 3169,
+    "end_index": 3210
+   },
+   {
+    "kind": "course",
+    "start_index": 3416,
+    "end_index": 3461
+   },
+   {
+    "kind": "course",
+    "start_index": 3670,
+    "end_index": 3713
+   },
+   {
+    "kind": "course",
+    "start_index": 4112,
+    "end_index": 4129
+   },
+   {
+    "kind": "course",
+    "start_index": 4197,
+    "end_index": 4214
+   },
+   {
+    "kind": "course",
+    "start_index": 4446,
+    "end_index": 4472
+   },
+   {
+    "kind": "course",
+    "start_index": 4819,
+    "end_index": 4833
+   },
+   {
+    "kind": "both",
+    "start_index": 5293,
+    "end_index": 5320
+   },
+   {
+    "kind": "course",
+    "start_index": 5578,
+    "end_index": 5592
+   },
+   {
+    "kind": "course",
+    "start_index": 5772,
+    "end_index": 5791
+   },
+   {
+    "kind": "course",
+    "start_index": 5974,
+    "end_index": 6002
+   },
+   {
+    "kind": "course",
+    "start_index": 6240,
+    "end_index": 6274
+   },
+   {
+    "kind": "course",
+    "start_index": 6530,
+    "end_index": 6562
+   },
+   {
+    "kind": "speed",
+    "start_index": 6893,
+    "end_index": 6901
+   },
+   {
+    "kind": "course",
+    "start_index": 7130,
+    "end_index": 7137
+   },
+   {
+    "kind": "course",
+    "start_index": 7497,
+    "end_index": 7553
+   },
+   {
+    "kind": "course",
+    "start_index": 7975,
+    "end_index": 8002
+   },
+   {
+    "kind": "course",
+    "start_index": 8216,
+    "end_index": 8226
+   }
+  ],
+  "ownship_turns": [
+   [
+    1322,
+    1352
+   ],
+   [
+    2523,
+    2551
+   ],
+   [
+    3802,
+    3834
+   ],
+   [
+    4746,
+    4775
+   ],
+   [
+    5792,
+    5821
+   ],
+   [
+    7084,
+    7110
+   ],
+   [
+    8213,
+    8245
+   ]
+  ],
+  "zig_index": 1352,
+  "turn_start_index": 1322,
+  "mean_range_m": 72064.52159873185,
+  "min_range_m": 5191.216238321552,
+  "max_range_m": 103669.62348440714,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     16477.563205322433,
+     19008.891473327407
+    ],
+    [
+     23939.4899863331,
+     24764.55975223051
+    ],
+    [
+     41472.366127805566,
+     43200.0
+    ]
+   ],
+   "steering": {
+    "planned": 0,
+    "lost": 7
+   },
+   "swapped_bearings": 0
+  },
+  "valid_share": 0.06122685185185185,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.054311232182945916,
+   "ownship_speed_mps": 7.705484550234548,
+   "ownship_turn_rate_rad_s": 0.0196331020995592,
+   "target_range0_m": 5209.815669242319
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 1365.0,
+   "change": -0.615041992232931,
+   "rate": 0.008313059338391321
+  },
+  {
+   "kind": "course",
+   "start_time_s": 3285.0,
+   "change": 0.6072438998673907,
+   "rate": 0.014140679584864823
+  },
+  {
+   "kind": "course",
+   "start_time_s": 5035.0,
+   "change": 0.7871983429509526,
+   "rate": 0.013980004464959138
+  },
+  {
+   "kind": "course",
+   "start_time_s": 6455.0,
+   "change": -0.5645285107460619,
+   "rate": 0.006906695270369688
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7750.0,
+   "change": -1.1470175493910248,
+   "rate": 0.007707307460983672
+  },
+  {
+   "kind": "course",
+   "start_time_s": 9175.0,
+   "change": -0.6282352890511294,
+   "rate": 0.013843845223955552
+  },
+  {
+   "kind": "course",
+   "start_time_s": 10800.0,
+   "change": -0.765931242963122,
+   "rate": 0.009229291541938937
+  },
+  {
+   "kind": "course",
+   "start_time_s": 11670.0,
+   "change": -1.8336149906534218,
+   "rate": 0.004651140997039751
+  },
+  {
+   "kind": "course",
+   "start_time_s": 12820.0,
+   "change": 0.7261903396406671,
+   "rate": 0.009774282947546162
+  },
+  {
+   "kind": "course",
+   "start_time_s": 13820.0,
+   "change": 1.868223701048553,
+   "rate": 0.015533149204135736
+  },
+  {
+   "kind": "course",
+   "start_time_s": 15840.0,
+   "change": 0.9689796441786122,
+   "rate": 0.00464478425965729
+  },
+  {
+   "kind": "course",
+   "start_time_s": 17075.0,
+   "change": 1.1407487060835142,
+   "rate": 0.004989177885979667
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18345.0,
+   "change": 1.7073848732262462,
+   "rate": 0.007803845694957541
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20555.0,
+   "change": -0.9248034239260661,
+   "rate": 0.010822572958377085
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20980.0,
+   "change": -0.715745578904746,
+   "rate": 0.008212002129459137
+  },
+  {
+   "kind": "course",
+   "start_time_s": 22225.0,
+   "change": -1.9228042845950055,
+   "rate": 0.014661768950085141
+  },
+  {
+   "kind": "course",
+   "start_time_s": 24090.0,
+   "change": -1.2458835133054487,
+   "rate": 0.01739973460152679
+  },
+  {
+   "kind": "both",
+   "start_time_s": 26460.0,
+   "change": -1.7498221537254968,
+   "rate": 0.012602610469654097,
+   "change2": -1.1037635121505707,
+   "rate2": 0.02552650315705591
+  },
+  {
+   "kind": "course",
+   "start_time_s": 27885.0,
+   "change": -1.0884376275798953,
+   "rate": 0.015247112207231395
+  },
+  {
+   "kind": "course",
+   "start_time_s": 28855.0,
+   "change": -1.182120728016645,
+   "rate": 0.012103798744856559
+  },
+  {
+   "kind": "course",
+   "start_time_s": 29865.0,
+   "change": -1.9121994352306424,
+   "rate": 0.013355477163627946
+  },
+  {
+   "kind": "course",
+   "start_time_s": 31195.0,
+   "change": -1.8300136742790776,
+   "rate": 0.010524863752015085
+  },
+  {
+   "kind": "course",
+   "start_time_s": 32645.0,
+   "change": -1.0714866300449442,
+   "rate": 0.006637113403006399
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 34460.0,
+   "change": -1.8169509052721478,
+   "rate": 0.044241050777192946
+  },
+  {
+   "kind": "course",
+   "start_time_s": 35645.0,
+   "change": 0.5691470358323394,
+   "rate": 0.016068372511977885
+  },
+  {
+   "kind": "course",
+   "start_time_s": 37480.0,
+   "change": -1.456445943063346,
+   "rate": 0.005185448620770976
+  },
+  {
+   "kind": "course",
+   "start_time_s": 39870.0,
+   "change": -1.4726373030884041,
+   "rate": 0.010842840728594077
+  },
+  {
+   "kind": "course",
+   "start_time_s": 41075.0,
+   "change": -0.8070063921611141,
+   "rate": 0.015991661445137063
+  }
+ ],
+ "git_commit": "2ead98440c2f495172050ac3c6edceae959c50c9",
+ "git_dirty": false,
+ "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+ "chain": [
+  [
+   0,
+   720
+  ],
+  [
+   540,
+   720
+  ],
+  [
+   1080,
+   720
+  ],
+  [
+   1620,
+   720
+  ],
+  [
+   2160,
+   720
+  ],
+  [
+   2700,
+   720
+  ],
+  [
+   3240,
+   720
+  ],
+  [
+   3780,
+   720
+  ],
+  [
+   4320,
+   720
+  ],
+  [
+   4860,
+   720
+  ],
+  [
+   5400,
+   720
+  ],
+  [
+   5940,
+   720
+  ],
+  [
+   6480,
+   720
+  ],
+  [
+   7020,
+   720
+  ],
+  [
+   7560,
+   720
+  ],
+  [
+   8100,
+   540
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "ctl-carry",
+  "ctl-prior",
+  "ctl-prior-noguard",
+  "c2",
+  "history-map"
+ ],
+ "carry_settings": {
+  "description": "Spec 027: the carried prior's settings, chosen on tuning seed 354 by plan.md's rule (the scale and tail whose contact-1 coverage of the carried 95% region is nearest 0.95, ties to the larger scale: scale 4, tail 1200 s, coverage 0.90; alpha stays 0.001, fall-back rate 2.3%). The tuning run itself used scale 2, tail 600, alpha 0.001 (recorded in its raw headers). Bound by digest in experiments/20261119-cp-decision/.",
+  "scale": 4.0,
+  "tail_s": 1200,
+  "alpha": 0.001
+ },
+ "windows": [
+  {
+   "index": 0,
+   "first": 0,
+   "rows": 720,
+   "seconds": 97.714846101,
+   "parts": {
+    "c2": 38.19,
+    "starts": 3.67,
+    "c2/v3": 13.72,
+    "c2/broad": 19.05,
+    "none/v3": 8.85,
+    "none/broad": 8.9,
+    "declare": 0.26,
+    "reference": 5.06,
+    "total": 97.71
+   },
+   "search_s": {
+    "c2": 32.77253786100002,
+    "none": 17.74338227299998,
+    "carry": 0.0,
+    "prior-c2": 0.0,
+    "prior-carry-p": 0.0
+   },
+   "bearings": 498,
+   "declared": {
+    "c2": [
+     [
+      1425.0,
+      1525.0
+     ],
+     [
+      2825.0,
+      3025.0
+     ],
+     [
+      3065.0,
+      3165.0
+     ]
+    ],
+    "ctl-d1-q0.01": [
+     [
+      1257.6961004088728,
+      1593.7963640999342
+     ],
+     [
+      2836.588186031211,
+      2859.724969771701
+     ]
+    ],
+    "ctl-carry": [
+     [
+      1257.6961004088728,
+      1593.7963640999342
+     ],
+     [
+      2836.588186031211,
+      2859.724969771701
+     ]
+    ],
+    "ctl-prior": [
+     [
+      1257.6961004088728,
+      1593.7963640999342
+     ],
+     [
+      2836.588186031211,
+      2859.724969771701
+     ]
+    ],
+    "ctl-prior-noguard": [
+     [
+      1257.6961004088728,
+      1593.7963640999342
+     ],
+     [
+      2836.588186031211,
+      2859.724969771701
+     ]
+    ]
+   },
+   "true": [
+    [
+     1365.0,
+     1440.0
+    ],
+    [
+     3285.0,
+     3330.0
+    ]
+   ],
+   "handed": {
+    "row": 0,
+    "hand_on_s": 3.4699999673648563e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 1,
+   "first": 540,
+   "rows": 720,
+   "seconds": 3.7652999992587866e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 31,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 540,
+    "mean": [
+     12273.144616515987,
+     -14814.716834832469,
+     2.5366427154456415,
+     8.65022648740431
+    ],
+    "cov_raw": [
+     [
+      2737225.822265198,
+      18024534.28614737,
+      -784.8615175683581,
+      -7625.049748457641
+     ],
+     [
+      18024534.28614737,
+      118883497.62926331,
+      -5175.16191671324,
+      -50325.70021197377
+     ],
+     [
+      -784.8615175683581,
+      -5175.16191671324,
+      0.2252939087696588,
+      2.190486375109619
+     ],
+     [
+      -7625.049748457641,
+      -50325.70021197377,
+      2.190486375109619,
+      21.31165187220706
+     ]
+    ],
+    "cov": [
+     [
+      10953228.23497361,
+      72098137.14458948,
+      -3139.4460702734323,
+      -30500.198993830563
+     ],
+     [
+      72098137.14458948,
+      475538315.4629661,
+      -20700.64766685296,
+      -201302.8008478951
+     ],
+     [
+      -3139.4460702734323,
+      -20700.64766685296,
+      2.5835522697756446,
+      8.761945500438475
+     ],
+     [
+      -30500.198993830563,
+      -201302.8008478951,
+      8.761945500438475,
+      89.078767853576
+     ]
+    ],
+    "t_last_s": 2690.0,
+    "gap_s": 10.0,
+    "tau_s": 1210.0,
+    "add_course": 1.6823766246970095,
+    "add_speed": 3.832160354747753,
+    "add_pos": 4323.9459128175295,
+    "hand_on_s": 0.06163379800000257
+   },
+   "guard": null
+  },
+  {
+   "index": 2,
+   "first": 1080,
+   "rows": 720,
+   "seconds": 2.0496999979968678e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 1080,
+    "hand_on_s": 1.8000000068241206e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 3,
+   "first": 1620,
+   "rows": 720,
+   "seconds": 1.8778999987034695e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 1620,
+    "hand_on_s": 1.3199999671087426e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 4,
+   "first": 2160,
+   "rows": 720,
+   "seconds": 1.825999999027772e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 2160,
+    "hand_on_s": 1.650000172048749e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 5,
+   "first": 2700,
+   "rows": 720,
+   "seconds": 1.7744000018637962e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 2700,
+    "hand_on_s": 1.1400001653782965e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 6,
+   "first": 3240,
+   "rows": 720,
+   "seconds": 1.8848000024718203e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 3240,
+    "hand_on_s": 9.199999340125942e-08
+   },
+   "guard": null
+  },
+  {
+   "index": 7,
+   "first": 3780,
+   "rows": 720,
+   "seconds": 1.878399999100111e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 3780,
+    "hand_on_s": 9.999999406318238e-08
+   },
+   "guard": null
+  },
+  {
+   "index": 8,
+   "first": 4320,
+   "rows": 720,
+   "seconds": 1.7972999984294802e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 4320,
+    "hand_on_s": 7.700000992372225e-08
+   },
+   "guard": null
+  },
+  {
+   "index": 9,
+   "first": 4860,
+   "rows": 720,
+   "seconds": 1.696999999012405e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 11,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 4860,
+    "hand_on_s": 7.200000595730671e-08
+   },
+   "guard": null
+  },
+  {
+   "index": 10,
+   "first": 5400,
+   "rows": 720,
+   "seconds": 1.715400000534828e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 17,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 5400,
+    "hand_on_s": 7.200000595730671e-08
+   },
+   "guard": null
+  },
+  {
+   "index": 11,
+   "first": 5940,
+   "rows": 720,
+   "seconds": 1.7498999994813857e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 5940,
+    "hand_on_s": 1.2000000992884452e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 12,
+   "first": 6480,
+   "rows": 720,
+   "seconds": 1.855799999361807e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 0,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 6480,
+    "hand_on_s": 1.3199999671087426e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 13,
+   "first": 7020,
+   "rows": 720,
+   "seconds": 1.6238000000612374e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 1,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 7020,
+    "hand_on_s": 1.0799999472510535e-07
+   },
+   "guard": null
+  },
+  {
+   "index": 14,
+   "first": 7560,
+   "rows": 720,
+   "seconds": 1.5276999988600437e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 9,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 7560,
+    "hand_on_s": 9.699999736767495e-08
+   },
+   "guard": null
+  },
+  {
+   "index": 15,
+   "first": 8100,
+   "rows": 540,
+   "seconds": 1.5071999996507657e-05,
+   "parts": {
+    "total": 0.0
+   },
+   "search_s": {},
+   "bearings": 7,
+   "declared": {},
+   "true": [],
+   "handed": {
+    "row": 8100,
+    "hand_on_s": 1.0700000530050602e-07
+   },
+   "guard": null
+  }
+ ],
+ "window_s": 3600.0,
+ "overlap_s": 900.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 102.92172002792358
+}

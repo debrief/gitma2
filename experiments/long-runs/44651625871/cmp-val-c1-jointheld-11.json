@@ -1,0 +1,611 @@
+{
+ "part": "jointheld",
+ "index": 11,
+ "hours": 12.0,
+ "seed": 365,
+ "config": "configs/long/cmp-val.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "2707963069614218868",
+  "dataset_seed": 365,
+  "index": 11,
+  "hours": 12.0,
+  "samples": 8640,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 274,
+    "end_index": 288
+   },
+   {
+    "kind": "course",
+    "start_index": 658,
+    "end_index": 666
+   },
+   {
+    "kind": "course",
+    "start_index": 1008,
+    "end_index": 1019
+   },
+   {
+    "kind": "course",
+    "start_index": 1292,
+    "end_index": 1308
+   },
+   {
+    "kind": "course",
+    "start_index": 1551,
+    "end_index": 1580
+   },
+   {
+    "kind": "course",
+    "start_index": 1836,
+    "end_index": 1845
+   },
+   {
+    "kind": "course",
+    "start_index": 2161,
+    "end_index": 2177
+   },
+   {
+    "kind": "course",
+    "start_index": 2335,
+    "end_index": 2413
+   },
+   {
+    "kind": "course",
+    "start_index": 2565,
+    "end_index": 2579
+   },
+   {
+    "kind": "course",
+    "start_index": 2765,
+    "end_index": 2789
+   },
+   {
+    "kind": "course",
+    "start_index": 3169,
+    "end_index": 3210
+   },
+   {
+    "kind": "course",
+    "start_index": 3416,
+    "end_index": 3461
+   },
+   {
+    "kind": "course",
+    "start_index": 3670,
+    "end_index": 3713
+   },
+   {
+    "kind": "course",
+    "start_index": 4112,
+    "end_index": 4129
+   },
+   {
+    "kind": "course",
+    "start_index": 4197,
+    "end_index": 4214
+   },
+   {
+    "kind": "course",
+    "start_index": 4446,
+    "end_index": 4472
+   },
+   {
+    "kind": "course",
+    "start_index": 4819,
+    "end_index": 4833
+   },
+   {
+    "kind": "both",
+    "start_index": 5293,
+    "end_index": 5320
+   },
+   {
+    "kind": "course",
+    "start_index": 5578,
+    "end_index": 5592
+   },
+   {
+    "kind": "course",
+    "start_index": 5772,
+    "end_index": 5791
+   },
+   {
+    "kind": "course",
+    "start_index": 5974,
+    "end_index": 6002
+   },
+   {
+    "kind": "course",
+    "start_index": 6240,
+    "end_index": 6274
+   },
+   {
+    "kind": "course",
+    "start_index": 6530,
+    "end_index": 6562
+   },
+   {
+    "kind": "speed",
+    "start_index": 6893,
+    "end_index": 6901
+   },
+   {
+    "kind": "course",
+    "start_index": 7130,
+    "end_index": 7137
+   },
+   {
+    "kind": "course",
+    "start_index": 7497,
+    "end_index": 7553
+   },
+   {
+    "kind": "course",
+    "start_index": 7975,
+    "end_index": 8002
+   },
+   {
+    "kind": "course",
+    "start_index": 8216,
+    "end_index": 8226
+   }
+  ],
+  "ownship_turns": [
+   [
+    1322,
+    1352
+   ],
+   [
+    2523,
+    2551
+   ],
+   [
+    3802,
+    3834
+   ],
+   [
+    4746,
+    4775
+   ],
+   [
+    5792,
+    5821
+   ],
+   [
+    7084,
+    7110
+   ],
+   [
+    8213,
+    8245
+   ]
+  ],
+  "zig_index": 1352,
+  "turn_start_index": 1322,
+  "mean_range_m": 72064.52159873185,
+  "min_range_m": 5191.216238321552,
+  "max_range_m": 103669.62348440714,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     16477.563205322433,
+     19008.891473327407
+    ],
+    [
+     23939.4899863331,
+     24764.55975223051
+    ],
+    [
+     41472.366127805566,
+     43200.0
+    ]
+   ],
+   "steering": {
+    "planned": 0,
+    "lost": 7
+   },
+   "swapped_bearings": 0
+  },
+  "valid_share": 0.06122685185185185,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.054311232182945916,
+   "ownship_speed_mps": 7.705484550234548,
+   "ownship_turn_rate_rad_s": 0.0196331020995592,
+   "target_range0_m": 5209.815669242319
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 1365.0,
+   "change": -0.615041992232931,
+   "rate": 0.008313059338391321
+  },
+  {
+   "kind": "course",
+   "start_time_s": 3285.0,
+   "change": 0.6072438998673907,
+   "rate": 0.014140679584864823
+  },
+  {
+   "kind": "course",
+   "start_time_s": 5035.0,
+   "change": 0.7871983429509526,
+   "rate": 0.013980004464959138
+  },
+  {
+   "kind": "course",
+   "start_time_s": 6455.0,
+   "change": -0.5645285107460619,
+   "rate": 0.006906695270369688
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7750.0,
+   "change": -1.1470175493910248,
+   "rate": 0.007707307460983672
+  },
+  {
+   "kind": "course",
+   "start_time_s": 9175.0,
+   "change": -0.6282352890511294,
+   "rate": 0.013843845223955552
+  },
+  {
+   "kind": "course",
+   "start_time_s": 10800.0,
+   "change": -0.765931242963122,
+   "rate": 0.009229291541938937
+  },
+  {
+   "kind": "course",
+   "start_time_s": 11670.0,
+   "change": -1.8336149906534218,
+   "rate": 0.004651140997039751
+  },
+  {
+   "kind": "course",
+   "start_time_s": 12820.0,
+   "change": 0.7261903396406671,
+   "rate": 0.009774282947546162
+  },
+  {
+   "kind": "course",
+   "start_time_s": 13820.0,
+   "change": 1.868223701048553,
+   "rate": 0.015533149204135736
+  },
+  {
+   "kind": "course",
+   "start_time_s": 15840.0,
+   "change": 0.9689796441786122,
+   "rate": 0.00464478425965729
+  },
+  {
+   "kind": "course",
+   "start_time_s": 17075.0,
+   "change": 1.1407487060835142,
+   "rate": 0.004989177885979667
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18345.0,
+   "change": 1.7073848732262462,
+   "rate": 0.007803845694957541
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20555.0,
+   "change": -0.9248034239260661,
+   "rate": 0.010822572958377085
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20980.0,
+   "change": -0.715745578904746,
+   "rate": 0.008212002129459137
+  },
+  {
+   "kind": "course",
+   "start_time_s": 22225.0,
+   "change": -1.9228042845950055,
+   "rate": 0.014661768950085141
+  },
+  {
+   "kind": "course",
+   "start_time_s": 24090.0,
+   "change": -1.2458835133054487,
+   "rate": 0.01739973460152679
+  },
+  {
+   "kind": "both",
+   "start_time_s": 26460.0,
+   "change": -1.7498221537254968,
+   "rate": 0.012602610469654097,
+   "change2": -1.1037635121505707,
+   "rate2": 0.02552650315705591
+  },
+  {
+   "kind": "course",
+   "start_time_s": 27885.0,
+   "change": -1.0884376275798953,
+   "rate": 0.015247112207231395
+  },
+  {
+   "kind": "course",
+   "start_time_s": 28855.0,
+   "change": -1.182120728016645,
+   "rate": 0.012103798744856559
+  },
+  {
+   "kind": "course",
+   "start_time_s": 29865.0,
+   "change": -1.9121994352306424,
+   "rate": 0.013355477163627946
+  },
+  {
+   "kind": "course",
+   "start_time_s": 31195.0,
+   "change": -1.8300136742790776,
+   "rate": 0.010524863752015085
+  },
+  {
+   "kind": "course",
+   "start_time_s": 32645.0,
+   "change": -1.0714866300449442,
+   "rate": 0.006637113403006399
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 34460.0,
+   "change": -1.8169509052721478,
+   "rate": 0.044241050777192946
+  },
+  {
+   "kind": "course",
+   "start_time_s": 35645.0,
+   "change": 0.5691470358323394,
+   "rate": 0.016068372511977885
+  },
+  {
+   "kind": "course",
+   "start_time_s": 37480.0,
+   "change": -1.456445943063346,
+   "rate": 0.005185448620770976
+  },
+  {
+   "kind": "course",
+   "start_time_s": 39870.0,
+   "change": -1.4726373030884041,
+   "rate": 0.010842840728594077
+  },
+  {
+   "kind": "course",
+   "start_time_s": 41075.0,
+   "change": -0.8070063921611141,
+   "rate": 0.015991661445137063
+  }
+ ],
+ "git_commit": "2ead98440c2f495172050ac3c6edceae959c50c9",
+ "git_dirty": false,
+ "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+ "chain": [
+  [
+   0,
+   720
+  ],
+  [
+   540,
+   720
+  ],
+  [
+   1080,
+   720
+  ],
+  [
+   1620,
+   720
+  ],
+  [
+   2160,
+   720
+  ],
+  [
+   2700,
+   720
+  ],
+  [
+   3240,
+   720
+  ],
+  [
+   3780,
+   720
+  ],
+  [
+   4320,
+   720
+  ],
+  [
+   4860,
+   720
+  ],
+  [
+   5400,
+   720
+  ],
+  [
+   5940,
+   720
+  ],
+  [
+   6480,
+   720
+  ],
+  [
+   7020,
+   720
+  ],
+  [
+   7560,
+   720
+  ],
+  [
+   8100,
+   540
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 1,
+   "first": 540,
+   "rows": 720,
+   "union": [
+    0,
+    1260
+   ],
+   "seconds": 228.59029647399998,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      1325.7503450581735,
+      1489.0954860924783
+     ],
+     [
+      3085.5491271354153,
+      3161.080215506329
+     ],
+     [
+      4645.255826739421,
+      4768.268464466089
+     ],
+     [
+      6264.980793471565,
+      6294.994064423558
+     ]
+    ],
+    "c2": [
+     [
+      1445.0,
+      1705.0
+     ],
+     [
+      2795.0,
+      3015.0
+     ],
+     [
+      3235.0,
+      3445.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 3,
+   "first": 1620,
+   "rows": 720,
+   "union": [
+    1080,
+    1260
+   ],
+   "seconds": 0.9513112850000311,
+   "declared": {
+    "ctl-d1-q0.01": [],
+    "c2": []
+   }
+  },
+  {
+   "index": 5,
+   "first": 2700,
+   "rows": 720,
+   "union": [
+    2160,
+    1260
+   ],
+   "seconds": 1.2078582269999742,
+   "declared": {
+    "ctl-d1-q0.01": [],
+    "c2": []
+   }
+  },
+  {
+   "index": 9,
+   "first": 4860,
+   "rows": 720,
+   "union": [
+    4320,
+    1260
+   ],
+   "seconds": 59.180167641000025,
+   "declared": {
+    "ctl-d1-q0.01": [],
+    "c2": []
+   }
+  },
+  {
+   "index": 11,
+   "first": 5940,
+   "rows": 720,
+   "union": [
+    5400,
+    1260
+   ],
+   "seconds": 67.16171395100002,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      32709.02422969971,
+      32720.854325869048
+     ]
+    ],
+    "c2": []
+   }
+  }
+ ],
+ "window_s": 3600.0,
+ "overlap_s": 900.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 362.36120200157166
+}
