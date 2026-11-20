@@ -71,7 +71,7 @@ Reported beside:
   - **Tuning:** spent seed 366, 6 + 6 engagements. Seed 366 was spec 031's test seed; these are
     different engagements under this config.
   - **Validation:** seed 367, 10 + 10 engagements.
-  - **Test:** seed 368, 30 + 30 engagements.
+  - **Test:** seed 368, 50 + 50 engagements. Raised from 30 + 30 on tuning (about 1.2 decided held windows per engagement), before the decision record.
   - The next fresh seed is 369.
 - **FR-002 (systems)**: unchanged code, each in its own CI job per engagement.
   - **(a)** spec 028's `carry2` on 2-hour windows overlapping 30 min: `ctl`, `ctl-carry`,
