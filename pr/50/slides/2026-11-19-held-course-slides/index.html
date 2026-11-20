@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- Spec 029 slides: the carried prior where the ownship holds course.
+     Figures: site/static/img/2026-11-19-held-course-slides/, made by scripts/research/hold_charts.py. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Holding course: the carried prior</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 54vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.85em; }
+      .reveal table { font-size: 0.62em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.5em">The carried prior where the ownship holds course</h1>
+          <p class="small">2026-11-19 · spec 029 · seeds 362 (tuning), 363 (validation), 364 (test) · gitma2</p>
+        </section>
+
+        <section>
+          <h2>The owner's case</h2>
+          <ul>
+            <li>Spec 028: the ownship turned every 20–40 min, so no window was blind</li>
+            <li>Here: ownship legs of 1–2 h; 1-hour windows; 30% of them hold no ownship turn</li>
+            <li>The same <b>ctl-prior</b> as spec 028 (state and uncertainty handed on), the tended contact</li>
+          </ul>
+          <p class="small">Registered rule: gain if ctl ÷ ctl-prior on turn-free windows has its lower limit above 1.</p>
+        </section>
+
+        <section>
+          <h2>Registered rule: gain, no harm</h2>
+          <img src="../../img/2026-11-19-held-course-slides/classes.svg" alt="ctl over ctl-prior by class in range, course and speed" />
+          <p class="small">No ownship turn: 2.41 [2.06, 2.83]; one turn 1.22 [1.06, 1.40]. Seeds agree: 2.10, 1.91, 2.41.</p>
+        </section>
+
+        <section>
+          <h2>In the typical window, not a tail</h2>
+          <img src="../../img/2026-11-19-held-course-slides/windows.svg" alt="per-window ratios by class" />
+          <p class="small">Turn-free windows: median 2.15; 76% better, 51% twice as good, 9% twice as bad.</p>
+        </section>
+
+        <section>
+          <h2>Error per window</h2>
+          <img src="../../img/2026-11-19-held-course-slides/errors.svg" alt="median range error by system and class" />
+          <p class="small">Turn-free windows: ctl 22.7%, ctl-prior 7.4%. The fit told the true history (13.6%) sees only the window, so it is no ceiling here.</p>
+        </section>
+
+        <section>
+          <h2>The median turn-free window</h2>
+          <img src="../../img/2026-11-19-held-course-slides/track.svg" alt="truth, ownship, ctl and ctl-prior tracks with the carried ellipse" />
+        </section>
+
+        <section>
+          <h2>What the panel narrowed</h2>
+          <ul>
+            <li>Against the same 1-hour window alone; 2-hour ctl and a joint solve not tested</li>
+            <li>Mechanism: range observability the window lacks; history counts not measured</li>
+            <li>Grows with range: 1.66 under 15 km, 3.19 beyond 25 km</li>
+            <li>One simulator, contact 1; windows placed by truth; hand-over defect kept</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>Recommended: adopt ctl-prior for the tended contact; then register ctl-prior (1 h) against ctl (2 h) and a joint solve</li>
+            <li>Or: repair the hand-over · the untended contact · close the track</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/19/held-course · Record: experiments/20261119-hold/ · Figures: scripts/research/hold_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
