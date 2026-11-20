@@ -61,7 +61,10 @@ def main() -> int:
     assert out_ is not None
     h, px, pr = out_
     secs = time.perf_counter() - t0
-    tsp = [s for s in sp.spans() if s["end_index"] > s["start_index"]]
+    # a manoeuvre cut by the span's start is left out: its fragment implies a rate the prior
+    # cannot pay for (the edge rule of specs 014 and 015); the count is recorded
+    every = [s for s in sp.spans() if s["end_index"] > s["start_index"]]
+    tsp = [s for s in every if not s["began_before"]]
     spt = np.array(
         [[t[max(s["start_index"] - 1, 0)], t[s["end_index"]]] for s in tsp], dtype=np.float64
     ).reshape(-1, 2)
@@ -76,6 +79,7 @@ def main() -> int:
         "ordinal": ordinal,
         "gaps_min": [round(n * x.dt / 60) for _a, n in lay.gaps()],
         "true_manoeuvres": int(spt.shape[0]),
+        "cut_at_start": len(every) - len(tsp),
         "declared_manoeuvres": int(h.fit.spans.shape[0]),
         "evidence_declared": float(ev_decl["total"]),
         "evidence_declared_search": float(h.evidence),
