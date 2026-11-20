@@ -1,8 +1,9 @@
 name: Long engagements (spec 023)
 
-# Runs when configs/long/run.json changes on a push (any branch), or by hand:
-#   jobs   [{part: realtime|realtime-inc|timelate|carry|scaling, index, shards, lengths,
-#           config, contact, block_s, indices}]: one CI job per shard (imm: --indices a-b)
+# Runs when configs/long/run.json changes on a push to any branch but main (a merge would re-run
+# the last study's whole plan), or by hand:
+#   jobs   [{part: realtime|realtime-inc|timelate|carry|carry2|jointpair|scaling, index, shards,
+#           lengths, config, contact, block_s, indices, pair, window_s, overlap_s}]: one CI job per shard (imm: --indices a-b)
 #          (scaling: one job per entry, its comma-separated period lengths in seconds)
 # Each job runs `tma2-long <part> --index <i> --shard <s>/<n>`; a collect job commits every
 # output to results/long-<run id> (experiments/long-runs/<run id>/). CPU only; no secrets.
@@ -10,6 +11,7 @@ name: Long engagements (spec 023)
 
 on:
   push:
+    branches-ignore: [main]
     paths: ["configs/long/run.json"]
   workflow_dispatch:
 
@@ -41,8 +43,12 @@ jobs:
                       extra += ["--block-s", str(j["block_s"])]
                   if "indices" in j:
                       extra += ["--indices", j["indices"]]
+                  if "pair" in j:
+                      extra += ["--pair", str(j["pair"])]
+                  if "window_s" in j:
+                      extra += ["--window-s", str(j["window_s"]), "--overlap-s", str(j["overlap_s"])]
                   stem = j["config"].rsplit("/", 1)[-1].removesuffix(".json") if "config" in j else "long"
-                  tag = f"{stem}-c{j.get('contact', 1)}-{j['part']}-{j.get('indices', j['index'])}-{s}" + (f"-{j['lengths']}" if "lengths" in j else "")
+                  tag = f"{stem}-c{j.get('contact', 1)}-{j['part']}-{j.get('indices', j['index'])}-{s}" + (f"-{j['lengths']}" if "lengths" in j else "") + (f"-p{j['pair']}" if "pair" in j else "")
                   m.append({"part": j["part"], "index": j["index"], "shard": f"{s}/{j.get('shards', 1)}", "tag": tag, "extra": " ".join(extra)})
           print("jobs=" + json.dumps({"include": m}))
           PY
@@ -87,7 +93,10 @@ jobs:
           BRANCH="results/long-$GITHUB_RUN_ID"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$BRANCH"
+          # an orphan branch holding only the results: a branch whose history carries this
+          # workflow's own edits is refused to the Actions token (no `workflows` permission)
+          git checkout --orphan "$BRANCH"
+          git rm -rq --cached .
           mkdir -p "$DEST"
           cp -r "$RUNNER_TEMP/out/." "$DEST/"
           cp configs/long/run.json "$DEST/run.json"

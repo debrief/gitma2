@@ -1,4 +1,4 @@
-# Spec 028 development run (spent seed 361): a carried prior across gaps
+# Spec 030 development run (spent seed 361): a carried prior across gaps
 
 Development work, not a registered result. CI run 44487166111 (`timelate/tl-n-dev` at 1c2041b),
 plan `configs/timelate/tl-n-dev.json` (runner `run10`), spent seed 361 (spec 027's test seed):

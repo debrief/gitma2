@@ -1,4 +1,4 @@
-"""Tables for spec 028's records: spec 025/027's tables (``tl8_tables.py``) and then the carried
+"""Tables for spec 030's records: spec 025/027's tables (``tl8_tables.py``) and then the carried
 prior's readings and the coverage of its stated uncertainty, all generated from the record's
 ``summary.json`` and ``<split>.periods.json`` (never hand-copied).
 
@@ -53,7 +53,7 @@ def _coverage(rec: Path, split: str) -> dict[str, float]:
 
 def section(rec: Path) -> str:
     sp = json.loads((rec / "summary.json").read_text())["splits"]
-    out = ["", "## Carried prior (spec 028), periods after an engagement's first", ""]
+    out = ["", "## Carried prior (spec 030), periods after an engagement's first", ""]
     out += ["| split | quantity | " + " | ".join(CMP) + " |", "|---|---|" + "---|" * len(CMP)]
     for s_, r in sp.items():
         for q in ("range", "course", "speed"):

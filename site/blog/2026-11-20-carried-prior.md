@@ -1,7 +1,7 @@
 ---
 title: "A carried prior across gaps: it helps where a period cannot answer alone"
 date: 2026-11-20
-tags: [write-up, spec-028]
+tags: [write-up, spec-030]
 ---
 
 Spec 027 showed that carrying a *start* from one period to the next does not substitute for one
@@ -145,9 +145,13 @@ The panel's order:
 4. **A real hand-over.** Only if that case matters: a carried state from another estimator, with
    uncertain association.
 
+This study was developed and registered as spec 028 and renumbered 030 after another session's
+specs 028 and 029 merged first; its registered seeds 362 and 363 had also been claimed by spec 029
+in the long-engagement simulator (different engagements; recorded in the decision record).
+
 Records:
 
-- spec `specs/028-carried-prior/`;
+- spec `specs/030-carried-prior/`;
 - development `experiments/20261119-tl10-dev/` and refinement `20261119-tl10-refine/`;
 - decision `20261119-tl10-decision/`;
 - validation `20261119-tl10-val/`;

@@ -1,4 +1,4 @@
-# Spec 028: panel review, round 1 (2026-11-20)
+# Spec 030: panel review, round 1 (2026-11-20)
 
 Five independent reviewers read the spec, the development, refinement, decision, validation and
 test records and the code at the registered commit. They recomputed from the per-row errors and
@@ -104,7 +104,7 @@ results.
     - `end_state_covariance` drops the carried term if called outside `carried_evidence()`.
     - run10 repeats the variance floor as a literal.
     - The wrappers are process-global.
-    - The verdict is applied by hand: `summary.json`'s `verdict` is spec 025's rule, and no code computes spec 028's.
+    - The verdict is applied by hand: `summary.json`'s `verdict` is spec 025's rule, and no code computes spec 030's.
     - `tables.md` named `tl8_tables.py` as its generator; it is now `tl10_tables.py`, a header change only.
 
 ## Outcome, as the panel words it

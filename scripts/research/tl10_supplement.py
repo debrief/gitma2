@@ -1,4 +1,4 @@
-"""Spec 028 panel supplement: readings the panel recomputed that the registered scorer does not
+"""Spec 030 panel supplement: readings the panel recomputed that the registered scorer does not
 report, generated from the committed records (never hand-copied).
 
     uv run python scripts/research/tl10_supplement.py

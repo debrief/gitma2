@@ -153,7 +153,7 @@ Ratios are geometric means of per-period ratios of period median error, with 95%
 
 Verdicts (spec 026's rule): man2: {'carry_vs_joint': 'joining better', 'alone_vs_carry': 'not shown'}; shift: {'carry_vs_joint': 'not separated', 'alone_vs_carry': 'carrying helps'}
 
-## Carried prior (spec 028), periods after an engagement's first
+## Carried prior (spec 030), periods after an engagement's first
 
 | split | quantity | cprior/joint | alone/cprior | carry/cprior | carry/joint |
 |---|---|---|---|---|---|

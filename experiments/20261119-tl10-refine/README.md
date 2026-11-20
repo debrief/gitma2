@@ -1,4 +1,4 @@
-# Spec 028 refinement (spent seeds 361 and 360): an honest carried uncertainty
+# Spec 030 refinement (spent seeds 361 and 360): an honest carried uncertainty
 
 Development work, not a registered result. CI runs 44531947083 (seed 361, choose) and
 44532116061 (seed 360, check), both at fb5fa2a, plan `configs/timelate/tl-n-refine.json`
@@ -54,4 +54,4 @@ own-turn falls below 0.9.
 ## Next (owner's choice)
 
 Register k4 against `ctl` alone (gain) and the joint solve (reported) on fresh seeds 362 (validation)
-and 363 (test), or stop here and write up spec 028 as development findings.
+and 363 (test), or stop here and write up spec 030 as development findings.

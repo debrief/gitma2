@@ -1,12 +1,12 @@
 ---
 title: "Slides: a carried prior across gaps"
 date: 2026-11-20
-tags: [slides, spec-028]
+tags: [slides, spec-030]
 ---
 
 import Slides from "@site/src/components/Slides";
 
-The illustrated companion to [the spec 028 write-up](/blog/2026/11/20/carried-prior): the
+The illustrated companion to [the spec 030 write-up](/blog/2026/11/20/carried-prior): the
 registered comparison, where the carried prior helps, and how well its stated uncertainty covers
 the truth.
 

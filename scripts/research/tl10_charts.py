@@ -1,4 +1,4 @@
-"""Spec 028 slides: SVG figures from the committed test record.
+"""Spec 030 slides: SVG figures from the committed test record.
 
     uv run python scripts/research/tl10_charts.py --record experiments/20261120-tl10 --out-dir <dir>
 

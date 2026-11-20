@@ -1,4 +1,4 @@
-# Spec 028 test record (seed 363): a carried prior across gaps (k4), against `ctl` alone
+# Spec 030 test record (seed 363): a carried prior across gaps (k4), against `ctl` alone
 
 CI run 44618826527 (`timelate/tl-o-test` at 9d92b86), plan `configs/timelate/tl-o.json`
 (`74166535…`, registered in `experiments/20261119-tl10-decision/`), code `90a19712…`, clean tree,
@@ -67,7 +67,22 @@ engagements; the joint solve answered every period.
   (uninflated ÷ k4 0.991 [0.781, 1.252] on Annex B), so the inflation is not shown to matter
   (the first draft's "narrower own-turn interval" reading is withdrawn by the panel).
 - No comparison with spec 027's carried start was registered (`supplement.json`: 1.60 [1.05, 2.74]).
-- The verdict is applied by hand; no code computes spec 028's rule.
+- The verdict is applied by hand; no code computes spec 030's rule.
 - IMM and EKF tracks (as specs 025 and 027).
 - A scale between 2 and 4, or one that depends on the previous fit's quality.
 - A carried prior over the previous period's candidate histories (only the declared one).
+
+## Renumbered, and a seed claimed twice (2026-11-20)
+
+This study was developed, registered and run as spec 028. Another session's spec 028 (the previous
+window as a prior, long engagements) and spec 029 (held course) merged to main first, so this one is
+spec 030 (`specs/030-carried-prior/`). The bound plan `configs/timelate/tl-o.json`, the earlier plans
+and the code (`cprior.py`, `run10.py`, `study10.py`) keep the words "spec 028": they are bound by
+digest and are not edited.
+
+Seeds: spec 029 registered seeds 362 to 364 at 15:42 UTC on 2026-11-19 on another branch, before
+this registration (18:33 UTC), which could not see it. It used them in the long-engagement simulator
+(`src/tma2/long/sim.py`), this study in the time-late layout simulator (`timelate/layout.py` on
+generator 0.6.0 periods), so the streams and engagements differ, but the numbers were used twice
+(as specs 025 and 026 did with 349 to 351). Neither study saw the other's data. The next fresh
+seed is 365.

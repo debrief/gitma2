@@ -1,7 +1,7 @@
 ---
 title: "Kickoff: a carried prior across gaps"
 date: 2026-11-19
-tags: [kickoff, spec-028]
+tags: [kickoff, spec-030]
 ---
 
 Spec 027 showed that handing the next period only a starting point does almost nothing:
@@ -20,7 +20,7 @@ seeds (owner, option A). Nothing is trained.
 
 ## Where this task moves to
 
-- Spec `specs/028-carried-prior/`: a Gaussian prior on each later period's starting state,
+- Spec `specs/030-carried-prior/`: a Gaussian prior on each later period's starting state,
   applied through wrappers so no registered code changes; equal to `ctl` with no prior.
 - Development readings on spec 027's spent test engagements: carried prior against joining,
   against `ctl` alone and against the carried start; and whether the carried uncertainty is

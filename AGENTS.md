@@ -705,11 +705,86 @@ output); this is a carried start, not carried information (about half of periods
 said about a carried prior. Write-up `site/blog/2026-11-19-carry-across-gaps.md`, slides
 `2026-11-19-carry-across-gaps-slides.md`. Panel's order (owner's choice): a carried prior
 (state and covariance through the gap, a prior in the evidence) on spent seeds first; a
-consistency flag; an uncertainty; longer gaps. Seeds 360, 361 used; 354 to 359 unused
-(skipped to stay clear of PR 47); the next fresh seed is 362.
+consistency flag; an uncertainty; longer gaps. Seeds 360, 361 used; 354 to 359 skipped to stay clear of PR 47
+(spec 028 then used 354–356; 357–359 unused); the next fresh seed is 362.
 
-028 (a carried prior across gaps, `specs/028-carried-prior/`; owner 2026-11-19 option A, then
-"register k4"; a registered study; nothing trained): `timelate/cprior.py` (`CarriedPrior`: a
+
+028 (the previous window as a prior, `specs/028-carry-prior/`; registered and run as 027,
+renumbered because the carry-across-gaps study merged first as 027; owner 2026-11-18 after PR 47; a
+registered study, not a gate; nothing trained). Code:
+- `long/carried.py`: `CarriedPrior`; `joint_fit_c`, `log_evidence_c` and the copied search,
+  equal to the originals with no prior; `hand_on` (the state at the next window's first row,
+  refitted on the bearings before it, with a Laplace covariance); `widen`; `guard`, a χ²(4)
+  test.
+- `long/carry2.py`: `ctl-prior` beside `ctl` and `ctl-carry` in one job, run by
+  `tma2-long carry2`.
+- `long/study27.py` (`tma2-long study27`) and `tma2-long jointpair`.
+
+Seeds and settings: 354 tuning (`experiments/20261118-cp-tuning/`). Decision record
+`20261119-cp-decision/`: scale 4, tail 1,200 s, α 0.001, code `09a7edae…`. Validation 355
+(`20261119-cp-val/`): soundness passed.
+
+**Test record `experiments/20261119-cp/` (seed 356, 60 engagements, scored once): not shown, at
+this size; no harm.** Weak geometry is 1.105 [0.963, 1.273]: clustered by engagement
+[0.951, 1.279], without the 13 constructed ties 1.112. Other 1.14 [1.035, 1.27]; contact 1 1.11
+[1.006, 1.22]; ctl-carry ÷ ctl-prior 1.14–1.22.
+
+**Panel round 1** (`review.md`): three approve with findings. Narrowings:
+- The owner's case, a window with no useful ownship manoeuvre, never occurs in this simulator;
+  the weak split is the untended contact plus windows near gaps.
+- Beside the rule there is an average shift with many losses (median window 1.03).
+- "Narrows the permutations" is not shown either way.
+- The registered settings were extrapolated, not run as a chain.
+- `hand_on`'s refit starts from the full-window fit, so it can keep overlap information.
+  Recorded, not repaired.
+
+Write-up `site/blog/2026-11-19-carry-prior.md`, slides `2026-11-19-carry-prior-slides.md`.
+Recommended (owner's choice): adopt `ctl-prior` with its guard for tended contacts up to 12 h
+and close the track. Alternatives: an ownship holding course for 1–2 h (the owner's case), or a
+registered joint solve over consecutive windows. Seeds 354–356 used (357–359 unused); the
+next fresh seed is 362.
+
+
+029 (the carried prior where the ownship holds course, `specs/029-held-course/`; owner
+2026-11-19 "test the ownship holding course option"; a registered study, not a gate; nothing
+trained).
+- **Design:** spec 024's realism with ownship legs of 1–2 h (`configs/long/hold-*.json`), contact
+  1 only, 1-hour windows overlapping 15 min. No 2-hour window is turn-free at those legs.
+  `long.yml` passes `window_s`/`overlap_s` through.
+- **System:** spec 028's `ctl-prior`, unchanged.
+- **Scorer:** `long/study29.py` (`tma2-long study29`). Classes by ownship turns overlapping a
+  window: held, one, more (more is empty). Excludes windows with no hand-over and bootstraps over
+  engagements.
+- **Records:** tuning 362 (`experiments/20261119-hold-tuning/`); decision
+  `20261119-hold-decision/` (code `c39cb031…`); validation 363 (`20261119-hold-val/`, soundness
+  passed).
+
+**Test record `experiments/20261119-hold/` (seed 364, 60 engagements, scored once): gain, no
+harm.**
+- Held windows: ctl ÷ ctl-prior 2.41 [2.06, 2.83], median 2.15, 76% of windows better. Seeds:
+  2.10, 1.91, 2.41.
+- One turn: 1.22 [1.06, 1.40].
+- Median error on held windows: 0.227 → 0.074.
+
+**Panel round 1** (`review.md`, three approve with findings). Narrowings:
+- The comparison is against the same 1-hour window alone; 2-hour `ctl` and a joint solve were not
+  tested.
+- The mechanism is range observability; history counts were not measured.
+- The gain grows with range: 1.66 under 15 km, 3.19 beyond 25.
+- Excluded held windows are windows where contact was lost (as ties 2.34).
+- Coverage 0.945 passes the band but is not a calibration (median NEES 0.74).
+- Hand-overs never fall inside a target manoeuvre: windows are placed by truth.
+- The carried start alone costs 11% on one-turn windows: no `ctl-carry` without the prior.
+
+Supplement: `scripts/research/hold_supplement.py`. Write-up `site/blog/2026-11-19-held-course.md`,
+slides `2026-11-19-held-course-slides.md`. Recommended (owner's choice): adopt `ctl-prior` for the
+tended contact. Then register `ctl-prior` (1 h) against `ctl` (2 h) and a joint solve on
+held-course engagements, with a reference told the truth over the span. Seeds 362–364 used; the
+next fresh seed is 365.
+
+030 (a carried prior across gaps, `specs/030-carried-prior/`; owner 2026-11-19 option A, then
+"register k4"; a registered study; nothing trained; developed and registered as 028, renumbered because
+another session's 028 and 029 (long engagements) merged first; code and bound plans keep "spec 028"): `timelate/cprior.py` (`CarriedPrior`: a
 Gaussian prior on a period's starting state from the previous period's declared last state and
 Laplace covariance, propagated through the gap at constant velocity with Annex B process noise;
 applied by wrapping `prior.prior_residuals`/`log_prior`/`open_precision` inside
@@ -731,7 +806,10 @@ standing; the carried prior applies, within the simulator, when only the previou
 covariance are kept. Write-up `site/blog/2026-11-20-carried-prior.md`, slides
 `2026-11-20-carried-prior-slides.md`. Panel's order (owner's choice): a consistency flag on the
 carried prior's distance; a calibrated carried prior on spent seeds; a longer-gap stress split;
-a real hand-over only if that case matters. Seeds 362, 363 used; the next fresh seed is 364.
+a real hand-over only if that case matters. Seeds 362, 363 used here in the time-late layout
+simulator; spec 029 had claimed 362 to 364 earlier on another branch in the long-engagement
+simulator (different streams, so different engagements, but the numbers were used twice). The next
+fresh seed is 365.
 
 ## Stack (owner decisions, 2026-10-31)
 
@@ -1158,7 +1236,28 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   what information each side's likelihood actually holds. Report ties (unchanged periods)
   beside any ratio whose median is 1.00. A recommendation conditioned on the deciding split
   must not be drawn from a secondary split.
-- Spec 028 panel: a variant chosen to remove a harm seen on one development seed must be
+- Spec 028 panel: when a chained system falls back to the control where nothing was handed on,
+  those windows are constructed ties too: exclude them in the registration. Bootstrap units are
+  engagements, not (engagement, contact) chains: two contacts share an ownship. A hand-over
+  refit started from the full-window fit can keep the overlap's information on a flat valley:
+  start it neutrally. Register the soundness check on the population the rule decides (the
+  coverage check covered contact 1 while the decided split was mostly contact 2), and run the
+  registered settings as a chain on tuning rather than extrapolating a grid. "Same history"
+  needs matched times and kinds, not equal counts. Check that each clause of a split can fire
+  in the simulator before registering it.
+- Spec 029 panel: a window shortened so that it is blind makes its control blind too. A gain
+  against the same window alone is "more data beats no data". Register the comparison against
+  the control's standing configuration (2-hour windows, a joint solve) beside it. A reference
+  fitted on the window alone is no ceiling for a system that carries information in: in chained
+  designs it reads as soundness only. A carried start without its prior can cost (0.89 on
+  one-turn windows), so do not carry a start alone. `timelate.chain` moves each window start past
+  a true manoeuvre, so hand-overs are never inside one: state it as a limit of every chained
+  study. Coverage within a band is not calibration: report the median NEES beside it. Never write
+  in a tuning record what validation or test will show.
+- `long.yml`: a results branch whose history carries workflow edits is refused to the Actions
+  token, so the collect step pushes an orphan branch. Pushes to main are ignored: merging a PR
+  that changes `configs/long/run.json` re-ran the last study's whole plan.
+- Spec 030 panel: a variant chosen to remove a harm seen on one development seed must be
   compared with the uninflated version on the test, or the test cannot say the change mattered
   (it did not). Coverage reached by inflating is not calibration: report the median d² beside
   the coverage. Read a prior's gain on rows the period determines alone before saying it

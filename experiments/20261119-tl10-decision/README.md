@@ -1,4 +1,4 @@
-# Spec 028 decision record: a carried prior across gaps (k4), against `ctl` alone
+# Spec 030 decision record: a carried prior across gaps (k4), against `ctl` alone
 
 Registered 2026-11-19, before seeds 362 (validation) and 363 (test) exist (neither appears in any
 earlier commit, run file or record). Nothing is trained; CPU only. A registered study, not a gate.
@@ -65,3 +65,18 @@ k4 ÷ joint about 2.1 on Annex B, 1.15 to 1.2 on busier. No harm expected; cover
 - Seed 361 both chose and was spec 027's test seed; the check on 360 is one seed.
 - The variant was chosen on Annex B and busier splits only; wild bearings and held course are
   first seen at test.
+
+## Renumbered, and a seed claimed twice (2026-11-20)
+
+This study was developed, registered and run as spec 028. Another session's spec 028 (the previous
+window as a prior, long engagements) and spec 029 (held course) merged to main first, so this one is
+spec 030 (`specs/030-carried-prior/`). The bound plan `configs/timelate/tl-o.json`, the earlier plans
+and the code (`cprior.py`, `run10.py`, `study10.py`) keep the words "spec 028": they are bound by
+digest and are not edited.
+
+Seeds: spec 029 registered seeds 362 to 364 at 15:42 UTC on 2026-11-19 on another branch, before
+this registration (18:33 UTC), which could not see it. It used them in the long-engagement simulator
+(`src/tma2/long/sim.py`), this study in the time-late layout simulator (`timelate/layout.py` on
+generator 0.6.0 periods), so the streams and engagements differ, but the numbers were used twice
+(as specs 025 and 026 did with 349 to 351). Neither study saw the other's data. The next fresh
+seed is 365.

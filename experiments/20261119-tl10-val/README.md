@@ -1,4 +1,4 @@
-# Spec 028 validation (seed 362): soundness
+# Spec 030 validation (seed 362): soundness
 
 CI run 44589038104 (`timelate/tl-o-val` at 09d03dc), plan `configs/timelate/tl-o.json`
 (`74166535…`, registered in `experiments/20261119-tl10-decision/`), code `90a19712…`, clean tree,
