@@ -708,6 +708,31 @@ said about a carried prior. Write-up `site/blog/2026-11-19-carry-across-gaps.md`
 consistency flag; an uncertainty; longer gaps. Seeds 360, 361 used; 354 to 359 unused
 (skipped to stay clear of PR 47); the next fresh seed is 362.
 
+028 (a carried prior across gaps, `specs/028-carried-prior/`; owner 2026-11-19 option A, then
+"register k4"; a registered study; nothing trained): `timelate/cprior.py` (`CarriedPrior`: a
+Gaussian prior on a period's starting state from the previous period's declared last state and
+Laplace covariance, propagated through the gap at constant velocity with Annex B process noise;
+applied by wrapping `prior.prior_residuals`/`log_prior`/`open_precision` inside
+`carried_evidence()`, so `ctl`'s registered code is untouched), `run10.py` (plan key `runner:
+run10`; `run9` then the carried-prior chain; settings `cprior_variants` for inflation `inflate`
+and a two-part mixture `w`), `study10.py`, `scripts/research/tl10_{tables,charts,supplement}.py`.
+Development on spent 361 (`experiments/20261119-tl10-dev/`: uninflated prior overconfident,
+truth inside 95% in about half), refinement (`20261119-tl10-refine/`: rule chose k4, covariance
+4× in sd, on 361; checked on 360), decision `20261119-tl10-decision/` (plan
+`configs/timelate/tl-o.json` `74166535…`, code `90a19712…`), validation seed 362 passed
+(`20261119-tl10-val/`), **test record `experiments/20261120-tl10/` (seed 363): alone ÷ k4 on
+Annex B 1.59 [1.21, 2.13], helps; no harm on any split. Decided by the panel, round 1**
+(`review.md`, five approve with findings; `supplement.json`): narrowed to "a carried prior helps
+where a period cannot answer alone" (no own turn 1.97; own rows 1.04, level); the inflation is
+not shown to matter (uninflated ÷ k4 0.99 [0.78, 1.25]); k4 covers by being about 2.6× too wide
+(mis-shaped process noise, one history's covariance too narrow in the tail); k4 ÷ joint 1.40,
+on the line; against spec 027's carried start 1.60 (not registered). The joint solve stays
+standing; the carried prior applies, within the simulator, when only the previous state and
+covariance are kept. Write-up `site/blog/2026-11-20-carried-prior.md`, slides
+`2026-11-20-carried-prior-slides.md`. Panel's order (owner's choice): a consistency flag on the
+carried prior's distance; a calibrated carried prior on spent seeds; a longer-gap stress split;
+a real hand-over only if that case matters. Seeds 362, 363 used; the next fresh seed is 364.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1133,6 +1158,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   what information each side's likelihood actually holds. Report ties (unchanged periods)
   beside any ratio whose median is 1.00. A recommendation conditioned on the deciding split
   must not be drawn from a secondary split.
+- Spec 028 panel: a variant chosen to remove a harm seen on one development seed must be
+  compared with the uninflated version on the test, or the test cannot say the change mattered
+  (it did not). Coverage reached by inflating is not calibration: report the median d² beside
+  the coverage. Read a prior's gain on rows the period determines alone before saying it
+  improves estimates. A harm rule on 32 periods sees only losses over about a third; state the
+  detectable size. Isotropic velocity noise for a turn puts half the change into speed.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting
