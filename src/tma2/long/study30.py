@@ -13,9 +13,10 @@ Reads, per engagement of contact 1 (``<stem>`` the config's stem):
 
 On every held 1-hour window (no ownship turn overlaps it; not a chain's first; handed on in (a);
 answered by (a), (b) and (c)) it takes each system's median error over that window's rows and
-returns ``study.json``'s content: the decided estimands D1 = (b) ÷ (a) and D2 = (c) ÷ (a) with a
-bootstrap over engagements, each read "ctl-prior better" (lower limit above 1), "ctl-prior worse"
-(upper limit below 1) or "not separated"; readings beside; soundness S1–S3.
+returns ``study.json``'s content: the decided estimands D1 = (b) ÷ (a), D2 = (c) ÷ (a) and,
+added on tuning before validation, D3 = (b)'s ``ctl-prior`` ÷ (a), with a bootstrap over
+engagements, each read "ctl-prior better" (lower limit above 1), "ctl-prior worse" (upper limit
+below 1) or "not separated"; readings beside; soundness S1–S3.
 """
 
 from __future__ import annotations
@@ -233,7 +234,11 @@ def score30(raw: Path, config: Path) -> dict[str, Any]:
         },
     }
     ests: dict[str, Any] = {}
-    for name, num in (("D1_2h_over_prior", "b"), ("D2_joint_over_prior", "c")):
+    for name, num in (
+        ("D1_2h_over_prior", "b"),
+        ("D2_joint_over_prior", "c"),
+        ("D3_prior2h_over_prior", "b_prior"),
+    ):
         ests[name] = {q: _ratio(units(num, decided, q)) for q in QUANTITIES}
         ests[name]["reading"] = _read(ests[name]["range"])
     out["estimands"] = ests
@@ -260,8 +265,8 @@ def score30(raw: Path, config: Path) -> dict[str, Any]:
         b[f"D2_range_{name}"] = _ratio(units("c", band))
     med = {}
     for key in ("a", "a_ctl", "b", "b_prior", "c", "c_ref"):
-        vals = [r[key]["range"] for r in rows_out if decided(r)]
-        med[key] = float(np.median(vals)) if vals else None
+        vals = [r[key]["range"] for r in rows_out if decided(r) and r.get(key) is not None]
+        med[key] = float(np.nanmedian(vals)) if vals and np.isfinite(vals).any() else None
     b["median_error_held"] = med
     b["cost"] = {
         "a_s_per_window": cost["a_s"] / max(cost["a_windows"], 1),

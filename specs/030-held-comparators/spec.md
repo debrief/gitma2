@@ -81,6 +81,9 @@ Reported beside, for each window:
   error, with a bootstrap over engagements (2,000 resamples, seed 30).
   - **D1** = (b) ÷ (a), 2-hour `ctl` against `ctl-prior`.
   - **D2** = (c) ÷ (a), joint solve against `ctl-prior`.
+  - **D3** = (b)'s `ctl-prior` on 2-hour windows ÷ (a). Added on tuning, before validation,
+    because the 2-hour `ctl-prior` led on tuning (0.57 [0.28, 1.08]); recorded in the decision
+    record.
   - For each estimand:
     - **"ctl-prior better"** if the lower limit is above 1;
     - **"ctl-prior worse"** if the upper limit is below 1;

@@ -1,0 +1,28 @@
+{
+  "study": "spec 030: the carried prior against 2-hour ctl and a joint solve (not a gate)",
+  "registered": "2026-11-20, before seeds 365 and 366 exist (generated only in their CI runs)",
+  "seeds": {"tuning": "364 (spent; spec 029's test engagements 0-5, 30-35)", "validation": 365, "test": 366, "next_fresh": 367},
+  "configs": {"validation": "configs/long/cmp-val.json", "test": "configs/long/cmp-test.json", "carry_settings": "configs/long/carry2.json", "runs": ["configs/long/runs/cmp-val.json", "configs/long/runs/cmp-test.json"]},
+  "systems": {
+    "a": "carry2 on 1-hour windows overlapping 15 min: ctl-prior (also ctl, ctl-carry)",
+    "b": "carry2 on 2-hour windows overlapping 30 min (tag <stem>-2h), stitched mid-overlap: ctl and ctl-prior",
+    "c": "jointheld: ctl on the union of each turn-free 1-hour window and the one before it, read on the window's rows; history-best over the union as the span reference"
+  },
+  "windows": "held = no ownship turn overlaps the 1-hour window; excluded: each chain's first window, windows with no hand-over in (a), windows any of (a), (b), (c) leaves unanswered",
+  "estimands": {
+    "D1": "(b) ctl ÷ (a) ctl-prior",
+    "D2": "(c) ctl ÷ (a) ctl-prior",
+    "D3": "(b) ctl-prior ÷ (a) ctl-prior (added on tuning, before validation)",
+    "statistic": "geometric mean over held windows of per-window median range error; 95% interval from 2,000 bootstrap resamples over engagements (seed 30)"
+  },
+  "reading": "per estimand: 'ctl-prior better' if the lower limit is above 1 (for D3: 1-hour ctl-prior better than 2-hour), 'ctl-prior worse' if the upper limit is below 1, else 'not separated, at this size'",
+  "soundness_on_validation": {
+    "S1": "every engagement present for (a), (b) and (c); at least 95% of (a)'s windows ran",
+    "S2": "per-engagement geometric mean of 1-hour ctl ÷ the true-history fit in [0.8, 4]",
+    "S3": "coverage of the carried 95% region on hand-overs into held windows in [0.80, 0.99]",
+    "on_failure": "the study stops before the test"
+  },
+  "scorer": "tma2-long study30 --raw <dir> --config <config> --out <dir>",
+  "code_sha256": "e7a1870be0632a4578e2766fc9c3ad1d26e34dfc44dca790c38d63ef504be731",
+  "digests": "digests.json (scripts/research/cmp_digests.py)"
+}

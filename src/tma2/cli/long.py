@@ -321,7 +321,7 @@ def main(argv: list[str] | None = None) -> int:
 
         s, priors, cp, c2 = settings_and_priors()
         spans = chain(e, a.window_s, a.overlap_s)
-        done = []
+        done: list[dict[str, Any]] = []
         for j in range(1, len(spans)):
             a1, r1 = spans[j]
             if turns_in(e, a1, r1) != 0:
