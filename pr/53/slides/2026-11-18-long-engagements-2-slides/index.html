@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- Spec 024 slides: carrying state, an incremental C, realism on long engagements.
+     Figures: site/static/img/2026-11-17-long-engagements-2-slides/, made by scripts/research/long2_charts.py. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Long engagements, part 2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.85em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">Long engagements, part 2</h1>
+          <p>carrying state · an incremental C · realism</p>
+          <p class="small">2026-11-18 · spec 024 · an investigation, not a gate · gitma2</p>
+        </section>
+
+        <section>
+          <h2>Overview: note 12's three recommendations, built</h2>
+          <ul>
+            <li><b>Carry</b>: each time-late window starts its search from the previous window's declared history instead of from nothing</li>
+            <li><b>Incremental C</b>: one confirmation per 2-hour block of estimates; each keeps the confirmed legs inside its window</li>
+            <li><b>Realism</b>: the ownship steers on what it measures (range belief ±30%); gaps; detection fading at 40 km; a second contact it does not manoeuvre for</li>
+          </ul>
+          <p class="small">Seed 348 with a separate realism stream: contact 1 is spec 023's target, so the comparison is paired.</p>
+        </section>
+
+        <section>
+          <h2>Carrying state: same accuracy, cheaper search</h2>
+          <img src="../../img/2026-11-17-long-engagements-2-slides/carry.svg" alt="ctl divided by ctl-carry, window by window" />
+          <p class="small">Median window ratio 1.00 in every set. Carry better / worse: 15 / 20 (spec 023's), 22 / 11 (realistic contact 1). Its start costs about 55% of the search it replaces (about 13% of a window).</p>
+        </section>
+
+        <section>
+          <h2>Incremental C: 1.7× cheaper, worse later in each block</h2>
+          <img src="../../img/2026-11-17-long-engagements-2-slides/cost.svg" alt="Seconds per estimate and search CPU hours" />
+          <p class="small">E's median range error at 24 / 48 h: 14.3 / 20.9% per window, 29.8 / 35.6% incremental. The first estimate of each block matches; from the 5th on it is 2–4× worse: the longer history before the crop, cause not established.</p>
+        </section>
+
+        <section>
+          <h2>Realism: a tended and an untended contact</h2>
+          <img src="../../img/2026-11-17-long-engagements-2-slides/realistic-24h.svg" alt="Realistic 24-hour engagement, both contacts" />
+          <p class="small">Contact 1 held 67–85% of the time; ctl 1.5–2.2% (spec 023's: 1.6–2.1%). Contact 2 drifts to 110 km, held 20% of the time; ctl 7.3% on the windows with its bearings.</p>
+        </section>
+
+        <section>
+          <h2>Contact 1: error against time, gaps shaded</h2>
+          <img src="../../img/2026-11-17-long-engagements-2-slides/errors-realistic-24h.svg" alt="Contact 1 relative range error against time with gaps" />
+          <p class="small">Real-time E (incremental C) and time-late ctl-carry, 24-hour realistic engagement.</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>No accuracy gain from carrying state; the incremental C loses accuracy and is not adopted</li>
+            <li>Mis-association barely exercised: 0–8 swapped bearings per engagement</li>
+            <li>One engagement per length: anecdotes, not rates; no registered study yet</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>A registered study on 6- and 12-hour realistic engagements (seeds 349–351): carry non-inferiority, the cost of an untended contact, the IMM's drift</li>
+            <li>Or shorter incremental blocks measured on tuning data first</li>
+            <li>Or stop the long-engagement track here</li>
+          </ul>
+          <p class="small">Note: docs/research/13-long-engagements-2.md · Record: experiments/20261117-long2/ · Figures: scripts/research/long2_charts.py, sidecars beside each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
