@@ -1,0 +1,32 @@
+1. evidence flag (log Bayes factor of the carried prior < 0 -> use ctl alone)
+  seed 360 man2  cprior n 118 twice-bad 20 AUC 0.66 flagged 0.28 bad caught 0.50 twice-good lost 0.07 | alone/var 1.62 alone/flagged 1.79
+  seed 360 man2  cv-k2  n 118 twice-bad 13 AUC 0.64 flagged 0.23 bad caught 0.46 twice-good lost 0.16 | alone/var 1.69 alone/flagged 1.67
+  seed 360 shift cprior n  94 twice-bad 16 AUC 0.78 flagged 0.16 bad caught 0.38 twice-good lost 0.05 | alone/var 1.53 alone/flagged 1.63
+  seed 360 shift cv-k2  n  94 twice-bad 12 AUC 0.62 flagged 0.14 bad caught 0.33 twice-good lost 0.08 | alone/var 1.70 alone/flagged 1.72
+  seed 361 man2  cprior n  70 twice-bad 17 AUC 0.61 flagged 0.31 bad caught 0.35 twice-good lost 0.32 | alone/var 0.98 alone/flagged 1.03
+  seed 361 man2  cv-k2  n  70 twice-bad 15 AUC 0.52 flagged 0.20 bad caught 0.13 twice-good lost 0.16 | alone/var 1.27 alone/flagged 1.26
+  seed 361 shift cprior n  92 twice-bad 17 AUC 0.61 flagged 0.29 bad caught 0.41 twice-good lost 0.14 | alone/var 1.57 alone/flagged 1.69
+  seed 361 shift cv-k2  n  92 twice-bad 13 AUC 0.76 flagged 0.26 bad caught 0.54 twice-good lost 0.10 | alone/var 1.45 alone/flagged 1.69
+2. ceiling: the truth's d2 from the carried prior as the detector
+  refine 360 man2  cprior n 118 twice-bad 20 AUC 0.64 median d2 bad 19.3 rest 5.7
+  refine 360 man2  cv-k4  n 118 twice-bad 12 AUC 0.56 median d2 bad 0.9 rest 0.4
+  refine 360 shift cprior n  94 twice-bad 16 AUC 0.69 median d2 bad 24.2 rest 7.2
+  refine 360 shift cv-k4  n  94 twice-bad  8 AUC 0.50 median d2 bad 0.3 rest 0.5
+  refine 361 man2  cprior n  70 twice-bad 17 AUC 0.69 median d2 bad 38.7 rest 12.0
+  refine 361 man2  cv-k4  n  70 twice-bad 11 AUC 0.59 median d2 bad 2.4 rest 0.8
+  refine 361 shift cprior n  92 twice-bad 17 AUC 0.68 median d2 bad 29.2 rest 7.8
+  refine 361 shift cv-k4  n  92 twice-bad 10 AUC 0.57 median d2 bad 1.3 rest 0.5
+  val 362    man2  cprior n 117 twice-bad 24 AUC 0.64 median d2 bad 16.0 rest 7.2
+  val 362    man2  cv-k4  n 117 twice-bad  9 AUC 0.60 median d2 bad 0.6 rest 0.5
+  test 363   man2  cprior n  72 twice-bad 12 AUC 0.67 median d2 bad 15.5 rest 7.2
+  test 363   man2  cv-k4  n  72 twice-bad  8 AUC 0.76 median d2 bad 1.9 rest 0.5
+  test 363   shift cprior n  94 twice-bad 14 AUC 0.64 median d2 bad 31.1 rest 5.4
+  test 363   shift cv-k4  n  94 twice-bad 11 AUC 0.45 median d2 bad 0.3 rest 0.4
+3. what the periods where k4 is twice as bad as alone are
+  refine 360 man2  n 118 twice-bad 12 (own turn 0.50, all 0.42) | median error there: alone 0.056 k4 0.224 joint 0.066 | elsewhere: alone 0.348 k4 0.196 joint 0.069
+  refine 360 shift n  94 twice-bad  8 (own turn 0.50, all 0.47) | median error there: alone 0.084 k4 0.290 joint 0.232 | elsewhere: alone 0.306 k4 0.177 joint 0.137
+  refine 361 man2  n  70 twice-bad 11 (own turn 0.73, all 0.49) | median error there: alone 0.023 k4 0.086 joint 0.046 | elsewhere: alone 0.208 k4 0.150 joint 0.059
+  refine 361 shift n  92 twice-bad 10 (own turn 0.50, all 0.54) | median error there: alone 0.064 k4 0.542 joint 0.222 | elsewhere: alone 0.304 k4 0.162 joint 0.124
+  val 362    man2  n 117 twice-bad  9 (own turn 0.22, all 0.42) | median error there: alone 0.117 k4 0.595 joint 0.232 | elsewhere: alone 0.254 k4 0.122 joint 0.095
+  test 363   man2  n  72 twice-bad  8 (own turn 0.50, all 0.44) | median error there: alone 0.028 k4 0.282 joint 0.114 | elsewhere: alone 0.420 k4 0.201 joint 0.117
+  test 363   shift n  94 twice-bad 11 (own turn 0.36, all 0.48) | median error there: alone 0.056 k4 0.257 joint 0.133 | elsewhere: alone 0.368 k4 0.174 joint 0.134
