@@ -1,7 +1,7 @@
 ---
 title: "Slides: the carried prior against longer windows"
 date: 2026-11-20T12:30
-tags: [slides, spec-030]
+tags: [slides, spec-031]
 ---
 
 import Slides from "@site/src/components/Slides";
@@ -9,7 +9,7 @@ import Slides from "@site/src/components/Slides";
 These slides are the illustrated companion to [the write-up](/blog/2026/11/20/held-comparators).
 On turn-free 1-hour windows, a joint solve over the hour and the hour before it beats 1-hour
 `ctl-prior`: **0.774 [0.632, 0.954]**. The 2-hour systems also beat it. The registered rule reads
-"ctl-prior worse" three times. Spec: `specs/030-held-comparators/`.
+"ctl-prior worse" three times. Spec: `specs/031-held-comparators/`.
 
 <!-- truncate -->
 

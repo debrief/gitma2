@@ -1,7 +1,7 @@
 ---
 title: "Long engagements: the carried prior against longer windows"
 date: 2026-11-20T12:00
-tags: [write-up, spec-030]
+tags: [write-up, spec-031]
 ---
 
 Spec 029 found that on held-course 1-hour windows, carrying the previous window's state as a
@@ -14,7 +14,7 @@ clean comparison is the joint solve. It uses the same past as the carried prior 
 bearings, and its error is **0.774 [0.632, 0.954]** of the prior's. A 1-hour window with a carried
 prior is not a substitute for using the bearings themselves.
 
-Spec: `specs/030-held-comparators/`. Record: `experiments/20261120-cmp/`.
+Spec: `specs/031-held-comparators/`. Record: `experiments/20261120-cmp/`.
 
 <!-- truncate -->
 

@@ -1,4 +1,4 @@
-# Tasks: spec 030
+# Tasks: spec 031
 
 - [x] T001 Spec, kickoff, plan
 - [x] T002 `jointheld` CLI part, `long/study30.py`, `long.yml` tag passthrough, configs, run files

@@ -24,8 +24,8 @@ FILES = [
     "configs/timelate/tl-broad.json",
     "configs/gateh/gh-a.json",
     ".github/workflows/long.yml",
-    "specs/030-held-comparators/spec.md",
-    "specs/030-held-comparators/plan.md",
+    "specs/031-held-comparators/spec.md",
+    "specs/031-held-comparators/plan.md",
 ]
 CODE_GLOBS = ["src/tma2/long/*.py", "src/tma2/timelate/*.py", "src/tma2/cli/long.py"]
 CODE_FILES = ["src/tma2/sim/prng.py", "src/tma2/sim/geometry.py"]

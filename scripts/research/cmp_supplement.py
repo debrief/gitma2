@@ -1,4 +1,4 @@
-"""Spec 030: readings beside the registered rule (experiments/20261120-cmp/), decided by nothing.
+"""Spec 031: readings beside the registered rule (experiments/20261120-cmp/), decided by nothing.
 
     uv run python scripts/research/cmp_supplement.py > experiments/20261120-cmp/supplement.json
 

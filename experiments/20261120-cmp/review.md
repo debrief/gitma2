@@ -1,4 +1,4 @@
-# Spec 030 panel, round 1
+# Spec 031 panel, round 1
 
 Three reviewers each read the test record (`README.md`, `study.json`, `supplement.json`, `raw/`), the
 decision record and the scorer. **Verdicts: three approve with findings.** No finding changes a

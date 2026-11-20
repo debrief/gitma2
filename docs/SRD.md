@@ -362,6 +362,13 @@ and recorded, not asked.
   Annex B; a carried start (the previous declared state as a start for the period's own
   search) shows no effect there and is not recommended; the joint solve stays the standing
   time-late system for several periods of one target. A carried prior is untested.
+- **2026-11-20 (agent, recording the owner's decisions of 2026-11-19; proposed, owner to
+  merge):** the owner chose a carried prior (spec 030, developed as 028) and then its registration. Decided by the
+  panel: a carried prior (the previous period's state and covariance, run through the gap, as a
+  prior on the next period's start) helps against solving each period alone on Annex B, where
+  the period cannot answer alone; no harm shown; the inflation chosen in development is not
+  shown to matter and its uncertainty is too wide, not calibrated. The joint solve stays the
+  standing time-late system; the carried prior applies when only the previous state is kept.
 
 ## Annexes
 

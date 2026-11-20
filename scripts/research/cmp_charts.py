@@ -1,4 +1,4 @@
-"""Spec 030 slides: SVG figures from the test record experiments/20261120-cmp/.
+"""Spec 031 slides: SVG figures from the test record experiments/20261120-cmp/.
 
     uv run python scripts/research/cmp_charts.py
 

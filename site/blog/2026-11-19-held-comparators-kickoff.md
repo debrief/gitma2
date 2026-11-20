@@ -1,7 +1,7 @@
 ---
 title: "Kickoff: the carried prior against longer windows and a joint solve"
 date: 2026-11-19T23:00
-tags: [kickoff, spec-030]
+tags: [kickoff, spec-031]
 ---
 
 [Spec 029](/blog/2026/11/19/held-course) found that when the ownship holds course, carrying the
@@ -10,7 +10,7 @@ measured against the same blind window solved alone.
 
 The owner asked for the comparison that matters in practice: the prior against `ctl` on its
 standing 2-hour windows, and against a joint solve over two windows. Spec:
-`specs/030-held-comparators/`.
+`specs/031-held-comparators/`.
 
 <!-- truncate -->
 

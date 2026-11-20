@@ -40,6 +40,7 @@ ADAPT_FILES = (*CONTROL_FILES, "detect.py", "adapt.py", "run6.py")  # spec 018
 LADDER_FILES = (*CONTROL_FILES, "adapt.py", "run7.py")  # spec 019
 JOIN_FILES = (*CONTROL_FILES, "layout.py", "run8.py")  # spec 025
 CARRY_FILES = (*JOIN_FILES, "carry.py", "run9.py")  # spec 026
+CPRIOR_FILES = (*CARRY_FILES, "cprior.py", "run10.py")  # spec 028
 
 
 def search_code_digest(extra: tuple[str, ...] = ()) -> str:
@@ -98,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     whole = bool(plan["splits"][a.split].get("whole", False)) or plan.get("runner") in (
         "run8",
         "run9",
+        "run10",
     )
     periods = list(iter_periods(a.inp, a.start, a.count, whole=whole))
     if not periods:
@@ -108,7 +110,8 @@ def main(argv: list[str] | None = None) -> int:
     run5 = plan.get("runner") == "run5"
     run6 = plan.get("runner") == "run6"
     run7 = plan.get("runner") == "run7"
-    run9 = plan.get("runner") == "run9"
+    run10 = plan.get("runner") == "run10"
+    run9 = plan.get("runner") == "run9" or run10
     run8 = plan.get("runner") == "run8" or run9
     run4 = plan.get("runner") == "run4" or run5 or run6 or run7 or run8
     run3 = plan.get("runner") == "run3"
@@ -145,10 +148,11 @@ def main(argv: list[str] | None = None) -> int:
         elif run8:
             from tma2.timelate.run8 import run_shard8
             from tma2.timelate.run9 import run_shard9
+            from tma2.timelate.run10 import run_shard10
 
             if learned:
                 raise SystemExit("runners run8 and run9 take no --learned")
-            shard = run_shard9 if run9 else run_shard8
+            shard = run_shard10 if run10 else (run_shard9 if run9 else run_shard8)
             arrays, recs = shard(periods, priors, c_params, c2, plan["settings"])
         elif run7:
             from tma2.timelate.adapt import family as family7
@@ -250,7 +254,9 @@ def main(argv: list[str] | None = None) -> int:
         c_code_sha256=str(c2.get("code_sha256", "")),
         search_code_sha256=search_code_digest(
             (
-                CARRY_FILES
+                CPRIOR_FILES
+                if run10
+                else CARRY_FILES
                 if run9
                 else JOIN_FILES
                 if run8

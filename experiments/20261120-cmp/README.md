@@ -1,6 +1,6 @@
-# Spec 030 test (seed 366): all three readings "ctl-prior worse"
+# Spec 031 test (seed 366): all three readings "ctl-prior worse"
 
-Test record for spec 030 (`specs/030-held-comparators/`). It was scored once, under the decision
+Registered and run as spec 030; renumbered 031 after the test, because another session's spec 030 merged first (see the decision README). Test record for spec 031 (`specs/031-held-comparators/`). It was scored once, under the decision
 record `experiments/20261120-cmp-decision/`.
 
 ## Run and scoring

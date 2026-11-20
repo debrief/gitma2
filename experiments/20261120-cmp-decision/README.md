@@ -68,3 +68,11 @@ For D3, "ctl-prior worse" means the 2-hour `ctl-prior` is better.
 - **The span reference** sees only the union's bearings and is told the true history. It is
   not a ceiling.
 - **Population:** one simulator family, contact 1 only. Spec 028's hand-over defect is kept.
+
+## Renumbered after the test (2026-11-20)
+
+This study was registered and run as spec 030. It is now spec 031, because another session's
+spec 030 (`specs/030-carried-prior/`) merged to main first. The folder moved from
+`specs/030-held-comparators/` to `specs/031-held-comparators/`. `spec.md` and `plan.md` are byte
+for byte the files bound in `digests.json`, under their old paths. Code, configs and records
+still say "spec 030" where they were bound or written before the rename.
