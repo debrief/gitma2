@@ -10,6 +10,7 @@
     uv run tma2-long study29 --raw <dir> --config <hold config> --out <dir>    # spec 029's study
     uv run tma2-long jointheld --index 0 --window-s 3600 --overlap-s 900 --out <dir>   # spec 030
     uv run tma2-long study30 --raw <dir> --config <config> --out <dir>         # spec 030's study
+    uv run tma2-long study32 --raw <dir> --config <config> --out <dir>         # spec 032's study
     ... --config configs/long/realistic.json --contact 2  # spec 024: realism; the second contact
 
 The engagement is ``configs/long/long.json``'s ``index``-th (in order of duration). Writes
@@ -75,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
             "study27",
             "study29",
             "study30",
+            "study32",
         ),
     )
     ap.add_argument("--indices", default="", help="imm: engagements a-b (inclusive)")
@@ -128,6 +130,17 @@ def main(argv: list[str] | None = None) -> int:
         out.mkdir(parents=True, exist_ok=True)
         (out / "study.json").write_text(json.dumps(res, indent=1, default=float) + "\n")
         print(json.dumps(res["rule"], indent=1, default=float))
+        return 0
+    if a.part == "study32":
+        from tma2.long.study32 import score32
+
+        res = score32(Path(a.raw).resolve(), Path(a.config).resolve())
+        res["git_commit"], res["git_dirty"] = g.commit, g.dirty
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "study.json").write_text(json.dumps(res, indent=1, default=float) + "\n")
+        print(json.dumps(res["soundness"], indent=1, default=float))
+        print(json.dumps(res["outcome"], default=float))
         return 0
     if a.part == "study30":
         from tma2.long.study30 import score30
@@ -392,7 +405,7 @@ def main(argv: list[str] | None = None) -> int:
         stem += f"-p{a.pair}"
     elif a.shard != "0/1":
         stem += "-" + a.shard.replace("/", "of")
-    if arrays:
+    if arrays or a.part == "jointheld":  # spec 032: always, so S1 can tell "none" from "lost"
         np.savez_compressed(out / f"{stem}.npz", **arrays)
     (out / f"{stem}.json").write_text(json.dumps(head, indent=1, default=float) + "\n")
     print(json.dumps({"part": a.part, "index": a.index, "wall_s": round(head["wall_s"], 1)}))
