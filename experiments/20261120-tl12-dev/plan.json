@@ -1,0 +1,55 @@
+{
+ "description": "Spec 031 development plan (spent seed 348 of the long simulator): spec 030's systems (ctl alone, the joint solve, the carried start, the carried prior uninflated and k4) on 6-hour engagements laid out as 2-4 periods of 15-30 min with gaps of 30-90 min. Development only; not registered.",
+ "data_split": "train",
+ "prior": "configs/timelate/tl-ranges.json",
+ "prior_broad": "configs/timelate/tl-broad.json",
+ "gh_plan": "configs/gateh/gh-a.json",
+ "runner": "run10",
+ "splits": {
+  "long": {
+   "ranges": "configs/timelate/tl-joined-ranges.json",
+   "heldout_ranges": "configs/timelate/tl-heldout.json",
+   "long": "configs/long/gaps-dev.json",
+   "what": "Annex B targets, ownship legs 20-40 min, gaps 30-90 min"
+  }
+ },
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "store_tracks": 8,
+  "layout": {
+   "period_s": [
+    900,
+    1800
+   ],
+   "gap_s": [
+    1800,
+    5400
+   ],
+   "counts": [
+    2,
+    3,
+    4
+   ]
+  },
+  "cprior_variants": [
+   {
+    "name": "k4",
+    "inflate": 4.0,
+    "w": 1.0
+   }
+  ]
+ },
+ "soundness": {
+  "statistic": "engagement_geomean",
+  "min_rows": 10,
+  "tight_bound": 0.05,
+  "band": [
+   0.6,
+   1.6
+  ],
+  "answered_min": 0.95
+ }
+}
