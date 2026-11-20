@@ -1,0 +1,304 @@
+{
+ "part": "jointheld",
+ "index": 45,
+ "hours": 6.0,
+ "seed": 368,
+ "config": "configs/long/legs-test.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "11189576923237817069",
+  "dataset_seed": 368,
+  "index": 45,
+  "hours": 6.0,
+  "samples": 4320,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 282,
+    "end_index": 297
+   },
+   {
+    "kind": "course",
+    "start_index": 606,
+    "end_index": 664
+   },
+   {
+    "kind": "course",
+    "start_index": 797,
+    "end_index": 828
+   },
+   {
+    "kind": "course",
+    "start_index": 1099,
+    "end_index": 1126
+   },
+   {
+    "kind": "course",
+    "start_index": 1442,
+    "end_index": 1516
+   },
+   {
+    "kind": "speed",
+    "start_index": 1948,
+    "end_index": 1963
+   },
+   {
+    "kind": "speed",
+    "start_index": 2284,
+    "end_index": 2297
+   },
+   {
+    "kind": "course",
+    "start_index": 2642,
+    "end_index": 2662
+   },
+   {
+    "kind": "course",
+    "start_index": 3094,
+    "end_index": 3117
+   },
+   {
+    "kind": "speed",
+    "start_index": 3553,
+    "end_index": 3566
+   },
+   {
+    "kind": "course",
+    "start_index": 3917,
+    "end_index": 3942
+   },
+   {
+    "kind": "course",
+    "start_index": 4302,
+    "end_index": 4330
+   }
+  ],
+  "ownship_turns": [
+   [
+    2077,
+    2092
+   ],
+   [
+    3790,
+    3806
+   ]
+  ],
+  "zig_index": 2092,
+  "turn_start_index": 2077,
+  "mean_range_m": 34789.85078198881,
+  "min_range_m": 1937.790444576383,
+  "max_range_m": 86829.25321576631,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     6840.33834024589,
+     9174.205557307094
+    ]
+   ],
+   "steering": {
+    "planned": 1,
+    "lost": 1
+   },
+   "swapped_bearings": 2
+  },
+  "valid_share": 0.5578703703703703,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.057891468574894994,
+   "ownship_speed_mps": 5.441099519441439,
+   "ownship_turn_rate_rad_s": 0.03951863845168474,
+   "target_range0_m": 4503.4665266307775
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 1405.0,
+   "change": 0.9224689868016799,
+   "rate": 0.011621886235759812
+  },
+  {
+   "kind": "course",
+   "start_time_s": 3025.0,
+   "change": -1.6596720861921632,
+   "rate": 0.005652940880687402
+  },
+  {
+   "kind": "course",
+   "start_time_s": 3980.0,
+   "change": 2.0922226604430207,
+   "rate": 0.01318603023436972
+  },
+  {
+   "kind": "course",
+   "start_time_s": 5490.0,
+   "change": -1.3207228108720397,
+   "rate": 0.009668781170766316
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7205.0,
+   "change": -2.0764986315849105,
+   "rate": 0.005581139133617647
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 9735.0,
+   "change": 2.898373973295074,
+   "rate": 0.03649610909419646
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 11415.0,
+   "change": -2.5371727080342366,
+   "rate": 0.03902100017819311
+  },
+  {
+   "kind": "course",
+   "start_time_s": 13205.0,
+   "change": -1.142277380293664,
+   "rate": 0.011097681742801933
+  },
+  {
+   "kind": "course",
+   "start_time_s": 15465.0,
+   "change": 1.8911448303419056,
+   "rate": 0.01630347941190942
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 17760.0,
+   "change": 1.251801164950058,
+   "rate": 0.018245365461471735
+  },
+  {
+   "kind": "course",
+   "start_time_s": 19580.0,
+   "change": 1.0328097735497097,
+   "rate": 0.008222437794735972
+  },
+  {
+   "kind": "course",
+   "start_time_s": 21505.0,
+   "change": -1.3514835447088327,
+   "rate": 0.009466254653871218
+  }
+ ],
+ "git_commit": "f93dfab2bba14002c66a73194c017cf9bcbd3578",
+ "git_dirty": false,
+ "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+ "chain": [
+  [
+   0,
+   1440
+  ],
+  [
+   1080,
+   1440
+  ],
+  [
+   2160,
+   1440
+  ],
+  [
+   3240,
+   1080
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 2,
+   "first": 2160,
+   "rows": 1440,
+   "union": [
+    1080,
+    2520
+   ],
+   "seconds": 841.6962263290001,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      7502.665559987473,
+      7632.145217196419
+     ],
+     [
+      9766.65613343037,
+      9820.6960851634
+     ],
+     [
+      11420.710385653094,
+      11462.280650649369
+     ],
+     [
+      13177.588882706761,
+      13447.448788474623
+     ],
+     [
+      15419.410098503111,
+      15510.473228148408
+     ]
+    ],
+    "c2": [
+     [
+      6565.0,
+      6765.0
+     ],
+     [
+      9555.0,
+      9775.0
+     ],
+     [
+      11515.0,
+      11705.0
+     ],
+     [
+      13245.0,
+      13495.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 7200.0,
+ "overlap_s": 1800.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 845.6308810710907
+}
