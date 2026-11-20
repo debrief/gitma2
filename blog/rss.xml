@@ -4,10 +4,198 @@
         <title>TMA via ML, second attempt Blog</title>
         <link>https://debrief.github.io/gitma2/blog</link>
         <description>TMA via ML, second attempt Blog</description>
-        <lastBuildDate>Thu, 19 Nov 2026 22:30:00 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 20 Nov 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
+        <item>
+            <title><![CDATA[Slides: a carried prior across gaps]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides</guid>
+            <pubDate>Fri, 20 Nov 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[The illustrated companion to the spec 030 write-up: the]]></description>
+            <content:encoded><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior">the spec 030 write-up</a>: the
+registered comparison, where the carried prior helps, and how well its stated uncertainty covers
+the truth.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-20-carried-prior-slides/index.html" title="Slides: 2026-11-20-carried-prior-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-20-carried-prior-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Verdict</strong>: alone ÷ k4 and k4 ÷ joint in range on every split, periods after an engagement's
+first, with 95% engagement intervals.</li>
+<li class=""><strong>Kinds</strong>: alone ÷ the carried prior, uninflated and k4, for periods with and without an
+ownship turn of their own (Annex B and busier).</li>
+<li class=""><strong>Coverage</strong>: the truth's squared distance from the carried prior at a period's first row, as a
+cumulative distribution against a calibrated one (Annex B).</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl10_charts.py --record experiments/20261120-tl10 --out-dir site/static/img/2026-11-20-carried-prior-slides</span><br></div></code></pre></div></div>
+<p>The script reads only the committed record (results branch
+<code>results/timelate-tl-o-test-44618826527</code>, seed 363); each figure's <code>.json</code> sidecar names the
+inputs' digests and the commit.</p>]]></content:encoded>
+            <category>slides</category>
+            <category>spec-030</category>
+        </item>
+        <item>
+            <title><![CDATA[A carried prior across gaps: it helps where a period cannot answer alone]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior</guid>
+            <pubDate>Fri, 20 Nov 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[Spec 027 showed that carrying a start from one period to the next does not substitute for one]]></description>
+            <content:encoded><![CDATA[<p>Spec 027 showed that carrying a <em>start</em> from one period to the next does not substitute for one
+solve through the gaps. This registered study carried <em>information</em> instead. The previous
+period's declared state and its uncertainty become a prior on the next period's starting state.
+By the rule registered beforehand, the carried prior helps against solving each period alone on
+Annex B targets, and no harm was shown. The review panel approved and narrowed the result:</p>
+<ul>
+<li class="">the gain is in periods the bearings leave undetermined;</li>
+<li class="">the 4× inflation chosen in development is not shown to matter;</li>
+<li class="">the carried uncertainty covers the truth because it is too wide.</li>
+</ul>
+<p>The joint solve stays the standing system. Nothing was trained. The illustrated companion is
+<a class="" href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides">the slides post</a>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<p>For each period after an engagement's first, the evidence of the standing control <code>ctl</code> gains a
+Gaussian prior on the period's starting state (position, course, speed). That prior is built in
+three steps:</p>
+<ol>
+<li class="">Take the previous period's declared track at its last row.</li>
+<li class="">Take that state's Laplace covariance from the previous period's posterior fit.</li>
+<li class="">Run both through the gap at constant velocity. Annex B's manoeuvre rate and sizes are added
+as process noise.</li>
+</ol>
+<p>The prior replaces the standing prior's terms for those four parameters (range log-uniform,
+bearing and course uniform, a soft speed band), and the period's search starts from the carried
+state. Everything else in <code>ctl</code> is unchanged.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-k4-was-chosen">How k4 was chosen<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#how-k4-was-chosen" class="hash-link" aria-label="Direct link to How k4 was chosen" title="Direct link to How k4 was chosen" translate="no">​</a></h2>
+<p>Development used spent seeds only.</p>
+<ul>
+<li class=""><strong>Seed 361.</strong> The uninflated prior was overconfident: the truth sat inside its 95% region in
+about half of periods. On this seed it harmed Annex B periods that had an ownship turn of
+their own (0.51).</li>
+<li class=""><strong>The choice.</strong> Five variants were run: inflation by 2 or 4 in sd, and mixtures with the
+standing prior. A rule written before the results kept only variants with no own-turn harm and
+coverage of at least 0.80. It chose <strong>k4</strong>, the covariance 4 times wider in sd.</li>
+<li class=""><strong>Seed 360.</strong> A declared check passed here.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-it-was-decided">How it was decided<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#how-it-was-decided" class="hash-link" aria-label="Direct link to How it was decided" title="Direct link to How it was decided" translate="no">​</a></h2>
+<p>All comparisons use periods after an engagement's first, on spec 025's rows. Each is a ratio of
+period median range error, with a 95% interval from resampling engagements.</p>
+<ul>
+<li class=""><strong>Helps</strong>: <code>ctl</code> alone ÷ k4 in range is wholly above 1 on Annex B, the split that decides.</li>
+<li class=""><strong>Harms</strong>: wholly below 1 in range, course or speed on any split, or in range on Annex B
+periods with their own ownship turn.</li>
+</ul>
+<p>Validation used seed 362, where soundness passed. The test used seed 363, scored once.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-result">The result<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#the-result" class="hash-link" aria-label="Direct link to The result" title="Direct link to The result" translate="no">​</a></h2>
+<table><thead><tr><th>split</th><th>alone ÷ k4, range (median per period)</th><th>k4 ÷ joint, range</th></tr></thead><tbody><tr><td>Annex B (decides)</td><td><strong>1.59 [1.21, 2.13]</strong> (1.09): helps</td><td>1.40 [0.98, 2.01]</td></tr><tr><td>busier targets</td><td>1.60 [1.28, 1.99] (1.16)</td><td>1.25 [0.94, 1.66]</td></tr><tr><td>2% wild bearings</td><td>1.35 [1.01, 1.87] (1.01)</td><td>1.74 [1.23, 2.43]</td></tr><tr><td>held course</td><td>2.32 [1.49, 3.62] (1.27)</td><td>5.20 [2.93, 9.00]</td></tr></tbody></table>
+<p>No harm on any split in any quantity. On Annex B periods with their own turn the ratio is 1.22
+[0.84, 1.85]. On Annex B, k4 is better in 57% of periods and worse in 32%. It is twice as good
+in 32% and twice as bad in 11%.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-it-means-as-the-panel-narrowed-it">What it means, as the panel narrowed it<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-it-means-as-the-panel-narrowed-it" class="hash-link" aria-label="Direct link to What it means, as the panel narrowed it" title="Direct link to What it means, as the panel narrowed it" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>The gain is where the bearings leave a period undetermined.</strong>
+<ul>
+<li class="">Annex B periods without their own ownship turn: 1.97. With one: 1.22.</li>
+<li class="">On rows a period determines by itself: 1.04 [0.77, 1.48], level.</li>
+<li class="">So a carried prior makes undetermined periods answerable. It does not improve a period's own
+estimate. This is the same pattern as spec 025's joint solve.</li>
+</ul>
+</li>
+<li class=""><strong>The inflation is not shown to matter.</strong>
+<ul>
+<li class="">The uninflated prior does as well on the test seed: uninflated ÷ k4 is 0.99 [0.78, 1.25].</li>
+<li class="">The uninflated prior would also have passed the rule.</li>
+<li class="">The own-turn harm that motivated k4 appeared on one development seed only.</li>
+<li class="">What is supported is "a carried prior helps", not "inflate by 4".</li>
+</ul>
+</li>
+<li class=""><strong>k4's uncertainty is too wide, not calibrated.</strong>
+<ul>
+<li class="">It covers the truth (0.92 to 0.98) because its spread is about 2.6 times too wide: median
+squared distance 0.51 against 3.36 for a calibrated prior.</li>
+<li class="">The process noise is mis-shaped. It puts half of a turn's change into speed, and constant
+velocity runs the mean ahead of a turning target.</li>
+<li class="">A single history's covariance is too narrow in the tail even with no manoeuvre in the gap.</li>
+<li class="">After inflation the prior carries little beyond a band on position.</li>
+</ul>
+</li>
+<li class=""><strong>Against the alternatives.</strong>
+<ul>
+<li class="">Against spec 027's carried start (not registered): 1.60 [1.05, 2.74] on Annex B.</li>
+<li class="">Against joining: on the line on Annex B (lower limit 0.97 to 1.02 by bootstrap seed).
+Separated with wild bearings and on held course.</li>
+<li class="">Joining is not shown unnecessary anywhere.</li>
+</ul>
+</li>
+<li class=""><strong>Across seeds.</strong> Annex B alone ÷ k4 was 1.59, 1.22, 1.51 and 1.59 on seeds 360 to 363. The
+one that would not pass (361) is the seed k4 was chosen on.</li>
+<li class=""><strong>When it applies.</strong>
+<ul>
+<li class="">Within this simulator, when only the previous declared state and its covariance are kept, a
+period solved under them is better than one solved from nothing.</li>
+<li class="">Time-late, the earlier bearings are normally kept, and then the joint solve is the answer.</li>
+<li class="">A real hand-over was not tested: a track from another estimator, with uncertain association.</li>
+</ul>
+</li>
+<li class=""><strong>Secondary splits are reported, not decided.</strong>
+<ul>
+<li class="">Wild bearings is on the line and carried by a tail (median 1.01).</li>
+<li class="">Held course's 2.32 is measured against a baseline that is very poor there.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="forecasts">Forecasts<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#forecasts" class="hash-link" aria-label="Direct link to Forecasts" title="Direct link to Forecasts" translate="no">​</a></h2>
+<p>Right:</p>
+<ul>
+<li class="">helps on Annex B (1.59, against a forecast of 1.2 to 1.6), with one development seed in two
+failing;</li>
+<li class="">busier about 1.55 (1.60), held course larger, no harm.</li>
+</ul>
+<p>Wrong:</p>
+<ul>
+<li class="">k4 ÷ joint on Annex B (forecast about 2.1; 1.40, on the line).</li>
+<li class="">Coverage was "right" (0.92 to 0.98), but by being too wide.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-done">What was not done<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-was-not-done" class="hash-link" aria-label="Direct link to What was not done" title="Direct link to What was not done" translate="no">​</a></h2>
+<ul>
+<li class="">A calibrated carried uncertainty: a scale near 1.5, noise shaped to turns and speed changes,
+or a prior over the previous period's candidate histories.</li>
+<li class="">A registered comparison of k4 with the uninflated prior and with the carried start.</li>
+<li class="">Code that applies the rule: the verdict was applied by hand.</li>
+<li class="">IMM and EKF tracks.</li>
+</ul>
+<p>Recorded, not repaired (the code is registered):</p>
+<ul>
+<li class="">the wrapped course Gaussian is normalised on the line, not the circle;</li>
+<li class="">a speed shoulder is left in the fit;</li>
+<li class="">three small fragilities.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-next-the-owners-choice">What next (the owner's choice)<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-next-the-owners-choice" class="hash-link" aria-label="Direct link to What next (the owner's choice)" title="Direct link to What next (the owner's choice)" translate="no">​</a></h2>
+<p>The panel's order:</p>
+<ol>
+<li class=""><strong>A consistency flag.</strong> Compare the carried prior's distance with the period's own fit, and
+test whether it finds the twice-as-bad periods.</li>
+<li class=""><strong>A calibrated carried prior on spent seeds.</strong> Scale, shaped noise, the manoeuvre mixture and
+candidate histories.</li>
+<li class=""><strong>A stress split</strong> with longer gaps and more periods, where a carried state is the realistic
+option.</li>
+<li class=""><strong>A real hand-over.</strong> Only if that case matters: a carried state from another estimator, with
+uncertain association.</li>
+</ol>
+<p>This study was developed and registered as spec 028 and renumbered 030 after another session's
+specs 028 and 029 merged first; its registered seeds 362 and 363 had also been claimed by spec 029
+in the long-engagement simulator (different engagements; recorded in the decision record).</p>
+<p>Records:</p>
+<ul>
+<li class="">spec <code>specs/030-carried-prior/</code>;</li>
+<li class="">development <code>experiments/20261119-tl10-dev/</code> and refinement <code>20261119-tl10-refine/</code>;</li>
+<li class="">decision <code>20261119-tl10-decision/</code>;</li>
+<li class="">validation <code>20261119-tl10-val/</code>;</li>
+<li class="">test <code>20261120-tl10/</code>, with the panel's <code>review.md</code> and <code>supplement.json</code>.</li>
+</ul>]]></content:encoded>
+            <category>write-up</category>
+            <category>spec-030</category>
+        </item>
         <item>
             <title><![CDATA[Slides: the carried prior where the ownship holds course]]></title>
             <link>https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides</link>
@@ -391,6 +579,43 @@ better on 12 pairs, at three times the cost.</li>
 <p>Slides: <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior-slides">the slides post</a>.</p>]]></content:encoded>
             <category>write-up</category>
             <category>spec-028</category>
+        </item>
+        <item>
+            <title><![CDATA[Kickoff: a carried prior across gaps]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/19/carried-prior-kickoff</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/19/carried-prior-kickoff</guid>
+            <pubDate>Thu, 19 Nov 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[Spec 027 showed that handing the next period only a starting point does almost nothing:]]></description>
+            <content:encoded><![CDATA[<p>Spec 027 showed that handing the next period only a starting point does almost nothing:
+the period's own bearings decide. This task hands it a <em>prior</em>: the previous period's state and
+uncertainty, run through the gap with room for a manoeuvre the gap may hide, inside the next
+period's evidence. It is the sequential approximation to the joint solve, scored first on spent
+seeds (owner, option A). Nothing is trained.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/19/carried-prior-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<ul>
+<li class=""><a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-across-gaps">Spec 027</a>: joining beats a carried start (Annex B 2.33
+[1.66, 3.43]); the carried start ties with <code>ctl</code> alone in about half of periods.</li>
+<li class="">The joint solve is the standing time-late system for several periods of one target.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/19/carried-prior-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class="">Spec <code>specs/030-carried-prior/</code>: a Gaussian prior on each later period's starting state,
+applied through wrappers so no registered code changes; equal to <code>ctl</code> with no prior.</li>
+<li class="">Development readings on spec 027's spent test engagements: carried prior against joining,
+against <code>ctl</code> alone and against the carried start; and whether the carried uncertainty is
+honest.</li>
+<li class="">Then a proposal: register a study on fresh seeds, or stop.</li>
+<li class="">Risk, already seen on three engagements: the previous period's Laplace uncertainty is
+overconfident where its fit is wrong, so the prior can pull the next period away from the
+truth.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/19/carried-prior-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<ul>
+<li class="">The ratios by split and by kind of period; how often the truth falls inside the carried
+two-sigma ellipse.</li>
+</ul>]]></content:encoded>
+            <category>kickoff</category>
+            <category>spec-030</category>
         </item>
         <item>
             <title><![CDATA[Slides: carrying state across gaps, against joining through them]]></title>
@@ -1108,158 +1333,6 @@ The next fresh seed is 349.</p>
 <p>Figures: <code>scripts/research/long_charts.py</code>, with a sidecar beside each SVG.</p>]]></content:encoded>
             <category>slides</category>
             <category>spec-023</category>
-        </item>
-        <item>
-            <title><![CDATA[Kickoff: longer engagements, 6 to 48 hours]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/17/long-engagements-kickoff</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/17/long-engagements-kickoff</guid>
-            <pubDate>Tue, 17 Nov 2026 13:00:00 GMT</pubDate>
-            <description><![CDATA[Issue #42 asks what it takes to apply our TMA to engagements of 6, 12, 24 and 48 hours, and to]]></description>
-            <content:encoded><![CDATA[<p>Issue #42 asks what it takes to apply our TMA to engagements of 6, 12, 24 and 48 hours, and to
-show them on the viewer and time-late pages. This task is an investigation: it simulates one
-engagement of each length, runs the standing systems on them as they are, measures what that
-costs and how they do, and lists the implementation challenges. Spec:
-<code>specs/023-long-engagements/</code>.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/17/long-engagements-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class="">Every engagement so far is 40 to 120 minutes with one ownship zig (MAN2, generator 0.6.0).</li>
-<li class="">The real-time model E (Gate 2) is carried and <a class="" href="https://debrief.github.io/gitma2/viewer">runs in the browser</a>. Its exported
-graph takes exactly 720 rows: two hours of 10-second bearings.</li>
-<li class="">The time-late track <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/15/time-late-synthesis">closed</a> with the classical control
-<code>ctl</code> standing, decided on periods of 20 to 120 minutes.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/17/long-engagements-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Acceptance</strong> (no gate, nothing trained, no GPU):<!-- -->
-<ul>
-<li class="">four engagements (seed 348, fresh) of 6, 12, 24 and 48 hours, with Annex B's target
-manoeuvres and an ownship that turns at each 20–40 minute leg and keeps the target in range;</li>
-<li class="">every system runs to the end of each: real-time every 10 minutes on a sliding 2-hour window
-(E, C″, one leg) and over the whole engagement (IMM); time-late <code>ctl</code> on a chain of 2-hour
-windows, stitched;</li>
-<li class="">a research note listing the challenges, each measured where it can be;</li>
-<li class="">long-engagement sections on <code>/viewer</code> and <code>/timelate</code>.</li>
-</ul>
-</li>
-<li class=""><strong>Plan:</strong>
-<ul>
-<li class="">a separate simulator, so generator 0.6.0 stays byte-identical (its table holds 32 target
-changes; 48 hours needs about 100);</li>
-<li class="">windows cut from the long engagement in the form every estimator already reads;</li>
-<li class="">the runs on CI (about 14 CPU-hours for the real-time part alone);</li>
-<li class="">a timing of <code>ctl</code> on single periods of 0.5 to 6 hours, to show why it is run on windows.</li>
-</ul>
-</li>
-<li class=""><strong>Risks:</strong> <code>ctl</code> may be too slow on long periods to time at all; four engagements are anecdotes,
-so the note will not claim rates.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/17/long-engagements-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<p>The slides post will carry the tracks of the 48-hour engagement, error against time for each
-system, run time against period length, and the list of challenges.</p>]]></content:encoded>
-            <category>kickoff</category>
-            <category>spec-023</category>
-        </item>
-        <item>
-            <title><![CDATA[Kickoff: time-late over several periods of one target, joined through the gaps]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/17/joined-periods-kickoff</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/17/joined-periods-kickoff</guid>
-            <pubDate>Tue, 17 Nov 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[Contact on a target comes and goes. Until now every time-late study gave the standing system]]></description>
-            <content:encoded><![CDATA[<p>Contact on a target comes and goes. Until now every time-late study gave the standing system
-one period per target. This task gives it two or three periods of the same target separated
-by gaps with no bearings, and asks whether solving them together, with the target's track
-continuous through the gaps, gives each period a better whole-period solution than solving
-each alone. The owner chose it on 2026-11-17 (option C: motion continuity only, no
-target-specific prior). It is classical work on CPU; nothing is trained.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/17/joined-periods-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class="">The time-late track was written up as a whole in
-<a class="" href="https://debrief.github.io/gitma2/blog/2026/11/15/time-late-synthesis">the time-late account</a>. The standing system is the
-classical control <code>ctl</code> (evidence-scored search over manoeuvre histories with the arc
-model, declared at an evidence margin of 1), with its recorded faults. A learned time-late
-model was not shown to help, at this budget.</li>
-<li class="">The account named more information as one reason to look again: "several periods of the
-same target". This is that study.</li>
-<li class="">Open: whatever a gap hides. A manoeuvre in a gap can only be inferred from how the periods
-disagree.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/17/joined-periods-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class="">SRD §1 (the time-late consumer), §5 (paired statistics, fresh seeds, registration before
-results), §9 (the owner's decision); spec folder <code>specs/025-joined-periods/</code>.</li>
-<li class="">Judged by a rule registered before the fresh seeds exist: on each split, the paired
-per-period ratio of median range error, <code>ctl</code> alone ÷ joint, with an interval that
-resamples engagements. <em>Gain</em> if wholly above 1; <em>harm</em> if wholly below 1 in range,
-course or speed on any split.</li>
-<li class="">Plan:<!-- -->
-<ol>
-<li class="">Lay engagements out as two or three periods with gaps of about 5 to 30 minutes, from a
-stream of their own (the generator untouched).</li>
-<li class="">Build the joint solve: one search over histories across the whole span, with
-manoeuvres allowed in the gaps and bearings only in the periods.</li>
-<li class="">Tune span settings on seed 349; register the rule; validate on 350 (soundness); test
-on 351, once.</li>
-<li class="">Panel review, write-up and slides.</li>
-</ol>
-</li>
-<li class="">Risks: a long gap may leave the joined track no better constrained than the periods
-alone, and an invented manoeuvre in a gap may cost more than the join gains. We stop at
-validation if the span reference or the joint solve fails its soundness checks.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/17/joined-periods-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">Track plots of engagements with gaps: truth, <code>ctl</code> per period, the joint track (drawn
-through the gaps, dashed where there are no bearings), with true and declared manoeuvres.</li>
-<li class="">Charts of the per-period ratio by split, by whether the period holds an ownship
-manoeuvre of its own, by gap length, and by whether the target manoeuvred in the gap.</li>
-<li class="">Data: the test record on seed 351 (tuning 349, validation 350), Annex B, shifted-prior,
-wild-bearing and held-course splits.</li>
-</ul>]]></content:encoded>
-            <category>kickoff</category>
-            <category>spec-025</category>
-        </item>
-        <item>
-            <title><![CDATA[Slides: the site, published, with persistent PR previews]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-slides</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-slides</guid>
-            <pubDate>Mon, 16 Nov 2026 20:00:00 GMT</pubDate>
-            <description><![CDATA[The site is published to GitHub Pages on every merge. A new time-late page shows]]></description>
-            <content:encoded><![CDATA[<p>The site is published to GitHub Pages on every merge. A new <a class="" href="https://debrief.github.io/gitma2/timelate">time-late page</a> shows
-the standing time-late system's tracks. Every pull request now keeps a preview, listed on
-<a class="" href="https://debrief.github.io/gitma2/previews">PR previews</a>. Spec: <code>specs/022-site-publishing/</code>.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-16-site-publishing-slides/index.html" title="Slides: 2026-11-16-site-publishing-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-16-site-publishing-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
-<ul>
-<li class=""><strong><code>.github/workflows/pages.yml</code></strong>:<!-- -->
-<ul>
-<li class="">Merges to <code>main</code> publish the site at the root of <code>gh-pages</code>.</li>
-<li class="">Each same-repository PR publishes its own build at <code>pr/&lt;n&gt;/</code>, and the copy is kept after
-the PR completes.</li>
-<li class="">Closing a PR updates its state in <code>pr/index.json</code>.</li>
-<li class="">A manual run builds a preview for an earlier PR.</li>
-<li class="">Deploys run one at a time.</li>
-</ul>
-</li>
-<li class=""><strong><code>/previews</code></strong> lists every PR with a preview: its state, a link to the preview, and links to
-the blog posts it added or changed, opened in that preview.</li>
-<li class=""><strong><code>/timelate</code></strong> draws whole-period tracks from spec 016's test record (seed 341, used):<!-- -->
-<ul>
-<li class="">the 20 first stored periods each of Annex B targets, 2% wild bearings and a shifted
-manoeuvre prior;</li>
-<li class="">the standing control, C″, the true-history fit and the learned model;</li>
-<li class="">true and declared manoeuvres on a timeline;</li>
-<li class="">per-period errors, checked against the record by a unit test.</li>
-</ul>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/blog/2026/11/16/site-publishing-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
-<ul>
-<li class="">PRs before this one have no preview until the manual backfill is run for them.</li>
-<li class="">The page's medians are over every stored row, not the scorer's rows, so they are not the
-record's figures. The page says so.</li>
-</ul>]]></content:encoded>
-            <category>slides</category>
-            <category>spec-022</category>
         </item>
     </channel>
 </rss>
