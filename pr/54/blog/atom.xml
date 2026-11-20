@@ -2,10 +2,76 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://debrief.github.io/gitma2/pr/54/blog</id>
     <title>TMA via ML, second attempt Blog</title>
-    <updated>2026-11-20T12:30:00.000Z</updated>
+    <updated>2026-11-20T14:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://debrief.github.io/gitma2/pr/54/blog"/>
     <subtitle>TMA via ML, second attempt Blog</subtitle>
+    <entry>
+        <title type="html"><![CDATA[Kickoff: the carried prior where the ownship's legs outlast the 2-hour window]]></title>
+        <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-kickoff</id>
+        <link href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-kickoff"/>
+        <updated>2026-11-20T14:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Spec 031 found that a 1-hour window with a carried prior is]]></summary>
+        <content type="html"><![CDATA[<p><a class="" href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/held-comparators">Spec 031</a> found that a 1-hour window with a carried prior is
+no substitute for a longer window or a joint solve. But with ownship legs of 1–2 h, a 2-hour
+window always contains a turn. The owner's case is a leg longer than the standing 2-hour window,
+so that the window itself is blind. Spec: <code>specs/032-long-legs/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Standing:</strong> <code>ctl</code> on 2-hour windows, with spec 028's <code>ctl-prior</code> (the previous window's state
+and uncertainty as a prior, with a guard) for tended contacts.</li>
+<li class=""><strong>Spec 029:</strong> on blind 1-hour windows the prior beat the window alone (about 1.7 to 2.4).</li>
+<li class=""><strong>Spec 031:</strong>
+<ul>
+<li class="">A joint solve over the same past bearings beat the 1-hour prior (0.774 [0.632, 0.954]).</li>
+<li class="">Not tested: legs longer than the 2-hour window.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Engagements:</strong> the ownship holds each leg for 2–4 h, with the same realism. The range drifts
+out, so about half of bearings are lost at long range.</li>
+<li class=""><strong>Systems on turn-free 2-hour windows:</strong>
+<ul>
+<li class="">2-hour <code>ctl</code>;</li>
+<li class="">2-hour <code>ctl-prior</code>;</li>
+<li class="">a joint solve: <code>ctl</code> on the window and the one before it, 3.5 h, past bearings only.</li>
+</ul>
+</li>
+<li class=""><strong>Rules:</strong>
+<ul>
+<li class=""><strong>E1</strong> = <code>ctl</code> ÷ <code>ctl-prior</code>; <strong>E2</strong> = joint ÷ <code>ctl-prior</code>. Each ends "ctl-prior better",
+"worse" or "not separated".</li>
+<li class=""><strong>Harm:</strong> E1 on one-turn windows has its upper limit below 1.</li>
+</ul>
+</li>
+<li class=""><strong>Plan:</strong>
+<ol>
+<li class="">tuning on spent seed 366;</li>
+<li class="">the decision record;</li>
+<li class="">validation on seed 367;</li>
+<li class="">test on seed 368, scored once;</li>
+<li class="">the panel, then the write-up.</li>
+</ol>
+</li>
+<li class=""><strong>Risks:</strong>
+<ul>
+<li class="">Lost contact thins the turn-free windows. Held windows are far-range windows.</li>
+<li class="">The joint solve's cost on 3.5 h is unknown.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/long-legs-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<ul>
+<li class="">E1 and E2 with intervals, and per-window ratios.</li>
+<li class="">Errors by system, by range band and by detected share.</li>
+<li class="">Guard rate, and coverage and NEES of the 2-hour hand-overs.</li>
+<li class="">Compute per engagement-hour.</li>
+</ul>]]></content>
+        <category label="kickoff" term="kickoff"/>
+        <category label="spec-032" term="spec-032"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Slides: the carried prior against longer windows]]></title>
         <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/20/held-comparators-slides</id>
@@ -1332,35 +1398,5 @@ determines alone; one engagement's tracks with all three systems.</li>
 </ul>]]></content>
         <category label="kickoff" term="kickoff"/>
         <category label="spec-027" term="spec-027"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Slides: time-late over several periods of one target, joined through the gaps]]></title>
-        <id>https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/joined-periods-slides</id>
-        <link href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/joined-periods-slides"/>
-        <updated>2026-11-18T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The illustrated companion to the spec 025 write-up: one]]></summary>
-        <content type="html"><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/joined-periods">the spec 025 write-up</a>: one
-engagement as tracks, the registered verdict, where the gain comes from, manoeuvres in the
-gaps, and what the review panel narrowed.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/pr/54/slides/2026-11-18-joined-periods-slides/index.html" title="Slides: 2026-11-18-joined-periods-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/pr/54/slides/2026-11-18-joined-periods-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/joined-periods-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Track</strong>: one Annex B engagement of the test seed (353), chosen by a rule in the script
-(the median engagement among the stored three-period ones): truth red, ownship blue, <code>ctl</code>
-alone per period orange, the joint solve green and dashed through the gaps.</li>
-<li class=""><strong>Verdict</strong>: <code>ctl</code> alone ÷ joint in range on every split with 95% engagement intervals, on
-the registered rows and on rows the period determines alone.</li>
-<li class=""><strong>Kinds</strong>: the same for periods with and without an ownship turn of their own.</li>
-<li class=""><strong>Gaps</strong>: true manoeuvres inside gaps found and missed, and the share of quiet gaps with
-an invented manoeuvre.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/pr/54/blog/2026/11/18/joined-periods-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl8_charts.py --record experiments/20261118-tl8 --out-dir site/static/img/2026-11-18-joined-periods-slides</span><br></div></code></pre></div></div>
-<p>The script reads only the committed record (results branch
-<code>results/timelate-tl-k-test-44252585727</code>); each figure's <code>.json</code> sidecar names the inputs'
-digests and the commit. Data: seed 353, 5-second bearings, <code>configs/timelate/tl-joined-*.json</code>,
-generated in the CI run.</p>]]></content>
-        <category label="slides" term="slides"/>
-        <category label="spec-025" term="spec-025"/>
     </entry>
 </feed>
