@@ -1,0 +1,514 @@
+{
+ "part": "jointheld",
+ "index": 66,
+ "hours": 12.0,
+ "seed": 368,
+ "config": "configs/long/legs-test.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "17565344956428814629",
+  "dataset_seed": 368,
+  "index": 66,
+  "hours": 12.0,
+  "samples": 8640,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 234,
+    "end_index": 269
+   },
+   {
+    "kind": "course",
+    "start_index": 732,
+    "end_index": 746
+   },
+   {
+    "kind": "both",
+    "start_index": 950,
+    "end_index": 959
+   },
+   {
+    "kind": "both",
+    "start_index": 1242,
+    "end_index": 1274
+   },
+   {
+    "kind": "course",
+    "start_index": 1685,
+    "end_index": 1726
+   },
+   {
+    "kind": "course",
+    "start_index": 2004,
+    "end_index": 2056
+   },
+   {
+    "kind": "course",
+    "start_index": 2292,
+    "end_index": 2333
+   },
+   {
+    "kind": "course",
+    "start_index": 2549,
+    "end_index": 2577
+   },
+   {
+    "kind": "course",
+    "start_index": 2979,
+    "end_index": 2995
+   },
+   {
+    "kind": "course",
+    "start_index": 3131,
+    "end_index": 3142
+   },
+   {
+    "kind": "course",
+    "start_index": 3311,
+    "end_index": 3350
+   },
+   {
+    "kind": "course",
+    "start_index": 3524,
+    "end_index": 3546
+   },
+   {
+    "kind": "course",
+    "start_index": 3919,
+    "end_index": 3964
+   },
+   {
+    "kind": "course",
+    "start_index": 4428,
+    "end_index": 4463
+   },
+   {
+    "kind": "speed",
+    "start_index": 4851,
+    "end_index": 4864
+   },
+   {
+    "kind": "course",
+    "start_index": 5229,
+    "end_index": 5260
+   },
+   {
+    "kind": "course",
+    "start_index": 5525,
+    "end_index": 5548
+   },
+   {
+    "kind": "course",
+    "start_index": 5916,
+    "end_index": 5940
+   },
+   {
+    "kind": "course",
+    "start_index": 6298,
+    "end_index": 6313
+   },
+   {
+    "kind": "both",
+    "start_index": 6649,
+    "end_index": 6670
+   },
+   {
+    "kind": "course",
+    "start_index": 7126,
+    "end_index": 7155
+   },
+   {
+    "kind": "course",
+    "start_index": 7397,
+    "end_index": 7423
+   },
+   {
+    "kind": "both",
+    "start_index": 7777,
+    "end_index": 7836
+   },
+   {
+    "kind": "course",
+    "start_index": 8241,
+    "end_index": 8262
+   },
+   {
+    "kind": "course",
+    "start_index": 8558,
+    "end_index": 8584
+   }
+  ],
+  "ownship_turns": [
+   [
+    2697,
+    2711
+   ],
+   [
+    4536,
+    4547
+   ],
+   [
+    6826,
+    6840
+   ]
+  ],
+  "zig_index": 2711,
+  "turn_start_index": 2697,
+  "mean_range_m": 38715.43314375738,
+  "min_range_m": 6485.778884387271,
+  "max_range_m": 87710.78988737948,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [],
+   "steering": {
+    "planned": 1,
+    "lost": 2
+   },
+   "swapped_bearings": 20
+  },
+  "valid_share": 0.5842592592592593,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.014900517037683969,
+   "ownship_speed_mps": 4.685129188296678,
+   "ownship_turn_rate_rad_s": 0.044387797372841625,
+   "target_range0_m": 13520.153192233725
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 1165.0,
+   "change": 1.009170517677213,
+   "rate": 0.005679742472140165
+  },
+  {
+   "kind": "course",
+   "start_time_s": 3655.0,
+   "change": -1.0010216418966271,
+   "rate": 0.014154894083516282
+  },
+  {
+   "kind": "both",
+   "start_time_s": 4745.0,
+   "change": -0.7852036621654128,
+   "rate": 0.01710287031285228,
+   "change2": 1.2582420523264277,
+   "rate2": 0.0314456068612896
+  },
+  {
+   "kind": "both",
+   "start_time_s": 6205.0,
+   "change": -0.9246757550294131,
+   "rate": 0.005653946359314186,
+   "change2": -1.856045950865246,
+   "rate2": 0.04061160145779024
+  },
+  {
+   "kind": "course",
+   "start_time_s": 8420.0,
+   "change": 0.9457974127806762,
+   "rate": 0.004530351199211082
+  },
+  {
+   "kind": "course",
+   "start_time_s": 10015.0,
+   "change": 1.6093548037408727,
+   "rate": 0.006169035756798354
+  },
+  {
+   "kind": "course",
+   "start_time_s": 11455.0,
+   "change": 1.809649793309445,
+   "rate": 0.008651594550925991
+  },
+  {
+   "kind": "course",
+   "start_time_s": 12740.0,
+   "change": 2.0350915985623512,
+   "rate": 0.014253739964589368
+  },
+  {
+   "kind": "course",
+   "start_time_s": 14890.0,
+   "change": 1.3349250106869595,
+   "rate": 0.016178624078262028
+  },
+  {
+   "kind": "course",
+   "start_time_s": 15650.0,
+   "change": 0.8206813339558579,
+   "rate": 0.014193429456928374
+  },
+  {
+   "kind": "course",
+   "start_time_s": 16550.0,
+   "change": 1.7515363119696081,
+   "rate": 0.00887859020947703
+  },
+  {
+   "kind": "course",
+   "start_time_s": 17615.0,
+   "change": 0.9303972530869243,
+   "rate": 0.008284305375364696
+  },
+  {
+   "kind": "course",
+   "start_time_s": 19590.0,
+   "change": -1.538357244766738,
+   "rate": 0.006837038814589974
+  },
+  {
+   "kind": "course",
+   "start_time_s": 22135.0,
+   "change": 1.8928626235255606,
+   "rate": 0.01074970636345388
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 24250.0,
+   "change": 1.3004210788423145,
+   "rate": 0.01900099727667957
+  },
+  {
+   "kind": "course",
+   "start_time_s": 26140.0,
+   "change": -1.4325387656505033,
+   "rate": 0.00917377123002187
+  },
+  {
+   "kind": "course",
+   "start_time_s": 27620.0,
+   "change": -1.3806274658991442,
+   "rate": 0.011878992368446306
+  },
+  {
+   "kind": "course",
+   "start_time_s": 29575.0,
+   "change": -1.317083639891317,
+   "rate": 0.010737541976017303
+  },
+  {
+   "kind": "course",
+   "start_time_s": 31485.0,
+   "change": 1.170279684287252,
+   "rate": 0.01498297457881604
+  },
+  {
+   "kind": "both",
+   "start_time_s": 33240.0,
+   "change": -0.5644459535590658,
+   "rate": 0.005199979158612563,
+   "change2": -2.7336744353331826,
+   "rate2": 0.04497693327876778
+  },
+  {
+   "kind": "course",
+   "start_time_s": 35625.0,
+   "change": -1.2189183165806847,
+   "rate": 0.008176721087557386
+  },
+  {
+   "kind": "course",
+   "start_time_s": 36980.0,
+   "change": 1.5370210371819488,
+   "rate": 0.011813139533226774
+  },
+  {
+   "kind": "both",
+   "start_time_s": 38880.0,
+   "change": -1.444169904938546,
+   "rate": 0.004829847119156774,
+   "change2": 2.9595958479371296,
+   "rate2": 0.02645527305767177
+  },
+  {
+   "kind": "course",
+   "start_time_s": 41200.0,
+   "change": -1.7547627457808574,
+   "rate": 0.01627552938424216
+  },
+  {
+   "kind": "course",
+   "start_time_s": 42785.0,
+   "change": -1.5661159682846835,
+   "rate": 0.011601959386632934
+  }
+ ],
+ "git_commit": "f93dfab2bba14002c66a73194c017cf9bcbd3578",
+ "git_dirty": false,
+ "cpu_model": "AMD EPYC 7763 64-Core Processor",
+ "chain": [
+  [
+   0,
+   1440
+  ],
+  [
+   1080,
+   1440
+  ],
+  [
+   2160,
+   1440
+  ],
+  [
+   3240,
+   1440
+  ],
+  [
+   4320,
+   1440
+  ],
+  [
+   5400,
+   1440
+  ],
+  [
+   6480,
+   1440
+  ],
+  [
+   7560,
+   1080
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 1,
+   "first": 1080,
+   "rows": 1440,
+   "union": [
+    0,
+    2520
+   ],
+   "seconds": 1468.841357132,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      1189.9914589970176,
+      1284.4352438670319
+     ],
+     [
+      3613.3318349834217,
+      3834.222040588327
+     ],
+     [
+      5892.28324446268,
+      6389.0087492143675
+     ],
+     [
+      8374.338062845358,
+      8566.340458093846
+     ],
+     [
+      10163.077416568178,
+      10214.569471039742
+     ],
+     [
+      11360.391051779214,
+      11411.797930741592
+     ]
+    ],
+    "c2": [
+     [
+      1245.0,
+      1385.0
+     ],
+     [
+      2375.0,
+      2455.0
+     ],
+     [
+      3595.0,
+      3795.0
+     ],
+     [
+      5955.0,
+      6145.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 7,
+   "first": 7560,
+   "rows": 1080,
+   "union": [
+    6480,
+    2160
+   ],
+   "seconds": 758.517695643,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      33724.694724524656,
+      33804.316983275276
+     ],
+     [
+      35802.290458655145,
+      36702.290458655145
+     ],
+     [
+      38959.263079644705,
+      39323.08552000629
+     ],
+     [
+      41193.33633124077,
+      41276.95581191076
+     ]
+    ],
+    "c2": [
+     [
+      39035.0,
+      39155.0
+     ],
+     [
+      41245.0,
+      41465.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 7200.0,
+ "overlap_s": 1800.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 2232.7302424907684
+}
