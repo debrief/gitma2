@@ -95,3 +95,45 @@ prior on 2-hour windows.
   | D1 | 0.747 [0.574, 0.958] |
   | D2 | 0.749 [0.600, 0.928] |
   | D3 | 0.474 [0.375, 0.604] |
+
+## What the panel narrowed (round 1; `review.md`)
+
+The panel had three reviewers, each approving with findings. Every decided number was reproduced
+independently, and no finding moves a reading.
+
+- **D2 is the clean comparison.** The joint solve uses the same past as 1-hour `ctl-prior` and no
+  later bearings. It is better in range, 0.774 [0.632, 0.954].
+- **D1 and D3 also measure latency and geometry.**
+  - In 98% of decided windows the stitched 2-hour rows come from a window that contains an
+    ownship turn.
+  - That window runs past the 1-hour window by a median of 29 min (at most 104).
+- **The ratios are averages with wide spread.** 1-hour `ctl-prior` is better in 43% (D1) and 41%
+  (D2) of windows, and twice as bad in 35% and 37%.
+- **The readings are conservative.**
+  - The four handed-but-undecided windows are failures of 1-hour `ctl-prior`: engagement/window
+    41/9, 45/12, 49/12 and 51/2 returned no answer on any row, and the comparators answered.
+  - Excluding them and the windows with no hand-over can only favour it.
+- **Heterogeneity.** D2 is 0.62 on 6-hour engagements and 0.90 [0.69, 1.17] on 12-hour ones.
+- **Is 2-hour `ctl-prior` the best?** This study does not decide it.
+  - Its edge over 2-hour `ctl` is supplement only (medians 1.14 held, 1.01 one-turn), on 183
+    windows rather than D3's 179. Validation went the other way.
+  - The registered support remains spec 028's test.
+- **Cost.**
+  - Per window, 477 s against 112 s, but the windows advance 90 against 45 min. Per
+    engagement-hour that is about 2.1× for the whole `carry2` job, which also runs other
+    systems.
+  - Latency: up to an hour of later bearings.
+- **Tuning's opposite reading** (1.30, 1.28) compared (a) from spec 029's run on another CPU
+  family with (b) and (c) from this run, on about 34 windows (spec 024's gotcha).
+- **Rows.** Comparators are scored on rows offset by up to 25 s in some windows. The effect on a
+  median is negligible.
+- **Soundness.** S2 is a gross-fault screen. S3 covers (a)'s hand-overs only and is not a
+  calibration.
+- **Spec 029's gain** replicates at 1.71. Quote it as about 1.7 to 2.4.
+- **Limits:**
+  - ownship legs of 1–2 h;
+  - contact 1;
+  - one simulator;
+  - windows placed past true target manoeuvres;
+  - spec 028's hand-over defect kept;
+  - legs longer than the window not tested.
