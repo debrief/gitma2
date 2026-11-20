@@ -1,0 +1,48 @@
+{
+ "what": "Time-late periods from spec 016's test record: tracks at every 30 s for the first 20 stored periods of three splits, with true and declared manoeuvres.",
+ "record": "experiments/20261114-tl4",
+ "seed": 341,
+ "splits": {
+  "man2": {
+   "label": "Annex B targets",
+   "file": "man2.json.gz",
+   "periods": 20
+  },
+  "man2-out": {
+   "label": "2% wild bearings",
+   "file": "man2-out.json.gz",
+   "periods": 20
+  },
+  "shift": {
+   "label": "shifted manoeuvre prior (busier targets)",
+   "file": "shift.json.gz",
+   "periods": 20
+  }
+ },
+ "systems": {
+  "ctl-d1-q0.01": "standing classical control (declared history)",
+  "c2": "C\u2033 read as a track (the old system)",
+  "history-best": "fit told the true manoeuvre history (a reference, not a bound)",
+  "learned-s1-arc": "learned whole-period model, arc read-out (stopped by study L)"
+ },
+ "note": "Medians here are over every stored row of a period; the record's figures are over rows whose known-history bound is below 0.5, so they are not the record's numbers.",
+ "account": "/blog/2026/11/15/time-late-synthesis",
+ "tables": "https://github.com/debrief/gitma2/blob/main/experiments/20261115-tl-synthesis/tables.md",
+ "files": {
+  "man2.json.gz": "54b88d722fd09cc092812a69045520f23759b4f855d9272ea862faeedaf2f3dc",
+  "man2-out.json.gz": "d8e6d9e7ee557a3e830e84ea664cc7adaf128cb50fe261a7bb508697f914bf0b",
+  "shift.json.gz": "3bea2e36719a25848afceebdf5e815efc20015bf675ff6ae78831a7c3ee6b966"
+ },
+ "inputs": {
+  "experiments/20261114-tl4/tracks.npz": "9bb93a803f3f5c673157527259c10aebed45bfb919f1721e040446c0178c7594",
+  "experiments/20261114-tl4/run.json": "d2604614b04d9303839d6f270334aeb1cdf9a1efd75a107e1de0a4714450df6c",
+  "experiments/20261114-tl4/man2.periods.json": "480d571eac9e739a4331b114b7272fbe81bb1bcbaa3d985b049cb894d7b65309",
+  "experiments/20261114-tl4/man2-out.periods.json": "c62bbbf76074d26c40cb758753b1d1bb064d79a837f1f47b53a4ea1a2df3f227",
+  "experiments/20261114-tl4/shift.periods.json": "d28b054056d68503274cee185bb13155900d382a9b70f519b4e1bf1202e73e69"
+ },
+ "built": {
+  "script": "scripts/research/timelate_viewer_data.py",
+  "git_commit": "8e436b6105d04b7c4c6b6ff6ccd2f46a17c48337",
+  "git_dirty": false
+ }
+}
