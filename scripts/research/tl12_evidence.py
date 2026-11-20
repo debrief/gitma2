@@ -80,6 +80,15 @@ def main() -> int:
         "evidence_declared": float(ev_decl["total"]),
         "evidence_declared_search": float(h.evidence),
         "evidence_true": float(ev_true["total"]),
+        "parts_declared": {k: float(v) for k, v in ev_decl.items()},
+        "parts_true": {k: float(v) for k, v in ev_true.items()},
+        "true_spans_s": spt.tolist(),
+        "true_kinds": kt.tolist(),
+        "declared_spans_s": h.fit.spans.tolist(),
+        "true_changes": [
+            {k: m[k] for k in ("kind", "change", "rate", "change2", "rate2") if k in m}
+            for m in sp.meta["parameters"]["target_manoeuvres"]
+        ],
         "cost_declared": float(h.fit.cost),
         "cost_true": float(hm.cost),
         "bearings": int(pb[4].sum()),
