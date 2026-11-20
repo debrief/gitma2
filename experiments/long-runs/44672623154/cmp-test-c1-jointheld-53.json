@@ -1,0 +1,629 @@
+{
+ "part": "jointheld",
+ "index": 53,
+ "hours": 12.0,
+ "seed": 366,
+ "config": "configs/long/cmp-test.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "7585322668738026726",
+  "dataset_seed": 366,
+  "index": 53,
+  "hours": 12.0,
+  "samples": 8640,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 335,
+    "end_index": 351
+   },
+   {
+    "kind": "course",
+    "start_index": 923,
+    "end_index": 959
+   },
+   {
+    "kind": "course",
+    "start_index": 1172,
+    "end_index": 1218
+   },
+   {
+    "kind": "course",
+    "start_index": 1554,
+    "end_index": 1582
+   },
+   {
+    "kind": "course",
+    "start_index": 1926,
+    "end_index": 1941
+   },
+   {
+    "kind": "course",
+    "start_index": 2344,
+    "end_index": 2389
+   },
+   {
+    "kind": "speed",
+    "start_index": 2728,
+    "end_index": 2741
+   },
+   {
+    "kind": "course",
+    "start_index": 2875,
+    "end_index": 2898
+   },
+   {
+    "kind": "course",
+    "start_index": 3153,
+    "end_index": 3180
+   },
+   {
+    "kind": "speed",
+    "start_index": 3454,
+    "end_index": 3467
+   },
+   {
+    "kind": "course",
+    "start_index": 3739,
+    "end_index": 3754
+   },
+   {
+    "kind": "course",
+    "start_index": 4305,
+    "end_index": 4315
+   },
+   {
+    "kind": "course",
+    "start_index": 4688,
+    "end_index": 4722
+   },
+   {
+    "kind": "course",
+    "start_index": 5086,
+    "end_index": 5098
+   },
+   {
+    "kind": "course",
+    "start_index": 5492,
+    "end_index": 5521
+   },
+   {
+    "kind": "course",
+    "start_index": 5925,
+    "end_index": 5948
+   },
+   {
+    "kind": "both",
+    "start_index": 6068,
+    "end_index": 6106
+   },
+   {
+    "kind": "course",
+    "start_index": 6226,
+    "end_index": 6276
+   },
+   {
+    "kind": "course",
+    "start_index": 6558,
+    "end_index": 6613
+   },
+   {
+    "kind": "course",
+    "start_index": 6980,
+    "end_index": 7007
+   },
+   {
+    "kind": "both",
+    "start_index": 7238,
+    "end_index": 7314
+   },
+   {
+    "kind": "both",
+    "start_index": 7646,
+    "end_index": 7664
+   },
+   {
+    "kind": "both",
+    "start_index": 7840,
+    "end_index": 7888
+   },
+   {
+    "kind": "course",
+    "start_index": 8308,
+    "end_index": 8334
+   },
+   {
+    "kind": "both",
+    "start_index": 8472,
+    "end_index": 8503
+   }
+  ],
+  "ownship_turns": [
+   [
+    1256,
+    1270
+   ],
+   [
+    2423,
+    2436
+   ],
+   [
+    3241,
+    3253
+   ],
+   [
+    4110,
+    4118
+   ],
+   [
+    5241,
+    5253
+   ],
+   [
+    6024,
+    6035
+   ],
+   [
+    7421,
+    7435
+   ],
+   [
+    8537,
+    8545
+   ]
+  ],
+  "zig_index": 1270,
+  "turn_start_index": 1256,
+  "mean_range_m": 31973.43583802972,
+  "min_range_m": 8729.45720200197,
+  "max_range_m": 66561.56864638963,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     9655.814453244499,
+     11698.906254485628
+    ],
+    [
+     29218.673706729154,
+     31303.081120742834
+    ],
+    [
+     42095.752053335964,
+     43200.0
+    ]
+   ],
+   "steering": {
+    "planned": 2,
+    "lost": 6
+   },
+   "swapped_bearings": 0
+  },
+  "valid_share": 0.6145833333333334,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.017866781345723306,
+   "ownship_speed_mps": 4.674447700205594,
+   "ownship_turn_rate_rad_s": 0.04679291283080058,
+   "target_range0_m": 8729.45720200197
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 1670.0,
+   "change": -0.6444685118564829,
+   "rate": 0.007900584426153101
+  },
+  {
+   "kind": "course",
+   "start_time_s": 4610.0,
+   "change": 2.0533669889810375,
+   "rate": 0.011236164156511044
+  },
+  {
+   "kind": "course",
+   "start_time_s": 5855.0,
+   "change": -1.6372515533341545,
+   "rate": 0.006994094576720545
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7765.0,
+   "change": 1.2064173533057154,
+   "rate": 0.008509547550693594
+  },
+  {
+   "kind": "course",
+   "start_time_s": 9625.0,
+   "change": 1.1542534329407774,
+   "rate": 0.014587038262900948
+  },
+  {
+   "kind": "course",
+   "start_time_s": 11715.0,
+   "change": 1.3595443674728704,
+   "rate": 0.0060247601126783915
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 13635.0,
+   "change": 2.3083527769363963,
+   "rate": 0.03357807912447008
+  },
+  {
+   "kind": "course",
+   "start_time_s": 14370.0,
+   "change": 2.0470373592484905,
+   "rate": 0.01745049103565948
+  },
+  {
+   "kind": "course",
+   "start_time_s": 15760.0,
+   "change": -1.254916890989969,
+   "rate": 0.009029426834530441
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 17265.0,
+   "change": -1.1730870261752355,
+   "rate": 0.017331851560014645
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18690.0,
+   "change": 1.2762537058819965,
+   "rate": 0.016658984000346086
+  },
+  {
+   "kind": "course",
+   "start_time_s": 21520.0,
+   "change": 0.8539387451453088,
+   "rate": 0.015532191266271915
+  },
+  {
+   "kind": "course",
+   "start_time_s": 23435.0,
+   "change": 1.2423189016840754,
+   "rate": 0.007241532882332546
+  },
+  {
+   "kind": "course",
+   "start_time_s": 25425.0,
+   "change": -0.8953892217776656,
+   "rate": 0.014395241362261682
+  },
+  {
+   "kind": "course",
+   "start_time_s": 27455.0,
+   "change": 1.02915059178163,
+   "rate": 0.0069580503938370016
+  },
+  {
+   "kind": "course",
+   "start_time_s": 29620.0,
+   "change": -1.9086966005083532,
+   "rate": 0.015928428688350402
+  },
+  {
+   "kind": "both",
+   "start_time_s": 30335.0,
+   "change": 0.9292972356653815,
+   "rate": 0.004854457321130457,
+   "change2": 1.7564951139321816,
+   "rate2": 0.04249622800458968
+  },
+  {
+   "kind": "course",
+   "start_time_s": 31125.0,
+   "change": 1.982342174115728,
+   "rate": 0.00786155292601603
+  },
+  {
+   "kind": "course",
+   "start_time_s": 32785.0,
+   "change": -1.6941133198683391,
+   "rate": 0.006126525767278486
+  },
+  {
+   "kind": "course",
+   "start_time_s": 34895.0,
+   "change": -0.8579888651778292,
+   "rate": 0.006165292369697864
+  },
+  {
+   "kind": "both",
+   "start_time_s": 36185.0,
+   "change": -1.9978138154242124,
+   "rate": 0.005222592587910063,
+   "change2": -1.7910562145669258,
+   "rate2": 0.045419660660511105
+  },
+  {
+   "kind": "both",
+   "start_time_s": 38225.0,
+   "change": -1.2243740408728856,
+   "rate": 0.01334166063407656,
+   "change2": 2.097481543284803,
+   "rate2": 0.04092092522608019
+  },
+  {
+   "kind": "both",
+   "start_time_s": 39195.0,
+   "change": -1.72903403919408,
+   "rate": 0.007152967185885203,
+   "change2": -1.1811597626997368,
+   "rate2": 0.02292239751501031
+  },
+  {
+   "kind": "course",
+   "start_time_s": 41535.0,
+   "change": 0.5840057610386624,
+   "rate": 0.0043782180681343425
+  },
+  {
+   "kind": "both",
+   "start_time_s": 42355.0,
+   "change": 0.7030568787093229,
+   "rate": 0.013206741425959484,
+   "change2": 2.5534599343050126,
+   "rate2": 0.01629590401119007
+  }
+ ],
+ "git_commit": "e1cd7d194d7534443f0b294e9a25d8d9bfb2c4d1",
+ "git_dirty": false,
+ "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+ "chain": [
+  [
+   0,
+   720
+  ],
+  [
+   540,
+   720
+  ],
+  [
+   1080,
+   720
+  ],
+  [
+   1620,
+   720
+  ],
+  [
+   2160,
+   720
+  ],
+  [
+   2700,
+   720
+  ],
+  [
+   3240,
+   720
+  ],
+  [
+   3780,
+   720
+  ],
+  [
+   4320,
+   720
+  ],
+  [
+   4860,
+   720
+  ],
+  [
+   5400,
+   720
+  ],
+  [
+   5949,
+   720
+  ],
+  [
+   6489,
+   720
+  ],
+  [
+   7029,
+   720
+  ],
+  [
+   7569,
+   720
+  ],
+  [
+   8109,
+   531
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 3,
+   "first": 1620,
+   "rows": 720,
+   "union": [
+    1080,
+    1260
+   ],
+   "seconds": 142.546079734,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      7732.669825239056,
+      7803.642325248696
+     ],
+     [
+      9496.025201386783,
+      9616.477898640685
+     ],
+     [
+      11116.639652676935,
+      11170.214977603962
+     ]
+    ],
+    "c2": [
+     [
+      7835.0,
+      7925.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 8,
+   "first": 4320,
+   "rows": 720,
+   "union": [
+    3780,
+    1260
+   ],
+   "seconds": 130.644976536,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      21467.467869147575,
+      21594.224227934257
+     ],
+     [
+      23474.55106123752,
+      23551.82147297026
+     ]
+    ],
+    "c2": [
+     [
+      21495.0,
+      21715.0
+     ],
+     [
+      23535.0,
+      23595.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 12,
+   "first": 6489,
+   "rows": 720,
+   "union": [
+    5949,
+    1260
+   ],
+   "seconds": 227.26729373800003,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      31040.011637855023,
+      31145.902963148517
+     ],
+     [
+      32750.262087657222,
+      33077.81047696964
+     ],
+     [
+      34010.977430307954,
+      34095.80275215041
+     ]
+    ],
+    "c2": [
+     [
+      31510.0,
+      31710.0
+     ],
+     [
+      31850.0,
+      32020.0
+     ],
+     [
+      32630.0,
+      32740.0
+     ],
+     [
+      33070.0,
+      33130.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 14,
+   "first": 7569,
+   "rows": 720,
+   "union": [
+    7029,
+    1260
+   ],
+   "seconds": 168.73540686399997,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      36233.52565410484,
+      36465.02244795946
+     ],
+     [
+      38160.800485146814,
+      38185.118184057574
+     ],
+     [
+      39014.94898831288,
+      39495.12961481788
+     ]
+    ],
+    "c2": [
+     [
+      36310.0,
+      36520.0
+     ],
+     [
+      39210.0,
+      39380.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 3600.0,
+ "overlap_s": 900.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 674.1534559726715
+}
