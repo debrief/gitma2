@@ -1,0 +1,32 @@
+{
+ "description": "Spec 031 development (spent seed 348, the long simulator's; never a result): 6-hour engagements with Annex B targets and an ownship turning at each 20-40 min leg, keeping the target at 3-25 km; no realism layer (steering on the true target, no sensor gaps, one contact). Laid out by the time-late runner as 2-4 periods with gaps of 30-90 min.",
+ "seed": 348,
+ "target_ranges": "configs/timelate/tl-ranges.json",
+ "dt_s": 5,
+ "hours": [
+  6
+ ],
+ "engagements_per_duration": 40,
+ "noise_sigma_rad": 0.017453292519943295,
+ "ownship": {
+  "leg_s": {
+   "min": 1200,
+   "max": 2400
+  },
+  "offset_rad": {
+   "min": 0.5235987755982988,
+   "max": 1.5707963267948966
+  },
+  "close_offset_rad": {
+   "min": 0.0,
+   "max": 0.5235987755982988
+  },
+  "open_offset_rad": {
+   "min": 1.7453292519943295,
+   "max": 2.6179938779914944
+  },
+  "range_low_m": 3000,
+  "range_high_m": 25000,
+  "sprint_speed_mps": 11.0
+ }
+}
