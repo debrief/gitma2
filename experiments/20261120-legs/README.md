@@ -112,3 +112,43 @@ it, and is not shown to lose to it either.
 |---|---|---|
 | (a) `carry2` | 192 s | |
 | (c) `jointheld` | 129 s | 705 s per held window |
+
+## What the panel narrowed (round 1; `review.md`)
+
+The panel had three reviewers, each approving with findings. Every decided number was reproduced
+independently, and no finding moves a reading.
+
+- **The population is half the held windows.**
+  - E1 and E2 are read on 85 of 165 held windows (52%): those where contact was kept and a
+    hand-over made.
+  - The other 80 are windows with contact lost, at a median of 72 km. There a 2-hour system has
+    nothing to fit, and the joint solve extrapolates with a median error of 0.19–0.29.
+  - Answered shares of held windows: joint 0.99, `ctl-prior` 0.52, `ctl` 0.52.
+  - Counting failures as 100% errors leaves E1 at 1.53.
+- **The gain is far-range.**
+  - E1 is about 2.2 beyond 35 km (44 windows) and about 1.0 under 35 km (41 windows; 0.82 at
+    15–25 km).
+  - Range and detected share correlate at −0.85, so they cannot be separated here.
+- **E1 is "more data beats no data".**
+  - `ctl` sees only the blind window.
+  - E2 is the like-for-like comparison against the same past bearings. It is not separated, and
+    weighting engagements equally gives 1.02. The compact hand-over is not shown to lose to
+    keeping the bearings, and not shown to beat them.
+- **The prior comes from an observable window.** In 83 of 85 decided windows the window before
+  contains an ownship turn. Chains of blind windows are not tested.
+- **Seeds.**
+  - E1 was 1.32, 0.87 and 1.54 across the three seeds. Pooled, reported only: 1.37 [1.05, 1.80].
+  - Joint ÷ `ctl` was 1.25, 1.46 and 0.72. Pooled it is 0.87 [0.67, 1.11]: the line above, "on this
+    seed the joint solve beats the 2-hour window", holds on this seed only.
+- **S3 is a gross-fault screen, not calibration.**
+  - Carried distances have a median of 0.94 against 3.36 expected, and 6% of them are over 20.
+  - One-turn coverage is 0.79: do not quote the carried region as an uncertainty across a turn.
+- **"The carried start alone does nothing"** holds on this seed. `ctl-carry` equals `ctl` on 33 of
+  85 windows, and on tuning it had the lowest median error.
+- **The cost of (a)** covers four systems run together, so it is not `ctl-prior`'s alone.
+- **Rows.** Medians are over each system's plausible rows. The joint solve's rows are offset by
+  5–25 s from (a)'s in 7 of 165 held windows.
+- **Limits:**
+  - windows are placed past true manoeuvres;
+  - spec 028's hand-over defect is kept;
+  - one simulator, contact 1, one realism setting.
