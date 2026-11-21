@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.37.0
+version: 0.38.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -2247,6 +2247,8 @@ classes:
       condition_number: { range: float, description: "Condition number of the Jacobi-scaled information matrix at the solution." }
       manoeuvre_t_s: { range: float, multivalued: true, description: "Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row)." }
       manoeuvre_prob: { range: float, multivalued: true, description: "The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s." }
+      manoeuvre_start_s: { range: float, multivalued: true, description: "Starts of the manoeuvre spans the solver declares (spec 016's spans_from_logit: runs of probability over 0.5, merged within 60 s, at least 10 s long); paired with manoeuvre_end_s." }
+      manoeuvre_end_s: { range: float, multivalued: true, description: "Ends of the declared manoeuvre spans. A legs read-out fits constant-velocity legs joined at these spans." }
 
   DemoSolverInfo:
     description: "Spec 035 FR-024: what a solver plug-in declares."

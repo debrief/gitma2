@@ -233,6 +233,51 @@ test("the whole-period model's inputs and own track equal Python's (spec 016 por
   }
 });
 
+test("the declared manoeuvre spans equal Python's spans_from_logit (spec 016 port)", () => {
+  const golden = JSON.parse(readFileSync(here + "demo/golden-spans.json", "utf8"));
+  const tlm = JSON.parse(readFileSync(here + "demo/golden-tlm.json", "utf8"));
+  assert.equal(golden.problems_sha256, tlm.problems_sha256);
+  let declared = 0;
+  for (const [id, g] of Object.entries(golden.cases)) {
+    const prob = tlm.cases[id].logit.map((l) => 1 / (1 + Math.exp(-l)));
+    assert.deepEqual(TLM.spansFromLogit(prob, g.rows), g.spans, `${id}: spans`);
+    assert.deepEqual(TLM.spansFromLogit(prob, g.rows, 0.5, 60.0, 4), g.spans_max4, `${id}: at most four`);
+    declared += g.spans.length;
+  }
+  assert.ok(declared > 0, "some golden case declares a manoeuvre");
+  // a hand-made case (Python's answers): merging within 60 s, the cap keeping the most probable
+  // runs, and the 10 s floor extended backwards
+  const prob = new Array(20).fill(0.1);
+  prob[2] = prob[3] = 0.9; prob[6] = 0.6; prob[7] = 0.55; prob[9] = 0.7; prob[12] = 0.8; prob[13] = 0.85; prob[16] = 0.95; prob[19] = 0.52;
+  assert.deepEqual(TLM.spansFromLogit(prob, 120), [[55, 595]]);
+  assert.deepEqual(TLM.spansFromLogit(prob, 120, 0.5, 0, 10), [[55, 115], [175, 235], [265, 295], [355, 415], [475, 505], [565, 595]]);
+  assert.deepEqual(TLM.spansFromLogit(prob, 120, 0.5, 0, 3), [[55, 115], [355, 415], [475, 505]]);
+  assert.deepEqual(TLM.spansFromLogit([0.9, 0.1], 7), [[0, 25]], "the first token's span starts at 0");
+  assert.deepEqual(TLM.spansFromLogit([0.1, 0.9, 0.1], 18), [[25, 55]]);
+  assert.deepEqual(TLM.spansFromLogit([0.1, 0.1, 0.9], 13), [[50, 60]], "a last token of one row is extended backwards to 10 s");
+});
+
+test("the learned model read as steady legs: the layer's legs at the model's spans", async () => {
+  for (const name of ["tlm-s1-legs", "tlm-s2-legs", "tlm-s3-legs"]) {
+    const r = await solveScenario(preset("target-turn"), name);
+    const own = await solveScenario(preset("target-turn"), name.replace("-legs", ""));
+    assert.notEqual(r.sol.status, "failed", name);
+    assert.deepEqual(r.sol.manoeuvre_prob, own.sol.manoeuvre_prob, `${name}: the same network statement`);
+    assert.ok(r.sol.manoeuvre_start_s.length <= 4 && r.sol.manoeuvre_start_s.length === r.sol.manoeuvre_end_s.length, name);
+    assert.equal(r.ev.t.length, r.rows.length, `${name}: an answer at every bearing`);
+    // legs: the velocity is piecewise constant, changing only inside a declared span
+    const vx = r.sol.vx_mps, t = r.sol.t_s;
+    for (let k = 1; k < t.length; k++) {
+      if (Math.abs(vx[k] - vx[k - 1]) < 1e-9) continue;
+      const inside = r.sol.manoeuvre_start_s.some((a, j) => t[k] >= a - 10.01 && t[k] <= r.sol.manoeuvre_end_s[j] + 10.01);
+      assert.ok(inside, `${name}: velocity changes at ${t[k]} s outside the declared spans ${JSON.stringify(r.sol.manoeuvre_start_s)}`);
+    }
+    assert.ok(r.sol.cov_end === null || r.sol.cov_end.length === 16, name);
+  }
+  const bad = await solveScenario({ ...preset("good-geometry"), interval_s: 10 }, "tlm-s1-legs");
+  assert.equal(bad.sol.status, "failed");
+});
+
 test("each seed of the whole-period model solves the presets", async () => {
   for (const name of ["tlm-s1", "tlm-s2", "tlm-s3"]) {
     const good = await solveScenario(preset("good-geometry"), name);

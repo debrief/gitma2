@@ -30,7 +30,7 @@ def test_pydantic_accepts_a_scenario() -> None:
     leg = {"course_deg": 10.0, "speed_kt": 8.0, "duration_s": 600.0, "turn_rate_dps": 1.0}
     sc = DemoScenario.model_validate(
         {
-            "schema_version": "0.37.0",
+            "schema_version": "0.38.0",
             "ownship": {"start_x_nm": 0.0, "start_y_nm": 0.0, "legs": [leg]},
             "target": {"start_x_nm": 1.0, "start_y_nm": 9.0, "legs": [leg]},
             "sigma_deg": 1.0,

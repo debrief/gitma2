@@ -52,3 +52,20 @@ The slides post will carry track plots made by the page's own code from its pres
 - a target turn, with one leg against the oracle told the turn.
 
 It will also carry the turn's range error against time (time down the left, as on the page).
+
+**2026-11-21, later.** The owner, looking at the learned model's wandering own track: "it's most likely
+that the target tends to travel in straight legs; have we considered examining the points in the
+TMA solution and predicting steady legs?" Spec 016 did, from the model's manoeuvre head rather than
+its points (`learned-arc`: the arc model fitted at the spans where the head's probability is over
+0.5), and the classical control beat it. The demonstrator now offers that read-out's shape beside
+the own track: **read as steady legs** (`tlm-s1-legs`, `-s2-`, `-s3-`), the same network's spans
+(`spans_from_logit` ported to `tlm.js` and checked against Python's on the golden logits) handed to
+the physics layer, which fits constant-velocity legs joined at them. Two things to know before
+choosing it. First, it is the chord model of Gates 1–2, not spec 016's arc model with Annex B's
+prior, so it reproduces the read-out's design and not its figures. Second, on every preset the head
+states at most 0.19 at any token (0.01 at the target-turn preset's 40° turn, seeds 1 and 2), so at
+the registered threshold it declares no manoeuvre there and the legs read-out is one leg: the page
+now says the largest probability it found. That is spec 016's finding in miniature: the comparison
+measured the model's untuned detector. The points themselves are not segmented: a change-point fit
+on a smoothed track double-smooths and discards the bearings; what the points could do is propose
+times to a search, which is on three panels' lists and not built.

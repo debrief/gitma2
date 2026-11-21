@@ -108,3 +108,43 @@ export function directTrack(mean, ox, oy, z, th) {
   }
   return out;
 }
+
+// learned.token_times: [T][2] the span each token's manoeuvre label speaks for, from the row
+// before its first row (a manoeuvre's span starts one row before its first row inside) to its
+// last existing row, in seconds from the period's start
+export function tokenTimes(n) {
+  const out = [];
+  for (let s = 0; s < n; s += PATCH) out.push([Math.max(s - 1, 0) * DT, Math.min(s + PATCH - 1, n - 1) * DT]);
+  return out;
+}
+
+export const MIN_DURATION = 10.0; // s, the arc fit's shortest manoeuvre (timelate.retest)
+
+// learned.spans_from_logit: manoeuvre spans [[start s, end s], ...] (ascending, disjoint) from
+// the probability per token: every run of tokens above `threshold`, runs closer than `mergeS`
+// merged; with more than `maxManoeuvres` the runs with the most probability above the threshold
+// are kept; a span shorter than MIN_DURATION is extended backwards to it (not past the previous
+// span or the period's start), and one that still is shorter is dropped.
+export function spansFromLogit(prob, n, threshold = 0.5, mergeS = 60.0, maxManoeuvres = 10) {
+  const tt = tokenTimes(n);
+  let runs = [];
+  prob.forEach((pj, j) => {
+    if (!(pj > threshold)) return;
+    const [a, b] = tt[j];
+    const w = pj - threshold;
+    if (runs.length && a - runs[runs.length - 1][1] <= mergeS) {
+      runs[runs.length - 1][1] = b;
+      runs[runs.length - 1][2] += w;
+    } else runs.push([a, b, w]);
+  });
+  if (runs.length > maxManoeuvres) {
+    const order = runs.map((_, i) => i).sort((i, j) => runs[j][2] - runs[i][2] || i - j).slice(0, maxManoeuvres).sort((i, j) => i - j);
+    runs = order.map((i) => runs[i]);
+  }
+  const out = runs.map((r) => [r[0], r[1]]);
+  for (let i = 0; i < out.length; i++) {
+    const floor = i ? out[i - 1][1] : 0.0;
+    if (out[i][1] - out[i][0] < MIN_DURATION) out[i][0] = Math.max(out[i][1] - MIN_DURATION, floor);
+  }
+  return out.filter((r) => r[1] - r[0] >= MIN_DURATION);
+}

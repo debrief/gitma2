@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.37.0"
+version = "0.38.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -4061,6 +4061,8 @@ class TmaSolution(ConfiguredBaseModel):
     condition_number: Optional[float] = Field(default=None, description="""Condition number of the Jacobi-scaled information matrix at the solution.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     manoeuvre_t_s: Optional[list[float]] = Field(default=None, description="""Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     manoeuvre_prob: Optional[list[float]] = Field(default=None, description="""The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    manoeuvre_start_s: Optional[list[float]] = Field(default=None, description="""Starts of the manoeuvre spans the solver declares (spec 016's spans_from_logit: runs of probability over 0.5, merged within 60 s, at least 10 s long); paired with manoeuvre_end_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    manoeuvre_end_s: Optional[list[float]] = Field(default=None, description="""Ends of the declared manoeuvre spans. A legs read-out fits constant-velocity legs joined at these spans.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
 
 
 class DemoSolverInfo(ConfiguredBaseModel):

@@ -646,9 +646,12 @@ function Demo() {
   };
   const q = qdef[quantity];
   const xDom = [sc.window.start_s, Math.min(sc.window.end_s, period)];
-  // the learned model's own statement of where the target manoeuvred (probability over 0.5)
+  // the learned model's own statement of where the target manoeuvred: its declared spans
+  // (spec 016's spans_from_logit) where the solver gives them, else runs of probability over 0.5
   const modelSpans = [];
-  if (sol && sol.manoeuvre_prob) {
+  if (sol && sol.manoeuvre_start_s) {
+    sol.manoeuvre_start_s.forEach((a, j) => modelSpans.push([a + derived.t0, sol.manoeuvre_end_s[j] + derived.t0, "#9467bd"]));
+  } else if (sol && sol.manoeuvre_prob) {
     let start = null;
     sol.manoeuvre_prob.forEach((pr, j) => {
       const t = sol.manoeuvre_t_s[j] + derived.t0;
@@ -889,7 +892,7 @@ function Demo() {
                   {!info.time_late && s && <div className={styles.small}>{s.answered} real-time estimates in the window.</div>}
                   {sol.manoeuvre_prob && (
                     <div className={styles.small} data-testid="model-manoeuvres">
-                      The model states {modelSpans.length} target {modelSpans.length === 1 ? "manoeuvre" : "manoeuvres"} (probability over 0.5; shaded purple on the error chart, the truth's red); the truth has {derived.kn.length} in the window.
+                      The model states {modelSpans.length} target {modelSpans.length === 1 ? "manoeuvre" : "manoeuvres"} (probability over 0.5; shaded purple on the error chart, the truth's red); the truth has {derived.kn.length} in the window; its largest probability is {fmt(Math.max(...sol.manoeuvre_prob), 2)}{sol.manoeuvre_prob.length ? ` at ${fmt((sol.manoeuvre_t_s[sol.manoeuvre_prob.indexOf(Math.max(...sol.manoeuvre_prob))] + derived.t0) / 60, 0)} min` : ""}.{info.name.endsWith("-legs") ? ` Read as ${modelSpans.length + 1} steady ${modelSpans.length ? "legs" : "leg"} fitted to the bearings at those spans (at most four manoeuvres).` : ""}
                     </div>
                   )}
                 </>
@@ -937,7 +940,7 @@ function Demo() {
               <li>Drag a leg's <b>square handle</b> to change its course and speed: every later leg swings round with it, so the rest of the track can move a long way.</li>
               <li>Click a leg to insert a waypoint; select a waypoint and press Delete (or right-click it) to remove it. Undo with Ctrl+Z. Amber waypoints: the turn does not fit at its rate and is drawn tighter.</li>
               <li>Wheel to zoom, drag empty space to pan. The link in the address bar restores this exact scenario, noise draw and solver.</li>
-              <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and spec 016's whole-period learned model (three training seeds, 26 MB each, loaded on first use), which reads the whole window at once and also states where it thinks the target manoeuvred. For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>
+              <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and spec 016's whole-period learned model (three training seeds, 26 MB each, loaded on first use), which reads the whole window at once and also states where it thinks the target manoeuvred; and the same model <b>read as steady legs</b>: its manoeuvre spans (probability over 0.5, merged within 60 s, the four most probable at most) handed to the physics layer, which fits constant-velocity legs joined at them, the shape of spec 016's learned-arc read-out. For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>
             </ul>
           </details>
         </div>

@@ -930,6 +930,14 @@ time down the left, each hideable; one screen at full browser width (plot | char
 Checks: `conformance/onnx/demo_node.mjs` (golden `demo/golden-tlm.json` for the model's port),
 `demo_page.mjs` (Chromium), golden least squares `demo/golden-ls.json` from Python
 (`demo_golden.py`); CI job `demo`. Figures `scripts/research/demo_charts.mjs`.
+Owner 2026-11-21 ("predict steady legs"): `tlm-sK-legs` reads the same network as steady legs:
+spec 016's `spans_from_logit` ported (`tlm.js`, checked against Python on the golden logits,
+`demo/golden-spans.json`), the four most probable spans handed to the physics layer as chords with
+both knots free (`solveLegs`, shared with the oracle). `TmaSolution.manoeuvre_start_s/end_s`,
+schema 0.38.0. On every preset the head's largest probability is 0.19 or less (0.01 at the
+target-turn preset's 40° turn), so at the 0.5 threshold the read-out is one leg there; the page
+states the largest probability. The points are not segmented (that would double-smooth); a proposer
+from them into the search is unbuilt.
 
 ## Stack (owner decisions, 2026-10-31)
 

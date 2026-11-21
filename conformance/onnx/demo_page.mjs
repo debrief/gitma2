@@ -152,6 +152,11 @@ try {
   const tl = await state();
   const said = await page.locator("[data-testid=model-manoeuvres]").innerText().catch(() => "");
   check("whole-period learned model: progress while loading, then a time-late track and its manoeuvres", badge === 1 && tl.status === "done" && tl.sol.status === "converged" && tl.summary.answered === tl.sol.t_s.length && /states \d+ target/.test(said), { range_pct_rms: tl.summary && tl.summary.range_pct.rms, ms: tl.sol && tl.sol.runtime_ms, said });
+  await page.selectOption("[data-testid=solver]", "tlm-s1-legs");
+  await settled();
+  const legs = await state();
+  const saidLegs = await page.locator("[data-testid=model-manoeuvres]").innerText().catch(() => "");
+  check("the learned model read as steady legs: the layer's track at the model's spans", legs.status === "done" && legs.sol.status !== "failed" && Array.isArray(legs.sol.manoeuvre_start_s) && legs.sol.manoeuvre_start_s.length <= 4 && /Read as \d+ steady/.test(saidLegs), { range_pct_rms: legs.summary && legs.summary.range_pct.rms, spans: legs.sol && legs.sol.manoeuvre_start_s, said: saidLegs });
   await page.selectOption("[data-testid=solver]", "ls-js");
   await settled();
 

@@ -39,3 +39,18 @@ def test_golden_ls_is_pythons(tmp_path: Path) -> None:
         assert f["iterations"] == g["iterations"] and f["converged"] == g["converged"], k
         for a, b in zip(f["theta"], g["theta"], strict=True):
             assert abs(a - b) <= 1e-7 * max(1.0, abs(b)), k
+
+
+def test_golden_spans_are_pythons(tmp_path: Path) -> None:
+    """The committed golden spans are spans_from_logit on the committed golden logits."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("demo_spans_golden", CONF / "demo_spans_golden.py")
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.main([str(CONF / "demo" / "golden-tlm.json"), str(tmp_path / "spans.json")])
+    fresh = json.loads((tmp_path / "spans.json").read_text())
+    committed = json.loads((CONF / "demo" / "golden-spans.json").read_text())
+    assert fresh == committed
+    assert sum(len(c["spans"]) for c in committed["cases"].values()) > 0
