@@ -45,7 +45,8 @@ def test_golden_spans_are_pythons(tmp_path: Path) -> None:
     """The committed golden spans are spans_from_logit on the committed golden logits."""
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("demo_spans_golden", CONF / "demo_spans_golden.py")
+    path = CONF / "demo_spans_golden.py"
+    spec = importlib.util.spec_from_file_location("demo_spans_golden", path)
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
