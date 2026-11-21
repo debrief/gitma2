@@ -118,7 +118,7 @@ export function stateAt(path, t) {
 }
 
 // polyline of the path for drawing (metres), about one point per `step` seconds on arcs
-export function pathPoints(path, step = 10) {
+export function pathPoints(path, step = 2) {
   const out = [];
   for (const p of path.pieces) {
     const n = p.kind === "arc" ? Math.max(2, Math.ceil((p.t1 - p.t0) / step)) : 1;
@@ -126,6 +126,26 @@ export function pathPoints(path, step = 10) {
       const s = stateAt(path, p.t0 + ((p.t1 - p.t0) * k) / n);
       out.push([s.x, s.y]);
     }
+  }
+  return out;
+}
+
+// polyline of the path between times a and e (metres): straight pieces by their ends, arcs every
+// `step` seconds, so turns draw round at any zoom
+export function pathPointsBetween(path, a, e, step = 2) {
+  const out = [];
+  const push = (t) => {
+    const s = stateAt(path, t);
+    out.push([s.x, s.y]);
+  };
+  push(a);
+  for (const p of path.pieces) {
+    const t0 = Math.max(p.t0, a), t1 = Math.min(p.t1, e);
+    if (t1 <= t0) continue;
+    if (p.kind === "arc") {
+      const n = Math.max(2, Math.ceil((t1 - t0) / step));
+      for (let k = 1; k <= n; k++) push(t0 + ((t1 - t0) * k) / n);
+    } else push(t1);
   }
   return out;
 }
