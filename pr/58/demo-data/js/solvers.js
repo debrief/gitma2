@@ -7,6 +7,7 @@ import { solveBatch, gridStart } from "../../viewer-data/js/lsq.js";
 import { segmentationInputs, layerFeeds, ROWS } from "../../viewer-data/js/handover.js";
 import { invSym, scaledCondition, sandwich } from "./linalg.js";
 import { INFO } from "./solver-info.js";
+import * as TLM from "./tlm.js";
 
 const DEG = Math.PI / 180;
 const MIN_SIGMA = 0.1 * DEG; // the physics layer's and C's floor: a noise-free run still divides by sigma
@@ -157,41 +158,52 @@ function layerSolver(oracle) {
 export const layerCv = layerSolver(false);
 export const layerOracle = layerSolver(true);
 
-// ---------- Gate 2's carried model E, end to end from bearings (spec 021's pipeline) ----------
-export const learnedE = {
-  info: INFO.learnedE,
-  async solve(p, ctx) {
-    const t0 = now();
-    const { runLive } = await import("../../viewer-data/js/pipeline.js");
-    const dt0 = p.t_s.length > 1 ? p.t_s[1] - p.t_s[0] : 10;
-    const stride = Math.max(Math.ceil(10 / dt0 - 1e-9), Math.ceil(p.t_s.length / ROWS));
-    const s = scenarioArrays(p, stride, MIN_SIGMA);
-    // E's row-based settings assume a regular grid: drop the appended last row if off-grid
-    if (s.n > 1 && Math.abs(s.t[s.n - 1] - s.t[s.n - 2] - s.dt) > 1e-6) s.n -= 1;
-    if (s.n < 40) return failed(this.info, t0, "the window is too short for the learned model (under 40 rows)");
-    const turn = (p.own_turns || [])[0];
-    s.zigIndex = turn ? Math.min(Math.round(turn.start_s / s.dt), s.n - 1) : 0;
-    const res = await runLive(s, ctx.run, ctx.progress || (() => {}), ctx.cancelled || (() => false));
-    const out = { solver: this.info.name, solver_version: this.info.version, status: "converged", t_s: [], x_m: [], y_m: [], vx_mps: [], vy_mps: [], stride };
-    let last = null;
-    res.rows.forEach((k, q) => {
-      const e = res.estimates[q];
-      if (!e || !e.plausible || !e.state.every(Number.isFinite)) return;
-      out.t_s.push(s.t[k]);
-      out.x_m.push(e.state[0]);
-      out.y_m.push(e.state[1]);
-      out.vx_mps.push(e.state[2]);
-      out.vy_mps.push(e.state[3]);
-      last = e;
-    });
-    if (!out.t_s.length) return failed(this.info, t0, "no plausible estimate in the window");
-    out.cov_end = null; // never shown (Gate 3: overconfident)
-    out.condition_number = last && last.cov_ok ? conditionOf(last.cov) : Infinity;
-    out.runtime_ms = now() - t0;
-    return out;
-  },
-};
+// ---------- spec 016's whole-period learned model (ONNX), time-late ----------
+function tlmSolver(seed) {
+  const info = INFO[`tlm${seed}`];
+  return {
+    info,
+    async solve(p, ctx) {
+      const t0 = now();
+      const n = p.t_s.length;
+      const dt = n > 1 ? p.t_s[1] - p.t_s[0] : 0;
+      if (Math.abs(dt - TLM.DT) > 1e-6) return failed(info, t0, "the learned model reads 5-second bearings: set the interval to 5 s");
+      if (n > TLM.MAX_ROWS) return failed(info, t0, "the learned model reads at most two hours (1,440 bearings): narrow the window");
+      if (n < 2 * TLM.PATCH) return failed(info, t0, "fewer than twelve bearings in the window");
+      const { f, mask, th } = TLM.periodFeatures(p.t_s, p.own_x_m, p.own_y_m, p.bearing_rad, Math.max(p.sigma_rad, 1e-6));
+      if (ctx.progress) ctx.progress({ stage: "running the network" });
+      const o = await ctx.run(`tlm-s${seed}`, {
+        features: { dtype: "float32", shape: [1, TLM.MAX_ROWS, TLM.N_FEATURES], data: f },
+        mask: { dtype: "bool", shape: [1, TLM.MAX_ROWS], data: mask },
+      });
+      const last = TLM.tokenRows(n);
+      const T = last.length;
+      const mean = [];
+      for (let j = 0; j < T; j++) mean.push([o.mean[3 * j], o.mean[3 * j + 1], o.mean[3 * j + 2]]);
+      if (!mean.flat().every(Number.isFinite)) return failed(info, t0, "non-finite output");
+      const tr = TLM.directTrack(mean, p.own_x_m, p.own_y_m, p.bearing_rad, th);
+      const out = { solver: info.name, solver_version: info.version, status: "converged", t_s: [], x_m: [], y_m: [], vx_mps: [], vy_mps: [] };
+      for (let k = 0; k < n; k++) {
+        out.t_s.push(p.t_s[k]);
+        out.x_m.push(tr[k][0]);
+        out.y_m.push(tr[k][1]);
+        out.vx_mps.push(tr[k][2]);
+        out.vy_mps.push(tr[k][3]);
+      }
+      out.manoeuvre_t_s = last.map((k) => p.t_s[k]);
+      out.manoeuvre_prob = Array.from({ length: T }, (_, j) => 1 / (1 + Math.exp(-o.logit[j])));
+      out.cov_end = null; // the model states a variance per output, not a joint covariance
+      out.condition_number = undefined;
+      out.runtime_ms = now() - t0;
+      return out;
+    },
+  };
+}
+export const tlm1 = tlmSolver(1), tlm2 = tlmSolver(2), tlm3 = tlmSolver(3);
 
-export const SOLVERS = [lsJs, layerCv, layerOracle, learnedE];
+// Gate 2's real-time E is no longer offered (owner, 2026-11-21: "not interested in a track of
+// real-time estimates"); spec 021's pipeline stays on the viewer page.
+
+export const SOLVERS = [lsJs, layerCv, layerOracle, tlm1, tlm2, tlm3];
 export const solverByName = (name) => SOLVERS.find((s) => s.info.name === name) || lsJs;
 export { gridStart };
