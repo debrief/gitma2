@@ -1,5 +1,5 @@
 // Spec 035 FR-024/025: the demonstrator's solver plug-ins. Each declares a DemoSolverInfo and
-// `solve(problem, ctx)` → TmaSolution (both LinkML types, schema 0.37.0). `ctx.run(graph, feeds)`
+// `solve(problem, ctx)` → TmaSolution (both LinkML types, schema 0.38.0). `ctx.run(graph, feeds)`
 // runs an exported graph (the worker's ONNX Runtime Web); `ctx.progress` and `ctx.cancelled`
 // serve the slow learned model. Solutions are in the problem's frame (metres from ownship at
 // the window's first bearing, seconds from it).
@@ -184,7 +184,7 @@ async function runNetwork(info, p, ctx, seed, t0) {
   if (!mean.flat().every(Number.isFinite)) return { fail: failed(info, t0, "non-finite output") };
   const prob = Array.from({ length: T }, (_, j) => 1 / (1 + Math.exp(-o.logit[j])));
   const threshold = p.manoeuvre_threshold ?? 0.5; // spec 016's 0.5 unless the page's slider says otherwise
-  const spans = TLM.spansFromLogit(prob, n, threshold);
+  const spans = TLM.spansFromLogit(prob, n, threshold, 60.0, Infinity); // every run: the page counts them
   return { n, th, mean, prob, spans, threshold, manoeuvre_t_s: last.map((k) => p.t_s[k]) };
 }
 
@@ -229,6 +229,7 @@ function tlmSolver(seed) {
 // fitted the arc model with Annex B's prior at the same spans; the legs here are the chord
 // model of Gates 1-2, so this is that read-out's shape, not its figures.
 const LEGS_MAX = 4;
+const LEGS_TAIL_S = 60.0;
 function tlmLegsSolver(seed) {
   const info = INFO[`tlm${seed}Legs`];
   return {
@@ -237,7 +238,10 @@ function tlmLegsSolver(seed) {
       const t0 = now();
       const r = await runNetwork(info, p, ctx, seed, t0);
       if (r.fail) return r.fail;
-      const spans = TLM.spansFromLogit(r.prob, r.n, r.threshold, 60.0, LEGS_MAX);
+      // a span whose end knot would have fewer than LEGS_TAIL_S of bearings after it leaves the
+      // knot's two parameters undetermined (the head does declare the window's last rows): drop it
+      const last = p.t_s[p.t_s.length - 1];
+      const spans = TLM.spansFromLogit(r.prob, r.n, r.threshold, 60.0, Infinity).filter(([, b]) => last - b >= LEGS_TAIL_S).slice(0, LEGS_MAX);
       if (ctx.progress) ctx.progress({ stage: `fitting ${spans.length + 1} legs` });
       const knots = spans.map(([a, b]) => ({ start_s: a, end_s: b, speed: true }));
       const out = await solveLegs(info, p, ctx, t0, knots, knots.map(() => false));
