@@ -910,6 +910,27 @@ join a period without its own ownship turn across gaps up to about an hour. Writ
 fresh seeds (369 onward, about 140 periods per band); or first re-check the evidence on the
 scored run's own histories on one CPU family. Seeds: none new.
 
+035 (interactive TMA demonstrator, `specs/035-interactive-demonstrator/`; the owner's draft
+"Spec 005" in `owner-draft.md`, interview 2026-11-21; not a gate, nothing trained, no seed):
+the page `/demo` (`site/src/pages/demo.js`, navbar "Demonstrator"). Drag ownship and target
+tracks (legs joined by steady-rate arcs), narrow a time-late window, solve on release in a
+module worker (`site/static/demo-data/worker.js`). Code in plain ES modules shared with Node
+tests: `site/static/demo-data/js/` (`track`, `scenario` (seeded xoshiro128** bearings), `solvers`
+and `solver-info` (`ls-js` = spec 021's `lsq.js`; `layer-cv`/`layer-oracle` = `tl-layer.onnx`,
+`PhysicsLayer()` with `k_state` and theta/knots outputs, by `tma2.viewer.demo_layer_export`;
+`tlm-s1..3` = spec 016's whole-period model, by `tma2.viewer.demo_tlm_export` from the results
+branches, ONNX digests equal to spec 016's export check, `tlm.js` ports its inputs and
+`direct_track`; real-time E was dropped at the owner's word), `metrics` (errors across the window, the
+known-manoeuvre bound, observability), `codec`, `presets`). LinkML `DemoScenario`, `TmaProblem`,
+`TmaSolution`, `DemoSolverInfo` (schema 0.37.0); the page's JSON Schema
+`site/static/demo-data/demo-scenario.schema.json` by `scripts/site/demo_schema.py` (`--check`).
+Owner decisions: both JS and ONNX solvers; 5 s bearings at 1°; errors over the whole window
+(RMS, worst, bound), no reference time; ellipses off by default, never for E; lower charts with
+time down the left, each hideable; one screen at full browser width (plot | charts | dashboard).
+Checks: `conformance/onnx/demo_node.mjs` (golden `demo/golden-tlm.json` for the model's port),
+`demo_page.mjs` (Chromium), golden least squares `demo/golden-ls.json` from Python
+(`demo_golden.py`); CI job `demo`. Figures `scripts/research/demo_charts.mjs`.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1386,6 +1407,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   own ownship turn before reading it by anything else. A narrow evidence difference (within about
   10 units) is ambiguity, not identifiability, and says nothing about search. When a local job
   keeps dying with the container, move it to a CI workflow at once.
+- Spec 035: the demo's ES modules under `site/static/demo-data/js/` are imported by the page
+  (bundled by webpack), loaded by the worker at run time and imported by the Node tests; keep
+  them free of browser-only globals at module scope. A `package.json` with `"type": "module"`
+  in `site/static/demo-data/` keeps Node from warning. `demo_page.mjs` needs
+  `PW_EXECUTABLE=/opt/pw-browsers/chromium` in a session whose Playwright is newer than the
+  installed browser. Inert knots tie in top-k and onnxruntime breaks ties unlike torch: compare
+  a layer's theta and knots through the active knots only.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting
