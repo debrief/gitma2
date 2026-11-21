@@ -132,3 +132,28 @@
   font-size: 0.78rem;
   color: var(--ifm-color-emphasis-700);
 }
+
+.bar {
+  position: relative;
+  height: 6px;
+  margin: 0.3rem 0 0.15rem;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--ifm-color-emphasis-200);
+}
+.barFill {
+  height: 100%;
+  background: var(--ifm-color-success);
+  transition: width 0.25s linear;
+}
+.barIndet {
+  position: absolute;
+  height: 100%;
+  width: 30%;
+  background: var(--ifm-color-success);
+  animation: indet 1.2s ease-in-out infinite;
+}
+@keyframes indet {
+  0% { left: -30%; }
+  100% { left: 100%; }
+}

@@ -15,3 +15,4 @@
 - [x] T013 `demo_node.mjs` (acceptance 1–5, FR-002..005, 011, 043, ONNX); `DEMO_E=1` for E
 - [x] T014 `demo_page.mjs` in Chromium; CI job `demo`
 - [x] T015 Kickoff and slides posts; AGENTS.md entry; PR
+- [x] T016 Owner feedback on the PR: progress bar and cancel; leg speed labels; NM grid; arcs drawn finely; click-to-split hint

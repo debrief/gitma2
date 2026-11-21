@@ -60,9 +60,15 @@ self.onmessage = async (ev) => {
     }
     if (msg.type === "solve") {
       const solver = solverByName(msg.solver);
+      const post = (p) => self.postMessage({ type: "progress", id: msg.id, ...p });
       const solution = await solver.solve(msg.problem, {
-        run,
-        progress: (p) => self.postMessage({ type: "progress", id: msg.id, ...p }),
+        // the first ONNX solve loads the runtime and the graph: say so
+        run: async (name, feeds) => {
+          if (!sessions[name]) post({ stage: `loading the ${name} graph` });
+          const out = await run(name, feeds);
+          return out;
+        },
+        progress: post,
         cancelled: () => cancelled.has(msg.id),
       });
       self.postMessage({ type: "solved", id: msg.id, solution });

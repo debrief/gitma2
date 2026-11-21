@@ -142,6 +142,19 @@ try {
     report[s] = r.summary;
   }
 
+  // progress: the learned model shows a determinate bar with its stage, and cancels
+  await page.selectOption("[data-testid=solver]", "e-gate2");
+  await page.waitForFunction(() => {
+    const el = document.querySelector("[data-testid=solve-progress]");
+    return el && Number(el.getAttribute("aria-valuenow")) > 0;
+  }, null, { timeout: 120000 });
+  const prog = await page.evaluate(() => ({ value: Number(document.querySelector("[data-testid=solve-progress]").getAttribute("aria-valuenow")), text: document.querySelector("[data-testid=solve-progress]").innerText, badge: !!document.querySelector("[data-testid=plot-solving]") }));
+  await page.locator("[data-testid=solve-cancel]").click();
+  const cancelled = await page.locator("[data-testid=solve-cancelled]").count();
+  check("progress bar during a slow solve, with its stage and a cancel (owner request)", prog.value > 0 && prog.badge && /Solving \d+%/.test(prog.text) && cancelled === 1, prog);
+  await page.selectOption("[data-testid=solver]", "ls-js");
+  await settled();
+
   // chart toggles hide each chart
   await page.locator("[data-testid=toggle-bearings]").uncheck();
   const hidden = await page.locator("[data-testid=panel-bearings]").count();

@@ -109,6 +109,41 @@ function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height 
   );
 }
 
+// ---------- solve progress ----------
+// E reports stages (spec 021's pipeline); its confirmation and estimates carry counts. The
+// weights are rough shares of its run time on a two-hour window (search about 1%, confirmation
+// about 75%, estimates about 17%), so the bar moves about evenly.
+const STAGE_SPAN = { "least squares": [0, 0.01], "GLR statistic": [0.01, 0.02], "ownship legs (O)": [0.02, 0.025], "E-s evidence": [0.025, 0.03], search: [0.03, 0.08], confirmation: [0.08, 0.83], estimates: [0.83, 1], done: [1, 1] };
+function progressFraction(p) {
+  if (!p || !p.stage || !STAGE_SPAN[p.stage]) return null;
+  const [a, b] = STAGE_SPAN[p.stage];
+  let f = 0;
+  if (p.stage === "confirmation" && p.nominations > 0) f = p.decided / p.nominations;
+  else if (p.stage === "estimates" && p.of > 0) f = p.done / p.of;
+  return a + (b - a) * f;
+}
+function progressStage(p) {
+  if (!p || !p.stage) return "";
+  if (p.note) return p.note;
+  if (p.stage === "confirmation" && p.nominations) return `confirmation: ${p.decided} of ${p.nominations} nominations`;
+  if (p.stage === "estimates" && p.of) return `estimates: ${p.done} of ${p.of} rows`;
+  return p.stage;
+}
+function ProgressBar({ fraction, stage, seconds, onCancel }) {
+  const det = fraction !== null && fraction !== undefined;
+  return (
+    <div data-testid="solve-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={det ? Math.round(100 * fraction) : undefined} aria-label="Solver progress">
+      <div className={styles.bar}>
+        <div className={det ? styles.barFill : styles.barIndet} style={det ? { width: `${(100 * fraction).toFixed(1)}%` } : undefined} />
+      </div>
+      <div className={styles.small}>
+        Solving{det ? ` ${Math.round(100 * fraction)}%` : "…"}{stage ? `: ${stage}` : ""}; {seconds.toFixed(seconds < 10 ? 1 : 0)} s{" "}
+        {seconds > 2 && <button className="button button--sm button--link" style={{ padding: 0 }} onClick={onCancel} data-testid="solve-cancel">cancel</button>}
+      </div>
+    </div>
+  );
+}
+
 // ---------- the page ----------
 function Demo() {
   const base = useBaseUrl("/demo-data/");
@@ -127,6 +162,8 @@ function Demo() {
   const [winDraft, setWinDraft] = useState(null);
   const [sigmaDraft, setSigmaDraft] = useState(null);
   const [solve, setSolve] = useState({ status: "idle" });
+  const [now, setNow] = useState(0);
+  const [nonce, setNonce] = useState(0); // "solve again" after a cancel
   const [quantity, setQuantity] = useState("position");
   const [showCharts, setShowCharts] = useState({ error: true, bearings: true, residuals: true });
   const [importErrors, setImportErrors] = useState(null);
@@ -188,7 +225,8 @@ function Demo() {
     w.onmessage = (ev) => {
       const m = ev.data;
       if (m.id === undefined || m.id !== latest.current) return; // a stale result: discarded (FR-023)
-      if (m.type === "progress") setSolve((s) => ({ ...s, progress: m }));
+      // a graph-loading note keeps the last stage's place on the bar
+      if (m.type === "progress") setSolve((s) => ({ ...s, progress: m.stage.startsWith("loading") && s.progress ? { ...s.progress, note: m.stage } : m }));
       else if (m.type === "solved") setSolve((s) => ({ ...s, status: "done", solution: m.solution }));
       else if (m.type === "error") setSolve((s) => ({ ...s, status: "error", error: m.message }));
     };
@@ -223,7 +261,19 @@ function Demo() {
     latest.current = id;
     setSolve({ status: "solving", key, id, t0: performance.now() });
     worker.current.postMessage({ type: "solve", id, solver: sc.solver, problem: derived.problem });
-  }, [key, loaded, derived, sc.solver]);
+  }, [key, loaded, derived, sc.solver, nonce]);
+
+  // progress: an elapsed clock while a solve runs
+  useEffect(() => {
+    if (solve.status !== "solving") return undefined;
+    const h = setInterval(() => setNow(performance.now()), 250);
+    return () => clearInterval(h);
+  }, [solve.status]);
+  const cancelSolve = () => {
+    if (worker.current && latest.current >= 0) worker.current.postMessage({ type: "cancel", id: latest.current });
+    latest.current = -1;
+    setSolve((s) => ({ ...s, status: "cancelled" }));
+  };
 
   // FR-042: the scenario in the URL fragment
   useEffect(() => {
@@ -473,15 +523,8 @@ function Demo() {
     const x1 = b.ox[i] + r * Math.sin(b.z[i]), y1 = b.oy[i] + r * Math.cos(b.z[i]);
     bearingLines.push(<line key={i} x1={sx(b.ox[i] / NM)} y1={sy(b.oy[i] / NM)} x2={sx(x1 / NM)} y2={sy(y1 / NM)} stroke={inWin(b.t[i]) ? BRG : "#999"} strokeOpacity={inWin(b.t[i]) ? 0.55 : 0.25} strokeWidth={0.8} />);
   }
-  const windowPart = (path) => {
-    const pts = [];
-    const a = Math.max(0, win.start_s), e = Math.min(win.end_s, path.end);
-    for (let t = a; t <= e + 1e-9; t += Math.max((e - a) / 200, 1)) {
-      const s = T.stateAt(path, t);
-      pts.push([s.x, s.y]);
-    }
-    return pts;
-  };
+  const windowPart = (path) => T.pathPointsBetween(path, Math.max(0, win.start_s), Math.min(win.end_s, path.end));
+
 
   const vesselLayer = (name, colour) => {
     const tr = shown[name];
@@ -495,7 +538,7 @@ function Demo() {
         <path d={poly(windowPart(path))} fill="none" stroke={colour} strokeWidth={3} />
         {/* faint polyline between waypoints: click to insert a waypoint (FR-004) */}
         {Wp.slice(0, -1).map((w, i) => (
-          <line key={`leg${i}`} data-kind="leg" data-vessel={name} data-index={i} x1={sx(w[0])} y1={sy(w[1])} x2={sx(Wp[i + 1][0])} y2={sy(Wp[i + 1][1])} stroke={colour} strokeOpacity={0.15} strokeWidth={12} strokeDasharray="2 4" style={{ cursor: "copy" }}>
+          <line key={`leg${i}`} data-kind="leg" data-vessel={name} data-index={i} x1={sx(w[0])} y1={sy(w[1])} x2={sx(Wp[i + 1][0])} y2={sy(Wp[i + 1][1])} stroke="transparent" strokeWidth={12} style={{ cursor: "copy" }}>
             <title>Click to insert a waypoint</title>
           </line>
         ))}
@@ -505,6 +548,21 @@ function Demo() {
             <rect key={`h${i}`} data-kind="handle" data-vessel={name} data-index={i} data-testid={`handle-${name}-${i}`} x={sx(hx) - 5} y={sy(hy) - 5} width={10} height={10} fill="#fff" stroke={colour} strokeWidth={isSel("leg", i) ? 3 : 1.5} style={{ cursor: "grab" }}>
               <title>{`Leg ${i + 1}: ${fmt(l.course_deg, 0)}°, ${fmt(l.speed_kt, 1)} kt, ${fmt(l.duration_s / 60, 1)} min. Drag to change course and speed; the rest of the track swings with it.`}</title>
             </rect>
+          );
+        })}
+        {tr.legs.map((l, i) => {
+          // the leg's speed, beside its middle on the side away from the handle's drag line
+          const [ax, ay] = Wp[i], [bx, by] = Wp[i + 1];
+          const dx = sx(bx) - sx(ax), dy = sy(by) - sy(ay);
+          const len = Math.hypot(dx, dy) || 1;
+          const nx = -dy / len, ny = dx / len;
+          const mx = (sx(ax) + sx(bx)) / 2 + nx * 12, my = (sy(ay) + sy(by)) / 2 + ny * 12;
+          const anchor = nx > 0.3 ? "start" : nx < -0.3 ? "end" : "middle";
+          if (len < 40) return null;
+          return (
+            <text key={`s${i}`} x={mx} y={my + (ny > 0.3 ? 10 : ny < -0.3 ? -2 : 4)} fontSize={11} textAnchor={anchor} fill={colour} pointerEvents="none" data-testid={`speed-${name}-${i}`} style={{ paintOrder: "stroke", stroke: "var(--ifm-background-color)", strokeWidth: 3 }}>
+              {`${fmt(l.speed_kt, 1)} kt`}
+            </text>
           );
         })}
         {Wp.map((w, i) => (
@@ -679,10 +737,32 @@ function Demo() {
             }
           }}>
             <rect x={0} y={0} width={W} height={H} fill="transparent" />
+            {(() => {
+              // a faint grid in NM from the scenario's origin, about ten lines across
+              const stepNm = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100].find((x) => x * view.ppn >= W / 12) || 100;
+              const [x0, y1] = toWorld(0, 0), [x1, y0] = toWorld(W, H);
+              const lines = [];
+              for (let x = Math.ceil(x0 / stepNm) * stepNm; x <= x1; x += stepNm) {
+                lines.push(<line key={`gx${x.toFixed(3)}`} x1={sx(x)} x2={sx(x)} y1={0} y2={H} stroke="currentColor" strokeOpacity={Math.abs(x) < 1e-9 ? 0.18 : 0.07} />);
+                lines.push(<text key={`tx${x.toFixed(3)}`} x={sx(x) + 2} y={H - 4} fontSize={9} fill="currentColor" fillOpacity={0.45}>{Number(x.toFixed(2))}</text>);
+              }
+              for (let y = Math.ceil(y0 / stepNm) * stepNm; y <= y1; y += stepNm) {
+                lines.push(<line key={`gy${y.toFixed(3)}`} x1={0} x2={W} y1={sy(y)} y2={sy(y)} stroke="currentColor" strokeOpacity={Math.abs(y) < 1e-9 ? 0.18 : 0.07} />);
+                lines.push(<text key={`ty${y.toFixed(3)}`} x={3} y={sy(y) - 2} fontSize={9} fill="currentColor" fillOpacity={0.45}>{Number(y.toFixed(2))}</text>);
+              }
+              return <g pointerEvents="none" data-testid="grid">{lines}<text x={W - 4} y={46} fontSize={10} textAnchor="end" fill="currentColor" fillOpacity={0.6}>grid {stepNm} NM</text></g>;
+            })()}
             <g>{bearingLines}</g>
             {vesselLayer("target", TGT)}
             {vesselLayer("ownship", OWN)}
             {estimate}
+            {solve.status === "solving" && (
+              <g pointerEvents="none" data-testid="plot-solving">
+                <rect x={W - 210} y={26} width={200} height={20} rx={4} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.3} />
+                <rect x={W - 206} y={40} width={192 * (progressFraction(solve.progress) ?? ((((now || 0) / 1000) % 1.5) / 1.5))} height={3} fill={EST} />
+                <text x={W - 204} y={37} fontSize={11} fill="currentColor">Solving{progressFraction(solve.progress) !== null ? ` ${Math.round(100 * progressFraction(solve.progress))}%` : "…"} · {Math.max(0, ((now || performance.now()) - solve.t0) / 1000).toFixed(0)} s</text>
+              </g>
+            )}
             {dragLabel && (
               <g pointerEvents="none">
                 <rect x={dragLabel.x + 10} y={dragLabel.y - 24} width={120} height={18} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.4} rx={3} />
@@ -692,7 +772,8 @@ function Demo() {
             <g pointerEvents="none">
               <line x1={W - 20 - niceNm * view.ppn} x2={W - 20} y1={H - 18} y2={H - 18} stroke="currentColor" strokeWidth={2} />
               <text x={W - 20} y={H - 24} fontSize={11} textAnchor="end" fill="currentColor">{niceNm} NM</text>
-              <text x={8} y={16} fontSize={11} fill="currentColor">north up; blue ownship, red target (thick: inside the window), green dashed: the solution; olive: bearings, thinned</text>
+              <text x={8} y={30} fontSize={11} fill="currentColor" fillOpacity={0.75}>click a leg to add a waypoint (a turn); drag a circle to move it; drag a square to change the leg's course and speed</text>
+              <text x={8} y={16} fontSize={11} fill="currentColor">north up; blue ownship, red target (thick: inside the window); green dashed: the solution; olive: bearings</text>
             </g>
           </svg>
           <div className="margin-top--sm" data-testid="window-slider">
@@ -724,7 +805,14 @@ function Demo() {
             <div><b>{info.label}</b></div>
             <div className={styles.small}>{info.assumptions}</div>
             <div className="margin-top--xs" data-testid="solve-status">
-              {solve.status === "solving" && <>Solving…{solve.progress ? ` ${solve.progress.stage}${solve.progress.seconds ? `, ${fmt(solve.progress.seconds, 0)} s` : ""}` : ""}</>}
+              {solve.status === "solving" && (
+                <ProgressBar fraction={progressFraction(solve.progress)} stage={progressStage(solve.progress)} seconds={Math.max(0, ((now || performance.now()) - solve.t0) / 1000)} onCancel={cancelSolve} />
+              )}
+              {solve.status === "cancelled" && (
+                <span data-testid="solve-cancelled">Cancelled.{" "}
+                  <button className="button button--sm button--link" style={{ padding: 0 }} onClick={() => setNonce((n) => n + 1)}>Solve again</button>
+                </span>
+              )}
               {solve.status === "error" && <span style={{ color: "#d62728" }}>Failed: {solve.error}</span>}
               {solve.status === "done" && sol && (
                 <>

@@ -51,6 +51,8 @@ manoeuvre breaks them, without reading gate reports.
 | Covariance ellipses (open decision 5) | **Off by default; a toggle shows 1σ and 2σ.** Never drawn for E (Gate 3: overconfident). The bound sits beside the error so the luck of one noise draw shows |
 | Which learned models (open decision 4) | E, the model carried from Gate 2 (Gates 2 passed; Gates 3 and 4 stopped), labelled with its limits |
 | Layout (after the first screenshot) | In the lower charts, time runs down the left and the value across. Each chart has a toggle to hide it |
+| Progress (after the PR) | A progress bar while a solver runs, with elapsed time. It is determinate for E (its stages and counts) and indeterminate otherwise. A badge sits on the plot, and Cancel and Solve again are offered |
+| Plot (after the PR) | Each leg's speed labelled in knots; a faint grid labelled in NM. Turns are drawn round at any zoom (arcs sampled every 2 s). A click on a leg splits it (kept, with a hint on the plot); the mid-leg square keeps decision 10 |
 
 Decided here, with the alternatives in the PR:
 
