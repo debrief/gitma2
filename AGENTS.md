@@ -918,13 +918,16 @@ module worker (`site/static/demo-data/worker.js`). Code in plain ES modules shar
 tests: `site/static/demo-data/js/` (`track`, `scenario` (seeded xoshiro128** bearings), `solvers`
 and `solver-info` (`ls-js` = spec 021's `lsq.js`; `layer-cv`/`layer-oracle` = `tl-layer.onnx`,
 `PhysicsLayer()` with `k_state` and theta/knots outputs, by `tma2.viewer.demo_layer_export`;
-`e-gate2` = spec 021's pipeline, about three minutes), `metrics` (errors across the window, the
+`tlm-s1..3` = spec 016's whole-period model, by `tma2.viewer.demo_tlm_export` from the results
+branches, ONNX digests equal to spec 016's export check, `tlm.js` ports its inputs and
+`direct_track`; real-time E was dropped at the owner's word), `metrics` (errors across the window, the
 known-manoeuvre bound, observability), `codec`, `presets`). LinkML `DemoScenario`, `TmaProblem`,
 `TmaSolution`, `DemoSolverInfo` (schema 0.37.0); the page's JSON Schema
 `site/static/demo-data/demo-scenario.schema.json` by `scripts/site/demo_schema.py` (`--check`).
 Owner decisions: both JS and ONNX solvers; 5 s bearings at 1°; errors over the whole window
 (RMS, worst, bound), no reference time; ellipses off by default, never for E; lower charts with
-time down the left, each hideable. Checks: `conformance/onnx/demo_node.mjs` (`DEMO_E=1` adds E),
+time down the left, each hideable; one screen at full browser width (plot | charts | dashboard).
+Checks: `conformance/onnx/demo_node.mjs` (golden `demo/golden-tlm.json` for the model's port),
 `demo_page.mjs` (Chromium), golden least squares `demo/golden-ls.json` from Python
 (`demo_golden.py`); CI job `demo`. Figures `scripts/research/demo_charts.mjs`.
 

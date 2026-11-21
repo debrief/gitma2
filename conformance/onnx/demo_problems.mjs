@@ -15,7 +15,7 @@ export function goldenCases() {
   return out.map(({ id, sc }) => {
     const b = bearings(sc);
     const { problem } = problemOf(sc, b, windowRows(sc, b));
-    return { id, t: problem.t_s, ox: problem.own_x_m, oy: problem.own_y_m, z: problem.bearing_rad };
+    return { id, t: problem.t_s, ox: problem.own_x_m, oy: problem.own_y_m, z: problem.bearing_rad, sigma: problem.sigma_rad };
   });
 }
 

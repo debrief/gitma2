@@ -17,12 +17,12 @@ const root = new URL("../../", import.meta.url).pathname;
 const req = createRequire(root + "conformance/onnx/package.json");
 const ort = await import(req.resolve("onnxruntime-web").replace(/ort\.[^/]*$/, "ort.node.min.mjs"));
 ort.env.wasm.numThreads = 1;
-const GRAPHS = { "tl-layer": "site/static/demo-data/tl-layer.onnx" };
+const GRAPHS = { "tl-layer": "site/static/demo-data/tl-layer.onnx", "tlm-s1": "site/static/demo-data/tlm-s1.onnx" };
 const sessions = {};
 async function run(name, feeds) {
   sessions[name] ??= await ort.InferenceSession.create(root + GRAPHS[name]);
   const f = {};
-  for (const [k, v] of Object.entries(feeds)) f[k] = v.dtype === "int64" ? new ort.Tensor("int64", BigInt64Array.from(v.data, (x) => BigInt(Math.round(x))), v.shape) : new ort.Tensor("float64", Float64Array.from(v.data), v.shape);
+  for (const [k, v] of Object.entries(feeds)) f[k] = v.dtype === "float32" ? new ort.Tensor("float32", Float32Array.from(v.data), v.shape) : v.dtype === "bool" ? new ort.Tensor("bool", Uint8Array.from(v.data), v.shape) : v.dtype === "int64" ? new ort.Tensor("int64", BigInt64Array.from(v.data, (x) => BigInt(Math.round(x))), v.shape) : new ort.Tensor("float64", Float64Array.from(v.data), v.shape);
   const o = {};
   for (const [k, t] of Object.entries(await sessions[name].run(f))) o[k] = Float64Array.from(t.data, Number);
   return o;
@@ -37,7 +37,7 @@ async function solve(sc, name) {
   return { b, rows, ev: evaluate(sc, b, rows, origin, t0, sol, kn), obs: observability(sc, b, rows, kn), kn };
 }
 const NM = T.NM;
-const C = { own: "#1f77b4", tgt: "#d62728", ls: "#2ca02c", cv: "#7f7f7f", or: "#9467bd", brg: "#bcbd22" };
+const C = { own: "#1f77b4", tgt: "#d62728", ls: "#2ca02c", cv: "#7f7f7f", or: "#9467bd", brg: "#bcbd22", tlm: "#ff7f0e" };
 
 function save(name, svg, meta) {
   writeFileSync(`${out}/${name}.svg`, svg);
@@ -98,8 +98,9 @@ const summary = {};
 {
   const sc = preset("good-geometry");
   const r = await solve(sc, "ls-js");
-  save("good-geometry", trackPlot(sc, r.b, [{ ev: r.ev, colour: C.ls, label: "least squares (JS)" }], "Good geometry: ownship zig-zag, σ 1°, seed 1"), { preset: "good-geometry", solver: "ls-js", range_pct_rms: r.ev.summary.range_pct.rms, observability: r.obs.level });
-  summary.good = { range_pct_rms: r.ev.summary.range_pct.rms, crb_m: r.ev.summary.range_m.crb, rms_m: r.ev.summary.range_m.rms, obs: r.obs.level, nrms: r.ev.summary.nrms };
+  const tl = await solve(sc, "tlm-s1");
+  save("good-geometry", trackPlot(sc, r.b, [{ ev: r.ev, colour: C.ls, label: "least squares (JS)" }, { ev: tl.ev, colour: C.tlm, label: "learned, whole period (s1)" }], "Good geometry: ownship zig-zag, σ 1°, seed 1"), { preset: "good-geometry", solver: "ls-js", range_pct_rms: r.ev.summary.range_pct.rms, observability: r.obs.level });
+  summary.good = { learned_s1: tl.ev.summary.range_pct.rms, range_pct_rms: r.ev.summary.range_pct.rms, crb_m: r.ev.summary.range_m.crb, rms_m: r.ev.summary.range_m.rms, obs: r.obs.level, nrms: r.ev.summary.nrms };
 }
 // 2. target turn: one leg against the oracle, and one leg on the first target leg only
 {
@@ -107,17 +108,19 @@ const summary = {};
   const cv = await solve(sc, "layer-cv");
   const or = await solve(sc, "layer-oracle");
   const leg = await solve({ ...sc, window: { start_s: 0, end_s: 3500 } }, "ls-js");
-  save("target-turn", trackPlot(sc, cv.b, [{ ev: cv.ev, colour: C.cv, label: "one leg (ONNX layer)" }, { ev: or.ev, colour: C.or, label: "told the turn (oracle)" }], "Target turns after an hour: one leg is biased by design"), { preset: "target-turn", solvers: ["layer-cv", "layer-oracle"] });
+  const tlm = await solve(sc, "tlm-s1");
+  save("target-turn", trackPlot(sc, cv.b, [{ ev: cv.ev, colour: C.cv, label: "one leg (ONNX layer)" }, { ev: or.ev, colour: C.or, label: "told the turn (oracle)" }, { ev: tlm.ev, colour: C.tlm, label: "learned, whole period (s1)" }], "Target turns after an hour: one leg is biased by design"), { preset: "target-turn", solvers: ["layer-cv", "layer-oracle"] });
   const pct = (e) => e.ev.t.map((t, k) => [t, Math.abs(e.ev.rangePct[k])]);
-  save("target-turn-errors", errorPlot([{ pts: pct(cv), colour: C.cv, label: "one leg, whole window" }, { pts: pct(or), colour: C.or, label: "told the turn" }, { pts: pct(leg), colour: C.ls, label: "one leg, first target leg only" }], 0, cv.b.period, "|range error| (% of range) against time", "% of range", cv.kn.map((m) => [m.t0, m.t1])), { preset: "target-turn" });
-  summary.turn = { cv: cv.ev.summary.range_pct.rms, oracle: or.ev.summary.range_pct.rms, first_leg: leg.ev.summary.range_pct.rms };
+  save("target-turn-errors", errorPlot([{ pts: pct(cv), colour: C.cv, label: "one leg, whole window" }, { pts: pct(or), colour: C.or, label: "told the turn" }, { pts: pct(leg), colour: C.ls, label: "one leg, first target leg only" }, { pts: pct(tlm), colour: C.tlm, label: "learned, whole period (s1)" }], 0, cv.b.period, "|range error| (% of range) against time", "% of range", cv.kn.map((m) => [m.t0, m.t1])), { preset: "target-turn" });
+  summary.turn = { cv: cv.ev.summary.range_pct.rms, oracle: or.ev.summary.range_pct.rms, first_leg: leg.ev.summary.range_pct.rms, learned_s1: tlm.ev.summary.range_pct.rms };
 }
 // 3. no zig
 {
   const sc = preset("no-zig");
   const r = await solve(sc, "ls-js");
-  save("no-zig", trackPlot(sc, r.b, [{ ev: r.ev, colour: C.ls, label: "least squares (JS)" }], "No ownship zig: the bearings fit, the range does not"), { preset: "no-zig", observability: r.obs.level, range_pct_rms: r.ev.summary.range_pct.rms, nrms: r.ev.summary.nrms });
-  summary.nozig = { range_pct_rms: r.ev.summary.range_pct.rms, nrms: r.ev.summary.nrms, obs: r.obs.level };
+  const tl = await solve(sc, "tlm-s1");
+  save("no-zig", trackPlot(sc, r.b, [{ ev: r.ev, colour: C.ls, label: "least squares (JS)" }, { ev: tl.ev, colour: C.tlm, label: "learned, whole period (s1)" }], "No ownship zig: the bearings fit, the range does not"), { preset: "no-zig", observability: r.obs.level, range_pct_rms: r.ev.summary.range_pct.rms, nrms: r.ev.summary.nrms });
+  summary.nozig = { range_pct_rms: r.ev.summary.range_pct.rms, nrms: r.ev.summary.nrms, obs: r.obs.level, learned_s1: tl.ev.summary.range_pct.rms };
 }
 writeFileSync(`${out}/summary.json`, JSON.stringify({ script: "scripts/research/demo_charts.mjs", commit, ...summary }, null, 2) + "\n");
 console.log(JSON.stringify(summary, null, 1));

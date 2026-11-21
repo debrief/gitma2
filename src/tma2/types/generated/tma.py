@@ -4059,6 +4059,8 @@ class TmaSolution(ConfiguredBaseModel):
     cov_end: Optional[list[float]] = Field(default=None, description="""4 by 4 covariance of (x, y, vx, vy) at the window end, row-major; absent when the solver states none.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     cost: Optional[float] = Field(default=None, description="""Sum of squared bearing residuals over the solver's rows, radians squared.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Segmentation', 'TmaSolution']} })
     condition_number: Optional[float] = Field(default=None, description="""Condition number of the Jacobi-scaled information matrix at the solution.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    manoeuvre_t_s: Optional[list[float]] = Field(default=None, description="""Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    manoeuvre_prob: Optional[list[float]] = Field(default=None, description="""The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
 
 
 class DemoSolverInfo(ConfiguredBaseModel):
@@ -4077,6 +4079,7 @@ class DemoSolverInfo(ConfiguredBaseModel):
     single_leg: bool = Field(default=..., description="""It assumes one constant-velocity leg (FR-036's mismatch flag).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
     accepts_knots: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
     time_late: bool = Field(default=..., description="""It fits the whole window at once (false: a causal, real-time estimator read as a track).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
+    learned: Optional[bool] = Field(default=None, description="""A trained model (its covariance, if any, is not drawn).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
 
 
 # Model rebuild

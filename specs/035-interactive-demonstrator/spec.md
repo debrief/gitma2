@@ -44,12 +44,14 @@ manoeuvre breaks them, without reading gate reports.
 | Question | Answer |
 | --- | --- |
 | How solvers reach the browser (open decision 1) | **Both now.** JavaScript batch least squares (spec 021's port, checked against Python), and ONNX solvers in ONNX Runtime Web |
-| Which ONNX solvers | **The physics layer and the learned model E.** The physics layer runs (a) with one leg and (b) told the truth's manoeuvre times (an oracle). Gate 2's carried E runs as well, labelled real-time |
-| Defaults (open decision 3) | **Repo MAN2 style.** Bearings every 5 s, σ 1° (slider 0–5°), turn rate 1°/s (0.25–3°/s). ONNX solvers thin to at most 720 bearings; E thins to at least 10 s |
+| Which ONNX solvers | **The physics layer and a learned model.** The physics layer runs (a) with one leg and (b) told the truth's manoeuvre times (an oracle). First built with Gate 2's real-time E; then (owner: "I'm not interested in a track of real-time estimates") **replaced by spec 016's time-late whole-period model, all three training seeds** |
+| Defaults (open decision 3) | **Repo MAN2 style.** Bearings every 5 s, σ 1° (slider 0–5°), turn rate 1°/s (0.25–3°/s). The physics layer thins to at most 720 bearings; the learned model needs 5-second bearings and at most 1,440 (two hours) |
 | Reference time (open decision 2) | **None.** In the owner's words, "This is a time-late scenario. We're optimising the error equally across the whole panel." The errors are read at every bearing time in the window and shown as a time graph |
 | Error summary | **RMS and worst value over the window**, with the Cramér–Rao bound's RMS beside them |
 | Covariance ellipses (open decision 5) | **Off by default; a toggle shows 1σ and 2σ.** Never drawn for E (Gate 3: overconfident). The bound sits beside the error so the luck of one noise draw shows |
 | Which learned models (open decision 4) | E, the model carried from Gate 2 (Gates 2 passed; Gates 3 and 4 stopped), labelled with its limits |
+| Learned model (after the PR) | Real-time E dropped; spec 016's three seeds added; the presets moved inside its training range (target at 4–17 km) |
+| One screen (after the PR) | Full browser width: plot, the three time-down charts and the dashboard side by side at viewport height. Hiding a chart widens the others without making them taller |
 | Layout (after the first screenshot) | In the lower charts, time runs down the left and the value across. Each chart has a toggle to hide it |
 | Progress (after the PR) | A progress bar while a solver runs, with elapsed time. It is determinate for E (its stages and counts) and indeterminate otherwise. A badge sits on the plot, and Cancel and Solve again are offered |
 | Plot (after the PR) | Each leg's speed labelled in knots; a faint grid labelled in NM. Turns are drawn round at any zoom (arcs sampled every 2 s). A click on a leg splits it (kept, with a hint on the plot); the mid-leg square keeps decision 10 |
@@ -91,7 +93,7 @@ any result older than its latest request. FR-024: the `TmaProblem`, `TmaSolution
 | `ls-js` | Batch least squares in JavaScript, spec 021's port, checked against Python's golden vectors |
 | `layer-cv` | The physics layer of Gates 1–2 with no knots, as an ONNX graph (`tl-layer.onnx`) |
 | `layer-oracle` | The same graph told the truth's manoeuvre spans as chord knots. An oracle, labelled as such; at most four manoeuvres |
-| `e-gate2` | Gate 2's E end to end from bearings (spec 021's pipeline). Causal: it answers once a minute from five minutes after the first ownship turn, read as a track of real-time estimates. About three minutes on a two-hour window |
+| `tlm-s1`, `tlm-s2`, `tlm-s3` | Spec 016's whole-period learned model (a bidirectional transformer; three training seeds of 12.5 million simulated periods). It reads the whole window of 5-second bearings at once and states range and velocity every 30 s and a manoeuvre probability. The page draws its own track (spec 016's `direct_track`) and shades its manoeuvres. 26 MB each, exported from the results branches by `tma2.viewer.demo_tlm_export`; the ONNX digests equal spec 016's export check. Study L stopped it against the classical control |
 
 **Dashboard**: FR-030 to FR-036. **FR-031 changed:** errors across the window (RMS, worst, the
 bound's RMS) instead of at one reference time. **FR-032:** a chart of range, bearing, course,
@@ -106,7 +108,8 @@ validated against the JSON Schema that LinkML generates for `DemoScenario`
 (`site/static/demo-data/demo-scenario.schema.json`, kept current by
 `scripts/site/demo_schema.py --check`).
 
-**Non-functional**: NFR-1 to NFR-5 as drafted. Least squares at 360 bearings takes about 30 ms
+**Non-functional**: NFR-1 to NFR-5 as drafted, with **NFR-4 changed**: the page is laid out for a
+full-width browser (the owner's choice). Below 1,200 px it stacks. Least squares at 360 bearings takes about 30 ms
 in Chromium.
 
 ## Acceptance (as checked)
@@ -116,7 +119,7 @@ in Chromium.
 | 1 | Every preset loads, solves and shows every panel | `demo_page.mjs`, `demo_node.mjs` |
 | 2 | Zero noise, good geometry: least-squares range error under 0.1% | `demo_node.mjs` |
 | 3 | No zig: indicator red, solution shown | both |
-| 4 | Target turn: mismatch flag shown; one target leg clears it and cuts the error (81.6% → 1.8% RMS) | both |
+| 4 | Target turn: mismatch flag shown; one target leg clears it and cuts the error (32% → 1.8% RMS) | both |
 | 5 | The URL and JSON round trips give the same scenario and solution | both |
 | 6 | The Docusaurus build and the PR preview work | CI `site`, `pages.yml` |
 
@@ -125,7 +128,9 @@ Also checked:
 - The JavaScript least squares equals Python's `solve_batch` on 11 problems the page builds
   (state within 1e-6 relative, iterations equal; `conformance/onnx/demo/golden-ls.json`).
 - The ONNX layer with one leg equals it on noise-free bearings.
-- The oracle cuts the target-turn error from 82% to under 0.5% (noise-free).
+- The oracle cuts the target-turn error to under 0.5% (noise-free).
+- The learned model's float32 inputs equal Python's bit for bit and its own track within 1e-6;
+  onnxruntime-web's manoeuvre probabilities are within 1e-3 of torch's.
 - `tl-layer.onnx` re-exports byte for byte. onnxruntime agrees with torch within 1.7e-6
   (`tl-layer.json`).
 
@@ -141,9 +146,14 @@ Also checked:
 - **The oracle is not a system.** It is told the truth. It shows what segmentation buys on the
   model-mismatch lesson, not what any segmenter achieves (spec 005's C, and Gate S's 0.90 of the
   gap).
-- **E is slow and causal.** It runs about three minutes per solve. Its "track" is a series of
-  real-time estimates, so it is not comparable row for row with the time-late fits. Its
-  covariance is never drawn.
+- **The learned model is out of its training range easily.** It was trained on initial ranges of
+  2–20 km and 5-second bearings. The presets keep the target there, but a user can drag the
+  target out (the first presets at about 33 km gave it 18% range error). It does not state the
+  presets' 40° target turn. Study L found it about 20% worse than the classical control in a
+  tail, level at the median. With noise, it beats least squares where the geometry is weak (no
+  zig: 6% against 130%) and loses where it is good (10% against 0.3%).
+- **Size.** The three seeds add 78 MB to the site and to each PR preview. Each is loaded only
+  when chosen.
 - **Decision 10 surprises.** The handle's tooltip and the help text say that the rest of the
   track swings. Waypoint drag is the local alternative.
 - **A screenshot of a failure out of context.** The observability and residual panels sit beside

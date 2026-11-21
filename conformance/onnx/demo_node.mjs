@@ -2,7 +2,8 @@
 // determinism, the JavaScript least squares against Python's golden vectors, the dashboard's
 // acceptance criteria 2-5, the LinkML validation, and the ONNX physics layer (one leg against the
 // JavaScript solve; the oracle on a target turn) in onnxruntime-web's Node build of the same
-// WASM. The learned model runs only with DEMO_E=1 (about three minutes).
+// WASM, and spec 016's whole-period learned model: its inputs and its own track against
+// Python's golden file, and each seed on the presets.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -14,6 +15,7 @@ import { PRESETS, clone } from "../../site/static/demo-data/js/presets.js";
 import { SOLVERS } from "../../site/static/demo-data/js/solvers.js";
 import { encodeFragment, decodeFragment, checkScenario } from "../../site/static/demo-data/js/codec.js";
 import { goldenCases } from "./demo_problems.mjs";
+import * as TLM from "../../site/static/demo-data/js/tlm.js";
 
 const here = new URL(".", import.meta.url).pathname;
 const site = new URL("../../site/static/", import.meta.url).pathname;
@@ -23,7 +25,7 @@ const solver = (name) => SOLVERS.find((s) => s.info.name === name);
 
 let ort = null;
 const sessions = {};
-const GRAPHS = { "tl-layer": "demo-data/tl-layer.onnx", es: "viewer-data/es.onnx", ew: "viewer-data/model.onnx", layer: "viewer-data/layer.onnx" };
+const GRAPHS = { "tl-layer": "demo-data/tl-layer.onnx", "tlm-s1": "demo-data/tlm-s1.onnx", "tlm-s2": "demo-data/tlm-s2.onnx", "tlm-s3": "demo-data/tlm-s3.onnx" };
 async function run(name, feeds) {
   if (!ort) {
     ort = await import("onnxruntime-web/dist/ort.node.min.mjs").catch(() => import("onnxruntime-web"));
@@ -31,7 +33,7 @@ async function run(name, feeds) {
   }
   sessions[name] ??= await ort.InferenceSession.create(site + GRAPHS[name]);
   const f = {};
-  for (const [k, v] of Object.entries(feeds)) f[k] = v.dtype === "int64" ? new ort.Tensor("int64", BigInt64Array.from(v.data, (x) => BigInt(Math.round(x))), v.shape) : new ort.Tensor("float64", Float64Array.from(v.data), v.shape);
+  for (const [k, v] of Object.entries(feeds)) f[k] = v.dtype === "float32" ? new ort.Tensor("float32", Float32Array.from(v.data), v.shape) : v.dtype === "bool" ? new ort.Tensor("bool", Uint8Array.from(v.data), v.shape) : v.dtype === "int64" ? new ort.Tensor("int64", BigInt64Array.from(v.data, (x) => BigInt(Math.round(x))), v.shape) : new ort.Tensor("float64", Float64Array.from(v.data), v.shape);
   const out = await sessions[name].run(f);
   const o = {};
   for (const [k, t] of Object.entries(out)) o[k] = Float64Array.from(t.data, Number);
@@ -206,9 +208,41 @@ test("the oracle told the manoeuvre times removes the turn's bias", async () => 
   assert.ok(or.ev.summary.range_pct.rms < 0.5 && cv.ev.summary.range_pct.rms > 20, `${or.ev.summary.range_pct.rms} vs ${cv.ev.summary.range_pct.rms}`);
 });
 
-test("the learned model E answers in the window (DEMO_E=1)", { skip: process.env.DEMO_E !== "1" }, async () => {
-  const r = await solveScenario(preset("good-geometry"), "e-gate2");
-  assert.equal(r.sol.status, "converged");
-  assert.ok(r.ev.t.length > 50);
-  assert.ok(r.ev.summary.range_pct.rms < 50);
+test("the whole-period model's inputs and own track equal Python's (spec 016 port)", async () => {
+  const golden = JSON.parse(readFileSync(here + "demo/golden-tlm.json", "utf8"));
+  const cases = goldenCases();
+  const sha = createHash("sha256").update(JSON.stringify({ cases }) + "\n").digest("hex");
+  assert.equal(sha, golden.problems_sha256);
+  assert.ok(Object.keys(golden.cases).length >= 8);
+  for (const c of cases) {
+    const g = golden.cases[c.id];
+    if (!g) continue;
+    const { f, th } = TLM.periodFeatures(c.t, c.ox, c.oy, c.z, c.sigma);
+    const n = c.t.length;
+    const fsha = createHash("sha256").update(Buffer.from(f.buffer, 0, n * TLM.N_FEATURES * 4)).digest("hex");
+    assert.equal(fsha, g.features_sha256_f32, `${c.id}: float32 features bit for bit`);
+    assert.ok(Math.abs(th - g.theta) < 1e-15);
+    // the track from Python's own means, so only the read-out is compared here
+    const tr = TLM.directTrack(g.mean, c.ox, c.oy, c.z, th);
+    g.track_every_6.forEach((row, i) => row.forEach((v, j) => assert.ok(Math.abs(tr[6 * i][j] - v) <= 1e-6 * Math.max(1, Math.abs(v)), `${c.id} row ${6 * i} col ${j}: ${tr[6 * i][j]} vs ${v}`)));
+    // and the network itself in onnxruntime-web against torch
+    const sol = await solver("tlm-s1").solve({ t_s: c.t, bearing_rad: c.z, own_x_m: c.ox, own_y_m: c.oy, sigma_rad: c.sigma }, { run });
+    const p = g.logit.map((l) => 1 / (1 + Math.exp(-l)));
+    sol.manoeuvre_prob.forEach((q, j) => assert.ok(Math.abs(q - p[j]) < 1e-3, `${c.id} token ${j}`));
+    assert.ok(Math.abs(sol.x_m.at(-1) - g.track_every_6.at(-1)[0]) < 50 || n % 6 !== 1, `${c.id} end x`);
+  }
+});
+
+test("each seed of the whole-period model solves the presets", async () => {
+  for (const name of ["tlm-s1", "tlm-s2", "tlm-s3"]) {
+    const good = await solveScenario(preset("good-geometry"), name);
+    assert.equal(good.sol.status, "converged", name);
+    assert.equal(good.ev.t.length, good.rows.length, `${name}: an answer at every bearing (time-late)`);
+    // a demonstration, not a gate: the model's own track is within a few tens of percent
+    assert.ok(good.ev.summary.range_pct.rms < 30, `${name} good geometry ${good.ev.summary.range_pct.rms}`);
+    const turn = await solveScenario(preset("target-turn"), name);
+    assert.equal(turn.sol.manoeuvre_prob.length, Math.ceil(turn.rows.length / 6), `${name}: a probability per token`);
+  }
+  const bad = await solveScenario({ ...preset("good-geometry"), interval_s: 10 }, "tlm-s1");
+  assert.equal(bad.sol.status, "failed");
 });

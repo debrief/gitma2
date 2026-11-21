@@ -905,6 +905,13 @@
                     "description": "Its model, in words (for example: one constant-velocity leg).",
                     "type": "string"
                 },
+                "learned": {
+                    "description": "A trained model (its covariance, if any, is not drawn).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
                 "name": {
                     "type": "string"
                 },
@@ -5811,6 +5818,26 @@
                 "iterations": {
                     "type": [
                         "integer",
+                        "null"
+                    ]
+                },
+                "manoeuvre_prob": {
+                    "description": "The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "manoeuvre_t_s": {
+                    "description": "Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row).",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
                         "null"
                     ]
                 },

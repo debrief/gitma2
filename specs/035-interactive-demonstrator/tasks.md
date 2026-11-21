@@ -16,3 +16,5 @@
 - [x] T014 `demo_page.mjs` in Chromium; CI job `demo`
 - [x] T015 Kickoff and slides posts; AGENTS.md entry; PR
 - [x] T016 Owner feedback on the PR: progress bar and cancel; leg speed labels; NM grid; arcs drawn finely; click-to-split hint
+- [x] T017 Owner: drop real-time E; spec 016's whole-period model, three seeds (`demo_tlm_export.py`, `tlm.js`, `golden-tlm.json`, CI re-export); presets inside its training range
+- [x] T018 Owner: one-screen full-width layout; hidden charts widen only

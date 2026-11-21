@@ -2,7 +2,7 @@
 // at once; ONNX solvers load ONNX Runtime Web (WASM, one thread) on first use. The page posts
 // one request per recompute and discards any result older than its latest request.
 //
-// In:  {type: "init", ortBase, models: {"tl-layer", es, ew, layer}}  (URLs)
+// In:  {type: "init", ortBase, models: {"tl-layer", "tlm-s1", "tlm-s2", "tlm-s3"}}  (URLs)
 //      {type: "solve", id, solver, problem}
 //      {type: "cancel", id}
 // Out: {type: "ready"} | {type: "solved", id, solution} | {type: "progress", id, stage, ...}
@@ -30,11 +30,13 @@ async function session(name) {
 }
 
 function tensor(v) {
+  if (v.dtype === "float32") return new ort.Tensor("float32", Float32Array.from(v.data), v.shape);
+  if (v.dtype === "bool") return new ort.Tensor("bool", Uint8Array.from(v.data), v.shape);
   if (v.dtype === "int64") return new ort.Tensor("int64", BigInt64Array.from(v.data, (x) => BigInt(Math.round(x))), v.shape);
   return new ort.Tensor("float64", Float64Array.from(v.data), v.shape);
 }
 
-// spec 021's graph names ("es", "layer", "ew") and this spec's "tl-layer"
+// graph names: "tl-layer" and "tlm-s1".."tlm-s3"
 async function run(name, feeds) {
   const s = await session(name);
   const f = {};

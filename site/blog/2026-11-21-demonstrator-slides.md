@@ -10,7 +10,7 @@ The [demonstrator](/demo) is live on the site. Drag the blue ownship and the red
 turns, narrow the window, and the target's track is solved from bearings over that window.
 
 - **Solvers:** JavaScript least squares, the physics layer in ONNX (one leg, or told the true
-  manoeuvre times) and Gate 2's learned E.
+  manoeuvre times) and spec 016's time-late whole-period learned model (three seeds).
 - **Dashboard:** errors across the window beside the Cramér–Rao bound, observability, a
   model-mismatch flag, and bearing and residual charts.
 
@@ -39,24 +39,25 @@ world.
 
 ## Demonstration (preset numbers, seed 1, σ 1°)
 
-| Preset and solver | Range error |
-| --- | --- |
-| Good geometry, least squares | 0.22% RMS (0.039 NM, bound 0.068 NM); residuals 1.01 σ |
-| Target turn, one leg | 80% RMS |
-| Target turn, told the turn (oracle) | 1.1% |
-| Target turn, one leg on the first target leg only | 1.8% |
-| No zig, least squares | 57%, with residuals at 1.01 σ and the indicator red |
+Range error, RMS over the window:
 
-On the no-zig preset the bearings fit and the range does not.
+| Preset | Least squares | Learned, whole period (seed 1) | Other |
+| --- | --- | --- | --- |
+| Good geometry | 0.30% (residuals 1.01 σ) | 9.9% | |
+| Target turn | 33% (one leg) | 12% | told the turn 1.0%; one leg on the first target leg 1.8% |
+| No zig | 130% (residuals 1.01 σ; indicator red) | 5.8% | |
+
+Where the geometry is good, the fit wins. Where the bearings cannot fix range, the learned
+model's prior wins.
 
 Figures: `scripts/research/demo_charts.mjs`, sidecars beside each SVG.
 
 ## What was not achieved
 
-- **E is slow.** About three minutes on a two-hour window, because C's confirmation runs on
-  every nomination.
-- **E is causal.** Its track is a series of real-time estimates, so it is not a like-for-like
-  time-late fit.
+- **The learned model is easily out of its training range** (initial range 2–20 km, 5-second
+  bearings, at most two hours). It did not state the target-turn preset's turn. Study L stopped
+  it against the classical control.
+- **Size:** 26 MB per seed.
 - **The ONNX layer thins** a two-hour window to every second bearing, so with noise it differs
   from the JavaScript solve.
 - **Not built:** Monte Carlo clouds, continuous recompute and the time-late `ctl` system.

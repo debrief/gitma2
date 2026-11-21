@@ -41,7 +41,7 @@ function ellipse(cov) {
   return { rx: Math.sqrt(l1), ry: Math.sqrt(l2), ang };
 }
 
-function fitView(sc) {
+function fitView(sc, w = W, h = H) {
   const pts = [];
   for (const tr of [sc.ownship, sc.target]) {
     pts.push(...T.waypoints(tr));
@@ -51,7 +51,28 @@ function fitView(sc) {
     x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
   }
   const span = Math.max(x1 - x0, y1 - y0, 2) * 1.15;
-  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, ppn: Math.min(W, H) / span };
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, ppn: Math.min(w, h) / span };
+}
+
+// the pixel size of an element (the plot and each chart draw at their box's own size, so text
+// keeps its size and a hidden chart lets the others widen without growing taller)
+function useSize(ref) {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    if (!ref.current) return undefined;
+    const ro = new ResizeObserver(([e]) => {
+      const r = e.contentRect;
+      setSize((s) => (Math.abs(s.w - r.width) < 1 && Math.abs(s.h - r.height) < 1 ? s : { w: Math.round(r.width), h: Math.round(r.height) }));
+    });
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, [ref]);
+  return size;
+}
+function ChartBox({ render }) {
+  const ref = useRef(null);
+  const { w, h } = useSize(ref);
+  return <div ref={ref} className={styles.chartBox}>{w > 40 && h > 80 ? render(w, h) : null}</div>;
 }
 
 // ---------- small charts: time runs down the left, the value across (owner, 2026-11-21) ----------
@@ -74,13 +95,13 @@ function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height 
   const sy = (t) => PADT + ((t - ta) / (tb - ta || 1)) * (height - PADT - PADB);
   const sx = (v) => PADL + ((Math.min(Math.max(v, v0), v1) - v0) / (v1 - v0)) * (width - PADL - PADR);
   const path = (pts) => pts.filter((p) => Number.isFinite(p[1])).map((p, i) => `${i ? "L" : "M"}${sx(p[1]).toFixed(1)},${sy(p[0]).toFixed(1)}`).join("");
-  const ticksV = [v0 + pad, (v0 + v1) / 2, v1 - pad];
+  const ticksV = width < 260 ? [v0 + pad, v1 - pad] : [v0 + pad, (v0 + v1) / 2, v1 - pad];
   const nt = 8;
   const lab = (v) => (Math.abs(v) >= 100 ? v.toFixed(0) : Number(v.toPrecision(3)).toString());
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className={styles.chart} data-testid={testid} role="img" aria-label={title}>
+    <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} className={styles.chart} data-testid={testid} role="img" aria-label={title}>
       <text x={4} y={12} fontSize={11} fill="currentColor">{title}</text>
-      <text x={PADL} y={PADT - 16} fontSize={10} fill="currentColor">{yLabel}</text>
+      <text x={PADL} y={PADT - 16} fontSize={10} fill="currentColor"><title>{yLabel}</title>{yLabel.length * 5.5 > width - PADL ? yLabel.slice(0, Math.max(4, Math.floor((width - PADL) / 5.5) - 1)) + "…" : yLabel}</text>
       <rect x={PADL} y={PADT} width={width - PADL - PADR} height={height - PADT - PADB} fill="none" stroke="currentColor" strokeOpacity={0.2} />
       {marks.map((m, i) => (
         <rect key={i} x={PADL} y={sy(m[0])} height={Math.max(sy(m[1]) - sy(m[0]), 1)} width={width - PADL - PADR} fill={m[2] || "#888"} fillOpacity={0.12} />
@@ -147,7 +168,6 @@ function ProgressBar({ fraction, stage, seconds, onCancel }) {
 // ---------- the page ----------
 function Demo() {
   const base = useBaseUrl("/demo-data/");
-  const viewerBase = useBaseUrl("/viewer-data/");
   const ownOrt = useBaseUrl("/ort/");
   const timelateUrl = useBaseUrl("/timelate");
   const { siteConfig } = useDocusaurusContext();
@@ -156,8 +176,13 @@ function Demo() {
   const [schema, setSchema] = useState(null);
   const [hist, setHist] = useState({ past: [], sc: clone(DEFAULT_SCENARIO), future: [] });
   const sc = hist.sc;
+  const scRef = useRef(sc);
+  scRef.current = sc;
   const [draft, setDraft] = useState(null); // a scenario while dragging (not solved)
   const [sel, setSel] = useState(null); // {vessel: "ownship"|"target", kind: "wp"|"leg", index}
+  const plotBoxRef = useRef(null);
+  const plotSize = useSize(plotBoxRef);
+  const W = plotSize.w || 760, H = plotSize.h || 520; // the plot's own pixels
   const [view, setView] = useState(() => fitView(DEFAULT_SCENARIO));
   const [winDraft, setWinDraft] = useState(null);
   const [sigmaDraft, setSigmaDraft] = useState(null);
@@ -194,7 +219,7 @@ function Demo() {
             if (errs.length) setNotice(`The link's scenario was not loaded: ${errs.slice(0, 3).join("; ")}`);
             else {
               setHist({ past: [], sc: got, future: [] });
-              setView(fitView(got));
+              setView(fitView(got, W, H));
             }
           } catch (e) {
             setNotice(`The link's scenario could not be read (${e.message}).`);
@@ -217,9 +242,9 @@ function Demo() {
       ortBase: new URL(ortBase, window.location.origin).href,
       models: {
         "tl-layer": new URL(base + "tl-layer.onnx", window.location.origin).href,
-        es: new URL(viewerBase + "es.onnx", window.location.origin).href,
-        ew: new URL(viewerBase + "model.onnx", window.location.origin).href,
-        layer: new URL(viewerBase + "layer.onnx", window.location.origin).href,
+        "tlm-s1": new URL(base + "tlm-s1.onnx", window.location.origin).href,
+        "tlm-s2": new URL(base + "tlm-s2.onnx", window.location.origin).href,
+        "tlm-s3": new URL(base + "tlm-s3.onnx", window.location.origin).href,
       },
     });
     w.onmessage = (ev) => {
@@ -233,7 +258,7 @@ function Demo() {
     w.onerror = (e) => setSolve({ status: "error", error: e.message || "worker failed" });
     worker.current = w;
     return () => w.terminate();
-  }, [base, viewerBase, ortBase]);
+  }, [base, ortBase]);
 
   // ---- derived from the committed scenario ----
   const derived = useMemo(() => {
@@ -297,6 +322,10 @@ function Demo() {
   const clampPx = (v) => Math.max(-1e5, Math.min(1e5, v));
   const poly = (pts) => pts.map(([x, y], i) => `${i ? "L" : "M"}${clampPx(sx(x / NM)).toFixed(1)},${clampPx(sy(y / NM)).toFixed(1)}`).join("");
 
+  // refit when the plot's box is first measured or resized
+  useEffect(() => {
+    if (plotSize.w) setView(fitView(scRef.current, plotSize.w, plotSize.h));
+  }, [plotSize.w, plotSize.h]);
   const svgRef = useRef(null);
   const drag = useRef(null);
   const toSvg = (e) => {
@@ -419,8 +448,6 @@ function Demo() {
   const startRef = useRef(null), endRef = useRef(null), sigmaRef = useRef(null);
   const period = derived.b.period;
   const win = winDraft || sc.window;
-  const scRef = useRef(sc);
-  scRef.current = sc;
   const winRef = useRef(win);
   winRef.current = win;
   useEffect(() => {
@@ -477,7 +504,7 @@ function Demo() {
     }
     setImportErrors(null);
     commit(obj);
-    setView(fitView(obj));
+    setView(fitView(obj, W, H));
     return true;
   }, [schema, commit]);
   const onFile = async (e) => {
@@ -491,7 +518,7 @@ function Demo() {
     if (!p) return;
     const next = { ...clone(p.scenario), solver: sc.solver, show_ellipses: sc.show_ellipses };
     commit(next);
-    setView(fitView(next));
+    setView(fitView(next, W, H));
     setSel(null);
   };
 
@@ -504,7 +531,7 @@ function Demo() {
     summary: () => (ev ? ev.summary : null),
     observability: () => derived.obs,
     mismatch: () => !!(info.single_leg && derived.kn && derived.kn.length),
-    set: (next) => { commit(next); setView(fitView(next)); },
+    set: (next) => { commit(next); setView(fitView(next, W, H)); },
     importText,
     fragment: () => window.location.hash,
   };
@@ -579,7 +606,7 @@ function Demo() {
     const pts = ev.ex.map((x, k) => [x, ev.ey[k]]);
     const last = pts[pts.length - 1];
     let ell = null;
-    if (sc.show_ellipses && solve.solution.cov_end && info.name !== "e-gate2") {
+    if (sc.show_ellipses && solve.solution.cov_end && !info.learned) {
       const e1 = ellipse(solve.solution.cov_end);
       if (e1) {
         const cx = sx(last[0] / NM), cy = sy(last[1] / NM);
@@ -619,6 +646,19 @@ function Demo() {
   };
   const q = qdef[quantity];
   const xDom = [sc.window.start_s, Math.min(sc.window.end_s, period)];
+  // the learned model's own statement of where the target manoeuvred (probability over 0.5)
+  const modelSpans = [];
+  if (sol && sol.manoeuvre_prob) {
+    let start = null;
+    sol.manoeuvre_prob.forEach((pr, j) => {
+      const t = sol.manoeuvre_t_s[j] + derived.t0;
+      if (pr > 0.5 && start === null) start = j ? sol.manoeuvre_t_s[j - 1] + derived.t0 : derived.t0;
+      if ((pr <= 0.5 || j === sol.manoeuvre_prob.length - 1) && start !== null) {
+        modelSpans.push([start, t, "#9467bd"]);
+        start = null;
+      }
+    });
+  }
   let errChart = null;
   if (ev) {
     const pts = ev.t.map((t, k) => [t, q.f(k)]);
@@ -633,8 +673,8 @@ function Demo() {
       bands.push({ colour: "#888", points: bp });
     }
     const big = Math.max(...pts.map((p) => Math.abs(p[1])).filter(Number.isFinite), 1e-9);
-    errChart = (
-      <Chart testid="chart-error" title="Error against the truth across the window" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}`} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={derived.kn.map((m) => [m.t0, m.t1, TGT])} yClip={[-big, big]} />
+    errChart = (w, h) => (
+      <Chart width={w} height={h} testid="chart-error" title="Error vs truth" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}${modelSpans.length ? "; purple: model's manoeuvres" : ""}`} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={[...derived.kn.map((m) => [m.t0, m.t1, TGT]), ...modelSpans]} yClip={[-big, big]} />
     );
   }
   let brgChart = null;
@@ -648,8 +688,8 @@ function Demo() {
     const pred = ev ? ev.predicted.map(([t, z]) => [t, unwrap(z)]) : [];
     const res = ev ? ev.residual : [];
     brgChart = {
-      bearings: <Chart testid="chart-bearings" title="Bearings: measured and the solution's" xDomain={[0, period]} yLabel="bearing (°): dots measured, line solution" series={[{ points: meas, dots: true, colour: BRG, colourAt: (p) => (inWin(p[0]) ? "#8c8c00" : "#bbb") }, { points: pred, colour: EST, width: 1.5 }]} marks={[[win.start_s, win.end_s, "#2ca02c"]]} />,
-      residuals: <Chart testid="chart-residuals" title="Residuals ÷ σ" xDomain={[0, period]} yLabel="residual ÷ σ (about ±2 when consistent)" series={[{ points: res, dots: true, colour: EST }, { points: [[0, 2], [period, 2]], colour: "#888", dash: "3 3", width: 1 }, { points: [[0, -2], [period, -2]], colour: "#888", dash: "3 3", width: 1 }]} marks={[[win.start_s, win.end_s, "#2ca02c"]]} yClip={[-8, 8]} />,
+      bearings: (w, h) => <Chart width={w} height={h} testid="chart-bearings" title="Bearings" xDomain={[0, period]} yLabel="° (dots measured, line solution)" series={[{ points: meas, dots: true, colour: BRG, colourAt: (p) => (inWin(p[0]) ? "#8c8c00" : "#bbb") }, { points: pred, colour: EST, width: 1.5 }]} marks={[[win.start_s, win.end_s, "#2ca02c"]]} />,
+      residuals: (w, h) => <Chart width={w} height={h} testid="chart-residuals" title="Residuals" xDomain={[0, period]} yLabel="÷ σ (±2 dashed)" series={[{ points: res, dots: true, colour: EST }, { points: [[0, 2], [period, 2]], colour: "#888", dash: "3 3", width: 1 }, { points: [[0, -2], [period, -2]], colour: "#888", dash: "3 3", width: 1 }]} marks={[[win.start_s, win.end_s, "#2ca02c"]]} yClip={[-8, 8]} />,
     };
   }
 
@@ -709,7 +749,7 @@ function Demo() {
         </label>
         <button className="button button--sm button--secondary" onClick={undo} disabled={!hist.past.length} title="Ctrl+Z">Undo</button>
         <button className="button button--sm button--secondary" onClick={redo} disabled={!hist.future.length} title="Ctrl+Y">Redo</button>
-        <button className="button button--sm button--secondary" onClick={() => setView(fitView(sc))}>Fit view</button>
+        <button className="button button--sm button--secondary" onClick={() => setView(fitView(sc, W, H))}>Fit view</button>
         <label><input type="checkbox" checked={!!sc.show_ellipses} onChange={(e) => commit({ ...sc, show_ellipses: e.target.checked })} /> 1σ/2σ ellipses</label>
         <button className="button button--sm button--outline button--primary" onClick={exportJson}>Export JSON</button>
         <button className="button button--sm button--outline button--primary" onClick={() => fileRef.current && fileRef.current.click()}>Import JSON</button>
@@ -722,9 +762,10 @@ function Demo() {
           <ul>{importErrors.slice(0, 8).map((e, i) => <li key={i}><code>{e}</code></li>)}</ul>
         </div>
       )}
-      <div className={styles.grid}>
-        <div>
-          <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className={styles.plot} data-testid="plot" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onContextMenu={(e) => {
+      <div className={styles.app}>
+        <div className={styles.plotCol}>
+          <div ref={plotBoxRef} className={styles.plotBox}>
+          <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className={styles.plot} width={W} height={H} data-testid="plot" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onContextMenu={(e) => {
             const t = e.target;
             if (t.getAttribute("data-kind") === "wp") {
               e.preventDefault();
@@ -772,10 +813,11 @@ function Demo() {
             <g pointerEvents="none">
               <line x1={W - 20 - niceNm * view.ppn} x2={W - 20} y1={H - 18} y2={H - 18} stroke="currentColor" strokeWidth={2} />
               <text x={W - 20} y={H - 24} fontSize={11} textAnchor="end" fill="currentColor">{niceNm} NM</text>
-              <text x={8} y={30} fontSize={11} fill="currentColor" fillOpacity={0.75}>click a leg to add a waypoint (a turn); drag a circle to move it; drag a square to change the leg's course and speed</text>
+              <text x={8} y={30} fontSize={11} fill="currentColor" fillOpacity={0.75}>click a leg to add a waypoint · drag a circle to move it · drag a square for course and speed · wheel to zoom</text>
               <text x={8} y={16} fontSize={11} fill="currentColor">north up; blue ownship, red target (thick: inside the window); green dashed: the solution; olive: bearings</text>
             </g>
           </svg>
+          </div>
           <div className="margin-top--sm" data-testid="window-slider">
             <div className={styles.small}>
               Analysis window {fmtMin(win.start_s)} – {fmtMin(Math.min(win.end_s, period))} of {fmtMin(period)} (min:s); {derived.rows.length} bearings go to the solver. Drag either end; the solve runs on release.
@@ -799,7 +841,30 @@ function Demo() {
             </label>
           </div>
         </div>
-        <div>
+        <div className={styles.chartsCol}>
+          <div className={styles.toolbar} data-testid="chart-toggles">
+            <b>Charts</b> (time runs down):
+            {[["error", "error vs time"], ["bearings", "bearings"], ["residuals", "residuals"]].map(([k, label]) => (
+              <label key={k}><input type="checkbox" checked={showCharts[k]} data-testid={`toggle-${k}`} onChange={(e) => setShowCharts({ ...showCharts, [k]: e.target.checked })} /> {label}</label>
+            ))}
+          </div>
+          <div className={styles.chartRow}>
+            {showCharts.error && (
+              <div className={styles.chartPanel} data-testid="panel-error-time">
+                <div className={styles.toolbar}>
+                  {Object.keys(qdef).map((k) => (
+                    <label key={k}><input type="radio" name="q" checked={quantity === k} onChange={() => setQuantity(k)} /> {k}</label>
+                  ))}
+                </div>
+                {errChart ? <ChartBox render={errChart} /> : <span className={styles.small}>no solution yet</span>}
+              </div>
+            )}
+            {showCharts.bearings && <div className={styles.chartPanel} data-testid="panel-bearings">{brgChart ? <ChartBox render={brgChart.bearings} /> : null}</div>}
+            {showCharts.residuals && <div className={styles.chartPanel} data-testid="panel-residuals">{brgChart ? <ChartBox render={brgChart.residuals} /> : null}</div>}
+            {!showCharts.error && !showCharts.bearings && !showCharts.residuals && <div className={styles.small}>All charts hidden.</div>}
+          </div>
+        </div>
+        <div className={styles.dashCol}>
           <div className={styles.panel} data-testid="panel-status">
             <h4>Solver</h4>
             <div><b>{info.label}</b></div>
@@ -822,6 +887,11 @@ function Demo() {
                   {s && <>; normalised RMS residual <b data-testid="nrms">{fmt(s.nrms, 2)}</b> (≈1 is a consistent fit)</>}
                   {sol.stride > 1 && <div className={styles.small}>Every {sol.stride}th bearing used (the graph takes at most 720).</div>}
                   {!info.time_late && s && <div className={styles.small}>{s.answered} real-time estimates in the window.</div>}
+                  {sol.manoeuvre_prob && (
+                    <div className={styles.small} data-testid="model-manoeuvres">
+                      The model states {modelSpans.length} target {modelSpans.length === 1 ? "manoeuvre" : "manoeuvres"} (probability over 0.5; shaded purple on the error chart, the truth's red); the truth has {derived.kn.length} in the window.
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -860,38 +930,18 @@ function Demo() {
             <div className={styles.small}>Time-late: each error is read at every bearing time in the window{info.time_late ? "" : " where the real-time model answered"}. The bound assumes the target's manoeuvre times are known; an error far under it was a lucky noise draw, far over it a poor fit. One draw only: press Reseed to see another.</div>
           </div>
           {editor}
+          <details>
+            <summary>How to use it, and what is running</summary>
+            <ul className={styles.small}>
+              <li>Drag a <b>waypoint</b> (circle) to move it alone: the legs either side change course and speed, everything else stays put. Drag the <b>start</b> (filled circle) to move a whole track.</li>
+              <li>Drag a leg's <b>square handle</b> to change its course and speed: every later leg swings round with it, so the rest of the track can move a long way.</li>
+              <li>Click a leg to insert a waypoint; select a waypoint and press Delete (or right-click it) to remove it. Undo with Ctrl+Z. Amber waypoints: the turn does not fit at its rate and is drawn tighter.</li>
+              <li>Wheel to zoom, drag empty space to pan. The link in the address bar restores this exact scenario, noise draw and solver.</li>
+              <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and spec 016's whole-period learned model (three training seeds, 26 MB each, loaded on first use), which reads the whole window at once and also states where it thinks the target manoeuvred. For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>
+            </ul>
+          </details>
         </div>
       </div>
-      <div className={styles.toolbar} data-testid="chart-toggles">
-        <b>Charts</b> (time runs down):
-        {[["error", "error vs time"], ["bearings", "bearings"], ["residuals", "residuals"]].map(([k, label]) => (
-          <label key={k}><input type="checkbox" checked={showCharts[k]} data-testid={`toggle-${k}`} onChange={(e) => setShowCharts({ ...showCharts, [k]: e.target.checked })} /> {label}</label>
-        ))}
-      </div>
-      <div className={styles.charts}>
-        {showCharts.error && (
-          <div className={styles.panel} data-testid="panel-error-time">
-            <div className={styles.toolbar}>
-              {Object.keys(qdef).map((k) => (
-                <label key={k}><input type="radio" name="q" checked={quantity === k} onChange={() => setQuantity(k)} /> {k}</label>
-              ))}
-            </div>
-            {errChart || <span className={styles.small}>no solution yet</span>}
-          </div>
-        )}
-        {showCharts.bearings && <div className={styles.panel} data-testid="panel-bearings">{brgChart ? brgChart.bearings : null}</div>}
-        {showCharts.residuals && <div className={styles.panel} data-testid="panel-residuals">{brgChart ? brgChart.residuals : null}</div>}
-      </div>
-      <details className="margin-top--md">
-        <summary>How to use it, and what is running</summary>
-        <ul className={styles.small}>
-          <li>Drag a <b>waypoint</b> (circle) to move it alone: the legs either side change course and speed, everything else stays put. Drag the <b>start</b> (filled circle) to move a whole track.</li>
-          <li>Drag a leg's <b>square handle</b> to change its course and speed: every later leg swings round with it, so the rest of the track can move a long way.</li>
-          <li>Click a leg to insert a waypoint; select a waypoint and press Delete (or right-click it) to remove it. Undo with Ctrl+Z. Amber waypoints: the turn does not fit at its rate and is drawn tighter.</li>
-          <li>Wheel to zoom, drag empty space to pan. The link in the address bar restores this exact scenario, noise draw and solver.</li>
-          <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and Gate 2's learned model E, real-time, from spec 021's in-browser pipeline (it takes about three minutes on a two-hour window). For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>
-        </ul>
-      </details>
     </div>
   );
 }
@@ -899,11 +949,13 @@ function Demo() {
 export default function DemoPage() {
   return (
     <Layout title="Demonstrator" description="Drag an ownship and a target track and watch a time-late TMA solution respond (spec 035).">
-      <main className="container container--fluid margin-vert--md" style={{ maxWidth: 1400 }}>
-        <h1>TMA demonstrator</h1>
-        <p>
-          Drag the blue ownship and the red target, add turns, narrow the analysis window, and see the target's track solved from bearings alone over that window, with how well it did against the truth. A toy two-vessel world with Gaussian bearing noise: a feel for where the solvers are good and where geometry or a target manoeuvre breaks them, not a result.
-        </p>
+      <main className={styles.main}>
+        <div className={styles.header}>
+          <h1>TMA demonstrator</h1>
+          <span className={`${styles.small} ${styles.oneLine}`}>
+            Drag the tracks, narrow the window, and see the target solved from bearings alone over that window against the truth. A toy two-vessel world with Gaussian bearing noise, one draw at a time: a feel for the solvers, not a result.
+          </span>
+        </div>
         <BrowserOnly fallback={<p>Loading…</p>}>{() => <Demo />}</BrowserOnly>
       </main>
     </Layout>

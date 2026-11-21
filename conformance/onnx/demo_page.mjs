@@ -142,16 +142,16 @@ try {
     report[s] = r.summary;
   }
 
-  // progress: the learned model shows a determinate bar with its stage, and cancels
-  await page.selectOption("[data-testid=solver]", "e-gate2");
-  await page.waitForFunction(() => {
-    const el = document.querySelector("[data-testid=solve-progress]");
-    return el && Number(el.getAttribute("aria-valuenow")) > 0;
-  }, null, { timeout: 120000 });
-  const prog = await page.evaluate(() => ({ value: Number(document.querySelector("[data-testid=solve-progress]").getAttribute("aria-valuenow")), text: document.querySelector("[data-testid=solve-progress]").innerText, badge: !!document.querySelector("[data-testid=plot-solving]") }));
-  await page.locator("[data-testid=solve-cancel]").click();
-  const cancelled = await page.locator("[data-testid=solve-cancelled]").count();
-  check("progress bar during a slow solve, with its stage and a cancel (owner request)", prog.value > 0 && prog.badge && /Solving \d+%/.test(prog.text) && cancelled === 1, prog);
+  // the whole-period learned model in the browser, with its progress shown while it loads
+  await page.selectOption("[data-testid=preset]", "target-turn");
+  await settled();
+  await page.selectOption("[data-testid=solver]", "tlm-s1");
+  await page.waitForSelector("[data-testid=solve-progress]", { timeout: 30000 });
+  const badge = await page.locator("[data-testid=plot-solving]").count();
+  await settled();
+  const tl = await state();
+  const said = await page.locator("[data-testid=model-manoeuvres]").innerText().catch(() => "");
+  check("whole-period learned model: progress while loading, then a time-late track and its manoeuvres", badge === 1 && tl.status === "done" && tl.sol.status === "converged" && tl.summary.answered === tl.sol.t_s.length && /states \d+ target/.test(said), { range_pct_rms: tl.summary && tl.summary.range_pct.rms, ms: tl.sol && tl.sol.runtime_ms, said });
   await page.selectOption("[data-testid=solver]", "ls-js");
   await settled();
 

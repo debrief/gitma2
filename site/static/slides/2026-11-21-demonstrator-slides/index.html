@@ -41,7 +41,7 @@
             <li><b>Least squares (JavaScript)</b>: spec 021's port, equal to Python's on golden vectors</li>
             <li><b>Physics layer (ONNX)</b>, one leg</li>
             <li><b>Physics layer told the true manoeuvre times</b>: an oracle, labelled so</li>
-            <li><b>Gate 2's E</b>, real-time, about three minutes</li>
+            <li><b>Spec 016's whole-period learned model</b>, three seeds, time-late</li>
           </ul>
           <p class="small">solve(TmaProblem) → TmaSolution; both types in LinkML (schema 0.37.0)</p>
         </section>
@@ -51,7 +51,7 @@
             <img src="../../img/2026-11-21-demonstrator/target-turn.svg" alt="Target turn: the one-leg solution is far off; the oracle follows the truth" />
             <img src="../../img/2026-11-21-demonstrator/target-turn-errors.svg" alt="Range error against time, time running down" />
           </div>
-          <p class="small">One leg over a turn: 80% RMS range error. Told the turn: 1.1%. One leg on the first target leg: 1.8%.</p>
+          <p class="small">One leg over a turn: 33% RMS range error. Told the turn: 1.0%. One leg on the first target leg: 1.8%. Learned, whole period: 12%.</p>
         </section>
         <section>
           <h2>Unobservable, and flagged</h2>
@@ -59,7 +59,8 @@
             <img src="../../img/2026-11-21-demonstrator/no-zig.svg" alt="No ownship zig: the solution sits on the bearings at the wrong range" />
             <ul>
               <li>Residuals 1.01 σ: the bearings fit</li>
-              <li>Range error 57%: the range does not</li>
+              <li>Range error 130%: the range does not</li>
+              <li>The learned model (orange): 5.8%, from its prior</li>
               <li>Observability red: the bound on range is unbounded</li>
             </ul>
           </div>
@@ -67,7 +68,7 @@
         <section>
           <h2>Not achieved</h2>
           <ul>
-            <li>E is slow (C's confirmation) and causal: not a like-for-like time-late fit</li>
+            <li>The learned model is easily out of its training range (2–20 km); it misses the 40° turn</li>
             <li>The ONNX layer thins two hours to 720 rows</li>
             <li>No Monte Carlo spread, no continuous recompute, no <code>ctl</code></li>
           </ul>

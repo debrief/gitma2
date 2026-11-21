@@ -2245,6 +2245,8 @@ classes:
       cov_end: { range: float, multivalued: true, description: "4 by 4 covariance of (x, y, vx, vy) at the window end, row-major; absent when the solver states none." }
       cost: { range: float, description: "Sum of squared bearing residuals over the solver's rows, radians squared." }
       condition_number: { range: float, description: "Condition number of the Jacobi-scaled information matrix at the solution." }
+      manoeuvre_t_s: { range: float, multivalued: true, description: "Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row)." }
+      manoeuvre_prob: { range: float, multivalued: true, description: "The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s." }
 
   DemoSolverInfo:
     description: "Spec 035 FR-024: what a solver plug-in declares."
@@ -2255,3 +2257,4 @@ classes:
       single_leg: { range: boolean, required: true, description: "It assumes one constant-velocity leg (FR-036's mismatch flag)." }
       accepts_knots: { range: boolean, required: true }
       time_late: { range: boolean, required: true, description: "It fits the whole window at once (false: a causal, real-time estimator read as a track)." }
+      learned: { range: boolean, description: "A trained model (its covariance, if any, is not drawn)." }
