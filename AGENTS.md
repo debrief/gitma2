@@ -884,7 +884,8 @@ option 3, `experiments/20261121-tl13-evidence/`, histories and errors in one job
 (declared refit ÷ gap-true 0.96 [0.67, 1.40]; the 2.35/2.48 were the whole true history, which
 knows the observed periods' manoeuvres too); beyond 70 min joining is level with alone (0.97,
 median 1.03), the reversal not reproduced; against the better declared fit the truth's evidence
-is higher by > 3 in 1 of 21, lower in 11: the search is not the limit. Write-up
+is higher by > 3 in 1 of 21, lower in 11: the search is not the limit. **Owner 2026-11-21: the
+gap track is closed**; the joint solve stands for gaps under about an hour. Write-up
 `site/blog/2026-11-21-long-gaps.md`, slides `2026-11-21-long-gaps-slides.md` (figures
 `scripts/research/tl12_charts.py`). Owner's choice next: stop; register a gap × own-turn rule on
 fresh seeds (369 onward, about 140 periods per band); or first re-check the evidence on the
