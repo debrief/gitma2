@@ -1,0 +1,32 @@
+{
+ "description": "Spec 031 development, second run (spent seed 348, the long simulator's; never a result): as gaps-dev.json but the ownship holds each leg 1-2 h (spec 029's legs), so most periods have no ownship turn of their own.",
+ "seed": 348,
+ "target_ranges": "configs/timelate/tl-ranges.json",
+ "dt_s": 5,
+ "hours": [
+  6
+ ],
+ "engagements_per_duration": 40,
+ "noise_sigma_rad": 0.017453292519943295,
+ "ownship": {
+  "leg_s": {
+   "min": 3600,
+   "max": 7200
+  },
+  "offset_rad": {
+   "min": 0.5235987755982988,
+   "max": 1.5707963267948966
+  },
+  "close_offset_rad": {
+   "min": 0.0,
+   "max": 0.5235987755982988
+  },
+  "open_offset_rad": {
+   "min": 1.7453292519943295,
+   "max": 2.6179938779914944
+  },
+  "range_low_m": 3000,
+  "range_high_m": 25000,
+  "sprint_speed_mps": 11.0
+ }
+}

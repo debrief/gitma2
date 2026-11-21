@@ -101,7 +101,20 @@ def main(argv: list[str] | None = None) -> int:
         "run9",
         "run10",
     )
-    periods = list(iter_periods(a.inp, a.start, a.count, whole=whole))
+    long_cfg = plan["splits"][a.split].get("long")
+    if long_cfg:  # whole engagements from the long simulator (its config names the seed)
+        from tma2.long.sim import generate as long_generate
+        from tma2.long.timelate import period_of
+
+        cfg = json.loads(Path(long_cfg).read_text())
+        rng_l = json.loads(Path(cfg["target_ranges"]).read_text())
+        hours = float(cfg["hours"][0])
+        periods = []
+        for i in range(a.start, a.start + a.count):
+            e = long_generate(int(cfg["seed"]), i, hours, cfg, rng_l)
+            periods.append(period_of(e, 0, e.samples, i))
+    else:
+        periods = list(iter_periods(a.inp, a.start, a.count, whole=whole))
     if not periods:
         raise SystemExit(f"no σ = 1° periods at {a.start} in {a.inp}")
     refs = plan.get("references") or {}

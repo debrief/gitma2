@@ -55,10 +55,13 @@ class Period:
     def ownship_turns(self) -> list[tuple[int, int]]:
         """Ownship turns overlapping the period, in the period's rows (clipped)."""
         m = self.meta
-        raw = [
-            (m.get("turn_start_index"), m.get("zig_index")),
-            (m.get("turn2_start_index"), m.get("zig2_index")),
-        ]
+        if isinstance(m.get("ownship_turns"), list):  # the long simulator lists every turn
+            raw = [(a, b) for a, b in m["ownship_turns"]]
+        else:  # generator 0.6.0: at most two turns, by index keys
+            raw = [
+                (m.get("turn_start_index"), m.get("zig_index")),
+                (m.get("turn2_start_index"), m.get("zig2_index")),
+            ]
         out = []
         for a, b in raw:
             if a is None or b is None or int(a) < 0 or int(b) < 0:

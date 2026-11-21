@@ -1,0 +1,78 @@
+# Spec 031 diagnostic: the joint solve's declared history against the true history, by log
+# evidence, on long-gap engagements (scripts/research/tl12_evidence.py). Push `tl12ev/<name>`
+# with configs/timelate/runs/<name>.json: {"config": <long config>, "ordinals": [...]}.
+# Results to the branch results/tl12ev-<name>-<run id>.
+name: Time-late evidence diagnostic (spec 031)
+
+on:
+  push:
+    branches: ["tl12ev/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.plan.outputs.name }}
+      ordinals: ${{ steps.plan.outputs.ordinals }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        run: |
+          NAME="${GITHUB_REF_NAME#tl12ev/}"
+          test -f "configs/timelate/runs/$NAME.json"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          python3 -c "import json, sys; print('ordinals=' + json.dumps(json.load(open(sys.argv[1]))['ordinals']))" "configs/timelate/runs/$NAME.json" >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        ordinal: ${{ fromJSON(needs.setup.outputs.ordinals) }}
+    env:
+      OMP_NUM_THREADS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Evidence
+        run: |
+          CFG="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['config'])" "configs/timelate/runs/${{ needs.setup.outputs.name }}.json")"
+          mkdir -p "$RUNNER_TEMP/out"
+          uv run python scripts/research/tl12_evidence.py "$CFG" "${{ matrix.ordinal }}" "$RUNNER_TEMP/out/${{ matrix.ordinal }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ev-${{ matrix.ordinal }}
+          path: ${{ runner.temp }}/out/*
+
+  collect:
+    needs: [setup, run]
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      NAME: ${{ needs.setup.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ev-*
+          path: ${{ runner.temp }}/ev
+          merge-multiple: true
+      - name: Push the results branch
+        run: |
+          DEST="experiments/tl12ev-runs/$NAME-$GITHUB_RUN_ID"
+          BRANCH="results/tl12ev-$NAME-$GITHUB_RUN_ID"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          mkdir -p "$DEST"
+          cp -r "$RUNNER_TEMP/ev/." "$DEST/"
+          echo "{\"run_id\": \"$GITHUB_RUN_ID\", \"commit\": \"$GITHUB_SHA\", \"cpu_model\": \"$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)\"}" > "$DEST/ci.json"
+          git add -f "$DEST"
+          git commit -m "Evidence diagnostic $NAME ($GITHUB_RUN_ID)"
+          git push origin "$BRANCH"
