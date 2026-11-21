@@ -862,6 +862,23 @@ calibrated and must not be shown as an uncertainty; spec 028's hand-over defect 
 long-engagement studies run `tma2-long carry2` and read `ctl-prior` as the standing system. Not
 chosen yet: closing the track with a synthesis.
 
+034 (the long-engagement track as a whole, `specs/034-long-synthesis/`; owner 2026-11-21 "yes,
+please try it"; a synthesis: no gate, no registered result, nothing trained, no new seed; numbered
+034 because another session's spec 033 (joined periods across long gaps) is on main).
+`scripts/research/long_synthesis.py` reads every figure of record from the test records of specs
+026, 028, 029, 031 and 032 (and spec 026's supplement) into
+`experiments/20261121-long-synthesis/tables.md` and `summary.json`, with two charts. Write-up
+`site/blog/2026-11-21-long-synthesis.md`, slides `2026-11-21-long-synthesis-slides.md`; two
+reviewers (fidelity, critical) approved with findings, all taken in (`review.md`). The account:
+stitched 2-hour `ctl` held up on the tended contact (registered to 12 h; 24 and 48 h one engagement
+each); a carried start is not shown to help accuracy and saves about 31% of the search where it
+runs; a carried prior beats the same window alone where the window cannot see range (1.7–2.4 on
+1-hour windows; 1.54 on one seed, 1.37 pooled, on 2-hour windows, far range only) and is not shown
+to beat a joint solve over the same past bearings. **The long-engagement track is closed unless the
+owner reopens it** (with measured realism, association, an ownship steered by its own track, a need
+for the untended contact or lost-contact answers, a latency requirement, or a case where only a
+hand-over can travel).
+
 033 (several periods of one target across long gaps, `specs/033-long-gaps/`; owner 2026-11-20
 option 3 of spec 030's order, then "separate the factors", "diagnose the >70 min reversal" and
 "write up"; developed as 031, renumbered because another session's 031 and 032 merged first;
@@ -1348,6 +1365,11 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   each system's answered share and read the effect by range band. Range and contact loss move
   together in this simulator. A tuning yield of decided windows is a forecast too: 120 planned,
   85 came.
+- Spec 034 review: a synthesis's headline must carry each study's comparator and window length;
+  "about twice as good" pooled a 1-hour window against itself with a 2-hour reading on one seed.
+  Quote cost figures as the panels corrected them (on the windows where the cheaper path runs),
+  label every row whose "above 1" reads the other way, and never mistake a bearings-held share for
+  an error.
 - `long.yml`: a results branch whose history carries workflow edits is refused to the Actions
   token, so the collect step pushes an orphan branch. Pushes to main are ignored: merging a PR
   that changes `configs/long/run.json` re-ran the last study's whole plan.

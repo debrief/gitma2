@@ -1,0 +1,394 @@
+{
+ "records": {
+  "026": "experiments/20261118-ls/study.json",
+  "026s": "experiments/20261118-ls/supplement.json",
+  "028": "experiments/20261119-cp/study.json",
+  "029": "experiments/20261119-hold/study.json",
+  "031": "experiments/20261120-cmp/study.json",
+  "032": "experiments/20261120-legs/study.json"
+ },
+ "seeds": {
+  "026": 351,
+  "028": 356,
+  "029": 364,
+  "031": 366,
+  "032": 368
+ },
+ "ratios": [
+  {
+   "spec": "026",
+   "name": "E1",
+   "ratio": "ctl \u00f7 ctl-carry (2 h windows)",
+   "above_1": "carried start better",
+   "convention": "tended contact, all windows; each chain's first window (60) equals ctl by construction and counts as a tie",
+   "gm": 1.0174439929179677,
+   "interval": [
+    0.9584852423037469,
+    1.0822301334881714
+   ],
+   "median": 1.0,
+   "shares": {
+    "better": 0.27298050139275765,
+    "twice_better": 0.06128133704735376,
+    "twice_worse": 0.04735376044568245
+   },
+   "n": "359 windows, 60 engagements",
+   "reading": "non-inferior",
+   "decided": true
+  },
+  {
+   "spec": "026",
+   "name": "E1 without first windows",
+   "ratio": "ctl \u00f7 ctl-carry (2 h windows)",
+   "above_1": "carried start better",
+   "convention": "tended contact, constructed ties excluded (panel supplement)",
+   "gm": 1.0209809483621328,
+   "interval": [
+    0.9502004529704936,
+    1.100138936297518
+   ],
+   "median": null,
+   "shares": null,
+   "n": "299 windows",
+   "reading": "reported",
+   "decided": false
+  },
+  {
+   "spec": "026",
+   "name": "E1 contact 2",
+   "ratio": "ctl \u00f7 ctl-carry (2 h windows)",
+   "above_1": "carried start better",
+   "convention": "untended contact; reported beside",
+   "gm": 0.9418758076377509,
+   "interval": [
+    0.8801548512139381,
+    1.0074495388389972
+   ],
+   "median": 1.0,
+   "shares": {
+    "better": 0.18518518518518517,
+    "twice_better": 0.032407407407407406,
+    "twice_worse": 0.07407407407407407
+   },
+   "n": "216 windows, 60 engagements",
+   "reading": "reported",
+   "decided": false
+  },
+  {
+   "spec": "026",
+   "name": "E2",
+   "ratio": "untended \u00f7 tended contact (ctl)",
+   "above_1": "untended worse",
+   "convention": "median range error by 10-km range band, rows each contact answers; 2-km sub-bands 1.34 [1.01, 1.87]",
+   "gm": 1.4658196424273058,
+   "interval": [
+    1.1188079901101005,
+    2.0522278878849374
+   ],
+   "median": null,
+   "shares": null,
+   "n": "60 engagements",
+   "reading": "untended worse",
+   "decided": true
+  },
+  {
+   "spec": "026",
+   "name": "E3",
+   "ratio": "IMM hours 6\u201312 \u00f7 0\u20136",
+   "above_1": "IMM drifts",
+   "convention": "answered rows only; 12-hour engagements; counting unanswered rows as failures 1.26",
+   "gm": 1.0564665176742005,
+   "interval": [
+    0.8193203209171761,
+    1.3087181558843317
+   ],
+   "median": null,
+   "shares": null,
+   "n": "30 engagements",
+   "reading": "drift not shown",
+   "decided": true
+  },
+  {
+   "spec": "028",
+   "name": "weak split (decided)",
+   "ratio": "ctl \u00f7 ctl-prior (2 h windows)",
+   "above_1": "carried prior better",
+   "convention": "ownship turning every 20\u201340 min; weak split = the untended contact plus contact-1 windows near a gap (the no-useful-turn clause never fired); windows with no hand-over counted as ties; bootstrap over (engagement, contact) chains",
+   "gm": 1.1051401665680343,
+   "interval": [
+    0.9633494534555369,
+    1.2727075472645406
+   ],
+   "median": 1.0306272835627568,
+   "shares": {
+    "better": 0.5441860465116279,
+    "twice_better": 0.13023255813953488,
+    "twice_worse": 0.11162790697674418
+   },
+   "n": "215 windows, 94 chains",
+   "reading": "not shown, at this size",
+   "decided": true
+  },
+  {
+   "spec": "028",
+   "name": "other windows",
+   "ratio": "ctl \u00f7 ctl-prior (2 h windows)",
+   "above_1": "carried prior better",
+   "convention": "ownship turning every 20\u201340 min; contact-1 windows not near a gap",
+   "gm": 1.1413918391953002,
+   "interval": [
+    1.0350020746921318,
+    1.2689967727994862
+   ],
+   "median": 1.027641390890437,
+   "shares": {
+    "better": 0.5583333333333333,
+    "twice_better": 0.16666666666666666,
+    "twice_worse": 0.09583333333333334
+   },
+   "n": "240 windows, 60 chains",
+   "reading": "reported",
+   "decided": false
+  },
+  {
+   "spec": "028",
+   "name": "tended contact",
+   "ratio": "ctl \u00f7 ctl-prior (2 h windows)",
+   "above_1": "carried prior better",
+   "convention": "contact 1, all windows; reported beside",
+   "gm": 1.1073999812583364,
+   "interval": [
+    1.005608730614626,
+    1.2206541359347032
+   ],
+   "median": 1.025415353730801,
+   "shares": {
+    "better": 0.5451505016722408,
+    "twice_better": 0.1505016722408027,
+    "twice_worse": 0.10033444816053512
+   },
+   "n": "299 windows, 60 engagements",
+   "reading": "reported",
+   "decided": false
+  },
+  {
+   "spec": "029",
+   "name": "blind 1 h windows (decided)",
+   "ratio": "ctl \u00f7 ctl-prior (1 h windows)",
+   "above_1": "carried prior better",
+   "convention": "ownship legs 1\u20132 h; the same 1-hour window alone as comparator",
+   "gm": 2.4135795180333934,
+   "interval": [
+    2.062313875962469,
+    2.824573710097268
+   ],
+   "median": 2.146928947330612,
+   "shares": {
+    "better": 0.7556818181818182,
+    "twice_better": 0.5113636363636364,
+    "twice_worse": 0.08522727272727272
+   },
+   "n": "176 windows, 58 engagements",
+   "reading": "gain",
+   "decided": true
+  },
+  {
+   "spec": "029",
+   "name": "one-turn 1 h windows",
+   "ratio": "ctl \u00f7 ctl-prior (1 h windows)",
+   "above_1": "carried prior better",
+   "convention": "ownship legs 1\u20132 h; the same 1-hour window alone as comparator",
+   "gm": 1.2177859859987867,
+   "interval": [
+    1.059829549438157,
+    1.3997640553050308
+   ],
+   "median": 1.1178391861322137,
+   "shares": {
+    "better": 0.5932203389830508,
+    "twice_better": 0.2457627118644068,
+    "twice_worse": 0.17796610169491525
+   },
+   "n": "354 windows, 60 engagements",
+   "reading": "no harm",
+   "decided": true
+  },
+  {
+   "spec": "031",
+   "name": "D1",
+   "ratio": "2 h ctl \u00f7 1 h ctl-prior",
+   "above_1": "1 h ctl-prior better",
+   "convention": "blind 1 h windows, legs 1\u20132 h; the stitched 2 h rows include an ownship turn in 98% of windows and a median 29 min of later bearings",
+   "gm": 0.7303608919333648,
+   "interval": [
+    0.5788938069014489,
+    0.9173585867893118
+   ],
+   "median": 0.8996309419578169,
+   "shares": {
+    "better": 0.4301675977653631,
+    "twice_better": 0.22905027932960895,
+    "twice_worse": 0.35195530726256985
+   },
+   "n": "179 windows, 56 engagements",
+   "reading": "ctl-prior worse",
+   "decided": true
+  },
+  {
+   "spec": "031",
+   "name": "D2",
+   "ratio": "joint solve \u00f7 1 h ctl-prior",
+   "above_1": "1 h ctl-prior better",
+   "convention": "blind 1 h windows, legs 1\u20132 h; the same past bearings, none later (the clean comparison)",
+   "gm": 0.7743332875409542,
+   "interval": [
+    0.6317617584528695,
+    0.9535233419817926
+   ],
+   "median": 0.7798880729839817,
+   "shares": {
+    "better": 0.4134078212290503,
+    "twice_better": 0.21787709497206703,
+    "twice_worse": 0.3687150837988827
+   },
+   "n": "179 windows, 56 engagements",
+   "reading": "ctl-prior worse",
+   "decided": true
+  },
+  {
+   "spec": "031",
+   "name": "D3",
+   "ratio": "2 h ctl-prior \u00f7 1 h ctl-prior",
+   "above_1": "1 h ctl-prior better",
+   "convention": "blind 1 h windows, legs 1\u20132 h; the stitched 2 h rows include an ownship turn in 98% of windows and a median 29 min of later bearings",
+   "gm": 0.4880976793461716,
+   "interval": [
+    0.38582839821667714,
+    0.619001521091233
+   ],
+   "median": 0.5828064358129523,
+   "shares": {
+    "better": 0.26256983240223464,
+    "twice_better": 0.12849162011173185,
+    "twice_worse": 0.44692737430167595
+   },
+   "n": "179 windows, 56 engagements",
+   "reading": "ctl-prior worse",
+   "decided": true
+  },
+  {
+   "spec": "031",
+   "name": "spec 029 replicated",
+   "ratio": "ctl \u00f7 ctl-prior (1 h windows)",
+   "above_1": "carried prior better",
+   "convention": "fresh seed 366, blind 1 h windows; reported beside",
+   "gm": 1.7130603402352542,
+   "interval": [
+    1.3947267940491335,
+    2.1375658503500734
+   ],
+   "median": 1.5555886978934077,
+   "shares": {
+    "better": 0.6256983240223464,
+    "twice_better": 0.43575418994413406,
+    "twice_worse": 0.18994413407821228
+   },
+   "n": "179 windows, 56 engagements",
+   "reading": "reported",
+   "decided": false
+  },
+  {
+   "spec": "032",
+   "name": "E1",
+   "ratio": "ctl \u00f7 ctl-prior (2 h windows)",
+   "above_1": "carried prior better",
+   "convention": "ownship legs 2\u20134 h; blind 2 h windows with contact kept, handed on and answered by ctl, ctl-prior and the joint (85 of 165)",
+   "gm": 1.537358927817128,
+   "interval": [
+    1.1557281209754864,
+    2.028744666141001
+   ],
+   "median": 1.2547481833500218,
+   "shares": {
+    "better": 0.5882352941176471,
+    "twice_better": 0.3764705882352941,
+    "twice_worse": 0.17647058823529413
+   },
+   "n": "85 windows, 64 engagements",
+   "reading": "ctl-prior better",
+   "decided": true
+  },
+  {
+   "spec": "032",
+   "name": "E2",
+   "ratio": "joint 3.5 h \u00f7 ctl-prior",
+   "above_1": "carried prior better",
+   "convention": "ownship legs 2\u20134 h; blind 2 h windows with contact kept, handed on and answered by ctl, ctl-prior and the joint (85 of 165)",
+   "gm": 1.1127423586099552,
+   "interval": [
+    0.8395314836854293,
+    1.4449101211418938
+   ],
+   "median": 1.2434398333600454,
+   "shares": {
+    "better": 0.611764705882353,
+    "twice_better": 0.23529411764705882,
+    "twice_worse": 0.18823529411764706
+   },
+   "n": "85 windows, 64 engagements",
+   "reading": "not separated, at this size",
+   "decided": true
+  },
+  {
+   "spec": "032",
+   "name": "harm (one-turn)",
+   "ratio": "ctl \u00f7 ctl-prior (2 h windows)",
+   "above_1": "carried prior better",
+   "convention": "one-turn 2 h windows",
+   "gm": 1.2587859745701484,
+   "interval": [
+    1.0564216635156727,
+    1.4995538782221756
+   ],
+   "median": 1.2142902974639846,
+   "shares": {
+    "better": 0.5977653631284916,
+    "twice_better": 0.30726256983240224,
+    "twice_worse": 0.1564245810055866
+   },
+   "n": "179 windows, 81 engagements",
+   "reading": "no harm",
+   "decided": true
+  }
+ ],
+ "median_errors": [
+  {
+   "study": "028: 2 h windows after the first, both contacts",
+   "ctl": 0.0247336950954119,
+   "ctl-prior": 0.020762057531959907,
+   "reference": 0.016290199877587286
+  },
+  {
+   "study": "029: blind 1 h windows",
+   "ctl": 0.22673866427709816,
+   "ctl-prior": 0.07370279291390808,
+   "reference": 0.13617067186404797
+  },
+  {
+   "study": "031: blind 1 h windows",
+   "ctl": 0.22383106205627018,
+   "ctl-prior": 0.10223464114486955,
+   "2 h ctl": 0.09001300067252989,
+   "2 h ctl-prior": 0.04234939143037341,
+   "joint": 0.07007844338587532,
+   "reference": 0.031377278446808154
+  },
+  {
+   "study": "032: blind 2 h windows",
+   "ctl": 0.1665558497024192,
+   "ctl-prior": 0.10406348016679787,
+   "joint": 0.12836261883358507,
+   "reference": 0.03340049650682496
+  }
+ ]
+}
