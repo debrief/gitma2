@@ -7,10 +7,10 @@ tags: [slides, spec-034]
 import Slides from "@site/src/components/Slides";
 
 These slides are the illustrated companion to [the write-up](/blog/2026/11/21/long-synthesis).
-- Stitched 2-hour `ctl` holds up over long engagements.
-- A carried start saves compute.
-- A carried prior roughly doubles accuracy where a window is blind to range, but does not beat
-  keeping the bearings.
+- Stitched 2-hour `ctl` held up on the tended contact (registered to 12 h; 24 and 48 h one engagement each).
+- A carried start is not shown to help accuracy; it saves about 31% of the search where it runs.
+- A carried prior beats the same window alone where that window is blind to range (1.7–2.4 on
+  1-hour windows, 1.37 pooled on 2-hour windows at far range), and is not shown to beat keeping the bearings.
 - The owner adopted 2-hour `ctl-prior`, and the track closes here.
 
 Spec: `specs/034-long-synthesis/`.

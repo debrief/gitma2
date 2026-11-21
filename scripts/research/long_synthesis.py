@@ -27,6 +27,7 @@ OUT = ROOT / "experiments/20261121-long-synthesis"
 FIG = ROOT / "site/static/img/2026-11-21-long-synthesis-slides"
 REC = {
     "026": ROOT / "experiments/20261118-ls/study.json",
+    "026s": ROOT / "experiments/20261118-ls/supplement.json",
     "028": ROOT / "experiments/20261119-cp/study.json",
     "029": ROOT / "experiments/20261119-hold/study.json",
     "031": ROOT / "experiments/20261120-cmp/study.json",
@@ -36,6 +37,10 @@ REC = {
 
 def _load() -> dict[str, Any]:
     return {k: json.loads(p.read_text()) for k, p in REC.items()}
+
+
+def _sep(reading: str) -> str:
+    return "not separated, at this size" if reading == "not separated" else reading
 
 
 def _shares_counts(r: dict[str, Any]) -> dict[str, float | None]:
@@ -89,13 +94,30 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
         "E1",
         "ctl ÷ ctl-carry (2 h windows)",
         "carried start better",
-        "tended contact, all windows after each chain's first; chain-first windows count as ties",
+        "tended contact, all windows; each chain's first window (60) equals ctl by construction"
+        " and counts as a tie",
         e1["gm_ctl_over_carry"],
         e1["interval"],
         e1["median"],
         _shares_counts(e1),
         f"{e1['windows']} windows, {e1['engagements']} engagements",
         "non-inferior" if e1["non_inferior"] else "not non-inferior",
+    )
+    sup = d["026s"]
+    w = sup["E1_without_first_windows"]
+    add(
+        "026",
+        "E1 without first windows",
+        "ctl ÷ ctl-carry (2 h windows)",
+        "carried start better",
+        "tended contact, constructed ties excluded (panel supplement)",
+        w["gm"],
+        w["interval"],
+        None,
+        None,
+        f"{w['windows']} windows",
+        "reported",
+        decided=False,
     )
     e1b = ls["E1_contact2_reported"]
     add(
@@ -118,7 +140,9 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
         "E2",
         "untended ÷ tended contact (ctl)",
         "untended worse",
-        "median range error by range band, rows each contact answers",
+        "median range error by 10-km range band, rows each contact answers; 2-km sub-bands"
+        f" {sup['E2_2km_sub_bands']['estimate']:.2f} [{sup['E2_2km_sub_bands']['interval'][0]:.2f},"
+        f" {sup['E2_2km_sub_bands']['interval'][1]:.2f}]",
         e2["gm_c2_over_c1"],
         e2["interval"],
         None,
@@ -132,7 +156,8 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
         "E3",
         "IMM hours 6–12 ÷ 0–6",
         "IMM drifts",
-        "answered rows only; 12-hour engagements",
+        "answered rows only; 12-hour engagements; counting unanswered rows as failures"
+        f" {sup['E3_unanswered_as_failures']['estimate']:.2f}",
         e3["late_over_early"],
         e3["interval"],
         None,
@@ -142,20 +167,26 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
     )
 
     cp = d["028"]
-    for split, label in (("weak", "weak geometry (decided)"), ("other", "other windows")):
+    for split, label in (("weak", "weak split (decided)"), ("other", "other windows")):
         r = cp["rule"]["by_split"][split]["range"]
         add(
             "028",
             label,
             "ctl ÷ ctl-prior (2 h windows)",
             "carried prior better",
-            "ownship turning every 20–40 min; windows with no hand-over are ties",
+            (
+                "ownship turning every 20–40 min; weak split = the untended contact plus contact-1"
+                " windows near a gap (the no-useful-turn clause never fired); windows with no"
+                " hand-over counted as ties; bootstrap over (engagement, contact) chains"
+            )
+            if split == "weak"
+            else "ownship turning every 20–40 min; contact-1 windows not near a gap",
             r["gm"],
             r["interval"],
             r["median"],
             _shares_counts(r),
-            f"{r['windows']} windows, {r['engagements']} engagements",
-            cp["rule"]["outcome"] if split == "weak" else "reported",
+            f"{r['windows']} windows, {r['engagements']} chains",
+            cp["rule"]["outcome"] + ", at this size" if split == "weak" else "reported",
             decided=split == "weak",
         )
     for c, label in (("contact1", "tended contact"),):
@@ -197,10 +228,19 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
         )
 
     cm = d["031"]
-    for key, label, ratio in (
-        ("D1_2h_over_prior", "D1", "2 h ctl ÷ 1 h ctl-prior"),
-        ("D2_joint_over_prior", "D2", "joint solve ÷ 1 h ctl-prior"),
-        ("D3_prior2h_over_prior", "D3", "2 h ctl-prior ÷ 1 h ctl-prior"),
+    later = (
+        "blind 1 h windows, legs 1–2 h; the stitched 2 h rows include an ownship turn in 98% of"
+        " windows and a median 29 min of later bearings"
+    )
+    for key, label, ratio, conv in (
+        ("D1_2h_over_prior", "D1", "2 h ctl ÷ 1 h ctl-prior", later),
+        (
+            "D2_joint_over_prior",
+            "D2",
+            "joint solve ÷ 1 h ctl-prior",
+            "blind 1 h windows, legs 1–2 h; the same past bearings, none later (the clean comparison)",
+        ),
+        ("D3_prior2h_over_prior", "D3", "2 h ctl-prior ÷ 1 h ctl-prior", later),
     ):
         r = cm["estimands"][key]["range"]
         add(
@@ -208,7 +248,7 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
             label,
             ratio,
             "1 h ctl-prior better",
-            "blind 1 h windows, legs 1–2 h; D2 the same past bearings (the clean comparison)",
+            conv,
             r["gm"],
             r["interval"],
             r["median"],
@@ -230,8 +270,12 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
         r["gm"],
         r["interval"],
         r.get("median"),
-        None,
-        f"{r['windows']} windows",
+        {
+            "better": r["share_a_better"],
+            "twice_better": r["share_twice_a_better"],
+            "twice_worse": r["share_twice_a_worse"],
+        },
+        f"{r['windows']} windows, {r['engagements']} engagements",
         "reported",
         decided=False,
     )
@@ -248,7 +292,8 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
             label,
             ratio,
             "carried prior better",
-            "ownship legs 2–4 h; blind 2 h windows where contact held (85 of 165)"
+            "ownship legs 2–4 h; blind 2 h windows with contact kept, handed on and answered by"
+            " ctl, ctl-prior and the joint (85 of 165)"
             if key != "E1_one_turn"
             else "one-turn 2 h windows",
             r["gm"],
@@ -260,7 +305,7 @@ def rows(d: dict[str, Any]) -> list[dict[str, Any]]:
                 "twice_worse": r["share_twice_prior_worse"],
             },
             f"{r['windows']} windows, {r['engagements']} engagements",
-            lg["estimands"][key]["reading"],
+            _sep(lg["estimands"][key]["reading"]),
         )
     return out
 
@@ -451,7 +496,7 @@ def charts(rs: list[dict[str, Any]], es: list[dict[str, Any]]) -> None:
 
 def main() -> int:
     d = _load()
-    seeds = {k: int(v["seed"]) for k, v in d.items()}
+    seeds = {k: int(v["seed"]) for k, v in d.items() if "seed" in v}
     rs = rows(d)
     es = errors(d)
     OUT.mkdir(parents=True, exist_ok=True)
