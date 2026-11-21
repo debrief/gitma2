@@ -1,0 +1,9 @@
+// Spec 035 FR-024: what each solver plug-in declares (a DemoSolverInfo, schema 0.37.0), apart
+// from its code so the page can list solvers without loading them.
+export const INFO = {
+  lsJs: { name: "ls-js", label: "Batch least squares (JavaScript)", version: "spec021-lsq", assumptions: "One constant-velocity leg over the window; Levenberg-Marquardt from a range/course/speed grid start (spec 021's port of the Python reference).", single_leg: true, accepts_knots: false, time_late: true, onnx: false },
+  layerCv: { name: "layer-cv", label: "Batch least squares (ONNX physics layer)", version: "tl-layer", assumptions: "One constant-velocity leg over the window: the physics layer of Gates 1-2 with no knots, in ONNX Runtime Web; at most 720 bearings (thinned).", single_leg: true, accepts_knots: false, time_late: true, onnx: true },
+  layerOracle: { name: "layer-oracle", label: "Segmented least squares told the true manoeuvre times (ONNX physics layer)", version: "tl-layer", assumptions: "Constant-velocity legs joined at the truth's manoeuvre spans (chords), told by the page: an oracle, not a system. The physics layer of Gates 1-2 in ONNX Runtime Web; at most 720 bearings (thinned) and four manoeuvres.", single_leg: false, accepts_knots: true, time_late: true, onnx: true },
+  learnedE: { name: "e-gate2", label: "Learned model E (Gate 2, real-time, ONNX)", version: "gate2-e-s3", assumptions: "Causal (real-time): C's segmenter with learned evidence and E-w's weighted physics layer, answering once a minute from five minutes after the first ownship turn; read here as a track of real-time estimates, not a time-late fit. Bearings thinned to at least 10 s and at most 720. Slow: about three minutes on a two-hour window. Its covariance is known to be overconfident (Gate 3) and is never drawn.", single_leg: false, accepts_knots: false, time_late: false, onnx: true },
+};
+export const SOLVER_LIST = [INFO.lsJs, INFO.layerCv, INFO.layerOracle, INFO.learnedE];
