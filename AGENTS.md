@@ -954,7 +954,12 @@ false, timing) and "Run all splitters" (worker message `compare`). Schema 0.38.0
 (`DemoScenario.splitter`, `DemoSpan.stat`, `DemoSplitterInfo`, solution splitter fields). Preset
 `two-target-turns` is outside spec 035's golden problem set (`golden: false`). Readings
 (`scripts/research/demo_splitters.mjs`, `experiments/20261121-demo-splitters/`; presets only,
-anecdotes): see the slides post `site/blog/2026-11-21-leg-splitters-slides.md`.
+anecdotes, σ 1°, five draws): two turns inside ownship legs: joined legs 9 of 10 found, 2.6% median
+range RMS (truth 2.0%, Debrief 14.5%, independent slices 37.8% (it splits between the turns), C 8.2%
+on three draws with false transitions at ownship's turns, one leg 27%); a turn during ownship's
+turn: Debrief blind (31.9%), independent slices 1.4%, joined legs 3.1% (instant knot placed late);
+held course: no false split. No splitter wins everywhere. Slides
+`site/blog/2026-11-21-leg-splitters-slides.md`; next is the owner's choice.
 
 ## Stack (owner decisions, 2026-10-31)
 

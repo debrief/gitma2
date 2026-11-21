@@ -17,6 +17,9 @@ import * as T from "../../site/static/demo-data/js/track.js";
 const rec = process.argv[2] || "experiments/20261121-demo-splitters";
 const fig = process.argv[3] || "site/static/img/2026-11-21-leg-splitters";
 const withC = process.argv.includes("--with-c");
+// --from <summary.json>: redraw the figures from a recorded sweep (the readings are not re-run)
+const fromI = process.argv.indexOf("--from");
+const from = fromI >= 0 ? JSON.parse((await import("node:fs")).readFileSync(process.argv[fromI + 1], "utf8")) : null;
 mkdirSync(rec, { recursive: true });
 mkdirSync(fig, { recursive: true });
 const root = new URL("../../", import.meta.url).pathname;
@@ -51,8 +54,8 @@ async function trial(sc, name) {
 const SPLIT = ["none", "arctan-debrief", "arctan-multi", "arctan-joined", "truth"];
 const PRE = ["two-target-turns", "target-turn", "good-geometry"];
 const SEEDS = [1, 2, 3, 4, 5];
-const rows = [];
-for (const id of PRE) for (const seed of SEEDS) {
+const rows = from ? from.rows : [];
+if (!from) for (const id of PRE) for (const seed of SEEDS) {
   const sc = { ...preset(id), seed };
   const names = withC && id === "two-target-turns" && seed <= 3 ? [...SPLIT, "c"] : SPLIT;
   for (const name of names) {
@@ -68,7 +71,7 @@ for (const id of PRE) for (const name of [...SPLIT, "c"]) {
   if (!r.length) continue;
   table.push({ preset: id, splitter: name, draws: r.length, matched: r.reduce((a, x) => a + x.legs.matched, 0), truth: r.reduce((a, x) => a + x.legs.truth, 0), false: r.reduce((a, x) => a + x.legs.false, 0), median_range_pct_rms: med(r.map((x) => x.range_pct_rms)), median_course_deg_rms: med(r.map((x) => x.course_deg_rms)), median_splitter_s: med(r.map((x) => x.splitter_ms / 1000)) });
 }
-writeFileSync(`${rec}/summary.json`, JSON.stringify({ script: "scripts/research/demo_splitters.mjs", commit, note: "Development readings on the demonstrator's presets (sigma 1 deg, 5 s bearings, two-hour windows); not a registered result.", rows, table }, null, 2) + "\n");
+if (!from) writeFileSync(`${rec}/summary.json`, JSON.stringify({ script: "scripts/research/demo_splitters.mjs", commit, note: "Development readings on the demonstrator's presets (sigma 1 deg, 5 s bearings, two-hour windows); not a registered result.", rows, table }, null, 2) + "\n");
 
 // ---------- figures ----------
 function save(name, svg, meta) {
@@ -80,9 +83,9 @@ const LAB = { none: "none (one leg)", "arctan-debrief": "Debrief 2015 slicing", 
 
 // dot chart: range RMS (%) per splitter, a row per preset, a dot per draw (log scale)
 {
-  const names = [...SPLIT, ...(withC ? ["c"] : [])];
+  const names = [...SPLIT, ...(withC || rows.some((x) => x.splitter === "c") ? ["c"] : [])];
   const W = 640, rowH = 34, top = 40, left = 170, right = 20;
-  const H = top + PRE.length * (names.length * rowH + 24) + 30;
+  const H = top + PRE.length * (14 + names.length * rowH * 0.62 + 18) + 34;
   const lo = 0.1, hi = 200;
   const X = (v) => left + ((Math.log10(Math.max(lo, Math.min(hi, v))) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo))) * (W - left - right);
   let body = `<text x="10" y="18" font-size="13" font-weight="bold">Range error (RMS over the window, % of range) with each leg splitter feeding the physics layer</text>`;
@@ -99,7 +102,7 @@ const LAB = { none: "none (one leg)", "arctan-debrief": "Debrief 2015 slicing", 
     }
     y += 18;
   }
-  save("range-by-splitter", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="sans-serif" style="background:#fff">${body}</svg>`, { presets: PRE, seeds: SEEDS, splitters: names, sigma_deg: 1 });
+  save("range-by-splitter", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="sans-serif" style="background:#fff">${body}</svg>`, { presets: PRE, seeds: SEEDS, splitters: names, sigma_deg: 1, readings_commit: from ? from.commit : commit, c_draws: "two-target-turns seeds 1-3 only" });
 }
 
 // track plot: two target turns, seed 1, each splitter's estimated track and its knots
