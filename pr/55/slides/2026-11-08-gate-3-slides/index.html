@@ -1,0 +1,120 @@
+<!doctype html>
+<!-- Gate 3 slides post deck (site/docs/process/reporting.md). Figures in
+     site/static/img/2026-11-08-gate-3-slides/, each with its .json sidecar. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gate 3: uncertainty calibration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.6em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Gate 3: can E's stated uncertainty be trusted?</h1>
+          <p class="small">2026-11-08 · spec 008, Gate 3 · gitma2 · stopped at validation (panel round 2)</p>
+        </section>
+
+        <!-- Part 1: overview -->
+        <section>
+          <h2>Every estimate now states its uncertainty</h2>
+          <div class="two">
+            <ul>
+              <li>Each prediction row carries the covariance of (x, y, vx, vy) and the standard deviations of log range, course and speed</li>
+              <li>For E it is the physics solve's σ²(JᵀJ)⁻¹: it knows the bearing noise, not the segmentation's mistakes</li>
+            </ul>
+            <svg viewBox="0 0 320 240" role="img" aria-label="A small stated ellipse around the estimate, far from the truth">
+              <line x1="20" y1="220" x2="300" y2="30" stroke="#999" stroke-dasharray="4 4" />
+              <text x="230" y="30" font-size="13" fill="#555">line of sight</text>
+              <circle cx="40" cy="206" r="6" fill="#1f5fbf" /><text x="52" y="226" font-size="13">ownship</text>
+              <ellipse cx="160" cy="125" rx="40" ry="5" transform="rotate(-34 160 125)" fill="none" stroke="#7b4fa3" stroke-width="2" />
+              <circle cx="160" cy="125" r="4" fill="#7b4fa3" /><text x="170" y="150" font-size="13" fill="#7b4fa3">E, stated 1-σ</text>
+              <circle cx="215" cy="70" r="5" fill="#c0392b" /><text x="225" y="74" font-size="13" fill="#c0392b">truth</text>
+            </svg>
+          </div>
+        </section>
+        <section>
+          <h2>Before calibration: everyone but the oracle is overconfident</h2>
+          <img src="../../img/2026-11-08-gate-3-slides/calibration.svg" alt="Coverage and NEES shares by estimator" />
+          <p class="small">E's 95% interval covers 0.60 of rows in log range; only a third fall within the χ²₄ 95% point. The oracle (true segmentation) is nearly calibrated.</p>
+        </section>
+        <section>
+          <h2>The calibration: four scales, points untouched</h2>
+          <ul>
+            <li>A small head reads E's encoder state, the raw standard deviations and C's code</li>
+            <li>It scales the standard deviations of log range, bearing, speed and course; correlations kept; the estimate never moves</li>
+            <li>The classical control: the same four scales fitted per (time since zig × open transition)</li>
+            <li>Gate 3: 95% coverage in [0.92, 0.98] (G3-a), share within χ²₄ 95% in [0.92, 0.98] (G3-b), beat the temperature (G3-c), points unchanged (G3-d)</li>
+          </ul>
+        </section>
+
+        <!-- Part 2: demonstration -->
+        <section>
+          <h2>A settled leg: the calibrated ellipse now covers the truth</h2>
+          <img src="../../img/2026-11-08-gate-3-slides/track-648.svg" alt="Track plot, ordinal 648" />
+          <p class="small">Validation seed 314, ordinal 648 (scenario 81299). Marks at zig + 5 and 15 min. The raw ellipses are too small to see; the calibrated ones are long slivers along the line of sight: covered, but wide in range.</p>
+        </section>
+        <section>
+          <h2>A manoeuvring target: course is simply not known yet</h2>
+          <img src="../../img/2026-11-08-gate-3-slides/track-514.svg" alt="Track plot, ordinal 514" />
+          <p class="small">Ordinal 514 (scenario 81048), marks at zig + 5 and 15 min. A target turn mid-window: E's course error reaches 67°; a Gaussian ellipse cannot state "the course is undetermined".</p>
+        </section>
+        <section>
+          <h2>Errors against time, the same scenario</h2>
+          <img src="../../img/2026-11-08-gate-3-slides/errors-514.svg" alt="Errors against time, ordinal 514" />
+          <p class="small">E (raw and calibrated share the points) against batch least squares, the frozen IMM and the oracle. E's rows are the four scored times.</p>
+        </section>
+        <section>
+          <h2>The validation verdict</h2>
+          <table>
+            <tr><th>Check</th><th>Carried head</th><th>Band</th><th>Outcome</th></tr>
+            <tr><td>G3-a coverage, log range / course / speed</td><td>0.986 / 0.923 / 0.984</td><td>0.92–0.98</td><td>inconclusive</td></tr>
+            <tr><td>G3-b within χ²₄ 95%</td><td>0.835 [0.819, 0.849]</td><td>0.92–0.98</td><td><b>fail</b></td></tr>
+            <tr><td>G3-c head − temperature, interval score</td><td>+1.07 [+0.98, +1.17]</td><td>below 0</td><td><b>fail</b></td></tr>
+            <tr><td>G3-d points unchanged</td><td>exact</td><td>—</td><td>pass</td></tr>
+          </table>
+          <p class="small">Seed 320 not generated. Time-late E-w (sees the future): −0.0018 [−0.0082, +0.0057] gap recovered against the causal E-w, no gain.</p>
+        </section>
+
+        <!-- Part 3: not achieved -->
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>An honest joint statement: the kept, near-singular correlations push 16% of rows outside χ²₄ (0.957 inside if dropped)</li>
+            <li>Course coverage is largely vacuous: on half the rows the 95% course interval is the whole circle</li>
+            <li>No learning shown: the head is nearly a constant and no better than the temperature</li>
+            <li>Training on linearised errors cannot see a course flip; the gate scores exact errors</li>
+          </ul>
+        </section>
+
+        <!-- Part 4: next -->
+        <section>
+          <h2>Next (spec 009, recommended)</h2>
+          <ul>
+            <li>Report course as circular, or as undetermined, never as a Gaussian sd above 90°</li>
+            <li>Gate the stated uncertainty on observability, with a causal proxy and a "manoeuvre suspected" flag</li>
+            <li>Shrink the stated correlations; train on the exact errors the gate scores</li>
+            <li>Until then: E's points stand; its raw covariance must not be shown as an uncertainty</li>
+          </ul>
+          <p class="small">Write-up: blog 2026-11-08 "Gate 3" · records experiments/20261108-g3-* · figures: tma2-plot and scripts/research/g3_calibration_chart.py, sidecars next to each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
