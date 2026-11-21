@@ -22,7 +22,7 @@ Here each engagement's job computes everything itself, on one machine (recorded 
 
 ## What it shows
 
-1. **The evidence prefers the simpler or cannot tell; the search is not the limit.** The true history is compared with the better of the declared history as searched and as refitted (21 engagements):
+1. **The truth's refit does not beat the declared history.** The true history is compared with the better of the declared history as searched and as refitted (21 engagements):
 
    | margin | truth better | declared better | within the margin |
    |---|---|---|---|
@@ -31,7 +31,7 @@ Here each engagement's job computes everything itself, on one machine (recorded 
    | 10 units | 0 | 6 | 15 |
 
    The first diagnostic's six "search shortfalls" came from comparing a refitted truth with the searched history. A neutral refit can land in a worse minimum: the searched history beats its own refit by 10 to 24 units in 4 engagements.
-2. **The true gap structure does not help.**
+2. **A gain from the true gap structure is not shown, at this size.**
 
    | after gaps of at least 70 min (22 periods, 17 engagements) | ratio |
    |---|---|
@@ -43,15 +43,25 @@ Here each engagement's job computes everything itself, on one machine (recorded 
    - The full true history still beats `ctl` alone, at 2.38 over all later periods.
    - So its advantage comes from the manoeuvres inside the observed periods, not from the gap.
    - The gap-true structure also has lower evidence than the best declared history in 20 of 21 engagements. Its refits are fragile (−199 on ordinal 16).
-3. **The ">70 min reversal" does not reappear on one machine.** After gaps of at least 70 min, alone ÷ joint is 0.97 [0.58, 1.73], median 1.03: level. The scored run's 0.71 on these engagements is not reproduced, so read it as noise. Over all later periods it is 1.02.
+3. **The ">70 min reversal" does not reappear on one machine.** After gaps of at least 70 min, alone ÷ joint is 0.97 [0.58, 1.73], median 1.03: nothing shown either way. The interval contains the scored run's 0.71; the shift between them is the search's known CPU-family sensitivity, not sampling noise. Over all later periods it is 1.02.
 4. **The refit costs little.** Joint ÷ declared refit is 0.94 [0.81, 1.11] over all later periods.
+
+## Review (one agent, approve with findings)
+
+All numbers reproduce from `summary.txt`. The wording above was narrowed on its findings:
+
+- The truth is refitted from neutral starts while the declared side keeps the better of search and refit, so finding 1 does not show that the search is not the limit.
+- Gap-true's evidence is below the declared refit's by 21 to 197 units in eight engagements, far beyond an Occam penalty. Those refits are in poor minima, so finding 2 may be a fitting failure. Where gap-true fitted well it sometimes won (ordinal 16: 6.72; ordinal 32: 24.6).
+- Gap manoeuvres are classed by midpoint (`tl13_evidence2.py`). A declared manoeuvre straddling a gap edge stays "outside" while the true one is added, so gap-true can hold a manoeuvre twice.
+- Engagements 6, 25 and 30 enter the evidence counts but have no scored later periods.
+- Subsets with fewer than five engagements now print a median without an interval.
 
 ## What this changes in spec 033
 
-- **"The true gap structure would still help beyond 70 min (2.35, 2.48)" is withdrawn as a statement about the gap.** That reference is the whole true history. Given only the true gap manoeuvres, nothing changes.
+- **"The true gap structure would still help beyond 70 min (2.35, 2.48)" is withdrawn as a statement about the gap.** That reference is the whole true history. Given only the true gap manoeuvres, no gain is shown (fragile refits).
 - **"What falls short is choosing the gap history" is withdrawn.** The shortfall, as far as this can see, is in the observed periods' own histories.
-- **Beyond about an hour, joining is level with solving each period alone.** It neither helps nor harms on one machine. The suggestion stands as "joining a period without its own ownship turn helps across gaps under about an hour; beyond, nothing is shown".
-- "The evidence rarely separates the true history from a simpler one" stands, and is sharper: no engagement has the truth better by more than 10 units.
+- **Beyond about an hour, nothing is shown either way.** The suggestion stands as "joining a period without its own ownship turn helps across gaps under about an hour; beyond, nothing is shown".
+- "The evidence rarely separates the true history from a simpler one" stands: no engagement has the truth's refit better by more than 10 units.
 
 ## Limits
 

@@ -90,6 +90,11 @@ def main() -> int:
         print(f"{lab} ({int(sel.sum())} periods, {np.unique(eng[sel]).size} engagements)")
         for a, b in PAIRS:
             lr = np.log(np.array([x[3][a] / x[3][b] for x in rows]))[sel]
+            if np.unique(eng[sel]).size < 5:
+                print(
+                    f"  {a} / {b}: median {np.exp(np.median(lr)):.2f} (too few engagements for an interval)"
+                )
+                continue
             g, lo, hi = boot(lr, eng[sel])
             print(
                 f"  {a} / {b}: {g:.2f} [{lo:.2f}, {hi:.2f}] median {np.exp(np.median(lr)):.2f}"
