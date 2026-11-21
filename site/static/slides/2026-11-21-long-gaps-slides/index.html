@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Several periods of one target across long gaps</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">Several periods of one target across long gaps</h1>
+          <p class="small">2026-11-21 · spec 031 · gitma2 · development study, spent seed · nothing trained</p>
+        </section>
+        <section>
+          <h2>The question</h2>
+          <ul>
+            <li>With gaps of 5–30 min, one solve through the gaps beat each period alone (spec 025: 3.10 on Annex B)</li>
+            <li>Here: 6-hour engagements from the long simulator, 2–4 periods of 15–30 min, gaps of 30–90 min</li>
+            <li>Two runs on the same targets and layouts: the ownship turning every 20–40 min, or holding course 1–2 h</li>
+            <li>Compared: <code>ctl</code> alone, the joint solve, and the carried prior k4 (spec 030)</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Joining helps up to about an hour, then reverses</h2>
+          <img src="../../img/2026-11-21-long-gaps-slides/bands.svg" alt="alone ÷ joint by gap band, both runs" />
+          <p class="small">Holding course: 1.34, 2.85 [1.49, 6.05], 0.71 [0.47, 1.02]. Turning: 1.40, 1.27, 0.80. The two runs share targets and gaps, so the reversal is one observation seen twice; no band but one is separated.</p>
+        </section>
+        <section>
+          <h2>Holding course doubles everyone's error</h2>
+          <img src="../../img/2026-11-21-long-gaps-slides/systems.svg" alt="median range error by system, both runs" />
+          <p class="small">Periods without their own ownship turn are poorly determined whatever the method; joining recovers part. k4 is level with alone in both runs (0.94, 1.05): after an hour its uncertainty says almost nothing.</p>
+        </section>
+        <section>
+          <h2>Why: the evidence prefers a simpler gap history</h2>
+          <img src="../../img/2026-11-21-long-gaps-slides/evidence.svg" alt="evidence of true minus declared gap history against alone ÷ joint" />
+          <p class="small">Of 21 engagements with a gap ≥ 70 min, the declared history has at least the truth's evidence in 15 (123 manoeuvres declared against 178 true); the search falls short in 6. Joining loses either way on average (0.80, 0.57).</p>
+        </section>
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>No registered result: one spent seed, 40 engagements, about 20–30 periods per gap band</li>
+            <li>The two runs are not independent; the "about an hour" threshold is a reading of three bands</li>
+            <li>No joint solve that breaks at long gaps was built; the long simulator's ownship steers on the true target</li>
+          </ul>
+        </section>
+        <section>
+          <h2>What follows</h2>
+          <ul>
+            <li>Practice suggested: join across gaps up to about an hour, solve each period alone beyond</li>
+            <li>The time-late gap track closes here unless reopened (owner's choice)</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/21/long-gaps · Records: experiments/20261120-tl12-dev, -tl12-hold-dev · Figures: scripts/research/tl12_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
