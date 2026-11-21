@@ -398,7 +398,25 @@ out, so about half of bearings are lost at long range.</li>
 <li class="">Errors by system, by range band and by detected share.</li>
 <li class="">Guard rate, and coverage and NEES of the 2-hour hand-overs.</li>
 <li class="">Compute per engagement-hour.</li>
-</ul>]]></content:encoded>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="update-2026-11-21-the-owner-adopted-2-hour-ctl-prior">Update, 2026-11-21: the owner adopted 2-hour <code>ctl-prior</code><a href="https://debrief.github.io/gitma2/blog/2026/11/20/long-legs-kickoff#update-2026-11-21-the-owner-adopted-2-hour-ctl-prior" class="hash-link" aria-label="Direct link to update-2026-11-21-the-owner-adopted-2-hour-ctl-prior" title="Direct link to update-2026-11-21-the-owner-adopted-2-hour-ctl-prior" translate="no">​</a></h2>
+<p>After <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/20/long-legs">the write-up</a>, the owner adopted 2-hour <code>ctl-prior</code> as the
+standing chained time-late system for the tended contact on long engagements.</p>
+<ul>
+<li class=""><strong>Settings:</strong> spec 028's <code>carry2</code> at its registered settings, on 2-hour windows overlapping
+30 minutes, up to 12 hours.</li>
+<li class=""><strong>Control:</strong> <code>ctl</code> stays as the control.</li>
+<li class=""><strong>Alternative:</strong> the joint solve is the equal alternative where the bearings are kept.</li>
+</ul>
+<p>The adoption carries the panel's limits:</p>
+<ul>
+<li class="">It is one simulator, contact 1.</li>
+<li class="">The gain on blind windows is a far-range one.</li>
+<li class="">Windows are placed past true manoeuvres.</li>
+<li class="">The carried covariance is not calibrated, so it is not shown as an uncertainty.</li>
+<li class="">Spec 028's hand-over defect is kept.</li>
+</ul>
+<p>Closing the long-engagement track with a synthesis is not yet chosen.</p>]]></content:encoded>
             <category>kickoff</category>
             <category>spec-032</category>
         </item>
