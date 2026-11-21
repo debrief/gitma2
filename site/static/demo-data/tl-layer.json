@@ -1,0 +1,44 @@
+{
+  "what": "PhysicsLayer() as a time-late solver with k_state and its parameters (spec 035)",
+  "onnx_sha256": "ec5f2a8ce58661e996df5a83fdead5932216e253af6129a6d3c617eaa6aa9768",
+  "max_rel_diff": {
+    "state": 1.6644619834277723e-06,
+    "cov": 7.093993127664725e-07,
+    "cost": 3.868998597707379e-15,
+    "plausible": 0.0,
+    "knot_weights": 0.0,
+    "cov_ok": 0.0,
+    "theta_p0u0": 1.6644619834277723e-06,
+    "active_knots": 3.1437976499848475e-07
+  },
+  "tol": 1e-05,
+  "runtime": "onnxruntime 1.31.1 (Python)",
+  "nodes": 2208,
+  "window_rows": 720,
+  "iterations": 100,
+  "knots": 8,
+  "inputs": [
+    "bearing",
+    "valid",
+    "own",
+    "t",
+    "sigma",
+    "k",
+    "theta0",
+    "changepoint",
+    "speed_weight",
+    "log_weight",
+    "speed_skip",
+    "k_state"
+  ],
+  "outputs": [
+    "state",
+    "cov",
+    "cost",
+    "plausible",
+    "theta",
+    "knots",
+    "knot_weights",
+    "cov_ok"
+  ]
+}

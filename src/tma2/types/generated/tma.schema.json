@@ -783,6 +783,232 @@
             "title": "DecisionTableHeader",
             "type": "object"
         },
+        "DemoLeg": {
+            "additionalProperties": false,
+            "description": "Spec 035 FR-001: one constant-speed leg; the turn rate applies at the waypoint ending it (ignored on the last leg).",
+            "properties": {
+                "course_deg": {
+                    "description": "True course, clockwise from north.",
+                    "maximum": 360,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "duration_s": {
+                    "maximum": 43200,
+                    "minimum": 1,
+                    "type": "number"
+                },
+                "speed_kt": {
+                    "maximum": 40,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "turn_rate_dps": {
+                    "description": "Steady turn rate into the next leg, degrees per second (FR-005).",
+                    "maximum": 3,
+                    "minimum": 0.25,
+                    "type": "number"
+                }
+            },
+            "required": [
+                "course_deg",
+                "speed_kt",
+                "duration_s",
+                "turn_rate_dps"
+            ],
+            "title": "DemoLeg",
+            "type": "object"
+        },
+        "DemoScenario": {
+            "additionalProperties": false,
+            "description": "Spec 035 FR-040: everything that fixes a demonstrator solve: both tracks, the bearing noise and sampling, the seed, the window and the solver.",
+            "properties": {
+                "interval_s": {
+                    "description": "Bearing sample interval (FR-010).",
+                    "maximum": 120,
+                    "minimum": 1,
+                    "type": "number"
+                },
+                "name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ownship": {
+                    "$ref": "#/$defs/DemoTrack"
+                },
+                "schema_version": {
+                    "type": "string"
+                },
+                "seed": {
+                    "description": "Seed of the noise generator; the same seed and scenario give identical bearings.",
+                    "maximum": 4294967295,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "show_ellipses": {
+                    "description": "Show the solver's 1- and 2-sigma position ellipses (off by default).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "sigma_deg": {
+                    "description": "Standard deviation of the zero-mean Gaussian bearing noise (FR-011).",
+                    "maximum": 5,
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "solver": {
+                    "description": "Name of the selected solver plug-in (FR-024).",
+                    "type": "string"
+                },
+                "target": {
+                    "$ref": "#/$defs/DemoTrack"
+                },
+                "window": {
+                    "$ref": "#/$defs/DemoWindow"
+                }
+            },
+            "required": [
+                "schema_version",
+                "ownship",
+                "target",
+                "sigma_deg",
+                "interval_s",
+                "seed",
+                "window",
+                "solver"
+            ],
+            "title": "DemoScenario",
+            "type": "object"
+        },
+        "DemoSolveStatus": {
+            "description": "Spec 035: how a demonstrator solve ended.",
+            "enum": [
+                "converged",
+                "not_converged",
+                "failed"
+            ],
+            "title": "DemoSolveStatus",
+            "type": "string"
+        },
+        "DemoSolverInfo": {
+            "additionalProperties": false,
+            "description": "Spec 035 FR-024: what a solver plug-in declares.",
+            "properties": {
+                "accepts_knots": {
+                    "type": "boolean"
+                },
+                "assumptions": {
+                    "description": "Its model, in words (for example: one constant-velocity leg).",
+                    "type": "string"
+                },
+                "learned": {
+                    "description": "A trained model (its covariance, if any, is not drawn).",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "single_leg": {
+                    "description": "It assumes one constant-velocity leg (FR-036's mismatch flag).",
+                    "type": "boolean"
+                },
+                "time_late": {
+                    "description": "It fits the whole window at once (false: a causal, real-time estimator read as a track).",
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "version",
+                "assumptions",
+                "single_leg",
+                "accepts_knots",
+                "time_late"
+            ],
+            "title": "DemoSolverInfo",
+            "type": "object"
+        },
+        "DemoSpan": {
+            "additionalProperties": false,
+            "description": "Spec 035: a closed time interval in a problem's own time (seconds from the window start).",
+            "properties": {
+                "end_s": {
+                    "type": "number"
+                },
+                "start_s": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "start_s",
+                "end_s"
+            ],
+            "title": "DemoSpan",
+            "type": "object"
+        },
+        "DemoTrack": {
+            "additionalProperties": false,
+            "description": "Spec 035 FR-001: a vessel as a start point and an ordered list of legs; waypoints sit at leg joins.",
+            "properties": {
+                "legs": {
+                    "items": {
+                        "$ref": "#/$defs/DemoLeg"
+                    },
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "type": "array"
+                },
+                "start_x_nm": {
+                    "description": "East of the origin.",
+                    "maximum": 200,
+                    "minimum": -200,
+                    "type": "number"
+                },
+                "start_y_nm": {
+                    "description": "North of the origin.",
+                    "maximum": 200,
+                    "minimum": -200,
+                    "type": "number"
+                }
+            },
+            "required": [
+                "start_x_nm",
+                "start_y_nm",
+                "legs"
+            ],
+            "title": "DemoTrack",
+            "type": "object"
+        },
+        "DemoWindow": {
+            "additionalProperties": false,
+            "description": "Spec 035 FR-020: the analysis window, seconds from the scenario's start.",
+            "properties": {
+                "end_s": {
+                    "minimum": 0,
+                    "type": "number"
+                },
+                "start_s": {
+                    "minimum": 0,
+                    "type": "number"
+                }
+            },
+            "required": [
+                "start_s",
+                "end_s"
+            ],
+            "title": "DemoWindow",
+            "type": "object"
+        },
         "DetectionRecord": {
             "additionalProperties": false,
             "description": "One scenario's detections by one detector (spec 004 R8).",
@@ -5490,6 +5716,205 @@
             "title": "TimeLateStudyCriteria",
             "type": "object"
         },
+        "TmaProblem": {
+            "additionalProperties": false,
+            "description": "Spec 035 FR-024: what a demonstrator solver is given. Frame: x east, y north, metres; bearings true, radians; times in seconds from the window start.",
+            "properties": {
+                "bearing_rad": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "knots": {
+                    "description": "Manoeuvre spans a solver may use when it accepts knots (the oracle is told the truth's).",
+                    "items": {
+                        "$ref": "#/$defs/DemoSpan"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "own_course_rad": {
+                    "description": "Ownship course at each bearing (the learned model reads ownship legs from it).",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "own_speed_mps": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "own_x_m": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "own_y_m": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                "sigma_rad": {
+                    "type": "number"
+                },
+                "t_s": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "t_s",
+                "bearing_rad",
+                "own_x_m",
+                "own_y_m",
+                "sigma_rad"
+            ],
+            "title": "TmaProblem",
+            "type": "object"
+        },
+        "TmaSolution": {
+            "additionalProperties": false,
+            "description": "Spec 035 FR-024: a solver's answer: the estimated track over the problem's times, its state and covariance at the window end, and how the solve went.",
+            "properties": {
+                "condition_number": {
+                    "description": "Condition number of the Jacobi-scaled information matrix at the solution.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "cost": {
+                    "description": "Sum of squared bearing residuals over the solver's rows, radians squared.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "cov_end": {
+                    "description": "4 by 4 covariance of (x, y, vx, vy) at the window end, row-major; absent when the solver states none.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "iterations": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "manoeuvre_prob": {
+                    "description": "The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s.",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "manoeuvre_t_s": {
+                    "description": "Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row).",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "message": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "runtime_ms": {
+                    "type": "number"
+                },
+                "solver": {
+                    "type": "string"
+                },
+                "solver_version": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/$defs/DemoSolveStatus"
+                },
+                "t_s": {
+                    "description": "Times of the estimated track (a time-late solver answers at every bearing; a causal one at its scored rows).",
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "vx_mps": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "vy_mps": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "x_m": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "y_m": {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "solver",
+                "solver_version",
+                "status",
+                "runtime_ms"
+            ],
+            "title": "TmaSolution",
+            "type": "object"
+        },
         "Track": {
             "additionalProperties": false,
             "description": "Time-ordered states of one platform. Stone Soup analogue GroundTruthPath.",
@@ -5834,6 +6259,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.36.0"
+    "version": "0.37.0"
 }
 

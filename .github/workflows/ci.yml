@@ -219,6 +219,52 @@ jobs:
             conformance/onnx/viewer-layer/results.json
             conformance/onnx/viewer-layer/python_leg.json
 
+  demo:
+    # spec 035: the interactive demonstrator. The time-late layer graph exported fresh and
+    # compared with the shipped one, golden least-squares vectors regenerated from Python, the
+    # page's code in Node (onnxruntime-web's Node build), then the built page in Chromium.
+    needs: changes
+    if: needs.changes.outputs.site == 'true' || needs.changes.outputs.onnx == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: uv sync
+      - name: Time-late layer graph and the demo schema are current
+        run: |
+          uv run python -m tma2.viewer.demo_layer_export --out "$RUNNER_TEMP/tl"
+          cmp "$RUNNER_TEMP/tl/tl-layer.onnx" site/static/demo-data/tl-layer.onnx
+          uv run python scripts/site/demo_schema.py --check
+      - name: Spec 016's whole-period model, three seeds, exported fresh from their results branches
+        run: |
+          (cd conformance/onnx && npm ci && node demo_problems.mjs > "$RUNNER_TEMP/problems.json")
+          uv run python -m tma2.viewer.demo_tlm_export --problems "$RUNNER_TEMP/problems.json" --out "$RUNNER_TEMP/tl" --golden "$RUNNER_TEMP/golden-tlm.json"
+          for k in 1 2 3; do cmp "$RUNNER_TEMP/tl/tlm-s$k.onnx" site/static/demo-data/tlm-s$k.onnx; done
+          # inputs exactly; the network's outputs differ in the last bits across CPU families
+          python3 -c "import json,sys; a=json.load(open('$RUNNER_TEMP/golden-tlm.json')); b=json.load(open('conformance/onnx/demo/golden-tlm.json')); ok=a['problems_sha256']==b['problems_sha256'] and all(a['cases'][k]['features_sha256_f32']==v['features_sha256_f32'] for k,v in b['cases'].items()); sys.exit(0 if ok else 'golden-tlm inputs changed: regenerate it')"
+      - name: Golden least squares from Python, and the page's code in Node
+        working-directory: conformance/onnx
+        run: |
+          npm ci
+          node demo_problems.mjs > "$RUNNER_TEMP/problems.json"
+          uv run python demo_golden.py "$RUNNER_TEMP/problems.json" "$RUNNER_TEMP/golden-ls.json"
+          python3 -c "import json,sys; a=json.load(open('$RUNNER_TEMP/golden-ls.json')); b=json.load(open('demo/golden-ls.json')); sys.exit(0 if a['problems_sha256']==b['problems_sha256'] else 'problems changed: regenerate demo/golden-ls.json')"
+          node --test demo_node.mjs
+      - name: The built page in Chromium
+        run: |
+          (cd site && npm ci && npm run build)
+          (cd conformance/onnx && npx playwright install --with-deps chromium && node demo_page.mjs --build ../../site/build --out "$RUNNER_TEMP/demo-page.json")
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: demo
+          path: ${{ runner.temp }}/demo-page.json
+
   browser-port:
     # spec 021: the JavaScript port of C's host code against Python's committed dump, stage by
     # stage, on 30 scenarios of used seed 319, with the graphs exported fresh
