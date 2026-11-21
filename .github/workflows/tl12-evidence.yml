@@ -1,6 +1,7 @@
 # Spec 033 diagnostic: the joint solve's declared history against the true history, by log
 # evidence, on long-gap engagements (scripts/research/tl12_evidence.py). Push `tl12ev/<name>`
-# with configs/timelate/runs/<name>.json: {"config": <long config>, "ordinals": [...]}.
+# with configs/timelate/runs/<name>.json: {"config": <long config>, "ordinals": [...]}, and
+# optionally "script" (default tl12_evidence.py) and "extra_args" (placed before the output path).
 # Results to the branch results/tl12ev-<name>-<run id>.
 name: Time-late evidence diagnostic (spec 033)
 
@@ -29,7 +30,7 @@ jobs:
   run:
     needs: setup
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
@@ -42,9 +43,13 @@ jobs:
       - run: uv sync
       - name: Evidence
         run: |
-          CFG="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['config'])" "configs/timelate/runs/${{ needs.setup.outputs.name }}.json")"
+          RUNF="configs/timelate/runs/${{ needs.setup.outputs.name }}.json"
+          CFG="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['config'])" "$RUNF")"
+          SCRIPT="$(python3 -c "import json, sys; print(json.load(open(sys.argv[1])).get('script', 'scripts/research/tl12_evidence.py'))" "$RUNF")"
+          EXTRA="$(python3 -c "import json, sys; print(' '.join(json.load(open(sys.argv[1])).get('extra_args', [])))" "$RUNF")"
           mkdir -p "$RUNNER_TEMP/out"
-          uv run python scripts/research/tl12_evidence.py "$CFG" "${{ matrix.ordinal }}" "$RUNNER_TEMP/out/${{ matrix.ordinal }}.json"
+          # shellcheck disable=SC2086
+          uv run python "$SCRIPT" "$CFG" "${{ matrix.ordinal }}" $EXTRA "$RUNNER_TEMP/out/${{ matrix.ordinal }}.json"
       - uses: actions/upload-artifact@v4
         with:
           name: ev-${{ matrix.ordinal }}
