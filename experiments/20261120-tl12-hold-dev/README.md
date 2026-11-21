@@ -1,5 +1,7 @@
 # Spec 033 development, second run: long gaps with the ownship holding course
 
+**Follow-up (2026-11-21, `experiments/20261121-tl13-evidence/`): on one machine the >70 min reversal is not reproduced (0.97), and the true gap structure alone does not help.**
+
 **Panel review (2026-11-21, `experiments/20261120-tl12-hold-dev/review.md`): three approve with findings; the readings below are narrowed there.** Where this README and the review differ, the review stands.
 
 Development work, not a registered result. CI run 44741196091 (`timelate/tl-q-hold-dev` at

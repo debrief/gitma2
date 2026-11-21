@@ -878,7 +878,13 @@ gap history: in most engagements the Laplace evidence does not prefer the true o
 within ±10 units; 123 declared against 178 true); whether search matters is not resolved (the
 diagnostic's re-run ran on another CPU family and declared other histories in 5 of 21); k4 (as
 tuned in spec 030) level with alone; the joint solve costs 11–16× alone. Suggestion, not a rule:
-join a period without its own ownship turn across gaps up to about an hour. Write-up
+join a period without its own ownship turn across gaps up to about an hour. **Follow-up (owner
+option 3, `experiments/20261121-tl13-evidence/`, histories and errors in one job per engagement,
+`scripts/research/tl13_{evidence2,summary}.py`)**: the true gap structure alone does not help
+(declared refit ÷ gap-true 0.96 [0.67, 1.40]; the 2.35/2.48 were the whole true history, which
+knows the observed periods' manoeuvres too); beyond 70 min joining is level with alone (0.97,
+median 1.03), the reversal not reproduced; against the better declared fit the truth's evidence
+is higher by > 3 in 1 of 21, lower in 11: the search is not the limit. Write-up
 `site/blog/2026-11-21-long-gaps.md`, slides `2026-11-21-long-gaps-slides.md` (figures
 `scripts/research/tl12_charts.py`). Owner's choice next: stop; register a gap × own-turn rule on
 fresh seeds (369 onward, about 140 periods per band); or first re-check the evidence on the
