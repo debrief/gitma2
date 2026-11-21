@@ -1,0 +1,49 @@
+{
+  "description": "Spec 032's registered study, validation: configs/long/realistic.json's realism with the ownship holding each leg 2-4 h (leg_s 7200-14400 s), seed 367, 10 engagements each of 6 and 12 hours (indices 0-9 are 6 hours, 10-19 are 12); contact 1 only, 2-hour windows overlapping 30 min.",
+  "seed": 367,
+  "target_ranges": "configs/timelate/tl-ranges.json",
+  "dt_s": 5,
+  "hours": [
+    6,
+    12
+  ],
+  "engagements_per_duration": 10,
+  "noise_sigma_rad": 0.017453292519943295,
+  "ownship": {
+    "leg_s": {
+      "min": 7200,
+      "max": 14400
+    },
+    "offset_rad": {
+      "min": 0.5235987755982988,
+      "max": 1.5707963267948966
+    },
+    "close_offset_rad": {
+      "min": 0.0,
+      "max": 0.5235987755982988
+    },
+    "open_offset_rad": {
+      "min": 1.7453292519943295,
+      "max": 2.6179938779914944
+    },
+    "range_low_m": 3000,
+    "range_high_m": 25000,
+    "sprint_speed_mps": 11.0
+  },
+  "realism": {
+    "steering": {
+      "range_belief_sd": 0.3
+    },
+    "gaps": {
+      "per_hour": 0.15,
+      "min_s": 600,
+      "max_s": 3600
+    },
+    "detection": {
+      "r50_m": 40000,
+      "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+  }
+}

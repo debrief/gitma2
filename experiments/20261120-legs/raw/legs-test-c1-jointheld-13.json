@@ -1,0 +1,356 @@
+{
+ "part": "jointheld",
+ "index": 13,
+ "hours": 6.0,
+ "seed": 368,
+ "config": "configs/long/legs-test.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "16733384807913295290",
+  "dataset_seed": 368,
+  "index": 13,
+  "hours": 6.0,
+  "samples": 4320,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 279,
+    "end_index": 315
+   },
+   {
+    "kind": "course",
+    "start_index": 457,
+    "end_index": 477
+   },
+   {
+    "kind": "speed",
+    "start_index": 953,
+    "end_index": 1004
+   },
+   {
+    "kind": "course",
+    "start_index": 1444,
+    "end_index": 1487
+   },
+   {
+    "kind": "both",
+    "start_index": 1865,
+    "end_index": 1881
+   },
+   {
+    "kind": "speed",
+    "start_index": 2031,
+    "end_index": 2055
+   },
+   {
+    "kind": "course",
+    "start_index": 2551,
+    "end_index": 2572
+   },
+   {
+    "kind": "course",
+    "start_index": 2887,
+    "end_index": 2906
+   },
+   {
+    "kind": "both",
+    "start_index": 3411,
+    "end_index": 3438
+   },
+   {
+    "kind": "course",
+    "start_index": 3642,
+    "end_index": 3669
+   },
+   {
+    "kind": "course",
+    "start_index": 4117,
+    "end_index": 4126
+   },
+   {
+    "kind": "course",
+    "start_index": 4275,
+    "end_index": 4297
+   }
+  ],
+  "ownship_turns": [
+   [
+    2611,
+    2631
+   ]
+  ],
+  "zig_index": 2631,
+  "turn_start_index": 2611,
+  "mean_range_m": 24219.487006161115,
+  "min_range_m": 12453.622584529465,
+  "max_range_m": 41612.875481035,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     3616.5344814215223,
+     6849.103405697579
+    ]
+   ],
+   "steering": {
+    "planned": 1,
+    "lost": 0
+   },
+   "swapped_bearings": 2
+  },
+  "valid_share": 0.7481481481481481,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.06465213022672132,
+   "ownship_speed_mps": 3.121924357315754,
+   "ownship_turn_rate_rad_s": 0.03196158724167519,
+   "target_range0_m": 12453.622584529465
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 1390.0,
+   "change": 1.2229345899368038,
+   "rate": 0.006646460368641798
+  },
+  {
+   "kind": "course",
+   "start_time_s": 2280.0,
+   "change": 1.3172011312018541,
+   "rate": 0.01285543186817963
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 4760.0,
+   "change": 2.934113630310196,
+   "rate": 0.011346489737282034
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7215.0,
+   "change": 1.826125092359412,
+   "rate": 0.0084407826952599
+  },
+  {
+   "kind": "both",
+   "start_time_s": 9320.0,
+   "change": 1.0484533305511676,
+   "rate": 0.013080923572416518,
+   "change2": 1.840329072462378,
+   "rate2": 0.04489885433524997
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 10150.0,
+   "change": -2.152339067516765,
+   "rate": 0.017310840023809823
+  },
+  {
+   "kind": "course",
+   "start_time_s": 12750.0,
+   "change": -1.355769720348774,
+   "rate": 0.012679119740988076
+  },
+  {
+   "kind": "course",
+   "start_time_s": 14430.0,
+   "change": 1.035973117642672,
+   "rate": 0.01057799479143966
+  },
+  {
+   "kind": "both",
+   "start_time_s": 17050.0,
+   "change": -1.4665004527212524,
+   "rate": 0.01081536752484396,
+   "change2": -1.1196502712097014,
+   "rate2": 0.012549275415486182
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18205.0,
+   "change": 1.9932120593857654,
+   "rate": 0.014456485780894469
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20580.0,
+   "change": 0.5543053763816523,
+   "rate": 0.011529336928626364
+  },
+  {
+   "kind": "course",
+   "start_time_s": 21370.0,
+   "change": -1.7565232296159703,
+   "rate": 0.015331622724112568
+  }
+ ],
+ "git_commit": "f93dfab2bba14002c66a73194c017cf9bcbd3578",
+ "git_dirty": false,
+ "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+ "chain": [
+  [
+   0,
+   1440
+  ],
+  [
+   1080,
+   1440
+  ],
+  [
+   2160,
+   1440
+  ],
+  [
+   3240,
+   1080
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 1,
+   "first": 1080,
+   "rows": 1440,
+   "union": [
+    0,
+    2520
+   ],
+   "seconds": 1336.4578416690001,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      1473.4839205236226,
+      1495.853834468955
+     ],
+     [
+      2885.7820401363897,
+      3358.2293473336267
+     ],
+     [
+      7060.044253109178,
+      7467.43266355457
+     ],
+     [
+      9320.621860124102,
+      9361.37637812113
+     ],
+     [
+      10243.063166149945,
+      10282.471065590347
+     ]
+    ],
+    "c2": [
+     [
+      1505.0,
+      1615.0
+     ],
+     [
+      3065.0,
+      3185.0
+     ],
+     [
+      7395.0,
+      7495.0
+     ],
+     [
+      9395.0,
+      9555.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 3,
+   "first": 3240,
+   "rows": 1080,
+   "union": [
+    2160,
+    2160
+   ],
+   "seconds": 671.1196099030001,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      12757.104973470843,
+      12837.905517495929
+     ],
+     [
+      14452.10387065811,
+      14568.672163278055
+     ],
+     [
+      17219.598010316833,
+      17414.05561678414
+     ],
+     [
+      18279.936804949237,
+      18348.378610301977
+     ],
+     [
+      20513.1595664251,
+      20591.111709175202
+     ]
+    ],
+    "c2": [
+     [
+      12655.0,
+      12795.0
+     ],
+     [
+      14545.0,
+      14695.0
+     ],
+     [
+      17355.0,
+      17475.0
+     ],
+     [
+      18295.0,
+      18565.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 7200.0,
+ "overlap_s": 1800.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 2012.9624860286713
+}
