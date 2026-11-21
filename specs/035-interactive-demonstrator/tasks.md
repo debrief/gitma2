@@ -21,3 +21,4 @@
 - [x] T019 Owner 2026-11-21 ("predict steady legs"): the learned model read as steady legs (`tlm-sK-legs`: spec 016's `spans_from_logit` ported to `tlm.js`, the four most probable spans handed to the physics layer as chords, both knots free); `TmaSolution.manoeuvre_start_s/end_s` (schema 0.38.0); golden spans `demo/golden-spans.json` (`demo_spans_golden.py`); Node and Chromium checks
 - [x] T020 Owner: a manoeuvre-threshold slider for the learned solvers (`manoeuvre_threshold` on `DemoScenario` and `TmaProblem`; declared spans and the legs follow it; in the URL)
 - [x] T021 Owner: ownship course and speed in blue on the course and speed error charts (a chart overlay on its own scale); the target-turn preset zigs at 50 min, between ownship turns; goldens and slide figures regenerated
+- [x] T022 Owner: classical break-scan solver (`breakscan.js`, `break-scan`): one speed, one course change, scanned break time, declared above 3 ln n; Node and Chromium checks

@@ -208,6 +208,32 @@ test("the oracle told the manoeuvre times removes the turn's bias", async () => 
   assert.ok(or.ev.summary.range_pct.rms < 0.5 && cv.ev.summary.range_pct.rms > 20, `${or.ev.summary.range_pct.rms} vs ${cv.ev.summary.range_pct.rms}`);
 });
 
+test("the classical break scan finds the target-turn preset's turn and declares none elsewhere", async () => {
+  for (const seed of [1, 2, 3]) {
+    const r = await solveScenario({ ...preset("target-turn"), seed }, "break-scan");
+    const truth = r.kn[0];
+    assert.equal(r.sol.status, "converged");
+    assert.equal(r.sol.manoeuvre_start_s.length, 1, `seed ${seed}: one break declared`);
+    const tb = (r.sol.manoeuvre_start_s[0] + r.sol.manoeuvre_end_s[0]) / 2;
+    const mid = (truth.t0 + truth.t1) / 2;
+    assert.ok(Math.abs(tb - mid) <= 180, `seed ${seed}: break at ${tb} s, truth ${mid} s`);
+    assert.ok(r.ev.summary.range_pct.rms < 4, `seed ${seed}: range ${r.ev.summary.range_pct.rms}`);
+    // legs: one speed, and the course changes by about the truth's 40 degrees
+    const sp = (k) => Math.hypot(r.sol.vx_mps[k], r.sol.vy_mps[k]);
+    assert.ok(Math.abs(sp(0) - sp(r.sol.t_s.length - 1)) < 1e-9);
+    const turn = (Math.atan2(r.sol.vx_mps.at(-1), r.sol.vy_mps.at(-1)) - Math.atan2(r.sol.vx_mps[0], r.sol.vy_mps[0])) * 180 / Math.PI;
+    assert.ok(Math.abs(turn - 40) < 8, `seed ${seed}: turn ${turn}`);
+  }
+  for (const id of ["good-geometry", "no-zig", "endfire", "short-window"]) {
+    const r = await solveScenario(preset(id), "break-scan");
+    const ls = await solveScenario(preset(id), "ls-js");
+    assert.equal(r.sol.manoeuvre_start_s.length, 0, `${id}: no break declared (${r.sol.message})`);
+    assert.ok(Math.abs(r.sol.x_m.at(-1) - ls.sol.x_m.at(-1)) < 1e-6, `${id}: one leg returned`);
+  }
+  const a = await solveScenario(preset("target-turn"), "break-scan"), b = await solveScenario(preset("target-turn"), "break-scan");
+  assert.deepEqual(a.sol.x_m, b.sol.x_m, "deterministic");
+});
+
 test("the whole-period model's inputs and own track equal Python's (spec 016 port)", async () => {
   const golden = JSON.parse(readFileSync(here + "demo/golden-tlm.json", "utf8"));
   const cases = goldenCases();

@@ -167,6 +167,17 @@ try {
   await page.selectOption("[data-testid=solver]", "ls-js");
   await settled();
 
+  // the classical break scan in the browser: one break declared near the true zig at 50 min
+  await page.selectOption("[data-testid=preset]", "target-turn");
+  await settled();
+  await page.selectOption("[data-testid=solver]", "break-scan");
+  await settled();
+  const bs = await state();
+  const at = bs.sol && bs.sol.manoeuvre_start_s && bs.sol.manoeuvre_start_s.length === 1 ? (bs.sol.manoeuvre_start_s[0] + bs.sol.manoeuvre_end_s[0]) / 2 : NaN;
+  check("classical break scan declares the target's zig within 3 min of 50 min", bs.status === "done" && Math.abs(at - 3000) <= 180 && bs.summary.range_pct.rms < 4, { break_s: at, range_pct_rms: bs.summary && bs.summary.range_pct.rms, ms: bs.sol && bs.sol.runtime_ms, message: bs.sol && bs.sol.message });
+  await page.selectOption("[data-testid=solver]", "ls-js");
+  await settled();
+
   // ownship course and speed in blue on the course and speed error charts, nowhere else
   const overlayOn = async (q) => { await page.locator(`input[type=radio][value=${q}]`).check(); await page.waitForTimeout(100); return page.locator("[data-testid=chart-error] [data-testid=chart-overlay] path").count(); };
   const ov = { course: await overlayOn("course"), speed: await overlayOn("speed"), range: await overlayOn("range"), position: await overlayOn("position") };

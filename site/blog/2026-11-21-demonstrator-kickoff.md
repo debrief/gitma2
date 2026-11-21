@@ -87,3 +87,18 @@ the turn. A classical scan of one free break gives a chi-square of 731 to 748 on
 anywhere from 30 to 60 minutes against 4,815 for one leg: that the target manoeuvred is certain,
 when is weakly determined by a chord with four free unknowns.
 
+**2026-11-21, evening.** The owner chose a classical yardstick for where a manoeuvre is: the page's
+new **break scan** solver. Its hypothesis is narrow on purpose: the target holds one speed and
+changes course at most once, at once, which is five unknowns. The break time is scanned (every four
+minutes, then every minute round the best) and each candidate fitted to the bearings; a break is
+declared only when chi-square falls by more than three times the log of the number of bearings,
+else one leg is returned. On the target-turn preset over three noise draws it declares the turn at
+48 to 50 minutes (truth 49.3 to 50.6) with a course change of 39 to 41° (truth 40°) and 0.5 to 1.9%
+RMS range error, in about two seconds in the browser; on the four presets without a target
+manoeuvre it declares nothing. Two things this does and does not show. It shows that the bearings
+do hold the time of this turn: the physics layer's chord, with four free unknowns per break and
+only a soft speed prior, left it undetermined from 30 to 65 minutes, and holding speed exactly is
+what pins it. It does not show a general detector: the scan is told the kind of manoeuvre the
+preset uses, finds no speed change or second manoeuvre, and its threshold is a rule of thumb. The
+standing time-late system for all that is `ctl` (specs 016 to 019), which is not in the browser.
+

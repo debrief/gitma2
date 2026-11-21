@@ -87,13 +87,14 @@ the window.
 `change` event (on release). The worker posts results with the request's id, and the page drops
 any result older than its latest request. FR-024: the `TmaProblem`, `TmaSolution` and
 `DemoSolverInfo` types are in LinkML (schema 0.38.0, with `manoeuvre_start_s`/`manoeuvre_end_s` on
-`TmaSolution`). FR-025 **(changed)** ships five solvers:
+`TmaSolution`). FR-025 **(changed)** ships six solvers:
 
 | Name | What it is |
 | --- | --- |
 | `ls-js` | Batch least squares in JavaScript, spec 021's port, checked against Python's golden vectors |
 | `layer-cv` | The physics layer of Gates 1–2 with no knots, as an ONNX graph (`tl-layer.onnx`) |
 | `layer-oracle` | The same graph told the truth's manoeuvre spans as chord knots. An oracle, labelled as such; at most four manoeuvres |
+| `break-scan` | A classical yardstick (owner, 2026-11-21), JavaScript (`breakscan.js`): one speed, at most one instantaneous course change (five unknowns); the break time scanned every 4 min then every minute, none within 5 min of the window's ends; declared when chi-square falls by more than 3 ln n against one leg, else one leg. Told the presets' kind of manoeuvre; no speed change, no second manoeuvre |
 | `tlm-s1`, `tlm-s2`, `tlm-s3` | Spec 016's whole-period learned model (a bidirectional transformer; three training seeds of 12.5 million simulated periods). It reads the whole window of 5-second bearings at once and states range and velocity every 30 s and a manoeuvre probability. The page draws its own track (spec 016's `direct_track`) and shades its manoeuvres. 26 MB each, exported from the results branches by `tma2.viewer.demo_tlm_export`; the ONNX digests equal spec 016's export check. Study L stopped it against the classical control |
 | `tlm-s1-legs`, `-s2-`, `-s3-` | The same network **read as steady legs** (owner, 2026-11-21): its manoeuvre spans (spec 016's `spans_from_logit`: probability over 0.5, merged within 60 s, at least 10 s; the four most probable kept) handed to `tl-layer.onnx` as chord knots with course and speed free. The shape of spec 016's `learned-arc` read-out (which used the arc model and Annex B's prior), not its figures. On the presets the head stays under 0.2, so at 0.5 it declares no manoeuvre and reads as one leg. A **manoeuvre threshold** slider (0.05–0.95, shown for the learned solvers; `DemoScenario.manoeuvre_threshold`, in the URL) moves the threshold for the declared spans and the legs |
 

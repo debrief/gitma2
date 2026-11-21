@@ -942,7 +942,11 @@ side of the truth and reaches 4–8% range error for that reason, not by finding
 states the largest probability, and a **manoeuvre threshold** slider (owner, 2026-11-21;
 `DemoScenario.manoeuvre_threshold`, 0.05–0.95, in the URL) moves the 0.5 for the declared spans
 and the legs. The course and speed error charts carry ownship course and speed in blue (`Chart`'s
-`overlay`). The points are not segmented (that would double-smooth); a proposer
+`overlay`). **`break-scan`** (`breakscan.js`; owner's yardstick, nothing learned): one speed, at
+most one instantaneous course change (five unknowns), the break time scanned, declared when
+chi-square falls by over 3 ln n. On the target-turn preset it declares the turn at 48–50 min with
+39–41° and 0.5–1.9% range error; none on the other presets. The layer's chord (four free unknowns
+a break, a soft speed prior) leaves the time flat from 30 to 65 min: holding speed exactly pins it. The points are not segmented (that would double-smooth); a proposer
 from them into the search is unbuilt.
 
 ## Stack (owner decisions, 2026-10-31)
