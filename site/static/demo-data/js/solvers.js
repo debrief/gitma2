@@ -183,8 +183,9 @@ async function runNetwork(info, p, ctx, seed, t0) {
   for (let j = 0; j < T; j++) mean.push([o.mean[3 * j], o.mean[3 * j + 1], o.mean[3 * j + 2]]);
   if (!mean.flat().every(Number.isFinite)) return { fail: failed(info, t0, "non-finite output") };
   const prob = Array.from({ length: T }, (_, j) => 1 / (1 + Math.exp(-o.logit[j])));
-  const spans = TLM.spansFromLogit(prob, n);
-  return { n, th, mean, prob, spans, manoeuvre_t_s: last.map((k) => p.t_s[k]) };
+  const threshold = p.manoeuvre_threshold ?? 0.5; // spec 016's 0.5 unless the page's slider says otherwise
+  const spans = TLM.spansFromLogit(prob, n, threshold);
+  return { n, th, mean, prob, spans, threshold, manoeuvre_t_s: last.map((k) => p.t_s[k]) };
 }
 
 function withSpans(out, r) {
@@ -222,8 +223,8 @@ function tlmSolver(seed) {
 }
 
 // Spec 016's `learned-arc` read-out in the browser (owner, 2026-11-21: "predict steady legs"):
-// the model's declared spans, at most the four with the most probability (the graph's eight
-// knots), and constant-velocity legs (chords) fitted to the bearings at those spans by the
+// the model's declared spans (probability over the scenario's threshold, 0.5 unless the owner
+// moves the slider), at most the four with the most probability (the graph's eight knots), and constant-velocity legs (chords) fitted to the bearings at those spans by the
 // physics layer, both knots free since the model does not state a manoeuvre's kind. Spec 016
 // fitted the arc model with Annex B's prior at the same spans; the legs here are the chord
 // model of Gates 1-2, so this is that read-out's shape, not its figures.
@@ -236,7 +237,7 @@ function tlmLegsSolver(seed) {
       const t0 = now();
       const r = await runNetwork(info, p, ctx, seed, t0);
       if (r.fail) return r.fail;
-      const spans = TLM.spansFromLogit(r.prob, r.n, 0.5, 60.0, LEGS_MAX);
+      const spans = TLM.spansFromLogit(r.prob, r.n, r.threshold, 60.0, LEGS_MAX);
       if (ctx.progress) ctx.progress({ stage: `fitting ${spans.length + 1} legs` });
       const knots = spans.map(([a, b]) => ({ start_s: a, end_s: b, speed: true }));
       const out = await solveLegs(info, p, ctx, t0, knots, knots.map(() => false));

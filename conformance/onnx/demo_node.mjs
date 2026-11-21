@@ -278,6 +278,20 @@ test("the learned model read as steady legs: the layer's legs at the model's spa
   assert.equal(bad.sol.status, "failed");
 });
 
+test("the manoeuvre threshold slider reaches the declared spans and the legs", async () => {
+  // at the registered 0.5 the head declares nothing on the target-turn preset; lowered, it does
+  const at = async (th, name) => solveScenario({ ...preset("target-turn"), manoeuvre_threshold: th }, name);
+  const high = await at(0.5, "tlm-s3-legs"), low = await at(0.1, "tlm-s3-legs");
+  assert.deepEqual(high.sol.manoeuvre_prob, low.sol.manoeuvre_prob, "the network's statement does not depend on the threshold");
+  assert.equal(high.sol.manoeuvre_start_s.length, 0);
+  assert.ok(low.sol.manoeuvre_start_s.length >= 1 && low.sol.manoeuvre_start_s.length <= 4, JSON.stringify(low.sol.manoeuvre_start_s));
+  assert.notEqual(low.sol.x_m.at(-1), high.sol.x_m.at(-1), "the legs change with the spans");
+  const own = await at(0.1, "tlm-s3");
+  assert.deepEqual(own.sol.manoeuvre_start_s, low.sol.manoeuvre_start_s, "the own-track solver declares the same spans");
+  const frag = await encodeFragment({ ...preset("target-turn"), manoeuvre_threshold: 0.1 });
+  assert.equal((await decodeFragment(frag)).manoeuvre_threshold, 0.1, "the threshold survives the URL");
+});
+
 test("each seed of the whole-period model solves the presets", async () => {
   for (const name of ["tlm-s1", "tlm-s2", "tlm-s3"]) {
     const good = await solveScenario(preset("good-geometry"), name);

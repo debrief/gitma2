@@ -65,7 +65,9 @@ choosing it. First, it is the chord model of Gates 1–2, not spec 016's arc mod
 prior, so it reproduces the read-out's design and not its figures. Second, on every preset the head
 states at most 0.19 at any token (0.01 at the target-turn preset's 40° turn, seeds 1 and 2), so at
 the registered threshold it declares no manoeuvre there and the legs read-out is one leg: the page
-now says the largest probability it found. That is spec 016's finding in miniature: the comparison
+now says the largest probability it found, and the owner asked for the threshold as a slider: it is
+one (shown for the learned solvers, 0.05 to 0.95, kept in the link), so the detector can be tuned by
+eye on the page, which is a demonstration and not a result. That is spec 016's finding in miniature: the comparison
 measured the model's untuned detector. The points themselves are not segmented: a change-point fit
 on a smoothed track double-smooths and discards the bearings; what the points could do is propose
 times to a search, which is on three panels' lists and not built.

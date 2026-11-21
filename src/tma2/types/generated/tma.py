@@ -4003,6 +4003,7 @@ class DemoScenario(ConfiguredBaseModel):
     window: DemoWindow = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario']} })
     solver: str = Field(default=..., description="""Name of the selected solver plug-in (FR-024).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaSolution']} })
     show_ellipses: Optional[bool] = Field(default=None, description="""Show the solver's 1- and 2-sigma position ellipses (off by default).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario']} })
+    manoeuvre_threshold: Optional[float] = Field(default=None, description="""Probability above which the learned model's manoeuvre statement counts as a manoeuvre (its declared spans and the legs read-out); spec 016's registered 0.5 when absent.""", ge=0.05, le=0.95, json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaProblem']} })
 
 
 class DemoSpan(ConfiguredBaseModel):
@@ -4034,6 +4035,7 @@ class TmaProblem(ConfiguredBaseModel):
                        'HeadroomPredictionHeader',
                        'Gate2Decision',
                        'TmaProblem']} })
+    manoeuvre_threshold: Optional[float] = Field(default=None, description="""DemoScenario.manoeuvre_threshold, for the learned model's declared spans; 0.5 when absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaProblem']} })
 
 
 class TmaSolution(ConfiguredBaseModel):

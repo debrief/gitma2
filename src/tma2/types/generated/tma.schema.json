@@ -829,6 +829,15 @@
                     "minimum": 1,
                     "type": "number"
                 },
+                "manoeuvre_threshold": {
+                    "description": "Probability above which the learned model's manoeuvre statement counts as a manoeuvre (its declared spans and the legs read-out); spec 016's registered 0.5 when absent.",
+                    "maximum": 0.95,
+                    "minimum": 0.05,
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
                 "name": {
                     "type": [
                         "string",
@@ -5733,6 +5742,13 @@
                     },
                     "type": [
                         "array",
+                        "null"
+                    ]
+                },
+                "manoeuvre_threshold": {
+                    "description": "DemoScenario.manoeuvre_threshold, for the learned model's declared spans; 0.5 when absent.",
+                    "type": [
+                        "number",
                         "null"
                     ]
                 },

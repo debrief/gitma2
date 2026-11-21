@@ -19,3 +19,4 @@
 - [x] T017 Owner: drop real-time E; spec 016's whole-period model, three seeds (`demo_tlm_export.py`, `tlm.js`, `golden-tlm.json`, CI re-export); presets inside its training range
 - [x] T018 Owner: one-screen full-width layout; hidden charts widen only
 - [x] T019 Owner 2026-11-21 ("predict steady legs"): the learned model read as steady legs (`tlm-sK-legs`: spec 016's `spans_from_logit` ported to `tlm.js`, the four most probable spans handed to the physics layer as chords, both knots free); `TmaSolution.manoeuvre_start_s/end_s` (schema 0.38.0); golden spans `demo/golden-spans.json` (`demo_spans_golden.py`); Node and Chromium checks
+- [x] T020 Owner: a manoeuvre-threshold slider for the learned solvers (`manoeuvre_threshold` on `DemoScenario` and `TmaProblem`; declared spans and the legs follow it; in the URL)

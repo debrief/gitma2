@@ -103,7 +103,7 @@ export function problemOf(sc, b, rows) {
   const p = {
     t_s: new Array(n), bearing_rad: new Array(n), own_x_m: new Array(n), own_y_m: new Array(n),
     own_course_rad: new Array(n), own_speed_mps: new Array(n),
-    sigma_rad: sc.sigma_deg * DEG, knots: [],
+    sigma_rad: sc.sigma_deg * DEG, knots: [], manoeuvre_threshold: sc.manoeuvre_threshold ?? 0.5,
   };
   rows.forEach((i, k) => {
     p.t_s[k] = b.t[i] - t0;

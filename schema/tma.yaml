@@ -2209,6 +2209,7 @@ classes:
       window: { range: DemoWindow, required: true, inlined: true }
       solver: { range: string, required: true, description: "Name of the selected solver plug-in (FR-024)." }
       show_ellipses: { range: boolean, description: "Show the solver's 1- and 2-sigma position ellipses (off by default)." }
+      manoeuvre_threshold: { range: float, minimum_value: 0.05, maximum_value: 0.95, description: "Probability above which the learned model's manoeuvre statement counts as a manoeuvre (its declared spans and the legs read-out); spec 016's registered 0.5 when absent." }
 
   DemoSpan:
     description: "Spec 035: a closed time interval in a problem's own time (seconds from the window start)."
@@ -2227,6 +2228,7 @@ classes:
       own_speed_mps: { range: float, multivalued: true }
       sigma_rad: { range: float, required: true }
       knots: { range: DemoSpan, multivalued: true, inlined_as_list: true, description: "Manoeuvre spans a solver may use when it accepts knots (the oracle is told the truth's)." }
+      manoeuvre_threshold: { range: float, description: "DemoScenario.manoeuvre_threshold, for the learned model's declared spans; 0.5 when absent." }
 
   TmaSolution:
     description: "Spec 035 FR-024: a solver's answer: the estimated track over the problem's times, its state and covariance at the window end, and how the solve went."

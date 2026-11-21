@@ -936,7 +936,9 @@ spec 016's `spans_from_logit` ported (`tlm.js`, checked against Python on the go
 both knots free (`solveLegs`, shared with the oracle). `TmaSolution.manoeuvre_start_s/end_s`,
 schema 0.38.0. On every preset the head's largest probability is 0.19 or less (0.01 at the
 target-turn preset's 40° turn), so at the 0.5 threshold the read-out is one leg there; the page
-states the largest probability. The points are not segmented (that would double-smooth); a proposer
+states the largest probability, and a **manoeuvre threshold** slider (owner, 2026-11-21;
+`DemoScenario.manoeuvre_threshold`, 0.05–0.95, in the URL) moves the 0.5 for the declared spans
+and the legs. The points are not segmented (that would double-smooth); a proposer
 from them into the search is unbuilt.
 
 ## Stack (owner decisions, 2026-10-31)

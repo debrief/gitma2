@@ -157,6 +157,13 @@ try {
   const legs = await state();
   const saidLegs = await page.locator("[data-testid=model-manoeuvres]").innerText().catch(() => "");
   check("the learned model read as steady legs: the layer's track at the model's spans", legs.status === "done" && legs.sol.status !== "failed" && Array.isArray(legs.sol.manoeuvre_start_s) && legs.sol.manoeuvre_start_s.length <= 4 && /Read as \d+ steady/.test(saidLegs), { range_pct_rms: legs.summary && legs.summary.range_pct.rms, spans: legs.sol && legs.sol.manoeuvre_start_s, said: saidLegs });
+  // the threshold slider: lowered, the model declares spans on the target turn and the legs follow
+  await page.selectOption("[data-testid=solver]", "tlm-s3-legs");
+  await settled();
+  await page.locator("[data-testid=threshold]").evaluate((el) => { const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set; set.call(el, "0.1"); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); });
+  await settled();
+  const low = await state();
+  check("manoeuvre threshold slider: at 0.1 the model declares spans and the legs read-out uses them", low.status === "done" && low.sol.manoeuvre_start_s.length >= 1 && /over 0\.10/.test(await page.locator("[data-testid=model-manoeuvres]").innerText().catch(() => "")), { spans: low.sol && low.sol.manoeuvre_start_s, range_pct_rms: low.summary && low.summary.range_pct.rms });
   await page.selectOption("[data-testid=solver]", "ls-js");
   await settled();
 

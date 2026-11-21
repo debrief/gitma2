@@ -186,6 +186,7 @@ function Demo() {
   const [view, setView] = useState(() => fitView(DEFAULT_SCENARIO));
   const [winDraft, setWinDraft] = useState(null);
   const [sigmaDraft, setSigmaDraft] = useState(null);
+  const [thDraft, setThDraft] = useState(null);
   const [solve, setSolve] = useState({ status: "idle" });
   const [now, setNow] = useState(0);
   const [nonce, setNonce] = useState(0); // "solve again" after a cancel
@@ -445,7 +446,7 @@ function Demo() {
   }, [sel, deleteSelected, undo, redo]);
 
   // ---- window and sigma sliders: commit on release (the native change event) ----
-  const startRef = useRef(null), endRef = useRef(null), sigmaRef = useRef(null);
+  const startRef = useRef(null), endRef = useRef(null), sigmaRef = useRef(null), thRef = useRef(null);
   const period = derived.b.period;
   const win = winDraft || sc.window;
   const winRef = useRef(win);
@@ -460,14 +461,21 @@ function Demo() {
       setSigmaDraft(null);
       commit({ ...scRef.current, sigma_deg: Number(e.target.value) });
     };
+    const onThreshold = (e) => {
+      setThDraft(null);
+      commit({ ...scRef.current, manoeuvre_threshold: Number(e.target.value) });
+    };
     const els = [startRef.current, endRef.current];
     els.forEach((el) => el && el.addEventListener("change", onChange));
     if (sigmaRef.current) sigmaRef.current.addEventListener("change", onSigma);
+    const th = thRef.current;
+    if (th) th.addEventListener("change", onThreshold);
     return () => {
       els.forEach((el) => el && el.removeEventListener("change", onChange));
       if (sigmaRef.current) sigmaRef.current.removeEventListener("change", onSigma);
+      if (th) th.removeEventListener("change", onThreshold);
     };
-  }, [commit, loaded]);
+  }, [commit, loaded, sc.solver]);
   const dtWin = Math.max(sc.interval_s, 5);
   const setWinEnd = (which, v) => {
     const w = { ...winRef.current };
@@ -839,6 +847,11 @@ function Demo() {
             </label>
             <button className="button button--sm button--secondary" data-testid="reseed" onClick={() => commit({ ...sc, seed: Math.floor(Math.random() * 4294967296) })}>Reseed</button>
             <span className={styles.small}>seed {sc.seed}</span>
+            {info.learned && (
+              <label title="Probability above which the model's manoeuvre statement counts as a manoeuvre: its declared spans, and where the legs read-out breaks the track. Spec 016 registered 0.5; the panel called that an untuned detector.">Manoeuvre threshold {fmt(thDraft ?? sc.manoeuvre_threshold ?? 0.5, 2)}{" "}
+                <input ref={thRef} type="range" min={0.05} max={0.95} step={0.05} value={thDraft ?? sc.manoeuvre_threshold ?? 0.5} data-testid="threshold" onChange={(e) => setThDraft(Number(e.target.value))} />
+              </label>
+            )}
             <label>Interval (s){" "}
               <input type="number" min={1} max={120} step={1} defaultValue={sc.interval_s} key={`iv-${sc.interval_s}`} style={{ width: "4.5rem" }} onBlur={(e) => { const v = Number(e.target.value); if (v >= 1 && v <= 120) commit({ ...sc, interval_s: v }); }} onKeyDown={(e) => e.key === "Enter" && e.target.blur()} />
             </label>
@@ -892,7 +905,7 @@ function Demo() {
                   {!info.time_late && s && <div className={styles.small}>{s.answered} real-time estimates in the window.</div>}
                   {sol.manoeuvre_prob && (
                     <div className={styles.small} data-testid="model-manoeuvres">
-                      The model states {modelSpans.length} target {modelSpans.length === 1 ? "manoeuvre" : "manoeuvres"} (probability over 0.5; shaded purple on the error chart, the truth's red); the truth has {derived.kn.length} in the window; its largest probability is {fmt(Math.max(...sol.manoeuvre_prob), 2)}{sol.manoeuvre_prob.length ? ` at ${fmt((sol.manoeuvre_t_s[sol.manoeuvre_prob.indexOf(Math.max(...sol.manoeuvre_prob))] + derived.t0) / 60, 0)} min` : ""}.{info.name.endsWith("-legs") ? ` Read as ${modelSpans.length + 1} steady ${modelSpans.length ? "legs" : "leg"} fitted to the bearings at those spans (at most four manoeuvres).` : ""}
+                      The model states {modelSpans.length} target {modelSpans.length === 1 ? "manoeuvre" : "manoeuvres"} (probability over {fmt(sc.manoeuvre_threshold ?? 0.5, 2)}; shaded purple on the error chart, the truth's red); the truth has {derived.kn.length} in the window; its largest probability is {fmt(Math.max(...sol.manoeuvre_prob), 2)}{sol.manoeuvre_prob.length ? ` at ${fmt((sol.manoeuvre_t_s[sol.manoeuvre_prob.indexOf(Math.max(...sol.manoeuvre_prob))] + derived.t0) / 60, 0)} min` : ""}.{info.name.endsWith("-legs") ? ` Read as ${modelSpans.length + 1} steady ${modelSpans.length ? "legs" : "leg"} fitted to the bearings at those spans (at most four manoeuvres).` : ""}
                     </div>
                   )}
                 </>
@@ -940,7 +953,7 @@ function Demo() {
               <li>Drag a leg's <b>square handle</b> to change its course and speed: every later leg swings round with it, so the rest of the track can move a long way.</li>
               <li>Click a leg to insert a waypoint; select a waypoint and press Delete (or right-click it) to remove it. Undo with Ctrl+Z. Amber waypoints: the turn does not fit at its rate and is drawn tighter.</li>
               <li>Wheel to zoom, drag empty space to pan. The link in the address bar restores this exact scenario, noise draw and solver.</li>
-              <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and spec 016's whole-period learned model (three training seeds, 26 MB each, loaded on first use), which reads the whole window at once and also states where it thinks the target manoeuvred; and the same model <b>read as steady legs</b>: its manoeuvre spans (probability over 0.5, merged within 60 s, the four most probable at most) handed to the physics layer, which fits constant-velocity legs joined at them, the shape of spec 016's learned-arc read-out. For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>
+              <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and spec 016's whole-period learned model (three training seeds, 26 MB each, loaded on first use), which reads the whole window at once and also states where it thinks the target manoeuvred; and the same model <b>read as steady legs</b>: its manoeuvre spans (probability over the threshold slider's value, 0.5 as spec 016 registered it, merged within 60 s, the four most probable at most) handed to the physics layer, which fits constant-velocity legs joined at them, the shape of spec 016's learned-arc read-out. For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>
             </ul>
           </details>
         </div>
