@@ -5747,6 +5747,8 @@
                 },
                 "manoeuvre_threshold": {
                     "description": "DemoScenario.manoeuvre_threshold, for the learned model's declared spans; 0.5 when absent.",
+                    "maximum": 0.95,
+                    "minimum": 0.05,
                     "type": [
                         "number",
                         "null"
@@ -5858,7 +5860,7 @@
                     ]
                 },
                 "manoeuvre_start_s": {
-                    "description": "Starts of the manoeuvre spans the solver declares (spec 016's spans_from_logit: runs of probability over 0.5, merged within 60 s, at least 10 s long); paired with manoeuvre_end_s.",
+                    "description": "Starts of the manoeuvre spans the solver declares (spec 016's spans_from_logit: runs of probability over the scenario's manoeuvre threshold, 0.5 unless moved, merged within 60 s, at least 10 s long); paired with manoeuvre_end_s.",
                     "items": {
                         "type": "number"
                     },

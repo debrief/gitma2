@@ -287,7 +287,13 @@ test("the manoeuvre threshold slider reaches the declared spans and the legs", a
   assert.ok(low.sol.manoeuvre_start_s.length >= 1 && low.sol.manoeuvre_start_s.length <= 4, JSON.stringify(low.sol.manoeuvre_start_s));
   assert.notEqual(low.sol.x_m.at(-1), high.sol.x_m.at(-1), "the legs change with the spans");
   const own = await at(0.1, "tlm-s3");
-  assert.deepEqual(own.sol.manoeuvre_start_s, low.sol.manoeuvre_start_s, "the own-track solver declares the same spans");
+  const lastT = own.sol.t_s.at(-1);
+  const kept = own.sol.manoeuvre_start_s.filter((_, j) => lastT - own.sol.manoeuvre_end_s[j] >= 60).slice(0, 4);
+  assert.deepEqual(low.sol.manoeuvre_start_s, kept, "the legs read-out keeps the own-track spans that end before the last minute, four at most");
+  // the no-zig preset at seed 0 is where the head declares the window's last two rows (golden spans)
+  const edge = await solveScenario({ ...preset("no-zig"), sigma_deg: 0 }, "tlm-s1-legs");
+  assert.equal(edge.sol.manoeuvre_start_s.length, 0, "a span at the window's end is dropped");
+  assert.notEqual(edge.sol.status, "failed");
   const frag = await encodeFragment({ ...preset("target-turn"), manoeuvre_threshold: 0.1 });
   assert.equal((await decodeFragment(frag)).manoeuvre_threshold, 0.1, "the threshold survives the URL");
 });

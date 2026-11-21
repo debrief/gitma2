@@ -4035,7 +4035,7 @@ class TmaProblem(ConfiguredBaseModel):
                        'HeadroomPredictionHeader',
                        'Gate2Decision',
                        'TmaProblem']} })
-    manoeuvre_threshold: Optional[float] = Field(default=None, description="""DemoScenario.manoeuvre_threshold, for the learned model's declared spans; 0.5 when absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaProblem']} })
+    manoeuvre_threshold: Optional[float] = Field(default=None, description="""DemoScenario.manoeuvre_threshold, for the learned model's declared spans; 0.5 when absent.""", ge=0.05, le=0.95, json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaProblem']} })
 
 
 class TmaSolution(ConfiguredBaseModel):
@@ -4063,7 +4063,7 @@ class TmaSolution(ConfiguredBaseModel):
     condition_number: Optional[float] = Field(default=None, description="""Condition number of the Jacobi-scaled information matrix at the solution.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     manoeuvre_t_s: Optional[list[float]] = Field(default=None, description="""Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     manoeuvre_prob: Optional[list[float]] = Field(default=None, description="""The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
-    manoeuvre_start_s: Optional[list[float]] = Field(default=None, description="""Starts of the manoeuvre spans the solver declares (spec 016's spans_from_logit: runs of probability over 0.5, merged within 60 s, at least 10 s long); paired with manoeuvre_end_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    manoeuvre_start_s: Optional[list[float]] = Field(default=None, description="""Starts of the manoeuvre spans the solver declares (spec 016's spans_from_logit: runs of probability over the scenario's manoeuvre threshold, 0.5 unless moved, merged within 60 s, at least 10 s long); paired with manoeuvre_end_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     manoeuvre_end_s: Optional[list[float]] = Field(default=None, description="""Ends of the declared manoeuvre spans. A legs read-out fits constant-velocity legs joined at these spans.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
 
 

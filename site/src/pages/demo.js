@@ -905,7 +905,7 @@ function Demo() {
                   {!info.time_late && s && <div className={styles.small}>{s.answered} real-time estimates in the window.</div>}
                   {sol.manoeuvre_prob && (
                     <div className={styles.small} data-testid="model-manoeuvres">
-                      The model states {modelSpans.length} target {modelSpans.length === 1 ? "manoeuvre" : "manoeuvres"} (probability over {fmt(sc.manoeuvre_threshold ?? 0.5, 2)}; shaded purple on the error chart, the truth's red); the truth has {derived.kn.length} in the window; its largest probability is {fmt(Math.max(...sol.manoeuvre_prob), 2)}{sol.manoeuvre_prob.length ? ` at ${fmt((sol.manoeuvre_t_s[sol.manoeuvre_prob.indexOf(Math.max(...sol.manoeuvre_prob))] + derived.t0) / 60, 0)} min` : ""}.{info.name.endsWith("-legs") ? ` Read as ${modelSpans.length + 1} steady ${modelSpans.length ? "legs" : "leg"} fitted to the bearings at those spans (at most four manoeuvres).` : ""}
+                      The model states {modelSpans.length} target {modelSpans.length === 1 ? "manoeuvre" : "manoeuvres"} (probability over {fmt(sc.manoeuvre_threshold ?? 0.5, 2)}; shaded purple on the error chart, the truth's red); the truth has {derived.kn.length} in the window; its largest probability is {fmt(Math.max(...sol.manoeuvre_prob), 2)}{sol.manoeuvre_prob.length ? ` at ${fmt((sol.manoeuvre_t_s[sol.manoeuvre_prob.indexOf(Math.max(...sol.manoeuvre_prob))] + derived.t0) / 60, 0)} min` : ""}.{info.name.endsWith("-legs") ? ` Read as ${modelSpans.length + 1} steady ${modelSpans.length ? "legs" : "leg"} fitted to the bearings at those spans (the first four at most; a span ending in the last minute is dropped).` : ""}
                     </div>
                   )}
                 </>
