@@ -1,0 +1,167 @@
+{
+ "what": "Demo data for the browser viewer (spec 020): the carried Gate 2 model E's exported E-w graph and its inputs on a few simulated engagements. A demonstration, not a result.",
+ "model": {
+  "file": "model.onnx",
+  "sha256": "e19f15c300835f30161fa896ce0f1cf962ac211c72efe79e65d1bcdb6b838bc4",
+  "exported_by": "python -m tma2.gate2.export --plan configs/gate2/g2-a.json --weights experiments/20261107-g2-val/models/ew-s3/best.safetensors",
+  "ew_weights_sha256": "58b51d10d30f5aaf56f7bfb606f35031574c4101fea3bcfed60b8d363de6883a",
+  "es_weights_sha256": "2b3b9c7348874da06e6b9fb4e62f01955c1b92496bb4a5ff91cb6eb2c83d7d29",
+  "carried": "experiments/20261107-g2-decision/carried.json",
+  "plan_sha256": "6092c364cc2a9ae51312d9ecd3f9d52eabb705e560dac1b20c4059020946175e",
+  "c_code_sha256": "4d2c084f288fa12034413a6a71ef741ca0b468eece24ea349d82d8494f55db27",
+  "c_parameters_sha256": "60e6ee635d9390e2c959b408997e39e8c30859febcb2d86f199142ea66aa425f",
+  "python_leg": {
+   "max_rel_diff": {
+    "state": 3.379737196674989e-08,
+    "cov": 3.124315948367309e-08,
+    "plausible": 0.0,
+    "cov_ok": 0.0
+   },
+   "runtime": "onnxruntime 1.31.1 (Python)",
+   "nodes": 3008,
+   "iterations": 100
+  },
+  "window_rows": 720,
+  "live_graphs": {
+   "es.onnx": "python -m tma2.segment.evidence_export --plan configs/gate2/g2-a.json --weights experiments/20261107-g2-val/models/es-s3/best.safetensors",
+   "layer.onnx": "python -m tma2.viewer.layer_export (PhysicsLayer() at C's confirmation settings)"
+  }
+ },
+ "data": {
+  "seed": 319,
+  "split": "test",
+  "used_by": "Gate 2's test record (experiments/20261107-g2/)",
+  "generate": "tma2-generate --seed 319 --count 100000 --ranges configs/man2-ranges.json --heldout-ranges configs/man2-heldout.json --format f32pack --out <dir>",
+  "generator_version": "0.6.0",
+  "split_sha256_at_generation": "ceee1a18123db7ff92cb7cf1f9c9ef273a5cb19efa5a3664379ce1710e26b3c7",
+  "selection": {
+   "rule": "tma2.viewer.choose (spec 020 research R2)",
+   "order": [
+    "quiet",
+    "one manoeuvre",
+    "busy",
+    "E worse than C\u2033",
+    "one manoeuvre",
+    "busy"
+   ],
+   "limit": 200,
+   "missing": []
+  }
+ },
+ "rows": "every 60 s from the first G5 row (zig + 5 min) to the end of the window",
+ "systems": {
+  "e": "E (carried model, computed in your browser)",
+  "one_leg": "batch least squares, one leg (Python)",
+  "imm": "IMM, frozen tuning (Python)",
+  "c": "C, classical segmenter (Python)",
+  "c2": "C\u2033, zig veto and fixed fade, nothing learned (Python)"
+ },
+ "uncertainty_warning": "E's stated covariance is overconfident: its 95% intervals held the truth on 0.60 of rows, not 0.95 (Gate 3, experiments/20261108-g3-val/). The ellipse is not a calibrated uncertainty.",
+ "links": {
+  "gate2": "/blog/2026/11/08/gate-2",
+  "gate3": "experiments/20261108-g3-val/"
+ },
+ "engagements": [
+  {
+   "id": 0,
+   "ordinal": 1,
+   "scenario_index": 90002,
+   "reason": "quiet",
+   "manoeuvres": 0,
+   "rows": 19,
+   "e_rows": 19,
+   "json": "engagement-0.json.gz",
+   "binary": "engagement-0.bin.gz",
+   "scenario": "scenario-0.json.gz"
+  },
+  {
+   "id": 1,
+   "ordinal": 0,
+   "scenario_index": 90001,
+   "reason": "one manoeuvre",
+   "manoeuvres": 1,
+   "rows": 23,
+   "e_rows": 23,
+   "json": "engagement-1.json.gz",
+   "binary": "engagement-1.bin.gz",
+   "scenario": "scenario-1.json.gz"
+  },
+  {
+   "id": 2,
+   "ordinal": 3,
+   "scenario_index": 90012,
+   "reason": "busy",
+   "manoeuvres": 2,
+   "rows": 56,
+   "e_rows": 56,
+   "json": "engagement-2.json.gz",
+   "binary": "engagement-2.bin.gz",
+   "scenario": "scenario-2.json.gz"
+  },
+  {
+   "id": 3,
+   "ordinal": 6,
+   "scenario_index": 90017,
+   "reason": "E worse than C\u2033",
+   "manoeuvres": 1,
+   "rows": 32,
+   "e_rows": 32,
+   "json": "engagement-3.json.gz",
+   "binary": "engagement-3.bin.gz",
+   "scenario": "scenario-3.json.gz"
+  },
+  {
+   "id": 4,
+   "ordinal": 4,
+   "scenario_index": 90014,
+   "reason": "one manoeuvre",
+   "manoeuvres": 1,
+   "rows": 16,
+   "e_rows": 16,
+   "json": "engagement-4.json.gz",
+   "binary": "engagement-4.bin.gz",
+   "scenario": "scenario-4.json.gz"
+  },
+  {
+   "id": 5,
+   "ordinal": 5,
+   "scenario_index": 90016,
+   "reason": "busy",
+   "manoeuvres": 2,
+   "rows": 35,
+   "e_rows": 35,
+   "json": "engagement-5.json.gz",
+   "binary": "engagement-5.bin.gz",
+   "scenario": "scenario-5.json.gz"
+  }
+ ],
+ "files": {
+  "model.onnx": "e19f15c300835f30161fa896ce0f1cf962ac211c72efe79e65d1bcdb6b838bc4",
+  "engagement-0.json.gz": "6c525d0cfc49d8563c9d366946512be57f64b647c9a0356cc29d4e837ae9771c",
+  "engagement-0.bin.gz": "ec118432cf4ab1fe0c20191fc22ec1391df7ded3fdf5bccea59136c8958ce422",
+  "engagement-1.json.gz": "2e787daa64fa70247fdf08f4190097aac569106784417f22d57730949473c2bb",
+  "engagement-1.bin.gz": "16062a8b4195ad44a1e0f370902585feb34dd848f57bcf4548c0058883c70558",
+  "engagement-2.json.gz": "946870369f5e50d726949a5d38e780fb0eba4289d631921578612c406d6eb206",
+  "engagement-2.bin.gz": "fadd6c4962accd858fc61917e854c6eb5f8e2828861b616e024b8c248357e524",
+  "engagement-3.json.gz": "fc140af256e49162b946519e8c6b99e6d6f195ce4154c8a7af6eeed0938f8355",
+  "engagement-3.bin.gz": "818d74640599f64f64c81b47e2fbe3cc3732962fd6eda62ab2994b8475920ea4",
+  "engagement-4.json.gz": "8ca4a05fffb4f708062dc39ee1c36117b24aaec78277ddf5f075fcdcf1fdcdb3",
+  "engagement-4.bin.gz": "cbf6cc107e5efb1382e1ab251fb4f2658f8ee07a62d58f2184d5e3a026e087cd",
+  "engagement-5.json.gz": "24fdde1493c37d753a65458236b526a76fc0c858094209e0d3357a5337827d11",
+  "engagement-5.bin.gz": "62f335d7129e3428830b698dec5b1a77cee515daa23ca99d94b80396184de1fd",
+  "es.onnx": "04051632831e84164d6deabc69c62d8ddcf6c23c60315961c13b6a3dd13f2655",
+  "layer.onnx": "65f80c59426b9e32a5121d1bbc39d55e5d0259a38179a532d31446805b2a67de",
+  "scenario-0.json.gz": "256fc54ea86b88b68f1a488c3bb9ddf479b36105a583e2652c34a929323a24b5",
+  "scenario-1.json.gz": "cf30d1484c92630fa9020512829303e938fa0ee6489355d70a8c04cedc84ba15",
+  "scenario-2.json.gz": "8dfdba423bae2e783e89724ed56e1c990cbf179457dd5538dbc72ded0d6168d5",
+  "scenario-3.json.gz": "c461793bec0f875fd56f2c99be3feca6fa7b427aa1871d2f5c3ff9e2307ab78b",
+  "scenario-4.json.gz": "ee7222d28f9cdc0080b4925494f87f95c4f6073f4cc1dee5e35b46e3b649aa94",
+  "scenario-5.json.gz": "379c180c387eb78d096aaab00c7202fbb2352d5e99d39af624d385c109d7d86e"
+ },
+ "built": {
+  "command": "tma2-viewer-data --split /home/user/data319/test.f32pack --export /tmp/claude-0/-home-user-gitma2/0b72a479-45f8-5810-8d27-02274f905c10/scratchpad/gate2-ew --out site/static/viewer",
+  "git_commit": "440311e8ae3ab2220565463af5003a497fc2ee6e",
+  "git_dirty": false,
+  "seconds": 1568.1
+ }
+}
