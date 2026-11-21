@@ -1,4 +1,6 @@
-# Spec 031 development, second run: long gaps with the ownship holding course
+# Spec 033 development, second run: long gaps with the ownship holding course
+
+**Panel review (2026-11-21, `experiments/20261120-tl12-hold-dev/review.md`): three approve with findings; the readings below are narrowed there.** Where this README and the review differ, the review stands.
 
 Development work, not a registered result. CI run 44741196091 (`timelate/tl-q-hold-dev` at
 91dc5ac), plan `configs/timelate/tl-q-hold-dev.json`, engagements from
@@ -45,8 +47,8 @@ reaches the cap of 10 manoeuvres here. It declares 120 of the 174 true gap manoe
 1. **Holding course roughly doubles everyone's error.** Periods without their own ownship turn are
    poorly determined whatever the method. Joining recovers some of that loss (1.34, the lower limit
    just above 1), and k4 does not separate from alone.
-2. **Joining's benefit is largest at 50–70 min gaps** (2.85 with long legs) **and reverses beyond 70
-   min in both runs** (0.80 and 0.71).
+2. **Joining's benefit is largest at 50–70 min gaps** (2.85 with long legs) **and reads below 1 beyond
+   70 min in both runs** (0.80 and 0.71), not separated (panel: medians 0.95 and 0.88; the runs barely agree period by period, r = 0.15).
    - The two runs share their targets, gaps and layouts, so the reversal is one observation seen
      twice, not a replication.
    - The 30–50 min band being smaller than the 50–70 min band is not expected. It is within noise

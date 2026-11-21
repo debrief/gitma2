@@ -1,4 +1,6 @@
-# Spec 031 development run (long simulator, spent seed 348): long gaps
+# Spec 033 development run (long simulator, spent seed 348): long gaps
+
+**Panel review (2026-11-21, `experiments/20261120-tl12-hold-dev/review.md`): three approve with findings; the readings below are narrowed there.** Where this README and the review differ, the review stands.
 
 Development work, not a registered result. CI run 44691013700 (`timelate/tl-q-dev` at 0a538d1),
 plan `configs/timelate/tl-q-dev.json` (runner `run10`, variant k4), engagements from
@@ -48,7 +50,7 @@ Cost and the cap:
      about half in spec 025's generator data.
    - The run therefore changes two things at once: the gap length, and how often a period has its
      own turn.
-   - The gap-band readings hold the second roughly fixed and still show the fade. The comparison
+   - The gap-band readings do not hold the second fixed (the own-turn share rises to 0.87 in the 70–90 min band), so the fade is partly composition (panel). The comparison
      with spec 025's numbers does not.
 4. **Cost.** Joining costs about 16 times `ctl` alone and does not pay for itself beyond about an
    hour's gap in this run.
@@ -73,3 +75,7 @@ Cost and the cap:
 - Soundness (the span reference's efficiency) was not computed: the plan's soundness block applies
   to a split named `man2`.
 - Seed 348 was spent by spec 023.
+
+## Renumbered (2026-11-21)
+
+This study was developed as spec 031. Another session's specs 031 (`031-held-comparators`) and 032 (`032-long-legs`) merged to main at the same time, so this one is spec 033 (`specs/033-long-gaps/`). The configs (`configs/long/gaps-*.json`, `configs/timelate/tl-q-*.json`) and the plans and run files copied into the records keep the words "spec 031": they are what ran, and are not edited.

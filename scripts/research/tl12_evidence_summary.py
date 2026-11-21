@@ -1,4 +1,4 @@
-"""Spec 031: summary of the evidence diagnostic (``tl12_evidence.py`` on CI, one engagement a
+"""Spec 033: summary of the evidence diagnostic (``tl12_evidence.py`` on CI, one engagement a
 job) against how the joint solve did on each engagement's later periods after a gap of at least
 70 min (alone ÷ joint, geometric mean over those periods).
 

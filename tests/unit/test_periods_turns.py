@@ -1,4 +1,4 @@
-"""Spec 031: ``Period.ownship_turns`` reads the long simulator's full list of turns, and the
+"""Spec 033: ``Period.ownship_turns`` reads the long simulator's full list of turns, and the
 generator's two index keys exactly as before."""
 
 from __future__ import annotations

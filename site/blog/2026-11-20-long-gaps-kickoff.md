@@ -1,7 +1,7 @@
 ---
 title: "Kickoff: several periods of one target across long gaps"
 date: 2026-11-20
-tags: [kickoff, spec-031]
+tags: [kickoff, spec-033]
 ---
 
 Spec 030 found that a carried prior helps a period that cannot answer alone, while one solve
@@ -20,7 +20,7 @@ hours of unseen manoeuvres. Nothing is trained.
 
 ## Where this task moves to
 
-- Spec `specs/031-long-gaps/`: 6-hour engagements from the long simulator (ownship legs of
+- Spec `specs/033-long-gaps/`: 6-hour engagements from the long simulator (ownship legs of
   20–40 minutes, Annex B targets), laid out as 2–4 periods with gaps of 30–90 minutes.
 - Spec 030's systems run unchanged: `ctl` alone, the joint solve, the carried start, and the
   carried prior both uninflated and as k4.
