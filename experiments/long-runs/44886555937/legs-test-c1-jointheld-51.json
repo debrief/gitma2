@@ -1,0 +1,589 @@
+{
+ "part": "jointheld",
+ "index": 51,
+ "hours": 12.0,
+ "seed": 368,
+ "config": "configs/long/legs-test.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "6499537847891455018",
+  "dataset_seed": 368,
+  "index": 51,
+  "hours": 12.0,
+  "samples": 8640,
+  "manoeuvres": [
+   {
+    "kind": "both",
+    "start_index": 356,
+    "end_index": 373
+   },
+   {
+    "kind": "course",
+    "start_index": 660,
+    "end_index": 674
+   },
+   {
+    "kind": "course",
+    "start_index": 1064,
+    "end_index": 1103
+   },
+   {
+    "kind": "course",
+    "start_index": 1540,
+    "end_index": 1548
+   },
+   {
+    "kind": "course",
+    "start_index": 1770,
+    "end_index": 1814
+   },
+   {
+    "kind": "both",
+    "start_index": 2287,
+    "end_index": 2306
+   },
+   {
+    "kind": "course",
+    "start_index": 2652,
+    "end_index": 2673
+   },
+   {
+    "kind": "course",
+    "start_index": 3057,
+    "end_index": 3082
+   },
+   {
+    "kind": "course",
+    "start_index": 3290,
+    "end_index": 3307
+   },
+   {
+    "kind": "course",
+    "start_index": 3676,
+    "end_index": 3688
+   },
+   {
+    "kind": "course",
+    "start_index": 4134,
+    "end_index": 4163
+   },
+   {
+    "kind": "course",
+    "start_index": 4398,
+    "end_index": 4463
+   },
+   {
+    "kind": "course",
+    "start_index": 4747,
+    "end_index": 4767
+   },
+   {
+    "kind": "course",
+    "start_index": 5050,
+    "end_index": 5084
+   },
+   {
+    "kind": "course",
+    "start_index": 5540,
+    "end_index": 5559
+   },
+   {
+    "kind": "course",
+    "start_index": 5875,
+    "end_index": 5898
+   },
+   {
+    "kind": "course",
+    "start_index": 6083,
+    "end_index": 6104
+   },
+   {
+    "kind": "course",
+    "start_index": 6508,
+    "end_index": 6535
+   },
+   {
+    "kind": "course",
+    "start_index": 6900,
+    "end_index": 6917
+   },
+   {
+    "kind": "course",
+    "start_index": 7068,
+    "end_index": 7089
+   },
+   {
+    "kind": "course",
+    "start_index": 7433,
+    "end_index": 7450
+   },
+   {
+    "kind": "speed",
+    "start_index": 7719,
+    "end_index": 7748
+   },
+   {
+    "kind": "speed",
+    "start_index": 7927,
+    "end_index": 7932
+   },
+   {
+    "kind": "course",
+    "start_index": 8288,
+    "end_index": 8324
+   },
+   {
+    "kind": "both",
+    "start_index": 8639,
+    "end_index": 8664
+   }
+  ],
+  "ownship_turns": [
+   [
+    1623,
+    1638
+   ],
+   [
+    4201,
+    4218
+   ],
+   [
+    6039,
+    6044
+   ],
+   [
+    8046,
+    8063
+   ]
+  ],
+  "zig_index": 1638,
+  "turn_start_index": 1623,
+  "mean_range_m": 53633.54440558995,
+  "min_range_m": 340.6295063212621,
+  "max_range_m": 112063.63364554427,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     16374.776967548534,
+     17226.694377330627
+    ],
+    [
+     22069.021115299205,
+     24653.501692569753
+    ]
+   ],
+   "steering": {
+    "planned": 1,
+    "lost": 3
+   },
+   "swapped_bearings": 0
+  },
+  "valid_share": 0.3280092592592593,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.030828412655386397,
+   "ownship_speed_mps": 5.515047815705129,
+   "ownship_turn_rate_rad_s": 0.036984705841756574,
+   "target_range0_m": 2084.4573892003955
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "both",
+   "start_time_s": 1775.0,
+   "change": -1.145222709922268,
+   "rate": 0.013094548369035251,
+   "change2": 3.0011813521552324,
+   "rate2": 0.04295447528865343
+  },
+  {
+   "kind": "course",
+   "start_time_s": 3295.0,
+   "change": -1.2817928155279839,
+   "rate": 0.017201082195491643
+  },
+  {
+   "kind": "course",
+   "start_time_s": 5315.0,
+   "change": 1.9211927576559615,
+   "rate": 0.009715786911248497
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7695.0,
+   "change": -0.5847557046318015,
+   "rate": 0.013007395955545648
+  },
+  {
+   "kind": "course",
+   "start_time_s": 8845.0,
+   "change": -1.0345924102954571,
+   "rate": 0.004609299081292353
+  },
+  {
+   "kind": "both",
+   "start_time_s": 11430.0,
+   "change": -1.1585147417782753,
+   "rate": 0.012183164838034496,
+   "change2": 2.3021317323242245,
+   "rate2": 0.04560839504905516
+  },
+  {
+   "kind": "course",
+   "start_time_s": 13255.0,
+   "change": -1.0176419791438662,
+   "rate": 0.009441325851441371
+  },
+  {
+   "kind": "course",
+   "start_time_s": 15280.0,
+   "change": -1.9675264898767613,
+   "rate": 0.015599188484908905
+  },
+  {
+   "kind": "course",
+   "start_time_s": 16445.0,
+   "change": 0.9654655747648546,
+   "rate": 0.010962496546114198
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18375.0,
+   "change": 1.0998299574461523,
+   "rate": 0.01722953077258564
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20665.0,
+   "change": -0.7500764664874044,
+   "rate": 0.005026533686219912
+  },
+  {
+   "kind": "course",
+   "start_time_s": 21985.0,
+   "change": -1.8476819284752994,
+   "rate": 0.005613481800699695
+  },
+  {
+   "kind": "course",
+   "start_time_s": 23730.0,
+   "change": 1.7245219577793072,
+   "rate": 0.016612773876234565
+  },
+  {
+   "kind": "course",
+   "start_time_s": 25245.0,
+   "change": 2.052872715130113,
+   "rate": 0.011868979312506652
+  },
+  {
+   "kind": "course",
+   "start_time_s": 27695.0,
+   "change": -1.2804653053596229,
+   "rate": 0.012863608607244392
+  },
+  {
+   "kind": "course",
+   "start_time_s": 29370.0,
+   "change": 0.9325510310390963,
+   "rate": 0.00791673793250076
+  },
+  {
+   "kind": "course",
+   "start_time_s": 30410.0,
+   "change": 1.5139886409845644,
+   "rate": 0.013825966864299263
+  },
+  {
+   "kind": "course",
+   "start_time_s": 32535.0,
+   "change": 1.5651996694743118,
+   "rate": 0.011217522497379095
+  },
+  {
+   "kind": "course",
+   "start_time_s": 34495.0,
+   "change": -0.8136847494896347,
+   "rate": 0.009302079742601322
+  },
+  {
+   "kind": "course",
+   "start_time_s": 35335.0,
+   "change": -1.8358248230240348,
+   "rate": 0.01717967201077064
+  },
+  {
+   "kind": "course",
+   "start_time_s": 37160.0,
+   "change": 1.2315413656969505,
+   "rate": 0.014174930970648224
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 38590.0,
+   "change": -2.9117160189083355,
+   "rate": 0.01984914287219878
+  },
+  {
+   "kind": "speed",
+   "start_time_s": 39630.0,
+   "change": -1.029670425515389,
+   "rate": 0.03968329302754564
+  },
+  {
+   "kind": "course",
+   "start_time_s": 41435.0,
+   "change": 1.948146006731415,
+   "rate": 0.010742549388244822
+  },
+  {
+   "kind": "both",
+   "start_time_s": 43190.0,
+   "change": -1.207313481928558,
+   "rate": 0.014147396542607615,
+   "change2": -2.6675359761991224,
+   "rate2": 0.02116191938559782
+  }
+ ],
+ "git_commit": "23b7a7cffcf4ee13afccb70cc2f942dca9bec318",
+ "git_dirty": false,
+ "cpu_model": "AMD EPYC 7763 64-Core Processor",
+ "chain": [
+  [
+   0,
+   1440
+  ],
+  [
+   1104,
+   1440
+  ],
+  [
+   2184,
+   1440
+  ],
+  [
+   3264,
+   1440
+  ],
+  [
+   4344,
+   1440
+  ],
+  [
+   5424,
+   1440
+  ],
+  [
+   6504,
+   1440
+  ],
+  [
+   7584,
+   1056
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 2,
+   "first": 2184,
+   "rows": 1440,
+   "union": [
+    1104,
+    2520
+   ],
+   "seconds": 1030.1685711090001,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      8715.735906004811,
+      8838.667904256263
+     ],
+     [
+      10031.939710088243,
+      10066.58113305079
+     ],
+     [
+      11467.283641898657,
+      11547.638347239523
+     ],
+     [
+      13300.653201998884,
+      13555.605348450994
+     ],
+     [
+      15292.791863833121,
+      15402.935825481947
+     ],
+     [
+      16695.187784481812,
+      16786.931034836573
+     ]
+    ],
+    "c2": [
+     [
+      8965.0,
+      9025.0
+     ],
+     [
+      11455.0,
+      11785.0
+     ],
+     [
+      12415.0,
+      12745.0
+     ],
+     [
+      14815.0,
+      15165.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 4,
+   "first": 4344,
+   "rows": 1440,
+   "union": [
+    3264,
+    2520
+   ],
+   "seconds": 816.1030017979999,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      18718.601032523617,
+      18863.766886134817
+     ],
+     [
+      20376.63429408956,
+      20610.776694281303
+     ],
+     [
+      22118.305817469693,
+      22231.93338487084
+     ],
+     [
+      23745.567606319906,
+      23798.647255880733
+     ],
+     [
+      25283.445973639777,
+      25750.46039179254
+     ],
+     [
+      27385.301689915927,
+      27727.10996916475
+     ]
+    ],
+    "c2": [
+     [
+      17385.0,
+      17745.0
+     ],
+     [
+      28285.0,
+      28385.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 6,
+   "first": 6504,
+   "rows": 1440,
+   "union": [
+    5424,
+    2520
+   ],
+   "seconds": 1554.6560505799998,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      29353.367242514272,
+      29519.421655791717
+     ],
+     [
+      30509.460654842376,
+      30540.723108213315
+     ],
+     [
+      32564.112454995764,
+      32669.082485231993
+     ],
+     [
+      34389.84320421959,
+      34692.85644924729
+     ],
+     [
+      35297.13314300337,
+      35438.18914352082
+     ],
+     [
+      36951.41844477462,
+      37099.133573813204
+     ]
+    ],
+    "c2": [
+     [
+      29485.0,
+      29545.0
+     ],
+     [
+      29845.0,
+      29995.0
+     ],
+     [
+      32655.0,
+      32765.0
+     ],
+     [
+      34385.0,
+      34595.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 7200.0,
+ "overlap_s": 1800.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 3406.158077955246
+}
