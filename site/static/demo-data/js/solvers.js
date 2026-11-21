@@ -117,10 +117,12 @@ function layerSolver(mode) {
       let note;
       if (mode !== "cv") {
         let kn = (p.knots || []).slice();
-        if (kn.length > 4 && kn.every((m) => Number.isFinite(m.stat))) {
+        if (kn.length > 4) {
           // a splitter stated more spans than the graph's eight knots hold: keep its four strongest
-          kn = kn.slice().sort((a, b) => b.stat - a.stat).slice(0, 4).sort((a, b) => a.start_s - b.start_s);
-          note = `${p.knots.length} spans stated; the four strongest used (the graph has eight knots)`;
+          // (by its own statistic; a splitter without one, as C, by span length)
+          const strength = kn.every((m) => Number.isFinite(m.stat)) ? (m) => m.stat : (m) => m.end_s - m.start_s;
+          kn = kn.slice().sort((a, b) => strength(b) - strength(a)).slice(0, 4).sort((a, b) => a.start_s - b.start_s);
+          note = `${p.knots.length} spans stated; the four ${kn.every((m) => Number.isFinite(m.stat)) ? "strongest" : "longest"} used (the graph has eight knots)`;
         }
         trs = spanRows(s, kn);
         courseOnly = kn.map((m) => !m.speed);

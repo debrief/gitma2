@@ -488,6 +488,14 @@ export async function joinedSlicing(s, P = JOINED, cancelled = () => false) {
     }
     if (!changed) break;
   }
+  // each kept knot's strength: the cost its removal adds (others held, all refitted)
+  for (let i = 0; i < rows.length; i++) {
+    const start = model.theta.slice(0, 4);
+    for (let j = 0; j < rows.length; j++) if (j !== i) start.push(model.theta[4 + 2 * j], model.theta[5 + 2 * j]);
+    const without = fitKnots(s, rows.filter((_, j) => j !== i).map((k) => s.t[k]), start);
+    fits++;
+    drops.set(rows[i], (without.cost - model.cost) / s2);
+  }
   const half = 3; // a knot is an instant; shown as a one-minute span centred on it
   return { spans: rows.map((r) => ({ lo: Math.max(0, r - half), hi: Math.min(s.n - 1, r + half), stat: drops.get(r) })), fits, theta: model.theta, knots: rows };
 }

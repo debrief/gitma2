@@ -67,7 +67,8 @@ function context(id, post) {
 
 async function splitAndSolve(solverName, splitterName, problem, ctx) {
   const solver = solverByName(solverName);
-  if (!solver.info.accepts_knots) return solver.solve(problem, ctx);
+  // spec 035's layer-cv and layer-oracle keep their own meaning (no splitter)
+  if (!solver.info.accepts_knots || solverName === "layer-cv" || solverName === "layer-oracle") return solver.solve(problem, ctx);
   const splitter = splitterByName(splitterName);
   const given = splitter.info.told_truth ? problem : { ...problem, knots: [] };
   const split = await splitter.split(given, ctx);

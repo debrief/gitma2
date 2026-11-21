@@ -136,8 +136,8 @@ export function observability(sc, b, rows, knotsAbs) {
 }
 
 // Spec 036: found legs against the truth.
-// A true manoeuvre is found when a stated span lies within `tolS` of it (their intervals, each
-// widened by tolS, overlap); each stated span matches at most one true manoeuvre, nearest centre
+// A true manoeuvre is found when a stated span lies within `tolS` of it (the gap between the two
+// intervals is at most tolS); each stated span matches at most one true manoeuvre, nearest centre
 // first. Timing error: centre of the stated span minus centre of the true one.
 export function compareLegs(trueSpans, found, tolS = 120) {
   const pairs = [];

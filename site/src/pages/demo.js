@@ -694,6 +694,18 @@ function Demo() {
   const legs = found ? compareLegs(trueSpans, found) : null;
   const foundMarks = found && splitterName !== "truth" ? found.map((f) => [f.start_s + derived.t0, Math.max(f.end_s + derived.t0, f.start_s + derived.t0 + 20), FOUND]) : [];
   const trueMarks = derived.kn ? derived.kn.map((m) => [m.t0, m.t1, TGT]) : [];
+  // the comparison's rows, evaluated once per result (the clock re-renders the page while it runs)
+  const cmpRows = useMemo(() => {
+    if (!cmp || cmp.key !== cmpKey) return [];
+    return (cmp.names || []).map((name) => {
+      const solx = cmp.rows[name];
+      const lab = (SPLITTER_LIST.find((x) => x.name === name) || {}).label || name;
+      if (!solx) return { name, lab };
+      const e = derived.problem ? evaluate(sc, derived.b, derived.rows, derived.origin, derived.t0, solx, derived.kn) : null;
+      const lg = solx.splitter_spans ? compareLegs(derived.problem.knots, solx.splitter_spans) : null;
+      return { name, lab, solx, sum: e ? e.summary : null, lg };
+    });
+  }, [cmp && cmp.rows, cmp && cmp.key, cmpKey, derived]);
 
   // error-vs-time series
   const qdef = {
@@ -1006,14 +1018,7 @@ function Demo() {
             {(() => {
               const fresh = cmp && cmp.key === cmpKey;
               const running = fresh && cmp.status === "running";
-              const rows = fresh ? (cmp.names || []).map((name) => {
-                const solx = cmp.rows[name];
-                const lab = (SPLITTER_LIST.find((x) => x.name === name) || {}).label || name;
-                if (!solx) return { name, lab };
-                const e = derived.problem ? evaluate(sc, derived.b, derived.rows, derived.origin, derived.t0, solx, derived.kn) : null;
-                const lg = solx.splitter_spans ? compareLegs(trueSpans, solx.splitter_spans) : null;
-                return { name, lab, solx, sum: e ? e.summary : null, lg };
-              }) : [];
+              const rows = fresh ? cmpRows : [];
               return (
                 <>
                   <div>
