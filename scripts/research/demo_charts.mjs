@@ -107,7 +107,7 @@ const summary = {};
   const sc = preset("target-turn");
   const cv = await solve(sc, "layer-cv");
   const or = await solve(sc, "layer-oracle");
-  const leg = await solve({ ...sc, window: { start_s: 0, end_s: 3500 } }, "ls-js");
+  const leg = await solve({ ...sc, window: { start_s: 0, end_s: 2900 } }, "ls-js");
   const tlm = await solve(sc, "tlm-s1");
   save("target-turn", trackPlot(sc, cv.b, [{ ev: cv.ev, colour: C.cv, label: "one leg (ONNX layer)" }, { ev: or.ev, colour: C.or, label: "told the turn (oracle)" }, { ev: tlm.ev, colour: C.tlm, label: "learned, whole period (s1)" }], "Target turns after an hour: one leg is biased by design"), { preset: "target-turn", solvers: ["layer-cv", "layer-oracle"] });
   const pct = (e) => e.ev.t.map((t, k) => [t, Math.abs(e.ev.rangePct[k])]);

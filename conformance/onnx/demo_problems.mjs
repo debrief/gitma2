@@ -11,7 +11,7 @@ export function goldenCases() {
     for (const sigma of [1, 0]) out.push({ id: `${p.id}-s${sigma}`, sc: { ...p.scenario, sigma_deg: sigma } });
   }
   const tt = PRESETS.find((p) => p.id === "target-turn").scenario;
-  out.push({ id: "target-turn-first-leg", sc: { ...tt, window: { start_s: 0, end_s: 3500 } } });
+  out.push({ id: "target-turn-first-leg", sc: { ...tt, window: { start_s: 0, end_s: 2900 } } });
   return out.map(({ id, sc }) => {
     const b = bearings(sc);
     const { problem } = problemOf(sc, b, windowRows(sc, b));

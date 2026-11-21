@@ -78,8 +78,12 @@ function ChartBox({ render }) {
 // ---------- small charts: time runs down the left, the value across (owner, 2026-11-21) ----------
 // series points are [t, value]; bands [t, lo, hi]; marks [t0, t1, colour] shade time spans.
 const CW = 330;
-function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height = 440, testid, yClip = null, width = CW }) {
-  const PADL = 44, PADR = 10, PADT = 40, PADB = 10;
+// `overlay`: one more line on a scale of its own across the chart's width ({points, colour,
+// unit, wrap}); its least and greatest values are labelled in its colour under the main ticks.
+// `wrap` breaks the line where an angle in degrees jumps through north.
+function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height = 440, testid, yClip = null, width = CW, overlay = null }) {
+  const PADL = 44, PADR = 10, PADT = overlay ? 52 : 40, PADB = 10;
+  const LROW = overlay ? 12 : 0; // the overlay's labels take the row nearest the plot
   const vs = [];
   for (const s of series) for (const p of s.points) if (Number.isFinite(p[1])) vs.push(p[1]);
   for (const b of bands) for (const p of b.points) if (Number.isFinite(p[1]) && Number.isFinite(p[2])) vs.push(p[1], p[2]);
@@ -98,10 +102,25 @@ function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height 
   const ticksV = width < 260 ? [v0 + pad, v1 - pad] : [v0 + pad, (v0 + v1) / 2, v1 - pad];
   const nt = 8;
   const lab = (v) => (Math.abs(v) >= 100 ? v.toFixed(0) : Number(v.toPrecision(3)).toString());
+  let over = null;
+  if (overlay) {
+    const op = overlay.points.filter((q) => Number.isFinite(q[1]) && q[0] >= ta && q[0] <= tb);
+    if (op.length) {
+      const lo = Math.min(...op.map((q) => q[1])), hi = Math.max(...op.map((q) => q[1]));
+      const a = hi - lo < 1e-9 ? lo - 1 : lo - (hi - lo) * 0.05, z = hi - lo < 1e-9 ? hi + 1 : hi + (hi - lo) * 0.05;
+      const ox = (v) => PADL + ((v - a) / (z - a)) * (width - PADL - PADR);
+      let d = "";
+      op.forEach((q, i) => {
+        const jump = i === 0 || (overlay.wrap && Math.abs(q[1] - op[i - 1][1]) > 180);
+        d += `${jump ? "M" : "L"}${ox(q[1]).toFixed(1)},${sy(q[0]).toFixed(1)}`;
+      });
+      over = { d, lo, hi, xlo: ox(lo), xhi: ox(hi) };
+    }
+  }
   return (
     <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} className={styles.chart} data-testid={testid} role="img" aria-label={title}>
       <text x={4} y={12} fontSize={11} fill="currentColor">{title}</text>
-      <text x={PADL} y={PADT - 16} fontSize={10} fill="currentColor"><title>{yLabel}</title>{yLabel.length * 5.5 > width - PADL ? yLabel.slice(0, Math.max(4, Math.floor((width - PADL) / 5.5) - 1)) + "…" : yLabel}</text>
+      <text x={PADL} y={PADT - 16 - LROW} fontSize={10} fill="currentColor"><title>{yLabel}</title>{yLabel.length * 5.5 > width - PADL ? yLabel.slice(0, Math.max(4, Math.floor((width - PADL) / 5.5) - 1)) + "…" : yLabel}</text>
       <rect x={PADL} y={PADT} width={width - PADL - PADR} height={height - PADT - PADB} fill="none" stroke="currentColor" strokeOpacity={0.2} />
       {marks.map((m, i) => (
         <rect key={i} x={PADL} y={sy(m[0])} height={Math.max(sy(m[1]) - sy(m[0]), 1)} width={width - PADL - PADR} fill={m[2] || "#888"} fillOpacity={0.12} />
@@ -120,8 +139,15 @@ function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height 
           <path key={i} d={path(s.points)} fill="none" stroke={s.colour} strokeWidth={s.width || 1.5} strokeDasharray={s.dash} />
         )
       )}
+      {over && (
+        <g data-testid="chart-overlay">
+          <path d={over.d} fill="none" stroke={overlay.colour} strokeWidth={1.4} strokeOpacity={0.85} />
+          <text x={PADL} y={PADT - 4} fontSize={10} textAnchor="start" fill={overlay.colour}><title>{overlay.label}</title>{`own ${lab(over.lo)}${overlay.unit}`}</text>
+          {over.hi - over.lo > 1e-9 && <text x={width - PADR} y={PADT - 4} fontSize={10} textAnchor="end" fill={overlay.colour}>{`${lab(over.hi)}${overlay.unit}`}</text>}
+        </g>
+      )}
       {ticksV.map((v, i) => (
-        <text key={i} x={sx(v)} y={PADT - 4} fontSize={10} textAnchor="middle" fill="currentColor">{lab(v)}</text>
+        <text key={i} x={sx(v)} y={PADT - 4 - LROW} fontSize={10} textAnchor="middle" fill="currentColor">{lab(v)}</text>
       ))}
       {Array.from({ length: nt + 1 }, (_, i) => ta + ((tb - ta) * i) / nt).map((t, i) => (
         <text key={i} x={PADL - 4} y={sy(t) + 3} fontSize={10} textAnchor="end" fill="currentColor">{`${Math.round(t / 60)} min`}</text>
@@ -684,8 +710,15 @@ function Demo() {
       bands.push({ colour: "#888", points: bp });
     }
     const big = Math.max(...pts.map((p) => Math.abs(p[1])).filter(Number.isFinite), 1e-9);
+    // owner, 2026-11-21: the ownship's own course and speed in blue on the course and speed
+    // charts, on a scale of their own, so its turns can be read against the error
+    const own = quantity === "course"
+      ? { points: derived.rows.map((i) => [b.t[i], ((Math.atan2(b.ovx[i], b.ovy[i]) / DEG) % 360 + 360) % 360]), colour: OWN, unit: "°", wrap: true, label: "ownship course (°), its own scale" }
+      : quantity === "speed"
+        ? { points: derived.rows.map((i) => [b.t[i], Math.hypot(b.ovx[i], b.ovy[i]) / KT]), colour: OWN, unit: " kt", label: "ownship speed (kt), its own scale" }
+        : null;
     errChart = (w, h) => (
-      <Chart width={w} height={h} testid="chart-error" title="Error vs truth" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}${modelSpans.length ? "; purple: model's manoeuvres" : ""}`} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={[...derived.kn.map((m) => [m.t0, m.t1, TGT]), ...modelSpans]} yClip={[-big, big]} />
+      <Chart width={w} height={h} testid="chart-error" title="Error vs truth" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}${modelSpans.length ? "; purple: model's manoeuvres" : ""}${own ? `; blue: ${own.label}` : ""}`} overlay={own} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={[...derived.kn.map((m) => [m.t0, m.t1, TGT]), ...modelSpans]} yClip={[-big, big]} />
     );
   }
   let brgChart = null;
@@ -869,7 +902,7 @@ function Demo() {
               <div className={styles.chartPanel} data-testid="panel-error-time">
                 <div className={styles.toolbar}>
                   {Object.keys(qdef).map((k) => (
-                    <label key={k}><input type="radio" name="q" checked={quantity === k} onChange={() => setQuantity(k)} /> {k}</label>
+                    <label key={k}><input type="radio" name="q" value={k} checked={quantity === k} onChange={() => setQuantity(k)} /> {k}</label>
                   ))}
                 </div>
                 {errChart ? <ChartBox render={errChart} /> : <span className={styles.small}>no solution yet</span>}

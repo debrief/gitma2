@@ -164,7 +164,7 @@ test("target turn: mismatch flagged; one target leg clears it and cuts the error
   const sc = preset("target-turn");
   const full = await solveScenario(sc);
   assert.ok(full.kn.length > 0, "a target manoeuvre in the window");
-  const leg = await solveScenario({ ...sc, window: { start_s: 0, end_s: 3500 } });
+  const leg = await solveScenario({ ...sc, window: { start_s: 0, end_s: 2900 } });
   assert.equal(leg.kn.length, 0);
   assert.ok(leg.ev.summary.range_pct.rms < full.ev.summary.range_pct.rms / 5, `${leg.ev.summary.range_pct.rms} vs ${full.ev.summary.range_pct.rms}`);
 });

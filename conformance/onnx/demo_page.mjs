@@ -61,7 +61,7 @@ try {
       check("target turn: mismatch flag shown (acceptance 4)", s.mismatch && flag === 1);
       const before = s.summary.range_pct.rms;
       // narrow the window with the slider's end (released: the native change event)
-      await page.locator("[data-testid=win-end]").fill("3500");
+      await page.locator("[data-testid=win-end]").fill("2900");
       await page.waitForTimeout(50);
       await settled();
       const t = await state();
@@ -166,6 +166,11 @@ try {
   check("manoeuvre threshold slider: at 0.1 the model declares spans and the legs read-out uses them", low.status === "done" && low.sol && Array.isArray(low.sol.manoeuvre_start_s) && low.sol.manoeuvre_start_s.length >= 1 && /over 0\.10/.test(await page.locator("[data-testid=model-manoeuvres]").innerText().catch(() => "")), { spans: low.sol && low.sol.manoeuvre_start_s, range_pct_rms: low.summary && low.summary.range_pct.rms });
   await page.selectOption("[data-testid=solver]", "ls-js");
   await settled();
+
+  // ownship course and speed in blue on the course and speed error charts, nowhere else
+  const overlayOn = async (q) => { await page.locator(`input[type=radio][value=${q}]`).check(); await page.waitForTimeout(100); return page.locator("[data-testid=chart-error] [data-testid=chart-overlay] path").count(); };
+  const ov = { course: await overlayOn("course"), speed: await overlayOn("speed"), range: await overlayOn("range"), position: await overlayOn("position") };
+  check("ownship course and speed drawn on the course and speed charts only", ov.course === 1 && ov.speed === 1 && ov.range === 0 && ov.position === 0, ov);
 
   // chart toggles hide each chart
   await page.locator("[data-testid=toggle-bearings]").uncheck();

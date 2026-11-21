@@ -25,8 +25,8 @@ export const PRESETS = [
   {
     id: "target-turn",
     title: "Target turns mid-window",
-    note: "The target turns after an hour. A one-leg solver is biased by design; narrow the window to one target leg, or pick the solver told the manoeuvre times.",
-    scenario: base("Target turn", zigzag(), { start_x_nm: -1, start_y_nm: 9, legs: [leg(100, 6, 60, 0.5), leg(140, 6, 60)] }),
+    note: "The target turns after 50 minutes, between two ownship turns (30 and 60 min), so the change in bearing rate there is the target's alone. A one-leg solver is biased by design; narrow the window to one target leg, or pick the solver told the manoeuvre times.",
+    scenario: base("Target turn", zigzag(), { start_x_nm: -1, start_y_nm: 9, legs: [leg(100, 6, 50, 0.5), leg(140, 6, 70)] }),
   },
   {
     id: "endfire",
