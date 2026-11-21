@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- Spec 032 slides: the carried prior where the ownship's legs outlast the window.
+     Figures: site/static/img/2026-11-20-long-legs-slides/, made by scripts/research/legs_charts.py. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blind windows: the carried prior</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 54vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.85em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.5em">The carried prior where the ownship's legs outlast the window</h1>
+          <p class="small">2026-11-20 · spec 032 · seeds 366 (tuning, spent), 367 (validation), 368 (test) · gitma2</p>
+        </section>
+
+        <section>
+          <h2>The owner's case at the standing configuration</h2>
+          <ul>
+            <li>Ownship holds each leg 2–4 h, so some standing 2-hour windows see no ownship turn</li>
+            <li>E1: ctl ÷ ctl-prior on those blind windows; E2: a joint solve over the same past bearings (3.5 h) ÷ ctl-prior</li>
+            <li>Harm: ctl ÷ ctl-prior on one-turn windows</li>
+          </ul>
+          <p class="small">Registered before seeds 367 and 368 existed; test 100 engagements.</p>
+        </section>
+
+        <section>
+          <h2>Registered rule: E1 better, E2 not separated, no harm</h2>
+          <img src="../../img/2026-11-20-long-legs-slides/estimands.svg" alt="E1, E2 and one-turn ratios with intervals" />
+          <p class="small">E1 1.54 [1.16, 2.03] · E2 1.11 [0.84, 1.45] · one turn 1.26 [1.06, 1.50]</p>
+        </section>
+
+        <section>
+          <h2>A far-range effect</h2>
+          <img src="../../img/2026-11-20-long-legs-slides/bands.svg" alt="E1 and E2 by range band" />
+          <p class="small">Beyond 35 km E1 is 2.2; under 35 km about 1.0. Range and contact loss cannot be separated here.</p>
+        </section>
+
+        <section>
+          <h2>Error on blind windows</h2>
+          <img src="../../img/2026-11-20-long-legs-slides/errors.svg" alt="median range error by system" />
+          <p class="small">The prior, not the carried start, does the work (ctl-carry ÷ ctl-prior 1.52 on this seed).</p>
+        </section>
+
+        <section>
+          <h2>Every decided window</h2>
+          <img src="../../img/2026-11-20-long-legs-slides/windows.svg" alt="per-window ratios" />
+          <p class="small">E1: better in 59%, twice as bad in 18%. E2: better in 61%, twice as bad in 19%.</p>
+        </section>
+
+        <section>
+          <h2>What the panel narrowed</h2>
+          <ul>
+            <li>Half the blind windows lost contact (median 72 km) and are unscored</li>
+            <li>E1 is "more data beats no data"; E2, the fair comparison, is level</li>
+            <li>The prior came from a window that saw a turn (83 of 85); seeds swung (1.32, 0.87, 1.54)</li>
+            <li>Carried uncertainty not calibrated; one simulator, contact 1</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>Recommended: adopt 2-hour ctl-prior for the tended contact; close the track with a synthesis</li>
+            <li>Or: E2 at ordinary ranges · repair the hand-over · lost-contact prediction</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/20/long-legs · Record: experiments/20261120-legs/ · Figures: scripts/research/legs_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

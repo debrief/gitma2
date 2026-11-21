@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>An interactive TMA demonstrator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">An interactive TMA demonstrator</h1>
+          <p class="small">2026-11-21 · spec 035 · gitma2 · <a href="../../demo">open the page</a></p>
+        </section>
+        <section>
+          <h2>Drag, narrow, solve</h2>
+          <div class="two">
+            <ul>
+              <li>Blue ownship, red target: drag a waypoint (it moves alone) or a leg's handle (the rest swings)</li>
+              <li>Steady-rate turns; σ, reseed, sample interval</li>
+              <li>A time-late solve over the window on release, in a worker</li>
+              <li>The URL holds the scenario; JSON in and out, checked against LinkML</li>
+            </ul>
+            <img src="../../img/2026-11-21-demonstrator/good-geometry.svg" alt="Good geometry: ownship zig-zag, target track and the least-squares solution" />
+          </div>
+        </section>
+        <section>
+          <h2>Four solvers, one contract</h2>
+          <ul>
+            <li><b>Least squares (JavaScript)</b>: spec 021's port, equal to Python's on golden vectors</li>
+            <li><b>Physics layer (ONNX)</b>, one leg</li>
+            <li><b>Physics layer told the true manoeuvre times</b>: an oracle, labelled so</li>
+            <li><b>Gate 2's E</b>, real-time, about three minutes</li>
+          </ul>
+          <p class="small">solve(TmaProblem) → TmaSolution; both types in LinkML (schema 0.37.0)</p>
+        </section>
+        <section>
+          <h2>The headline lesson: model mismatch</h2>
+          <div class="two">
+            <img src="../../img/2026-11-21-demonstrator/target-turn.svg" alt="Target turn: the one-leg solution is far off; the oracle follows the truth" />
+            <img src="../../img/2026-11-21-demonstrator/target-turn-errors.svg" alt="Range error against time, time running down" />
+          </div>
+          <p class="small">One leg over a turn: 80% RMS range error. Told the turn: 1.1%. One leg on the first target leg: 1.8%.</p>
+        </section>
+        <section>
+          <h2>Unobservable, and flagged</h2>
+          <div class="two">
+            <img src="../../img/2026-11-21-demonstrator/no-zig.svg" alt="No ownship zig: the solution sits on the bearings at the wrong range" />
+            <ul>
+              <li>Residuals 1.01 σ: the bearings fit</li>
+              <li>Range error 57%: the range does not</li>
+              <li>Observability red: the bound on range is unbounded</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>E is slow (C's confirmation) and causal: not a like-for-like time-late fit</li>
+            <li>The ONNX layer thins two hours to 720 rows</li>
+            <li>No Monte Carlo spread, no continuous recompute, no <code>ctl</code></li>
+          </ul>
+        </section>
+        <section>
+          <h2>Next (owner's choice)</h2>
+          <ul>
+            <li>A spread over several noise draws</li>
+            <li><code>ctl</code> in the browser</li>
+            <li>The joint solve across gaps</li>
+          </ul>
+          <p class="small">Figures: scripts/research/demo_charts.mjs, sidecars beside each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
