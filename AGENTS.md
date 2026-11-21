@@ -934,11 +934,15 @@ Owner 2026-11-21 ("predict steady legs"): `tlm-sK-legs` reads the same network a
 spec 016's `spans_from_logit` ported (`tlm.js`, checked against Python on the golden logits,
 `demo/golden-spans.json`), the four most probable spans handed to the physics layer as chords with
 both knots free (`solveLegs`, shared with the oracle). `TmaSolution.manoeuvre_start_s/end_s`,
-schema 0.38.0. On every preset the head's largest probability is 0.19 or less (0.01 at the
-target-turn preset's 40° turn), so at the 0.5 threshold the read-out is one leg there; the page
+schema 0.38.0. The target-turn preset zigs at 50 min, between ownship turns (owner: a target
+turning with the ownship is a worst case, not the basis of analysis). The head states 0.00–0.02
+at that turn on all three seeds; where seed 3 states anything (0.2–0.4) it is at an ownship turn,
+so at the 0.5 threshold the read-out is one leg; at 0.1 seed 3 breaks at two ownship turns either
+side of the truth and reaches 4–8% range error for that reason, not by finding the turn. The page
 states the largest probability, and a **manoeuvre threshold** slider (owner, 2026-11-21;
 `DemoScenario.manoeuvre_threshold`, 0.05–0.95, in the URL) moves the 0.5 for the declared spans
-and the legs. The points are not segmented (that would double-smooth); a proposer
+and the legs. The course and speed error charts carry ownship course and speed in blue (`Chart`'s
+`overlay`). The points are not segmented (that would double-smooth); a proposer
 from them into the search is unbuilt.
 
 ## Stack (owner decisions, 2026-10-31)

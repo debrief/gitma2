@@ -44,7 +44,7 @@ Range error, RMS over the window:
 | Preset | Least squares | Learned, whole period (seed 1) | Other |
 | --- | --- | --- | --- |
 | Good geometry | 0.30% (residuals 1.01 σ) | 9.9% | |
-| Target turn | 33% (one leg) | 12% | told the turn 1.0%; one leg on the first target leg 1.8% |
+| Target turn (at 50 min, between ownship turns) | 22% (one leg) | 15% | told the turn 0.4%; one leg on the first target leg 1.7% |
 | No zig | 130% (residuals 1.01 σ; indicator red) | 5.8% | |
 
 Where the geometry is good, the fit wins. Where the bearings cannot fix range, the learned

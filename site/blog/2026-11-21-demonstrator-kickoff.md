@@ -63,7 +63,7 @@ the own track: **read as steady legs** (`tlm-s1-legs`, `-s2-`, `-s3-`), the same
 the physics layer, which fits constant-velocity legs joined at them. Two things to know before
 choosing it. First, it is the chord model of Gates 1–2, not spec 016's arc model with Annex B's
 prior, so it reproduces the read-out's design and not its figures. Second, on every preset the head
-states at most 0.19 at any token (0.01 at the target-turn preset's 40° turn, seeds 1 and 2), so at
+stays well under 0.5 at every token, so at
 the registered threshold it declares no manoeuvre there and the legs read-out is one leg: the page
 now says the largest probability it found, and the owner asked for the threshold as a slider: it is
 one (shown for the learned solvers, 0.05 to 0.95, kept in the link), so the detector can be tuned by
@@ -71,3 +71,19 @@ eye on the page, which is a demonstration and not a result. That is spec 016's f
 measured the model's untuned detector. The points themselves are not segmented: a change-point fit
 on a smoothed track double-smooths and discards the bearings; what the points could do is propose
 times to a search, which is on three panels' lists and not built.
+
+**2026-11-21, later still.** Two more changes at the owner's word. The course and speed error charts
+now carry the ownship's own course and speed in blue, on a scale of their own, so its turns can be
+read against the error. And the target-turn preset no longer has the target turning at 60 minutes,
+the same moment as an ownship turn ("feasible, but it shouldn't be the basis of our analysis"): the
+target now zigs at 50 minutes, between the ownship's turns at 30 and 60. What the page then shows,
+over three noise draws (a demonstration, not a result): one leg 21 to 22% RMS range error, told the
+turn 0.3 to 0.5%, the model's own track 11 to 17%. The model's manoeuvre head states 0.00 to 0.02
+within three minutes of the true turn, on all three training seeds; where seed 3 states anything
+(0.2 to 0.4) it is at 30 to 34 minutes, an ownship turn. With the threshold at 0.1, seed 3 declares
+spans near 30 and 58 to 61 minutes, both ownship turns, and the legs fitted there reach 4 to 8%,
+because two free breaks either side of the true turn can absorb it; that is not the head finding
+the turn. A classical scan of one free break gives a chi-square of 731 to 748 on 715 bearings
+anywhere from 30 to 60 minutes against 4,815 for one leg: that the target manoeuvred is certain,
+when is weakly determined by a chord with four free unknowns.
+

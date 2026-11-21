@@ -151,7 +151,7 @@ Also checked:
 - **The learned model is out of its training range easily.** It was trained on initial ranges of
   2–20 km and 5-second bearings. The presets keep the target there, but a user can drag the
   target out (the first presets at about 33 km gave it 18% range error). It does not state the
-  presets' 40° target turn. Study L found it about 20% worse than the classical control in a
+  presets' 40° target turn (at 50 min, between ownship turns, since the owner's change of 2026-11-21; where its head states anything it is at an ownship turn). Study L found it about 20% worse than the classical control in a
   tail, level at the median. With noise, it beats least squares where the geometry is weak (no
   zig: 6% against 130%) and loses where it is good (10% against 0.3%).
 - **Size.** The three seeds add 78 MB to the site and to each PR preview. Each is loaded only
