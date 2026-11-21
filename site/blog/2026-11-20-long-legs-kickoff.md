@@ -48,3 +48,21 @@ so that the window itself is blind. Spec: `specs/032-long-legs/`.
 - Errors by system, by range band and by detected share.
 - Guard rate, and coverage and NEES of the 2-hour hand-overs.
 - Compute per engagement-hour.
+
+## Update, 2026-11-21: the owner adopted 2-hour `ctl-prior`
+
+After [the write-up](/blog/2026/11/20/long-legs), the owner adopted 2-hour `ctl-prior` as the
+standing chained time-late system for the tended contact on long engagements.
+- **Settings:** spec 028's `carry2` at its registered settings, on 2-hour windows overlapping
+  30 minutes, up to 12 hours.
+- **Control:** `ctl` stays as the control.
+- **Alternative:** the joint solve is the equal alternative where the bearings are kept.
+
+The adoption carries the panel's limits:
+- It is one simulator, contact 1.
+- The gain on blind windows is a far-range one.
+- Windows are placed past true manoeuvres.
+- The carried covariance is not calibrated, so it is not shown as an uncertainty.
+- Spec 028's hand-over defect is kept.
+
+Closing the long-engagement track with a synthesis is not yet chosen.

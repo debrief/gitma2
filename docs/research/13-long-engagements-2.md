@@ -147,3 +147,16 @@ Note 12 put a registered study after realism. Proposed design (no seed spent yet
    on tuning data first.
 3. Run the registered study above (E1–E3), or stop the long-engagement track here. The owner's
    choice.
+
+## Decision, 2026-11-21 (owner)
+
+The owner adopted 2-hour `ctl-prior` (`tma2-long carry2`, spec 028's registered settings) as the
+standing chained time-late system for the tended contact, up to 12 h. `ctl` remains the control,
+and the joint solve is the equal alternative where the bearings are kept. The evidence and its
+limits are in spec 028 (`experiments/20261119-cp/`), spec 031 (`experiments/20261120-cmp/`) and
+spec 032 (`experiments/20261120-legs/`). The limits:
+- one simulator, contact 1;
+- the gain on blind windows is far-range;
+- windows are placed past true manoeuvres;
+- the carried covariance is not calibrated;
+- the hand-over defect is kept.
