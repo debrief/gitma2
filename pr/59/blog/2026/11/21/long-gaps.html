@@ -5,7 +5,7 @@
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Several periods of one target across long gaps: what joining depends on | TMA via ML, second attempt</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="robots" content="noindex, nofollow"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://debrief.github.io/gitma2/pr/59/blog/2026/11/21/long-gaps"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="Several periods of one target across long gaps: what joining depends on | TMA via ML, second attempt"><meta data-rh="true" name="description" content="Spec 025 found that one solve through the gaps beats solving each period of a target alone,"><meta data-rh="true" property="og:description" content="Spec 025 found that one solve through the gaps beats solving each period of a target alone,"><meta data-rh="true" property="og:type" content="article"><meta data-rh="true" property="article:published_time" content="2026-11-21T00:00:00.000Z"><meta data-rh="true" property="article:tag" content="write-up,spec-033"><link data-rh="true" rel="canonical" href="https://debrief.github.io/gitma2/pr/59/blog/2026/11/21/long-gaps"><link data-rh="true" rel="alternate" href="https://debrief.github.io/gitma2/pr/59/blog/2026/11/21/long-gaps" hreflang="en"><link data-rh="true" rel="alternate" href="https://debrief.github.io/gitma2/pr/59/blog/2026/11/21/long-gaps" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","@id":"https://debrief.github.io/gitma2/pr/59/blog/2026/11/21/long-gaps","mainEntityOfPage":"https://debrief.github.io/gitma2/pr/59/blog/2026/11/21/long-gaps","url":"https://debrief.github.io/gitma2/pr/59/blog/2026/11/21/long-gaps","headline":"Several periods of one target across long gaps: what joining depends on","name":"Several periods of one target across long gaps: what joining depends on","description":"Spec 025 found that one solve through the gaps beats solving each period of a target alone,","datePublished":"2026-11-21T00:00:00.000Z","author":[],"keywords":[],"isPartOf":{"@type":"Blog","@id":"https://debrief.github.io/gitma2/pr/59/blog","name":"Blog"}}</script><link rel="alternate" type="application/rss+xml" href="/gitma2/pr/59/blog/rss.xml" title="TMA via ML, second attempt RSS Feed">
 <link rel="alternate" type="application/atom+xml" href="/gitma2/pr/59/blog/atom.xml" title="TMA via ML, second attempt Atom Feed"><link rel="stylesheet" href="/gitma2/pr/59/assets/css/styles.9ec013ba.css">
-<script src="/gitma2/pr/59/assets/js/runtime~main.fa2f0ffe.js" defer="defer"></script>
+<script src="/gitma2/pr/59/assets/js/runtime~main.7067ff13.js" defer="defer"></script>
 <script src="/gitma2/pr/59/assets/js/main.9a6d40a1.js" defer="defer"></script>
 </head>
 <body>
@@ -134,14 +134,19 @@ first.</p>
 This time each engagement&#x27;s histories and errors came from one job on one machine. Three
 statements above change:</p>
 <ul>
-<li class=""><strong>The true gap history does not help.</strong> Refitted the same way, the declared history with its gap
-manoeuvres replaced by the true ones is level with it after long gaps: 0.96 [0.67, 1.40]. The
-2.35 and 2.48 above come from the whole true history, which also knows the observed periods&#x27;
-manoeuvres. &quot;What falls short is choosing the gap history&quot; is withdrawn.</li>
-<li class=""><strong>Beyond about 70 minutes joining is level with solving alone</strong> (0.97 [0.58, 1.73], median
-1.03). The readings below 1 are not reproduced.</li>
-<li class=""><strong>The search is not the limit.</strong> Against the better declared fit, the truth&#x27;s evidence is
-higher by more than 3 units in 1 of 21 engagements, lower in 11, and within 3 in 9.</li>
+<li class=""><strong>A gain from the true gap history is not shown, at this size.</strong> Refitted the same way, the
+declared history with its gap manoeuvres replaced by the true ones is level with it after long
+gaps: 0.96 [0.67, 1.40]. Many of those refits sit in poor minima, so this may be a fitting
+failure rather than an absence of information. The 2.35 and 2.48 above come from the whole true
+history, which also knows the observed periods&#x27; manoeuvres. &quot;What falls short is choosing the
+gap history&quot; is withdrawn.</li>
+<li class=""><strong>Beyond about 70 minutes nothing is shown either way</strong> (alone ÷ joint 0.97 [0.58, 1.73],
+median 1.03). The interval still contains the earlier 0.71; the shift is the search&#x27;s known
+sensitivity to the CPU family, so read neither figure as a direction.</li>
+<li class=""><strong>The truth&#x27;s refit does not beat the declared history.</strong> Against the better declared fit, the
+truth&#x27;s evidence is higher by more than 3 units in 1 of 21 engagements, lower in 11, and within
+3 in 9. The truth is refitted from neutral starts and such refits can lose 10 to 24 units, so
+this does not show that the search is not the limit.</li>
 </ul>
 <p>The suggestion is now narrower. Joining helps a period without its own ownship turn across gaps
 under about an hour. Beyond that, nothing is shown either way.</p>
