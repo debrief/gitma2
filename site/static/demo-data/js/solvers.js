@@ -99,8 +99,10 @@ function spanRows(s, knots) {
   return knots.map((m) => [row(m.start_s), Math.max(row(m.end_s), row(m.start_s))]);
 }
 
-function layerSolver(oracle) {
-  const info = oracle ? INFO.layerOracle : INFO.layerCv;
+// mode: "cv" (no knots), "oracle" (the problem's true spans) or "splitter" (spec 036: whatever
+// spans the leg splitter put in problem.knots)
+function layerSolver(mode) {
+  const info = mode === "oracle" ? INFO.layerOracle : mode === "cv" ? INFO.layerCv : INFO.layer;
   return {
     info,
     async solve(p, ctx) {
@@ -112,9 +114,16 @@ function layerSolver(oracle) {
       const k = s.n - 1;
       let trs = [];
       let courseOnly = null;
-      if (oracle) {
-        trs = spanRows(s, p.knots || []);
-        courseOnly = (p.knots || []).map((m) => !m.speed);
+      let note;
+      if (mode !== "cv") {
+        let kn = (p.knots || []).slice();
+        if (kn.length > 4 && kn.every((m) => Number.isFinite(m.stat))) {
+          // a splitter stated more spans than the graph's eight knots hold: keep its four strongest
+          kn = kn.slice().sort((a, b) => b.stat - a.stat).slice(0, 4).sort((a, b) => a.start_s - b.start_s);
+          note = `${p.knots.length} spans stated; the four strongest used (the graph has eight knots)`;
+        }
+        trs = spanRows(s, kn);
+        courseOnly = kn.map((m) => !m.speed);
         if (2 * trs.length > 8) return failed(info, t0, "more than four target manoeuvres in the window (the graph has eight knots)");
       }
       const inp = segmentationInputs(s, k, trs, "chord", true, courseOnly);
@@ -130,7 +139,8 @@ function layerSolver(oracle) {
         const c = o.knot_weights[j];
         if (c > 0) kn.push({ c, t: s.t[Math.round(o.knots[j])], d: [th[4 + 2 * j], th[5 + 2 * j]] });
       }
-      const out = { solver: info.name, solver_version: info.version, status: o.plausible[0] === 1 ? "converged" : "not_converged", message: o.plausible[0] === 1 ? undefined : "implausible state (speed over 25 m/s or range over 100 km)", cost: o.cost[0] * s.sigma * s.sigma, t_s: [], x_m: [], y_m: [], vx_mps: [], vy_mps: [], stride };
+      const msg = [o.plausible[0] === 1 ? null : "implausible state (speed over 25 m/s or range over 100 km)", note].filter(Boolean).join("; ") || undefined;
+      const out = { solver: info.name, solver_version: info.version, status: o.plausible[0] === 1 ? "converged" : "not_converged", message: msg, cost: o.cost[0] * s.sigma * s.sigma, t_s: [], x_m: [], y_m: [], vx_mps: [], vy_mps: [], stride };
       for (const t of p.t_s) {
         let x = th[0] + th[2] * t, y = th[1] + th[3] * t, vx = th[2], vy = th[3];
         for (const q of kn) {
@@ -155,8 +165,9 @@ function layerSolver(oracle) {
     },
   };
 }
-export const layerCv = layerSolver(false);
-export const layerOracle = layerSolver(true);
+export const layer = layerSolver("splitter");
+export const layerCv = layerSolver("cv");
+export const layerOracle = layerSolver("oracle");
 
 // ---------- spec 016's whole-period learned model (ONNX), time-late ----------
 function tlmSolver(seed) {
@@ -204,6 +215,9 @@ export const tlm1 = tlmSolver(1), tlm2 = tlmSolver(2), tlm3 = tlmSolver(3);
 // Gate 2's real-time E is no longer offered (owner, 2026-11-21: "not interested in a track of
 // real-time estimates"); spec 021's pipeline stays on the viewer page.
 
-export const SOLVERS = [lsJs, layerCv, layerOracle, tlm1, tlm2, tlm3];
-export const solverByName = (name) => SOLVERS.find((s) => s.info.name === name) || lsJs;
+// spec 036: the drop-down's TMA solvers; spec 035's layer-cv and layer-oracle stay callable by
+// name (tests, figures, old links)
+export const SOLVERS = [lsJs, layer, tlm1, tlm2, tlm3];
+export const ALL_SOLVERS = [...SOLVERS, layerCv, layerOracle];
+export const solverByName = (name) => ALL_SOLVERS.find((s) => s.info.name === name) || lsJs;
 export { gridStart };

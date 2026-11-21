@@ -130,17 +130,47 @@ try {
   const n1 = await state();
   check("least squares at 360 bearings within 200 ms (NFR-1)", n1.summary.answered === 360 && n1.sol.runtime_ms <= 200, { n: n1.summary.answered, ms: n1.sol.runtime_ms });
 
-  // the ONNX graphs in the browser's worker
+  // the ONNX graphs in the browser's worker; spec 035's names still load (legacy links)
   for (const s of ["layer-cv", "layer-oracle"]) {
     await page.selectOption("[data-testid=preset]", "target-turn");
     await settled();
-    await page.selectOption("[data-testid=solver]", s);
+    await page.evaluate((name) => window.__demo.set({ ...window.__demo.scenario(), solver: name }), s);
     await page.waitForTimeout(50);
     await settled();
     const r = await state();
-    check(`${s} solves in ONNX Runtime Web`, r.status === "done" && r.sol && r.sol.status !== "failed", { status: r.sol && r.sol.status, range_pct_rms: r.summary && r.summary.range_pct.rms, ms: r.sol && r.sol.runtime_ms });
+    const sc = await page.evaluate(() => window.__demo.scenario());
+    check(`${s} solves in ONNX Runtime Web (as layer + ${sc.splitter})`, sc.solver === "layer" && r.status === "done" && r.sol && r.sol.status !== "failed", { status: r.sol && r.sol.status, range_pct_rms: r.summary && r.summary.range_pct.rms, ms: r.sol && r.sol.runtime_ms });
     report[s] = r.summary;
   }
+
+  // spec 036: leg splitters feed the segmented layer; the legs panel reads them against the truth
+  await page.selectOption("[data-testid=preset]", "two-target-turns");
+  await settled();
+  for (const sp of ["none", "truth", "arctan-debrief", "arctan-multi", "arctan-joined"]) {
+    await page.selectOption("[data-testid=splitter]", sp);
+    await page.waitForTimeout(50);
+    await settled();
+    const r = await state();
+    const legs = await page.evaluate(() => window.__demo.legs());
+    const panel = await page.locator("[data-testid=panel-legs]").innerText().catch(() => "");
+    check(`splitter ${sp} → layer: solved, legs read against the truth`, r.status === "done" && r.sol.status !== "failed" && legs && legs.truth === 2 && r.sol.splitter === sp && /Target legs/.test(panel) && (sp !== "truth" || legs.matched === 2), { legs: legs && { stated: legs.stated, matched: legs.matched, false_: legs.false_ }, range_pct_rms: r.summary && r.summary.range_pct.rms, splitter_ms: r.sol && r.sol.splitter_runtime_ms });
+    report[`splitter-${sp}`] = { legs, summary: r.summary };
+  }
+  const disabled = await (async () => {
+    await page.selectOption("[data-testid=solver]", "ls-js");
+    await settled();
+    return page.locator("[data-testid=splitter]").isDisabled();
+  })();
+  check("the splitter drop-down is disabled for a solver that takes no legs", disabled);
+  await page.selectOption("[data-testid=solver]", "layer");
+  await settled();
+  // the comparison table (C left out here: it takes minutes; demo_node.mjs runs it)
+  await page.evaluate(() => window.__demo.startCompare(["none", "truth", "arctan-debrief", "arctan-multi", "arctan-joined"]));
+  await page.waitForFunction(() => { const c = window.__demo.compare(); return c && c.status !== "running"; }, null, { timeout: 180000 });
+  const cmpRows = await page.locator("[data-testid=compare-table] tbody tr").count();
+  const cmpState = await page.evaluate(() => { const c = window.__demo.compare(); return { status: c.status, done: Object.keys(c.rows) }; });
+  check("compare runs each splitter through the layer and tabulates them", cmpState.status === "done" && cmpState.done.length === 5 && cmpRows === 5, cmpState);
+  if (process.env.DEMO_SHOT) await page.screenshot({ path: process.env.DEMO_SHOT, fullPage: false });
 
   // the whole-period learned model in the browser, with its progress shown while it loads
   await page.selectOption("[data-testid=preset]", "target-turn");

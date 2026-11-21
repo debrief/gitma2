@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.37.0
+version: 0.38.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -2208,6 +2208,7 @@ classes:
       seed: { range: integer, required: true, minimum_value: 0, maximum_value: 4294967295, description: "Seed of the noise generator; the same seed and scenario give identical bearings." }
       window: { range: DemoWindow, required: true, inlined: true }
       solver: { range: string, required: true, description: "Name of the selected solver plug-in (FR-024)." }
+      splitter: { range: string, description: "Spec 036: name of the selected leg splitter, whose manoeuvre spans a solver that accepts knots uses (absent: none, one leg)." }
       show_ellipses: { range: boolean, description: "Show the solver's 1- and 2-sigma position ellipses (off by default)." }
 
   DemoSpan:
@@ -2215,6 +2216,7 @@ classes:
     attributes:
       start_s: { range: float, required: true }
       end_s: { range: float, required: true }
+      stat: { range: float, description: "Spec 036: the splitter's strength for this span (its own statistic; absent for the truth)." }
 
   TmaProblem:
     description: "Spec 035 FR-024: what a demonstrator solver is given. Frame: x east, y north, metres; bearings true, radians; times in seconds from the window start."
@@ -2247,6 +2249,19 @@ classes:
       condition_number: { range: float, description: "Condition number of the Jacobi-scaled information matrix at the solution." }
       manoeuvre_t_s: { range: float, multivalued: true, description: "Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row)." }
       manoeuvre_prob: { range: float, multivalued: true, description: "The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s." }
+      splitter: { range: string, description: "Spec 036: the leg splitter whose spans the solver used." }
+      splitter_spans: { range: DemoSpan, multivalued: true, inlined_as_list: true, description: "Spec 036: the manoeuvre spans the leg splitter stated, in the problem's time." }
+      splitter_runtime_ms: { range: float }
+      splitter_message: { range: string }
+
+  DemoSplitterInfo:
+    description: "Spec 036: what a leg-splitter plug-in declares."
+    attributes:
+      name: { range: string, required: true }
+      version: { range: string, required: true }
+      label: { range: string }
+      assumptions: { range: string, required: true, description: "Its method, in words." }
+      told_truth: { range: boolean, required: true, description: "It is told the true manoeuvre spans (an oracle)." }
 
   DemoSolverInfo:
     description: "Spec 035 FR-024: what a solver plug-in declares."

@@ -136,6 +136,13 @@
    "description": "Name of the selected solver plug-in (FR-024).",
    "type": "string"
   },
+  "splitter": {
+   "description": "Spec 036: name of the selected leg splitter, whose manoeuvre spans a solver that accepts knots uses (absent: none, one leg).",
+   "type": [
+    "string",
+    "null"
+   ]
+  },
   "target": {
    "$ref": "#/$defs/DemoTrack"
   },
@@ -155,5 +162,5 @@
  ],
  "title": "DemoScenario",
  "type": "object",
- "version": "0.37.0"
+ "version": "0.38.0"
 }
