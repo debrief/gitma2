@@ -853,6 +853,37 @@ choice): adopt 2-hour `ctl-prior` with its guard for the tended contact up to 12
 the equal alternative; close the long-engagement track with a synthesis. Seeds 367, 368 used; the
 next fresh seed is 369.
 
+033 (several periods of one target across long gaps, `specs/033-long-gaps/`; owner 2026-11-20
+option 3 of spec 030's order, then "separate the factors", "diagnose the >70 min reversal" and
+"write up"; developed as 031, renumbered because another session's 031 and 032 merged first;
+a development study, not registered; nothing trained; spent seed 348 only). First, a look at spec
+030's records (`experiments/20261120-tl11-flag-look/`, `scripts/research/tl11_flag_look.py`): a
+per-period consistency flag on the carried prior is not worth registering (evidence flag AUC
+0.52–0.78; even the truth's distance reaches 0.45–0.76 on k4; the twice-as-bad periods are
+mostly ones where `ctl` alone landed close). Code: `tma2-tlsolve` takes a split's `long` config
+(whole engagements from the long simulator via `long.timelate.period_of`);
+`Period.ownship_turns()` reads the long simulator's full turn list when the meta carries one
+(generator data unchanged, `tests/unit/test_periods_turns.py`); workflow `tl12ev/**` →
+`.github/workflows/tl12-evidence.yml`; `scripts/research/tl12_{readings,paired,evidence,
+evidence_summary,charts}.py`. Two runs on the same 40 six-hour engagements, 2–4 periods with
+gaps of 30–90 min (`configs/long/gaps-dev.json`, `gaps-hold-dev.json`; plans
+`configs/timelate/tl-q-dev.json`, `tl-q-hold-dev.json`): ownship legs 20–40 min
+(`experiments/20261120-tl12-dev/`) and 1–2 h (`experiments/20261120-tl12-hold-dev/`, with
+`evidence/` and the panel's `review.md`, three approve with findings). Readings: periods without
+their own ownship turn gain from joining by about 2 below 70 min gaps (2.24 [1.13, 4.50],
+2.13 [1.29, 3.55]); with their own turn not separated; of 18 gap-band intervals one is separated
+(held course 50–70 min, 2.85); beyond 70 min 0.80 and 0.71, not separated (medians 0.95, 0.88);
+the true gap structure would still help there (2.35, 2.48), so what falls short is choosing the
+gap history: in most engagements the Laplace evidence does not prefer the true one (13 of 21
+within ±10 units; 123 declared against 178 true); whether search matters is not resolved (the
+diagnostic's re-run ran on another CPU family and declared other histories in 5 of 21); k4 (as
+tuned in spec 030) level with alone; the joint solve costs 11–16× alone. Suggestion, not a rule:
+join a period without its own ownship turn across gaps up to about an hour. Write-up
+`site/blog/2026-11-21-long-gaps.md`, slides `2026-11-21-long-gaps-slides.md` (figures
+`scripts/research/tl12_charts.py`). Owner's choice next: stop; register a gap × own-turn rule on
+fresh seeds (369 onward, about 140 periods per band); or first re-check the evidence on the
+scored run's own histories on one CPU family. Seeds: none new.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1317,6 +1348,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   the coverage. Read a prior's gain on rows the period determines alone before saying it
   improves estimates. A harm rule on 32 periods sees only losses over about a third; state the
   detectable size. Isotropic velocity noise for a turn puts half the change into speed.
+- Spec 033 panel: a diagnostic that re-runs a search must run on the scored run's CPU family,
+  or compare stored histories: a re-run on another family declared different histories in 5 of
+  21 engagements and broke the cross-tab with the errors. Fix bands before looking, or call them
+  post hoc; test a trend, not three band means. Split a joining gain by whether the period has its
+  own ownship turn before reading it by anything else. A narrow evidence difference (within about
+  10 units) is ambiguity, not identifiability, and says nothing about search. When a local job
+  keeps dying with the container, move it to a CI workflow at once.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting

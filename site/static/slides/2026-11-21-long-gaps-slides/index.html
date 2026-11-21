@@ -31,33 +31,33 @@
           </ul>
         </section>
         <section>
-          <h2>Joining helps up to about an hour, then reverses</h2>
+          <h2>By gap length: one band separated, no trend shown</h2>
           <img src="../../img/2026-11-21-long-gaps-slides/bands.svg" alt="alone ÷ joint by gap band, both runs" />
-          <p class="small">Holding course: 1.34, 2.85 [1.49, 6.05], 0.71 [0.47, 1.02]. Turning: 1.40, 1.27, 0.80. The two runs share targets and gaps, so the reversal is one observation seen twice; no band but one is separated.</p>
+          <p class="small">Holding course: 1.34, 2.85 [1.49, 6.05], 0.71 [0.47, 1.02]. Turning: 1.40, 1.27, 0.80. Only 50–70 min (holding) is separated; beyond 70 min both read below 1, not separated (medians 0.95, 0.88). Bands chosen after the data. The clearest signal is a period without its own ownship turn: about 2 below 70 min in both runs.</p>
         </section>
         <section>
           <h2>Holding course doubles everyone's error</h2>
           <img src="../../img/2026-11-21-long-gaps-slides/systems.svg" alt="median range error by system, both runs" />
-          <p class="small">Periods without their own ownship turn are poorly determined whatever the method; joining recovers part. k4 is level with alone in both runs (0.94, 1.05): after an hour its uncertainty says almost nothing.</p>
+          <p class="small">Periods without their own ownship turn are poorly determined whatever the method; joining recovers part. k4 (as tuned in spec 030) is level with alone in both runs (0.94, 1.05).</p>
         </section>
         <section>
-          <h2>Why: the evidence prefers a simpler gap history</h2>
+          <h2>Beyond an hour: the gap history is not chosen well</h2>
           <img src="../../img/2026-11-21-long-gaps-slides/evidence.svg" alt="evidence of true minus declared gap history against alone ÷ joint" />
-          <p class="small">Of 21 engagements with a gap ≥ 70 min, the declared history has at least the truth's evidence in 15 (123 manoeuvres declared against 178 true); the search falls short in 6. Joining loses either way on average (0.80, 0.57).</p>
+          <p class="small">The true gap structure would still help (2.35, 2.48 against alone). The Laplace evidence rarely separates the true gap history from a simpler one (13 of 21 within ±10 units; 123 declared against 178 true). Whether better search would help is not resolved: the re-run declared other histories in 5 engagements.</p>
         </section>
         <section>
           <h2>Not achieved</h2>
           <ul>
-            <li>No registered result: one spent seed, 40 engagements, about 20–30 periods per gap band</li>
-            <li>The two runs are not independent; the "about an hour" threshold is a reading of three bands</li>
+            <li>No registered result: one spent seed, 40 engagements, about 20–30 periods per gap band, bands chosen after the data</li>
+            <li>No trend with gap length is separated; beyond 70 min nothing is shown either way</li>
             <li>No joint solve that breaks at long gaps was built; the long simulator's ownship steers on the true target</li>
           </ul>
         </section>
         <section>
           <h2>What follows</h2>
           <ul>
-            <li>Practice suggested: join across gaps up to about an hour, solve each period alone beyond</li>
-            <li>The time-late gap track closes here unless reopened (owner's choice)</li>
+            <li>A suggestion, not a rule: join a period without its own ownship turn across gaps up to about an hour</li>
+            <li>Owner's choice: stop; register a gap × own-turn rule on fresh seeds; or first check the evidence on the scored run's own histories</li>
           </ul>
           <p class="small">Write-up: /blog/2026/11/21/long-gaps · Records: experiments/20261120-tl12-dev, -tl12-hold-dev · Figures: scripts/research/tl12_charts.py</p>
         </section>

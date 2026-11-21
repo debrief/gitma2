@@ -7,7 +7,8 @@ tags: [slides, spec-033]
 import Slides from "@site/src/components/Slides";
 
 The illustrated companion to [the spec 033 write-up](/blog/2026/11/21/long-gaps): joining by gap
-length, what holding course does to every system, and why joining fails beyond about an hour.
+length, what holding course does to every system, and how well the gap history is chosen beyond
+about an hour.
 
 <!-- truncate -->
 
