@@ -1,4 +1,4 @@
-"""Spec 031 slides: SVG figures from the committed development records.
+"""Spec 033 slides: SVG figures from the committed development records.
 
     uv run python scripts/research/tl12_charts.py --out-dir <dir>
 

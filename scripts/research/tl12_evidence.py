@@ -1,4 +1,4 @@
-"""Spec 031 diagnostic: beyond about 70 min the joint solve is worse than ``ctl`` alone. Is that
+"""Spec 033 diagnostic: beyond about 70 min the joint solve is worse than ``ctl`` alone. Is that
 the search (the true history has more evidence than the history declared) or the evidence (the
 declared history has as much or more)? Spec 013's check, per engagement.
 

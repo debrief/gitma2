@@ -1,12 +1,12 @@
 ---
 title: "Slides: several periods of one target across long gaps"
 date: 2026-11-21
-tags: [slides, spec-031]
+tags: [slides, spec-033]
 ---
 
 import Slides from "@site/src/components/Slides";
 
-The illustrated companion to [the spec 031 write-up](/blog/2026/11/21/long-gaps): joining by gap
+The illustrated companion to [the spec 033 write-up](/blog/2026/11/21/long-gaps): joining by gap
 length, what holding course does to every system, and why joining fails beyond about an hour.
 
 <!-- truncate -->

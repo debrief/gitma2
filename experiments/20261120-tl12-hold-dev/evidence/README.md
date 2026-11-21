@@ -1,4 +1,4 @@
-# Spec 031 diagnostic: why the joint solve loses beyond 70 min gaps
+# Spec 033 diagnostic: why the joint solve loses beyond 70 min gaps
 
 Development work on spent seed 348 (long simulator), not a registered result.
 

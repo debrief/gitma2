@@ -1,4 +1,4 @@
-"""Spec 031 development readings beyond the generated tables: per later period, alone ÷ joint
+"""Spec 033 development readings beyond the generated tables: per later period, alone ÷ joint
 and alone ÷ k4 by the length of the gap before it; the joint solve's cost and manoeuvre counts
 against `ctl`'s cap of ten; gap manoeuvres found.
 

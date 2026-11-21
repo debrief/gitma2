@@ -1,4 +1,4 @@
-# Spec 031 development, second run: long gaps with the ownship holding course
+# Spec 033 development, second run: long gaps with the ownship holding course
 
 Development work, not a registered result. CI run 44741196091 (`timelate/tl-q-hold-dev` at
 91dc5ac), plan `configs/timelate/tl-q-hold-dev.json`, engagements from

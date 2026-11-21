@@ -1,4 +1,4 @@
-# Spec 031: several periods of one target across long gaps (stress split)
+# Spec 033: several periods of one target across long gaps (stress split)
 
 Owner 2026-11-20: option 3 of spec 030's panel order, "a stress split with longer gaps and more
 periods, where a carried state is the realistic option". A study, not a gate; nothing trained;
@@ -61,3 +61,7 @@ where carrying a state, rather than joining, could become the better choice.
 - The long simulator's ownship steers on the true target: the geometry is kinder than a real
   ownship's.
 - Seeds: 348 was spent by spec 023 in the long simulator. The next fresh seed is 365.
+
+## Renumbered (2026-11-21)
+
+This study was developed as spec 031. Another session's specs 031 (`031-held-comparators`) and 032 (`032-long-legs`) merged to main at the same time, so this one is spec 033 (`specs/033-long-gaps/`). The configs (`configs/long/gaps-*.json`, `configs/timelate/tl-q-*.json`) and the plans and run files copied into the records keep the words "spec 031": they are what ran, and are not edited.

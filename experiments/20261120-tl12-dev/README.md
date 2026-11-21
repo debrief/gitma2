@@ -1,4 +1,4 @@
-# Spec 031 development run (long simulator, spent seed 348): long gaps
+# Spec 033 development run (long simulator, spent seed 348): long gaps
 
 Development work, not a registered result. CI run 44691013700 (`timelate/tl-q-dev` at 0a538d1),
 plan `configs/timelate/tl-q-dev.json` (runner `run10`, variant k4), engagements from
@@ -73,3 +73,7 @@ Cost and the cap:
 - Soundness (the span reference's efficiency) was not computed: the plan's soundness block applies
   to a split named `man2`.
 - Seed 348 was spent by spec 023.
+
+## Renumbered (2026-11-21)
+
+This study was developed as spec 031. Another session's specs 031 (`031-held-comparators`) and 032 (`032-long-legs`) merged to main at the same time, so this one is spec 033 (`specs/033-long-gaps/`). The configs (`configs/long/gaps-*.json`, `configs/timelate/tl-q-*.json`) and the plans and run files copied into the records keep the words "spec 031": they are what ran, and are not edited.
