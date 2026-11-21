@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-algorithms/segmentation" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.2">
+<title data-rh="true">Steady-leg segmentation (C, O, L) | TMA via ML, second attempt</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="robots" content="noindex, nofollow"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://debrief.github.io/gitma2/pr/57/algorithms/segmentation"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Steady-leg segmentation (C, O, L) | TMA via ML, second attempt"><meta data-rh="true" name="description" content="Source: src/tma2/segment/; CLIs tma2-segment, tma2-segtrain and tma2-gs."><meta data-rh="true" property="og:description" content="Source: src/tma2/segment/; CLIs tma2-segment, tma2-segtrain and tma2-gs."><link data-rh="true" rel="canonical" href="https://debrief.github.io/gitma2/pr/57/algorithms/segmentation"><link data-rh="true" rel="alternate" href="https://debrief.github.io/gitma2/pr/57/algorithms/segmentation" hreflang="en"><link data-rh="true" rel="alternate" href="https://debrief.github.io/gitma2/pr/57/algorithms/segmentation" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Steady-leg segmentation (C, O, L)","item":"https://debrief.github.io/gitma2/pr/57/algorithms/segmentation"}]}</script><link rel="alternate" type="application/rss+xml" href="/gitma2/pr/57/blog/rss.xml" title="TMA via ML, second attempt RSS Feed">
+<link rel="alternate" type="application/atom+xml" href="/gitma2/pr/57/blog/atom.xml" title="TMA via ML, second attempt Atom Feed"><link rel="stylesheet" href="/gitma2/pr/57/assets/css/styles.9ec013ba.css">
+<script src="/gitma2/pr/57/assets/js/runtime~main.1e4b16fe.js" defer="defer"></script>
+<script src="/gitma2/pr/57/assets/js/main.ebd27380.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/gitma2/pr/57/"><b class="navbar__title text--truncate">gitma2</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/gitma2/pr/57/">Welcome</a><a class="navbar__item navbar__link" href="/gitma2/pr/57/glossary">Glossary</a><a class="navbar__item navbar__link" href="/gitma2/pr/57/data-dictionary">Data dictionary</a><a class="navbar__item navbar__link" href="/gitma2/pr/57/blog">Blog</a><a class="navbar__item navbar__link" href="/gitma2/pr/57/viewer">Viewer</a><a class="navbar__item navbar__link" href="/gitma2/pr/57/timelate">Time-late</a><a class="navbar__item navbar__link" href="/gitma2/pr/57/previews">PR previews</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/debrief/gitma2" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/gitma2/pr/57/"><span class="linkLabel_WmDU">Welcome</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/gitma2/pr/57/glossary"><span class="linkLabel_WmDU">Glossary</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/gitma2/pr/57/data-dictionary"><span class="linkLabel_WmDU">Data dictionary</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/gitma2/pr/57/process/reporting"><span class="categoryLinkLabel_W154">Process</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/gitma2/pr/57/algorithms/physics-layer"><span class="categoryLinkLabel_W154">Algorithms</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/physics-layer"><span class="linkLabel_WmDU">Physics layer</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/gate1-model"><span class="linkLabel_WmDU">Gate 1 model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/least-squares"><span class="linkLabel_WmDU">Batch least squares</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/ekf-imm"><span class="linkLabel_WmDU">EKF and IMM</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/crb"><span class="linkLabel_WmDU">Cramér–Rao bound and efficiency</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/detector"><span class="linkLabel_WmDU">Steady-leg detector</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/gitma2/pr/57/algorithms/segmentation"><span class="linkLabel_WmDU">Steady-leg segmentation (C, O, L)</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/gate2-model"><span class="linkLabel_WmDU">Gate 2 model</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/gitma2/pr/57/algorithms/calibration"><span class="linkLabel_WmDU">Uncertainty calibration</span></a></li></ul></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/gitma2/pr/57/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Algorithms</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Steady-leg segmentation (C, O, L)</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Steady-leg segmentation: C, O and L</h1></header>
+<p>Source: <code>src/tma2/segment/</code>; CLIs <code>tma2-segment</code>, <code>tma2-segtrain</code> and <code>tma2-gs</code>.
+Requirements: SRD Annex A §A.9 (Gate S), Annex B (the owner&#x27;s manoeuvre definitions) and spec
+005.</p>
+<p>The problem is to label, at each scored row k and using bearings up to k only, every earlier row
+of the target&#x27;s track as <strong>steady</strong>, <strong>transition</strong> or <strong>unknown</strong>. The labels then go to the
+physics layer, which fits one constant-velocity leg per steady piece. Three components do the
+labelling:</p>
+<ul>
+<li class=""><strong>O</strong> labels ownship legs from navigation data.</li>
+<li class=""><strong>C</strong> is the classical target segmenter.</li>
+<li class=""><strong>L</strong> is C with learned per-bearing evidence added.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="definitions-annex-b">Definitions (Annex B)<a href="#definitions-annex-b" class="hash-link" aria-label="Direct link to Definitions (Annex B)" title="Direct link to Definitions (Annex B)" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Steady leg:</strong> at least <code>L_min</code> = 30 rows (5 min), with course within ± 5° and speed within
+± 0.5 kt of the leg mean.</li>
+<li class=""><strong>Transition:</strong> at least <code>T_min</code> = 6 rows (60 s). Its length is estimated.</li>
+<li class=""><strong>Unknown:</strong> rows the evidence cannot decide. For the target, every row up to the ownship&#x27;s
+first zig is unknown: before it, one leg cannot be told from two.</li>
+</ul>
+<p>Truth labels come from the generator&#x27;s manoeuvre spans, widened to <code>T_min</code>. A steady piece
+shorter than <code>L_min</code> becomes unknown.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="o-ownship-legs">O: ownship legs<a href="#o-ownship-legs" class="hash-link" aria-label="Direct link to O: ownship legs" title="Direct link to O: ownship legs" translate="no">​</a></h2>
+<p>A coarse pass compares 1-min moving averages of course and speed with D = 10° and D_S = 1 kt to
+find deliberate changes. A fine walk then finds each transition&#x27;s edges:</p>
+<ul>
+<li class="">it starts from the steepest row and walks outward;</li>
+<li class="">it stops where the rate changes sign, or where the track enters the neighbouring leg&#x27;s ± 5°
+band.</li>
+</ul>
+<p>A change is kept only if the change in leg means exceeds D and a signed test across the
+transition rows confirms it. Thirty seconds are trimmed from each leg end. On MAN2, O finds every
+ownship turn within 30 s with zero contamination; helm wander and autopilot oscillation call no
+transition.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="c-nominate-then-confirm-by-the-coupled-cost">C: nominate, then confirm by the coupled cost<a href="#c-nominate-then-confirm-by-the-coupled-cost" class="hash-link" aria-label="Direct link to C: nominate, then confirm by the coupled cost" title="Direct link to C: nominate, then confirm by the coupled cost" translate="no">​</a></h2>
+<ol>
+<li class=""><strong>Nominators.</strong>
+<ul>
+<li class=""><strong>GLR alarms.</strong> GLR is the spec 004 control, on per-timestep batch least squares. Its
+threshold is tuned on validation to a 20% held-leg exceedance; a raised alarm is re-tested
+every 6 rows.</li>
+<li class=""><strong>An additive search</strong> over legs, each scored by its own constant-velocity fit. It is run
+on prefixes every 30 rows, on a 6-row grid anchored at the scored rows, so one cost table
+serves every prefix. A per-leg penalty of 30 holds false transitions to 3.5% of prefixes.</li>
+</ul>
+</li>
+<li class=""><strong>Confirmation.</strong>
+<ul>
+<li class=""><strong>The test.</strong> Each nomination is tested by the physics-layer solve on its own prefix, a
+coupled fit with knots at both transition ends.</li>
+<li class=""><strong>Search order.</strong> Starts are searched at the middle transition length, then every length is
+tried at the best start.</li>
+<li class=""><strong>Acceptance.</strong> An open transition (start knot only) is accepted if its cost drop exceeds
+τ = 13.8, the 0.1% point of χ² with 2 degrees of freedom; a closed one (two knots) against
+the 4-degree-of-freedom point with the same tail probability, 18.45. Both boundaries are
+then polished by ± 3 rows.</li>
+<li class=""><strong>Causality.</strong> Closing an open transition polishes its start with bearings up to the
+closing row, so prefixes before the close keep the start as it was accepted (FR-002; the
+Gate S panel found the start being rewritten for earlier prefixes, fixed in 7fe8874).</li>
+</ul>
+</li>
+<li class=""><strong>Segmentation of each prefix.</strong> Accepted transitions become transitions, near misses become
+unknown, and the rest is steady.</li>
+</ol>
+<p>The search alone is a weak nominator on MAN2: it finds 13% of changes within ± 60 s. C&#x27;s accepted
+transitions come from both nominators; the share from each has not been counted.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="hand-over-to-the-physics-layer-gap-or-chord">Hand-over to the physics layer: gap or chord<a href="#hand-over-to-the-physics-layer-gap-or-chord" class="hash-link" aria-label="Direct link to Hand-over to the physics layer: gap or chord" title="Direct link to Hand-over to the physics layer: gap or chord" translate="no">​</a></h2>
+<p>A transition [s, e] gives the physics layer knots at s and e. An open transition at prefix k is
+[s, k], so it gets its second knot, and in chord mode the speed prior, at k itself; the oracle
+and confirmation instead treat an open span as a start knot only. Either way the state at k is
+weakly determined. Gate 2 must fix one convention for both. A segmenter reports no kinds, so the
+speed prior is applied across every transition, speed changes included.</p>
+<ul>
+<li class=""><strong>Gap:</strong> the bearings inside the transition are excluded.</li>
+<li class=""><strong>Chord:</strong> the bearings are kept, with the speed-continuity prior across a course-only
+transition.</li>
+</ul>
+<p>The mode is fixed on validation: gap had the lower median range error, 0.120 against 0.123.</p>
+<p><strong>Known defect (Gate S panel round 2).</strong> An open transition reserves only [s, s + 1] when later
+nominations are checked for overlap, so a second transition can be accepted inside the first&#x27;s
+eventual span, and the close picks its length without an overlap check: the two then merge into
+one interval (21 of C&#x27;s 1,148 open test intervals are older than the 35-row close; one reaches 60
+rows). Polish checks only T_min, so polished transitions reach 42 rows. Rare, the same for C and
+L. <em>Fixed after Gate S:</em> an open transition now reserves its longest span, [s, s + l_max − 1];
+the close takes only lengths that keep clear of other transitions; polish keeps a transition
+within T_min … l_max rows (<code>test_segment_c_fixes.py</code>).</p>
+<p><strong>Known defect (Gate S panel round 1).</strong> The search&#x27;s cost table warm-starts each leg&#x27;s fit from
+the shorter leg&#x27;s and takes a fresh grid start only every fourth step, so some entries are failed
+fits: a longer leg costs less than a nested shorter one (by more than 100 χ² for 3,191 pairs in
+500 validation scenarios). It weakens the search nominator for C and L alike. <em>Fixed after Gate S:</em> a
+warm-started fit whose cost jumps by more than 9 χ² per added bearing plus 30 is re-tried from a
+grid start, and a backward pass re-fits each shorter leg from its longer extension&#x27;s solution
+where the order is broken, keeping the lower cost. On 40 validation scenarios the order
+violations above 1 χ² fell from 991 to 0 and 7,335 entries came down; 67 in 36,000 rose (by up
+to 40 χ²: the changed warm-start chain found a worse local minimum); the tables take about 1.6
+times as long.</p>
+<p><strong>Open-transition hand-over.</strong> A parameter since Gate S (<code>open_handover</code>): <code>knot_at_k</code> (spec
+005&#x27;s), <code>start_masked</code> (a start knot, the bearings from s to k excluded) or <code>start_chord</code> (a start
+knot, the bearings kept). It is chosen on validation before Gate 2. Absent optional parameters are
+left out of the parameter digest, so Gate S&#x27;s digests are unchanged.</p>
+<p><strong>Code identity.</strong> Each segmentation header records <code>code_sha256</code>, a digest of the source files
+<code>tma2-segment</code> runs (<code>segment/codeid.py</code>), so a gate can refuse segmentations made by other
+code.</p>
+<p><strong>Reproducing a segmentation.</strong> The physics-layer solves are batched 16 scenarios at a time and
+padded to the longest; the padding changes the last bits of the costs, which can flip a
+near-threshold acceptance. A scenario re-run alone can therefore differ from its CI segmentation;
+re-run with the plan&#x27;s ordinals and shards.</p>
+<p><strong>Scoring conventions.</strong> Contamination counts a segmenter&#x27;s unknown rows as steady, and a truth
+transition [start_index, end_index] includes the first row on the new leg. Both are conservative
+and the same for every segmenter.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="l-learned-evidence">L: learned evidence<a href="#l-learned-evidence" class="hash-link" aria-label="Direct link to L: learned evidence" title="Direct link to L: learned evidence" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>The network.</strong> A small causal dilated 1-D convolution: width 32, kernel 5, dilations 1, 2, 4
+and 8, SiLU activations and a zero-initialised head.</li>
+<li class=""><strong>Its inputs:</strong>
+<ul>
+<li class="">the bearing;</li>
+<li class="">ownship position and time;</li>
+<li class="">O&#x27;s online label: for each row r, O run on rows 0 … r alone;</li>
+<li class="">the per-timestep least-squares innovation.</li>
+</ul>
+</li>
+<li class=""><strong>Its output.</strong> For each row, a log-likelihood ratio e of steady against transition.</li>
+<li class=""><strong>Where e enters C:</strong>
+<ul>
+<li class="">the search&#x27;s costs, as −2Σe on legs and +2Σe on transitions;</li>
+<li class="">the confirmation threshold, which shifts by twice e summed over the candidate&#x27;s rows,
+capped at ± τ/2.</li>
+</ul>
+</li>
+</ul>
+<p>An untrained L emits e = 0 and equals C exactly.</p>
+<p><strong>Training</strong> minimises the semi-Markov negative log-likelihood of the truth segmentation on the
+search&#x27;s lattice (<code>segment/crf.py</code>), plus 0.1 × a per-bearing cross-entropy term.</p>
+<ul>
+<li class="">The normaliser is a log-sum-exp forward recursion over every segmentation the lattice allows.</li>
+<li class="">The truth path is the lattice segmentation that agrees with the most labelled rows, with ties
+broken by the cost.</li>
+<li class="">The <strong>shuffled control</strong> trains on another scenario&#x27;s labels.</li>
+</ul>
+<p>It exports to ONNX with each convolution written as matrix products, because onnxruntime has no
+double-precision <code>Conv</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="measures">Measures<a href="#measures" class="hash-link" aria-label="Direct link to Measures" title="Direct link to Measures" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Contamination:</strong> the share of a reported leg&#x27;s rows that the truth labels as transition.</li>
+<li class=""><strong>Coverage:</strong> the share of truth-steady rows inside reported legs.</li>
+<li class=""><strong>False split:</strong> any transition at a prefix where no target change has begun by its row k
+(the measure as built, <code>segment/metrics.py</code>; on a scenario with no change at all, every prefix
+counts).</li>
+<li class=""><strong>Gap recovered:</strong> (median one-leg error − median segmentation error) ÷ (median one-leg error −
+median oracle error), on σ = 1° G5 rows. One leg scores 0 and the oracle 1.</li>
+</ul>
+<p>Every measure is stratified by <strong>detectability</strong>, the oracle&#x27;s cost drop for each change (note
+08&#x27;s bands: below 13.3, 13.3–50, 50–200, at least 200).</p></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/gitma2/pr/57/algorithms/detector"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Steady-leg detector</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/gitma2/pr/57/algorithms/gate2-model"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Gate 2 model</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#definitions-annex-b" class="table-of-contents__link toc-highlight">Definitions (Annex B)</a></li><li><a href="#o-ownship-legs" class="table-of-contents__link toc-highlight">O: ownship legs</a></li><li><a href="#c-nominate-then-confirm-by-the-coupled-cost" class="table-of-contents__link toc-highlight">C: nominate, then confirm by the coupled cost</a></li><li><a href="#hand-over-to-the-physics-layer-gap-or-chord" class="table-of-contents__link toc-highlight">Hand-over to the physics layer: gap or chord</a></li><li><a href="#l-learned-evidence" class="table-of-contents__link toc-highlight">L: learned evidence</a></li><li><a href="#measures" class="table-of-contents__link toc-highlight">Measures</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Mock data only; nothing above OFFICIAL. Apache-2.0.</div></div></div></footer></div>
+</body>
+</html>

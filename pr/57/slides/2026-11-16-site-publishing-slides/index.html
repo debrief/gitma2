@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Publishing the site (spec 022)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">The site, published</h1>
+          <p>Every merge online; every PR's report kept</p>
+          <p class="small">16 November 2026 · spec 022 · gitma2</p>
+        </section>
+        <section>
+          <h2>How it is published</h2>
+          <svg viewBox="0 0 640 230" role="img" aria-label="Merges to main publish the root; PRs publish pr/n; an index lists previews">
+            <g font-size="11" text-anchor="middle">
+              <rect x="20" y="30" width="150" height="44" fill="#eee" stroke="#777"/><text x="95" y="50">merge to main</text><text x="95" y="64">build</text>
+              <rect x="20" y="130" width="150" height="44" fill="#eee" stroke="#777"/><text x="95" y="150">pull request</text><text x="95" y="164">build at its head</text>
+              <rect x="250" y="20" width="370" height="170" fill="#f3e9fb" stroke="#7b4fa3"/>
+              <text x="435" y="40">gh-pages branch → debrief.github.io/gitma2</text>
+              <rect x="270" y="50" width="160" height="34" fill="#fff" stroke="#7b4fa3"/><text x="350" y="71">/ (the site)</text>
+              <rect x="270" y="110" width="160" height="34" fill="#fff" stroke="#7b4fa3"/><text x="350" y="131">/pr/&lt;n&gt;/ (kept)</text>
+              <rect x="450" y="110" width="150" height="34" fill="#fff" stroke="#7b4fa3"/><text x="525" y="131">/pr/index.json</text>
+              <path d="M170 52 H270 M170 152 H230 V127 H270 M430 127 H450" stroke="#555" fill="none"/>
+              <text x="435" y="175" fill="#555">/previews reads the index: each PR, its state, its posts</text>
+            </g>
+          </svg>
+        </section>
+        <section>
+          <h2>Time-late, online</h2>
+          <ul>
+            <li>Whole-period tracks of the standing control, C″, the true-history fit and the learned model.</li>
+            <li>True manoeuvres against each system's declared ones, on a timeline.</li>
+            <li>Errors per period; 20 periods each of Annex B targets, wild bearings and a shifted prior.</li>
+            <li>From spec 016's test record; the figures of record stay in the account.</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Not achieved, and next</h2>
+          <ul>
+            <li>Previews before this PR exist only by the manual backfill.</li>
+            <li>No pruning: the branch grows by what each PR changes.</li>
+            <li>Fork PRs get no preview.</li>
+          </ul>
+          <p class="small">Pages: /gitma2/timelate · /gitma2/previews · workflow: .github/workflows/pages.yml</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
