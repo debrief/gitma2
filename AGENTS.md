@@ -852,6 +852,15 @@ against 3.36; one-turn coverage 0.79). Write-up `site/blog/2026-11-20-long-legs.
 choice): adopt 2-hour `ctl-prior` with its guard for the tended contact up to 12 h, joint solve as
 the equal alternative; close the long-engagement track with a synthesis. Seeds 367, 368 used; the
 next fresh seed is 369.
+**Owner 2026-11-21: adopt 2-hour `ctl-prior`.** The standing chained time-late system for the
+tended contact on long engagements is `ctl-prior` (spec 028's `carry2`, registered settings: scale
+4, tail 1,200 s, guard α 0.001) on 2-hour windows overlapping 30 min, up to 12 h, with `ctl` as the
+control and the joint solve as the equal alternative where the bearings are kept. Limits that go
+with it: one simulator, contact 1; the claim on blind windows is a far-range one (about 2.2 beyond
+35 km, about 1.0 under); windows are placed past true manoeuvres; the carried covariance is not
+calibrated and must not be shown as an uncertainty; spec 028's hand-over defect is kept. New
+long-engagement studies run `tma2-long carry2` and read `ctl-prior` as the standing system. Not
+chosen yet: closing the track with a synthesis.
 
 ## Stack (owner decisions, 2026-10-31)
 
