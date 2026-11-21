@@ -7,7 +7,7 @@ import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { PRESETS, clone } from "../../site/static/demo-data/js/presets.js";
 import { bearings, windowRows, problemOf, targetManoeuvresIn } from "../../site/static/demo-data/js/scenario.js";
-import { SOLVERS } from "../../site/static/demo-data/js/solvers.js";
+import { ALL_SOLVERS as SOLVERS } from "../../site/static/demo-data/js/solvers.js";
 import { evaluate, observability } from "../../site/static/demo-data/js/metrics.js";
 import * as T from "../../site/static/demo-data/js/track.js";
 
