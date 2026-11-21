@@ -8,6 +8,7 @@ import { segmentationInputs, layerFeeds, ROWS } from "../../viewer-data/js/hando
 import { invSym, scaledCondition, sandwich } from "./linalg.js";
 import { INFO } from "./solver-info.js";
 import * as TLM from "./tlm.js";
+import { scanBreak, position as breakPosition, FINE_S } from "./breakscan.js";
 
 const DEG = Math.PI / 180;
 const MIN_SIGMA = 0.1 * DEG; // the physics layer's and C's floor: a noise-free run still divides by sigma
@@ -162,6 +163,51 @@ function layerSolver(oracle) {
 export const layerCv = layerSolver(false);
 export const layerOracle = layerSolver(true);
 
+// ---------- classical break scan (JavaScript), time-late ----------
+export const breakScan = {
+  info: INFO.breakScan,
+  async solve(p, ctx = {}) {
+    const info = this.info, t0 = now();
+    if (p.t_s.length < 8) return failed(info, t0, "fewer than eight bearings in the window");
+    const sigma = Math.max(p.sigma_rad, MIN_SIGMA);
+    const r = scanBreak(p, sigma, { progress: ctx.progress, cancelled: ctx.cancelled });
+    if (r === null) return failed(info, t0, "no solution");
+    const min = (t) => `${Math.round(t / 60)} min`;
+    const out = { solver: info.name, solver_version: info.version, status: "converged", t_s: [], x_m: [], y_m: [], vx_mps: [], vy_mps: [], stride: r.stride, manoeuvre_start_s: [], manoeuvre_end_s: [] };
+    if (r.declared) {
+      const { tb, q } = r.best;
+      for (const t of p.t_s) {
+        const [x, y] = breakPosition(q, tb, t);
+        const c = t < tb ? q[3] : q[3] + q[4];
+        out.t_s.push(t);
+        out.x_m.push(x);
+        out.y_m.push(y);
+        out.vx_mps.push(q[2] * Math.sin(c));
+        out.vy_mps.push(q[2] * Math.cos(c));
+      }
+      out.cost = r.best.cost;
+      out.manoeuvre_start_s = [tb - FINE_S / 2];
+      out.manoeuvre_end_s = [tb + FINE_S / 2];
+      const turn = Math.atan2(Math.sin(q[4]), Math.cos(q[4])) / DEG;
+      out.message = `one course change declared: ${Math.abs(turn).toFixed(0)}° to ${turn >= 0 ? "starboard" : "port"} at ${min(tb)} from the window's start; chi-square falls by ${r.drop.toFixed(0)} against one leg, over the price of ${r.price.toFixed(0)}; ${r.fits} fits`;
+    } else {
+      const th = r.one.theta;
+      for (const t of p.t_s) {
+        out.t_s.push(t);
+        out.x_m.push(th[0] + th[2] * t);
+        out.y_m.push(th[1] + th[3] * t);
+        out.vx_mps.push(th[2]);
+        out.vy_mps.push(th[3]);
+      }
+      out.cost = r.one.cost;
+      out.message = r.best ? `no break declared: the best, at ${min(r.best.tb)}, lowers chi-square by ${r.drop.toFixed(0)}, under the price of ${r.price.toFixed(0)}; one leg returned` : "window too short to scan (no break within 5 min of its ends); one leg returned";
+    }
+    out.cov_end = null; // not stated
+    out.runtime_ms = now() - t0;
+    return out;
+  },
+};
+
 // ---------- spec 016's whole-period learned model (ONNX), time-late ----------
 // the network on the problem: its per-token means, manoeuvre probabilities and declared spans
 // (spans_from_logit at spec 016's settings), or {fail} with the reason
@@ -258,6 +304,6 @@ export const tlm1Legs = tlmLegsSolver(1), tlm2Legs = tlmLegsSolver(2), tlm3Legs 
 // Gate 2's real-time E is no longer offered (owner, 2026-11-21: "not interested in a track of
 // real-time estimates"); spec 021's pipeline stays on the viewer page.
 
-export const SOLVERS = [lsJs, layerCv, layerOracle, tlm1, tlm2, tlm3, tlm1Legs, tlm2Legs, tlm3Legs];
+export const SOLVERS = [lsJs, layerCv, layerOracle, breakScan, tlm1, tlm2, tlm3, tlm1Legs, tlm2Legs, tlm3Legs];
 export const solverByName = (name) => SOLVERS.find((s) => s.info.name === name) || lsJs;
 export { gridStart };
