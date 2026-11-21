@@ -1,0 +1,352 @@
+{
+ "part": "jointheld",
+ "index": 0,
+ "hours": 6.0,
+ "seed": 367,
+ "config": "configs/long/legs-val.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "15482397357114944006",
+  "dataset_seed": 367,
+  "index": 0,
+  "hours": 6.0,
+  "samples": 4320,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 282,
+    "end_index": 313
+   },
+   {
+    "kind": "course",
+    "start_index": 523,
+    "end_index": 562
+   },
+   {
+    "kind": "course",
+    "start_index": 803,
+    "end_index": 825
+   },
+   {
+    "kind": "course",
+    "start_index": 1062,
+    "end_index": 1080
+   },
+   {
+    "kind": "course",
+    "start_index": 1319,
+    "end_index": 1341
+   },
+   {
+    "kind": "course",
+    "start_index": 1485,
+    "end_index": 1507
+   },
+   {
+    "kind": "course",
+    "start_index": 1647,
+    "end_index": 1666
+   },
+   {
+    "kind": "course",
+    "start_index": 2008,
+    "end_index": 2048
+   },
+   {
+    "kind": "both",
+    "start_index": 2482,
+    "end_index": 2510
+   },
+   {
+    "kind": "course",
+    "start_index": 2908,
+    "end_index": 2969
+   },
+   {
+    "kind": "course",
+    "start_index": 3161,
+    "end_index": 3167
+   },
+   {
+    "kind": "course",
+    "start_index": 3654,
+    "end_index": 3667
+   },
+   {
+    "kind": "course",
+    "start_index": 4028,
+    "end_index": 4051
+   }
+  ],
+  "ownship_turns": [
+   [
+    2014,
+    2030
+   ]
+  ],
+  "zig_index": 2030,
+  "turn_start_index": 2014,
+  "mean_range_m": 37677.33387011927,
+  "min_range_m": 1608.9362130076013,
+  "max_range_m": 78845.19542941292,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [],
+   "steering": {
+    "planned": 0,
+    "lost": 1
+   },
+   "swapped_bearings": 2
+  },
+  "valid_share": 0.5331018518518519,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.06251367428127454,
+   "ownship_speed_mps": 6.929387384079567,
+   "ownship_turn_rate_rad_s": 0.03805931805574258,
+   "target_range0_m": 2796.7262964569313
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 1405.0,
+   "change": 1.8417506637248295,
+   "rate": 0.011877286097273319
+  },
+  {
+   "kind": "course",
+   "start_time_s": 2610.0,
+   "change": -1.0889059051143835,
+   "rate": 0.005553764045396103
+  },
+  {
+   "kind": "course",
+   "start_time_s": 4010.0,
+   "change": 1.6027185414276834,
+   "rate": 0.014215220793115838
+  },
+  {
+   "kind": "course",
+   "start_time_s": 5305.0,
+   "change": -0.5764779281402668,
+   "rate": 0.006175345465346721
+  },
+  {
+   "kind": "course",
+   "start_time_s": 6590.0,
+   "change": -1.1785702968487808,
+   "rate": 0.010378332434599007
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7420.0,
+   "change": 0.9340231835192626,
+   "rate": 0.008190769022931185
+  },
+  {
+   "kind": "course",
+   "start_time_s": 8230.0,
+   "change": -1.3027914106418832,
+   "rate": 0.013444429429779567
+  },
+  {
+   "kind": "course",
+   "start_time_s": 10035.0,
+   "change": -1.6195560962855686,
+   "rate": 0.008083714912590783
+  },
+  {
+   "kind": "both",
+   "start_time_s": 12405.0,
+   "change": 1.6854033495172143,
+   "rate": 0.015478617341476455,
+   "change2": 1.7994367259465234,
+   "rate2": 0.01275315259723718
+  },
+  {
+   "kind": "course",
+   "start_time_s": 14535.0,
+   "change": 2.013708806261182,
+   "rate": 0.006589423610989563
+  },
+  {
+   "kind": "course",
+   "start_time_s": 15800.0,
+   "change": -0.5323491936870854,
+   "rate": 0.016097853907934667
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18265.0,
+   "change": -1.0678572865065097,
+   "rate": 0.015575763185323055
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20135.0,
+   "change": -0.5884409879311718,
+   "rate": 0.0049673266382011146
+  }
+ ],
+ "git_commit": "c105162a511095da7598cb230cf5c2b38694fa37",
+ "git_dirty": false,
+ "cpu_model": "AMD EPYC 7763 64-Core Processor",
+ "chain": [
+  [
+   0,
+   1440
+  ],
+  [
+   1081,
+   1440
+  ],
+  [
+   2161,
+   1440
+  ],
+  [
+   3241,
+   1079
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 2,
+   "first": 2161,
+   "rows": 1440,
+   "union": [
+    1081,
+    2520
+   ],
+   "seconds": 894.546905531,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      8504.895143827913,
+      8550.778523206547
+     ],
+     [
+      10182.885802301975,
+      10661.079097181304
+     ],
+     [
+      12254.022637327904,
+      12772.817841056569
+     ],
+     [
+      14438.86385408704,
+      15338.86385408704
+     ]
+    ],
+    "c2": [
+     [
+      6000.0,
+      6200.0
+     ],
+     [
+      14330.0,
+      14400.0
+     ],
+     [
+      16940.0,
+      17020.0
+     ]
+    ]
+   }
+  },
+  {
+   "index": 3,
+   "first": 3241,
+   "rows": 1079,
+   "union": [
+    2161,
+    2159
+   ],
+   "seconds": 1164.9333002350002,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      12493.894675801528,
+      12936.854858920824
+     ],
+     [
+      14511.066974052517,
+      14844.982651140654
+     ],
+     [
+      16091.668029202236,
+      16188.736172800423
+     ],
+     [
+      18256.97510856193,
+      18320.151044692957
+     ],
+     [
+      20372.17055393717,
+      20440.708875075972
+     ]
+    ],
+    "c2": [
+     [
+      14130.0,
+      14340.0
+     ],
+     [
+      14380.0,
+      14440.0
+     ],
+     [
+      14920.0,
+      15130.0
+     ],
+     [
+      18280.0,
+      18390.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 7200.0,
+ "overlap_s": 1800.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 2064.7609310150146
+}

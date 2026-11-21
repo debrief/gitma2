@@ -1,0 +1,298 @@
+{
+ "part": "jointheld",
+ "index": 26,
+ "hours": 6.0,
+ "seed": 368,
+ "config": "configs/long/legs-test.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "11488721420853464039",
+  "dataset_seed": 368,
+  "index": 26,
+  "hours": 6.0,
+  "samples": 4320,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 104,
+    "end_index": 162
+   },
+   {
+    "kind": "course",
+    "start_index": 503,
+    "end_index": 531
+   },
+   {
+    "kind": "course",
+    "start_index": 791,
+    "end_index": 843
+   },
+   {
+    "kind": "course",
+    "start_index": 1372,
+    "end_index": 1403
+   },
+   {
+    "kind": "course",
+    "start_index": 1664,
+    "end_index": 1674
+   },
+   {
+    "kind": "course",
+    "start_index": 2108,
+    "end_index": 2118
+   },
+   {
+    "kind": "both",
+    "start_index": 2475,
+    "end_index": 2505
+   },
+   {
+    "kind": "course",
+    "start_index": 2880,
+    "end_index": 2910
+   },
+   {
+    "kind": "course",
+    "start_index": 3280,
+    "end_index": 3302
+   },
+   {
+    "kind": "course",
+    "start_index": 3470,
+    "end_index": 3509
+   },
+   {
+    "kind": "course",
+    "start_index": 3701,
+    "end_index": 3771
+   },
+   {
+    "kind": "course",
+    "start_index": 4268,
+    "end_index": 4298
+   }
+  ],
+  "ownship_turns": [
+   [
+    1731,
+    1743
+   ],
+   [
+    3189,
+    3204
+   ]
+  ],
+  "zig_index": 1743,
+  "turn_start_index": 1731,
+  "mean_range_m": 37275.68490981686,
+  "min_range_m": 4138.725915079758,
+  "max_range_m": 59682.45956931348,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [
+    [
+     309.40082999887056,
+     2962.133751515972
+    ]
+   ],
+   "steering": {
+    "planned": 1,
+    "lost": 1
+   },
+   "swapped_bearings": 0
+  },
+  "valid_share": 0.4085648148148148,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.07902022714384038,
+   "ownship_speed_mps": 5.1183437173097905,
+   "ownship_turn_rate_rad_s": 0.03950690373884452,
+   "target_range0_m": 4138.725915079758
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 515.0,
+   "change": -1.7003654129484453,
+   "rate": 0.005793203169699307
+  },
+  {
+   "kind": "course",
+   "start_time_s": 2510.0,
+   "change": 0.7949191867837099,
+   "rate": 0.005628512503510167
+  },
+  {
+   "kind": "course",
+   "start_time_s": 3950.0,
+   "change": 1.5979456074656473,
+   "rate": 0.006093596011756733
+  },
+  {
+   "kind": "course",
+   "start_time_s": 6855.0,
+   "change": -1.2216322357151772,
+   "rate": 0.007677663037638035
+  },
+  {
+   "kind": "course",
+   "start_time_s": 8315.0,
+   "change": -0.6379294716774828,
+   "rate": 0.011671939851188376
+  },
+  {
+   "kind": "course",
+   "start_time_s": 10535.0,
+   "change": 0.7085523270433337,
+   "rate": 0.013630196029605336
+  },
+  {
+   "kind": "both",
+   "start_time_s": 12370.0,
+   "change": -0.7080217544425801,
+   "rate": 0.011103510154075614,
+   "change2": 2.084189314799727,
+   "rate2": 0.013867231984939532
+  },
+  {
+   "kind": "course",
+   "start_time_s": 14395.0,
+   "change": 1.626063166302845,
+   "rate": 0.01073127018458355
+  },
+  {
+   "kind": "course",
+   "start_time_s": 16395.0,
+   "change": 1.748690399010329,
+   "rate": 0.015645554959180248
+  },
+  {
+   "kind": "course",
+   "start_time_s": 17345.0,
+   "change": 0.9712036294174733,
+   "rate": 0.0048988830113337965
+  },
+  {
+   "kind": "course",
+   "start_time_s": 18500.0,
+   "change": -1.8670731013272133,
+   "rate": 0.005284668605961012
+  },
+  {
+   "kind": "course",
+   "start_time_s": 21335.0,
+   "change": -1.511477109973345,
+   "rate": 0.010019268735855066
+  }
+ ],
+ "git_commit": "f93dfab2bba14002c66a73194c017cf9bcbd3578",
+ "git_dirty": false,
+ "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+ "chain": [
+  [
+   0,
+   1440
+  ],
+  [
+   1080,
+   1440
+  ],
+  [
+   2160,
+   1440
+  ],
+  [
+   3240,
+   1080
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 3,
+   "first": 3240,
+   "rows": 1080,
+   "union": [
+    2160,
+    2160
+   ],
+   "seconds": 398.104063336,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      12181.284702654611,
+      12613.729670758576
+     ],
+     [
+      14274.419491910925,
+      14604.625786726961
+     ],
+     [
+      17299.31309938075,
+      17653.181789079536
+     ],
+     [
+      18572.04959943728,
+      18673.328585692645
+     ]
+    ],
+    "c2": [
+     [
+      12235.0,
+      12305.0
+     ],
+     [
+      14285.0,
+      14425.0
+     ],
+     [
+      17185.0,
+      17545.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 7200.0,
+ "overlap_s": 1800.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 402.52478647232056
+}

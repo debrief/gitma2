@@ -1,0 +1,27 @@
+{
+  "study": "spec 032: the carried prior where the ownship's legs outlast the 2-hour window (not a gate)",
+  "registered": "2026-11-20, before seeds 367 and 368 exist (generated only in their CI runs)",
+  "seeds": {"tuning": "366 (spent; spec 031's test seed, different engagements under legs-tuning.json)", "validation": 367, "test": 368, "next_fresh": 369},
+  "configs": {"validation": "configs/long/legs-val.json (10 + 10)", "test": "configs/long/legs-test.json (50 + 50)", "carry_settings": "configs/long/carry2.json", "runs": ["configs/long/runs/legs-val.json", "configs/long/runs/legs-test.json"]},
+  "systems": {
+    "a": "carry2 on 2-hour windows overlapping 30 min: ctl (ctl-d1-q0.01) and ctl-prior (also ctl-carry, ctl-prior-noguard, history-map)",
+    "c": "jointheld at 7200/1800: ctl on the union of each turn-free 2-hour window and the one before it, read on the window's rows; history-best over the union as the span reference"
+  },
+  "windows": "held = no ownship turn overlaps the 2-hour window; excluded: each chain's first window, windows with no hand-over in (a), windows that ctl, ctl-prior or (c) leaves unanswered; windows where the guard fell back are kept (fall-back is to ctl-carry, not ctl)",
+  "estimands": {
+    "E1": "ctl ÷ ctl-prior on held windows",
+    "E2": "(c) joint ÷ ctl-prior on held windows",
+    "harm": "ctl ÷ ctl-prior on one-turn windows (handed on, both answered)",
+    "statistic": "geometric mean over windows of per-window median range error; 95% interval from 2,000 bootstrap resamples over engagements (seed 32)"
+  },
+  "reading": "E1 and E2: 'ctl-prior better' if the lower limit is above 1, 'ctl-prior worse' if the upper limit is below 1, else 'not separated, at this size'; harm if the one-turn upper limit is below 1",
+  "soundness_on_validation": {
+    "S1": "every engagement present for (a) and (c); at least 95% of (a)'s windows ran",
+    "S2": "per-engagement geometric mean of ctl ÷ the true-history fit in [0.8, 4]",
+    "S3": "coverage of the carried 95% region on decided held hand-overs in [0.80, 0.99] (median NEES reported)",
+    "on_failure": "the study stops before the test"
+  },
+  "scorer": "tma2-long study32 --raw <dir> --config <config> --out <dir>",
+  "code_sha256": "babd25bc4dfe9843e38d7bc986bb7d5b4e874fa71f36596c7ecff388d5ecb201",
+  "digests": "digests.json (scripts/research/legs_digests.py)"
+}

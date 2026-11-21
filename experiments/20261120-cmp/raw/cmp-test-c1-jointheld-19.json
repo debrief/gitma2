@@ -1,0 +1,326 @@
+{
+ "part": "jointheld",
+ "index": 19,
+ "hours": 6.0,
+ "seed": 366,
+ "config": "configs/long/cmp-test.json",
+ "contact": 1,
+ "engagement": {
+  "seed": "13515692103876595257",
+  "dataset_seed": 366,
+  "index": 19,
+  "hours": 6.0,
+  "samples": 4320,
+  "manoeuvres": [
+   {
+    "kind": "course",
+    "start_index": 119,
+    "end_index": 130
+   },
+   {
+    "kind": "course",
+    "start_index": 439,
+    "end_index": 456
+   },
+   {
+    "kind": "course",
+    "start_index": 806,
+    "end_index": 827
+   },
+   {
+    "kind": "course",
+    "start_index": 1207,
+    "end_index": 1229
+   },
+   {
+    "kind": "course",
+    "start_index": 1533,
+    "end_index": 1565
+   },
+   {
+    "kind": "course",
+    "start_index": 1997,
+    "end_index": 2015
+   },
+   {
+    "kind": "course",
+    "start_index": 2297,
+    "end_index": 2308
+   },
+   {
+    "kind": "course",
+    "start_index": 2601,
+    "end_index": 2620
+   },
+   {
+    "kind": "course",
+    "start_index": 2955,
+    "end_index": 2979
+   },
+   {
+    "kind": "both",
+    "start_index": 3311,
+    "end_index": 3367
+   },
+   {
+    "kind": "both",
+    "start_index": 3742,
+    "end_index": 3770
+   },
+   {
+    "kind": "course",
+    "start_index": 4031,
+    "end_index": 4076
+   },
+   {
+    "kind": "course",
+    "start_index": 4243,
+    "end_index": 4260
+   }
+  ],
+  "ownship_turns": [
+   [
+    1111,
+    1121
+   ],
+   [
+    2233,
+    2241
+   ],
+   [
+    3350,
+    3360
+   ]
+  ],
+  "zig_index": 1121,
+  "turn_start_index": 1111,
+  "mean_range_m": 21102.618960334286,
+  "min_range_m": 2196.1456193997938,
+  "max_range_m": 40778.19425286332,
+  "realism": {
+   "config": {
+    "steering": {
+     "range_belief_sd": 0.3
+    },
+    "gaps": {
+     "per_hour": 0.15,
+     "min_s": 600,
+     "max_s": 3600
+    },
+    "detection": {
+     "r50_m": 40000,
+     "width_m": 4000
+    },
+    "second_target": true,
+    "swap_rad": 0.017453292519943295
+   },
+   "gaps_s": [],
+   "steering": {
+    "planned": 3,
+    "lost": 0
+   },
+   "swapped_bearings": 20
+  },
+  "valid_share": 0.8557870370370371,
+  "parameters": {
+   "dt_s": 5.0,
+   "noise_sigma_rad": 0.017453292519943295,
+   "dropout_fraction": 0.08606332681278833,
+   "ownship_speed_mps": 7.148835693568667,
+   "ownship_turn_rate_rad_s": 0.052206860894009194,
+   "target_range0_m": 5014.198923343033
+  }
+ },
+ "target_manoeuvres": [
+  {
+   "kind": "course",
+   "start_time_s": 590.0,
+   "change": -0.9730823480634259,
+   "rate": 0.017413203008910163
+  },
+  {
+   "kind": "course",
+   "start_time_s": 2190.0,
+   "change": 0.7256453233788389,
+   "rate": 0.008362346203805627
+  },
+  {
+   "kind": "course",
+   "start_time_s": 4025.0,
+   "change": 1.5116597050710536,
+   "rate": 0.014343733507517296
+  },
+  {
+   "kind": "course",
+   "start_time_s": 6030.0,
+   "change": -1.9584528524860483,
+   "rate": 0.01730975304196751
+  },
+  {
+   "kind": "course",
+   "start_time_s": 7660.0,
+   "change": 1.4561605288035642,
+   "rate": 0.009003733099869083
+  },
+  {
+   "kind": "course",
+   "start_time_s": 9980.0,
+   "change": 1.5727857770539493,
+   "rate": 0.017418400069418638
+  },
+  {
+   "kind": "course",
+   "start_time_s": 11480.0,
+   "change": -0.7996766784236787,
+   "rate": 0.013879103947221576
+  },
+  {
+   "kind": "course",
+   "start_time_s": 13000.0,
+   "change": 1.4246220750069092,
+   "rate": 0.014352615286353832
+  },
+  {
+   "kind": "course",
+   "start_time_s": 14770.0,
+   "change": 1.1058637982330501,
+   "rate": 0.008939724222507599
+  },
+  {
+   "kind": "both",
+   "start_time_s": 16550.0,
+   "change": -1.732829736385677,
+   "rate": 0.0061015719865343794,
+   "change2": 1.165109852767622,
+   "rate2": 0.037057255719465075
+  },
+  {
+   "kind": "both",
+   "start_time_s": 18705.0,
+   "change": 1.6372319074598187,
+   "rate": 0.011418071586039212,
+   "change2": 1.604126939284039,
+   "rate2": 0.015173786077837353
+  },
+  {
+   "kind": "course",
+   "start_time_s": 20150.0,
+   "change": 2.0079711284137365,
+   "rate": 0.008854300936213672
+  },
+  {
+   "kind": "course",
+   "start_time_s": 21210.0,
+   "change": -0.8503972717229011,
+   "rate": 0.009486123489730786
+  }
+ ],
+ "git_commit": "e1cd7d194d7534443f0b294e9a25d8d9bfb2c4d1",
+ "git_dirty": false,
+ "cpu_model": "AMD EPYC 7763 64-Core Processor",
+ "chain": [
+  [
+   0,
+   720
+  ],
+  [
+   540,
+   720
+  ],
+  [
+   1080,
+   720
+  ],
+  [
+   1620,
+   720
+  ],
+  [
+   2160,
+   720
+  ],
+  [
+   2700,
+   720
+  ],
+  [
+   3240,
+   720
+  ],
+  [
+   3780,
+   540
+  ]
+ ],
+ "systems": [
+  "ctl-d1-q0.01",
+  "c2",
+  "history-best"
+ ],
+ "windows": [
+  {
+   "index": 7,
+   "first": 3780,
+   "rows": 540,
+   "union": [
+    3240,
+    1080
+   ],
+   "seconds": 267.92856174200006,
+   "declared": {
+    "ctl-d1-q0.01": [
+     [
+      16251.743026789078,
+      16451.62830689455
+     ],
+     [
+      18684.065193046612,
+      18897.02698506999
+     ],
+     [
+      20198.783826849503,
+      20367.16334047714
+     ],
+     [
+      21291.316770725418,
+      21396.818571844844
+     ]
+    ],
+    "c2": [
+     [
+      18755.0,
+      18905.0
+     ],
+     [
+      20255.0,
+      20325.0
+     ],
+     [
+      21355.0,
+      21595.0
+     ]
+    ]
+   }
+  }
+ ],
+ "window_s": 3600.0,
+ "overlap_s": 900.0,
+ "settings": {
+  "steps": 12,
+  "max_manoeuvres": 10,
+  "candidates": 10,
+  "score_every": 6,
+  "temperatures": [],
+  "margins": [
+   1
+  ],
+  "quiets": [
+   0.01
+  ],
+  "store_tracks": 1073741824,
+  "systems": [
+   "ctl"
+  ]
+ },
+ "wall_s": 272.97185158729553
+}
