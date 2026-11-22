@@ -166,6 +166,33 @@ that became C.</li>
 <li class="">A track plot of the two-turn preset with each splitter's track and knots.</li>
 <li class="">Data: <code>scripts/research/demo_splitters.mjs</code> on the page's own presets, recorded in
 <code>experiments/20261121-demo-splitters/</code>.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="updates">Updates<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-kickoff#updates" class="hash-link" aria-label="Direct link to Updates" title="Direct link to Updates" translate="no">​</a></h2>
+<ul>
+<li class="">2026-11-22: from the owner's review of the merged demo:<!-- -->
+<ul>
+<li class="">An arrowhead at the end of each track shows which way it is heading.</li>
+<li class="">A fourth optional chart, "course &amp; speed", shows both vessels' course or speed (a drop-down:
+course, speed or both) with the estimate dashed. True turns are shaded (blue ownship, red
+target); turns a splitter detected are solid strips: orange target turns on the right edge,
+teal ownship turns on the left. Only Debrief's slicing detects ownship turns, so only it
+draws the teal strips.</li>
+<li class="">The error chart's quantity is a drop-down, so the chart is as tall as its neighbours and
+their time axes line up.</li>
+<li class="">The Preset drop-down shows the preset the scenario matches, or "custom" once edited.</li>
+<li class="">Dragging a waypoint (circle) now keeps the adjacent legs' speeds, so their durations change.
+Dragging a leg's square keeps its duration, so its speed changes.</li>
+<li class="">Ctrl-click (⌘-click) deletes a waypoint.</li>
+<li class="">Each leg's speed label sits on the leg's north side (west for a north–south leg), clear of
+the square handle and the cursor that drags it. The read-out during a drag sits above and
+to the left of the cursor. It says what is kept and what changes: "Keeping time: speed
+changes" for a square (the leg's minutes, its old and new speed and course), "Keeping speed:
+leg times change" for a circle (each adjacent leg's speed, its old and new minutes). The
+hover tooltips on squares and circles say the same.</li>
+<li class="">Schema 0.39.0: <code>TmaSolution.splitter_ownship_spans</code>, and the <code>DemoSplitterInfo</code> flags
+<code>detects_target</code> and <code>detects_ownship</code>.</li>
+</ul>
+</li>
 </ul>]]></content>
         <category label="kickoff" term="kickoff"/>
         <category label="spec-036" term="spec-036"/>
