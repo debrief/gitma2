@@ -26,6 +26,9 @@ regressor's estimate and uncertainty start and constrain C″'s final physics-la
   $26, spec 016 about $14). This spec may use what the ledger shows is left, about $9, and no more.
 - 2026-11-11: spending within the $50 is pre-approved.
 - 2026-11-22: option A (this spec).
+- 2026-11-22 (later): the training workflow's guard is raised from $45 to **$49** (the ledger
+  agrees with Modal's own total within 50 cents). About $8.40 is available: a pilot of at most
+  1 T4-hour and about 3.5 hours for each seed. The $50 total is unchanged.
 
 **Standing of the models**: constitution principle III requires the reported estimate to come
 from a declared physics layer. The regressor has none and stays a **control**: never carried or
@@ -276,10 +279,8 @@ limit and is refused if it would pass the cap.
 
 - Seeds: 369 fine-tuning stream, 370 validation, 371 test; step 1 on spent seed 321. The next
   fresh seed after this spec is 372.
-- Money (corrected at planning): the ledger reads $40.57 and the training workflow refuses a
-  plan past $45, a margin under the owner's $50. Inside that guard there is about $4.40, 6.7
-  T4-hours: 1 for the pilot and 1.8 for each seed. Raising the guard toward $50 is the owner's;
-  with it the fine-tunes are about 3.5 hours each. None is launched past the guard.
+- Money: the ledger reads $40.57 and the training workflow refuses a plan past $49 (owner,
+  2026-11-22). None is launched past the guard.
 - The stated intervals come from the variance head the regressor already has, scaled on
   validation (research R1); no new head is trained.
 - The existing checkpoints are retrievable from spec 012's results branches with their digests.

@@ -48,11 +48,11 @@
 
 - **Fact**: the ledger reads $40.57. `gputrain.yml` refuses a plan past $45. Modal's own total
   for November is about $41, so the ledger is close to complete.
-- **Decision**: plan inside the $45 guard: pilot at most 1 T4-hour ($0.66), three fine-tunes
-  of at most 1.8 hours each ($3.56), total $4.22. If the owner raises the guard to $49, the
-  fine-tunes become 3.5 hours each; the decision record binds whichever plans exist then.
+- **Decision** (owner, 2026-11-22: raise the guard to $49): pilot at most 1 T4-hour ($0.66),
+  three fine-tunes of at most 3.5 hours each ($6.93), total $7.59, leaving about $0.80 under
+  the guard.
 - **Fine-tune**: learning rate 1e-4 after 300 warm-up updates, cosine to zero; batch 256;
-  about 4 million scenarios a seed at 600 a second in 1.8 hours. The first tokens of the
+  about 7.5 million scenarios a seed at 600 a second in 3.5 hours. The first tokens of the
   schedule and the rate are the pilot's to change once.
 - **Alternatives**: one seed for longer (no seed spread; rejected by the constitution).
 

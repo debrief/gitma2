@@ -26,10 +26,8 @@ the regressor's estimate. Decisions and alternatives: [research.md](research.md)
 **Performance Goals**: the fine-tuning stream at 500 scenarios a second or better on a T4
 container (spec 012 measured 570 to 670 without the overlay)
 **Constraints**: GPU dollars by the ledger. The ledger reads $40.57 used; `gputrain.yml`
-refuses past $45, a margin kept under the owner's $50 for charges the ledger does not see. This
-plan fits inside the $45 guard ($4.43, about 6.7 T4-hours). Raising the guard is the owner's
-(research R4).
-**Scale/Scope**: step 1: 16 conditions × 300 engagements; step 2: about 4 million scenarios a
+refuses past $49 (owner, 2026-11-22; was $45), under the owner's $50 total (research R4).
+**Scale/Scope**: step 1: 16 conditions × 300 engagements; step 2: about 7.5 million scenarios a
 seed; test: 2,000 engagements × 4 conditions
 
 ## Constitution Check
