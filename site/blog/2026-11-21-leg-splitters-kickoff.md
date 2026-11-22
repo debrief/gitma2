@@ -70,6 +70,9 @@ This is spec 036.
   - Ctrl-click (⌘-click) deletes a waypoint.
   - Each leg's speed label sits on the leg's north side (west for a north–south leg), clear of
     the square handle and the cursor that drags it. The read-out during a drag sits above and
-    to the left of the cursor.
+    to the left of the cursor. It says what is kept and what changes: "Keeping time: speed
+    changes" for a square (the leg's minutes, its old and new speed and course), "Keeping speed:
+    leg times change" for a circle (each adjacent leg's speed, its old and new minutes). The
+    hover tooltips on squares and circles say the same.
   - Schema 0.39.0: `TmaSolution.splitter_ownship_spans`, and the `DemoSplitterInfo` flags
     `detects_target` and `detects_ownship`.

@@ -439,15 +439,23 @@ function Demo() {
       if (d.index === 0) {
         // the start point moves the whole track
         next = { ...tr, start_x_nm: wx, start_y_nm: wy };
-        setDragLabel(null);
+        setDragLabel({ x: p[0], y: p[1], title: "Moving the whole track", lines: ["every leg keeps its course, speed and time"] });
       } else {
+        // say what is kept (speed) and what changes (time), leg by leg, against the values at the drag's start
         const legs = [d.index - 1, d.index].filter((i) => i < next.legs.length);
-        setDragLabel({ x: p[0], y: p[1], text: legs.map((i) => `${fmt(next.legs[i].duration_s / 60, 1)} min`).join(" | ") });
+        setDragLabel({
+          x: p[0], y: p[1], title: "Keeping speed: leg times change",
+          lines: legs.map((i) => `leg ${i + 1}: ${fmt(next.legs[i].speed_kt, 1)} kt, ${fmt(tr.legs[i].duration_s / 60, 1)} → ${fmt(next.legs[i].duration_s / 60, 1)} min`),
+        });
       }
     } else if (d.kind === "handle") {
       const v = T.velocityFromHandle(tr, d.index, wx, wy);
       next = T.setLegVelocity(tr, d.index, v.course_deg, Math.min(v.speed_kt, 40));
-      setDragLabel({ x: p[0], y: p[1], text: `${fmt(next.legs[d.index].speed_kt, 1)} kt, ${fmt(next.legs[d.index].course_deg, 0)}°` });
+      const L0 = tr.legs[d.index], L1 = next.legs[d.index];
+      setDragLabel({
+        x: p[0], y: p[1], title: "Keeping time: speed changes",
+        lines: [`leg ${d.index + 1}: ${fmt(L1.duration_s / 60, 1)} min, ${fmt(L0.speed_kt, 1)} → ${fmt(L1.speed_kt, 1)} kt`, `course ${fmt(L0.course_deg, 0)}° → ${fmt(L1.course_deg, 0)}°; later legs swing with it`],
+      });
     }
     setDraft({ ...sc, [d.vessel]: next });
   };
@@ -648,7 +656,7 @@ function Demo() {
           const [hx, hy] = T.handleOf(tr, i);
           return (
             <rect key={`h${i}`} data-kind="handle" data-vessel={name} data-index={i} data-testid={`handle-${name}-${i}`} x={sx(hx) - 5} y={sy(hy) - 5} width={10} height={10} fill="#fff" stroke={colour} strokeWidth={isSel("leg", i) ? 3 : 1.5} style={{ cursor: "grab" }}>
-              <title>{`Leg ${i + 1}: ${fmt(l.course_deg, 0)}°, ${fmt(l.speed_kt, 1)} kt, ${fmt(l.duration_s / 60, 1)} min. Drag to change course and speed; the rest of the track swings with it.`}</title>
+              <title>{`Leg ${i + 1}: ${fmt(l.course_deg, 0)}°, ${fmt(l.speed_kt, 1)} kt, ${fmt(l.duration_s / 60, 1)} min. Drag this square to change course and speed while keeping the leg's time; later legs swing with it.`}</title>
             </rect>
           );
         })}
@@ -672,7 +680,7 @@ function Demo() {
         })}
         {Wp.map((w, i) => (
           <circle key={`w${i}`} data-kind="wp" data-vessel={name} data-index={i} data-testid={`wp-${name}-${i}`} cx={sx(w[0])} cy={sy(w[1])} r={i === 0 ? 7 : 5.5} fill={amber.has(i) ? AMBER : i === 0 ? colour : "#fff"} stroke={colour} strokeWidth={isSel("wp", i) ? 3.5 : 1.5} style={{ cursor: "move" }}>
-            <title>{i === 0 ? "Start: drag to move the whole track" : `Waypoint ${i}: drag to move it alone${amber.has(i) ? " (turn clamped: the arc does not fit at this rate)" : ""}; select and press Delete to remove`}</title>
+            <title>{i === 0 ? "Start: drag to move the whole track" : `Waypoint ${i}: drag to move it, keeping the legs' speeds (their times change)${amber.has(i) ? "; turn clamped: the arc does not fit at this rate" : ""}. Ctrl-click, or select and press Delete, to remove it.`}</title>
           </circle>
         ))}
       </g>
@@ -957,8 +965,19 @@ function Demo() {
             {dragLabel && (
               <g pointerEvents="none">
                 {/* above and to the left of the cursor, which points up-left and trails down-right */}
-                <rect x={dragLabel.x - 132} y={dragLabel.y - 30} width={120} height={18} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.4} rx={3} />
-                <text x={dragLabel.x - 126} y={dragLabel.y - 17} fontSize={12} fill="currentColor">{dragLabel.text}</text>
+                {(() => {
+                  const rows = [dragLabel.title, ...dragLabel.lines];
+                  const w = Math.max(...rows.map((r) => r.length)) * 6.4 + 14, h = rows.length * 15 + 6;
+                  // above-left of the cursor; flipped right or down where the plot's edge would clip it
+                  const x0 = dragLabel.x - w - 12 >= 2 ? dragLabel.x - w - 12 : dragLabel.x + 18;
+                  const y0 = dragLabel.y - h - 12 >= 2 ? dragLabel.y - h - 12 : dragLabel.y + 18;
+                  return (
+                    <g data-testid="drag-label">
+                      <rect x={x0} y={y0} width={w} height={h} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.4} rx={3} />
+                      {rows.map((r, k) => <text key={k} x={x0 + 7} y={y0 + 15 + k * 15} fontSize={12} fontWeight={k === 0 ? 700 : 400} fill="currentColor">{r}</text>)}
+                    </g>
+                  );
+                })()}
               </g>
             )}
             <g pointerEvents="none">
