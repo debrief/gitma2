@@ -18,6 +18,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--name", default="reg")
     ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--count", type=int, default=1 << 30)
+    ap.add_argument(
+        "--intervals",
+        nargs="?",
+        const="1,1,1",
+        help="spec 037: state 95%% intervals from the variance head; optional scales of the "
+        "sd for range,course,speed (default 1,1,1) or a JSON file holding interval_scale",
+    )
     a = ap.parse_args(argv)
     import torch
 
@@ -35,7 +42,18 @@ def main(argv: list[str] | None = None) -> int:
     cfg = RegressorConfig(**json.loads(Path(a.config).read_text()))
     torch.set_num_threads(4)
     model = load_model(cfg, Path(a.weights))
-    recs = predict_split(model, a.inp, a.start, a.count)
+    scale = None
+    if a.intervals:
+        txt = a.intervals
+        vals = (
+            json.loads(Path(txt).read_text())["interval_scale"]
+            if txt.endswith(".json")
+            else [float(x) for x in txt.split(",")]
+        )
+        if len(vals) != 3 or not all(v > 0 for v in vals):
+            ap.error("--intervals: three positive scales (range, course, speed)")
+        scale = (float(vals[0]), float(vals[1]), float(vals[2]))
+    recs = predict_split(model, a.inp, a.start, a.count, scale=scale)
     head = RegressorPredictionHeader(
         record=RecordKind.header,
         schema_version=SCHEMA_VERSION,

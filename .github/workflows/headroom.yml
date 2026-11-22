@@ -17,6 +17,8 @@ name: Headroom (Gate H)
 #                 each (the tuning grid); default one variant with the plan's settings
 #   digests       optional path to committed digests {"<condition>/<file>": sha256}: checked
 #   imm, ekf      frozen reference names
+#   checkpoints   optional (spec 037): [{name, branch, dir, sha256}] regressors scored beside the runs, with
+#                 read_controls [run names] for the paired readings and interval_scale "r,c,s"
 # Each record goes to results/headroom-<name>-<condition>-<variant>-<run id>.
 
 on:
@@ -191,6 +193,15 @@ jobs:
           for i in $(seq 0 $((N - 1))); do
             uv run python -m tma2.cli.hmerge --out "$RUNNER_TEMP/pred/$i.ndjson" "$RUNNER_TEMP"/shards/$i.*.ndjson
           done
+      - name: Regressors (spec 037; plans with checkpoints)
+        env:
+          N: ${{ matrix.ordinals }}
+        run: |
+          if python3 -c "import json, sys; sys.exit(0 if json.load(open('$PLAN')).get('checkpoints') else 1)"; then
+            START=$(python3 -c "import json; print(json.load(open('$PLAN'))['start'])")
+            export START
+            bash scripts/rmis_regressors.sh
+          fi
       - name: Score
         run: |
           OUT="experiments/headroom-runs/$NAME-${{ github.run_id }}/$COND/$VARIANT"
@@ -225,6 +236,11 @@ jobs:
           CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
           printf '{"run_id": "%s", "commit": "%s", "exit": %s, "cpu_model": "%s", "condition": "%s", "variant": "%s"}\n' \
             "${{ github.run_id }}" "${{ github.sha }}" "$rc" "$CPU" "$COND" "$VARIANT" > "$OUT/run.json"
+      - name: Paired readings (spec 037; plans with checkpoints)
+        run: |
+          if python3 -c "import json, sys; sys.exit(0 if json.load(open('$PLAN')).get('checkpoints') else 1)"; then
+            bash scripts/rmis_read.sh
+          fi
       - name: Push the results branch
         run: |
           git config user.name "github-actions[bot]"
