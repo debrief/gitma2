@@ -1,7 +1,7 @@
 // Spec 036: the demonstrator's leg splitters. A splitter reads the window's bearings and ownship's
 // track and states where it thinks the target manoeuvred, as time spans; a TMA solver that accepts
 // knots (the ONNX physics layer) then fits constant-velocity legs joined across those spans.
-// Each splitter declares a DemoSplitterInfo (schema 0.38.0) and `split(problem, ctx)` →
+// Each splitter declares a DemoSplitterInfo (schema 0.39.0) and `split(problem, ctx)` →
 // {spans: [{start_s, end_s, stat}], rows_dt_s, runtime_ms, message}.
 //
 // Only the "truth" splitter is shown the problem's true manoeuvre spans; the worker strips them
@@ -33,6 +33,7 @@ export function splitterArrays(p, targetDt = 10, maxRows = ROWS) {
   const s = { n, stride, idx, t: new Float64Array(n), ox: new Float64Array(n), oy: new Float64Array(n), z: new Float64Array(n), valid: new Uint8Array(n).fill(1), course: new Float64Array(n), speed: new Float64Array(n), sigma: Math.max(p.sigma_rad, MIN_SIGMA), zigIndex: 0 };
   idx.forEach((i, k) => {
     s.t[k] = p.t_s[i];
+    if (p.bearing_valid) s.valid[k] = p.bearing_valid[i] ? 1 : 0;
     s.ox[k] = p.own_x_m[i];
     s.oy[k] = p.own_y_m[i];
     s.z[k] = p.bearing_rad[i];

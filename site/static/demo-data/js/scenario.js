@@ -4,7 +4,21 @@
 // same bearings whatever the window.
 import { buildPath, stateAt, manoeuvres, DEG } from "./track.js";
 
-export const SCHEMA_VERSION = "0.38.0";
+export const SCHEMA_VERSION = "0.39.0";
+
+// Owner, 2026-11-22: bearings are lost while ownship turns and for two minutes after each turn
+// is complete. A scenario's turn_loss_s is that tail in seconds (null: bearings kept through
+// turns); a scenario without the field takes the default.
+export const TURN_LOSS_S = 120;
+export const turnLossOf = (sc) => (sc.turn_loss_s === undefined ? TURN_LOSS_S : sc.turn_loss_s);
+
+// [t0, t1] intervals (s) in which no bearing is received: each ownship course change from its
+// start to its end plus the scenario's tail
+export function lossIntervals(sc, ownPath) {
+  const tail = turnLossOf(sc);
+  if (tail === null || !(tail >= 0)) return [];
+  return manoeuvres(ownPath).filter((m) => m.course).map((m) => [m.t0, m.t1 + tail]);
+}
 const TWO_PI = 2 * Math.PI;
 export const wrap2pi = (a) => {
   const w = a % TWO_PI;
@@ -58,6 +72,8 @@ export function period(sc, paths = null) {
 }
 
 // The whole scenario's truth and bearings: arrays over t = 0, dt, ... up to the period.
+// `valid[i]` is 0 where the bearing is lost (an ownship turn and its tail); the noise is drawn
+// for every row all the same, so the kept bearings do not change with the loss setting.
 export function bearings(sc) {
   const own = buildPath(sc.ownship), tgt = buildPath(sc.target);
   const T = Math.min(own.end, tgt.end);
@@ -70,6 +86,7 @@ export function bearings(sc) {
     t: new Float64Array(n), z: new Float64Array(n), truth: new Float64Array(n),
     ox: new Float64Array(n), oy: new Float64Array(n), ovx: new Float64Array(n), ovy: new Float64Array(n),
     tx: new Float64Array(n), ty: new Float64Array(n), tvx: new Float64Array(n), tvy: new Float64Array(n),
+    valid: new Uint8Array(n).fill(1), lost: lossIntervals(sc, own),
   };
   for (let i = 0; i < n; i++) {
     const t = i * dt;
@@ -80,11 +97,13 @@ export function bearings(sc) {
     const b = wrap2pi(Math.atan2(q.x - o.x, q.y - o.y));
     out.truth[i] = b;
     out.z[i] = wrap2pi(b + sig * g.gauss());
+    for (const [a, e] of out.lost) if (t >= a - 1e-9 && t <= e + 1e-9) out.valid[i] = 0;
   }
   return out;
 }
 
-// indices of the bearings inside the window [start, end]
+// indices of the bearing rows inside the window [start, end]; lost bearings keep their row (the
+// solvers' grids are regular) and are flagged invalid in the problem
 export function windowRows(sc, b) {
   const a = Math.max(0, sc.window.start_s), e = Math.min(sc.window.end_s, b.period);
   const rows = [];
@@ -103,7 +122,7 @@ export function problemOf(sc, b, rows) {
   const p = {
     t_s: new Array(n), bearing_rad: new Array(n), own_x_m: new Array(n), own_y_m: new Array(n),
     own_course_rad: new Array(n), own_speed_mps: new Array(n),
-    sigma_rad: sc.sigma_deg * DEG, knots: [],
+    sigma_rad: sc.sigma_deg * DEG, knots: [], bearing_valid: new Array(n),
   };
   rows.forEach((i, k) => {
     p.t_s[k] = b.t[i] - t0;
@@ -112,6 +131,7 @@ export function problemOf(sc, b, rows) {
     p.own_y_m[k] = b.oy[i] - origin[1];
     p.own_course_rad[k] = wrap2pi(Math.atan2(b.ovx[i], b.ovy[i]));
     p.own_speed_mps[k] = Math.hypot(b.ovx[i], b.ovy[i]);
+    p.bearing_valid[k] = b.valid[i];
   });
   const tEnd = b.t[rows[n - 1]];
   for (const m of manoeuvres(b.paths.tgt)) {
@@ -134,4 +154,11 @@ export function targetManoeuvresIn(sc, b) {
 export function ownTurnsIn(sc, b) {
   const a = sc.window.start_s, e = Math.min(sc.window.end_s, b.period);
   return manoeuvres(b.paths.own).filter((m) => m.course && m.t1 >= a && m.t0 <= e);
+}
+
+// the number of bearings received (not lost) among `rows`
+export function validCount(b, rows) {
+  let n = 0;
+  for (const i of rows) n += b.valid[i];
+  return n;
 }

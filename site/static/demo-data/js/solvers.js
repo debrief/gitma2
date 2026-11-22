@@ -12,6 +12,9 @@ import * as TLM from "./tlm.js";
 const DEG = Math.PI / 180;
 const MIN_SIGMA = 0.1 * DEG; // the physics layer's and C's floor: a noise-free run still divides by sigma
 
+// bearings received among the problem's rows (spec 035 problems without the flag: all of them)
+const nValid = (p) => (p.bearing_valid ? p.bearing_valid.reduce((a, v) => a + (v ? 1 : 0), 0) : p.t_s.length);
+
 const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
 // the problem as spec 021's scenario arrays, every `stride`-th bearing
@@ -23,6 +26,7 @@ function scenarioArrays(p, stride = 1, sigmaFloor = 0) {
   const s = { n, t: new Float64Array(n), ox: new Float64Array(n), oy: new Float64Array(n), z: new Float64Array(n), valid: new Uint8Array(n).fill(1), course: new Float64Array(n), speed: new Float64Array(n), sigma: Math.max(p.sigma_rad, sigmaFloor), zigIndex: 0, idx };
   idx.forEach((i, k) => {
     s.t[k] = p.t_s[i];
+    if (p.bearing_valid) s.valid[k] = p.bearing_valid[i] ? 1 : 0;
     s.ox[k] = p.own_x_m[i];
     s.oy[k] = p.own_y_m[i];
     s.z[k] = p.bearing_rad[i];
@@ -41,6 +45,7 @@ function cvInformation(p, th, sigma) {
   const I = Array.from({ length: 4 }, () => new Float64Array(4));
   const w = 1 / (sigma * sigma);
   for (let i = 0; i < p.t_s.length; i++) {
+    if (p.bearing_valid && !p.bearing_valid[i]) continue;
     const t = p.t_s[i];
     const dx = th[0] + th[2] * t - p.own_x_m[i], dy = th[1] + th[3] * t - p.own_y_m[i];
     const r2 = dx * dx + dy * dy;
@@ -68,7 +73,7 @@ export const lsJs = {
   async solve(p) {
     const t0 = now();
     const s = scenarioArrays(p);
-    if (s.n < 4) return failed(this.info, t0, "fewer than four bearings in the window");
+    if (nValid(p) < 4) return failed(this.info, t0, "fewer than four bearings in the window");
     const r = solveBatch(s, s.n);
     if (r === null || !Array.from(r.theta).every(Number.isFinite)) return failed(this.info, t0, "no solution");
     const th = r.theta;
@@ -110,7 +115,7 @@ function layerSolver(mode) {
       const stride = Math.max(1, Math.ceil(p.t_s.length / ROWS));
       const s = scenarioArrays(p, stride, MIN_SIGMA);
       if (s.n > ROWS) return failed(info, t0, "too many bearings for the graph");
-      if (s.n < 4) return failed(info, t0, "fewer than four bearings in the window");
+      if (nValid(p) < 4) return failed(info, t0, "fewer than four bearings in the window");
       const k = s.n - 1;
       let trs = [];
       let courseOnly = null;
@@ -182,8 +187,9 @@ function tlmSolver(seed) {
       const dt = n > 1 ? p.t_s[1] - p.t_s[0] : 0;
       if (Math.abs(dt - TLM.DT) > 1e-6) return failed(info, t0, "the learned model reads 5-second bearings: set the interval to 5 s");
       if (n > TLM.MAX_ROWS) return failed(info, t0, "the learned model reads at most two hours (1,440 bearings): narrow the window");
-      if (n < 2 * TLM.PATCH) return failed(info, t0, "fewer than twelve bearings in the window");
-      const { f, mask, th } = TLM.periodFeatures(p.t_s, p.own_x_m, p.own_y_m, p.bearing_rad, Math.max(p.sigma_rad, 1e-6));
+      if (n < 2 * TLM.PATCH || nValid(p) < 2 * TLM.PATCH) return failed(info, t0, "fewer than twelve bearings in the window");
+      const valid = p.bearing_valid || new Uint8Array(n).fill(1);
+      const { f, mask, th } = TLM.periodFeatures(p.t_s, p.own_x_m, p.own_y_m, p.bearing_rad, Math.max(p.sigma_rad, 1e-6), valid);
       if (ctx.progress) ctx.progress({ stage: "running the network" });
       const o = await ctx.run(`tlm-s${seed}`, {
         features: { dtype: "float32", shape: [1, TLM.MAX_ROWS, TLM.N_FEATURES], data: f },
@@ -194,7 +200,7 @@ function tlmSolver(seed) {
       const mean = [];
       for (let j = 0; j < T; j++) mean.push([o.mean[3 * j], o.mean[3 * j + 1], o.mean[3 * j + 2]]);
       if (!mean.flat().every(Number.isFinite)) return failed(info, t0, "non-finite output");
-      const tr = TLM.directTrack(mean, p.own_x_m, p.own_y_m, p.bearing_rad, th);
+      const tr = TLM.directTrack(mean, p.own_x_m, p.own_y_m, p.bearing_rad, th, valid);
       const out = { solver: info.name, solver_version: info.version, status: "converged", t_s: [], x_m: [], y_m: [], vx_mps: [], vy_mps: [] };
       for (let k = 0; k < n; k++) {
         out.t_s.push(p.t_s[k]);

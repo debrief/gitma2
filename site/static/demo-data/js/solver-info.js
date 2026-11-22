@@ -14,7 +14,7 @@ export const INFO = {
 export const SOLVER_LIST = [INFO.lsJs, INFO.layer, INFO.tlm1, INFO.tlm2, INFO.tlm3];
 export const LEGACY_SOLVERS = { "layer-cv": ["layer", "none"], "layer-oracle": ["layer", "truth"] };
 
-// Spec 036: the leg splitters (DemoSplitterInfo, schema 0.38.0)
+// Spec 036: the leg splitters (DemoSplitterInfo, schema 0.39.0)
 export const SPLITTER_INFO = {
   none: { name: "none", label: "None (one leg)", version: "none", assumptions: "No manoeuvre: one constant-velocity leg over the window.", told_truth: false },
   truth: { name: "truth", label: "Told the true manoeuvres (oracle)", version: "truth", assumptions: "The page tells it the target's true manoeuvre spans and their kinds (a course-only change gets the layer's speed-continuity prior; a speed change does not): a ceiling for any splitter, not a system. Every other splitter's spans are treated as course changes, C's convention.", told_truth: true },

@@ -52,3 +52,20 @@ This is spec 036.
 - A track plot of the two-turn preset with each splitter's track and knots.
 - Data: `scripts/research/demo_splitters.mjs` on the page's own presets, recorded in
   `experiments/20261121-demo-splitters/`.
+
+## 2026-11-22: bearings lost in ownship's turns
+
+The owner noted that bearings are lost while ownship turns and for two minutes after each turn
+ends. The demonstrator now drops them by default. A scenario's `turn_loss_s` sets the tail
+(120 s); null keeps every bearing, and a checkbox under the noise controls turns the loss off.
+Lost bearings keep their rows, flagged in the problem's `bearing_valid` (schema 0.39.0), so every
+solver and splitter keeps its regular time grid and skips them, as Python's `valid` column does.
+Least squares, the physics layer, C, the arctan splitters and the learned model's inputs all
+ignore them, and the plot, bearings chart and residuals hide them. The noise is still drawn for
+every row, so the bearings that are kept do not change. On the good-geometry preset, 120 of
+1,429 bearings are lost (three turns of 1 to 1.5 minutes, each plus two minutes).
+
+Spec 035's golden problems and spec 036's readings and figures kept every bearing, so their
+scripts and tests pin `turn_loss_s: null`. With the loss on, joined legs on the two-turn preset
+places the first turn at 50 min instead of 46.5 on seed 1, outside the 120 s match. Seeds 2, 3
+and 5 still find both turns. This is one draw, not a result.

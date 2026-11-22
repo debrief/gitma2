@@ -1,6 +1,8 @@
 // Spec 035: the demonstrator's solver problems for the golden least-squares vectors. Every
 // preset at sigma 1 and 0, the target-turn preset narrowed to its first leg, written as JSON
-// for demo_golden.py (Python's tma2.references.lsq.solve_batch on the same arrays).
+// for demo_golden.py (Python's tma2.references.lsq.solve_batch on the same arrays). Spec 035's
+// problems keep every bearing (turn_loss_s null), so the golden files' digests stand; the
+// lost-bearing path is checked in demo_node.mjs.
 //   node demo_problems.mjs > demo/problems.json
 import { PRESETS } from "../../site/static/demo-data/js/presets.js";
 import { bearings, windowRows, problemOf } from "../../site/static/demo-data/js/scenario.js";
@@ -10,10 +12,10 @@ export function goldenCases() {
   // spec 035's presets only: a later preset (golden: false) would change the problems' digest
   // that the golden files bind
   for (const p of PRESETS.filter((q) => q.golden !== false)) {
-    for (const sigma of [1, 0]) out.push({ id: `${p.id}-s${sigma}`, sc: { ...p.scenario, sigma_deg: sigma } });
+    for (const sigma of [1, 0]) out.push({ id: `${p.id}-s${sigma}`, sc: { ...p.scenario, sigma_deg: sigma, turn_loss_s: null } });
   }
   const tt = PRESETS.find((p) => p.id === "target-turn").scenario;
-  out.push({ id: "target-turn-first-leg", sc: { ...tt, window: { start_s: 0, end_s: 3500 } } });
+  out.push({ id: "target-turn-first-leg", sc: { ...tt, window: { start_s: 0, end_s: 3500 }, turn_loss_s: null } });
   return out.map(({ id, sc }) => {
     const b = bearings(sc);
     const { problem } = problemOf(sc, b, windowRows(sc, b));

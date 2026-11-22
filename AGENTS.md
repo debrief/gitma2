@@ -960,6 +960,10 @@ on three draws with false transitions at ownship's turns, one leg 27%); a turn d
 turn: Debrief blind (31.9%), independent slices 1.4%, joined legs 3.1% (instant knot placed late);
 held course: no false split. No splitter wins everywhere. Slides
 `site/blog/2026-11-21-leg-splitters-slides.md`; next is the owner's choice.
+Owner 2026-11-22: bearings are lost in ownship's turns and for 120 s after each; the demonstrator
+drops them by default (`DemoScenario.turn_loss_s`, null keeps all; `TmaProblem.bearing_valid`,
+rows kept so grids stay regular; schema 0.39.0). Spec 035's golden problems and spec 036's
+readings pin `turn_loss_s: null`.
 
 ## Stack (owner decisions, 2026-10-31)
 

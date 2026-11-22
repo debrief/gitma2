@@ -9,7 +9,7 @@ import useBaseUrl from "@docusaurus/useBaseUrl";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import * as T from "../../static/demo-data/js/track.js";
-import { bearings, windowRows, problemOf, targetManoeuvresIn, ownTurnsIn, SCHEMA_VERSION } from "../../static/demo-data/js/scenario.js";
+import { bearings, windowRows, problemOf, targetManoeuvresIn, ownTurnsIn, validCount, TURN_LOSS_S, SCHEMA_VERSION } from "../../static/demo-data/js/scenario.js";
 import { evaluate, observability, compareLegs, OBS_GREEN, OBS_AMBER, OBS_SIGMA_DEG } from "../../static/demo-data/js/metrics.js";
 import { PRESETS, DEFAULT_SCENARIO, clone, normaliseScenario } from "../../static/demo-data/js/presets.js";
 import { SOLVER_LIST, SPLITTER_LIST } from "../../static/demo-data/js/solver-info.js";
@@ -278,11 +278,12 @@ function Demo() {
   const derived = useMemo(() => {
     const b = bearings(sc);
     const rows = windowRows(sc, b);
-    if (rows.length < 4) return { b, rows, problem: null };
+    const received = validCount(b, rows);
+    if (received < 4) return { b, rows, received, problem: null };
     const { problem, origin, t0 } = problemOf(sc, b, rows);
     const kn = targetManoeuvresIn(sc, b);
     const obs = observability(sc, b, rows, kn);
-    return { b, rows, problem, origin, t0, kn, obs, ownTurns: ownTurnsIn(sc, b) };
+    return { b, rows, received, problem, origin, t0, kn, obs, ownTurns: ownTurnsIn(sc, b) };
   }, [sc]);
   const info = SOLVER_LIST.find((s) => s.name === sc.solver) || SOLVER_LIST[0];
   const splitterName = sc.splitter || "none";
@@ -589,6 +590,7 @@ function Demo() {
   const step = Math.max(1, Math.ceil(b.n / 48));
   const bearingLines = [];
   for (let i = 0; i < b.n; i += step) {
+    if (!b.valid[i]) continue; // lost in ownship's turn
     const r = Math.hypot(b.tx[i] - b.ox[i], b.ty[i] - b.oy[i]) * 1.15;
     const x1 = b.ox[i] + r * Math.sin(b.z[i]), y1 = b.oy[i] + r * Math.cos(b.z[i]);
     bearingLines.push(<line key={i} x1={sx(b.ox[i] / NM)} y1={sy(b.oy[i] / NM)} x2={sx(x1 / NM)} y2={sy(y1 / NM)} stroke={inWin(b.t[i]) ? BRG : "#999"} strokeOpacity={inWin(b.t[i]) ? 0.55 : 0.25} strokeWidth={0.8} />);
@@ -752,14 +754,16 @@ function Demo() {
   if (ev || derived.problem) {
     // bearings drawn around their circular mean, so a track across north does not jump 360°
     let cs = 0, cc = 0;
-    for (let i = 0; i < b.n; i++) { cs += Math.sin(b.z[i]); cc += Math.cos(b.z[i]); }
+    for (let i = 0; i < b.n; i++) if (b.valid[i]) { cs += Math.sin(b.z[i]); cc += Math.cos(b.z[i]); }
     const mean = Math.atan2(cs, cc);
     const unwrap = (z) => (mean + Math.atan2(Math.sin(z - mean), Math.cos(z - mean))) / DEG;
-    const meas = Array.from(b.t, (t, i) => [t, unwrap(b.z[i])]);
+    const meas = [];
+    for (let i = 0; i < b.n; i++) if (b.valid[i]) meas.push([b.t[i], unwrap(b.z[i])]);
+    const lostMarks = b.lost.map(([a, e]) => [a, Math.min(e, period), "#d0d0d0"]);
     const pred = ev ? ev.predicted.map(([t, z]) => [t, unwrap(z)]) : [];
     const res = ev ? ev.residual : [];
     brgChart = {
-      bearings: (w, h) => <Chart width={w} height={h} testid="chart-bearings" title="Bearings" xDomain={[0, period]} yLabel="° (dots measured, line solution)" series={[{ points: meas, dots: true, colour: BRG, colourAt: (p) => (inWin(p[0]) ? "#8c8c00" : "#bbb") }, { points: pred, colour: EST, width: 1.5 }]} marks={[[win.start_s, win.end_s, "#2ca02c"], ...trueMarks, ...foundMarks]} />,
+      bearings: (w, h) => <Chart width={w} height={h} testid="chart-bearings" title="Bearings" xDomain={[0, period]} yLabel="° (dots measured, line solution)" series={[{ points: meas, dots: true, colour: BRG, colourAt: (p) => (inWin(p[0]) ? "#8c8c00" : "#bbb") }, { points: pred, colour: EST, width: 1.5 }]} marks={[[win.start_s, win.end_s, "#2ca02c"], ...lostMarks, ...trueMarks, ...foundMarks]} />,
       residuals: (w, h) => <Chart width={w} height={h} testid="chart-residuals" title="Residuals" xDomain={[0, period]} yLabel="÷ σ (±2 dashed)" series={[{ points: res, dots: true, colour: EST }, { points: [[0, 2], [period, 2]], colour: "#888", dash: "3 3", width: 1 }, { points: [[0, -2], [period, -2]], colour: "#888", dash: "3 3", width: 1 }]} marks={[[win.start_s, win.end_s, "#2ca02c"], ...trueMarks, ...foundMarks]} yClip={[-8, 8]} />,
     };
   }
@@ -899,7 +903,7 @@ function Demo() {
           </div>
           <div className="margin-top--sm" data-testid="window-slider">
             <div className={styles.small}>
-              Analysis window {fmtMin(win.start_s)} – {fmtMin(Math.min(win.end_s, period))} of {fmtMin(period)} (min:s); {derived.rows.length} bearings go to the solver. Drag either end; the solve runs on release.
+              Analysis window {fmtMin(win.start_s)} – {fmtMin(Math.min(win.end_s, period))} of {fmtMin(period)} (min:s); {derived.received} bearings go to the solver{derived.received < derived.rows.length ? ` (${derived.rows.length - derived.received} lost in ownship's turns)` : ""}. Drag either end; the solve runs on release.
             </div>
             <div className={styles.dual}>
               <div className={styles.track}>
@@ -917,6 +921,12 @@ function Demo() {
             <span className={styles.small}>seed {sc.seed}</span>
             <label>Interval (s){" "}
               <input type="number" min={1} max={120} step={1} defaultValue={sc.interval_s} key={`iv-${sc.interval_s}`} style={{ width: "4.5rem" }} onBlur={(e) => { const v = Number(e.target.value); if (v >= 1 && v <= 120) commit({ ...sc, interval_s: v }); }} onKeyDown={(e) => e.key === "Enter" && e.target.blur()} />
+            </label>
+            <label title="Bearings are lost while ownship turns and for this long after each turn">
+              <input type="checkbox" data-testid="turn-loss" checked={sc.turn_loss_s !== null} onChange={(e) => commit({ ...sc, turn_loss_s: e.target.checked ? TURN_LOSS_S : null })} /> Lose bearings in ownship turns{" "}
+              {sc.turn_loss_s !== null && (
+                <>+ <input type="number" min={0} max={1800} step={10} defaultValue={sc.turn_loss_s} key={`tl-${sc.turn_loss_s}`} style={{ width: "4.5rem" }} data-testid="turn-loss-s" onBlur={(e) => { const v = Number(e.target.value); if (v >= 0 && v <= 1800) commit({ ...sc, turn_loss_s: v }); }} onKeyDown={(e) => e.key === "Enter" && e.target.blur()} /> s after</>
+              )}
             </label>
           </div>
         </div>

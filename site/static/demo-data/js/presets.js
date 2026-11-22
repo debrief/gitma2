@@ -1,13 +1,13 @@
 // Spec 035 FR-041: preset scenarios (generic and unclassified, NFR-5). Distances in NM from an
 // arbitrary origin, two-hour engagements, bearings every 5 s at 1 degree.
-import { SCHEMA_VERSION } from "./scenario.js";
+import { SCHEMA_VERSION, TURN_LOSS_S } from "./scenario.js";
 import { LEGACY_SOLVERS } from "./solver-info.js";
 
 const leg = (course_deg, speed_kt, minutes, turn_rate_dps = 1) => ({ course_deg, speed_kt, duration_s: minutes * 60, turn_rate_dps });
 const zigzag = () => ({ start_x_nm: 0, start_y_nm: 0, legs: [leg(0, 8, 30), leg(60, 8, 30), leg(330, 8, 30), leg(60, 8, 30)] });
 const base = (name, ownship, target, extra = {}) => ({
   schema_version: SCHEMA_VERSION, name, ownship, target,
-  sigma_deg: 1, interval_s: 5, seed: 1, window: { start_s: 0, end_s: 7140 }, solver: "ls-js", show_ellipses: false, ...extra,
+  sigma_deg: 1, interval_s: 5, turn_loss_s: TURN_LOSS_S, seed: 1, window: { start_s: 0, end_s: 7140 }, solver: "ls-js", show_ellipses: false, ...extra,
 });
 
 export const PRESETS = [
@@ -63,5 +63,8 @@ export function normaliseScenario(sc) {
     out.splitter = splitter;
   }
   if (!out.splitter) out.splitter = "none";
+  // owner, 2026-11-22: bearings are lost in ownship's turns and two minutes after; a scenario
+  // saved before then takes the default
+  if (out.turn_loss_s === undefined) out.turn_loss_s = TURN_LOSS_S;
   return out;
 }

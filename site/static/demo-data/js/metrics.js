@@ -19,7 +19,7 @@ export const OBS_AMBER = 0.25;
 // Cramér-Rao bound for the target's track over the window rows, the manoeuvre times known:
 // parameters are position and velocity at the window start plus one velocity increment at the
 // middle of each target manoeuvre in the window; information from the window's bearings at the
-// truth. Returns per-row sds of range (m), bearing (rad), course (rad) and speed (m/s), and the
+// truth (lost bearings, b.valid 0, carry none). Returns per-row sds of range (m), bearing (rad), course (rad) and speed (m/s), and the
 // condition number of the scaled information.
 export function crb(b, rows, knotsAbs, sigma) {
   const t0 = b.t[rows[0]];
@@ -29,6 +29,7 @@ export function crb(b, rows, knotsAbs, sigma) {
   const row = new Float64Array(P);
   const w = 1 / (sigma * sigma);
   for (const i of rows) {
+    if (b.valid && !b.valid[i]) continue;
     const tau = b.t[i] - t0;
     const dx = b.tx[i] - b.ox[i], dy = b.ty[i] - b.oy[i];
     const r2 = dx * dx + dy * dy;
@@ -102,6 +103,7 @@ export function evaluate(sc, b, rows, origin, t0, sol, knotsAbs) {
     if (i === undefined) continue;
     const pred = wrap2pi(Math.atan2(out.ex[k] - b.ox[i], out.ey[k] - b.oy[i]));
     out.predicted.push([out.t[k], pred]);
+    if (b.valid && !b.valid[i]) continue; // a lost bearing has no residual
     out.residual.push([out.t[k], sigma > 0 ? wrapPi(b.z[i] - pred) / sigma : NaN]);
   }
   const bound = crb(b, rows, knotsAbs, Math.max(sigma, 1e-9));

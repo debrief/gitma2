@@ -97,6 +97,20 @@ try {
   check("Delete removes a waypoint and undo restores it (FR-004, FR-007)", del.sc.ownship.legs.length === after.sc.ownship.legs.length - 1 && JSON.stringify(und.sc.ownship) === JSON.stringify(after.sc.ownship));
   await settled();
 
+  // owner 2026-11-22: bearings lost in ownship's turns; the control turns the loss off and on
+  const lostText = async () => page.locator("[data-testid=window-slider]").innerText();
+  const withLoss = await lostText();
+  await page.locator("[data-testid=turn-loss]").uncheck();
+  await page.waitForTimeout(50);
+  await settled();
+  const without = await lostText();
+  const sNo = await state();
+  await page.locator("[data-testid=turn-loss]").check();
+  await page.waitForTimeout(50);
+  await settled();
+  const sYes = await state();
+  check("bearings lost in ownship turns: stated under the window, and the control turns the loss off", /lost in ownship's turns/.test(withLoss) && !/lost in ownship's turns/.test(without) && sNo.sc.turn_loss_s === null && sYes.sc.turn_loss_s === 120, { withLoss: withLoss.split(";")[1] });
+
   // acceptance 5: the URL restores the exact scenario and solution
   await page.locator("[data-testid=reseed]").click();
   await page.waitForTimeout(50);

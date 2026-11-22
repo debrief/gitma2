@@ -194,6 +194,64 @@ test("LinkML validation accepts every preset and rejects a bad file with its mes
   assert.ok(errs.some((e) => e.includes('"extra"')), errs.join("; "));
 });
 
+// ---------- bearings lost in ownship's turns (owner, 2026-11-22) ----------
+test("bearings are lost during each ownship turn and 120 s after; the kept ones do not change", () => {
+  const sc = preset("good-geometry");
+  assert.equal(sc.turn_loss_s, 120);
+  const b = bearings(sc), keep = bearings({ ...sc, turn_loss_s: null });
+  assert.deepEqual(Array.from(b.z), Array.from(keep.z));
+  assert.ok(keep.valid.every((v) => v === 1));
+  const turns = T.manoeuvres(b.paths.own).filter((m) => m.course);
+  assert.equal(turns.length, 3);
+  for (let i = 0; i < b.n; i++) {
+    const lost = turns.some((m) => b.t[i] >= m.t0 - 1e-9 && b.t[i] <= m.t1 + 120 + 1e-9);
+    assert.equal(b.valid[i], lost ? 0 : 1, `row ${i} t ${b.t[i]}`);
+  }
+  // a 60-degree turn at 1 deg/s lasts about a minute, then two minutes: about 36 rows of 5 s each
+  const nLost = b.n - b.valid.reduce((a, v) => a + v, 0);
+  assert.ok(nLost > 90 && nLost < 130, `${nLost} lost`);
+  // a scenario saved without the field takes the default
+  const legacy = clone(sc);
+  delete legacy.turn_loss_s;
+  assert.equal(normaliseScenario(legacy).turn_loss_s, 120);
+  assert.deepEqual(Array.from(bearings(legacy).valid), Array.from(b.valid));
+  // the schema accepts null and rejects a negative tail
+  assert.deepEqual(checkScenario(schema, { ...sc, turn_loss_s: null }), []);
+  assert.ok(checkScenario(schema, { ...sc, turn_loss_s: -1 }).length > 0);
+});
+
+test("least squares with lost bearings flagged equals least squares on the received rows only", async () => {
+  const sc = preset("good-geometry");
+  const b = bearings(sc);
+  const { problem } = problemOf(sc, b, windowRows(sc, b));
+  assert.ok(problem.bearing_valid.includes(0));
+  const keep = problem.t_s.map((_, k) => k).filter((k) => problem.bearing_valid[k]);
+  const pick = (a) => keep.map((k) => a[k]);
+  const sub = { ...problem, t_s: pick(problem.t_s), bearing_rad: pick(problem.bearing_rad), own_x_m: pick(problem.own_x_m), own_y_m: pick(problem.own_y_m), own_course_rad: pick(problem.own_course_rad), own_speed_mps: pick(problem.own_speed_mps), bearing_valid: undefined };
+  const a = await solver("ls-js").solve(problem, { run }), c = await solver("ls-js").solve(sub, { run });
+  for (const k of [0, keep.length - 1]) {
+    assert.ok(Math.abs(a.x_m[keep[k]] - c.x_m[k]) < 1e-6 && Math.abs(a.vx_mps[keep[k]] - c.vx_mps[k]) < 1e-9);
+  }
+  for (let q = 0; q < 16; q++) assert.ok(Math.abs(a.cov_end[q] - c.cov_end[q]) <= 1e-8 * (Math.abs(c.cov_end[q]) + 1));
+  // the scored residuals skip lost bearings
+  const r = await solveScenario(sc, "ls-js");
+  assert.equal(r.ev.residual.length, keep.length);
+});
+
+test("the learned model's inputs zero a lost bearing's features and keep ownship's", () => {
+  const sc = preset("good-geometry");
+  const b = bearings(sc);
+  const { problem: p } = problemOf(sc, b, windowRows(sc, b));
+  const full = TLM.periodFeatures(p.t_s, p.own_x_m, p.own_y_m, p.bearing_rad, p.sigma_rad);
+  const lost = TLM.periodFeatures(p.t_s, p.own_x_m, p.own_y_m, p.bearing_rad, p.sigma_rad, p.bearing_valid);
+  const k = p.bearing_valid.indexOf(0), N = TLM.N_FEATURES;
+  assert.deepEqual([0, 1, 4].map((j) => lost.f[k * N + j]), [0, 0, 0]);
+  for (const j of [2, 3, 5, 6, 7, 8]) assert.equal(lost.f[k * N + j], full.f[k * N + j]);
+  // the smoothed bearing interpolates over the gap
+  const zs = TLM.smoothedBearing(p.bearing_rad, p.bearing_valid);
+  assert.ok(zs.every(Number.isFinite));
+});
+
 // ---------- ONNX ----------
 test("the ONNX physics layer with one leg equals the JavaScript solve on noise-free bearings", async () => {
   const sc = { ...preset("good-geometry"), sigma_deg: 0 };
@@ -299,7 +357,9 @@ test("held course: no arctan splitter states a manoeuvre (good geometry, endfire
 });
 
 test("two target turns inside ownship legs: joined legs find both, Debrief one, independent slices land between", async () => {
-  const sc = preset("two-target-turns");
+  // spec 036's reading, every bearing kept (with the owner's turn loss, seed 1's first turn is
+  // placed at 50 min, outside the 120 s match; seeds 2, 3 and 5 still find both)
+  const sc = { ...preset("two-target-turns"), turn_loss_s: null };
   const j = await split(sc, "arctan-joined");
   assert.equal(j.legs.matched, 2);
   assert.equal(j.legs.false_, 0);
