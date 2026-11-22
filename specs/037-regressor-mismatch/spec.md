@@ -276,8 +276,12 @@ limit and is refused if it would pass the cap.
 
 - Seeds: 369 fine-tuning stream, 370 validation, 371 test; step 1 on spent seed 321. The next
   fresh seed after this spec is 372.
-- About $9 buys about 13 T4-hours at the measured $0.66 an hour: roughly 3 for the pilot and 3
-  for each seed. If the ledger shows less, the plans shrink; none is launched past the cap.
+- Money (corrected at planning): the ledger reads $40.57 and the training workflow refuses a
+  plan past $45, a margin under the owner's $50. Inside that guard there is about $4.40, 6.7
+  T4-hours: 1 for the pilot and 1.8 for each seed. Raising the guard toward $50 is the owner's;
+  with it the fine-tunes are about 3.5 hours each. None is launched past the guard.
+- The stated intervals come from the variance head the regressor already has, scaled on
+  validation (research R1); no new head is trained.
 - The existing checkpoints are retrievable from spec 012's results branches with their digests.
 - The regressor is real-time (causal) and this spec is about real-time estimates; the time-late
   track and its standing systems are untouched.
