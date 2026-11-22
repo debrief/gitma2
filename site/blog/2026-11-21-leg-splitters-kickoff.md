@@ -53,12 +53,36 @@ This is spec 036.
 - Data: `scripts/research/demo_splitters.mjs` on the page's own presets, recorded in
   `experiments/20261121-demo-splitters/`.
 
+## Updates
+
+- 2026-11-22: from the owner's review of the merged demo:
+  - An arrowhead at the end of each track shows which way it is heading.
+  - A fourth optional chart, "course & speed", shows both vessels' course or speed (a drop-down:
+    course, speed or both) with the estimate dashed. True turns are shaded (blue ownship, red
+    target); turns a splitter detected are solid strips: orange target turns on the right edge,
+    teal ownship turns on the left. Only Debrief's slicing detects ownship turns, so only it
+    draws the teal strips.
+  - The error chart's quantity is a drop-down, so the chart is as tall as its neighbours and
+    their time axes line up.
+  - The Preset drop-down shows the preset the scenario matches, or "custom" once edited.
+  - Dragging a waypoint (circle) now keeps the adjacent legs' speeds, so their durations change.
+    Dragging a leg's square keeps its duration, so its speed changes.
+  - Ctrl-click (⌘-click) deletes a waypoint.
+  - Each leg's speed label sits on the leg's north side (west for a north–south leg), clear of
+    the square handle and the cursor that drags it. The read-out during a drag sits above and
+    to the left of the cursor. It says what is kept and what changes: "Keeping time: speed
+    changes" for a square (the leg's minutes, its old and new speed and course), "Keeping speed:
+    leg times change" for a circle (each adjacent leg's speed, its old and new minutes). The
+    hover tooltips on squares and circles say the same.
+  - Schema 0.39.0: `TmaSolution.splitter_ownship_spans`, and the `DemoSplitterInfo` flags
+    `detects_target` and `detects_ownship`.
+
 ## 2026-11-22: bearings lost in ownship's turns
 
 The owner noted that bearings are lost while ownship turns and for two minutes after each turn
 ends. The demonstrator now drops them by default. A scenario's `turn_loss_s` sets the tail
 (120 s); null keeps every bearing, and a checkbox under the noise controls turns the loss off.
-Lost bearings keep their rows, flagged in the problem's `bearing_valid` (schema 0.39.0), so every
+Lost bearings keep their rows, flagged in the problem's `bearing_valid` (schema 0.40.0), so every
 solver and splitter keeps its regular time grid and skips them, as Python's `valid` column does.
 Least squares, the physics layer, C, the arctan splitters and the learned model's inputs all
 ignore them, and the plot, bearings chart and residuals hide them. The noise is still drawn for

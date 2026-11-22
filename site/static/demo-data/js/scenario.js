@@ -4,7 +4,7 @@
 // same bearings whatever the window.
 import { buildPath, stateAt, manoeuvres, DEG } from "./track.js";
 
-export const SCHEMA_VERSION = "0.39.0";
+export const SCHEMA_VERSION = "0.40.0";
 
 // Owner, 2026-11-22: bearings are lost while ownship turns and for two minutes after each turn
 // is complete. A scenario's turn_loss_s is that tail in seconds (null: bearings kept through

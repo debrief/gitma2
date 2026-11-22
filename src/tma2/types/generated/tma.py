@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.39.0"
+version = "0.40.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -4071,6 +4071,7 @@ class TmaSolution(ConfiguredBaseModel):
     manoeuvre_prob: Optional[list[float]] = Field(default=None, description="""The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     splitter: Optional[str] = Field(default=None, description="""Spec 036: the leg splitter whose spans the solver used.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaSolution']} })
     splitter_spans: Optional[list[DemoSpan]] = Field(default=None, description="""Spec 036: the manoeuvre spans the leg splitter stated, in the problem's time.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    splitter_ownship_spans: Optional[list[DemoSpan]] = Field(default=None, description="""Spec 036 follow-up: ownship turns the leg splitter detected, in the problem's time (only a splitter that detects them, as Debrief's slicing).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     splitter_runtime_ms: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     splitter_message: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
 
@@ -4091,6 +4092,8 @@ class DemoSplitterInfo(ConfiguredBaseModel):
     label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo']} })
     assumptions: str = Field(default=..., description="""Its method, in words.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo', 'DemoSolverInfo']} })
     told_truth: bool = Field(default=..., description="""It is told the true manoeuvre spans (an oracle).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo']} })
+    detects_target: Optional[bool] = Field(default=None, description="""Spec 036 follow-up: it states target manoeuvres.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo']} })
+    detects_ownship: Optional[bool] = Field(default=None, description="""Spec 036 follow-up: it states ownship turns it detected.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo']} })
 
 
 class DemoSolverInfo(ConfiguredBaseModel):

@@ -165,7 +165,10 @@ const legFrom = (a, b, duration_s) => {
 
 // FR-002: move waypoint j (1..L) to (x, y) NM; adjacent legs keep their durations, downstream
 // waypoints stay put. Waypoint 0 (the start) moves the whole track.
-export function moveWaypoint(track, j, x, y) {
+// keep: "time" keeps each adjacent leg's duration (its speed changes); "speed" (spec 036 follow-up, the page's
+// waypoint drag) keeps each adjacent leg's speed, so its duration follows its new length (a leg at
+// rest keeps its duration).
+export function moveWaypoint(track, j, x, y, keep = "time") {
   const out = copy(track);
   if (j === 0) {
     out.start_x_nm = x;
@@ -176,7 +179,12 @@ export function moveWaypoint(track, j, x, y) {
   W[j] = [x, y];
   for (const i of [j - 1, j]) {
     if (i < 0 || i >= out.legs.length) continue;
-    Object.assign(out.legs[i], legFrom(W[i], W[i + 1], out.legs[i].duration_s));
+    let dur = out.legs[i].duration_s;
+    if (keep === "speed" && out.legs[i].speed_kt > 0) {
+      const lenNm = Math.hypot(W[i + 1][0] - W[i][0], W[i + 1][1] - W[i][1]);
+      dur = Math.min(43200, Math.max(1, (lenNm / out.legs[i].speed_kt) * 3600.0));
+    }
+    Object.assign(out.legs[i], legFrom(W[i], W[i + 1], dur), { duration_s: dur });
   }
   return out;
 }
