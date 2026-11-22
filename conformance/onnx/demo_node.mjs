@@ -53,6 +53,21 @@ async function solveScenario(sc, name = sc.solver) {
 }
 
 // ---------- tracks ----------
+test("spec 036 follow-up: a waypoint drag that keeps speed changes the adjacent legs' durations, not their speeds", () => {
+  const tr = preset("good-geometry").ownship;
+  const W0 = T.waypoints(tr);
+  const moved = T.moveWaypoint(tr, 2, W0[2][0] + 1, W0[2][1] - 0.5, "speed");
+  const W1 = T.waypoints(moved);
+  for (const j of [0, 1, 3, 4]) assert.ok(Math.hypot(W1[j][0] - W0[j][0], W1[j][1] - W0[j][1]) < 1e-9, `waypoint ${j} stayed`);
+  for (const i of [1, 2]) {
+    assert.ok(Math.abs(moved.legs[i].speed_kt - tr.legs[i].speed_kt) < 1e-9, `leg ${i} kept its speed`);
+    const len = Math.hypot(W1[i + 1][0] - W1[i][0], W1[i + 1][1] - W1[i][1]);
+    assert.ok(Math.abs(moved.legs[i].duration_s - (len / tr.legs[i].speed_kt) * 3600) < 1e-6, `leg ${i} duration follows its length`);
+  }
+  assert.equal(moved.legs[0].duration_s, tr.legs[0].duration_s);
+  assert.equal(moved.legs[3].duration_s, tr.legs[3].duration_s);
+});
+
 test("waypoint drag moves only the adjacent legs (FR-002)", () => {
   const tr = preset("good-geometry").ownship;
   const W0 = T.waypoints(tr);
@@ -296,6 +311,14 @@ test("held course: no arctan splitter states a manoeuvre (good geometry, endfire
       assert.equal(r.spans.length, 0, `${name} ${id} sigma ${sigma} seed ${seed}`);
     }
   }
+});
+
+test("spec 036 follow-up: Debrief's splitter states the ownship turns it found, between its steady legs", async () => {
+  const sc = preset("two-target-turns");
+  const { r } = await split(sc, "arctan-debrief");
+  const own = T.manoeuvres(bearings(sc).paths.own);
+  assert.equal(r.ownship_spans.length, own.length);
+  r.ownship_spans.forEach((f, i) => assert.ok(Math.abs((f.start_s + f.end_s) / 2 - (own[i].t0 + own[i].t1) / 2) < 30, `ownship turn ${i}`));
 });
 
 test("two target turns inside ownship legs: joined legs find both, Debrief one, independent slices land between", async () => {

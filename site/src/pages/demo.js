@@ -105,7 +105,12 @@ function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height 
       <text x={PADL} y={PADT - 16} fontSize={10} fill="currentColor"><title>{yLabel}</title>{yLabel.length * 5.5 > width - PADL ? yLabel.slice(0, Math.max(4, Math.floor((width - PADL) / 5.5) - 1)) + "…" : yLabel}</text>
       <rect x={PADL} y={PADT} width={width - PADL - PADR} height={height - PADT - PADB} fill="none" stroke="currentColor" strokeOpacity={0.2} />
       {marks.map((m, i) => (
-        <rect key={i} x={PADL} y={sy(m[0])} height={Math.max(sy(m[1]) - sy(m[0]), 1)} width={width - PADL - PADR} fill={m[2] || "#888"} fillOpacity={0.12} />
+        // m[3]: "left" or "right" draws a solid strip at that edge (a detection) instead of shading
+        m[3] ? (
+          <rect key={i} x={m[3] === "left" ? PADL : width - PADR - 7} y={sy(m[0])} height={Math.max(sy(m[1]) - sy(m[0]), 2)} width={7} fill={m[2] || "#888"} fillOpacity={0.85} />
+        ) : (
+          <rect key={i} x={PADL} y={sy(m[0])} height={Math.max(sy(m[1]) - sy(m[0]), 1)} width={width - PADL - PADR} fill={m[2] || "#888"} fillOpacity={0.12} />
+        )
       ))}
       {v0 < 0 && v1 > 0 && <line y1={PADT} y2={height - PADB} x1={sx(0)} x2={sx(0)} stroke="currentColor" strokeOpacity={0.35} />}
       {bands.map((b, i) => {
@@ -193,7 +198,8 @@ function Demo() {
   const [now, setNow] = useState(0);
   const [nonce, setNonce] = useState(0); // "solve again" after a cancel
   const [quantity, setQuantity] = useState("position");
-  const [showCharts, setShowCharts] = useState({ error: true, bearings: true, residuals: true });
+  const [kinQ, setKinQ] = useState("course"); // spec 036 follow-up: course, speed or both
+  const [showCharts, setShowCharts] = useState({ error: true, bearings: true, residuals: true, kinematics: true });
   const [importErrors, setImportErrors] = useState(null);
   const [notice, setNotice] = useState(null);
   const [dragLabel, setDragLabel] = useState(null);
@@ -397,6 +403,15 @@ function Demo() {
     const index = Number(t.getAttribute("data-index"));
     const p = toSvg(e);
     svgRef.current.setPointerCapture(e.pointerId);
+    // spec 036 follow-up: ctrl-click (cmd-click) deletes a waypoint (not the start or the end)
+    if (kind === "wp" && (e.ctrlKey || e.metaKey)) {
+      const tr = sc[vessel];
+      if (index >= 1 && index < tr.legs.length) {
+        commit({ ...sc, [vessel]: T.deleteWaypoint(tr, index) });
+        setSel(null);
+      }
+      return;
+    }
     if (kind === "wp" || kind === "handle" || kind === "leg") {
       drag.current = { kind, vessel, index, p0: p, moved: false };
       if (kind !== "leg") setSel({ vessel, kind: kind === "wp" ? "wp" : "leg", index });
@@ -419,16 +434,28 @@ function Demo() {
     const tr = sc[d.vessel];
     let next = tr;
     if (d.kind === "wp") {
-      next = T.moveWaypoint(tr, d.index, wx, wy);
+      // spec 036 follow-up: a waypoint drag keeps the adjacent legs' speeds, so their durations change
+      next = T.moveWaypoint(tr, d.index, wx, wy, "speed");
       if (d.index === 0) {
         // the start point moves the whole track
         next = { ...tr, start_x_nm: wx, start_y_nm: wy };
+        setDragLabel({ x: p[0], y: p[1], title: "Moving the whole track", lines: ["every leg keeps its course, speed and time"] });
+      } else {
+        // say what is kept (speed) and what changes (time), leg by leg, against the values at the drag's start
+        const legs = [d.index - 1, d.index].filter((i) => i < next.legs.length);
+        setDragLabel({
+          x: p[0], y: p[1], title: "Keeping speed: leg times change",
+          lines: legs.map((i) => `leg ${i + 1}: ${fmt(next.legs[i].speed_kt, 1)} kt, ${fmt(tr.legs[i].duration_s / 60, 1)} → ${fmt(next.legs[i].duration_s / 60, 1)} min`),
+        });
       }
-      setDragLabel(null);
     } else if (d.kind === "handle") {
       const v = T.velocityFromHandle(tr, d.index, wx, wy);
       next = T.setLegVelocity(tr, d.index, v.course_deg, Math.min(v.speed_kt, 40));
-      setDragLabel({ x: p[0], y: p[1], text: `${fmt(next.legs[d.index].speed_kt, 1)} kt, ${fmt(next.legs[d.index].course_deg, 0)}°` });
+      const L0 = tr.legs[d.index], L1 = next.legs[d.index];
+      setDragLabel({
+        x: p[0], y: p[1], title: "Keeping time: speed changes",
+        lines: [`leg ${d.index + 1}: ${fmt(L1.duration_s / 60, 1)} min, ${fmt(L0.speed_kt, 1)} → ${fmt(L1.speed_kt, 1)} kt`, `course ${fmt(L0.course_deg, 0)}° → ${fmt(L1.course_deg, 0)}°; later legs swing with it`],
+      });
     }
     setDraft({ ...sc, [d.vessel]: next });
   };
@@ -605,6 +632,19 @@ function Demo() {
     return (
       <g key={name}>
         <path d={poly(T.pathPoints(path))} fill="none" stroke={colour} strokeWidth={1.2} strokeOpacity={0.6} />
+        {(() => {
+          // spec 036 follow-up: an arrowhead at the track's end, along its final course
+          const end = T.stateAt(path, path.end);
+          const X = clampPx(sx(end.x / NM)), Y = clampPx(sy(end.y / NM));
+          const sp = Math.hypot(end.vx, end.vy);
+          if (!(sp > 0)) return null;
+          const ux = end.vx / sp, uy = -end.vy / sp; // screen y runs down
+          // beyond the end waypoint's circle, so the circle does not hide it
+          const L = 12, Wd = 6, off = 9;
+          const base = [X + ux * off, Y + uy * off], tip = [X + ux * (off + L), Y + uy * (off + L)];
+          const pts = [tip, [base[0] - uy * Wd, base[1] + ux * Wd], [base[0] + uy * Wd, base[1] - ux * Wd]];
+          return <polygon data-testid={`arrow-${name}`} points={pts.map((q) => q.map((v) => v.toFixed(1)).join(",")).join(" ")} fill={colour} pointerEvents="none"><title>{`${name === "ownship" ? "Ownship" : "Target"} heading ${fmt(((Math.atan2(end.vx, end.vy) / DEG) + 360) % 360, 0)}° at the end of the scenario`}</title></polygon>;
+        })()}
         <path d={poly(windowPart(path))} fill="none" stroke={colour} strokeWidth={3} />
         {/* faint polyline between waypoints: click to insert a waypoint (FR-004) */}
         {Wp.slice(0, -1).map((w, i) => (
@@ -616,7 +656,7 @@ function Demo() {
           const [hx, hy] = T.handleOf(tr, i);
           return (
             <rect key={`h${i}`} data-kind="handle" data-vessel={name} data-index={i} data-testid={`handle-${name}-${i}`} x={sx(hx) - 5} y={sy(hy) - 5} width={10} height={10} fill="#fff" stroke={colour} strokeWidth={isSel("leg", i) ? 3 : 1.5} style={{ cursor: "grab" }}>
-              <title>{`Leg ${i + 1}: ${fmt(l.course_deg, 0)}°, ${fmt(l.speed_kt, 1)} kt, ${fmt(l.duration_s / 60, 1)} min. Drag to change course and speed; the rest of the track swings with it.`}</title>
+              <title>{`Leg ${i + 1}: ${fmt(l.course_deg, 0)}°, ${fmt(l.speed_kt, 1)} kt, ${fmt(l.duration_s / 60, 1)} min. Drag this square to change course and speed while keeping the leg's time; later legs swing with it.`}</title>
             </rect>
           );
         })}
@@ -625,8 +665,11 @@ function Demo() {
           const [ax, ay] = Wp[i], [bx, by] = Wp[i + 1];
           const dx = sx(bx) - sx(ax), dy = sy(by) - sy(ay);
           const len = Math.hypot(dx, dy) || 1;
-          const nx = -dy / len, ny = dx / len;
-          const mx = (sx(ax) + sx(bx)) / 2 + nx * 12, my = (sy(ay) + sy(by)) / 2 + ny * 12;
+          // on the leg's north side (west when the leg runs north–south), clear of the square
+          // handle at its middle and the cursor that drags it
+          let nx = -dy / len, ny = dx / len;
+          if (Math.abs(ny) > 0.3 ? ny > 0 : nx > 0) { nx = -nx; ny = -ny; }
+          const mx = (sx(ax) + sx(bx)) / 2 + nx * 20, my = (sy(ay) + sy(by)) / 2 + ny * 20;
           const anchor = nx > 0.3 ? "start" : nx < -0.3 ? "end" : "middle";
           if (len < 40) return null;
           return (
@@ -637,7 +680,7 @@ function Demo() {
         })}
         {Wp.map((w, i) => (
           <circle key={`w${i}`} data-kind="wp" data-vessel={name} data-index={i} data-testid={`wp-${name}-${i}`} cx={sx(w[0])} cy={sy(w[1])} r={i === 0 ? 7 : 5.5} fill={amber.has(i) ? AMBER : i === 0 ? colour : "#fff"} stroke={colour} strokeWidth={isSel("wp", i) ? 3.5 : 1.5} style={{ cursor: "move" }}>
-            <title>{i === 0 ? "Start: drag to move the whole track" : `Waypoint ${i}: drag to move it alone${amber.has(i) ? " (turn clamped: the arc does not fit at this rate)" : ""}; select and press Delete to remove`}</title>
+            <title>{i === 0 ? "Start: drag to move the whole track" : `Waypoint ${i}: drag to move it, keeping the legs' speeds (their times change)${amber.has(i) ? "; turn clamped: the arc does not fit at this rate" : ""}. Ctrl-click, or select and press Delete, to remove it.`}</title>
           </circle>
         ))}
       </g>
@@ -745,7 +788,7 @@ function Demo() {
     }
     const big = Math.max(...pts.map((p) => Math.abs(p[1])).filter(Number.isFinite), 1e-9);
     errChart = (w, h) => (
-      <Chart width={w} height={h} testid="chart-error" title="Error vs truth" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}${modelSpans.length ? "; purple: model's manoeuvres" : ""}${foundMarks.length ? "; orange: splitter's" : ""}`} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={[...trueMarks, ...modelSpans, ...foundMarks]} yClip={[-big, big]} />
+      <Chart width={w} height={h} testid="chart-error" title="" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}${modelSpans.length ? "; purple: model's manoeuvres" : ""}${foundMarks.length ? "; orange: splitter's" : ""}`} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={[...trueMarks, ...modelSpans, ...foundMarks]} yClip={[-big, big]} />
     );
   }
   let brgChart = null;
@@ -763,6 +806,42 @@ function Demo() {
       residuals: (w, h) => <Chart width={w} height={h} testid="chart-residuals" title="Residuals" xDomain={[0, period]} yLabel="÷ σ (±2 dashed)" series={[{ points: res, dots: true, colour: EST }, { points: [[0, 2], [period, 2]], colour: "#888", dash: "3 3", width: 1 }, { points: [[0, -2], [period, -2]], colour: "#888", dash: "3 3", width: 1 }]} marks={[[win.start_s, win.end_s, "#2ca02c"], ...trueMarks, ...foundMarks]} yClip={[-8, 8]} />,
     };
   }
+
+  // spec 036 follow-up: both vessels' course and speed over the scenario, with true and detected turns
+  let kinChart = null;
+  {
+    const own = [], tgt = [];
+    for (let i = 0; i < b.n; i++) {
+      own.push([b.t[i], Math.atan2(b.ovx[i], b.ovy[i]), Math.hypot(b.ovx[i], b.ovy[i]) / KT]);
+      tgt.push([b.t[i], Math.atan2(b.tvx[i], b.tvy[i]), Math.hypot(b.tvx[i], b.tvy[i]) / KT]);
+    }
+    const est = sol && sol.t_s && sol.status !== "failed" ? sol.t_s.map((t, k) => [t + derived.t0, Math.atan2(sol.vx_mps[k], sol.vy_mps[k]), Math.hypot(sol.vx_mps[k], sol.vy_mps[k]) / KT]) : [];
+    // courses drawn around their circular mean, so a course across north does not jump 360°
+    let cs = 0, cc = 0;
+    for (const p of [...own, ...tgt]) { cs += Math.sin(p[1]); cc += Math.cos(p[1]); }
+    const mean = Math.atan2(cs, cc);
+    const unwrapC = (c) => (mean + Math.atan2(Math.sin(c - mean), Math.cos(c - mean))) / DEG;
+    const trueTgt = T.manoeuvres(b.paths.tgt).map((m) => [m.t0, m.t1, TGT]);
+    const trueOwn = T.manoeuvres(b.paths.own).map((m) => [m.t0, m.t1, OWN]);
+    const detTgt = (sol && sol.splitter_spans && splitterName !== "truth" ? sol.splitter_spans : []).map((f) => [f.start_s + derived.t0, Math.max(f.end_s, f.start_s + 20) + derived.t0, FOUND, "right"]);
+    const detOwn = (sol && sol.splitter_ownship_spans ? sol.splitter_ownship_spans : []).map((f) => [f.start_s + derived.t0, Math.max(f.end_s, f.start_s + 20) + derived.t0, "#17becf", "left"]);
+    const modelStrips = modelSpans.map((m) => [m[0], m[1], m[2], "right"]);
+    const marks = [[win.start_s, win.end_s, "#2ca02c"], ...trueOwn, ...trueTgt, ...detTgt, ...detOwn, ...modelStrips];
+    const detected = detTgt.length || detOwn.length || modelStrips.length;
+    const note = detected ? "; strips: detected" : "";
+    kinChart = {
+      course: (w, h) => <Chart width={w} height={h} testid="chart-course" title={kinQ === "both" ? "Course" : ""} xDomain={[0, period]} yLabel={`° (blue own, red target, green est.)${note}`} series={[{ points: own.map((p) => [p[0], unwrapC(p[1])]), colour: OWN }, { points: tgt.map((p) => [p[0], unwrapC(p[1])]), colour: TGT }, { points: est.map((p) => [p[0], unwrapC(p[1])]), colour: EST, dash: "4 3" }]} marks={marks} />,
+      speed: (w, h) => <Chart width={w} height={h} testid="chart-speed" title={kinQ === "both" ? "Speed" : ""} xDomain={[0, period]} yLabel={`kt${note}`} series={[{ points: own.map((p) => [p[0], p[2]]), colour: OWN }, { points: tgt.map((p) => [p[0], p[2]]), colour: TGT }, { points: est.map((p) => [p[0], p[2]]), colour: EST, dash: "4 3" }]} marks={marks} yClip={[0, 40]} />,
+    };
+  }
+
+  // spec 036 follow-up: the preset the scenario matches (the drop-down shows it; "custom" once edited)
+  const presetShown = (() => {
+    const pick = (x) => JSON.stringify([x.ownship, x.target, x.sigma_deg, x.interval_s, x.seed, x.window]);
+    const k = pick(sc);
+    const hit = PRESETS.find((pr) => pick(pr.scenario) === k);
+    return hit ? hit.id : "custom";
+  })();
 
   const selTrack = sel ? sc[sel.vessel] : null;
   const editor = sel && selTrack ? (
@@ -808,8 +887,8 @@ function Demo() {
       {notice && <div className="alert alert--warning margin-bottom--sm">{notice}</div>}
       <div className={styles.toolbar}>
         <label>Preset{" "}
-          <select data-testid="preset" value="" onChange={(e) => loadPreset(e.target.value)}>
-            <option value="">choose…</option>
+          <select data-testid="preset" value={presetShown} onChange={(e) => loadPreset(e.target.value)}>
+            <option value="custom" disabled>custom (edited)</option>
             {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>
         </label>
@@ -885,14 +964,26 @@ function Demo() {
             )}
             {dragLabel && (
               <g pointerEvents="none">
-                <rect x={dragLabel.x + 10} y={dragLabel.y - 24} width={120} height={18} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.4} rx={3} />
-                <text x={dragLabel.x + 16} y={dragLabel.y - 11} fontSize={12} fill="currentColor">{dragLabel.text}</text>
+                {/* above and to the left of the cursor, which points up-left and trails down-right */}
+                {(() => {
+                  const rows = [dragLabel.title, ...dragLabel.lines];
+                  const w = Math.max(...rows.map((r) => r.length)) * 6.4 + 14, h = rows.length * 15 + 6;
+                  // above-left of the cursor; flipped right or down where the plot's edge would clip it
+                  const x0 = dragLabel.x - w - 12 >= 2 ? dragLabel.x - w - 12 : dragLabel.x + 18;
+                  const y0 = dragLabel.y - h - 12 >= 2 ? dragLabel.y - h - 12 : dragLabel.y + 18;
+                  return (
+                    <g data-testid="drag-label">
+                      <rect x={x0} y={y0} width={w} height={h} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.4} rx={3} />
+                      {rows.map((r, k) => <text key={k} x={x0 + 7} y={y0 + 15 + k * 15} fontSize={12} fontWeight={k === 0 ? 700 : 400} fill="currentColor">{r}</text>)}
+                    </g>
+                  );
+                })()}
               </g>
             )}
             <g pointerEvents="none">
               <line x1={W - 20 - niceNm * view.ppn} x2={W - 20} y1={H - 18} y2={H - 18} stroke="currentColor" strokeWidth={2} />
               <text x={W - 20} y={H - 24} fontSize={11} textAnchor="end" fill="currentColor">{niceNm} NM</text>
-              <text x={8} y={30} fontSize={11} fill="currentColor" fillOpacity={0.75}>click a leg to add a waypoint · drag a circle to move it · drag a square for course and speed · wheel to zoom</text>
+              <text x={8} y={30} fontSize={11} fill="currentColor" fillOpacity={0.75}>click a leg to add a waypoint · drag a circle: speed kept, time changes · drag a square: time kept, speed changes · ctrl-click a circle to delete</text>
               <text x={8} y={16} fontSize={11} fill="currentColor">north up; blue ownship, red target (thick: inside the window); green dashed: the solution; olive: bearings</text>
             </g>
           </svg>
@@ -923,24 +1014,39 @@ function Demo() {
         <div className={styles.chartsCol}>
           <div className={styles.toolbar} data-testid="chart-toggles">
             <b>Charts</b> (time runs down):
-            {[["error", "error vs time"], ["bearings", "bearings"], ["residuals", "residuals"]].map(([k, label]) => (
+            {[["error", "error vs time"], ["bearings", "bearings"], ["residuals", "residuals"], ["kinematics", "course & speed"]].map(([k, label]) => (
               <label key={k}><input type="checkbox" checked={showCharts[k]} data-testid={`toggle-${k}`} onChange={(e) => setShowCharts({ ...showCharts, [k]: e.target.checked })} /> {label}</label>
             ))}
           </div>
           <div className={styles.chartRow}>
             {showCharts.error && (
-              <div className={styles.chartPanel} data-testid="panel-error-time">
-                <div className={styles.toolbar}>
-                  {Object.keys(qdef).map((k) => (
-                    <label key={k}><input type="radio" name="q" checked={quantity === k} onChange={() => setQuantity(k)} /> {k}</label>
-                  ))}
-                </div>
+              <div className={`${styles.chartPanel} ${styles.overlayHost}`} data-testid="panel-error-time">
+                <select className={styles.chartSelect} data-testid="error-quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} aria-label="Error quantity">
+                  {Object.keys(qdef).map((k) => <option key={k} value={k}>{k}</option>)}
+                </select>
                 {errChart ? <ChartBox render={errChart} /> : <span className={styles.small}>no solution yet</span>}
               </div>
             )}
             {showCharts.bearings && <div className={styles.chartPanel} data-testid="panel-bearings">{brgChart ? <ChartBox render={brgChart.bearings} /> : null}</div>}
             {showCharts.residuals && <div className={styles.chartPanel} data-testid="panel-residuals">{brgChart ? <ChartBox render={brgChart.residuals} /> : null}</div>}
-            {!showCharts.error && !showCharts.bearings && !showCharts.residuals && <div className={styles.small}>All charts hidden.</div>}
+            {showCharts.kinematics && (
+              <div className={styles.chartPanel} data-testid="panel-kinematics">
+                <div className={styles.overlayHost} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+                  <select className={styles.chartSelect} data-testid="kinematics-quantity" value={kinQ} onChange={(e) => setKinQ(e.target.value)} aria-label="Course or speed">
+                    <option value="course">course</option>
+                    <option value="speed">speed</option>
+                    <option value="both">both</option>
+                  </select>
+                  {kinQ === "both" ? (
+                    <div className={styles.subCharts}>
+                      <ChartBox render={kinChart.course} />
+                      <ChartBox render={kinChart.speed} />
+                    </div>
+                  ) : <ChartBox render={kinChart[kinQ]} />}
+                </div>
+              </div>
+            )}
+            {!showCharts.error && !showCharts.bearings && !showCharts.residuals && !showCharts.kinematics && <div className={styles.small}>All charts hidden.</div>}
           </div>
         </div>
         <div className={styles.dashCol}>
@@ -1073,9 +1179,9 @@ function Demo() {
           <details>
             <summary>How to use it, and what is running</summary>
             <ul className={styles.small}>
-              <li>Drag a <b>waypoint</b> (circle) to move it alone: the legs either side change course and speed, everything else stays put. Drag the <b>start</b> (filled circle) to move a whole track.</li>
-              <li>Drag a leg's <b>square handle</b> to change its course and speed: every later leg swings round with it, so the rest of the track can move a long way.</li>
-              <li>Click a leg to insert a waypoint; select a waypoint and press Delete (or right-click it) to remove it. Undo with Ctrl+Z. Amber waypoints: the turn does not fit at its rate and is drawn tighter.</li>
+              <li>Drag a <b>waypoint</b> (circle) to move it alone: the legs either side keep their speeds, so their lengths and durations change (later waypoints stay put but are reached later or sooner). Drag the <b>start</b> (filled circle) to move a whole track. Ctrl-click (⌘-click) a waypoint to delete it.</li>
+              <li>Drag a leg's <b>square handle</b> to change its course and speed: the leg keeps its duration, so its length follows the speed, and every later leg swings round with it, so the rest of the track can move a long way.</li>
+              <li>Click a leg to insert a waypoint; select a waypoint and press Delete (or right-click or ctrl-click it) to remove it. Undo with Ctrl+Z. Amber waypoints: the turn does not fit at its rate and is drawn tighter.</li>
               <li>Wheel to zoom, drag empty space to pan. The link in the address bar restores this exact scenario, noise draw and solver.</li>
               <li>Leg splitters (spec 036): none; told the truth (an oracle); Debrief's 2015 arctan slicing (one split per steady ownship leg, ZigRatio); a multi-leg arctan slicing with independent slices; the arctan law with joined legs, searched over the whole window; and C, the project's classical segmenter (spec 005, spec 021's port). Their spans go to the segmented physics layer; "Run all splitters" compares them on this window.</li>
               <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and spec 016's whole-period learned model (three training seeds, 26 MB each, loaded on first use), which reads the whole window at once and also states where it thinks the target manoeuvred. For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>

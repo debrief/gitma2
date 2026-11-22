@@ -264,3 +264,23 @@
   border-radius: 4px;
 }
 .solverBox select { max-width: 18rem; }
+
+/* spec 036 follow-up: the error chart's quantity as a drop-down over the chart's title row, so its time
+   axis lines up with the other charts; course and speed side by side in one panel */
+.overlayHost { position: relative; }
+.chartSelect {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.3rem;
+  z-index: 1;
+  font-size: 0.7rem;
+  padding: 0 0.1rem;
+  max-width: 6.5rem;
+}
+.subCharts {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 0.25rem;
+}
+.subCharts > * { flex: 1 1 0; min-width: 0; }

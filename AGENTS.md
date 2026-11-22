@@ -960,6 +960,12 @@ on three draws with false transitions at ownship's turns, one leg 27%); a turn d
 turn: Debrief blind (31.9%), independent slices 1.4%, joined legs 3.1% (instant knot placed late);
 held course: no false split. No splitter wins everywhere. Slides
 `site/blog/2026-11-21-leg-splitters-slides.md`; next is the owner's choice.
+Follow-up 2026-11-22 (owner's review): arrowheads at track ends; an optional course & speed chart
+(both vessels, estimate dashed; true turns shaded, detected turns as edge strips: target orange
+right, ownship teal left, only Debrief detects ownship turns, `splitter_ownship_spans`); the error
+chart's quantity as a drop-down; the Preset drop-down shows the matching preset or "custom"; a
+waypoint drag keeps the adjacent legs' speeds (`moveWaypoint(..., "speed")`; the square keeps
+duration); ctrl-click deletes a waypoint. Schema 0.39.0.
 
 ## Stack (owner decisions, 2026-10-31)
 
