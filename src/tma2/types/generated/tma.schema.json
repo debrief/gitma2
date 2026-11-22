@@ -3359,6 +3359,20 @@
                         "number",
                         "null"
                     ]
+                },
+                "sigma_step_factor": {
+                    "description": "Spec 037: from a sample drawn uniformly in the engagement, the white, correlated and outlier parts are multiplied by this factor or its inverse (at least 1).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "white_t_df": {
+                    "description": "Spec 037: the white part is Student-t with this many degrees of freedom (at least 3), scaled to the same sd. Drawn from a second stream; never in a training mix.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -6360,6 +6374,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.39.0"
+    "version": "0.40.0"
 }
 
