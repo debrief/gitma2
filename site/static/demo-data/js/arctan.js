@@ -182,7 +182,8 @@ export const DEBRIEF = { zigRatio: 0.6, bufferRows: 12, minSliceRows: 18, stepRo
 
 export async function debriefSlicing(s, P = DEBRIEF, cancelled = () => false) {
   const found = [];
-  const legs = ownshipLegs(s).filter(([a, b]) => b - a + 1 >= P.minLegRows);
+  const allLegs = ownshipLegs(s);
+  const legs = allLegs.filter(([a, b]) => b - a + 1 >= P.minLegRows);
   const breathe = () => new Promise((r) => setTimeout(r, 0));
   let fits = 0;
   for (const [a, b] of legs) {
@@ -206,7 +207,7 @@ export async function debriefSlicing(s, P = DEBRIEF, cancelled = () => false) {
     }
     if (best && best.score < wholeScore * P.zigRatio) found.push({ lo: best.lo, hi: best.hi, stat: wholeScore / best.score });
   }
-  return { spans: found, fits, legs };
+  return { spans: found, fits, legs: allLegs };
 }
 
 // ---------- multi-leg: recursive, ownship subtracted, threshold tied to the noise ----------

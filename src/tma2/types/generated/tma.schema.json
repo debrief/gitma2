@@ -978,6 +978,20 @@
                     "description": "Its method, in words.",
                     "type": "string"
                 },
+                "detects_ownship": {
+                    "description": "Spec 036 follow-up: it states ownship turns it detected.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "detects_target": {
+                    "description": "Spec 036 follow-up: it states target manoeuvres.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
                 "label": {
                     "type": [
                         "string",
@@ -5917,6 +5931,16 @@
                         "null"
                     ]
                 },
+                "splitter_ownship_spans": {
+                    "description": "Spec 036 follow-up: ownship turns the leg splitter detected, in the problem's time (only a splitter that detects them, as Debrief's slicing).",
+                    "items": {
+                        "$ref": "#/$defs/DemoSpan"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "splitter_runtime_ms": {
                     "type": [
                         "number",
@@ -6336,6 +6360,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.38.0"
+    "version": "0.39.0"
 }
 

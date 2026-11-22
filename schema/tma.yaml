@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.38.0
+version: 0.39.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -2251,6 +2251,7 @@ classes:
       manoeuvre_prob: { range: float, multivalued: true, description: "The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s." }
       splitter: { range: string, description: "Spec 036: the leg splitter whose spans the solver used." }
       splitter_spans: { range: DemoSpan, multivalued: true, inlined_as_list: true, description: "Spec 036: the manoeuvre spans the leg splitter stated, in the problem's time." }
+      splitter_ownship_spans: { range: DemoSpan, multivalued: true, inlined_as_list: true, description: "Spec 036 follow-up: ownship turns the leg splitter detected, in the problem's time (only a splitter that detects them, as Debrief's slicing)." }
       splitter_runtime_ms: { range: float }
       splitter_message: { range: string }
 
@@ -2262,6 +2263,8 @@ classes:
       label: { range: string }
       assumptions: { range: string, required: true, description: "Its method, in words." }
       told_truth: { range: boolean, required: true, description: "It is told the true manoeuvre spans (an oracle)." }
+      detects_target: { range: boolean, description: "Spec 036 follow-up: it states target manoeuvres." }
+      detects_ownship: { range: boolean, description: "Spec 036 follow-up: it states ownship turns it detected." }
 
   DemoSolverInfo:
     description: "Spec 035 FR-024: what a solver plug-in declares."

@@ -73,7 +73,7 @@ async function splitAndSolve(solverName, splitterName, problem, ctx) {
   const given = splitter.info.told_truth ? problem : { ...problem, knots: [] };
   const split = await splitter.split(given, ctx);
   const solution = await solver.solve({ ...problem, knots: split.spans }, ctx);
-  return { ...solution, splitter: splitter.info.name, splitter_spans: split.spans, splitter_runtime_ms: split.runtime_ms, splitter_message: split.message };
+  return { ...solution, splitter: splitter.info.name, splitter_spans: split.spans, splitter_ownship_spans: split.ownship_spans, splitter_runtime_ms: split.runtime_ms, splitter_message: split.message };
 }
 
 self.onmessage = async (ev) => {

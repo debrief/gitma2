@@ -70,10 +70,13 @@ export const arctanDebrief = {
     const s = splitterArrays(p);
     const r = await debriefSlicing(s, DEBRIEF, ctx.cancelled || (() => false));
     const notes = [];
-    if (!r.legs.length) notes.push("no steady ownship leg long enough to slice");
+    if (!r.legs.some(([a, b]) => b - a + 1 >= DEBRIEF.minLegRows)) notes.push("no steady ownship leg long enough to slice");
     const d = dtNote(s);
     if (d) notes.push(d);
-    return { spans: spansOf(s, r.spans), rows_dt_s: s.dt, fits: r.fits, runtime_ms: now() - t0, message: notes.join("; ") || undefined };
+    // spec 036 follow-up: ownship turns as Debrief found them: the gaps between its steady ownship legs
+    const own = [];
+    for (let i = 0; i + 1 < r.legs.length; i++) own.push({ lo: r.legs[i][1], hi: r.legs[i + 1][0] });
+    return { spans: spansOf(s, r.spans), ownship_spans: spansOf(s, own), rows_dt_s: s.dt, fits: r.fits, runtime_ms: now() - t0, message: notes.join("; ") || undefined };
   },
 };
 

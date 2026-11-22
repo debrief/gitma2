@@ -95,6 +95,33 @@ try {
   await page.waitForTimeout(50);
   const und = await state();
   check("Delete removes a waypoint and undo restores it (FR-004, FR-007)", del.sc.ownship.legs.length === after.sc.ownship.legs.length - 1 && JSON.stringify(und.sc.ownship) === JSON.stringify(after.sc.ownship));
+
+  // spec 036 follow-up: the waypoint drag kept the adjacent legs' speeds; ctrl-click deletes a waypoint
+  const keptSpeed = [1, 2].every((i) => Math.abs(after.sc.ownship.legs[i].speed_kt - before.legs[i].speed_kt) < 1e-6) && [1, 2].some((i) => Math.abs(after.sc.ownship.legs[i].duration_s - before.legs[i].duration_s) > 1);
+  check("a waypoint drag keeps the adjacent legs' speeds and changes their durations (spec 036 follow-up)", keptSpeed, [1, 2].map((i) => [before.legs[i].duration_s, after.sc.ownship.legs[i].duration_s]));
+  await page.locator("[data-testid=wp-ownship-2]").click({ modifiers: ["Control"] });
+  await page.waitForTimeout(50);
+  const cdel = await state();
+  check("ctrl-click deletes a waypoint (spec 036 follow-up)", cdel.sc.ownship.legs.length === und.sc.ownship.legs.length - 1);
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(50);
+  await settled();
+
+  // spec 036 follow-up: arrows at the tracks' ends, the preset shown, the error quantity as a drop-down, course and speed
+  const arrows = await page.locator("[data-testid=arrow-ownship], [data-testid=arrow-target]").count();
+  const shownPreset = await page.locator("[data-testid=preset]").inputValue();
+  check("an arrowhead at each track's end; the preset drop-down shows custom after an edit (spec 036 follow-up)", arrows === 2 && shownPreset === "custom", { arrows, shownPreset });
+  await page.selectOption("[data-testid=preset]", "good-geometry");
+  await settled();
+  const shown2 = await page.locator("[data-testid=preset]").inputValue();
+  await page.selectOption("[data-testid=error-quantity]", "range");
+  const ylab = await page.locator("[data-testid=chart-error]").innerHTML();
+  let kin = await page.locator("[data-testid=chart-course]").count();
+  await page.selectOption("[data-testid=kinematics-quantity]", "speed");
+  kin += await page.locator("[data-testid=chart-speed]").count();
+  const hErr = (await page.locator("[data-testid=chart-error]").boundingBox()).height, hBrg = (await page.locator("[data-testid=chart-bearings]").boundingBox()).height;
+  check("preset shown; error quantity by drop-down with the chart as tall as its neighbours; course and speed charts (spec 036 follow-up)", shown2 === "good-geometry" && /range error/.test(ylab) && kin === 2 && Math.abs(hErr - hBrg) < 2, { shown2, kin, hErr, hBrg });
+
   await settled();
 
   // acceptance 5: the URL restores the exact scenario and solution
@@ -170,7 +197,12 @@ try {
   const cmpRows = await page.locator("[data-testid=compare-table] tbody tr").count();
   const cmpState = await page.evaluate(() => { const c = window.__demo.compare(); return { status: c.status, done: Object.keys(c.rows) }; });
   check("compare runs each splitter through the layer and tabulates them", cmpState.status === "done" && cmpState.done.length === 5 && cmpRows === 5, cmpState);
-  if (process.env.DEMO_SHOT) await page.screenshot({ path: process.env.DEMO_SHOT, fullPage: false });
+  if (process.env.DEMO_SHOT) {
+    await page.selectOption("[data-testid=splitter]", "arctan-debrief");
+    await page.waitForTimeout(50);
+    await settled();
+    await page.screenshot({ path: process.env.DEMO_SHOT, fullPage: false });
+  }
 
   // the whole-period learned model in the browser, with its progress shown while it loads
   await page.selectOption("[data-testid=preset]", "target-turn");
