@@ -46,7 +46,7 @@
 
 ## R4 Budget
 
-- **Fact**: the ledger reads $40.57. `gputrain.yml` refuses a plan past $45. Modal's own total
+- **Fact**: the ledger reads $40.57. `gputrain.yml` refused a plan past $45 until 2026-11-22 (now $49). Modal's own total
   for November is about $41, so the ledger is close to complete.
 - **Decision** (owner, 2026-11-22: raise the guard to $49): pilot at most 1 T4-hour ($0.66),
   three fine-tunes of at most 3.5 hours each ($6.93), total $7.59, leaving about $0.80 under

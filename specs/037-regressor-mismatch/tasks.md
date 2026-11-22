@@ -31,7 +31,7 @@ the hybrid (step 3), US4 spending. Tests are written with the code they check.
 
 ## Phase 4: User Story 4 - spending (P1)
 
-- [ ] T012 [US4] `configs/regress/ft-pilot.json`, `ft-s1..s3.json`, `ft-toy.json` with limits that sum inside the guard (research R4); check each with `python -m tma2.regress.ledger --cap-usd 45`; record the ledger's total in the decision record and after the runs
+- [ ] T012 [US4] `configs/regress/ft-pilot.json`, `ft-s1..s3.json`, `ft-toy.json` with limits that sum inside the guard (research R4); check each with `python -m tma2.regress.ledger --cap-usd 49`; record the ledger's total in the decision record and after the runs
 
 ## Phase 5: User Story 2 - fine-tune with an uncertainty (P1)
 
