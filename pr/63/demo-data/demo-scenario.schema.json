@@ -1,0 +1,175 @@
+{
+ "$defs": {
+  "DemoLeg": {
+   "additionalProperties": false,
+   "description": "Spec 035 FR-001: one constant-speed leg; the turn rate applies at the waypoint ending it (ignored on the last leg).",
+   "properties": {
+    "course_deg": {
+     "description": "True course, clockwise from north.",
+     "maximum": 360,
+     "minimum": 0,
+     "type": "number"
+    },
+    "duration_s": {
+     "maximum": 43200,
+     "minimum": 1,
+     "type": "number"
+    },
+    "speed_kt": {
+     "maximum": 40,
+     "minimum": 0,
+     "type": "number"
+    },
+    "turn_rate_dps": {
+     "description": "Steady turn rate into the next leg, degrees per second (FR-005).",
+     "maximum": 3,
+     "minimum": 0.25,
+     "type": "number"
+    }
+   },
+   "required": [
+    "course_deg",
+    "speed_kt",
+    "duration_s",
+    "turn_rate_dps"
+   ],
+   "title": "DemoLeg",
+   "type": "object"
+  },
+  "DemoTrack": {
+   "additionalProperties": false,
+   "description": "Spec 035 FR-001: a vessel as a start point and an ordered list of legs; waypoints sit at leg joins.",
+   "properties": {
+    "legs": {
+     "items": {
+      "$ref": "#/$defs/DemoLeg"
+     },
+     "maxItems": 50,
+     "minItems": 1,
+     "type": "array"
+    },
+    "start_x_nm": {
+     "description": "East of the origin.",
+     "maximum": 200,
+     "minimum": -200,
+     "type": "number"
+    },
+    "start_y_nm": {
+     "description": "North of the origin.",
+     "maximum": 200,
+     "minimum": -200,
+     "type": "number"
+    }
+   },
+   "required": [
+    "start_x_nm",
+    "start_y_nm",
+    "legs"
+   ],
+   "title": "DemoTrack",
+   "type": "object"
+  },
+  "DemoWindow": {
+   "additionalProperties": false,
+   "description": "Spec 035 FR-020: the analysis window, seconds from the scenario's start.",
+   "properties": {
+    "end_s": {
+     "minimum": 0,
+     "type": "number"
+    },
+    "start_s": {
+     "minimum": 0,
+     "type": "number"
+    }
+   },
+   "required": [
+    "start_s",
+    "end_s"
+   ],
+   "title": "DemoWindow",
+   "type": "object"
+  }
+ },
+ "$id": "https://github.com/debrief/gitma/schema/tma/DemoScenario",
+ "$schema": "https://json-schema.org/draft/2019-09/schema",
+ "additionalProperties": false,
+ "description": "Spec 035 FR-040: everything that fixes a demonstrator solve: both tracks, the bearing noise and sampling, the seed, the window and the solver.",
+ "properties": {
+  "interval_s": {
+   "description": "Bearing sample interval (FR-010).",
+   "maximum": 120,
+   "minimum": 1,
+   "type": "number"
+  },
+  "name": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "ownship": {
+   "$ref": "#/$defs/DemoTrack"
+  },
+  "schema_version": {
+   "type": "string"
+  },
+  "seed": {
+   "description": "Seed of the noise generator; the same seed and scenario give identical bearings.",
+   "maximum": 4294967295,
+   "minimum": 0,
+   "type": "integer"
+  },
+  "show_ellipses": {
+   "description": "Show the solver's 1- and 2-sigma position ellipses (off by default).",
+   "type": [
+    "boolean",
+    "null"
+   ]
+  },
+  "sigma_deg": {
+   "description": "Standard deviation of the zero-mean Gaussian bearing noise (FR-011).",
+   "maximum": 5,
+   "minimum": 0,
+   "type": "number"
+  },
+  "solver": {
+   "description": "Name of the selected solver plug-in (FR-024).",
+   "type": "string"
+  },
+  "splitter": {
+   "description": "Spec 036: name of the selected leg splitter, whose manoeuvre spans a solver that accepts knots uses (absent: none, one leg).",
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "target": {
+   "$ref": "#/$defs/DemoTrack"
+  },
+  "turn_loss_s": {
+   "description": "Owner 2026-11-22: bearings are lost while ownship turns and for this many seconds after each turn ends (default 120); null keeps every bearing.",
+   "maximum": 1800,
+   "minimum": 0,
+   "type": [
+    "number",
+    "null"
+   ]
+  },
+  "window": {
+   "$ref": "#/$defs/DemoWindow"
+  }
+ },
+ "required": [
+  "schema_version",
+  "ownship",
+  "target",
+  "sigma_deg",
+  "interval_s",
+  "seed",
+  "window",
+  "solver"
+ ],
+ "title": "DemoScenario",
+ "type": "object",
+ "version": "0.39.0"
+}
