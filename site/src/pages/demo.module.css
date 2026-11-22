@@ -252,3 +252,15 @@
     flex: none;
   }
 }
+
+/* spec 036: the leg splitter and the TMA solver, side by side */
+.solverBox {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+}
+.solverBox select { max-width: 18rem; }

@@ -864,6 +864,13 @@
                     "description": "Name of the selected solver plug-in (FR-024).",
                     "type": "string"
                 },
+                "splitter": {
+                    "description": "Spec 036: name of the selected leg splitter, whose manoeuvre spans a solver that accepts knots uses (absent: none, one leg).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "target": {
                     "$ref": "#/$defs/DemoTrack"
                 },
@@ -947,6 +954,13 @@
                 },
                 "start_s": {
                     "type": "number"
+                },
+                "stat": {
+                    "description": "Spec 036: the splitter's strength for this span (its own statistic; absent for the truth).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -954,6 +968,40 @@
                 "end_s"
             ],
             "title": "DemoSpan",
+            "type": "object"
+        },
+        "DemoSplitterInfo": {
+            "additionalProperties": false,
+            "description": "Spec 036: what a leg-splitter plug-in declares.",
+            "properties": {
+                "assumptions": {
+                    "description": "Its method, in words.",
+                    "type": "string"
+                },
+                "label": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "told_truth": {
+                    "description": "It is told the true manoeuvre spans (an oracle).",
+                    "type": "boolean"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "version",
+                "assumptions",
+                "told_truth"
+            ],
+            "title": "DemoSplitterInfo",
             "type": "object"
         },
         "DemoTrack": {
@@ -5856,6 +5904,35 @@
                 "solver_version": {
                     "type": "string"
                 },
+                "splitter": {
+                    "description": "Spec 036: the leg splitter whose spans the solver used.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "splitter_message": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "splitter_runtime_ms": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "splitter_spans": {
+                    "description": "Spec 036: the manoeuvre spans the leg splitter stated, in the problem's time.",
+                    "items": {
+                        "$ref": "#/$defs/DemoSpan"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "status": {
                     "$ref": "#/$defs/DemoSolveStatus"
                 },
@@ -6259,6 +6336,6 @@
     ],
     "title": "tma",
     "type": "object",
-    "version": "0.37.0"
+    "version": "0.38.0"
 }
 

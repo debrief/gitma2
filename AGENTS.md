@@ -938,6 +938,29 @@ Checks: `conformance/onnx/demo_node.mjs` (golden `demo/golden-tlm.json` for the 
 `demo_page.mjs` (Chromium), golden least squares `demo/golden-ls.json` from Python
 (`demo_golden.py`); CI job `demo`. Figures `scripts/research/demo_charts.mjs`.
 
+036 (leg splitters in the demonstrator, `specs/036-leg-splitters/`; owner 2026-11-21 "a demo of
+the leg solvers, so we can compare them … two blocks: leg splitters and TMA solvers"; not a gate,
+nothing trained, no seed): the page's toolbar picks a **leg splitter → TMA solver**. The physics
+layer (`layer`, which replaces `layer-cv`/`layer-oracle`; old names map to `layer` + `none` /
+`truth` through `presets.normaliseScenario`) fits legs joined across the splitter's spans.
+Splitters (`site/static/demo-data/js/splitters.js`, `arctan.js`): none; truth; Debrief's 2015
+arctan slicing (three-parameter arctan law per steady ownship leg, one split, 2-minute buffer,
+ZigRatio 0.6, our choice); multi-leg independent slices (recursive, τ = 40 σ²); the arctan law
+with **joined legs** (position continuous, velocity steps at knots, forward selection then
+re-placement, τ = 25 σ², at most four knots); C (spec 021's port, no evidence, confirmation
+through `viewer-data/layer.onnx`, about 3–4 min on a two-hour window). Only the truth splitter
+sees the true spans (the worker strips them; tested). A legs panel (found within 120 s, missed,
+false, timing) and "Run all splitters" (worker message `compare`). Schema 0.38.0
+(`DemoScenario.splitter`, `DemoSpan.stat`, `DemoSplitterInfo`, solution splitter fields). Preset
+`two-target-turns` is outside spec 035's golden problem set (`golden: false`). Readings
+(`scripts/research/demo_splitters.mjs`, `experiments/20261121-demo-splitters/`; presets only,
+anecdotes, σ 1°, five draws): two turns inside ownship legs: joined legs 9 of 10 found, 2.6% median
+range RMS (truth 2.0%, Debrief 14.5%, independent slices 37.8% (it splits between the turns), C 8.2%
+on three draws with false transitions at ownship's turns, one leg 27%); a turn during ownship's
+turn: Debrief blind (31.9%), independent slices 1.4%, joined legs 3.1% (instant knot placed late);
+held course: no false split. No splitter wins everywhere. Slides
+`site/blog/2026-11-21-leg-splitters-slides.md`; next is the owner's choice.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1421,6 +1444,12 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   `PW_EXECUTABLE=/opt/pw-browsers/chromium` in a session whose Playwright is newer than the
   installed browser. Inert knots tie in top-k and onnxruntime breaks ties unlike torch: compare
   a layer's theta and knots through the active knots only.
+- Spec 036: a leg split scored by independent slices (each slice its own constant-velocity fit)
+  is too flexible: a slice without an ownship turn absorbs a misplaced break through its free
+  range, and the drop is flat over a quarter of an hour. Join the legs (position continuous) and
+  refit every parameter before comparing splits. A target turn made during ownship's turn is
+  invisible to a detector that only slices steady ownship legs. C's leg search takes about 40 s
+  in JavaScript on 715 rows (every prefix's cost table); keep it off the default path of a page.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting

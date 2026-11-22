@@ -7,7 +7,9 @@ import { bearings, windowRows, problemOf } from "../../site/static/demo-data/js/
 
 export function goldenCases() {
   const out = [];
-  for (const p of PRESETS) {
+  // spec 035's presets only: a later preset (golden: false) would change the problems' digest
+  // that the golden files bind
+  for (const p of PRESETS.filter((q) => q.golden !== false)) {
     for (const sigma of [1, 0]) out.push({ id: `${p.id}-s${sigma}`, sc: { ...p.scenario, sigma_deg: sigma } });
   }
   const tt = PRESETS.find((p) => p.id === "target-turn").scenario;

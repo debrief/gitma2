@@ -12,7 +12,10 @@ import * as T from "../../site/static/demo-data/js/track.js";
 import { bearings, windowRows, problemOf, targetManoeuvresIn } from "../../site/static/demo-data/js/scenario.js";
 import { evaluate, observability } from "../../site/static/demo-data/js/metrics.js";
 import { PRESETS, clone } from "../../site/static/demo-data/js/presets.js";
-import { SOLVERS } from "../../site/static/demo-data/js/solvers.js";
+import { ALL_SOLVERS } from "../../site/static/demo-data/js/solvers.js";
+import { SPLITTERS, splitterByName } from "../../site/static/demo-data/js/splitters.js";
+import { compareLegs } from "../../site/static/demo-data/js/metrics.js";
+import { normaliseScenario } from "../../site/static/demo-data/js/presets.js";
 import { encodeFragment, decodeFragment, checkScenario } from "../../site/static/demo-data/js/codec.js";
 import { goldenCases } from "./demo_problems.mjs";
 import * as TLM from "../../site/static/demo-data/js/tlm.js";
@@ -21,11 +24,11 @@ const here = new URL(".", import.meta.url).pathname;
 const site = new URL("../../site/static/", import.meta.url).pathname;
 const schema = JSON.parse(readFileSync(site + "demo-data/demo-scenario.schema.json", "utf8"));
 const preset = (id) => clone(PRESETS.find((p) => p.id === id).scenario);
-const solver = (name) => SOLVERS.find((s) => s.info.name === name);
+const solver = (name) => ALL_SOLVERS.find((s) => s.info.name === name);
 
 let ort = null;
 const sessions = {};
-const GRAPHS = { "tl-layer": "demo-data/tl-layer.onnx", "tlm-s1": "demo-data/tlm-s1.onnx", "tlm-s2": "demo-data/tlm-s2.onnx", "tlm-s3": "demo-data/tlm-s3.onnx" };
+const GRAPHS = { "c-layer": "viewer-data/layer.onnx", "tl-layer": "demo-data/tl-layer.onnx", "tlm-s1": "demo-data/tlm-s1.onnx", "tlm-s2": "demo-data/tlm-s2.onnx", "tlm-s3": "demo-data/tlm-s3.onnx" };
 async function run(name, feeds) {
   if (!ort) {
     ort = await import("onnxruntime-web/dist/ort.node.min.mjs").catch(() => import("onnxruntime-web"));
@@ -245,4 +248,86 @@ test("each seed of the whole-period model solves the presets", async () => {
   }
   const bad = await solveScenario({ ...preset("good-geometry"), interval_s: 10 }, "tlm-s1");
   assert.equal(bad.sol.status, "failed");
+});
+
+// ---------- spec 036: leg splitters ----------
+async function split(sc, name) {
+  const b = bearings(sc);
+  const rows = windowRows(sc, b);
+  const { problem } = problemOf(sc, b, rows);
+  const sp = splitterByName(name);
+  const r = await sp.split(sp.info.told_truth ? problem : { ...problem, knots: [] }, { run });
+  return { problem, r, legs: compareLegs(problem.knots, r.spans) };
+}
+
+test("compareLegs matches within the tolerance, each span once", () => {
+  const truth = [{ start_s: 100, end_s: 200 }, { start_s: 1000, end_s: 1100 }];
+  const c = compareLegs(truth, [{ start_s: 250, end_s: 260 }, { start_s: 270, end_s: 280 }, { start_s: 3000, end_s: 3010 }]);
+  assert.equal(c.matched, 1);
+  assert.equal(c.missed, 1);
+  assert.equal(c.false_, 2);
+  assert.equal(c.median_offset_s, 105);
+});
+
+test("spec 035's layer-cv and layer-oracle scenarios become layer with no splitter or the truth", () => {
+  assert.deepEqual([normaliseScenario({ solver: "layer-cv" }).solver, normaliseScenario({ solver: "layer-cv" }).splitter], ["layer", "none"]);
+  assert.deepEqual([normaliseScenario({ solver: "layer-oracle" }).solver, normaliseScenario({ solver: "layer-oracle" }).splitter], ["layer", "truth"]);
+  assert.equal(normaliseScenario({ solver: "ls-js" }).splitter, "none");
+});
+
+test("splitters other than the truth never see the true spans", async () => {
+  for (const sp of SPLITTERS) {
+    if (sp.info.name === "c") continue; // slow; covered below
+    const sc = preset("two-target-turns");
+    const b = bearings(sc);
+    const { problem } = problemOf(sc, b, windowRows(sc, b));
+    let seen = false;
+    const guarded = new Proxy({ ...problem, knots: [] }, { get: (o, k) => { if (k === "knots" && o.knots.length) seen = true; return o[k]; } });
+    await sp.split(guarded, { run });
+    assert.equal(seen, false, sp.info.name);
+  }
+});
+
+test("held course: no arctan splitter states a manoeuvre (good geometry, endfire; sigma 1 and 2)", async () => {
+  for (const id of ["good-geometry", "endfire"]) for (const sigma of [1, 2]) for (const seed of [1, 2]) {
+    const sc = { ...preset(id), sigma_deg: sigma, seed };
+    for (const name of ["arctan-debrief", "arctan-multi", "arctan-joined"]) {
+      const { r } = await split(sc, name);
+      assert.equal(r.spans.length, 0, `${name} ${id} sigma ${sigma} seed ${seed}`);
+    }
+  }
+});
+
+test("two target turns inside ownship legs: joined legs find both, Debrief one, independent slices land between", async () => {
+  const sc = preset("two-target-turns");
+  const j = await split(sc, "arctan-joined");
+  assert.equal(j.legs.matched, 2);
+  assert.equal(j.legs.false_, 0);
+  const d = await split(sc, "arctan-debrief");
+  assert.equal(d.legs.matched, 1); // one split per ownship leg; the 45-minute turn's leg fails ZigRatio
+  const m = await split(sc, "arctan-multi");
+  assert.ok(m.legs.false_ >= 1); // a split between the turns: the 2017 note's failure
+  // the layer with the joined splitter's spans is close to the layer told the truth
+  const b = bearings(sc);
+  const rows = windowRows(sc, b);
+  const { problem, origin, t0 } = problemOf(sc, b, rows);
+  const kn = targetManoeuvresIn(sc, b);
+  const ev = async (knots) => evaluate(sc, b, rows, origin, t0, await solver("layer").solve({ ...problem, knots }, { run }), kn).summary.range_pct.rms;
+  const [eJ, eT, eN] = [await ev(j.r.spans), await ev(problem.knots), await ev([])];
+  assert.ok(eJ < 3 && eT < 3 && eN > 10, JSON.stringify({ eJ, eT, eN }));
+});
+
+test("a target turn during ownship's turn: Debrief's slicing cannot see it", async () => {
+  const d = await split(preset("target-turn"), "arctan-debrief");
+  assert.equal(d.legs.truth, 1);
+  assert.equal(d.legs.matched, 0);
+});
+
+test("C runs in Node with the confirmation layer and states its transitions (one-hour window)", { timeout: 600000 }, async () => {
+  const sc = { ...preset("target-turn"), window: { start_s: 1800, end_s: 5400 } };
+  const { r, legs } = await split(sc, "c");
+  assert.ok(r.nominations > 0);
+  assert.equal(legs.truth, 1);
+  for (const f of r.spans) assert.ok(f.end_s >= f.start_s && f.start_s >= 0);
+  console.log("C on target-turn 30-90 min:", JSON.stringify({ spans: r.spans, legs: { matched: legs.matched, false_: legs.false_ }, ms: Math.round(r.runtime_ms) }));
 });

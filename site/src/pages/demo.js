@@ -10,9 +10,9 @@ import BrowserOnly from "@docusaurus/BrowserOnly";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import * as T from "../../static/demo-data/js/track.js";
 import { bearings, windowRows, problemOf, targetManoeuvresIn, ownTurnsIn, SCHEMA_VERSION } from "../../static/demo-data/js/scenario.js";
-import { evaluate, observability, OBS_GREEN, OBS_AMBER, OBS_SIGMA_DEG } from "../../static/demo-data/js/metrics.js";
-import { PRESETS, DEFAULT_SCENARIO, clone } from "../../static/demo-data/js/presets.js";
-import { SOLVER_LIST } from "../../static/demo-data/js/solver-info.js";
+import { evaluate, observability, compareLegs, OBS_GREEN, OBS_AMBER, OBS_SIGMA_DEG } from "../../static/demo-data/js/metrics.js";
+import { PRESETS, DEFAULT_SCENARIO, clone, normaliseScenario } from "../../static/demo-data/js/presets.js";
+import { SOLVER_LIST, SPLITTER_LIST } from "../../static/demo-data/js/solver-info.js";
 import { encodeFragment, decodeFragment, checkScenario } from "../../static/demo-data/js/codec.js";
 import styles from "./demo.module.css";
 
@@ -21,6 +21,7 @@ const TGT = "#d62728";
 const EST = "#2ca02c";
 const BRG = "#bcbd22";
 const AMBER = "#ff9800";
+const FOUND = "#ff7f0e"; // spec 036: the leg splitter's manoeuvre spans
 const W = 760, H = 520;
 const NM = T.NM, KT = T.KT, DEG = T.DEG;
 const OBS_COLOUR = { green: "#2ca02c", amber: AMBER, red: "#d62728" };
@@ -136,6 +137,7 @@ function Chart({ title, xDomain, yLabel, series, bands = [], marks = [], height 
 // about 75%, estimates about 17%), so the bar moves about evenly.
 const STAGE_SPAN = { "least squares": [0, 0.01], "GLR statistic": [0.01, 0.02], "ownship legs (O)": [0.02, 0.025], "E-s evidence": [0.025, 0.03], search: [0.03, 0.08], confirmation: [0.08, 0.83], estimates: [0.83, 1], done: [1, 1] };
 function progressFraction(p) {
+  if (p && p.stage === "C: confirmation" && p.nominations > 0) return 0.1 + 0.85 * (p.decided / p.nominations);
   if (!p || !p.stage || !STAGE_SPAN[p.stage]) return null;
   const [a, b] = STAGE_SPAN[p.stage];
   let f = 0;
@@ -146,7 +148,7 @@ function progressFraction(p) {
 function progressStage(p) {
   if (!p || !p.stage) return "";
   if (p.note) return p.note;
-  if (p.stage === "confirmation" && p.nominations) return `confirmation: ${p.decided} of ${p.nominations} nominations`;
+  if ((p.stage === "confirmation" || p.stage === "C: confirmation") && p.nominations) return `${p.stage}: ${p.decided} of ${p.nominations} nominations`;
   if (p.stage === "estimates" && p.of) return `estimates: ${p.done} of ${p.of} rows`;
   return p.stage;
 }
@@ -170,11 +172,12 @@ function Demo() {
   const base = useBaseUrl("/demo-data/");
   const ownOrt = useBaseUrl("/ort/");
   const timelateUrl = useBaseUrl("/timelate");
+  const cLayerUrl = useBaseUrl("/viewer-data/layer.onnx");
   const { siteConfig } = useDocusaurusContext();
   const ortBase = siteConfig.customFields.ortBase || ownOrt;
 
   const [schema, setSchema] = useState(null);
-  const [hist, setHist] = useState({ past: [], sc: clone(DEFAULT_SCENARIO), future: [] });
+  const [hist, setHist] = useState({ past: [], sc: normaliseScenario(clone(DEFAULT_SCENARIO)), future: [] });
   const sc = hist.sc;
   const scRef = useRef(sc);
   scRef.current = sc;
@@ -196,6 +199,7 @@ function Demo() {
   const [dragLabel, setDragLabel] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [tlInfo, setTlInfo] = useState(null);
+  const [cmp, setCmp] = useState(null); // spec 036: {key, id, status, rows: {splitter: solution}, progress}
 
   const commit = useCallback((next) => {
     setHist((h) => (JSON.stringify(h.sc) === JSON.stringify(next) ? h : { past: [...h.past.slice(-99), h.sc], sc: next, future: [] }));
@@ -218,7 +222,7 @@ function Demo() {
             const errs = got ? checkScenario(s, got) : ["no scenario in the link"];
             if (errs.length) setNotice(`The link's scenario was not loaded: ${errs.slice(0, 3).join("; ")}`);
             else {
-              setHist({ past: [], sc: got, future: [] });
+              setHist({ past: [], sc: normaliseScenario(got), future: [] });
               setView(fitView(got, W, H));
             }
           } catch (e) {
@@ -234,6 +238,7 @@ function Demo() {
 
   const worker = useRef(null);
   const latest = useRef(-1);
+  const latestCmp = useRef(-1);
   const nextId = useRef(0);
   useEffect(() => {
     const w = new Worker(base + "worker.js", { type: "module" });
@@ -245,10 +250,19 @@ function Demo() {
         "tlm-s1": new URL(base + "tlm-s1.onnx", window.location.origin).href,
         "tlm-s2": new URL(base + "tlm-s2.onnx", window.location.origin).href,
         "tlm-s3": new URL(base + "tlm-s3.onnx", window.location.origin).href,
+        "c-layer": new URL(cLayerUrl, window.location.origin).href,
       },
     });
     w.onmessage = (ev) => {
       const m = ev.data;
+      if (m.id !== undefined && m.id === latestCmp.current) {
+        // spec 036: the comparison of leg splitters runs beside the solve
+        if (m.type === "progress") setCmp((c) => (c ? { ...c, progress: m } : c));
+        else if (m.type === "compared-one") setCmp((c) => (c ? { ...c, rows: { ...c.rows, [m.splitter]: m.solution } } : c));
+        else if (m.type === "compared") setCmp((c) => (c ? { ...c, status: "done", progress: null } : c));
+        else if (m.type === "error") setCmp((c) => (c ? { ...c, status: "error", error: m.message } : c));
+        return;
+      }
       if (m.id === undefined || m.id !== latest.current) return; // a stale result: discarded (FR-023)
       // a graph-loading note keeps the last stage's place on the bar
       if (m.type === "progress") setSolve((s) => ({ ...s, progress: m.stage.startsWith("loading") && s.progress ? { ...s.progress, note: m.stage } : m }));
@@ -258,7 +272,7 @@ function Demo() {
     w.onerror = (e) => setSolve({ status: "error", error: e.message || "worker failed" });
     worker.current = w;
     return () => w.terminate();
-  }, [base, ortBase]);
+  }, [base, ortBase, cLayerUrl]);
 
   // ---- derived from the committed scenario ----
   const derived = useMemo(() => {
@@ -270,8 +284,13 @@ function Demo() {
     const obs = observability(sc, b, rows, kn);
     return { b, rows, problem, origin, t0, kn, obs, ownTurns: ownTurnsIn(sc, b) };
   }, [sc]);
-  const key = useMemo(() => JSON.stringify(sc), [sc]);
   const info = SOLVER_LIST.find((s) => s.name === sc.solver) || SOLVER_LIST[0];
+  const splitterName = sc.splitter || "none";
+  const sInfo = SPLITTER_LIST.find((x) => x.name === splitterName) || SPLITTER_LIST[0];
+  // the splitter is part of the solve only for a solver that accepts knots
+  const key = useMemo(() => JSON.stringify(info.accepts_knots ? sc : { ...sc, splitter: undefined }), [sc, info.accepts_knots]);
+  // the comparison depends on everything but the chosen solver and splitter
+  const cmpKey = useMemo(() => JSON.stringify({ ...sc, solver: undefined, splitter: undefined, show_ellipses: undefined }), [sc]);
 
   // FR-022: recompute on every committed change (drag release, slider release, sigma, reseed, solver)
   useEffect(() => {
@@ -285,15 +304,35 @@ function Demo() {
     const id = nextId.current++;
     latest.current = id;
     setSolve({ status: "solving", key, id, t0: performance.now() });
-    worker.current.postMessage({ type: "solve", id, solver: sc.solver, problem: derived.problem });
-  }, [key, loaded, derived, sc.solver, nonce]);
+    worker.current.postMessage({ type: "solve", id, solver: sc.solver, splitter: splitterName, problem: derived.problem });
+  }, [key, loaded, derived, sc.solver, splitterName, nonce]);
+
+  // spec 036: run every leg splitter through the physics layer on this window
+  const startCompare = (only = null) => {
+    if (!worker.current || !derived.problem) return;
+    if (latestCmp.current >= 0) worker.current.postMessage({ type: "cancel", id: latestCmp.current });
+    const id = nextId.current++;
+    latestCmp.current = id;
+    const names = only || SPLITTER_LIST.map((x) => x.name);
+    setCmp({ key: cmpKey, id, status: "running", rows: {}, names, t0: performance.now() });
+    worker.current.postMessage({ type: "compare", id, solver: "layer", splitters: names, problem: derived.problem });
+  };
+  const cancelCompare = () => {
+    if (worker.current && latestCmp.current >= 0) worker.current.postMessage({ type: "cancel", id: latestCmp.current });
+    latestCmp.current = -1;
+    setCmp((c) => (c ? { ...c, status: "cancelled" } : c));
+  };
+  // a changed scenario makes a comparison stale: stop it
+  useEffect(() => {
+    if (cmp && cmp.key !== cmpKey && cmp.status === "running") cancelCompare();
+  }, [cmpKey]);
 
   // progress: an elapsed clock while a solve runs
   useEffect(() => {
-    if (solve.status !== "solving") return undefined;
+    if (solve.status !== "solving" && !(cmp && cmp.status === "running")) return undefined;
     const h = setInterval(() => setNow(performance.now()), 250);
     return () => clearInterval(h);
-  }, [solve.status]);
+  }, [solve.status, cmp && cmp.status]);
   const cancelSolve = () => {
     if (worker.current && latest.current >= 0) worker.current.postMessage({ type: "cancel", id: latest.current });
     latest.current = -1;
@@ -503,7 +542,7 @@ function Demo() {
       return false;
     }
     setImportErrors(null);
-    commit(obj);
+    commit(normaliseScenario(obj));
     setView(fitView(obj, W, H));
     return true;
   }, [schema, commit]);
@@ -516,7 +555,8 @@ function Demo() {
   const loadPreset = (id) => {
     const p = PRESETS.find((q) => q.id === id);
     if (!p) return;
-    const next = { ...clone(p.scenario), solver: sc.solver, show_ellipses: sc.show_ellipses };
+    // a preset that names a splitter (spec 036) brings its solver too
+    const next = normaliseScenario({ ...clone(p.scenario), solver: p.scenario.splitter ? p.scenario.solver : sc.solver, splitter: p.scenario.splitter || sc.splitter, show_ellipses: sc.show_ellipses });
     commit(next);
     setView(fitView(next, W, H));
     setSel(null);
@@ -530,8 +570,11 @@ function Demo() {
     solution: () => (solve.key === key ? solve.solution : null),
     summary: () => (ev ? ev.summary : null),
     observability: () => derived.obs,
-    mismatch: () => !!(info.single_leg && derived.kn && derived.kn.length),
-    set: (next) => { commit(next); setView(fitView(next, W, H)); },
+    mismatch: () => !!(oneLeg && derived.kn && derived.kn.length),
+    set: (next) => { const n = normaliseScenario(next); commit(n); setView(fitView(n, W, H)); },
+    legs: () => legs,
+    compare: () => cmp,
+    startCompare: (only) => startCompare(only || null),
     importText,
     fragment: () => window.location.hash,
   };
@@ -624,6 +667,14 @@ function Demo() {
         )}
         <circle cx={clampPx(sx(last[0] / NM))} cy={clampPx(sy(last[1] / NM))} r={5} fill={EST} stroke="#fff" />
         {ell}
+        {(solve.solution.splitter_spans || []).map((f, j) => {
+          // spec 036: where the splitter put each manoeuvre, on the estimated track
+          const tc = (f.start_s + f.end_s) / 2 + derived.t0;
+          let k = 0;
+          while (k < ev.t.length - 1 && ev.t[k] < tc) k++;
+          const X = clampPx(sx(pts[k][0] / NM)), Y = clampPx(sy(pts[k][1] / NM));
+          return <path key={`kn${j}`} data-testid="found-knot" d={`M${X},${Y - 6}L${X + 6},${Y}L${X},${Y + 6}L${X - 6},${Y}Z`} fill={FOUND} stroke="#fff" strokeWidth={1}><title>{`The splitter's manoeuvre ${j + 1}: ${fmtMin(f.start_s + derived.t0)}–${fmtMin(f.end_s + derived.t0)}`}</title></path>;
+        })}
       </g>
     );
   }
@@ -633,8 +684,28 @@ function Demo() {
 
   const s = ev ? ev.summary : null;
   const obs = derived.obs;
-  const mismatch = info.single_leg && derived.kn && derived.kn.length > 0;
+  // one leg: a single-leg solver, or the layer given no spans by its splitter
+  const oneLeg = info.single_leg || (info.accepts_knots && splitterName === "none");
+  const mismatch = oneLeg && derived.kn && derived.kn.length > 0;
   const sol = solve.key === key ? solve.solution : null;
+  // spec 036: the splitter's spans in scenario time, and how they match the truth's
+  const trueSpans = derived.problem ? derived.problem.knots : [];
+  const found = sol && sol.splitter_spans ? sol.splitter_spans : null;
+  const legs = found ? compareLegs(trueSpans, found) : null;
+  const foundMarks = found && splitterName !== "truth" ? found.map((f) => [f.start_s + derived.t0, Math.max(f.end_s + derived.t0, f.start_s + derived.t0 + 20), FOUND]) : [];
+  const trueMarks = derived.kn ? derived.kn.map((m) => [m.t0, m.t1, TGT]) : [];
+  // the comparison's rows, evaluated once per result (the clock re-renders the page while it runs)
+  const cmpRows = useMemo(() => {
+    if (!cmp || cmp.key !== cmpKey) return [];
+    return (cmp.names || []).map((name) => {
+      const solx = cmp.rows[name];
+      const lab = (SPLITTER_LIST.find((x) => x.name === name) || {}).label || name;
+      if (!solx) return { name, lab };
+      const e = derived.problem ? evaluate(sc, derived.b, derived.rows, derived.origin, derived.t0, solx, derived.kn) : null;
+      const lg = solx.splitter_spans ? compareLegs(derived.problem.knots, solx.splitter_spans) : null;
+      return { name, lab, solx, sum: e ? e.summary : null, lg };
+    });
+  }, [cmp && cmp.rows, cmp && cmp.key, cmpKey, derived]);
 
   // error-vs-time series
   const qdef = {
@@ -674,7 +745,7 @@ function Demo() {
     }
     const big = Math.max(...pts.map((p) => Math.abs(p[1])).filter(Number.isFinite), 1e-9);
     errChart = (w, h) => (
-      <Chart width={w} height={h} testid="chart-error" title="Error vs truth" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}${modelSpans.length ? "; purple: model's manoeuvres" : ""}`} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={[...derived.kn.map((m) => [m.t0, m.t1, TGT]), ...modelSpans]} yClip={[-big, big]} />
+      <Chart width={w} height={h} testid="chart-error" title="Error vs truth" yLabel={`${q.label}${q.band ? "; grey ±2 × bound" : ""}${modelSpans.length ? "; purple: model's manoeuvres" : ""}${foundMarks.length ? "; orange: splitter's" : ""}`} xDomain={xDom} series={[{ points: pts, colour: EST, width: 1.8 }]} bands={bands} marks={[...trueMarks, ...modelSpans, ...foundMarks]} yClip={[-big, big]} />
     );
   }
   let brgChart = null;
@@ -688,8 +759,8 @@ function Demo() {
     const pred = ev ? ev.predicted.map(([t, z]) => [t, unwrap(z)]) : [];
     const res = ev ? ev.residual : [];
     brgChart = {
-      bearings: (w, h) => <Chart width={w} height={h} testid="chart-bearings" title="Bearings" xDomain={[0, period]} yLabel="° (dots measured, line solution)" series={[{ points: meas, dots: true, colour: BRG, colourAt: (p) => (inWin(p[0]) ? "#8c8c00" : "#bbb") }, { points: pred, colour: EST, width: 1.5 }]} marks={[[win.start_s, win.end_s, "#2ca02c"]]} />,
-      residuals: (w, h) => <Chart width={w} height={h} testid="chart-residuals" title="Residuals" xDomain={[0, period]} yLabel="÷ σ (±2 dashed)" series={[{ points: res, dots: true, colour: EST }, { points: [[0, 2], [period, 2]], colour: "#888", dash: "3 3", width: 1 }, { points: [[0, -2], [period, -2]], colour: "#888", dash: "3 3", width: 1 }]} marks={[[win.start_s, win.end_s, "#2ca02c"]]} yClip={[-8, 8]} />,
+      bearings: (w, h) => <Chart width={w} height={h} testid="chart-bearings" title="Bearings" xDomain={[0, period]} yLabel="° (dots measured, line solution)" series={[{ points: meas, dots: true, colour: BRG, colourAt: (p) => (inWin(p[0]) ? "#8c8c00" : "#bbb") }, { points: pred, colour: EST, width: 1.5 }]} marks={[[win.start_s, win.end_s, "#2ca02c"], ...trueMarks, ...foundMarks]} />,
+      residuals: (w, h) => <Chart width={w} height={h} testid="chart-residuals" title="Residuals" xDomain={[0, period]} yLabel="÷ σ (±2 dashed)" series={[{ points: res, dots: true, colour: EST }, { points: [[0, 2], [period, 2]], colour: "#888", dash: "3 3", width: 1 }, { points: [[0, -2], [period, -2]], colour: "#888", dash: "3 3", width: 1 }]} marks={[[win.start_s, win.end_s, "#2ca02c"], ...trueMarks, ...foundMarks]} yClip={[-8, 8]} />,
     };
   }
 
@@ -742,11 +813,19 @@ function Demo() {
             {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>
         </label>
-        <label>Solver{" "}
-          <select data-testid="solver" value={sc.solver} onChange={(e) => commit({ ...sc, solver: e.target.value })}>
-            {SOLVER_LIST.map((x) => <option key={x.name} value={x.name}>{x.label}</option>)}
-          </select>
-        </label>
+        <span className={styles.solverBox}>
+          <label title={info.accepts_knots ? sInfo.assumptions : "This TMA solver does not take legs from a splitter."}>Leg splitter{" "}
+            <select data-testid="splitter" value={splitterName} disabled={!info.accepts_knots} onChange={(e) => commit({ ...sc, splitter: e.target.value })}>
+              {SPLITTER_LIST.map((x) => <option key={x.name} value={x.name}>{x.label}</option>)}
+            </select>
+          </label>
+          <span aria-hidden="true">→</span>
+          <label title={info.assumptions}>TMA solver{" "}
+            <select data-testid="solver" value={sc.solver} onChange={(e) => commit({ ...sc, solver: e.target.value })}>
+              {SOLVER_LIST.map((x) => <option key={x.name} value={x.name}>{x.label}{x.accepts_knots ? " ← legs" : ""}</option>)}
+            </select>
+          </label>
+        </span>
         <button className="button button--sm button--secondary" onClick={undo} disabled={!hist.past.length} title="Ctrl+Z">Undo</button>
         <button className="button button--sm button--secondary" onClick={redo} disabled={!hist.future.length} title="Ctrl+Y">Redo</button>
         <button className="button button--sm button--secondary" onClick={() => setView(fitView(sc, W, H))}>Fit view</button>
@@ -867,6 +946,7 @@ function Demo() {
         <div className={styles.dashCol}>
           <div className={styles.panel} data-testid="panel-status">
             <h4>Solver</h4>
+            {info.accepts_knots && <div data-testid="splitter-label"><b>{sInfo.label}</b> → </div>}
             <div><b>{info.label}</b></div>
             <div className={styles.small}>{info.assumptions}</div>
             <div className="margin-top--xs" data-testid="solve-status">
@@ -909,9 +989,69 @@ function Demo() {
           {mismatch && (
             <div className={`${styles.panel} ${styles.flag}`} data-testid="panel-mismatch">
               <h4>Model mismatch</h4>
-              The target manoeuvres inside the window ({derived.kn.length} {derived.kn.length === 1 ? "change" : "changes"}, shaded red on the error chart) and this solver assumes one constant-velocity leg: its answer is biased by design. Narrow the window to one target leg, or choose the solver told the manoeuvre times.
+              The target manoeuvres inside the window ({derived.kn.length} {derived.kn.length === 1 ? "change" : "changes"}, shaded red on the error chart) and this solver assumes one constant-velocity leg: its answer is biased by design. Narrow the window to one target leg, or give the segmented solver a leg splitter.
             </div>
           )}
+          {info.accepts_knots && (
+            <div className={styles.panel} data-testid="panel-legs">
+              <h4>Target legs</h4>
+              {legs ? (
+                <>
+                  <div className={styles.small}>{sInfo.assumptions}</div>
+                  <table>
+                    <thead><tr><th></th><th>manoeuvres</th><th>found</th><th>missed</th><th>false</th><th>timing</th></tr></thead>
+                    <tbody>
+                      <tr><td>{sInfo.told_truth ? "told" : "stated"}</td><td data-testid="legs-stated">{legs.stated}</td><td data-testid="legs-found">{legs.matched} of {legs.truth}</td><td data-testid="legs-missed">{legs.missed}</td><td data-testid="legs-false">{legs.false_}</td><td>{Number.isFinite(legs.median_offset_s) ? `${fmt(legs.median_offset_s, 0)} s` : "–"}</td></tr>
+                    </tbody>
+                  </table>
+                  <div className={styles.small}>
+                    Truth (red): {trueSpans.length ? trueSpans.map((m) => `${fmtMin(m.start_s + derived.t0)}–${fmtMin(m.end_s + derived.t0)}`).join(", ") : "none in the window"}.{" "}
+                    {splitterName !== "truth" && <>Splitter (orange): {found.length ? found.map((f) => `${fmtMin(f.start_s + derived.t0)}–${fmtMin(f.end_s + derived.t0)}${Number.isFinite(f.stat) ? ` (${fmt(f.stat, 0)})` : ""}`).join(", ") : "none"}.</>}{" "}
+                    Found: a stated span within 2 min of a true one, each used once; timing is the median offset of their centres. Splitter {fmt(sol.splitter_runtime_ms / 1000, 1)} s{sol.splitter_message ? `; ${sol.splitter_message}` : ""}.
+                  </div>
+                </>
+              ) : <span className={styles.small}>{solve.status === "solving" ? "waiting for the splitter" : "–"}</span>}
+            </div>
+          )}
+          <div className={styles.panel} data-testid="panel-compare">
+            <h4>Compare leg splitters</h4>
+            {(() => {
+              const fresh = cmp && cmp.key === cmpKey;
+              const running = fresh && cmp.status === "running";
+              const rows = fresh ? cmpRows : [];
+              return (
+                <>
+                  <div>
+                    <button className="button button--sm button--primary" data-testid="compare-run" disabled={running || !derived.problem} onClick={() => startCompare()}>Run all splitters</button>{" "}
+                    {running && <><span className={styles.small}>{cmp.progress ? (cmp.progress.splitter ? `${cmp.progress.splitter}: ` : "") + (progressStage(cmp.progress) || "") : "starting"} · {fmt(Math.max(0, ((now || performance.now()) - cmp.t0) / 1000), 0)} s</span>{" "}<button className="button button--sm button--link" style={{ padding: 0 }} onClick={cancelCompare}>cancel</button></>}
+                    {cmp && !fresh && <span className={styles.small}>The scenario changed since the last comparison.</span>}
+                  </div>
+                  {fresh && (
+                    <table data-testid="compare-table">
+                      <thead><tr><th>splitter → layer</th><th>found / missed / false</th><th>range RMS (%)</th><th>course RMS (°)</th><th>speed RMS (kt)</th><th>s</th></tr></thead>
+                      <tbody>
+                        {rows.map((r) => (
+                          <tr key={r.name} data-testid={`compare-${r.name}`}>
+                            <td>{r.lab}</td>
+                            {!r.solx ? <td colSpan={5} className={styles.small}>{running ? "…" : "–"}</td> : r.solx.status === "failed" ? <td colSpan={5} className={styles.small}>failed: {r.solx.message}</td> : (
+                              <>
+                                <td>{r.lg ? `${r.lg.matched} / ${r.lg.missed} / ${r.lg.false_}` : "–"}</td>
+                                <td>{r.sum ? fmt(r.sum.range_pct.rms, 1) : "–"}</td>
+                                <td>{r.sum ? fmt(r.sum.course_deg.rms, 1) : "–"}</td>
+                                <td>{r.sum ? fmt(r.sum.speed_kt.rms, 2) : "–"}</td>
+                                <td>{fmt(((r.solx.splitter_runtime_ms || 0) + (r.solx.runtime_ms || 0)) / 1000, 1)}</td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                  <div className={styles.small}>Each splitter's spans go to the segmented physics layer on this window and this noise draw; errors read at every bearing time, as above. One draw: Reseed and run again before reading much into a difference. C takes minutes (cancel stops it).</div>
+                </>
+              );
+            })()}
+          </div>
           <div className={styles.panel} data-testid="panel-errors">
             <h4>Errors across the window</h4>
             {s ? (
@@ -937,6 +1077,7 @@ function Demo() {
               <li>Drag a leg's <b>square handle</b> to change its course and speed: every later leg swings round with it, so the rest of the track can move a long way.</li>
               <li>Click a leg to insert a waypoint; select a waypoint and press Delete (or right-click it) to remove it. Undo with Ctrl+Z. Amber waypoints: the turn does not fit at its rate and is drawn tighter.</li>
               <li>Wheel to zoom, drag empty space to pan. The link in the address bar restores this exact scenario, noise draw and solver.</li>
+              <li>Leg splitters (spec 036): none; told the truth (an oracle); Debrief's 2015 arctan slicing (one split per steady ownship leg, ZigRatio); a multi-leg arctan slicing with independent slices; the arctan law with joined legs, searched over the whole window; and C, the project's classical segmenter (spec 005, spec 021's port). Their spans go to the segmented physics layer; "Run all splitters" compares them on this window.</li>
               <li>Solvers: JavaScript batch least squares (spec 021's port of the Python reference); the physics layer of Gates 1–2 as an ONNX graph (<code>tl-layer.onnx</code>{tlInfo ? <> , SHA-256 <code>{tlInfo.onnx_sha256.slice(0, 16)}…</code></> : null}), with one leg or told the true manoeuvre times; and spec 016's whole-period learned model (three training seeds, 26 MB each, loaded on first use), which reads the whole window at once and also states where it thinks the target manoeuvred. For the time-late studies' standing system see <a href={timelateUrl}>Time-late</a>.</li>
             </ul>
           </details>

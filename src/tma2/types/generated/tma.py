@@ -31,7 +31,7 @@ from pydantic import (
 
 
 metamodel_version = "1.12.0"
-version = "0.37.0"
+version = "0.38.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -1203,8 +1203,9 @@ class PackageVersion(ConfiguredBaseModel):
                        'EstimatorRef',
                        'GateCheck',
                        'DemoScenario',
+                       'DemoSplitterInfo',
                        'DemoSolverInfo']} })
-    version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'DemoSolverInfo']} })
+    version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'DemoSplitterInfo', 'DemoSolverInfo']} })
 
 
 class RunEnvironment(ConfiguredBaseModel):
@@ -1227,6 +1228,7 @@ class EstimatorRef(ConfiguredBaseModel):
                        'EstimatorRef',
                        'GateCheck',
                        'DemoScenario',
+                       'DemoSplitterInfo',
                        'DemoSolverInfo']} })
     settings_json: str = Field(default=..., description="""Estimator settings as JSON.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EstimatorRef']} })
 
@@ -1306,6 +1308,7 @@ class GateCheck(ConfiguredBaseModel):
                        'EstimatorRef',
                        'GateCheck',
                        'DemoScenario',
+                       'DemoSplitterInfo',
                        'DemoSolverInfo']} })
     result: GateResult = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck', 'GateVerdict']} })
     detail: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GateCheck']} })
@@ -3984,6 +3987,7 @@ class DemoScenario(ConfiguredBaseModel):
                        'EstimatorRef',
                        'GateCheck',
                        'DemoScenario',
+                       'DemoSplitterInfo',
                        'DemoSolverInfo']} })
     ownship: DemoTrack = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario', 'DemoScenario']} })
     target: DemoTrack = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario', 'DemoScenario']} })
@@ -4002,6 +4006,7 @@ class DemoScenario(ConfiguredBaseModel):
                        'DemoScenario']} })
     window: DemoWindow = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario']} })
     solver: str = Field(default=..., description="""Name of the selected solver plug-in (FR-024).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaSolution']} })
+    splitter: Optional[str] = Field(default=None, description="""Spec 036: name of the selected leg splitter, whose manoeuvre spans a solver that accepts knots uses (absent: none, one leg).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaSolution']} })
     show_ellipses: Optional[bool] = Field(default=None, description="""Show the solver's 1- and 2-sigma position ellipses (off by default).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario']} })
 
 
@@ -4013,6 +4018,7 @@ class DemoSpan(ConfiguredBaseModel):
 
     start_s: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DemoWindow', 'DemoSpan']} })
     end_s: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DemoWindow', 'DemoSpan']} })
+    stat: Optional[float] = Field(default=None, description="""Spec 036: the splitter's strength for this span (its own statistic; absent for the truth).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSpan']} })
 
 
 class TmaProblem(ConfiguredBaseModel):
@@ -4061,6 +4067,28 @@ class TmaSolution(ConfiguredBaseModel):
     condition_number: Optional[float] = Field(default=None, description="""Condition number of the Jacobi-scaled information matrix at the solution.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     manoeuvre_t_s: Optional[list[float]] = Field(default=None, description="""Times of the solver's own manoeuvre statements (the learned whole-period model: each token's last row).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
     manoeuvre_prob: Optional[list[float]] = Field(default=None, description="""The solver's probability that a target manoeuvre is in progress at each of manoeuvre_t_s.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    splitter: Optional[str] = Field(default=None, description="""Spec 036: the leg splitter whose spans the solver used.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario', 'TmaSolution']} })
+    splitter_spans: Optional[list[DemoSpan]] = Field(default=None, description="""Spec 036: the manoeuvre spans the leg splitter stated, in the problem's time.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    splitter_runtime_ms: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+    splitter_message: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TmaSolution']} })
+
+
+class DemoSplitterInfo(ConfiguredBaseModel):
+    """
+    Spec 036: what a leg-splitter plug-in declares.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://github.com/debrief/gitma/schema/tma'})
+
+    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion',
+                       'EstimatorRef',
+                       'GateCheck',
+                       'DemoScenario',
+                       'DemoSplitterInfo',
+                       'DemoSolverInfo']} })
+    version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'DemoSplitterInfo', 'DemoSolverInfo']} })
+    label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo']} })
+    assumptions: str = Field(default=..., description="""Its method, in words.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo', 'DemoSolverInfo']} })
+    told_truth: bool = Field(default=..., description="""It is told the true manoeuvre spans (an oracle).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo']} })
 
 
 class DemoSolverInfo(ConfiguredBaseModel):
@@ -4073,9 +4101,10 @@ class DemoSolverInfo(ConfiguredBaseModel):
                        'EstimatorRef',
                        'GateCheck',
                        'DemoScenario',
+                       'DemoSplitterInfo',
                        'DemoSolverInfo']} })
-    version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'DemoSolverInfo']} })
-    assumptions: str = Field(default=..., description="""Its model, in words (for example: one constant-velocity leg).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
+    version: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PackageVersion', 'DemoSplitterInfo', 'DemoSolverInfo']} })
+    assumptions: str = Field(default=..., description="""Its model, in words (for example: one constant-velocity leg).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSplitterInfo', 'DemoSolverInfo']} })
     single_leg: bool = Field(default=..., description="""It assumes one constant-velocity leg (FR-036's mismatch flag).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
     accepts_knots: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
     time_late: bool = Field(default=..., description="""It fits the whole window at once (false: a causal, real-time estimator read as a track).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DemoSolverInfo']} })
@@ -4181,4 +4210,5 @@ DemoScenario.model_rebuild()
 DemoSpan.model_rebuild()
 TmaProblem.model_rebuild()
 TmaSolution.model_rebuild()
+DemoSplitterInfo.model_rebuild()
 DemoSolverInfo.model_rebuild()
