@@ -101,9 +101,7 @@ def generate_dataset(opts: GenerateOptions) -> list[SplitSummary]:
             {
                 "record": "header",
                 "schema_version": opts.schema_version,
-                "generator_version": (
-                    cond.version if cond is not None else opts.generator_version
-                ),
+                "generator_version": (cond.version if cond is not None else opts.generator_version),
                 **({"mismatch": opts.mismatch} if cond is not None else {}),
                 "dataset_seed": str(int(opts.seed)),
                 "split": plan.split,
@@ -210,7 +208,7 @@ def write_mismatch_truth(
         "split": split,
         "index_start": index_start,
         "scenario_count": int(eng.shape[0]),
-        "generator_version": mm.flatten_condition(opts.mismatch).version,
+        "generator_version": mm.flatten_condition(opts.mismatch or {"id": "off"}).version,
         "generator_git_commit": opts.generator_git_commit,
         "generator_git_dirty": opts.generator_git_dirty,
         "eng_columns": [

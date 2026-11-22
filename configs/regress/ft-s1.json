@@ -1,0 +1,34 @@
+{
+ "description": "Spec 037 fine-tune, training seed 1, DRAFT until the decision record binds it: spec 012's seed 1 checkpoint under the mismatch mix, at most 26,000 updates of 256 scenarios (6.7 million from stream seed 369, starting at index 0), learning rate 1e-4 after 300 warm-up updates, cosine to zero, one segment of at most 3 h 10 min (3 h 20 min with the start-up allowance).",
+ "config": {
+  "layers": 8,
+  "width": 256,
+  "heads": 8,
+  "feedforward": 1024,
+  "batch_scenarios": 256,
+  "learning_rate": 0.0001,
+  "warmup_updates": 300,
+  "weight_decay": 0.01,
+  "val_count": 512,
+  "val_every_updates": 500,
+  "checkpoint_seconds": 900,
+  "precision": "amp",
+  "held_fraction": 0.2,
+  "stream_seed": 369,
+  "val_seed": 370,
+  "id": "ft-s1",
+  "limit_seconds": 11400,
+  "seed": 1,
+  "total_updates": 26000,
+  "stream_start": 0,
+  "error_mix": "configs/regress/ft-mix.json",
+  "init_sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+ },
+ "segments": 1,
+ "segment_limit_seconds": 11400,
+ "init_from": {
+  "branch": "results/gputrain-r-a-s1-42990055824",
+  "dir": "experiments/gputrain-runs/r-a-s1-42990055824",
+  "sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+ }
+}

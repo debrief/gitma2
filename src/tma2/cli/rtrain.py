@@ -16,13 +16,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--resume", help="a directory with state.pt and run.json")
     ap.add_argument("--device", default="cpu", choices=("cpu", "cuda"))
     ap.add_argument("--limit-seconds", type=int)
+    ap.add_argument("--init", help="spec 037: the checkpoint the configuration starts from")
     a = ap.parse_args(argv)
     from tma2.regress.model import RegressorConfig
     from tma2.regress.train import train
 
     raw = json.loads(Path(a.config).read_text())
     cfg = RegressorConfig(**raw.get("config", raw))
-    rec = train(cfg, Path(a.out), a.device, Path(a.resume) if a.resume else None, a.limit_seconds)
+    rec = train(
+        cfg,
+        Path(a.out),
+        a.device,
+        Path(a.resume) if a.resume else None,
+        a.limit_seconds,
+        init=Path(a.init) if a.init else None,
+    )
     print(
         f"{rec['stopped']}: {rec['updates']} updates, {rec['scenarios_seen']} {cfg.data}, "
         f"{rec['scenarios_per_second']:.0f} per second"

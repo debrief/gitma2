@@ -21,6 +21,7 @@ from tma2.data.provenance import read_git_provenance
 
 from . import period_data as pdata
 from .data import Tensors, batch_at, load_ranges, supervised, validation
+from .mixture import load_mix
 from .model import Regressor, RegressorConfig, beta_nll, manoeuvre_bce
 
 
@@ -130,6 +131,7 @@ def train(
     resume: Path | None = None,
     limit_seconds: int | None = None,
     git_commit: str | None = None,
+    init: Path | None = None,
 ) -> dict[str, Any]:
     gp = read_git_provenance()  # before any output
     commit = git_commit or gp.commit  # a remote container has no checkout: the caller's commit
@@ -148,6 +150,16 @@ def train(
         "segments": [],
         "validation": [],
     }
+    if cfg.init_sha256 and resume is None:
+        # spec 037: fine-tuning starts from a named checkpoint, checked by its digest
+        from safetensors.torch import load_file
+
+        if init is None:
+            raise ValueError("this configuration starts from a checkpoint: pass init")
+        if hashlib.sha256(init.read_bytes()).hexdigest() != cfg.init_sha256:
+            raise ValueError("init: not the checkpoint the configuration names (init_sha256)")
+        model.load_state_dict(load_file(str(init)))
+        model.to(device)
     if resume is not None:
         st = torch.load(resume / "state.pt", map_location=device, weights_only=False)
         if st["config_sha256"] != record["config_sha256"]:
@@ -165,6 +177,8 @@ def train(
         ranges = load_ranges(cfg.ranges)
         held = load_ranges(cfg.held_ranges) if cfg.held_fraction > 0 else None
         val = validation(cfg, ranges)
+        emix = load_mix(cfg.error_mix) if cfg.error_mix else None
+        val_mis = validation(cfg, ranges, emix) if emix is not None else None
     out.mkdir(parents=True, exist_ok=True)
     start_update = update
     seg: dict[str, Any] = {"start_update": update, "started": time.time(), "git_commit": commit}
@@ -220,7 +234,7 @@ def train(
         if periods:
             loss, _ = period_loss(model, pdata.batch_at(cfg, mix, update), device, amp)
         else:
-            x = batch_at(cfg, ranges, update, held)
+            x = batch_at(cfg, ranges, update, held, emix)
             offset = int(rng.integers(0, cfg.patch_rows))
             loss, _, _, _ = _loss(model, x, offset, device, amp)
         opt.zero_grad(set_to_none=True)
@@ -236,6 +250,9 @@ def train(
                 if periods
                 else evaluate(model, val, device, amp)
             )
+            if not periods and val_mis is not None:  # the same engagements under the mix
+                vm = evaluate(model, val_mis, device, amp)
+                v.update({f"mis_{k}": x for k, x in vm.items()})
             v.update(update=update, seconds=time.time() - t0, train_loss=float(loss.detach()))
             record["validation"].append(v)
             print(json.dumps(v), flush=True)

@@ -53,10 +53,22 @@ jobs:
           # a call that never starts training must not wait for hours: the segment's limit
           # plus 25 minutes for the image, the queue and saving
           LIMIT=$(python3 -c "import json; print(json.load(open('configs/regress/${{ steps.plan.outputs.name }}.json'))['segment_limit_seconds'] + 1500)")
+          # spec 037: a plan with init_from starts from that checkpoint (digest checked here and in train)
+          INIT=()
+          read -r IB ID IS <<< "$(python3 -c "
+          import json
+          i = json.load(open('configs/regress/${{ steps.plan.outputs.name }}.json')).get('init_from') or {}
+          print(i.get('branch', '-'), i.get('dir', '-'), i.get('sha256', '-'))")"
+          if [ "$IB" != "-" ]; then
+            git fetch -q origin "$IB"
+            git show "FETCH_HEAD:$ID/checkpoint.safetensors" > "$RUNNER_TEMP/init.safetensors"
+            echo "$IS  $RUNNER_TEMP/init.safetensors" | sha256sum -c -
+            INIT=(--init "$RUNNER_TEMP/init.safetensors")
+          fi
           timeout "$LIMIT" uv run --with modal modal run scripts/modal_train.py \
             --plan "configs/regress/${{ steps.plan.outputs.name }}.json" \
             --out "$RUNNER_TEMP/out" --run-name "${{ steps.plan.outputs.name }}-${{ github.run_id }}" \
-            --commit "${{ github.sha }}"
+            --commit "${{ github.sha }}" "${INIT[@]}"
       - uses: actions/upload-artifact@v4
         with:
           name: segment1

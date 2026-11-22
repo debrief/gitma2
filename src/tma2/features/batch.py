@@ -19,8 +19,10 @@ from tma2.kinds import KIND_NAMES as KIND_NAMES
 from tma2.kinds import KIND_SPEED as KIND_SPEED
 from tma2.kinds import is_speed_kind as is_speed_kind
 from tma2.kinds import is_turn_kind as is_turn_kind
+from tma2.sim import mismatch as mm
 from tma2.sim import scenario as sc
 from tma2.sim.geometry import f32
+from tma2.sim.prng import derive_seed
 from tma2.sim.ranges import flatten_ranges, noise_free, rows_for
 
 KIND_NONE = -1
@@ -152,6 +154,71 @@ def _fill_batch(
             since_m_end[b, i] = (i - last_end) * dt if (inside and last_end >= 0) else -1.0
 
 
+@njit(parallel=True, cache=True)
+def _overlay_batch(
+    dataset_seed: uint64,
+    indices: np.ndarray,
+    R: np.ndarray,
+    M: np.ndarray,
+    rmax: int,
+    bearing: np.ndarray,
+) -> None:
+    """Spec 037: rebuild the bearings of the scenarios whose row of ``M`` [n, M_LEN] is a
+    mismatch condition, exactly as ``sim.generate.run_kernel`` does for a split."""
+    for b in prange(indices.shape[0]):
+        if np.all(np.isnan(M[b])):
+            continue
+        own_b = np.zeros((rmax, 4))
+        tgt_b = np.zeros((rmax, 4))
+        bearing_b = np.zeros(rmax)
+        valid_b = np.zeros(rmax, dtype=np.bool_)
+        clean = np.zeros(rmax)
+        white = np.zeros(rmax)
+        P = np.full(sc.P_LEN, np.nan)
+        tm = np.zeros((sc.MAX_TM, sc.TM_COLS))
+        TI = np.full(sc.TI_LEN, -1, dtype=np.int64)
+        sp = np.zeros((sc.MAX_TM, 3), dtype=np.int64)
+        stats = np.zeros(3)
+        redraws = sc.generate_parts_into(
+            dataset_seed,
+            indices[b],
+            R,
+            rmax,
+            own_b,
+            tgt_b,
+            bearing_b,
+            valid_b,
+            P,
+            tm,
+            TI,
+            sp,
+            stats,
+            clean,
+            white,
+        )
+        if redraws < 0:
+            continue
+        eng = np.zeros(mm.E_LEN)
+        comp = np.zeros((rmax, 4))
+        outlier = np.zeros(rmax, dtype=np.bool_)
+        mm.apply_mismatch(
+            derive_seed(dataset_seed, indices[b]),
+            M[b],
+            TI[sc.TI_SAMPLES],
+            P[sc.P_DT],
+            P[sc.P_SIGMA],
+            clean,
+            white,
+            valid_b,
+            bearing_b,
+            eng,
+            comp,
+            outlier,
+        )
+        for i in range(rmax):
+            bearing[b, i] = bearing_b[i]
+
+
 def generate_batch(
     seed: int | np.uint64,
     batch_index: int,
@@ -179,8 +246,10 @@ def generate_indices(
     ranges: dict[str, Any],
     noise_free_data: bool = False,
     workers: int | None = None,
+    mismatch: np.ndarray | None = None,
 ) -> Batch:
-    """Arrays for an explicit set of scenario indices."""
+    """Arrays for an explicit set of scenario indices. ``mismatch`` [n, M_LEN] (spec 037): a
+    bearing-error condition per scenario (a row of NaN: none), applied as a split's would be."""
     r = noise_free(ranges) if noise_free_data else ranges
     R = flatten_ranges(r)
     rmax = rows_for(r)
@@ -234,6 +303,12 @@ def generate_indices(
             b.tm,
             b.n_tm,
         )
+        if mismatch is not None:
+            if mismatch.shape != (n, mm.M_LEN):
+                raise ValueError("mismatch: one row of M_LEN per scenario")
+            _overlay_batch(
+                np.uint64(seed), b.index, R, mismatch.astype(np.float64), rmax, b.bearing
+            )
     finally:
         if workers is not None:
             set_num_threads(previous)

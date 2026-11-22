@@ -21,7 +21,11 @@ from .train import train
 
 
 def run_segment(
-    plan: dict[str, Any], workdir: Path, device: str, git_commit: str | None = None
+    plan: dict[str, Any],
+    workdir: Path,
+    device: str,
+    git_commit: str | None = None,
+    init: Path | None = None,
 ) -> dict[str, Any]:
     t0 = time.time()
     cfg = RegressorConfig(**plan["config"])
@@ -36,7 +40,7 @@ def run_segment(
             shutil.rmtree(resume)
         shutil.copytree(workdir, resume)
         prev = float(json.loads((resume / "run.json").read_text()).get("gpu_seconds", 0.0))
-    rec = train(cfg, workdir, device, resume, limit, git_commit)
+    rec = train(cfg, workdir, device, resume, limit, git_commit, init)
     if resume is not None:
         shutil.rmtree(resume)
     rec["gpu_seconds"] = prev + (time.time() - t0)

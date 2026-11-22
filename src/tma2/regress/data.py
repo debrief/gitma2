@@ -12,6 +12,7 @@ import numpy as np
 from tma2.features.batch import Batch, generate_indices
 
 from .frame import features, targets
+from .mixture import Mix, conditions
 from .model import RegressorConfig
 
 
@@ -62,27 +63,36 @@ def astuple_(t: Tensors) -> tuple[np.ndarray, ...]:
     return (t.f, t.y, t.mask, t.zig, t.index)
 
 
+def _generate(
+    seed: int, idx: np.ndarray, ranges: dict[str, Any], cfg: RegressorConfig, mix: Mix | None
+) -> Tensors:
+    M = conditions(seed, idx, mix) if mix is not None else None
+    return tensors_of(generate_indices(seed, idx, ranges, mismatch=M), cfg)
+
+
 def batch_at(
     cfg: RegressorConfig,
     ranges: dict[str, Any],
     update: int,
     held: dict[str, Any] | None = None,
+    mix: Mix | None = None,
 ) -> Tensors:
     """Update ``update``'s batch. With ``held`` ranges and ``cfg.held_fraction`` > 0, the first
-    round(B · fraction) indices of the batch are drawn with the held-course ranges."""
+    round(B · fraction) indices of the batch are drawn with the held-course ranges. With a
+    ``mix`` (spec 037) each scenario carries the bearing-error condition its index draws."""
     idx = stream_indices(cfg, update)
     n_held = int(round(cfg.held_fraction * idx.size)) if held is not None else 0
     if held is None or n_held == 0:
-        return tensors_of(generate_indices(cfg.stream_seed, idx, ranges), cfg)
-    a = tensors_of(generate_indices(cfg.stream_seed, idx[:n_held], held), cfg)
+        return _generate(cfg.stream_seed, idx, ranges, cfg, mix)
+    a = _generate(cfg.stream_seed, idx[:n_held], held, cfg, mix)
     if n_held == idx.size:
         return a
-    return _concat(a, tensors_of(generate_indices(cfg.stream_seed, idx[n_held:], ranges), cfg))
+    return _concat(a, _generate(cfg.stream_seed, idx[n_held:], ranges, cfg, mix))
 
 
-def validation(cfg: RegressorConfig, ranges: dict[str, Any]) -> Tensors:
+def validation(cfg: RegressorConfig, ranges: dict[str, Any], mix: Mix | None = None) -> Tensors:
     idx = np.arange(cfg.val_count, dtype=np.int64)
-    return tensors_of(generate_indices(cfg.val_seed, idx, ranges), cfg)
+    return _generate(cfg.val_seed, idx, ranges, cfg, mix)
 
 
 def supervised(mask: np.ndarray, patch: int, offset: int) -> np.ndarray:
