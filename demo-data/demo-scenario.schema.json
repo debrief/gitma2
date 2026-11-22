@@ -146,6 +146,15 @@
   "target": {
    "$ref": "#/$defs/DemoTrack"
   },
+  "turn_loss_s": {
+   "description": "Owner 2026-11-22: bearings are lost while ownship turns and for this many seconds after each turn ends (default 120); null keeps every bearing.",
+   "maximum": 1800,
+   "minimum": 0,
+   "type": [
+    "number",
+    "null"
+   ]
+  },
   "window": {
    "$ref": "#/$defs/DemoWindow"
   }
@@ -162,5 +171,5 @@
  ],
  "title": "DemoScenario",
  "type": "object",
- "version": "0.39.0"
+ "version": "0.40.0"
 }
