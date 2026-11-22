@@ -657,8 +657,11 @@ function Demo() {
           const [ax, ay] = Wp[i], [bx, by] = Wp[i + 1];
           const dx = sx(bx) - sx(ax), dy = sy(by) - sy(ay);
           const len = Math.hypot(dx, dy) || 1;
-          const nx = -dy / len, ny = dx / len;
-          const mx = (sx(ax) + sx(bx)) / 2 + nx * 12, my = (sy(ay) + sy(by)) / 2 + ny * 12;
+          // on the leg's north side (west when the leg runs north–south), clear of the square
+          // handle at its middle and the cursor that drags it
+          let nx = -dy / len, ny = dx / len;
+          if (Math.abs(ny) > 0.3 ? ny > 0 : nx > 0) { nx = -nx; ny = -ny; }
+          const mx = (sx(ax) + sx(bx)) / 2 + nx * 20, my = (sy(ay) + sy(by)) / 2 + ny * 20;
           const anchor = nx > 0.3 ? "start" : nx < -0.3 ? "end" : "middle";
           if (len < 40) return null;
           return (
@@ -953,8 +956,9 @@ function Demo() {
             )}
             {dragLabel && (
               <g pointerEvents="none">
-                <rect x={dragLabel.x + 10} y={dragLabel.y - 24} width={120} height={18} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.4} rx={3} />
-                <text x={dragLabel.x + 16} y={dragLabel.y - 11} fontSize={12} fill="currentColor">{dragLabel.text}</text>
+                {/* above and to the left of the cursor, which points up-left and trails down-right */}
+                <rect x={dragLabel.x - 132} y={dragLabel.y - 30} width={120} height={18} fill="var(--ifm-background-color)" stroke="currentColor" strokeOpacity={0.4} rx={3} />
+                <text x={dragLabel.x - 126} y={dragLabel.y - 17} fontSize={12} fill="currentColor">{dragLabel.text}</text>
               </g>
             )}
             <g pointerEvents="none">

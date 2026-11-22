@@ -68,5 +68,8 @@ This is spec 036.
   - Dragging a waypoint (circle) now keeps the adjacent legs' speeds, so their durations change.
     Dragging a leg's square keeps its duration, so its speed changes.
   - Ctrl-click (⌘-click) deletes a waypoint.
+  - Each leg's speed label sits on the leg's north side (west for a north–south leg), clear of
+    the square handle and the cursor that drags it. The read-out during a drag sits above and
+    to the left of the cursor.
   - Schema 0.39.0: `TmaSolution.splitter_ownship_spans`, and the `DemoSplitterInfo` flags
     `detects_target` and `detects_ownship`.
