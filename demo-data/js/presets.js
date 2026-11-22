@@ -1,6 +1,7 @@
 // Spec 035 FR-041: preset scenarios (generic and unclassified, NFR-5). Distances in NM from an
 // arbitrary origin, two-hour engagements, bearings every 5 s at 1 degree.
 import { SCHEMA_VERSION } from "./scenario.js";
+import { LEGACY_SOLVERS } from "./solver-info.js";
 
 const leg = (course_deg, speed_kt, minutes, turn_rate_dps = 1) => ({ course_deg, speed_kt, duration_s: minutes * 60, turn_rate_dps });
 const zigzag = () => ({ start_x_nm: 0, start_y_nm: 0, legs: [leg(0, 8, 30), leg(60, 8, 30), leg(330, 8, 30), leg(60, 8, 30)] });
@@ -29,6 +30,13 @@ export const PRESETS = [
     scenario: base("Target turn", zigzag(), { start_x_nm: -1, start_y_nm: 9, legs: [leg(100, 6, 60, 0.5), leg(140, 6, 60)] }),
   },
   {
+    id: "two-target-turns",
+    golden: false, // not in spec 035's golden problem set (conformance/onnx/demo_problems.mjs)
+    title: "Target turns twice between ownship turns",
+    note: "Spec 036: the target turns at 45 and 75 minutes, inside ownship's legs. Compare the leg splitters with the physics layer.",
+    scenario: base("Two target turns", zigzag(), { start_x_nm: -1, start_y_nm: 9, legs: [leg(100, 6, 45, 0.5), leg(150, 6, 30, 0.5), leg(90, 7, 45)] }, { solver: "layer", splitter: "arctan-joined" }),
+  },
+  {
     id: "endfire",
     title: "Near-endfire geometry",
     note: "The target is nearly dead ahead and on a similar course: small zigs barely change the bearing rate.",
@@ -44,3 +52,16 @@ export const PRESETS = [
 
 export const DEFAULT_SCENARIO = PRESETS[0].scenario;
 export const clone = (x) => JSON.parse(JSON.stringify(x));
+
+// Spec 036: spec 035's scenarios name "layer-cv" or "layer-oracle"; today the layer takes its legs
+// from a leg splitter. A scenario without a splitter has none (one leg).
+export function normaliseScenario(sc) {
+  const out = { ...sc };
+  if (LEGACY_SOLVERS[out.solver]) {
+    const [solver, splitter] = LEGACY_SOLVERS[out.solver];
+    out.solver = solver;
+    out.splitter = splitter;
+  }
+  if (!out.splitter) out.splitter = "none";
+  return out;
+}

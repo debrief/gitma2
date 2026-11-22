@@ -134,3 +134,35 @@ export function observability(sc, b, rows, knotsAbs) {
   const level = !(rel < OBS_AMBER) ? "red" : rel < OBS_GREEN ? "green" : "amber";
   return { level, rel, cond: bd.cond, sigma_deg: sig / DEG };
 }
+
+// Spec 036: found legs against the truth.
+// A true manoeuvre is found when a stated span lies within `tolS` of it (the gap between the two
+// intervals is at most tolS); each stated span matches at most one true manoeuvre, nearest centre
+// first. Timing error: centre of the stated span minus centre of the true one.
+export function compareLegs(trueSpans, found, tolS = 120) {
+  const pairs = [];
+  trueSpans.forEach((m, i) => found.forEach((f, j) => {
+    if (f.start_s - tolS <= m.end_s && m.start_s - tolS <= f.end_s) {
+      pairs.push({ i, j, d: (f.start_s + f.end_s) / 2 - (m.start_s + m.end_s) / 2 });
+    }
+  }));
+  pairs.sort((a, b) => Math.abs(a.d) - Math.abs(b.d));
+  const ti = new Set(), fj = new Set(), matched = [];
+  for (const q of pairs) {
+    if (ti.has(q.i) || fj.has(q.j)) continue;
+    ti.add(q.i);
+    fj.add(q.j);
+    matched.push(q);
+  }
+  const offs = matched.map((q) => Math.abs(q.d)).sort((a, b) => a - b);
+  return {
+    truth: trueSpans.length,
+    stated: found.length,
+    matched: matched.length,
+    missed: trueSpans.length - matched.length,
+    false_: found.length - matched.length,
+    median_offset_s: offs.length ? offs[Math.floor((offs.length - 1) / 2)] : NaN,
+    matchedTrue: [...ti],
+    matchedFound: [...fj],
+  };
+}

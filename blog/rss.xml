@@ -4,10 +4,174 @@
         <title>TMA via ML, second attempt Blog</title>
         <link>https://debrief.github.io/gitma2/blog</link>
         <description>TMA via ML, second attempt Blog</description>
-        <lastBuildDate>Sat, 21 Nov 2026 18:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Sat, 21 Nov 2026 22:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
+        <item>
+            <title><![CDATA[Slides: leg splitters in the demonstrator]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-slides</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-slides</guid>
+            <pubDate>Sat, 21 Nov 2026 22:00:00 GMT</pubDate>
+            <description><![CDATA[The demonstrator now asks two questions separately: a leg splitter says where the]]></description>
+            <content:encoded><![CDATA[<p>The <a class="" href="https://debrief.github.io/gitma2/demo">demonstrator</a> now asks two questions separately: a <strong>leg splitter</strong> says where the
+target manoeuvred, and a <strong>TMA solver</strong> fits the window. The physics layer joins its legs across
+the splitter's spans. On the page's presets, the joined-legs arctan search came close to the
+layer told the truth on two turns between ownship turns. Debrief's 2015 slicing cannot see a
+turn made during ownship's turn, and independent slices split between two real turns.
+Spec: <code>specs/036-leg-splitters/</code>. Not a result: three presets, a few noise draws.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-21-leg-splitters-slides/index.html" title="Slides: 2026-11-21-leg-splitters-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-21-leg-splitters-slides/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
+<ul>
+<li class="">
+<p><strong>Two drop-downs.</strong> "Leg splitter → TMA solver". The splitter is disabled for a solver that
+takes no legs. Spec 035's <code>layer-cv</code> and <code>layer-oracle</code> links still load, as the layer with
+the splitters <code>none</code> and <code>truth</code>.</p>
+</li>
+<li class="">
+<p><strong>Six splitters</strong> (<code>site/static/demo-data/js/splitters.js</code>, <code>arctan.js</code>):</p>
+<ul>
+<li class=""><strong>none:</strong> one leg.</li>
+<li class=""><strong>truth:</strong> told the true spans and their kinds (the oracle).</li>
+<li class=""><strong>Debrief 2015 arctan slicing:</strong> the three-parameter arctan law on each steady ownship
+leg, one split, a 2-minute buffer, ZigRatio 0.6 (our choice: the 2015 default is not on
+file).</li>
+<li class=""><strong>Independent slices:</strong> ownship subtracted, recursive.</li>
+<li class=""><strong>Joined legs:</strong> position continuous, velocity steps at knots, forward selection with
+every parameter refitted, then re-placement.</li>
+<li class=""><strong>C:</strong> spec 005's classical segmenter, spec 021's JavaScript port, its segmentation at the
+window's last bearing.</li>
+</ul>
+<p>Only the truth splitter sees the true spans; a test checks it.</p>
+</li>
+<li class="">
+<p><strong>Panels:</strong></p>
+<ul>
+<li class="">A legs panel: found within 120 s, missed, false, timing.</li>
+<li class="">Orange spans on the charts and diamonds on the track.</li>
+<li class="">"Run all splitters", which runs every splitter through the layer on the same window and
+noise draw.</li>
+</ul>
+</li>
+<li class="">
+<p><strong>Schema and checks:</strong></p>
+<ul>
+<li class="">Schema 0.38.0: <code>DemoScenario.splitter</code>, <code>DemoSpan.stat</code>, <code>DemoSplitterInfo</code>.</li>
+<li class="">23 Node tests and the Chromium run of the built page.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="readings-presets-σ-1-seeds-15-record-experiments20261121-demo-splitters">Readings (presets, σ 1°, seeds 1–5; record <code>experiments/20261121-demo-splitters/</code>)<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-slides#readings-presets-%CF%83-1-seeds-15-record-experiments20261121-demo-splitters" class="hash-link" aria-label="Direct link to readings-presets-σ-1-seeds-15-record-experiments20261121-demo-splitters" title="Direct link to readings-presets-σ-1-seeds-15-record-experiments20261121-demo-splitters" translate="no">​</a></h2>
+<table><thead><tr><th>Preset</th><th>Splitter</th><th>Found / true</th><th>False</th><th>Median range RMS</th></tr></thead><tbody><tr><td>Two turns between ownship turns</td><td>none</td><td>0 / 10</td><td>0</td><td>27.0%</td></tr><tr><td></td><td>Debrief 2015</td><td>5 / 10</td><td>0</td><td>14.5%</td></tr><tr><td></td><td>independent slices</td><td>3 / 10</td><td>7</td><td>37.8%</td></tr><tr><td></td><td>joined legs</td><td>9 / 10</td><td>1</td><td>2.6%</td></tr><tr><td></td><td>C (3 draws)</td><td>3 / 6</td><td>4</td><td>8.2%</td></tr><tr><td></td><td>truth</td><td>10 / 10</td><td>0</td><td>2.0%</td></tr><tr><td>Turn during ownship's turn</td><td>Debrief 2015</td><td>0 / 5</td><td>0</td><td>31.9%</td></tr><tr><td></td><td>independent slices</td><td>5 / 5</td><td>0</td><td>1.4%</td></tr><tr><td></td><td>joined legs</td><td>3 / 5</td><td>2</td><td>3.1%</td></tr><tr><td></td><td>truth</td><td>5 / 5</td><td>0</td><td>1.5%</td></tr><tr><td>Held course</td><td>every splitter</td><td>0 / 0</td><td>0</td><td>0.7%</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="critical-reading">Critical reading<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-slides#critical-reading" class="hash-link" aria-label="Direct link to Critical reading" title="Direct link to Critical reading" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>These are anecdotes, not a ranking.</strong> Three hand-drawn presets and five draws. The
+thresholds (independent slices τ = 40, joined legs τ = 25, in units of σ²) were set on the
+same kind of presets. No false-alarm rate, no interval.</li>
+<li class=""><strong>No splitter wins everywhere.</strong>
+<ul>
+<li class="">Joined legs are best on two turns inside ownship legs.</li>
+<li class="">Independent slices are best where the target turns during ownship's turn. There an
+instant knot is placed 2–4 minutes late, which the 120-s rule counts as a miss plus a
+false span.</li>
+</ul>
+</li>
+<li class=""><strong>Debrief's limits are structural</strong> (Annex B):<!-- -->
+<ul>
+<li class="">It cannot see a turn made during ownship's turn, by design.</li>
+<li class="">Its ratio is not tied to the noise.</li>
+</ul>
+</li>
+<li class=""><strong>C does poorly here.</strong> It has no zig veto, so ownship's turns become false transitions (C″
+adds the veto). It was tuned for Annex B's targets, not these presets. It also takes about
+3½ minutes per two-hour window in JavaScript.</li>
+<li class=""><strong>The truth row is told the kinds of change; the splitters are not.</strong> Every splitter span gets
+the layer's speed-continuity prior, C's convention. On the two-turn preset (a speed change
+at the second turn) this handicaps the splitters slightly against the truth.</li>
+<li class="">The comparison table's figures were computed at commit <code>69e98c2</code>. Review fixes since then
+touch only C's cut to four spans, which never fired here, and how knot strengths are shown.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="next-owners-choice">Next (owner's choice)<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-slides#next-owners-choice" class="hash-link" aria-label="Direct link to Next (owner's choice)" title="Direct link to Next (owner's choice)" translate="no">​</a></h2>
+<ol>
+<li class="">Score joined legs against C″ and <code>ctl</code> on Annex B data on spent seeds (development), and
+register it only if it holds.</li>
+<li class="">A finite-length turn (the arc model's) where a knot meets ownship's turn.</li>
+<li class="">Or keep this as a teaching tool: the page now shows that finding the legs, not the solve,
+is the hard part.</li>
+</ol>]]></content:encoded>
+            <category>slides</category>
+            <category>spec-036</category>
+        </item>
+        <item>
+            <title><![CDATA[Kickoff: leg splitters in the demonstrator]]></title>
+            <link>https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-kickoff</link>
+            <guid>https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-kickoff</guid>
+            <pubDate>Sat, 21 Nov 2026 20:00:00 GMT</pubDate>
+            <description><![CDATA[In the demonstrator, the physics layer told the target's true manoeuvre times is]]></description>
+            <content:encoded><![CDATA[<p>In the <a class="" href="https://debrief.github.io/gitma2/demo">demonstrator</a>, the physics layer told the target's true manoeuvre times is
+excellent: about 1% range error where one leg gives 25–35%. Real systems are not told the times.
+The owner asked for effort on target leg identification, remembering Debrief's arctan slicing,
+and for a demo where leg splitters and TMA solvers are chosen separately so they can be compared.
+This is spec 036.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<ul>
+<li class="">The demonstrator (spec 035) offers JavaScript least squares, the physics layer with one leg or
+with the true manoeuvre times, and spec 016's learned whole-period model.</li>
+<li class="">The project's own leg identification:<!-- -->
+<ul>
+<li class="">C, the classical segmenter: Gate S, then Gate 2's segmenter, frozen.</li>
+<li class="">The time-late evidence search <code>ctl</code>, the standing time-late system.</li>
+<li class="">The finding of specs 013–019: much of the remaining gap is ambiguity in the bearings, not
+a weak search.</li>
+</ul>
+</li>
+<li class="">Research note 07 tried the arctan law as a sliding-window detector. Alarms used directly as
+knots failed. A window nominating a change and the whole history confirming it worked, and
+that became C.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class="">Spec <code>specs/036-leg-splitters/</code>: SRD §1, Annex A, and Annex B's background table.</li>
+<li class="">Acceptance:<!-- -->
+<ul>
+<li class="">Splitters other than the truth never see the true times.</li>
+<li class="">No false split on held-course presets.</li>
+<li class="">On a two-turn preset the best splitter's layer solve comes close to the oracle's.</li>
+<li class="">All of it runs in the built page.</li>
+</ul>
+</li>
+<li class="">Plan:<!-- -->
+<ol>
+<li class="">Two drop-downs: leg splitter → TMA solver.</li>
+<li class="">Splitters:<!-- -->
+<ul>
+<li class="">Debrief's 2015 arctan slicing, as published.</li>
+<li class="">A multi-leg slicing.</li>
+<li class="">The arctan law with joined legs, searched over the whole window.</li>
+<li class="">C, in the browser.</li>
+</ul>
+</li>
+<li class="">A legs panel and a "run all splitters" comparison.</li>
+</ol>
+</li>
+<li class="">Risks:<!-- -->
+<ul>
+<li class="">C is slow in a browser (minutes).</li>
+<li class="">Thresholds set on a few presets are not false-alarm rates.</li>
+<li class="">Nothing here is a result.</li>
+</ul>
+</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/21/leg-splitters-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<ul>
+<li class="">A dot chart of range error per splitter on three presets over five noise draws.</li>
+<li class="">A track plot of the two-turn preset with each splitter's track and knots.</li>
+<li class="">Data: <code>scripts/research/demo_splitters.mjs</code> on the page's own presets, recorded in
+<code>experiments/20261121-demo-splitters/</code>.</li>
+</ul>]]></content:encoded>
+            <category>kickoff</category>
+            <category>spec-036</category>
+        </item>
         <item>
             <title><![CDATA[Slides: an interactive TMA demonstrator]]></title>
             <link>https://debrief.github.io/gitma2/blog/2026/11/21/demonstrator-slides</link>
@@ -1512,129 +1676,6 @@ prior is a cheap substitute for using the bearings themselves.</li>
 <p>Slides: <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-slides">the slides post</a>.</p>]]></content:encoded>
             <category>write-up</category>
             <category>spec-029</category>
-        </item>
-        <item>
-            <title><![CDATA[Kickoff: the carried prior where the ownship holds course]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff</guid>
-            <pubDate>Thu, 19 Nov 2026 14:00:00 GMT</pubDate>
-            <description><![CDATA[Spec 028 carried the previous window's state and uncertainty]]></description>
-            <content:encoded><![CDATA[<p><a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior">Spec 028</a> carried the previous window's state and uncertainty
-into the next window as a prior. It found a small average shift and no harm, but it could not
-test the owner's own case. In that simulator the ownship turned every 20–40 minutes, so every
-window could resolve the target from its own bearings. The owner asked to test the ownship
-holding course. This study does that. Spec: <code>specs/029-held-course/</code>.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Standing time-late system:</strong> <code>ctl</code>. <code>ctl-prior</code> is recommended for adoption, scoped as "a
-small refinement, no harm shown".</li>
-<li class=""><strong>Spec 028's registered split showed no gain:</strong> 1.105 [0.963, 1.273]. That split was mostly
-the untended contact. The owner's case never occurred.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Engagements:</strong> realistic engagements where the ownship holds each leg for 1–2 hours,
-tended contact only.</li>
-<li class=""><strong>Windows:</strong> 1-hour windows overlapping 15 minutes. With 2-hour windows no window is free of
-ownship turns.</li>
-<li class=""><strong>Turn-free windows:</strong> about 30% of windows contain no ownship turn (measured on spent seed
-354).</li>
-<li class=""><strong>Rule:</strong>
-<ul>
-<li class="">Gain if ctl ÷ ctl-prior on turn-free windows has its lower limit above 1, with a
-bootstrap over engagements.</li>
-<li class="">Harm if any class's upper limit is below 1, in range, course or speed.</li>
-<li class="">Windows where nothing was handed on are excluded.</li>
-</ul>
-</li>
-<li class=""><strong>Plan:</strong>
-<ol>
-<li class="">tuning on seed 362 checks the split and the carried prior's coverage;</li>
-<li class="">the decision record;</li>
-<li class="">validation on seed 363;</li>
-<li class="">test on seed 364, scored once;</li>
-<li class="">the panel, then the write-up.</li>
-</ol>
-</li>
-<li class=""><strong>Risks:</strong>
-<ul>
-<li class="">Holding course costs range keeping: the target drifts to 50 km at the 95th percentile,
-beyond detection, so geometry and detection mix.</li>
-<li class="">The carried prior's settings were set on 2-hour windows.</li>
-<li class="">The hand-over defect spec 028's panel found stays in.</li>
-</ul>
-</li>
-<li class=""><strong>Stop:</strong> soundness or coverage outside its band on validation.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/19/held-course-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">ctl ÷ ctl-prior by class (no turn, one turn, more), with intervals.</li>
-<li class="">Per-window ratios.</li>
-<li class="">Coverage of the carried prior on turn-free windows.</li>
-<li class="">A track plot of a turn-free window.</li>
-</ul>]]></content:encoded>
-            <category>kickoff</category>
-            <category>spec-029</category>
-        </item>
-        <item>
-            <title><![CDATA[Slides: the previous window as a prior]]></title>
-            <link>https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior-slides</link>
-            <guid>https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior-slides</guid>
-            <pubDate>Thu, 19 Nov 2026 12:30:00 GMT</pubDate>
-            <description><![CDATA[These slides are the illustrated companion to]]></description>
-            <content:encoded><![CDATA[<p>These slides are the illustrated companion to
-<a class="" href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior">the write-up</a>. The registered rule's output is <strong>not shown, at
-this size</strong>, with no harm. Beside the rule, carrying the previous window's state as a prior
-gives a small average shift: about 10% in geometric mean and 3% in the median window. Spec:
-<code>specs/028-carry-prior/</code>.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-19-carry-prior-slides/index.html" title="Slides: 2026-11-19-carry-prior-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-19-carry-prior-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior-slides#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
-<ul>
-<li class=""><strong><code>src/tma2/long/carried.py</code></strong>: the carried prior.<!-- -->
-<ul>
-<li class="">The fit and evidence carry it as a Gaussian term. With no prior they equal the originals,
-which a unit test checks.</li>
-<li class="">The hand-over excludes the next window's bearings.</li>
-<li class="">It also holds the widening and the χ²(4) guard.</li>
-</ul>
-</li>
-<li class=""><strong><code>src/tma2/long/carry2.py</code></strong>: <code>ctl-prior</code> beside <code>ctl</code> and <code>ctl-carry</code> in one job. A test
-checks that <code>ctl</code> and <code>ctl-carry</code> equal spec 026's.</li>
-<li class=""><strong><code>src/tma2/long/study27.py</code></strong>: the scorer. CLI: <code>tma2-long carry2</code>, <code>study27</code> and
-<code>jointpair</code>.</li>
-<li class=""><strong>CI:</strong> <code>long.yml</code> now ignores pushes to main and pushes its results to an orphan branch.</li>
-<li class=""><strong>Records:</strong>
-<ul>
-<li class="">tuning <code>experiments/20261118-cp-tuning/</code>;</li>
-<li class="">decision <code>20261119-cp-decision/</code>;</li>
-<li class="">validation <code>20261119-cp-val/</code>;</li>
-<li class="">test <code>20261119-cp/</code>, with <code>review.md</code>, <code>supplement.json</code> and <code>ties.json</code>.</li>
-</ul>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-achieved">What was not achieved<a href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior-slides#what-was-not-achieved" class="hash-link" aria-label="Direct link to What was not achieved" title="Direct link to What was not achieved" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>The owner's case:</strong> a window without useful ownship geometry does not occur in this
-simulator.</li>
-<li class=""><strong>Gain on the registered split:</strong> not shown.</li>
-<li class=""><strong>Whether the prior narrows the set of histories:</strong> not tested.</li>
-<li class=""><strong>The hand-over defect:</strong> the refit's start is recorded, not repaired.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-comes-next-the-owners-choice">What comes next (the owner's choice)<a href="https://debrief.github.io/gitma2/blog/2026/11/19/carry-prior-slides#what-comes-next-the-owners-choice" class="hash-link" aria-label="Direct link to What comes next (the owner's choice)" title="Direct link to What comes next (the owner's choice)" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Recommended:</strong> adopt <code>ctl-prior</code> with its guard for tended contacts up to 12 hours, then
-close the track.</li>
-<li class=""><strong>Alternatives:</strong>
-<ul>
-<li class="">an ownship that holds course for one to two hours, which answers the owner's question
-directly;</li>
-<li class="">a registered joint solve over consecutive windows.</li>
-</ul>
-</li>
-</ul>
-<p>Figures: <code>scripts/research/cp_charts.py</code>, with a sidecar beside each SVG.</p>]]></content:encoded>
-            <category>slides</category>
-            <category>spec-028</category>
         </item>
     </channel>
 </rss>

@@ -4,7 +4,7 @@
 // same bearings whatever the window.
 import { buildPath, stateAt, manoeuvres, DEG } from "./track.js";
 
-export const SCHEMA_VERSION = "0.37.0";
+export const SCHEMA_VERSION = "0.38.0";
 const TWO_PI = 2 * Math.PI;
 export const wrap2pi = (a) => {
   const w = a % TWO_PI;
