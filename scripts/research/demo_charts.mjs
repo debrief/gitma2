@@ -28,7 +28,8 @@ async function run(name, feeds) {
   return o;
 }
 const commit = execSync("git rev-parse HEAD", { cwd: root }).toString().trim();
-const preset = (id) => clone(PRESETS.find((p) => p.id === id).scenario);
+// spec 035's figures kept every bearing (before the owner's 2026-11-22 turn loss): pinned here
+const preset = (id) => ({ ...clone(PRESETS.find((p) => p.id === id).scenario), turn_loss_s: null });
 async function solve(sc, name) {
   const b = bearings(sc), rows = windowRows(sc, b);
   const { problem, origin, t0 } = problemOf(sc, b, rows);

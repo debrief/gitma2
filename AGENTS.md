@@ -966,6 +966,10 @@ right, ownship teal left, only Debrief detects ownship turns, `splitter_ownship_
 chart's quantity as a drop-down; the Preset drop-down shows the matching preset or "custom"; a
 waypoint drag keeps the adjacent legs' speeds (`moveWaypoint(..., "speed")`; the square keeps
 duration); ctrl-click deletes a waypoint. Schema 0.39.0.
+Owner 2026-11-22: bearings are lost in ownship's turns and for 120 s after each; the demonstrator
+drops them by default (`DemoScenario.turn_loss_s`, null keeps all; `TmaProblem.bearing_valid`,
+rows kept so grids stay regular; schema 0.40.0). Spec 035's golden problems and spec 036's
+readings pin `turn_loss_s: null`.
 
 ## Stack (owner decisions, 2026-10-31)
 

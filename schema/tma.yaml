@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.39.0
+version: 0.40.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -2205,6 +2205,7 @@ classes:
       target: { range: DemoTrack, required: true, inlined: true }
       sigma_deg: { range: float, required: true, minimum_value: 0, maximum_value: 5, description: "Standard deviation of the zero-mean Gaussian bearing noise (FR-011)." }
       interval_s: { range: float, required: true, minimum_value: 1, maximum_value: 120, description: "Bearing sample interval (FR-010)." }
+      turn_loss_s: { range: float, minimum_value: 0, maximum_value: 1800, description: "Owner 2026-11-22: bearings are lost while ownship turns and for this many seconds after each turn ends (default 120); null keeps every bearing." }
       seed: { range: integer, required: true, minimum_value: 0, maximum_value: 4294967295, description: "Seed of the noise generator; the same seed and scenario give identical bearings." }
       window: { range: DemoWindow, required: true, inlined: true }
       solver: { range: string, required: true, description: "Name of the selected solver plug-in (FR-024)." }
@@ -2228,6 +2229,7 @@ classes:
       own_course_rad: { range: float, multivalued: true, description: "Ownship course at each bearing (the learned model reads ownship legs from it)." }
       own_speed_mps: { range: float, multivalued: true }
       sigma_rad: { range: float, required: true }
+      bearing_valid: { range: integer, multivalued: true, description: "1 where the bearing was received, 0 where it was lost (an ownship turn and its tail); absent: every bearing received. Lost rows keep their place so the time grid stays regular." }
       knots: { range: DemoSpan, multivalued: true, inlined_as_list: true, description: "Manoeuvre spans a solver may use when it accepts knots (the oracle is told the truth's)." }
 
   TmaSolution:
