@@ -56,17 +56,34 @@ def main() -> None:
     conds = decided + (st.get("reported_conditions", []) if a.stage == "test" else [])
     hyb_conds = ["off", "all-central"]
     runs: list[dict[str, Any]] = list(proto["systems"]["classical"])
-    for k in (1, 2, 3):
-        runs.append(
-            {
-                "kind": "hybrid",
-                "segmentation": "c2",
-                "name": f"hyb-s{k}",
-                "prior_from": f"ft-s{k}",
-                "prior_weight": a.prior_weight,
-                "conditions": hyb_conds,
-            }
-        )
+    hyb: list[str] = []
+    if a.stage == "validation":
+        # the weight is chosen on validation, on training seed 1 only (addendum 1)
+        for w in (0.5, 1.0, 2.0, 4.0):
+            hyb.append(f"hyb-s1-w{w:g}")
+            runs.append(
+                {
+                    "kind": "hybrid",
+                    "segmentation": "c2",
+                    "name": hyb[-1],
+                    "prior_from": "ft-s1",
+                    "prior_weight": w,
+                    "conditions": hyb_conds,
+                }
+            )
+    else:
+        for k in (1, 2, 3):
+            hyb.append(f"hyb-s{k}")
+            runs.append(
+                {
+                    "kind": "hybrid",
+                    "segmentation": "c2",
+                    "name": hyb[-1],
+                    "prior_from": f"ft-s{k}",
+                    "prior_weight": a.prior_weight,
+                    "conditions": hyb_conds,
+                }
+            )
     if a.prior_static:
         runs.append(
             {
