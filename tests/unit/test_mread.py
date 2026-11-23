@@ -84,3 +84,40 @@ def test_interval_rows_reads_the_stated_fields() -> None:
     assert hz["range"][0].tolist() == [1.0, 0.0]
     assert hz["course_deg"][0][0] == 0.0 and math.isnan(hz["course_deg"][0][1])  # 10° > 0.1 rad
     assert hz["speed_kt"][0].tolist() == [1.0, 0.0]  # 2 kt = 1.03 m/s
+
+
+def test_scale_and_temperature_fits_cover_their_rows() -> None:
+    rng = np.random.default_rng(9)
+    n = 6000
+    est = np.exp(rng.normal(9.5, 0.5, n))
+    sd = np.where(est > np.median(est), 0.3, 0.1)
+    err = np.abs(rng.normal(0.0, sd, (3, n))).T
+    half = np.repeat((0.5 * mread.Z95 * sd)[:, None], 3, axis=1)  # stated half as wide as true
+    s = mread.fit_scale(err[:, 0], half[:, 0])
+    assert abs(s - 2.0) < 0.15
+    assert abs(np.mean(err[:, 0] <= s * half[:, 0]) - 0.95) < 0.005
+    temp = mread.fit_temperature(est, err)
+    th = mread.temperature_half(temp, est)
+    assert abs(np.mean(err[:, 0] <= th[:, 0]) - 0.95) < 0.01
+    # the honest head (width follows the sd) scores better than the per-band constant
+    ordinal = np.arange(n) // 4
+    r = mread.score_ratio(
+        mread.winkler(err[:, 0], 2 * half[:, 0]), mread.winkler(err[:, 0], th[:, 0]), ordinal, 300
+    )
+    assert r["ratio"] < 1.0
+
+
+def test_row_terms_units() -> None:
+    ordinal, ks = np.array([0]), np.array([5])
+    e = np.array([[0.1, 90.0, 1.9438444924406046]])
+    t = mread.row_terms(
+        {(0, 5): {"range_m": 11_000.0, "range_ratio_q95": 0.2}},
+        ordinal,
+        ks,
+        e,
+        np.array([10_000.0]),
+    )
+    assert abs(t["err"][0, 0] - math.log(1.1)) < 1e-12 and abs(t["err"][0, 1] - math.pi / 2) < 1e-12
+    assert (
+        abs(t["err"][0, 2] - 1.0) < 1e-9 and t["half"][0, 0] == 0.2 and math.isnan(t["half"][0, 1])
+    )

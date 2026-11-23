@@ -18,6 +18,8 @@ name: Headroom (Gate H)
 #   digests       optional path to committed digests {"<condition>/<file>": sha256}: checked
 #   imm, ekf      frozen reference names
 #   conditions_file  optional (spec 037): a conditions file other than the Gate H plan's
+#   runs (spec 037) may also carry: conditions [ids] (the run is made under these only); kind hybrid with
+#                 prior_from <checkpoint name> or prior_static 'mean,sd', and prior_weight
 #   checkpoints   optional (spec 037): [{name, branch, dir, sha256}] regressors scored beside the runs, with
 #                 read_controls [run names] for the paired readings and interval_scale "r,c,s"
 # Each record goes to results/headroom-<name>-<condition>-<variant>-<run id>.
@@ -112,16 +114,25 @@ jobs:
               --mismatch "$CONDS#$C"
           done
           DSPLIT=$(python3 -c "import json; print(json.load(open('$PLAN'))['data_split'])")
+          # spec 037: a hybrid run takes a regressor's rows on this shard as its prior
+          if python3 -c "import json, sys; sys.exit(0 if any(r.get('prior_from') for r in json.load(open('$PLAN'))['runs']) else 1)"; then
+            START="${{ matrix.start }}" N="${{ matrix.count }}" PRED_DIR="$RUNNER_TEMP/prior" bash scripts/rmis_regressors.sh
+          fi
           python3 -c "
           import json, shlex
           p = json.load(open('$PLAN')); cond = '$COND'; variant = '$VARIANT'
           sets = next((v.get('set', {}) for v in p.get('variants', []) if v['name'] == variant), {})
           for i, r in enumerate(p['runs']):
+              if 'conditions' in r and cond not in r['conditions']: continue
               kind = r['kind']; seg = r.get('segmentation', 'truth')
               a = ['--in', '$TRUTH', '--kind', kind, '--segmentation', seg,
                    '--start', '${{ matrix.start }}', '--count', '${{ matrix.count }}',
                    '--out', f'$RUNNER_TEMP/pred/{i}.${{ matrix.shard }}.ndjson']
-              if kind == 'robust' or seg == 'c2': a += ['--plan', '$GH']
+              if kind in ('robust', 'hybrid') or seg == 'c2': a += ['--plan', '$GH']
+              if kind == 'hybrid':
+                  if r.get('prior_from'): a += ['--prior-from', '$RUNNER_TEMP/prior/' + r['prior_from'] + '.ndjson']
+                  if r.get('prior_static'): a += ['--prior-static', r['prior_static']]
+                  a += ['--prior-weight', str(r.get('prior_weight', 1.0))]
               if r.get('name'): a += ['--name', r['name']]
               tag = r.get('name', str(i))
               if r.get('dump'): a += ['--dump-segmentation', f'$RUNNER_TEMP/pred/seg-{tag}.${{ matrix.shard }}.ndjson.gz']
@@ -192,7 +203,10 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pred"
           N=$(python3 -c "import json; print(len(json.load(open('$PLAN'))['runs']))")
           for i in $(seq 0 $((N - 1))); do
-            uv run python -m tma2.cli.hmerge --out "$RUNNER_TEMP/pred/$i.ndjson" "$RUNNER_TEMP"/shards/$i.*.ndjson
+            # a run restricted to other conditions (spec 037 "conditions") has no shards here
+            if ls "$RUNNER_TEMP"/shards/$i.*.ndjson >/dev/null 2>&1; then
+              uv run python -m tma2.cli.hmerge --out "$RUNNER_TEMP/pred/$i.ndjson" "$RUNNER_TEMP"/shards/$i.*.ndjson
+            fi
           done
       - name: Regressors (spec 037; plans with checkpoints)
         env:

@@ -5,8 +5,9 @@
 # START. Everything is written outside the checkout.
 set -euo pipefail
 W="$RUNNER_TEMP"
-mkdir -p "$W/ck" "$W/pred"
-SCALE=$(python3 -c "import json; print(json.load(open('$PLAN')).get('interval_scale') or '1,1,1')")
+PRED="${PRED_DIR:-$W/pred}"
+mkdir -p "$W/ck" "$PRED"
+SCALE=$(python3 -c "import json; print(json.load(open('$PLAN')).get('interval_scale') or '1,1,1')")  # 'r,c,s' or an interval-fit.json
 while read -r NAME BRANCH DIR SHA; do
   git fetch -q origin "$BRANCH"
   git show "FETCH_HEAD:$DIR/checkpoint.safetensors" > "$W/ck/$NAME.safetensors"
@@ -15,7 +16,7 @@ while read -r NAME BRANCH DIR SHA; do
   if [ "$SHA" != "-" ] && [ "$GOT" != "$SHA" ]; then echo "checkpoint digest: plan says $SHA"; exit 1; fi
   git show "FETCH_HEAD:$DIR/plan.json" | python3 -c "import json, sys; json.dump(json.load(sys.stdin)['config'], open('$W/ck/$NAME.json', 'w'))"
   uv run tma2-rpredict --weights "$W/ck/$NAME.safetensors" --config "$W/ck/$NAME.json" \
-    --in "$TRUTH" --out "$W/pred/$NAME.ndjson" --name "$NAME" --start "$START" --count "$N" \
+    --in "$TRUTH" --out "$PRED/$NAME.ndjson" --name "$NAME" --start "$START" --count "$N" \
     --intervals "$SCALE"
 done < <(python3 -c "
 import json

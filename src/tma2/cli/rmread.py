@@ -18,6 +18,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--stated", nargs="*", default=[], metavar="NAME=PATH", help="rows with intervals"
     )
+    ap.add_argument("--temperature", help="interval-fit.json: score the head against the control")
     ap.add_argument("--condition", default="")
     ap.add_argument("--resamples", type=int, default=2000)
     ap.add_argument("--out", required=True)
@@ -48,7 +49,11 @@ def main(argv: list[str] | None = None) -> int:
         "paired": {},
         "paired_by_range_band": {},
         "coverage": {},
+        "interval_score": {},
+        "temperature_coverage": {},
     }
+    terms: dict[str, dict[str, Any]] = {}
+    temp = json.loads(Path(a.temperature).read_text())["temperature"] if a.temperature else None
     for c in controls:
         res["paired"][c] = mread.paired(errs, c, systems, ordinal, resamples=a.resamples)
         res["paired_by_range_band"][c] = [
@@ -75,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
                         if k is not None:
                             stated[(int(rec["ordinal"]), k)] = x
             hz = mread.interval_rows(stated, ordinal, ks, errs[name], true_range)
+            terms[name] = mread.row_terms(stated, ordinal, ks, errs[name], true_range)
             res["coverage"][name] = {
                 col: {
                     "all": mread.coverage(h, zz, ordinal, resamples=a.resamples),
@@ -87,9 +93,29 @@ def main(argv: list[str] | None = None) -> int:
                 }
                 for col, (h, zz) in hz.items()
             }
+            if temp is not None:
+                tm = terms[name]
+                th = mread.temperature_half(temp, tm["est_range_m"])
+                res["interval_score"][name] = {}
+                res["temperature_coverage"][name] = {}
+                for c, col in enumerate(mread.COLS):
+                    e_c, h_c = tm["err"][:, c], tm["half"][:, c]
+                    head = mread.winkler(e_c, h_c)
+                    ctl = np.where(np.isfinite(h_c), mread.winkler(e_c, th[:, c]), np.nan)
+                    res["interval_score"][name][col] = mread.score_ratio(
+                        head, ctl, ordinal, a.resamples
+                    )
+                    okc = np.isfinite(e_c)
+                    res["temperature_coverage"][name][col] = float(np.mean(e_c[okc] <= th[okc, c]))
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(res, indent=1, sort_keys=True) + "\n")
+    if terms:  # per-row terms, for fitting scales on validation and pooling over conditions
+        arrays = {"ordinal": ordinal}
+        for name, tm in terms.items():
+            for key, v in tm.items():
+                arrays[f"{name}__{key}"] = v
+        np.savez_compressed(out.with_name("interval-rows.npz"), **arrays)
     for c in controls:
         for s, r in res["paired"][c]["range"].items():
             if r.get("scenarios"):

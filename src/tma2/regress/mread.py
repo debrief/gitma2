@@ -177,3 +177,92 @@ def interval_rows(
             d = float(e[q, 2]) / kt
             out["speed_kt"][0][q], out["speed_kt"][1][q] = float(d <= s), d / (s / Z95)
     return out
+
+
+def row_terms(
+    stated: dict[tuple[int, int], dict[str, float]],
+    ordinal: np.ndarray,
+    ks: np.ndarray,
+    e: np.ndarray,
+    true_range: np.ndarray,
+) -> dict[str, np.ndarray]:
+    """Per scored row, for the uncertainty readings: the estimator's own range estimate, its
+    errors in the intervals' units (|ln range ratio|, course rad, speed m/s) and its stated 95%
+    half-widths (NaN where none is stated). Rows the estimator does not answer are NaN."""
+    kt = 3600.0 / 1852.0
+    n = ordinal.size
+    est = np.full(n, np.nan)
+    err = np.full((n, 3), np.nan)
+    half = np.full((n, 3), np.nan)
+    for q in range(n):
+        x = stated.get((int(ordinal[q]), int(ks[q])))
+        if x is None or not np.isfinite(e[q]).all():
+            continue
+        est[q] = float(x["range_m"])
+        err[q] = (
+            abs(math.log(max(est[q], 1e-9) / true_range[q])),
+            math.radians(float(e[q, 1])),
+            float(e[q, 2]) / kt,
+        )
+        for c, key in enumerate(("range_ratio_q95", "course_arc_rad", "speed_q95_mps")):
+            w = x.get(key)
+            if w is not None and w > 0:
+                half[q, c] = float(w)
+    return {"est_range_m": est, "err": err, "half": half}
+
+
+def winkler(err: np.ndarray, half: np.ndarray, alpha: float = 0.05) -> np.ndarray:
+    """Interval score of a symmetric interval of half-width ``half`` about the estimate."""
+    out: np.ndarray = 2.0 * half + (2.0 / alpha) * np.maximum(err - half, 0.0)
+    return out
+
+
+def fit_scale(err: np.ndarray, half: np.ndarray, level: float = 0.95) -> float:
+    """The multiplier of the stated half-widths that makes them cover ``level`` of these rows."""
+    ok = np.isfinite(err) & np.isfinite(half) & (half > 0)
+    return float(np.quantile(err[ok] / half[ok], level))
+
+
+def fit_temperature(est: np.ndarray, err: np.ndarray, level: float = 0.95) -> dict[str, Any]:
+    """The control: one half-width per quantity and per third of the estimator's own range
+    estimate, covering ``level`` of these rows. It reads no truth when applied."""
+    ok = np.isfinite(est) & np.isfinite(err).all(axis=1)
+    cuts = np.quantile(est[ok], [1 / 3, 2 / 3])
+    band = np.searchsorted(cuts, est, side="right")
+    widths = [
+        [float(np.quantile(err[ok & (band == b), c], level)) for c in range(3)] for b in range(3)
+    ]
+    return {"cuts_m": [float(c) for c in cuts], "half_widths": widths, "level": level}
+
+
+def temperature_half(temp: dict[str, Any], est: np.ndarray) -> np.ndarray:
+    """[rows, 3] the control's half-widths for rows with these range estimates."""
+    band = np.searchsorted(np.asarray(temp["cuts_m"]), np.nan_to_num(est), side="right")
+    out: np.ndarray = np.asarray(temp["half_widths"])[band]
+    return out
+
+
+def score_ratio(
+    a: np.ndarray, b: np.ndarray, ordinal: np.ndarray, resamples: int = 2000, seed: int = 39
+) -> dict[str, Any]:
+    """mean(a) ÷ mean(b) over rows where both are finite, with an engagement bootstrap; "better"
+    (for a) if the interval lies wholly below 1."""
+    ok = np.isfinite(a) & np.isfinite(b)
+    if not ok.any():
+        return {"rows": 0}
+    uniq, inv = np.unique(ordinal[ok], return_inverse=True)
+    sa = np.bincount(inv, weights=a[ok], minlength=uniq.size)
+    sb = np.bincount(inv, weights=b[ok], minlength=uniq.size)
+    pick = np.random.default_rng(seed).integers(0, uniq.size, (resamples, uniq.size))
+    draws = sa[pick].sum(axis=1) / sb[pick].sum(axis=1)
+    lo, hi = (float(v) for v in np.quantile(draws, [0.025, 0.975]))
+    return {
+        "rows": int(ok.sum()),
+        "scenarios": int(uniq.size),
+        "a_mean": float(a[ok].mean()),
+        "b_mean": float(b[ok].mean()),
+        "ratio": float(sa.sum() / sb.sum()),
+        "lo": lo,
+        "hi": hi,
+        "outcome": "better" if hi < 1 else "worse" if lo > 1 else "not separated",
+    }
