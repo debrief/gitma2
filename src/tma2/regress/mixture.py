@@ -4,7 +4,7 @@ Every scenario index of the stream draws its condition from its own sub-stream o
 seed: clean with probability ``clean_share``; otherwise each of the four kinds of spec 010 is
 on with probability ``p_on`` and its severities are log-uniform within the mix's ranges. The
 draws are made for every index and every kind in one fixed order, whatever is switched on. The
-kinds of the overlay's second stream (``white_t_df``, ``sigma_step_factor``) can never be drawn:
+kinds of the overlay's second stream (``mm.M_SECOND`` onward) can never be drawn:
 they are the held-out family.
 """
 

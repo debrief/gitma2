@@ -99,4 +99,38 @@ def test_heldout_conditions_use_only_the_second_stream() -> None:
         if c["id"] == "off":
             continue
         m = mm.flatten_condition(c).M
-        assert np.all(np.isnan(m[: mm.M_T_DF])) and not np.all(np.isnan(m[mm.M_T_DF :]))
+        assert np.all(np.isnan(m[: mm.M_SECOND])) and not np.all(np.isnan(m[mm.M_SECOND :]))
+
+
+def test_oscillation_and_bursts() -> None:
+    cond = mm.flatten_condition(
+        {
+            "id": "ob",
+            "osc_amp": 1.0,
+            "osc_period_s": 300.0,
+            "burst_rate": 0.004,
+            "burst_len_s": 120.0,
+            "burst_spread": 5.0,
+        }
+    )
+    assert cond.version == "0.8.0"
+    runs = _run(cond, 60)
+    bursts = 0
+    for r in runs:
+        sig = float(r["sigma"])
+        c, o = r["comp"][:, 1], r["comp"][:, 3]
+        assert abs(np.abs(c).max() - sig) < 0.02 * sig  # a sinusoid of amplitude one sd
+        assert (
+            np.allclose(c[30:60], c[:30] * 1.0, atol=3 * sig)
+            and abs(c[:30] - c[30:60]).max() < 1e-9 * sig + 1e-12
+        )
+        inside = np.flatnonzero(o != 0.0)
+        if inside.size:
+            starts = inside[np.r_[True, np.diff(inside) > 1]]
+            bursts += starts.size
+            first = inside[inside < starts[0] + 1][0]
+            run = o[first : first + 3]
+            assert np.all(run[run != 0.0] == run[0])  # one offset through a burst
+    assert bursts > 30
+    with pytest.raises(ValueError):
+        mm.flatten_condition({"id": "x", "burst_rate": 0.01})

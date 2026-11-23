@@ -3321,6 +3321,27 @@
                         "null"
                     ]
                 },
+                "burst_len_s": {
+                    "description": "Spec 037: mean duration of a burst (geometric).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "burst_rate": {
+                    "description": "Spec 037: probability per sample that a burst starts (with burst_len_s and burst_spread).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "burst_spread": {
+                    "description": "Spec 037: sd, in units of the true error sd, of the one offset every bearing of a burst carries.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
                 "corr_share": {
                     "description": "Share of the true error variance that is correlated (the rest is white).",
                     "type": [
@@ -3338,6 +3359,20 @@
                 "id": {
                     "description": "Condition name, for example all-central.",
                     "type": "string"
+                },
+                "osc_amp": {
+                    "description": "Spec 037: amplitude of a sinusoidal error, in units of the true error sd (with osc_period_s).",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "osc_period_s": {
+                    "description": "Spec 037: period of the sinusoidal error; its phase is drawn once per engagement.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
                 },
                 "outlier_rate": {
                     "description": "Probability per bearing of an added outlier.",

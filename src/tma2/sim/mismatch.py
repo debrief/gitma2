@@ -25,8 +25,17 @@ and every condition without them is byte-identical to 0.7.0:
 - ``sigma_step_factor`` (f ≥ 1): from a sample drawn uniformly in the engagement, the white,
   correlated and outlier parts are multiplied by f or by 1 / f (an even draw).
 
-The truth side file's per-engagement columns do not describe these two kinds; the per-sample
-components do.
+Two more kinds of the second stream, added after the first two proved harmless to every system
+on tuning data (spec 037 T018):
+
+- ``osc_amp`` and ``osc_period_s``: a sinusoidal error of that amplitude (in units of the true
+  sd) and period, with a phase drawn once per engagement (recorded in the correlated column);
+- ``burst_rate``, ``burst_len_s`` and ``burst_spread``: with that probability per sample a burst
+  starts; for a geometric number of samples of that mean duration every bearing carries one
+  common offset drawn N(0, (spread × true sd)²) (recorded in the outlier column, flagged).
+
+The truth side file's per-engagement columns do not describe the kinds of the second stream;
+the per-sample components do.
 """
 
 from __future__ import annotations
@@ -61,7 +70,13 @@ M_OUT_RATE = 5
 M_OUT_SPREAD = 6
 M_T_DF = 7
 M_STEP = 8
-M_LEN = 9
+M_OSC_AMP = 9
+M_OSC_PERIOD = 10
+M_BURST_RATE = 11
+M_BURST_LEN = 12
+M_BURST_SPREAD = 13
+M_LEN = 14
+M_SECOND = 7  # columns from here on belong to the second stream
 
 MISMATCH_STREAM_2 = 1_000_033
 """The second stream's SplitMix64 output number (spec 037): the two kinds added later."""
@@ -92,7 +107,7 @@ class Condition:
     @property
     def version(self) -> str:
         """The generator version a split under this condition records."""
-        second = not np.all(np.isnan(self.M[[M_T_DF, M_STEP]]))
+        second = not np.all(np.isnan(self.M[M_SECOND:]))
         return MISMATCH_VERSION_2 if second else MISMATCH_VERSION
 
 
@@ -131,6 +146,15 @@ def flatten_condition(c: dict[str, Any]) -> Condition:
         if float(step) < 1.0:
             raise ValueError(f"mismatch condition {c.get('id')}: sigma_step_factor must be >= 1")
         M[M_STEP] = float(step)
+    pair("osc_amp", "osc_period_s", M_OSC_AMP, M_OSC_PERIOD)
+    burst = [c.get(k) for k in ("burst_rate", "burst_len_s", "burst_spread")]
+    if any(v is not None for v in burst):
+        if any(v is None or float(v) <= 0 for v in burst) or float(burst[0]) >= 1.0:
+            raise ValueError(
+                f"mismatch condition {c.get('id')}: burst_rate (below 1), burst_len_s and "
+                "burst_spread go together and are positive"
+            )
+        M[M_BURST_RATE], M[M_BURST_LEN], M[M_BURST_SPREAD] = (float(v) for v in burst)
     return Condition(id=str(c["id"]), M=M)
 
 
@@ -183,12 +207,21 @@ def apply_mismatch(
     # the second stream (spec 037): read only when one of its kinds is on
     df = 0 if math.isnan(M[M_T_DF]) else int(M[M_T_DF])
     step = 1.0 if math.isnan(M[M_STEP]) else M[M_STEP]
-    second = df > 0 or step > 1.0
+    osc = 0.0 if math.isnan(M[M_OSC_AMP]) else M[M_OSC_AMP] * sigma_true
+    osc_w = 0.0 if math.isnan(M[M_OSC_PERIOD]) else 2.0 * math.pi / M[M_OSC_PERIOD]
+    b_rate = 0.0 if math.isnan(M[M_BURST_RATE]) else M[M_BURST_RATE]
+    b_len = 0.0 if math.isnan(M[M_BURST_LEN]) else M[M_BURST_LEN] / dt
+    b_sd = 0.0 if math.isnan(M[M_BURST_SPREAD]) else M[M_BURST_SPREAD] * sigma_true
+    second = df > 0 or step > 1.0 or osc > 0.0 or b_rate > 0.0
     step_at = samples
+    phase = 0.0
+    b_left = 0
+    b_off = 0.0
     if second:
         s2 = create_rng(derive_seed(scenario_seed, MISMATCH_STREAM_2))
         u_at = uniform01(s2)
         u_dir = uniform01(s2)
+        phase = 2.0 * math.pi * uniform01(s2)
         if step > 1.0:
             step_at = int(u_at * samples)
             if u_dir < 0.5:
@@ -219,6 +252,19 @@ def apply_mismatch(
         c = level * sigma_c * zc
         b = sigma_b * zb
         o = level * out_sd * go if is_out else 0.0
+        if second:  # three draws per sample, whatever is on
+            ub = uniform01(s2)
+            gbst = gaussian(s2)
+            ul = uniform01(s2)
+            if b_left == 0 and ub < b_rate:
+                b_off = b_sd * gbst
+                b_left = max(1, int(-math.log(1.0 - ul) * b_len))
+            if b_left > 0:
+                b_left -= 1
+                o += level * b_off
+                is_out = True
+            if osc > 0.0:
+                c += level * osc * math.sin(osc_w * i * dt + phase)
         comp[i, 0] = w
         comp[i, 1] = c
         comp[i, 2] = b

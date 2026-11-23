@@ -53,7 +53,7 @@ def test_mix_is_a_pure_function_of_the_index_and_stays_in_range() -> None:
         M[5000:5010], mixture.conditions(369, idx[5000:5010], MIX), equal_nan=True
     )
     assert not np.array_equal(M, mixture.conditions(370, idx, MIX), equal_nan=True)
-    assert np.all(np.isnan(M[:, [mm.M_T_DF, mm.M_STEP]]))  # the held-out kinds: never
+    assert np.all(np.isnan(M[:, mm.M_SECOND :]))  # the held-out kinds: never
     clean = np.all(np.isnan(M), axis=1)
     assert abs(clean.mean() - (0.25 + 0.75 / 16)) < 0.015
     for i, c in enumerate(MIX.col):

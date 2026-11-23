@@ -883,6 +883,11 @@ class MismatchCondition(ConfiguredBaseModel):
     outlier_spread: Optional[float] = Field(default=None, description="""Outlier sd in units of the true error sd.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
     white_t_df: Optional[int] = Field(default=None, description="""Spec 037: the white part is Student-t with this many degrees of freedom (at least 3), scaled to the same sd. Drawn from a second stream; never in a training mix.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
     sigma_step_factor: Optional[float] = Field(default=None, description="""Spec 037: from a sample drawn uniformly in the engagement, the white, correlated and outlier parts are multiplied by this factor or its inverse (at least 1).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
+    osc_amp: Optional[float] = Field(default=None, description="""Spec 037: amplitude of a sinusoidal error, in units of the true error sd (with osc_period_s).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
+    osc_period_s: Optional[float] = Field(default=None, description="""Spec 037: period of the sinusoidal error; its phase is drawn once per engagement.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition'], 'unit': {'ucum_code': 's'}} })
+    burst_rate: Optional[float] = Field(default=None, description="""Spec 037: probability per sample that a burst starts (with burst_len_s and burst_spread).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
+    burst_len_s: Optional[float] = Field(default=None, description="""Spec 037: mean duration of a burst (geometric).""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition'], 'unit': {'ucum_code': 's'}} })
+    burst_spread: Optional[float] = Field(default=None, description="""Spec 037: sd, in units of the true error sd, of the one offset every bearing of a burst carries.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MismatchCondition']} })
 
 
 class NormalisationConstants(ConfiguredBaseModel):

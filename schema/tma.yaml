@@ -722,6 +722,23 @@ classes:
         description: >-
           Spec 037: from a sample drawn uniformly in the engagement, the white, correlated and
           outlier parts are multiplied by this factor or its inverse (at least 1).
+      osc_amp:
+        range: float
+        description: "Spec 037: amplitude of a sinusoidal error, in units of the true error sd (with osc_period_s)."
+      osc_period_s:
+        range: float
+        unit: { ucum_code: s }
+        description: "Spec 037: period of the sinusoidal error; its phase is drawn once per engagement."
+      burst_rate:
+        range: float
+        description: "Spec 037: probability per sample that a burst starts (with burst_len_s and burst_spread)."
+      burst_len_s:
+        range: float
+        unit: { ucum_code: s }
+        description: "Spec 037: mean duration of a burst (geometric)."
+      burst_spread:
+        range: float
+        description: "Spec 037: sd, in units of the true error sd, of the one offset every bearing of a burst carries."
 
   NormalisationConstants:
     description: Fixed scaling constants computed from the train split's input channels only.

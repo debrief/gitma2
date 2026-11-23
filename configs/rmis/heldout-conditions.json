@@ -1,5 +1,5 @@
 {
- "description": "Spec 037 research R2: bearing-error conditions whose kinds are never drawn in the fine-tuning mix (configs/regress/ft-mix.json) or in any tuning. ho-t3: the white error is Student-t with 3 degrees of freedom at the same sd. ho-step2: the error level doubles or halves from a time uniform in the engagement. ho-both: both; the registered held-out condition.",
+ "description": "Spec 037 research R2 and T018: bearing-error conditions whose kinds are never drawn in the fine-tuning mix (configs/regress/ft-mix.json) or in any tuning. The first family (ho-t3: Student-t white error at the same sd; ho-step2: the error level doubles or halves mid-engagement) proved harmless to every system on tuning data (experiments/20261122-rmis-dev/heldout) and is kept as reported conditions. The strengthened family: ho-osc, a sinusoidal error of amplitude one sd and period 300 s; ho-burst, bursts of mean 120 s (about three per two-hour engagement) in which every bearing carries one offset of sd five times the error sd; ho-both, both: the registered held-out condition.",
  "primary": "ho-both",
  "conditions": [
   {
@@ -14,9 +14,23 @@
    "sigma_step_factor": 2.0
   },
   {
+   "id": "ho-osc",
+   "osc_amp": 1.0,
+   "osc_period_s": 300.0
+  },
+  {
+   "id": "ho-burst",
+   "burst_rate": 0.004,
+   "burst_len_s": 120.0,
+   "burst_spread": 5.0
+  },
+  {
    "id": "ho-both",
-   "white_t_df": 3,
-   "sigma_step_factor": 2.0
+   "osc_amp": 1.0,
+   "osc_period_s": 300.0,
+   "burst_rate": 0.004,
+   "burst_len_s": 120.0,
+   "burst_spread": 5.0
   }
  ]
 }
