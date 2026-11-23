@@ -1,0 +1,155 @@
+{
+ "checkpoint_sha256": "b036fb2a06dc8b7e2fb7794773cc90550c757a7eb91ee7a670e8e22686038c37",
+ "config": {
+  "batch_scenarios": 256,
+  "beta": 0.5,
+  "checkpoint_seconds": 900,
+  "error_mix": "configs/regress/ft-mix.json",
+  "feedforward": 1024,
+  "heads": 8,
+  "held_fraction": 0.2,
+  "held_ranges": "configs/regress/held-course-ranges.json",
+  "id": "ft-pilot",
+  "init_sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281",
+  "inputs": "full",
+  "layers": 8,
+  "learning_rate": 0.0001,
+  "limit_seconds": 2400,
+  "max_rows": 720,
+  "patch_rows": 3,
+  "precision": "amp",
+  "ranges": "configs/man2-ranges.json",
+  "seed": 1,
+  "stream_repeat": 0,
+  "stream_seed": 369,
+  "stream_start": 50000000,
+  "total_updates": 4000,
+  "val_count": 512,
+  "val_every_updates": 500,
+  "val_seed": 370,
+  "warmup_updates": 300,
+  "weight_decay": 0.01,
+  "width": 256
+ },
+ "config_sha256": "b47e16dd4cd1ee35c7a7e5193488c834abc9a92b559078a53fa4ee6cfe88cb91",
+ "cuda": "13.2",
+ "device": "cuda",
+ "git_dirty": false,
+ "gpu": "Tesla T4",
+ "gpu_seconds": 1648.3036692142487,
+ "plan": {
+  "description": "Spec 037 pilot (research R4), DRAFT until the decision record binds the three seeds: spec 012's seed 1 fine-tuned under the mismatch mix for at most 40 minutes (50 with the start-up allowance), from stream index 50 million of seed 369 so that it shares no scenario with the seeds' runs. Reads throughput with the overlay and whether the validation curves move.",
+  "init_from": {
+   "branch": "results/gputrain-r-a-s1-42990055824",
+   "dir": "experiments/gputrain-runs/r-a-s1-42990055824",
+   "sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+  },
+  "segment_limit_seconds": 2400,
+  "segments": 1
+ },
+ "scenarios_per_second": 621.3750200514688,
+ "scenarios_seen": 1024000,
+ "segments": [
+  {
+   "end_update": 4000,
+   "git_commit": "55bac32c3b0c2fa0553e2309e3f56549952f12aa",
+   "seconds": 1647.9580953121185,
+   "start_update": 0,
+   "started": 1795401409.7473257
+  }
+ ],
+ "stopped": "complete",
+ "torch": "2.15.0+cu132",
+ "train_seconds": 1647.9580953121185,
+ "updates": 4000,
+ "validation": [
+  {
+   "ln_range_abs_median": 0.08806151151657104,
+   "loss": -0.5939457267522812,
+   "mis_ln_range_abs_median": 0.10266172885894775,
+   "mis_loss": -0.57856185734272,
+   "mis_velocity_mps_median": 2.0397958755493164,
+   "seconds": 226.81412601470947,
+   "train_loss": -0.5764982104301453,
+   "update": 500,
+   "velocity_mps_median": 1.8164591789245605
+  },
+  {
+   "ln_range_abs_median": 0.09221184253692627,
+   "loss": -0.5800510942935944,
+   "mis_ln_range_abs_median": 0.10578569769859314,
+   "mis_loss": -0.5669112503528595,
+   "mis_velocity_mps_median": 2.0846750736236572,
+   "seconds": 419.35564827919006,
+   "train_loss": -0.5442667603492737,
+   "update": 1000,
+   "velocity_mps_median": 1.8764872550964355
+  },
+  {
+   "ln_range_abs_median": 0.09408769011497498,
+   "loss": -0.5841987133026123,
+   "mis_ln_range_abs_median": 0.10481548309326172,
+   "mis_loss": -0.5713296979665756,
+   "mis_velocity_mps_median": 2.0438013076782227,
+   "seconds": 615.1589734554291,
+   "train_loss": -0.5979035496711731,
+   "update": 1500,
+   "velocity_mps_median": 1.8507159948349
+  },
+  {
+   "ln_range_abs_median": 0.09045636653900146,
+   "loss": -0.5934865325689316,
+   "mis_ln_range_abs_median": 0.10271209478378296,
+   "mis_loss": -0.5822461247444153,
+   "mis_velocity_mps_median": 2.0529274940490723,
+   "seconds": 805.495187997818,
+   "train_loss": -0.539757490158081,
+   "update": 2000,
+   "velocity_mps_median": 1.8158358335494995
+  },
+  {
+   "ln_range_abs_median": 0.08982831239700317,
+   "loss": -0.5920507460832596,
+   "mis_ln_range_abs_median": 0.1042749285697937,
+   "mis_loss": -0.5800742954015732,
+   "mis_velocity_mps_median": 2.009908676147461,
+   "seconds": 995.5385329723358,
+   "train_loss": -0.5698808431625366,
+   "update": 2500,
+   "velocity_mps_median": 1.8029736280441284
+  },
+  {
+   "ln_range_abs_median": 0.09027326107025146,
+   "loss": -0.5890500396490097,
+   "mis_ln_range_abs_median": 0.10368406772613525,
+   "mis_loss": -0.5783561766147614,
+   "mis_velocity_mps_median": 1.9950507879257202,
+   "seconds": 1193.0954103469849,
+   "train_loss": -0.5538398623466492,
+   "update": 3000,
+   "velocity_mps_median": 1.7878129482269287
+  },
+  {
+   "ln_range_abs_median": 0.09043172001838684,
+   "loss": -0.5872222185134888,
+   "mis_ln_range_abs_median": 0.1021011471748352,
+   "mis_loss": -0.5768875777721405,
+   "mis_velocity_mps_median": 1.999210000038147,
+   "seconds": 1451.2930698394775,
+   "train_loss": -0.5926815271377563,
+   "update": 3500,
+   "velocity_mps_median": 1.7888158559799194
+  },
+  {
+   "ln_range_abs_median": 0.0906212329864502,
+   "loss": -0.5868682563304901,
+   "mis_ln_range_abs_median": 0.10211285948753357,
+   "mis_loss": -0.5761521309614182,
+   "mis_velocity_mps_median": 1.9958686828613281,
+   "seconds": 1647.9577083587646,
+   "train_loss": -0.525867760181427,
+   "update": 4000,
+   "velocity_mps_median": 1.7847667932510376
+  }
+ ]
+}
