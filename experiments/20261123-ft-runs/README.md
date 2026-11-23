@@ -39,3 +39,24 @@ plus a spending cap) can only be read in Modal's dashboard.
   (`configs/headroom/rm-pilot-321.json`): it is one seed of a shorter schedule and is not the
   registered model.
 - Whether to re-enable the workspace, and for how much, is the owner's.
+
+## Update, 2026-11-23 22:25 UTC: the saved state is secured; the resume was refused
+
+The owner chose to resume. A read-only check of the volume (`modal-check/volume`, no container)
+found each run's saved state, and `modal-fetch/ft` copied each checkpoint and run record to
+`results/ftpartial-<run>` with the checkpoint's digest checked against its record
+(`partial/<run>/run.json` here):
+
+| Run | Updates saved (of 26,000) | Last monitor at | Monitor under the mix, start → then | Clean monitor, start → then | Checkpoint |
+|---|---|---|---|---|---|
+| ft-s1-45108906382 | 14,075 | 14,000 | 0.114 → 0.101 | 0.085 → 0.086 | `6cbaeab4ff92…` |
+| ft-s2-45109019065 | 16,476 | 16,000 | 0.118 → 0.100 | 0.086 → 0.090 | `ec513fd0bc57…` |
+| ft-s3-45109133362 | 12,389 | 12,000 | 0.120 → 0.106 | 0.087 → 0.094 | `8ac019f34322…` |
+
+(Median absolute error of ln range on the runs' own monitors: development figures.)
+
+Re-running the three failed jobs at 22:02 UTC (same run ids, so the same folders on the volume
+and a resume, not a restart) was refused before any container started: "Workspace … has
+exceeded its spend limit". Nothing was charged. The workspace can be read but cannot spend
+until its limit is raised in Modal's dashboard, which is the owner's. Finishing needs about
+35,000 updates in all, about 4 T4-hours, about $2.90.
