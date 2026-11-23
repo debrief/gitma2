@@ -4000,6 +4000,7 @@ class DemoScenario(ConfiguredBaseModel):
     target: DemoTrack = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Scenario', 'DemoScenario']} })
     sigma_deg: float = Field(default=..., description="""Standard deviation of the zero-mean Gaussian bearing noise (FR-011).""", ge=0, le=5, json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario']} })
     interval_s: float = Field(default=..., description="""Bearing sample interval (FR-010).""", ge=1, le=120, json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario']} })
+    turn_loss_s: Optional[float] = Field(default=None, description="""Owner 2026-11-22: bearings are lost while ownship turns and for this many seconds after each turn ends (default 120); null keeps every bearing.""", ge=0, le=1800, json_schema_extra = { "linkml_meta": {'domain_of': ['DemoScenario']} })
     seed: int = Field(default=..., description="""Seed of the noise generator; the same seed and scenario give identical bearings.""", ge=0, le=4294967295, json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioMetadata',
                        'PhysicsModelConfig',
                        'DetectorConfig',
@@ -4041,6 +4042,7 @@ class TmaProblem(ConfiguredBaseModel):
     own_course_rad: Optional[list[float]] = Field(default=None, description="""Ownship course at each bearing (the learned model reads ownship legs from it).""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaProblem']} })
     own_speed_mps: Optional[list[float]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TmaProblem']} })
     sigma_rad: float = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TmaProblem']} })
+    bearing_valid: Optional[list[int]] = Field(default=None, description="""1 where the bearing was received, 0 where it was lost (an ownship turn and its tail); absent: every bearing received. Lost rows keep their place so the time grid stays regular.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TmaProblem']} })
     knots: Optional[list[DemoSpan]] = Field(default=None, description="""Manoeuvre spans a solver may use when it accepts knots (the oracle is told the truth's).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DetectorConfig',
                        'KnotSet',
                        'EModelConfig',

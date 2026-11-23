@@ -12,25 +12,33 @@ const DEG = Math.PI / 180;
 const L_UNIT = 1.0e4, V_UNIT = 10.0, D_UNIT = 100.0, T_UNIT = 7200.0;
 const SMOOTH_ROWS = 7;
 
-// [MAX_ROWS * 9] float32 features and the [MAX_ROWS] row mask; every bearing is valid here
-export function periodFeatures(t, ox, oy, z, sigma) {
+// [MAX_ROWS * 9] float32 features and the [MAX_ROWS] row mask (frame.features): a row without a
+// bearing (`valid[k]` 0, a bearing lost in ownship's turn) keeps its ownship and time features and
+// zeros its bearing features; the frame turns to the first valid bearing
+const allValid = (n) => new Uint8Array(n).fill(1);
+export function firstValid(z, valid) {
+  for (let k = 0; k < z.length; k++) if (valid[k]) return z[k];
+  return 0;
+}
+export function periodFeatures(t, ox, oy, z, sigma, valid = allValid(t.length)) {
   const n = t.length;
   const f = new Float32Array(MAX_ROWS * N_FEATURES);
   const mask = new Uint8Array(MAX_ROWS);
-  const th = z[0];
+  const th = firstValid(z, valid);
   const c = Math.cos(th), s = Math.sin(th);
   const lsig = Math.log(Math.max(sigma, 1e-6) / DEG);
   for (let k = 0; k < n; k++) {
     const tk = k * DT; // the model's clock: rows from 0 at its own spacing
     const dx = k ? ox[k] - ox[k - 1] : 0, dy = k ? oy[k] - oy[k - 1] : 0;
     const dt = k ? tk - (k - 1) * DT : 0;
+    const ok = valid[k] ? 1 : 0;
     const b = z[k] - th;
     const o = k * N_FEATURES;
-    f[o] = Math.sin(b);
-    f[o + 1] = Math.cos(b);
+    f[o] = Math.sin(b) * ok;
+    f[o + 1] = Math.cos(b) * ok;
     f[o + 2] = (dx * c - dy * s) / D_UNIT;
     f[o + 3] = (dy * c + dx * s) / D_UNIT;
-    f[o + 4] = 1;
+    f[o + 4] = ok;
     f[o + 5] = lsig;
     f[o + 6] = dt / 10.0;
     f[o + 7] = tk / T_UNIT;
@@ -60,11 +68,16 @@ function unwrap(z) {
   return out;
 }
 
-// learned.smoothed_bearing with every bearing valid: unwrap, then a centred running median of
-// seven rows with the ends repeated
-export function smoothedBearing(z) {
-  const u = unwrap(z);
-  const h = SMOOTH_ROWS >> 1, n = u.length;
+// learned.smoothed_bearing: valid bearings unwrapped, interpolated over the rows without one,
+// then a centred running median of seven rows with the ends repeated
+export function smoothedBearing(z, valid = allValid(z.length)) {
+  const n = z.length;
+  const ks = [];
+  for (let k = 0; k < n; k++) if (valid[k]) ks.push(k);
+  if (!ks.length) return new Float64Array(n).fill(NaN);
+  const uk = unwrap(Float64Array.from(ks, (k) => z[k]));
+  const u = ks.length === n ? uk : interp(n, ks, Array.from(uk));
+  const h = SMOOTH_ROWS >> 1;
   const out = new Float64Array(n);
   const win = new Float64Array(SMOOTH_ROWS);
   for (let i = 0; i < n; i++) {
@@ -90,7 +103,7 @@ function interp(n, xs, ys) {
 
 // learned.direct_track: the model's own track at every row (x, y, vx, vy), from its per-token
 // means ([T][3]); position is the stated range along the smoothed measured bearing
-export function directTrack(mean, ox, oy, z, th) {
+export function directTrack(mean, ox, oy, z, th, valid = allValid(z.length)) {
   const n = z.length;
   const last = tokenRows(n);
   const col = (c) => last.map((_, j) => mean[j][c]);
@@ -100,7 +113,7 @@ export function directTrack(mean, ox, oy, z, th) {
     for (let k = 0; k < last[0]; k++) lnR[k] = mean[0][0] + slope * (k - last[0]);
   }
   const c = Math.cos(th), s = Math.sin(th);
-  const zs = smoothedBearing(z);
+  const zs = smoothedBearing(z, valid);
   const out = [];
   for (let k = 0; k < n; k++) {
     const r = L_UNIT * Math.exp(lnR[k]);
