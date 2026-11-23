@@ -45,14 +45,14 @@ the hybrid (step 3), US4 spending. Tests are written with the code they check.
 - [x] T017 [US2] Pilot on Modal (`gputrain/ft-pilot`): throughput, the validation curve; one change of configuration allowed; stop and ask if nothing moves in the first hour; record `experiments/<date>-ft-pilot/`
 - [x] T018 [US2] Read on tuning data that the held-out conditions hurt C″ at all (seed 321, 100 engagements); if not, strengthen once before registration
 - [x] T019 [US2] Decision record `experiments/<date>-rmis-decision/`: plans and code by digest, readings M1–M5 and Y1–Y2 with thresholds, controls, forecasts labelled by their basis, seeds 369, 370, 371, the ledger's total; never edited afterwards
-- [ ] T020 [US2] Launch `gputrain/ft-s1..s3` a minute apart; failure check 20 minutes after each; run records to `experiments/<date>-ft-runs/` with checkpoint digests
+- [ ] T020 [US2] (**launched and cut off**: Modal disabled the workspace at about $45; see `experiments/20261123-ft-runs/`; blocked on the owner) Launch `gputrain/ft-s1..s3` a minute apart; failure check 20 minutes after each; run records to `experiments/<date>-ft-runs/` with checkpoint digests
 - [ ] T021 [US2] Validation `rmis/val-370` (off, `all-central`, `ho-both`, one more): the interval scales, the temperature control, the hybrid's weight; addendum binding them; forecasts not rewritten
 - [ ] T022 [US2] Test `rmis/test-371`, once; record `experiments/<date>-rmis/` with weights' digests, readings, tables, what was promised and not run
 
 ## Phase 6: User Story 3 - the hybrid (P2)
 
-- [ ] T023 [US3] `src/tma2/regress/hybrid.py`: a subclass of the physics layer with the three prior residuals and the regressor's start (research R7); `physics/layer.py` untouched and C's `code_sha256` asserted unchanged; `tests/unit/test_hybrid.py` (weight → 0 equals C″'s solve; a tight prior returns the regressor's range; finite gradients)
-- [ ] T024 [US3] `tma2-hpredict --kind hybrid --prior-from --prior-weight`; the static range-prior comparator; fall-back rows flagged; wired into `rmis.yml` before T021
+- [x] T023 [US3] `src/tma2/regress/hybrid.py`: a subclass of the physics layer with the three prior residuals and the regressor's start (research R7); `physics/layer.py` untouched and C's `code_sha256` asserted unchanged; `tests/unit/test_hybrid.py` (weight → 0 equals C″'s solve; a tight prior returns the regressor's range; finite gradients)
+- [x] T024 [US3] `tma2-hpredict --kind hybrid --prior-from --prior-weight`; the static range-prior comparator; fall-back rows flagged; wired into `rmis.yml` before T021
 
 ## Phase 7: Polish
 

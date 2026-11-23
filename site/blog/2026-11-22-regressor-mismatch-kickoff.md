@@ -71,3 +71,10 @@ for an uncertainty, and tries a hybrid that reports from the physics layer. Spec
   model's own 95% range interval covers 0.95 on clean data and 0.77 under the primary
   condition. The owner raised the GPU guard to $49 on 2026-11-22: a 40-minute pilot and about
   three hours a seed.
+- 2026-11-23 (later): the pilot fine-tune moved the model (outlier scenarios 0.152 to 0.106 on
+  its monitor, clean data 7% worse), the readings were registered
+  (`experiments/20261123-rmis-decision/`) and the three seeds were launched. All three were cut
+  off after 1 h 53 min of 3 h when Modal disabled the workspace at about $45 of spend
+  (`experiments/20261123-ft-runs/`). The $45 guard this task raised to $49 had been the distance
+  to a limit on Modal's side, not a margin. No fine-tuned seed exists; validation and test seeds
+  are untouched. What happens next is the owner's decision.

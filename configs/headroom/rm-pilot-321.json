@@ -1,0 +1,125 @@
+{
+  "description": "Spec 037 development reading with the PILOT checkpoint (seed 1, 4,000 updates) standing in for a fine-tuned model, after the three registered fine-tunes were cut off (experiments/20261123-ft-runs): the first 300 sigma = 1 deg engagements of spent seed 321 under off, all-central and ho-both, with the hybrid at four prior weights on off and all-central. One seed of a shorter schedule: tuning data, not the registered model and not a result.",
+  "stage": "development",
+  "plan": "configs/gateh/gh-a.json",
+  "conditions_file": "configs/rmis/all-conditions.json",
+  "split": "tuning",
+  "seed": 321,
+  "count": 2600,
+  "data_split": "train",
+  "start": 0,
+  "ordinals": 300,
+  "shards": 6,
+  "shard_size": 50,
+  "conditions": [
+    "off",
+    "all-central",
+    "ho-both"
+  ],
+  "runs": [
+    {
+      "kind": "nominal",
+      "segmentation": "c2",
+      "name": "c2"
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2",
+      "name": "c2-robust"
+    },
+    {
+      "kind": "robust",
+      "name": "robust-true"
+    },
+    {
+      "kind": "nominal",
+      "name": "plain-true"
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "hyb-s1-w0.5",
+      "prior_from": "ft-s1",
+      "prior_weight": 0.5,
+      "conditions": [
+        "off",
+        "all-central"
+      ]
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "hyb-s1-w1",
+      "prior_from": "ft-s1",
+      "prior_weight": 1.0,
+      "conditions": [
+        "off",
+        "all-central"
+      ]
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "hyb-s1-w2",
+      "prior_from": "ft-s1",
+      "prior_weight": 2.0,
+      "conditions": [
+        "off",
+        "all-central"
+      ]
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "hyb-s1-w4",
+      "prior_from": "ft-s1",
+      "prior_weight": 4.0,
+      "conditions": [
+        "off",
+        "all-central"
+      ]
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "checkpoints": [
+    {
+      "name": "ft-s1",
+      "branch": "results/gputrain-ft-pilot-45101050454",
+      "dir": "experiments/gputrain-runs/ft-pilot-45101050454",
+      "sha256": "b036fb2a06dc8b7e2fb7794773cc90550c757a7eb91ee7a670e8e22686038c37"
+    },
+    {
+      "name": "reg-s1",
+      "branch": "results/gputrain-r-a-s1-42990055824",
+      "dir": "experiments/gputrain-runs/r-a-s1-42990055824",
+      "sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+    }
+  ],
+  "read_controls": [
+    "c2-robust",
+    "c2",
+    "robust-true",
+    "reg-s1",
+    "imm",
+    "one_leg"
+  ],
+  "read_extra": [
+    {
+      "systems": [
+        "hyb-s1-w0.5",
+        "hyb-s1-w1",
+        "hyb-s1-w2",
+        "hyb-s1-w4"
+      ],
+      "controls": [
+        "c2-robust",
+        "c2",
+        "ft-s1",
+        "robust-true"
+      ],
+      "out": "reading-hybrid.json"
+    }
+  ],
+  "interval_scale": "1,1,1"
+}
