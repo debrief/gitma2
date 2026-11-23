@@ -222,6 +222,14 @@ def train(
         )
         (out / "run.json").write_text(json.dumps(rec, indent=1, sort_keys=True) + "\n")
 
+    if cfg.init_sha256 and resume is None and not periods:
+        # spec 037: where a fine-tune starts from, on the same monitors (the pilot lacked it)
+        v0 = evaluate(model, val, device, amp)
+        if val_mis is not None:
+            v0.update({f"mis_{k}": x for k, x in evaluate(model, val_mis, device, amp).items()})
+        v0.update(update=0, seconds=time.time() - t0)
+        record["validation"].append(v0)
+        print(json.dumps(v0), flush=True)
     last_save = time.time()
     stopped = "complete"
     model.train()

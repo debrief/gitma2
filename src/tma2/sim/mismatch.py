@@ -149,12 +149,13 @@ def flatten_condition(c: dict[str, Any]) -> Condition:
     pair("osc_amp", "osc_period_s", M_OSC_AMP, M_OSC_PERIOD)
     burst = [c.get(k) for k in ("burst_rate", "burst_len_s", "burst_spread")]
     if any(v is not None for v in burst):
-        if any(v is None or float(v) <= 0 for v in burst) or float(burst[0]) >= 1.0:
+        vals = [float(v) if v is not None else 0.0 for v in burst]
+        if min(vals) <= 0 or vals[0] >= 1.0:
             raise ValueError(
                 f"mismatch condition {c.get('id')}: burst_rate (below 1), burst_len_s and "
                 "burst_spread go together and are positive"
             )
-        M[M_BURST_RATE], M[M_BURST_LEN], M[M_BURST_SPREAD] = (float(v) for v in burst)
+        M[M_BURST_RATE], M[M_BURST_LEN], M[M_BURST_SPREAD] = vals
     return Condition(id=str(c["id"]), M=M)
 
 

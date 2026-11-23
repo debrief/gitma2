@@ -8,7 +8,7 @@ the hybrid (step 3), US4 spending. Tests are written with the code they check.
 
 ## Phase 1: Setup
 
-- [x] T001 (condition fields only; the interval fields reuse spec 009's row fields, so no others were needed) Add the schema fields of data-model.md to `schema/tma.yaml` (condition fields `white_t_df` "> 2" and `sigma_step_factor` "≥ 1"; regressor row interval fields; header `interval_scale`, `init_weights_sha256`; rmis plan and reading records), schema 0.40.0; run `scripts/gen_types.py` and `scripts/data_dictionary.py`
+- [x] T001 (condition fields only; the interval fields reuse spec 009's row fields, so no others were needed) Add the schema fields of data-model.md to `schema/tma.yaml` (condition fields `white_t_df` "> 2" and `sigma_step_factor` "≥ 1"; regressor row interval fields; header `interval_scale`, `init_weights_sha256`; rmis plan and reading records), schema 0.41.0; run `scripts/gen_types.py` and `scripts/data_dictionary.py`
 - [x] T002 [P] Register `tma2-rmread` in `pyproject.toml` and add `src/tma2/cli/rmread.py` (argument parsing only)
 
 ## Phase 2: Foundational
@@ -42,9 +42,9 @@ the hybrid (step 3), US4 spending. Tests are written with the code they check.
 - [x] T014 [US2] `src/tma2/features/batch.py`: `generate_indices(..., mismatch=)` applies a condition per scenario and equals `tma2-generate --mismatch` on the same indices (test)
 - [x] T015 [P] [US2] `src/tma2/regress/mixture.py` and `configs/regress/ft-mix.json`: a condition per scenario index from its own stream (research R3); the held-out kinds can never be drawn (test); `tests/unit/test_regress_mixture.py`
 - [x] T016 [US2] `src/tma2/regress/model.py`, `data.py`, `train.py`, `scripts/modal_train.py`: config fields `mix` and `init_from` (omitted from the JSON at defaults: spec 012's and 016's digests asserted unchanged); training starts from a checkpoint whose digest is checked; a toy fine-tune on CPU in a fresh interpreter
-- [ ] T017 [US2] Pilot on Modal (`gputrain/ft-pilot`): throughput, the validation curve; one change of configuration allowed; stop and ask if nothing moves in the first hour; record `experiments/<date>-ft-pilot/`
-- [ ] T018 [US2] Read on tuning data that the held-out conditions hurt C″ at all (seed 321, 100 engagements); if not, strengthen once before registration
-- [ ] T019 [US2] Decision record `experiments/<date>-rmis-decision/`: plans and code by digest, readings M1–M5 and Y1–Y2 with thresholds, controls, forecasts labelled by their basis, seeds 369, 370, 371, the ledger's total; never edited afterwards
+- [x] T017 [US2] Pilot on Modal (`gputrain/ft-pilot`): throughput, the validation curve; one change of configuration allowed; stop and ask if nothing moves in the first hour; record `experiments/<date>-ft-pilot/`
+- [x] T018 [US2] Read on tuning data that the held-out conditions hurt C″ at all (seed 321, 100 engagements); if not, strengthen once before registration
+- [x] T019 [US2] Decision record `experiments/<date>-rmis-decision/`: plans and code by digest, readings M1–M5 and Y1–Y2 with thresholds, controls, forecasts labelled by their basis, seeds 369, 370, 371, the ledger's total; never edited afterwards
 - [ ] T020 [US2] Launch `gputrain/ft-s1..s3` a minute apart; failure check 20 minutes after each; run records to `experiments/<date>-ft-runs/` with checkpoint digests
 - [ ] T021 [US2] Validation `rmis/val-370` (off, `all-central`, `ho-both`, one more): the interval scales, the temperature control, the hybrid's weight; addendum binding them; forecasts not rewritten
 - [ ] T022 [US2] Test `rmis/test-371`, once; record `experiments/<date>-rmis/` with weights' digests, readings, tables, what was promised and not run

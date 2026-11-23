@@ -1,0 +1,137 @@
+{
+ "description": "Spec 037 protocol, bound by experiments/20261123-rmis-decision by SHA-256 and never edited after it. Scoring plans (configs/headroom/rm-val-370.json, rm-test-371.json) are written once the fine-tuned checkpoints exist and must agree with this file.",
+ "seeds": {
+  "fine_tune_stream": 369,
+  "validation": 370,
+  "test": 371,
+  "development": 321
+ },
+ "data": {
+  "count": 5600,
+  "data_split": "train",
+  "ranges": "configs/man2-ranges.json"
+ },
+ "validation": {
+  "ordinals": 300,
+  "conditions": [
+   "off",
+   "all-central",
+   "ho-both"
+  ],
+  "uses": [
+   "interval scales (fitted on off and all-central only)",
+   "the temperature control (same rows)",
+   "the hybrid's prior weight and fall-back",
+   "nothing else"
+  ]
+ },
+ "test": {
+  "ordinals": 1000,
+  "decided_conditions": {
+   "clean": "off",
+   "primary": "all-central",
+   "held_out": "ho-both"
+  },
+  "reported_conditions": [
+   "out-central",
+   "corr-central",
+   "ho-osc",
+   "ho-burst"
+  ],
+  "scored": "once"
+ },
+ "conditions_files": [
+  "configs/gateh/conditions.json",
+  "configs/rmis/heldout-conditions.json"
+ ],
+ "systems": {
+  "fine_tuned": [
+   "ft-s1",
+   "ft-s2",
+   "ft-s3"
+  ],
+  "unchanged": [
+   "reg-s1",
+   "reg-s2",
+   "reg-s3"
+  ],
+  "classical": [
+   {
+    "kind": "nominal",
+    "segmentation": "c2",
+    "name": "c2"
+   },
+   {
+    "kind": "robust",
+    "segmentation": "c2",
+    "name": "c2-robust"
+   },
+   {
+    "kind": "robust",
+    "name": "robust-true"
+   },
+   {
+    "kind": "nominal",
+    "name": "plain-true"
+   }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "hybrid": "hyb-s1..s3 (C'' segmentation, robust final solve with the fine-tuned regressor as start and prior; settings by addendum after validation)",
+  "range_prior_control": "c2-prior (the same solve with a static prior on ln range fitted on validation)"
+ },
+ "statistic": "per engagement, the median over its scored rows (rows both sides answer) of the absolute relative range error; the paired ratio numerator / denominator per engagement; geometric mean with a bootstrap over engagements (2,000 resamples, 95%); the three seeds pooled by the mean log ratio within an engagement. Outcome: better (interval wholly above 1), worse (wholly below), not separated.",
+ "readings": {
+  "M1": {
+   "ratio": "c2-robust / fine-tuned",
+   "condition": "all-central"
+  },
+  "M2": {
+   "ratio": "c2-robust / fine-tuned",
+   "condition": "ho-both"
+  },
+  "M3": {
+   "ratio": "unchanged / fine-tuned (same seed)",
+   "conditions": [
+    "all-central",
+    "ho-both"
+   ]
+  },
+  "M4": {
+   "ratio": "unchanged / fine-tuned (same seed)",
+   "condition": "off",
+   "no_cost_if_lower_limit_at_least": 0.95
+  },
+  "M5": {
+   "coverage": "stated 95% intervals of the fine-tuned regressors at the validation-fitted scales, per quantity (range, course where stated, speed), on off, all-central and ho-both separately; honest if the engagement-bootstrap interval lies within [0.90, 0.99]",
+   "against_temperature": "mean interval score (Winkler, 95%) of the head's intervals / the temperature control's, per quantity, pooled over the three conditions; better if the bootstrap interval of the ratio lies wholly below 1"
+  },
+  "Y1": {
+   "ratio": "c2-robust / hybrid",
+   "conditions": [
+    "off",
+    "all-central"
+   ],
+   "ties": "rows where the hybrid falls back to C''-robust are constructed ties: excluded and counted"
+  },
+  "Y2": {
+   "ratio": "fine-tuned / hybrid (same seed)",
+   "conditions": [
+    "off",
+    "all-central"
+   ]
+  },
+  "harm": "Y: any of range, course or speed wholly below 1 for c2-robust / hybrid on off"
+ },
+ "reported_beside": [
+  "course and speed: the same paired ratios and efficiency against the bound (the nominal bound under held-out conditions, named so)",
+  "median per-engagement ratio, shares better, twice as good, twice as bad",
+  "by true-range third",
+  "engagement counts; share of rows answered per system",
+  "each seed alone",
+  "normalised-error median beside every coverage",
+  "the first bearing an outlier or not (research R8), where the truth file allows"
+ ],
+ "temperature_control": "a fixed half-width per quantity and per third of the regressor's own estimated range, fitted on the validation rows of off and all-central to cover 0.95 there; it reads no truth at test",
+ "interval_scale": "one multiplier of the head's sd per quantity (range, course, speed), fitted on the same validation rows to cover 0.95; the three seeds share it"
+}

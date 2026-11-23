@@ -33,7 +33,7 @@ seed; test: 2,000 engagements × 4 conditions
 ## Constitution Check
 
 - Types once in LinkML: new condition fields, plan and header fields go in `schema/tma.yaml`
-  (schema 0.40.0). Pass.
+  (schema 0.41.0). Pass.
 - Seeded randomness only: the per-scenario training condition and the new error kinds draw from
   their own SplitMix64 streams; no existing draw moves. Pass.
 - Reported estimate from a declared physics layer: the regressor is a control, named so in
