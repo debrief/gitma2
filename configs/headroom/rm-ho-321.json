@@ -1,0 +1,69 @@
+{
+  "description": "Spec 037 T018, tuning data: do the held-out bearing-error conditions (configs/rmis/heldout-conditions.json: Student-t white error, a level step, both) hurt C'' and the unchanged regressors at all? The first 100 sigma = 1 deg engagements of spent seed 321, with mismatch off beside them. The bound under these conditions is the truth file's Gaussian model, which does not describe the two new kinds: efficiency here is against a nominal bound.",
+  "plan": "configs/gateh/gh-a.json",
+  "split": "tuning",
+  "seed": 321,
+  "count": 2600,
+  "data_split": "train",
+  "start": 0,
+  "runs": [
+    {
+      "kind": "nominal",
+      "segmentation": "c2",
+      "name": "c2"
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2",
+      "name": "c2-robust"
+    },
+    {
+      "kind": "robust",
+      "name": "robust-true"
+    },
+    {
+      "kind": "nominal",
+      "name": "plain-true"
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "checkpoints": [
+    {
+      "name": "reg-s1",
+      "branch": "results/gputrain-r-a-s1-42990055824",
+      "dir": "experiments/gputrain-runs/r-a-s1-42990055824",
+      "sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+    },
+    {
+      "name": "reg-s2",
+      "branch": "results/gputrain-r-a-s2-42990055730",
+      "dir": "experiments/gputrain-runs/r-a-s2-42990055730",
+      "sha256": "d88c944bcbe2b70f98bd272ed4fd330b92f1fdd9cf3833ed96bcce39eabf33e5"
+    },
+    {
+      "name": "reg-s3",
+      "branch": "results/gputrain-r-a-s3-42990059695",
+      "dir": "experiments/gputrain-runs/r-a-s3-42990059695",
+      "sha256": "3f75d81d2dc266df99d192a317be4ae58ea15b0f1489d79c28e3ed34ec400d05"
+    }
+  ],
+  "read_controls": [
+    "c2-robust",
+    "c2",
+    "robust-true",
+    "imm",
+    "one_leg"
+  ],
+  "interval_scale": "1,1,1",
+  "ordinals": 100,
+  "shards": 1,
+  "shard_size": 100,
+  "conditions": [
+    "off",
+    "ho-t3",
+    "ho-step2",
+    "ho-both"
+  ],
+  "conditions_file": "configs/rmis/heldout-conditions.json"
+}

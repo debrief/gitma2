@@ -25,9 +25,9 @@ the hybrid (step 3), US4 spending. Tests are written with the code they check.
 
 - [x] T007 [US1] (built as a hook in the existing `headroom.yml` with `scripts/rmis_regressors.sh` and `scripts/rmis_read.sh`, plans under `configs/headroom/rm-*.json`, instead of a new workflow) `.github/workflows/rmis.yml` (`rmis/**`) and `scripts/rmis_job.sh`: per condition, generate the split with `--mismatch`, classical shards by `tma2-hpredict` (C″ plain and robust final solve; the robust solve on the true segmentation), regressors by `tma2-rpredict`, `tma2-gh`, `tma2-rmread`; `set -o pipefail`, folders made before `tee`, everything outside the checkout, results on an orphan branch `results/rmis-<name>-<run id>`; `max-parallel` 16; a test plan refused without its decision record or when its results branch exists
 - [x] T008 [US1] `configs/rmis/smoke.json` (two conditions, 20 engagements) and `configs/rmis/dev-321.json` (sixteen conditions, 300 engagements, the three `r-a` checkpoints with digests); emulate the workflow's command builder through bash against both plans before any push
-- [ ] T009 [US1] Commit the rule of research R5 in `experiments/<date>-rmis-dev/RULE.md` before the run; push `rmis/smoke`, check it 20 minutes after launch, then `rmis/dev-321`
-- [ ] T010 [US1] `scripts/research/rmis_tables.py` (tables from `reading.json` only) and the record `experiments/<date>-rmis-dev/` (README, tables, reading, digests); state the rule's output; update the kickoff post with a dated paragraph
-- [ ] T011 [US1] **Checkpoint**: "holds up" → stop before step 2 and ask the owner; otherwise continue
+- [x] T009 [US1] Commit the rule of research R5 in `experiments/<date>-rmis-dev/RULE.md` before the run; push `rmis/smoke`, check it 20 minutes after launch, then `rmis/dev-321`
+- [x] T010 [US1] `scripts/research/rmis_tables.py` (tables from `reading.json` only) and the record `experiments/<date>-rmis-dev/` (README, tables, reading, digests); state the rule's output; update the kickoff post with a dated paragraph
+- [x] T011 [US1] **Checkpoint**: "holds up" → stop before step 2 and ask the owner; otherwise continue
 
 ## Phase 4: User Story 4 - spending (P1)
 

@@ -59,3 +59,15 @@ for an uncertainty, and tries a hybrid that reports from the physics layer. Spec
 - Coverage of the stated intervals by range band and by time since the last target change.
 - Track plots of one test engagement, clean and under the primary condition: C″, the regressor
   and the hybrid.
+
+## Updates
+
+- 2026-11-23: step 1 is done on spent seed 321 (`experiments/20261122-rmis-dev/`; development
+  data, not a result). By the rule written beforehand the unchanged regressors do not hold up:
+  their range error is 3.1 times higher under the primary condition (0.192 against 0.062), so
+  the fine-tune goes ahead. They are still ahead of C″ with the robust solve in 14 of 16
+  conditions (1.18 [1.07, 1.31] under the primary one) and not separated under the harshest
+  outliers. Outliers and correlated error do the damage; an untold error level does none. The
+  model's own 95% range interval covers 0.95 on clean data and 0.77 under the primary
+  condition. The owner raised the GPU guard to $49 on 2026-11-22: a 40-minute pilot and about
+  three hours a seed.

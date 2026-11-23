@@ -96,5 +96,7 @@ def test_bad_fields_are_refused() -> None:
 def test_heldout_conditions_use_only_the_second_stream() -> None:
     doc = json.loads((ROOT / "configs/rmis/heldout-conditions.json").read_text())
     for c in doc["conditions"]:
+        if c["id"] == "off":
+            continue
         m = mm.flatten_condition(c).M
         assert np.all(np.isnan(m[: mm.M_T_DF])) and not np.all(np.isnan(m[mm.M_T_DF :]))

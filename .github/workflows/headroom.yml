@@ -17,6 +17,7 @@ name: Headroom (Gate H)
 #                 each (the tuning grid); default one variant with the plan's settings
 #   digests       optional path to committed digests {"<condition>/<file>": sha256}: checked
 #   imm, ekf      frozen reference names
+#   conditions_file  optional (spec 037): a conditions file other than the Gate H plan's
 #   checkpoints   optional (spec 037): [{name, branch, dir, sha256}] regressors scored beside the runs, with
 #                 read_controls [run names] for the paired readings and interval_scale "r,c,s"
 # Each record goes to results/headroom-<name>-<condition>-<variant>-<run id>.
@@ -87,7 +88,7 @@ jobs:
           read -r GH SEED COUNT DSPLIT <<< "$(python3 -c "
           import json; p = json.load(open('$PLAN')); print(p['plan'], p['seed'], p['count'], p['data_split'])")"
           read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
-          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+          import json; g = json.load(open('$GH')); p = json.load(open('$PLAN')); print(p.get('conditions_file') or g['conditions'], g['ranges'], g['heldout'])")"
           uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
             --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data" \
             --mismatch "$CONDS#$COND"
@@ -105,7 +106,7 @@ jobs:
             read -r SEED COUNT DSPLIT <<< "$(python3 -c "
           import json; p = json.load(open('$PLAN')); print(p['seed'], p['count'], p['data_split'])")"
             read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
-          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+          import json; g = json.load(open('$GH')); p = json.load(open('$PLAN')); print(p.get('conditions_file') or g['conditions'], g['ranges'], g['heldout'])")"
             uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
               --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data-$C" \
               --mismatch "$CONDS#$C"
@@ -167,7 +168,7 @@ jobs:
           read -r GH SEED COUNT DSPLIT <<< "$(python3 -c "
           import json; p = json.load(open('$PLAN')); print(p['plan'], p['seed'], p['count'], p['data_split'])")"
           read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
-          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+          import json; g = json.load(open('$GH')); p = json.load(open('$PLAN')); print(p.get('conditions_file') or g['conditions'], g['ranges'], g['heldout'])")"
           uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
             --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data" \
             --mismatch "$CONDS#$COND"
