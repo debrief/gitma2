@@ -325,7 +325,8 @@ def main(argv: list[str] | None = None) -> int:
             **settings,
             "prior_weight": a.prior_weight,
             "prior_static": prior["static"],
-            "prior_sha256": sha256_file(a.prior_from) if a.prior_from else None,
+            # the prior file differs by shard, so the header names it and does not digest it
+            "prior_from": Path(a.prior_from).stem if a.prior_from else None,
         }
     c2 = None
     code = None
