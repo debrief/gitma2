@@ -32,7 +32,7 @@ jobs:
         run: |
           uvx modal --version
           uvx modal app list
-      - name: Training volume (spec 037: what a resume would find; no container, no GPU)
+      - name: "Training volume (spec 037): what a resume would find; no container, no GPU"
         env:
           MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
           MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
