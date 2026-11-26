@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- Spec 031 slides: the carried prior against longer windows.
+     Figures: site/static/img/2026-11-20-held-comparators-slides/, made by scripts/research/cmp_charts.py. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Carried prior or longer window</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 54vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.85em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.5em">The carried prior against longer windows</h1>
+          <p class="small">2026-11-20 · spec 031 · seeds 364 (tuning, spent), 365 (validation), 366 (test) · gitma2</p>
+        </section>
+
+        <section>
+          <h2>The question from spec 029's panel</h2>
+          <ul>
+            <li>1-hour ctl-prior beat the same 1-hour window alone (2.41): more data beats no data</li>
+            <li>Against the fair comparators? (b) ctl on 2-hour windows, (c) a joint solve over the turn-free hour and the hour before</li>
+            <li>Plus D3: ctl-prior on 2-hour windows</li>
+          </ul>
+          <p class="small">Registered rule: "ctl-prior worse" when comparator ÷ 1-hour ctl-prior has its upper limit below 1.</p>
+        </section>
+
+        <section>
+          <h2>Registered rule: ctl-prior worse, three times</h2>
+          <img src="../../img/2026-11-20-held-comparators-slides/estimands.svg" alt="D1, D2, D3 ratios with intervals, and the supplement" />
+          <p class="small">D1 0.730 [0.579, 0.917] · D2 0.774 [0.632, 0.954] · D3 0.488 [0.386, 0.619]. Right: supplement only.</p>
+        </section>
+
+        <section>
+          <h2>Averages with wide spread</h2>
+          <img src="../../img/2026-11-20-held-comparators-slides/windows.svg" alt="per-window ratios for D1, D2, D3" />
+          <p class="small">1-hour ctl-prior better in 43% (D1) and 41% (D2) of windows; twice as bad in about a third.</p>
+        </section>
+
+        <section>
+          <h2>Error on turn-free windows</h2>
+          <img src="../../img/2026-11-20-held-comparators-slides/errors.svg" alt="median range error by system" />
+          <p class="small">The span reference is told the true history and is no ceiling for systems with later bearings.</p>
+        </section>
+
+        <section>
+          <h2>What the panel narrowed</h2>
+          <ul>
+            <li>D2 is the clean comparison: same past, no later bearings, and it still wins</li>
+            <li>D1/D3 include an ownship turn (98%) and a median 29 min of later bearings</li>
+            <li>2-hour ctl-prior over 2-hour ctl: supplement only (medians 1.14, 1.01)</li>
+            <li>Legs 1–2 h, contact 1, one simulator; legs longer than the window untested</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>Spec 029's 1-hour recommendation withdrawn; spec 028's ctl-prior on 2-hour windows stands</li>
+            <li>Recommended: close the long-engagement track with a synthesis</li>
+            <li>Or: legs longer than the window · reopen with new information</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/20/held-comparators · Record: experiments/20261120-cmp/ · Figures: scripts/research/cmp_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

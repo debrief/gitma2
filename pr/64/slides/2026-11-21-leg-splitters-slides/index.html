@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Leg splitters in the demonstrator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 60vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.85em; }
+      .reveal table { font-size: 0.55em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Leg splitters in the demonstrator</h1>
+          <p class="small">2026-11-21 · spec 036 · gitma2 · not a gate; readings on the page's presets</p>
+        </section>
+
+        <section>
+          <h2>Two stages, chosen separately</h2>
+          <svg viewBox="0 0 900 170" width="900" height="170" font-family="sans-serif" font-size="18">
+            <rect x="10" y="50" width="150" height="60" rx="8" fill="#fff" stroke="#bcbd22" stroke-width="2"/><text x="85" y="86" text-anchor="middle">bearings</text>
+            <rect x="230" y="40" width="200" height="80" rx="8" fill="#fff4e8" stroke="#ff7f0e" stroke-width="2"/><text x="330" y="75" text-anchor="middle">leg splitter</text><text x="330" y="100" text-anchor="middle" font-size="14">where did it manoeuvre?</text>
+            <rect x="500" y="40" width="200" height="80" rx="8" fill="#eef7ee" stroke="#2ca02c" stroke-width="2"/><text x="600" y="75" text-anchor="middle">TMA solver</text><text x="600" y="100" text-anchor="middle" font-size="14">physics layer, legs joined</text>
+            <rect x="770" y="50" width="120" height="60" rx="8" fill="#fff" stroke="#d62728" stroke-width="2"/><text x="830" y="86" text-anchor="middle">track</text>
+            <path d="M160,80H228M430,80H498M700,80H768" stroke="#333" stroke-width="2" marker-end="url(#a)"/>
+            <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z"/></marker></defs>
+            <text x="465" y="150" text-anchor="middle" font-size="14">spans (orange on the charts, diamonds on the track)</text>
+          </svg>
+          <ul>
+            <li>Splitters: none · told the truth · Debrief 2015 arctan slicing · independent slices · joined legs · C</li>
+            <li>A legs panel (found, missed, false, timing) and "Run all splitters"</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>The arctan law, three ways</h2>
+          <ul>
+            <li>While both hold course: tan b = (A + Bt)/(C + Dt). A manoeuvre breaks it.</li>
+            <li><b>Debrief 2015:</b> per steady ownship leg, best single split, 2-min buffer, accept if score &lt; whole × ZigRatio. Blind to a turn made during ownship's turn.</li>
+            <li><b>Independent slices:</b> ownship subtracted, recursive. Each slice fits its own leg, so a slice without an ownship turn absorbs a misplaced break: the split's drop is flat over 15 min.</li>
+            <li><b>Joined legs:</b> position continuous, velocity steps at knots, every parameter refitted; knots added one at a time, then re-placed with the others held. "The window to notice, the whole history to decide" (note 07).</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Range error by splitter</h2>
+          <img src="../../img/2026-11-21-leg-splitters/range-by-splitter.svg" alt="Dot chart: range RMS error per splitter on three presets, five noise draws" />
+          <p class="small">Page presets, σ 1°, 5-s bearings, two-hour windows, seeds 1–5 (C: seeds 1–3, two-turn preset only). scripts/research/demo_splitters.mjs.</p>
+        </section>
+
+        <section>
+          <h2>Two target turns between ownship turns</h2>
+          <img src="../../img/2026-11-21-leg-splitters/two-turns-tracks.svg" alt="Track plot: ownship, target and each splitter's estimated track with its knots" />
+        </section>
+
+        <section>
+          <h2>No splitter wins everywhere</h2>
+          <table>
+            <thead><tr><th>preset</th><th>splitter</th><th>found / true</th><th>false</th><th>median range RMS</th><th>s</th></tr></thead>
+            <tbody>
+              <tr><td>two turns</td><td>none</td><td>0 / 10</td><td>0</td><td>27.0%</td><td>0</td></tr>
+              <tr><td></td><td>Debrief</td><td>5 / 10</td><td>0</td><td>14.5%</td><td>0.4</td></tr>
+              <tr><td></td><td>independent slices</td><td>3 / 10</td><td>7</td><td>37.8%</td><td>7</td></tr>
+              <tr><td></td><td><b>joined legs</b></td><td>9 / 10</td><td>1</td><td><b>2.6%</b></td><td>6.5</td></tr>
+              <tr><td></td><td>C (3 draws)</td><td>3 / 6</td><td>4</td><td>8.2%</td><td>210</td></tr>
+              <tr><td></td><td>truth</td><td>10 / 10</td><td>0</td><td>2.0%</td><td>0</td></tr>
+              <tr><td>turn during ownship's turn</td><td>Debrief</td><td>0 / 5</td><td>0</td><td>31.9%</td><td>0.3</td></tr>
+              <tr><td></td><td><b>independent slices</b></td><td>5 / 5</td><td>0</td><td><b>1.4%</b></td><td>4</td></tr>
+              <tr><td></td><td>joined legs</td><td>3 / 5</td><td>2</td><td>3.1%</td><td>1.3</td></tr>
+              <tr><td></td><td>truth</td><td>5 / 5</td><td>0</td><td>1.5%</td><td>0</td></tr>
+              <tr><td>held course</td><td>all</td><td>0 / 0</td><td>0</td><td>0.7%</td><td>≤ 1.5</td></tr>
+            </tbody>
+          </table>
+          <p class="small">Found: within 120 s. Joined legs' two "false" on the turn-during-zig preset are its one turn placed more than 2 min late (an instant knot inside ownship's turn).</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>No result: three presets, five draws, thresholds set on the same presets. No false-alarm rate, no interval.</li>
+            <li>C is slow in the browser (about 3½ min per two-hour window) and here poor: it has no zig veto, so ownship's turns become false transitions.</li>
+            <li>The standing time-late system <code>ctl</code> (arc model, prior, evidence) is not in the browser.</li>
+            <li>Joined legs use instant knots; a turn inside ownship's turn is placed late.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (owner's choice)</h2>
+          <ul>
+            <li>Score joined legs on Annex B data against C″ and <code>ctl</code> on spent seeds (development), then register if it holds.</li>
+            <li>Give joined legs a turn of finite length (the arc model's) where a knot meets ownship's turn.</li>
+            <li>Or leave it as a teaching tool: the page now shows why leg finding, not the solve, is the hard part.</li>
+          </ul>
+          <p class="small">Spec: specs/036-leg-splitters · record: experiments/20261121-demo-splitters · figures: scripts/research/demo_splitters.mjs (sidecars beside each SVG)</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
