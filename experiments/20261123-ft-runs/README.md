@@ -60,3 +60,31 @@ and a resume, not a restart) was refused before any container started: "Workspac
 exceeded its spend limit". Nothing was charged. The workspace can be read but cannot spend
 until its limit is raised in Modal's dashboard, which is the owner's. Finishing needs about
 35,000 updates in all, about 4 T4-hours, about $2.90.
+
+## Update, 2026-11-26: the three fine-tunes completed
+
+The owner raised Modal's spend limit; the three failed jobs were re-run at 06:23 to 06:26 UTC
+under their original run ids and each continued from its saved state. All three reached the
+registered 26,000 updates and stopped "complete". Run records and plans: `<run>/run.json`,
+`<run>/plan.json`; checkpoints on `results/gputrain-<run>`.
+
+| Run | Stopped | Updates | Segments | Training hours | Monitor under the mix, start → end | Clean monitor, start → end | Velocity under the mix (m/s) | Checkpoint |
+|---|---|---|---|---|---|---|---|---|
+| ft-s1-45108906382 | complete | 26,000 | 4 | 2.82 | 0.114 → 0.098 | 0.085 → 0.086 | 2.17 → 1.95 | `5ecb77e93b52…` |
+| ft-s2-45109019065 | complete | 26,000 | 3 | 2.79 | 0.118 → 0.097 | 0.086 → 0.085 | 2.19 → 1.96 | `9695333fb1a3…` |
+| ft-s3-45109133362 | complete | 26,000 | 3 | 2.98 | 0.120 → 0.102 | 0.087 → 0.089 | 2.19 → 1.95 | `e151ac91bfc8…` |
+
+(Median absolute error of ln range and median velocity error on each run's own monitor of 512
+scenarios of seed 370's stream: development figures, not scored results.)
+
+- Each run has three or four segments: Modal had already restarted two containers once before
+  the workspace was disabled, and each restart resumed from the last 15-minute save.
+- On the monitors the clean-data error ends where it began (0.085 to 0.089 against 0.085 to
+  0.087), unlike the pilot, whose shorter schedule left it 7% worse. Whether that holds on
+  scored data is reading M4.
+- **Money**: 8.59 training hours in all, about **.85** at /bin/bash.68 an hour, so the project's
+  total is about **6.75** of the owner's 0. The ledger reads 3.27 because a run record's
+  `gpu_seconds` counts only the segments of its last call; the interrupted segments' time is
+  in `train_seconds`. The ledger undercounts by about .50 and must not be trusted as the
+  total from here on.
+- The partial checkpoints on `results/ftpartial-*` are superseded and are kept.

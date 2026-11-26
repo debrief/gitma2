@@ -45,7 +45,7 @@ the hybrid (step 3), US4 spending. Tests are written with the code they check.
 - [x] T017 [US2] Pilot on Modal (`gputrain/ft-pilot`): throughput, the validation curve; one change of configuration allowed; stop and ask if nothing moves in the first hour; record `experiments/<date>-ft-pilot/`
 - [x] T018 [US2] Read on tuning data that the held-out conditions hurt C″ at all (seed 321, 100 engagements); if not, strengthen once before registration
 - [x] T019 [US2] Decision record `experiments/<date>-rmis-decision/`: plans and code by digest, readings M1–M5 and Y1–Y2 with thresholds, controls, forecasts labelled by their basis, seeds 369, 370, 371, the ledger's total; never edited afterwards
-- [ ] T020 [US2] (**launched and cut off**: Modal disabled the workspace at about $45; see `experiments/20261123-ft-runs/`; blocked on the owner) Launch `gputrain/ft-s1..s3` a minute apart; failure check 20 minutes after each; run records to `experiments/<date>-ft-runs/` with checkpoint digests
+- [x] T020 [US2] (**launched and cut off**: Modal disabled the workspace at about $45; see `experiments/20261123-ft-runs/`; resumed 2026-11-26 after the owner raised the limit; all three complete) Launch `gputrain/ft-s1..s3` a minute apart; failure check 20 minutes after each; run records to `experiments/<date>-ft-runs/` with checkpoint digests
 - [ ] T021 [US2] Validation `rmis/val-370` (off, `all-central`, `ho-both`, one more): the interval scales, the temperature control, the hybrid's weight; addendum binding them; forecasts not rewritten
 - [ ] T022 [US2] Test `rmis/test-371`, once; record `experiments/<date>-rmis/` with weights' digests, readings, tables, what was promised and not run
 
