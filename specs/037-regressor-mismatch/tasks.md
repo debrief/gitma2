@@ -56,9 +56,9 @@ the hybrid (step 3), US4 spending. Tests are written with the code they check.
 
 ## Phase 7: Polish
 
-- [ ] T025 Panel review of the test record (`review.md`); narrow the write-up to what the panel supports
-- [ ] T026 Write-up `site/blog/<date>-regressor-mismatch.md`; slides post by `/speckit-report-slides` with `scripts/research/rmis_charts.py`; SRD §9 line proposed (owner merges)
-- [ ] T027 `AGENTS.md`: status, seeds, gotchas; `uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest -q`
+- [x] T025 Panel review of the test record (`review.md`); narrow the write-up to what the panel supports
+- [x] T026 Write-up `site/blog/<date>-regressor-mismatch.md`; slides post by `/speckit-report-slides` with `scripts/research/rmis_charts.py`; SRD §9 line proposed (owner merges)
+- [x] T027 `AGENTS.md`: status, seeds, gotchas; `uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest -q`
 
 ## Dependencies
 

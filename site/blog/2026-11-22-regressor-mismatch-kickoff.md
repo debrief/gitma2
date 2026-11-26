@@ -78,3 +78,7 @@ for an uncertainty, and tries a hybrid that reports from the physics layer. Spec
   (`experiments/20261123-ft-runs/`). The $45 guard this task raised to $49 had been the distance
   to a limit on Modal's side, not a margin. No fine-tuned seed exists; validation and test seeds
   are untouched. What happens next is the owner's decision.
+- 2026-11-26: the owner raised the provider's limit, the three fine-tunes resumed and completed,
+  and the test on seed 371 was scored once. The panel approved with findings. The account is
+  the [write-up](/blog/2026/11/26/regressor-mismatch), with
+  [slides](/blog/2026/11/26/regressor-mismatch-slides).
