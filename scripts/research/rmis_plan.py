@@ -59,7 +59,7 @@ def main() -> None:
     hyb: list[str] = []
     if a.stage == "validation":
         # the weight is chosen on validation, on training seed 1 only (addendum 1)
-        for w in (0.5, 1.0, 2.0, 4.0):
+        for w in (0.125, 0.25, 0.5, 1.0):
             hyb.append(f"hyb-s1-w{w:g}")
             runs.append(
                 {
