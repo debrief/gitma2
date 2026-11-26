@@ -1,0 +1,44 @@
+import numpy as np, sys, math, json
+S=sys.argv[1]; R='/home/user/gitma2/experiments/20261127-rmis/runs'
+Q=0.6744897501960817
+def cb(hit,o,B=2000,seed=38):
+    ok=np.isfinite(hit); h=hit[ok]; u,inv=np.unique(o[ok],return_inverse=True)
+    if u.size<10: return 'n/a'
+    num=np.bincount(inv,weights=h); den=np.bincount(inv).astype(float)
+    p=np.random.default_rng(seed).integers(0,u.size,(B,u.size)); d=num[p].sum(1)/den[p].sum(1)
+    lo,hi=np.quantile(d,[.025,.975]); return f'{h.mean():.3f} [{lo:.3f},{hi:.3f}] n={h.size}'
+names=('range','course','speed')
+for c in ('off','all-central','ho-both'):
+    z=np.load(f'{R}/{c}/interval-rows.npz'); e=np.load(f'{S}/data/{c}/errors.npz')
+    assert (z['ordinal']==e['ordinal']).all()
+    o=z['ordinal']; tr=e['true_range_m']; mn=e['minute']
+    # pool three seeds: stack
+    O=np.tile(o,3); TR=np.tile(tr,3); MN=np.tile(mn,3); ST=np.tile(e['settled'],3)
+    err=np.concatenate([z[f'ft-s{k}__err'] for k in (1,2,3)]); half=np.concatenate([z[f'ft-s{k}__half'] for k in (1,2,3)])
+    est=np.concatenate([z[f'ft-s{k}__est_range_m'] for k in (1,2,3)])
+    abs_err=np.concatenate([e[f'err_ft-s{k}'] for k in (1,2,3)])
+    print('=====',c)
+    for q in range(3):
+        hit=np.where(np.isfinite(half[:,q])&np.isfinite(err[:,q]),(err[:,q]<=half[:,q]).astype(float),np.nan)
+        print(names[q],'overall',cb(hit,O),'z-med',round(float(np.nanmedian(err[:,q]/(half[:,q]/1.96))/Q),2))
+        w=half[:,q]; ok=np.isfinite(w)
+        qs=np.quantile(w[ok],[.2,.4,.6,.8]); b=np.where(ok,np.searchsorted(qs,w),-1)
+        print('  by own-width quintile:',' | '.join(cb(np.where(b==k,hit,np.nan),O) for k in range(5)))
+        d=np.quantile(w[ok],[.9,.95]); print('  widest 10%:',cb(np.where(w>=d[0],hit,np.nan),O),' widest 5%:',cb(np.where(w>=d[1],hit,np.nan),O),' narrowest 10%:',cb(np.where(w<=np.quantile(w[ok],.1),hit,np.nan),O))
+        cuts=np.quantile(tr,[1/3,2/3]); band=np.searchsorted(cuts,TR)
+        print('  by true-range third:',' | '.join(cb(np.where(band==k,hit,np.nan),O) for k in range(3)))
+        tq=np.quantile(tr,[.05,.95]); print('  nearest 5% / farthest 5% true range:',cb(np.where(TR<=tq[0],hit,np.nan),O),'|',cb(np.where(TR>=tq[1],hit,np.nan),O))
+        print('  by minute:',' | '.join(cb(np.where(MN==m,hit,np.nan),O) for m in (5,10,15,20)))
+        print('  settled 0/1:',cb(np.where(ST==0,hit,np.nan),O),'|',cb(np.where(ST==1,hit,np.nan),O))
+        # one-sidedness for range: signed error unavailable from err (abs). skip
+        # miss magnitude: among misses, median err/half
+        ms=(hit==0); print('  misses: median err/half',round(float(np.median(err[ms,q]/half[ms,q])),2),'p90',round(float(np.quantile(err[ms,q]/half[ms,q],.9)),2), ' width p50/p90',np.round(np.quantile(w[ok],[.5,.9]),3))
+    # course unstated rows
+    un=~np.isfinite(half[:,1]); ce=abs_err[:,1]
+    print(' course stated share',1-un.mean(),' course err deg median stated/unstated',np.median(ce[~un]).round(1),np.median(ce[un]).round(1),' share>90deg stated/unstated',np.mean(ce[~un]>90).round(3),np.mean(ce[un]>90).round(3),'unstated p75',np.quantile(ce[un],.75).round(1))
+    print(' stated arc median deg',np.degrees(np.nanmedian(half[:,1])).round(1),'p90',np.degrees(np.nanquantile(half[:,1],.9)).round(1),' share arcs >60deg',np.mean(np.degrees(half[~un,1])>60).round(3))
+    print(' unstated share by minute',[round(float(un[MN==m].mean()),2) for m in (5,10,15,20)],' by range third',[round(float(un[band==k].mean()),2) for k in range(3)])
+    # if unstated counted as 180-deg arcs (trivial hit) vs coverage of a 90-deg arc
+    print(' course coverage all rows if unstated rows given the max 90deg arc:',np.mean(np.where(un,ce<=90,err[:,1]<=half[:,1])).round(3))
+    # c2-robust course error on same rows for comparison
+    c2=np.tile(e['err_c2-robust'][:,1],3); print(' c2-robust course err median on ft-stated/unstated rows',np.nanmedian(np.where(np.isfinite(c2),c2,np.nan)[~un]).round(1),np.nanmedian(np.where(np.isfinite(c2),c2,np.nan)[un]).round(1))

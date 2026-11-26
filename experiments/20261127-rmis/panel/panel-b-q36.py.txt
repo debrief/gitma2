@@ -1,0 +1,79 @@
+import numpy as np, sys, math
+S=sys.argv[1]; sys.argv=[sys.argv[0],S]
+exec(open(f'{S}/q12.py').read().split("for c,name in")[0])
+Q=0.6744897501960817
+FT=['ft-s1','ft-s2','ft-s3']; RG=['reg-s1','reg-s2','reg-s3']; HY=['hyb-s1','hyb-s2','hyb-s3']
+def boot(lr,seed,B):
+    n=lr.size; rng=np.random.default_rng(seed)
+    m=np.concatenate([lr[rng.integers(0,n,(2000,n))].mean(1) for _ in range(B//2000)])
+    return np.exp(np.quantile(m,[.025,.975]))
+print('### cross-split M1/M2 by C2r error on CLEAN data of same engagement')
+zo=load('off'); o=zo['ordinal']; a=zo['err_c2-robust'][:,0]
+ce={int(u):np.median(a[(o==u)&np.isfinite(a)]) for u in np.unique(o[np.isfinite(a)])}
+for c in ('all-central','ho-both'):
+    z=load(c); ids,lr=pooled(z,'c2-robust',FT)
+    cev=np.array([ce.get(int(u),np.nan) for u in ids]); qs=np.nanquantile(cev,[.25,.5,.75]); q=np.searchsorted(qs,cev)
+    for k in range(4): print(c,'clean-c2r quartile',k,desc(lr[q==k]))
+    # odd/even split
+    mn=z['minute']; A=np.isin(mn,[5,15]); Bm=np.isin(mn,[10,20])
+    oo=z['ordinal']; aa=z['err_c2-robust'][:,0]
+    for cls,ev in ((A,Bm),(Bm,A)):
+        ids,lr=pooled(z,'c2-robust',FT,rows=ev)
+        cv=np.array([np.median(aa[(oo==u)&cls&np.isfinite(aa)]) if ((oo==u)&cls&np.isfinite(aa)).any() else np.nan for u in ids])
+        med=np.nanmedian(cv); q1=np.nanquantile(cv,.25)
+        print(c,' classify other rows: best half',desc(lr[cv<=med]),'| best quartile',desc(lr[cv<=q1]),'| worst half',desc(lr[cv>med]))
+print('### M4')
+z=zo
+def m4(col=0,rows=None):
+    ds=[eng(z,r,f,col=col,rows=rows) for r,f in zip(RG,FT)]
+    com=sorted(set.intersection(*(set(d) for d in ds))); return np.array([np.mean([d[u] for d in ds]) for u in com])
+lr=m4(); print('M4 all',desc(lr))
+for s in (37,1,2,3,4,5):
+    print(' seed',s,'B=2000',boot(lr,s,2000).round(4),'B=10000',boot(lr,s,10000).round(4))
+se=lr.std(ddof=1)/math.sqrt(lr.size); print(' normal-theory',math.exp(lr.mean()-1.96*se),math.exp(lr.mean()+1.96*se),'boot MC se of lower limit approx')
+los=[boot(lr,s,2000)[0] for s in range(100,160)]; print(' 60 seeds B=2000 lower limit: mean',np.mean(los),'sd',np.std(los),'share>=0.95',np.mean(np.array(los)>=0.95))
+los=[boot(lr,s,10000)[0] for s in range(200,220)]; print(' 20 seeds B=10000 lower: mean',np.mean(los),'sd',np.std(los),'share>=0.95',np.mean(np.array(los)>=0.95))
+for k,(r,f) in enumerate(zip(RG,FT)):
+    d=eng(z,r,f); print(' seed pair',r,desc(np.array(list(d.values()))))
+tr=z['true_range_m']; cuts=np.quantile(tr,[1/3,2/3]); band=np.searchsorted(cuts,tr)
+for b in range(3):
+    for col in range(3): print(' M4 range third',b,'col',col,desc(m4(col,band==b)))
+print(' M4 eng-mean stat', desc(np.mean([[v for v in eng(z,r,f,stat=np.mean).values()] for r,f in zip(RG,FT)],0)))
+for r,f in zip(RG,FT):
+    x,y=z['err_'+r][:,0],z['err_'+f][:,0]; print('  row medians',np.median(x)/np.median(y),'row means',x.mean()/y.mean(),'p90',np.quantile(x,.9)/np.quantile(y,.9))
+print('### Efficiency')
+for c in ('off','all-central','ho-both'):
+    z=load(c); b=z['bound']
+    for n in ['ft-s1','ft-s2','ft-s3','reg-s1','hyb-s1','hyb-s2','hyb-s3','c2-robust','c2','robust-true','plain-true','c2-prior']:
+        e=z['err_'+n]; out=[]
+        for col in range(3):
+            m=np.isfinite(e[:,col])&np.isfinite(b[:,col])&(b[:,col]>0)
+            # common rows with c2-robust
+            m2=m&np.isfinite(z['err_c2-robust'][:,col])
+            out.append(f'{np.median(e[m2,col]/b[m2,col])/Q:.2f}')
+        print(c,n,'eff range/course/speed',out,'answered',np.isfinite(e).all(1).mean().round(3))
+    # efficiency by tightness of bound, ft-s1 vs robust-true, range
+    bb=b[:,0]; qs=np.quantile(bb[np.isfinite(bb)],[1/3,2/3]); bd=np.searchsorted(qs,bb)
+    for k in range(3):
+        m=(bd==k)&np.isfinite(bb)&np.isfinite(z['err_c2-robust'][:,0])
+        print('  bound third',k,{n:[round(float(np.median(z['err_'+n][m,col]/b[m,col])/Q),2) for col in range(3)] for n in ('ft-s1','hyb-s1','c2-robust','robust-true')})
+print('### Y2 / Y1')
+for c in ('off','all-central'):
+    z=load(c); tr=z['true_range_m']; cuts=np.quantile(tr,[1/3,2/3]); band=np.searchsorted(cuts,tr)
+    for col in range(3):
+        for f,h in zip(FT,HY):
+            d=eng(z,f,h,col=col); print(c,'Y2 col',col,f,desc(np.array(list(d.values()))))
+        for b in range(3):
+            ds=[eng(z,f,h,col=col,rows=band==b) for f,h in zip(FT,HY)]; com=sorted(set.intersection(*(set(d) for d in ds)))
+            print(c,'Y2 col',col,'range third',b,desc(np.array([np.mean([d[u] for d in ds]) for u in com])))
+            ids,lr=pooled(z,'c2-robust',HY,col=col,rows=band==b); print(c,'Y1 col',col,'range third',b,desc(lr))
+    # Y2 & Y1 by c2r err quartile on other condition? by own c2r error
+    ids,lr=pooled(z,'c2-robust',HY); a=z['err_c2-robust'][:,0]; o=z['ordinal']
+    cev=np.array([np.median(a[(o==u)&np.isfinite(a)]) for u in ids]); q=np.searchsorted(np.quantile(cev,[.25,.5,.75]),cev)
+    for k in range(4): print(c,'Y1 by own c2r quartile',k,desc(lr[q==k]))
+    ds=[eng(z,f,h) for f,h in zip(FT,HY)]; com=sorted(set.intersection(*(set(d) for d in ds))); l2=np.array([np.mean([d[u] for d in ds]) for u in com])
+    cd=dict(zip(ids.tolist(),q.tolist())); qq=np.array([cd.get(u,-1) for u in com])
+    for k in range(4): print(c,'Y2 by own c2r quartile',k,desc(l2[qq==k]))
+    for h in HY:
+        x=z['err_'+h][:,0]; y=z['err_ft-s'+h[-1]][:,0]; a=z['err_c2-robust'][:,0]; ok=np.isfinite(x)&np.isfinite(a)
+        print(c,h,'answered',np.isfinite(x).mean(),'row: hyb>2x c2r',np.mean(x[ok]>2*a[ok]).round(3),'hyb>2x ft',np.mean(x[ok]>2*y[ok]).round(3),'p90 hyb/ft/c2r',np.quantile(x[ok],.9).round(3),np.quantile(y[ok],.9).round(3),np.quantile(a[ok],.9).round(3),'p99',np.quantile(x[ok],.99).round(3),np.quantile(y[ok],.99).round(3),np.quantile(a[ok],.99).round(3),'mean',x[ok].mean().round(4),y[ok].mean().round(4),a[ok].mean().round(4))

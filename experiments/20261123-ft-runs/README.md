@@ -82,9 +82,9 @@ scenarios of seed 370's stream: development figures, not scored results.)
 - On the monitors the clean-data error ends where it began (0.085 to 0.089 against 0.085 to
   0.087), unlike the pilot, whose shorter schedule left it 7% worse. Whether that holds on
   scored data is reading M4.
-- **Money**: 8.59 training hours in all, about **.85** at /bin/bash.68 an hour, so the project's
-  total is about **6.75** of the owner's 0. The ledger reads 3.27 because a run record's
+- **Money**: 8.59 training hours in all, about **$5.85** at $0.68 an hour, so the project's
+  total is about **$46.75** of the owner's $50. The ledger reads $43.27 because a run record's
   `gpu_seconds` counts only the segments of its last call; the interrupted segments' time is
-  in `train_seconds`. The ledger undercounts by about .50 and must not be trusted as the
+  in `train_seconds`. The ledger undercounts by about $3.50 and must not be trusted as the
   total from here on.
 - The partial checkpoints on `results/ftpartial-*` are superseded and are kept.
