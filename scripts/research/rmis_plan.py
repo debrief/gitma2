@@ -130,7 +130,7 @@ def main() -> None:
         ],
         "read_extra": [
             {
-                "systems": ["hyb-s1", "hyb-s2", "hyb-s3", "c2-prior"],
+                "systems": [*hyb, "c2-prior"],
                 "controls": ["c2-robust", "c2", "ft-s1", "ft-s2", "ft-s3", "robust-true"],
                 "out": "reading-hybrid.json",
             }
