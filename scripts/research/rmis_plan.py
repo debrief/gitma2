@@ -130,10 +130,24 @@ def main() -> None:
         ],
         "read_extra": [
             {
+                "systems": ["ft-s1", "ft-s2", "ft-s3"],
+                "controls": [
+                    "c2-robust",
+                    "c2",
+                    "robust-true",
+                    "reg-s1",
+                    "reg-s2",
+                    "reg-s3",
+                    "imm",
+                    "one_leg",
+                ],
+                "out": "reading-ft.json",
+            },
+            {
                 "systems": [*hyb, "c2-prior"],
                 "controls": ["c2-robust", "c2", "ft-s1", "ft-s2", "ft-s3", "robust-true"],
                 "out": "reading-hybrid.json",
-            }
+            },
         ],
         "interval_scale": a.interval_fit or "1,1,1",
     }
