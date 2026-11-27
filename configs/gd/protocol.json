@@ -145,7 +145,21 @@
   ]
  },
  "hybrid_prior_weight": 0.25,
- "chosen": null,
+ "chosen": {
+  "threshold": 4,
+  "edit": "wild",
+  "own_prior_weight": 2,
+  "combined": true,
+  "threshold_neighbours": [
+   6,
+   8
+  ],
+  "own_prior_weight_neighbours": [
+   1,
+   4
+  ],
+  "basis": "experiments/20261127-gd-dev-a (seed 321): the pooled log range ratio against c2-robust over clean and primary. Threshold: every value is below 0 pooled (1.5: -0.068, 2: -0.073, 3: -0.090, 4: -0.065); 4 is best and at the grid's edge, so 6 and 8 are run on dev-b. Edit: wild +0.170, both +0.134, eff +0.047. Own-prior weight: 2 (+0.023), bracketed by 1 and 4."
+ },
  "statistic": {
   "resamples": 2000,
   "since_bands_s": [
