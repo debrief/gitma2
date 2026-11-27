@@ -16,7 +16,7 @@ Order matters where a task names an earlier one. `[P]` can run beside its neighb
   `decomp`; `scripts/gd_read.sh`. The command builder emulated against the real plan.
 - [x] T006 `configs/gd/protocol.json`, `configs/gd/shift-ranges.json` (generated locally on a
   spent seed: rows at the scored prefixes exist on all three splits), `scripts/research/gd_plan.py`.
-- [ ] T007 Smoke: every run kind of the development plan on three engagements, locally; a
+- [x] T007 Smoke: every run kind of the development plan on three engagements, locally; a
   cache hit reproduces the uncached rows.
 
 ## Phase 2: development on spent seeds
