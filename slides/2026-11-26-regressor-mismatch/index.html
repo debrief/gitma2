@@ -1,0 +1,119 @@
+<!doctype html>
+<!-- Spec 037 slides deck (site/docs/process/reporting.md). Figures: site/static/img/2026-11-26-regressor-mismatch/. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The regressor under bearing-error mismatch</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">A learned regressor under bearing errors</h1>
+          <p>Twice as good as our classical system, mostly because the classical segmenter breaks</p>
+          <p class="small">2026-11-26 · spec 037 · gitma2 · a registered study, not a gate</p>
+        </section>
+
+        <section>
+          <h2>Overview: the question</h2>
+          <div class="two">
+            <ul>
+              <li>Bearing errors that break the simulator's assumptions cost the classical real-time system (C″) a factor of 2.7. The classical remedy failed.</li>
+              <li>Spec 012's regressor has no segmenter to break. It had never been scored under those errors.</li>
+              <li>Three steps: score it unchanged; fine-tune it; pass its estimate through the physics layer.</li>
+            </ul>
+            <img src="../../img/2026-11-26-regressor-mismatch/range-by-condition.svg" alt="Median range error by condition for four systems" />
+          </div>
+        </section>
+
+        <section>
+          <h2>Overview: what was registered first</h2>
+          <ul>
+            <li>M1 to M4: against C″ with the robust solve, in and outside the training mix; the fine-tune's own effect; its cost on clean data.</li>
+            <li>M5: do the model's stated 95% intervals cover?</li>
+            <li>Y1, Y2: a hybrid (C″'s solve with the regressor as a prior) against C″ and against the regressor.</li>
+            <li>Forecasts written before any fine-tuned seed existed. Test seed 371, 1,000 engagements a condition, scored once.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Range error by condition</h2>
+          <img src="../../img/2026-11-26-regressor-mismatch/range-by-condition.svg" alt="Median range error by condition" />
+          <p class="small">Test seed 371. The fine-tuned regressor (green) sits beside the solve told the true manoeuvre times (purple). C″ (grey) is well above both.</p>
+        </section>
+
+        <section>
+          <h2>The registered readings</h2>
+          <img src="../../img/2026-11-26-regressor-mismatch/readings.svg" alt="Paired ratios with intervals" />
+          <p class="small">Paired per engagement, three seeds pooled. Two forecasts were wrong: the intervals outside the mix, and the hybrid's range.</p>
+        </section>
+
+        <section>
+          <h2>One engagement, clean</h2>
+          <img src="../../img/2026-11-26-regressor-mismatch/track-20-off.svg" alt="Track plot, clean bearings" />
+          <p class="small">Engagement 20 (scenario 51), marks at 3,670 s and 4,270 s. All three systems are close. Chosen to show the mechanism; not a typical case.</p>
+        </section>
+
+        <section>
+          <h2>The same engagement under the primary condition</h2>
+          <img src="../../img/2026-11-26-regressor-mismatch/track-20-all-central.svg" alt="Track plot under bearing-error mismatch" />
+          <p class="small">C″ is fooled (28% range error); the regressor and the hybrid stay within 5%.</p>
+        </section>
+
+        <section>
+          <h2>Stated intervals: coverage on average</h2>
+          <img src="../../img/2026-11-26-regressor-mismatch/coverage.svg" alt="Coverage of stated 95% intervals" />
+          <p class="small">Inside the registered band on all nine. Not slice by slice: course covers 0.79 shortly after a target change, 0.98 elsewhere.</p>
+        </section>
+
+        <section>
+          <h2>What the panel narrowed</h2>
+          <ul>
+            <li>A classical solve told the true manoeuvre times equals the regressor in range and beats it in course and speed. The factor of two is C's segmenter failing.</li>
+            <li>Where C″'s segmentation holds: 1.15 to 1.43 in range, nothing in course or speed. On clean data the regressor is worse there in course and speed.</li>
+            <li>"Held out" was chosen after looking, and lies inside what training covered in its statistics.</li>
+            <li>Prior or bearings: still open. The static-prior comparator was too loose to test it.</li>
+            <li>The hybrid is the regressor's range with a classical velocity refit.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>A classical control told what the regressor is told.</li>
+            <li>A test on errors outside training's statistics.</li>
+            <li>Intervals that hold slice by slice; nothing here is ready to show an operator.</li>
+            <li>Readings by time since the last target change; the hybrid outside the mix.</li>
+            <li>The three fine-tunes were interrupted at the provider's spend limit and resumed.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next</h2>
+          <ul>
+            <li>Recommended (the owner's choice): a prior-informed classical control and a decomposition of the gain into prior and bearings. CPU only, nothing trained.</li>
+            <li>Then a conditional coverage study; only then the hybrid as a provisional candidate.</li>
+            <li>No further GPU spending: about $46.75 of $50 is spent.</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/26/regressor-mismatch · Record: experiments/20261126-rmis · Figures: scripts/research/rmis_charts.py and tma2-plot, sidecars next to each SVG</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
