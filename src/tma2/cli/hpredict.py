@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -75,6 +76,34 @@ def c2_parameters(c2: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _save_segs(path: Path, ords: list[int], sg: list[dict[int, list[Any]]]) -> None:
+    """One chunk's segmentations, so that further runs on the same shard that use the same
+    segmenter do not repeat it (spec 038). Written whole, then renamed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = {
+        "ordinals": ords,
+        "segs": [{str(k): [list(iv) for iv in ivs] for k, ivs in g.items()} for g in sg],
+    }
+    tmp = path.with_suffix(f".{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(body))
+    tmp.replace(path)
+
+
+def _load_segs(path: Path, ords: list[int]) -> list[dict[int, list[Any]]]:
+    from tma2.segment import Interval
+
+    body = json.loads(path.read_text())
+    if body["ordinals"] != ords:
+        raise ValueError(f"{path}: a cache of other scenarios")
+    return [
+        {
+            int(k): [Interval(int(a), int(b), int(c), bool(o)) for a, b, c, o in ivs]
+            for k, ivs in g.items()
+        }
+        for g in body["segs"]
+    ]
+
+
 def _task(args: tuple[Any, ...]) -> Task:
     import numpy as np
     import torch
@@ -123,7 +152,17 @@ def _task(args: tuple[Any, ...]) -> Task:
             seg_data = [other[j] for j in ords]
             if any(a.n != b.n or a.index != b.index for a, b in zip(seg_data, data, strict=True)):
                 raise ValueError("--segments-from: not the same scenarios as --in")
-        if seg == "c2r":
+        if c2.get("edit"):  # spec 038: the segmenter sees edited bearings; the solve does not
+            from tma2.headroom.edit import Edit, edited
+
+            cfg = Edit(**c2["edit"])
+            seg_data = [edited(d, ks, cfg)[0] for d, ks in zip(seg_data, rows, strict=True)]
+        cache = None
+        if c2.get("cache"):
+            cache = Path(c2["cache"]) / f"{c2['cache_key']}-{start}-{count}.json"
+        if cache is not None and cache.exists():
+            sg = _load_segs(cache, ords)
+        elif seg == "c2r":
             from tma2.gate2.predict import zig_veto_evidence
             from tma2.segment.robust import RobustConfirm, robust_segmentations
 
@@ -131,6 +170,8 @@ def _task(args: tuple[Any, ...]) -> Task:
             sg, _ = robust_segmentations(seg_data, rows, p, RobustConfirm(**c2["cr"]), ev)
         else:
             sg = veto_segmentations(seg_data, rows, p, int(c2["window"]))
+        if cache is not None and not cache.exists():
+            _save_segs(cache, ords, sg)
         fade = c2["fade"]
     for i, (d, m, ks) in enumerate(zip(data, metas, rows, strict=True)):
         for q, k in enumerate(ks):
@@ -235,6 +276,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--prior-from", help="hybrid: the regressor's prediction rows on this split")
     ap.add_argument("--prior-weight", type=float, default=1.0, help="multiplies the prior's sds")
     ap.add_argument("--prior-static", help="hybrid: instead, 'mean,sd' of a fixed ln range prior")
+    ap.add_argument("--edit", help="c2/c2r: the bearings C sees (headroom.edit.Edit as JSON)")
+    ap.add_argument(
+        "--segments-cache",
+        help="c2/c2r: a folder; a segmentation computed with the same settings is reused",
+    )
     ap.add_argument("--start", type=int, required=True)
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--out", required=True)
@@ -282,6 +328,8 @@ def main(argv: list[str] | None = None) -> int:
         bad.append("--segments-from applies to --segmentation c2 or c2r")
     if (a.segmentation == "c2r") != bool(a.robust_confirm):
         bad.append("--robust-confirm is needed for, and only for, --segmentation c2r")
+    if (a.edit or a.segments_cache) and a.segmentation not in ("c2", "c2r"):
+        bad.append("--edit and --segments-cache apply to --segmentation c2 or c2r")
     if a.segments_from:
         oh = read_pack_header(a.segments_from)
         same = (oh.dataset_seed, oh.index_start, oh.scenario_count) == (
@@ -346,6 +394,16 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             cr_json = json.dumps(c2["cr"], sort_keys=True, separators=(",", ":"))
             cr_code = robust_code_digest()
+        if a.edit:
+            from tma2.headroom.edit import Edit
+
+            try:
+                c2["edit"] = asdict(Edit(**json.loads(a.edit)))
+            except (TypeError, ValueError) as e:
+                print(f"--edit: {e}", file=sys.stderr)
+                return 2
+            both = {"edit": c2["edit"], **({"confirm": c2["cr"]} if a.robust_confirm else {})}
+            cr_json = json.dumps(both, sort_keys=True, separators=(",", ":"))
         try:
             c2["parameters"] = c2_parameters(c2)
         except ValueError as e:
@@ -355,6 +413,21 @@ def main(argv: list[str] | None = None) -> int:
             c2["segments_from"] = a.segments_from
         c2["dump"] = bool(a.dump_segmentation)
         code = code_digest()
+        if a.segments_cache:
+            key = [
+                sha256_file(a.inp),
+                sha256_file(a.segments_from) if a.segments_from else None,
+                a.segmentation,
+                c2.get("cr"),
+                c2.get("edit"),
+                c2["parameters_sha256"],
+                int(c2["window"]),
+                code,
+            ]
+            c2["cache"] = a.segments_cache
+            c2["cache_key"] = hashlib.sha256(json.dumps(key, sort_keys=True).encode()).hexdigest()[
+                :24
+            ]
         if code != c2["code_sha256"]:
             print(
                 "this checkout's segmenter code is not the plan's C (code_sha256)", file=sys.stderr

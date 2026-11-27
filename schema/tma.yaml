@@ -2003,7 +2003,7 @@ classes:
       kind: { range: string, required: true, description: "nominal, realisation, attainable or robust." }
       segmentation: { range: string, required: true, description: "truth, c2 (the classical C'' hand-over) or c2r (C'' with C-r's robust confirmation, spec 011)." }
       segments_from: { range: string, description: "The condition of the split the segmentation was computed on, when not this one (spec 011 FR-003, a diagnostic)." }
-      segmenter_settings: { range: string, description: "C-r's confirmation settings as canonical JSON (c2r only; spec 011)." }
+      segmenter_settings: { range: string, description: "C-r's confirmation settings as canonical JSON (c2r; spec 011), or {edit, confirm} when the segmenter was given edited bearings (spec 038)." }
       robust_code_sha256: { range: string, description: "Digest of C-r's own source (segment.robust), c2r only." }
       condition: { range: string, required: true, description: "The split's mismatch condition id (off without one)." }
       dataset_digest: { range: string, required: true }
