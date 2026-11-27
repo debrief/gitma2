@@ -14,7 +14,8 @@ from tma2.gate2.predict import _row
 from tma2.references.classical import BearingData, bearing_data_from_arrays
 from tma2.segment.score import g5_rows, iter_selected
 
-from .frame import features, to_state
+from .frame import V_UNIT, features, to_state
+from .intervals import row_intervals
 from .model import Regressor, RegressorConfig
 
 
@@ -28,7 +29,10 @@ def load_model(cfg: RegressorConfig, weights: Path) -> Regressor:
 
 
 def predict_scenarios(
-    model: Regressor, data: list[BearingData], rows: list[list[int]]
+    model: Regressor,
+    data: list[BearingData],
+    rows: list[list[int]],
+    scale: tuple[float, float, float] | None = None,
 ) -> list[list[dict[str, Any]]]:
     """One prediction row per (scenario, prefix row k). Each k is read from a pass whose folding
     offset makes k the last row of a token, so the output at k reads rows ≤ k only."""
@@ -72,13 +76,20 @@ def predict_scenarios(
             sd = np.exp(0.5 * outs[off][1][i, j])
             row["sd_log_range"] = float(sd[0])
             row["sd_speed_mps"] = float(10.0 * math.hypot(sd[1], sd[2]) / math.sqrt(2.0))
+            if scale is not None:  # spec 037: stated 95% intervals (range, course, speed)
+                row.update(row_intervals(pred, outs[off][1][i, j], V_UNIT, scale))
             out.append(row)
         res.append(out)
     return res
 
 
 def predict_split(
-    model: Regressor, path: str, start: int, count: int, batch: int = 64
+    model: Regressor,
+    path: str,
+    start: int,
+    count: int,
+    batch: int = 64,
+    scale: tuple[float, float, float] | None = None,
 ) -> list[tuple[int, int, list[dict[str, Any]]]]:
     recs: list[tuple[int, int, list[dict[str, Any]]]] = []
     buf: list[tuple[int, dict[str, Any], BearingData, list[int]]] = []
@@ -86,7 +97,7 @@ def predict_split(
     def flush() -> None:
         if not buf:
             return
-        rows = predict_scenarios(model, [d for _, _, d, _ in buf], [ks for *_, ks in buf])
+        rows = predict_scenarios(model, [d for _, _, d, _ in buf], [ks for *_, ks in buf], scale)
         recs.extend((j, int(m["index"]), rr) for (j, m, _, _), rr in zip(buf, rows, strict=True))
         buf.clear()
 

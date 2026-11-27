@@ -91,7 +91,7 @@ def _task(args: tuple[Any, ...]) -> Task:
     from tma2.segment.score import oracle as oracle_inputs
     from tma2.types.generated.tma import SegmentParameters
 
-    path, start, count, kind, seg, c2, settings, truth, index_start, plain, batch = args
+    path, start, count, kind, seg, c2, settings, truth, index_start, plain, batch, prior = args
     torch.set_num_threads(1)
     torch.set_default_dtype(torch.float64)
     data: list[BearingData] = []
@@ -151,6 +151,16 @@ def _task(args: tuple[Any, ...]) -> Task:
                 where.append((i, q))
     plain_layer = PhysicsLayer(knots=KNOTS)
     layer = WhitenedLayer(knots=KNOTS)
+    prior_by: dict[tuple[int, float], dict[str, Any]] = {}
+    used_prior: dict[tuple[int, int], bool] = {}
+    if prior is not None:  # spec 037: the hybrid, or the static range-prior comparator
+        from tma2.regress import hybrid as hy
+        from tma2.sim.geometry import f32
+
+        hlayer = hy.HybridLayer(knots=KNOTS)
+        layer = hlayer
+        if prior.get("from"):
+            prior_by = hy.load_prior_rows(prior["from"], set(ords))
     rs = RobustSettings(**settings) if settings is not None else None
     for s in range(0, len(items), batch):
         part = items[s : s + batch]
@@ -166,6 +176,20 @@ def _task(args: tuple[Any, ...]) -> Task:
                 for i, _q in where[s : s + batch]:
                     pos = int(metas[i]["index"]) - index_start
                     tr.append(Truth(eng[pos], outlier[pos, : data[i].n].astype(bool)))
+            if prior is not None:
+                pr = [
+                    hy.prior_rows(
+                        d,
+                        k,
+                        prior_by.get((ords[i], f32(float(d.t[k])))),
+                        float(prior["weight"]),
+                        tuple(prior["static"]) if prior.get("static") else None,
+                    )
+                    for (d, k, _), (i, _q) in zip(part, where[s : s + batch], strict=True)
+                ]
+                hy.set_prior(hlayer, part, pr)
+                for (i, q), (_a, _m, u) in zip(where[s : s + batch], pr, strict=True):
+                    used_prior[(i, q)] = u
             o, _info = estimate(layer, part, kind, r_max, tr, rs)
         for b, (i, q) in enumerate(where[s : s + batch]):
             d, k, _ = part[b]
@@ -173,6 +197,8 @@ def _task(args: tuple[Any, ...]) -> Task:
             if np.isfinite(st).all():
                 rcs = (float(o.range[b]), float(o.course[b]), float(o.speed[b]))
                 out[i][q] = _row(d, k, st, rcs, bool(o.plausible[b]), o.cov[b].numpy())
+                if prior is not None:
+                    out[i][q]["prior_used"] = bool(used_prior.get((i, q), False))
     dump = None
     if seg != "truth" and c2 is not None and c2.get("dump"):
         dump = [
@@ -206,6 +232,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--only", help="robust: one fix alone (huber, sigma or whiten)")
     ap.add_argument("--set", action="append", default=[], help="robust: key=value over the plan")
+    ap.add_argument("--prior-from", help="hybrid: the regressor's prediction rows on this split")
+    ap.add_argument("--prior-weight", type=float, default=1.0, help="multiplies the prior's sds")
+    ap.add_argument("--prior-static", help="hybrid: instead, 'mean,sd' of a fixed ln range prior")
     ap.add_argument("--start", type=int, required=True)
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--out", required=True)
@@ -228,6 +257,15 @@ def main(argv: list[str] | None = None) -> int:
     condition = hdr.mismatch.id if hdr.mismatch is not None else "off"
     ceiling = a.kind in ("attainable", "realisation")
     bad = []
+    hybrid = a.kind == "hybrid"
+    if hybrid:  # spec 037: the robust solve with a prior (regress/hybrid.py)
+        a.kind = "robust"
+        if bool(a.prior_from) == bool(a.prior_static):
+            bad.append("--kind hybrid needs exactly one of --prior-from and --prior-static")
+        if a.prior_weight <= 0:
+            bad.append("--prior-weight must be positive")
+    elif a.prior_from or a.prior_static:
+        bad.append("--prior-from and --prior-static are for --kind hybrid")
     if a.kind not in KINDS:
         bad.append(f"--kind {a.kind}: expected one of {', '.join(KINDS)}")
     if ceiling and a.segmentation != "truth":
@@ -274,6 +312,22 @@ def main(argv: list[str] | None = None) -> int:
         except (TypeError, ValueError) as e:
             print(f"robust settings: {e}", file=sys.stderr)
             return 2
+    prior = None
+    settings_hdr = settings
+    if hybrid:
+        prior = {
+            "from": a.prior_from,
+            "weight": a.prior_weight,
+            "static": [float(v) for v in a.prior_static.split(",")] if a.prior_static else None,
+        }
+        assert settings is not None
+        settings_hdr = {
+            **settings,
+            "prior_weight": a.prior_weight,
+            "prior_static": prior["static"],
+            # the prior file differs by shard, so the header names it and does not digest it
+            "prior_from": Path(a.prior_from).stem if a.prior_from else None,
+        }
     c2 = None
     code = None
     cr_json = None
@@ -328,7 +382,7 @@ def main(argv: list[str] | None = None) -> int:
         schema_version=SCHEMA_VERSION,
         estimator=name,
         mode="per_timestep",
-        kind=a.kind,
+        kind="hybrid" if hybrid else a.kind,
         segmentation=a.segmentation,
         segments_from=seg_from,
         segmenter_settings=cr_json,
@@ -336,7 +390,9 @@ def main(argv: list[str] | None = None) -> int:
         condition=condition,
         dataset_digest=sha256_file(a.inp),
         truth_sha256=truth_sha,
-        settings=json.dumps(settings, sort_keys=True, separators=(",", ":")) if settings else None,
+        settings=json.dumps(settings_hdr, sort_keys=True, separators=(",", ":"))
+        if settings_hdr
+        else None,
         plan_sha256=plan_sha,
         code_sha256=code,
         knots=KNOTS,
@@ -358,6 +414,7 @@ def main(argv: list[str] | None = None) -> int:
             hdr.index_start,
             plain,
             a.batch,
+            prior,
         )
         for s in range(a.start, a.start + a.count, CHUNK)
     ]

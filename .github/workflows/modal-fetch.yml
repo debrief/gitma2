@@ -1,0 +1,57 @@
+name: Fetch saved training state from the Modal volume (spec 037)
+
+# Push `modal-fetch/<anything>`: downloads each interrupted fine-tune's last saved checkpoint and
+# run record from the volume `gitma2-regress` and commits them to results/ftpartial-<run name>.
+# Reads only: starts no container and uses no GPU time.
+
+on:
+  push:
+    branches: ["modal-fetch/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        run: ["ft-s1-45108906382", "ft-s2-45109019065", "ft-s3-45109133362"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Download
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+          RUN: ${{ matrix.run }}
+        run: |
+          set -euo pipefail
+          OUT="experiments/gputrain-partial/$RUN"
+          mkdir -p "$OUT"
+          uvx modal volume get gitma2-regress "/$RUN/run.json" "$OUT/run.json"
+          uvx modal volume get gitma2-regress "/$RUN/checkpoint.safetensors" "$OUT/checkpoint.safetensors"
+          PLAN="configs/regress/${RUN%-*}.json"
+          cp "$PLAN" "$OUT/plan.json"
+          python3 - "$OUT" <<'PY'
+          import hashlib, json, sys
+          out = sys.argv[1]
+          r = json.load(open(f"{out}/run.json"))
+          got = hashlib.sha256(open(f"{out}/checkpoint.safetensors", "rb").read()).hexdigest()
+          print(r["updates"], r.get("stopped"), got, r.get("checkpoint_sha256"))
+          assert got == r["checkpoint_sha256"], "the checkpoint is not the one its run record names"
+          PY
+      - name: Push the results branch
+        env:
+          RUN: ${{ matrix.run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BR="results/ftpartial-$RUN"
+          git checkout --orphan "$BR"
+          git rm -rq --cached . >/dev/null
+          git add -f "experiments/gputrain-partial/$RUN"
+          git commit -qm "experiments: interrupted fine-tune $RUN, last saved state (fetched ${{ github.sha }})"
+          git push origin "$BR"

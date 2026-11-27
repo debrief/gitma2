@@ -32,3 +32,20 @@ jobs:
         run: |
           uvx modal --version
           uvx modal app list
+      - name: "Training volume (spec 037): what a resume would find; no container, no GPU"
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          set -o pipefail
+          uvx modal volume ls gitma2-regress / | tee "$RUNNER_TEMP/vol.txt"
+          for d in $(grep -o 'ft-s[123]-[0-9]*' "$RUNNER_TEMP/vol.txt" | sort -u); do
+            echo "== $d"
+            uvx modal volume ls gitma2-regress "/$d" || true
+            uvx modal volume get gitma2-regress "/$d/run.json" "$RUNNER_TEMP/$d.json" && python3 -c "
+          import json
+          r = json.load(open('$RUNNER_TEMP/$d.json'))
+          print({k: r.get(k) for k in ('updates', 'stopped', 'train_seconds', 'gpu_seconds', 'scenarios_per_second', 'checkpoint_sha256')})
+          v = r.get('validation', [])
+          print('first', v[:1]); print('last', v[-1:])" || echo "no run.json in $d"
+          done

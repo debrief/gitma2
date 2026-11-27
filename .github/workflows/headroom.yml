@@ -17,6 +17,11 @@ name: Headroom (Gate H)
 #                 each (the tuning grid); default one variant with the plan's settings
 #   digests       optional path to committed digests {"<condition>/<file>": sha256}: checked
 #   imm, ekf      frozen reference names
+#   conditions_file  optional (spec 037): a conditions file other than the Gate H plan's
+#   runs (spec 037) may also carry: conditions [ids] (the run is made under these only); kind hybrid with
+#                 prior_from <checkpoint name> or prior_static 'mean,sd', and prior_weight
+#   checkpoints   optional (spec 037): [{name, branch, dir, sha256}] regressors scored beside the runs, with
+#                 read_controls [run names] for the paired readings and interval_scale "r,c,s"
 # Each record goes to results/headroom-<name>-<condition>-<variant>-<run id>.
 
 on:
@@ -85,7 +90,7 @@ jobs:
           read -r GH SEED COUNT DSPLIT <<< "$(python3 -c "
           import json; p = json.load(open('$PLAN')); print(p['plan'], p['seed'], p['count'], p['data_split'])")"
           read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
-          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+          import json; g = json.load(open('$GH')); p = json.load(open('$PLAN')); print(p.get('conditions_file') or g['conditions'], g['ranges'], g['heldout'])")"
           uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
             --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data" \
             --mismatch "$CONDS#$COND"
@@ -103,22 +108,31 @@ jobs:
             read -r SEED COUNT DSPLIT <<< "$(python3 -c "
           import json; p = json.load(open('$PLAN')); print(p['seed'], p['count'], p['data_split'])")"
             read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
-          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+          import json; g = json.load(open('$GH')); p = json.load(open('$PLAN')); print(p.get('conditions_file') or g['conditions'], g['ranges'], g['heldout'])")"
             uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
               --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data-$C" \
               --mismatch "$CONDS#$C"
           done
           DSPLIT=$(python3 -c "import json; print(json.load(open('$PLAN'))['data_split'])")
+          # spec 037: a hybrid run takes a regressor's rows on this shard as its prior
+          if python3 -c "import json, sys; sys.exit(0 if any(r.get('prior_from') for r in json.load(open('$PLAN'))['runs']) else 1)"; then
+            START="${{ matrix.start }}" N="${{ matrix.count }}" PRED_DIR="$RUNNER_TEMP/prior" bash scripts/rmis_regressors.sh
+          fi
           python3 -c "
           import json, shlex
           p = json.load(open('$PLAN')); cond = '$COND'; variant = '$VARIANT'
           sets = next((v.get('set', {}) for v in p.get('variants', []) if v['name'] == variant), {})
           for i, r in enumerate(p['runs']):
+              if 'conditions' in r and cond not in r['conditions']: continue
               kind = r['kind']; seg = r.get('segmentation', 'truth')
               a = ['--in', '$TRUTH', '--kind', kind, '--segmentation', seg,
                    '--start', '${{ matrix.start }}', '--count', '${{ matrix.count }}',
                    '--out', f'$RUNNER_TEMP/pred/{i}.${{ matrix.shard }}.ndjson']
-              if kind == 'robust' or seg == 'c2': a += ['--plan', '$GH']
+              if kind in ('robust', 'hybrid') or seg == 'c2': a += ['--plan', '$GH']
+              if kind == 'hybrid':
+                  if r.get('prior_from'): a += ['--prior-from', '$RUNNER_TEMP/prior/' + r['prior_from'] + '.ndjson']
+                  if r.get('prior_static'): a += ['--prior-static', r['prior_static']]
+                  a += ['--prior-weight', str(r.get('prior_weight', 1.0))]
               if r.get('name'): a += ['--name', r['name']]
               tag = r.get('name', str(i))
               if r.get('dump'): a += ['--dump-segmentation', f'$RUNNER_TEMP/pred/seg-{tag}.${{ matrix.shard }}.ndjson.gz']
@@ -165,7 +179,7 @@ jobs:
           read -r GH SEED COUNT DSPLIT <<< "$(python3 -c "
           import json; p = json.load(open('$PLAN')); print(p['plan'], p['seed'], p['count'], p['data_split'])")"
           read -r CONDS RANGES HELDOUT <<< "$(python3 -c "
-          import json; g = json.load(open('$GH')); print(g['conditions'], g['ranges'], g['heldout'])")"
+          import json; g = json.load(open('$GH')); p = json.load(open('$PLAN')); print(p.get('conditions_file') or g['conditions'], g['ranges'], g['heldout'])")"
           uv run tma2-generate --seed "$SEED" --count "$COUNT" --ranges "$RANGES" \
             --heldout-ranges "$HELDOUT" --format f32pack --out "$RUNNER_TEMP/data" \
             --mismatch "$CONDS#$COND"
@@ -189,8 +203,20 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pred"
           N=$(python3 -c "import json; print(len(json.load(open('$PLAN'))['runs']))")
           for i in $(seq 0 $((N - 1))); do
-            uv run python -m tma2.cli.hmerge --out "$RUNNER_TEMP/pred/$i.ndjson" "$RUNNER_TEMP"/shards/$i.*.ndjson
+            # a run restricted to other conditions (spec 037 "conditions") has no shards here
+            if ls "$RUNNER_TEMP"/shards/$i.*.ndjson >/dev/null 2>&1; then
+              uv run python -m tma2.cli.hmerge --out "$RUNNER_TEMP/pred/$i.ndjson" "$RUNNER_TEMP"/shards/$i.*.ndjson
+            fi
           done
+      - name: Regressors (spec 037; plans with checkpoints)
+        env:
+          N: ${{ matrix.ordinals }}
+        run: |
+          if python3 -c "import json, sys; sys.exit(0 if json.load(open('$PLAN')).get('checkpoints') else 1)"; then
+            START=$(python3 -c "import json; print(json.load(open('$PLAN'))['start'])")
+            export START
+            bash scripts/rmis_regressors.sh
+          fi
       - name: Score
         run: |
           OUT="experiments/headroom-runs/$NAME-${{ github.run_id }}/$COND/$VARIANT"
@@ -225,6 +251,11 @@ jobs:
           CPU=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')
           printf '{"run_id": "%s", "commit": "%s", "exit": %s, "cpu_model": "%s", "condition": "%s", "variant": "%s"}\n' \
             "${{ github.run_id }}" "${{ github.sha }}" "$rc" "$CPU" "$COND" "$VARIANT" > "$OUT/run.json"
+      - name: Paired readings (spec 037; plans with checkpoints)
+        run: |
+          if python3 -c "import json, sys; sys.exit(0 if json.load(open('$PLAN')).get('checkpoints') else 1)"; then
+            bash scripts/rmis_read.sh
+          fi
       - name: Push the results branch
         run: |
           git config user.name "github-actions[bot]"

@@ -971,6 +971,51 @@ drops them by default (`DemoScenario.turn_loss_s`, null keeps all; `TmaProblem.b
 rows kept so grids stay regular; schema 0.40.0). Spec 035's golden problems and spec 036's
 readings pin `turn_loss_s: null`.
 
+037 (the scaled regressor under bearing-error mismatch, with an uncertainty and a hybrid,
+`specs/037-regressor-mismatch/`; owner 2026-11-22 option A; a registered study, not a gate; done).
+- **Code:** two more overlay kinds from a second stream (`sim/mismatch.py`: `white_t_df`,
+  `sigma_step_factor`, `osc_*`, `burst_*`; generator version 0.8.0 for conditions that use them;
+  existing conditions byte-identical, `tests/fixtures/mismatch/`); `generate_indices(mismatch=)`;
+  `regress/mixture.py` (a condition per scenario, `configs/regress/ft-mix.json`); config fields
+  `error_mix`, `init_sha256` and `train(init=)`; `regress/intervals.py` (95% intervals from the
+  variance head, spec 009's row fields); `regress/mread.py` and `tma2-rmread` (paired
+  per-engagement ratios, coverage, interval score, scale and temperature fits);
+  `regress/hybrid.py` and `tma2-hpredict --kind hybrid --prior-from|--prior-static`;
+  `headroom.yml` takes `checkpoints`, `conditions_file`, per-run `conditions`, `read_extra`;
+  `modal-check` lists the training volume, `modal-fetch` copies saved state out; schema 0.41.0.
+- **Scripts:** `scripts/research/rmis_{tables,plan,fit,digests,readings,val_tables,charts,
+  pilot_summary}.py`.
+- **Records:** step 1 `experiments/20261122-rmis-dev/` (unchanged regressors, spent seed 321:
+  3.1 times their clean error under the primary condition, still ahead of C″-robust in 14 of 16);
+  pilot `20261123-ft-pilot/`; decision `20261123-rmis-decision/` (protocol
+  `configs/rmis/protocol.json` `beb6af49…`, three addenda); fine-tunes `20261123-ft-runs/`
+  (26,000 updates each, interrupted and resumed); validation seed 370 `20261126-rmis-val/`.
+- **Test record `experiments/20261126-rmis/` (seed 371, 1,000 engagements × 7 conditions, scored
+  once):** C″-robust ÷ fine-tuned 1.954 [1.839, 2.074] primary (M1) and 2.285 [2.133, 2.435] on
+  kinds outside the mix (M2); unchanged ÷ fine-tuned 1.68 and 1.46 (M3); clean-data cost 0.967
+  [0.949, 0.985] (M4); stated 95% intervals within the band on all nine and better than a
+  constant width (M5); C″-robust ÷ hybrid 1.53 clean, 1.96 primary (Y1); fine-tuned ÷ hybrid not
+  separated in range, hybrid better in course and speed (Y2).
+- **Panel round 1** (`review.md`, three approve with findings; every number reproduced).
+  Narrowed: a robust solve told the true manoeuvre times equals the regressor in range and beats
+  it in course and speed, so the factor of two is C's segmenter failing (1.15–1.43 in range and
+  nothing in course or speed where C″'s segmentation holds; worse than C″ in course and speed on
+  clean data there); "held out" was chosen after looking and lies inside training's statistics;
+  prior or bearings is open (efficiency below 1 where the bound is loose; the static-prior
+  comparator was too loose to test it); M4's "no cost" clause is inside bootstrap noise (0.9496);
+  the intervals cover on average only (course 0.79 on unsettled rows) and must not be shown; the
+  hybrid is the regressor's range with a classical velocity refit, its covariance must not be
+  shown.
+- Write-up `site/blog/2026-11-26-regressor-mismatch.md`, slides
+  `2026-11-26-regressor-mismatch-slides.md`. Nothing is carried; C″ stands. Panel's order
+  (owner's choice): a prior-informed classical control and a decomposition of the gain (CPU,
+  nothing trained); a conditional coverage study; then the hybrid as a provisional candidate; no
+  more GPU spending.
+- **Money:** about $46.75 of the owner's $50. Modal's own spend limit sat at about $45 and was
+  raised by the owner on 2026-11-26 (new figure not recorded here); `gputrain.yml`'s guard is $49.
+  The ledger undercounts interrupted runs by about $3.50 (`gpu_seconds` counts the last call's
+  segments only). Seeds 369 stream, 370 validation, 371 test used; the next fresh seed is 372.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1460,6 +1505,28 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   refit every parameter before comparing splits. A target turn made during ownship's turn is
   invisible to a detector that only slices steady ownship legs. C's leg search takes about 40 s
   in JavaScript on 715 rows (every prefix's cost table); keep it off the default path of a page.
+- Spec 037: a spending guard in a workflow may be the distance to a limit set elsewhere: read
+  its comment before proposing to raise it (the $45 was "kept under what Modal's limits enforce";
+  raising it to $49 cut three runs off mid-way). The ledger counts published run records only,
+  and a resumed run's `gpu_seconds` only its last call. Re-running a failed GPU job keeps the
+  run id, so the run resumes from its folder on the volume; check that folder holds state first
+  (`modal-check/volume`), or the job restarts from nothing. Numba's cache does not notice a
+  changed callee in another module: clear `*.nbi`/`*.nbc` after editing an njit function others
+  call. A workflow step name containing ": " must be quoted. Shards of one estimator cannot be
+  merged if their headers carry a per-shard digest. A plan writer's lists must be built from the
+  plan's own run names (the first validation launch read hybrids that did not exist), and a
+  job's "pooled" reading pools every system it is given. Never write dollar amounts through an
+  unquoted shell heredoc.
+- Spec 037 panel: a learned model beating a frozen classical system under errors that system
+  was never hardened against measures the system's weak part (C's segmenter), not the model:
+  put the solve told the true structure beside every headline and split the gain by whether the
+  classical structure was right, on rows other than the ones used to classify. A held-out
+  condition chosen after seeing which model recovers on it is biased; compare its first- and
+  second-order statistics with the training ranges before calling it unseen. A prior comparator
+  must be tight enough to move the solve, or its null is foreseeable. A decision line within a
+  Monte Carlo sd of the bootstrap limit is undecidable: check the limit over bootstrap seeds
+  before registering a threshold. Coverage must be read by the model's own stated width, by
+  settled rows and on rows where no interval is stated. An efficiency below 1 is prior.
 - Spec 022: PR previews live on `gh-pages` at `pr/<n>/`, and a main deploy must exclude `/pr/`
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting

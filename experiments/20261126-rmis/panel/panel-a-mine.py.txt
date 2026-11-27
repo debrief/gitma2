@@ -1,0 +1,45 @@
+import numpy as np, sys
+S=sys.argv[1]
+def lr(z,num,den,c):
+    a=z['err_'+num][:,c]; b=z['err_'+den][:,c]; o=z['ordinal']
+    ok=np.isfinite(a)&np.isfinite(b); d={}
+    for u in np.unique(o[ok]):
+        m=ok&(o==u); x=np.median(a[m]); y=np.median(b[m])
+        if x>0 and y>0: d[int(u)]=np.log(x/y)
+    return d
+def pooled(z,pairs,c,drop_first=False):
+    ds=[lr(z,n,d,c) for n,d in pairs]
+    com=sorted(set.intersection(*[set(d) for d in ds]))
+    v=np.array([np.mean([d[u] for d in ds]) for u in com])
+    rng=np.random.default_rng(12345)
+    bs=v[rng.integers(0,len(v),(4000,len(v)))].mean(1)
+    return len(v),np.exp(v.mean()),np.exp(np.quantile(bs,[.025,.975])),np.exp(np.median(v)),(v>0).mean(),(v<-np.log(2)).mean()
+for cond,name,pairs in [('all-central','M1',[('c2-robust',f'ft-s{k}') for k in (1,2,3)]),
+  ('ho-both','M2',[('c2-robust',f'ft-s{k}') for k in (1,2,3)]),
+  ('all-central','M3',[(f'reg-s{k}',f'ft-s{k}') for k in (1,2,3)]),
+  ('ho-both','M3',[(f'reg-s{k}',f'ft-s{k}') for k in (1,2,3)]),
+  ('off','M4',[(f'reg-s{k}',f'ft-s{k}') for k in (1,2,3)]),
+  ('off','Y1',[('c2-robust',f'hyb-s{k}') for k in (1,2,3)]),
+  ('all-central','Y1',[('c2-robust',f'hyb-s{k}') for k in (1,2,3)]),
+  ('off','Y2',[(f'ft-s{k}',f'hyb-s{k}') for k in (1,2,3)]),
+  ('all-central','Y2',[(f'ft-s{k}',f'hyb-s{k}') for k in (1,2,3)]),
+  ('off','rt/ft',[('robust-true',f'ft-s{k}') for k in (1,2,3)]),
+  ('off','c2r/ft',[('c2-robust',f'ft-s{k}') for k in (1,2,3)]),
+  ]:
+    z=np.load(f'{S}/err/{cond}/errors.npz')
+    for c in range(3):
+        n,g,ci,med,sb,tb=pooled(z,pairs,c)
+        print(name,cond,c,n,f'{g:.4f} [{ci[0]:.4f},{ci[1]:.4f}] med {med:.3f} better {sb:.2f} twicebad {tb:.3f}')
+z=np.load(f'{S}/err/off/errors.npz'); print(z.files); print(len(z['ordinal']),len(np.unique(z['ordinal'])), np.unique(z['k'])[:10])
+for n in z.files:
+    if n.startswith('err_'): print(n, np.isfinite(z[n]).all(1).mean().round(3))
+# M4 lower limit sensitivity: bootstrap seeds
+ds=[lr(z,f'reg-s{k}',f'ft-s{k}',0) for k in (1,2,3)]
+com=sorted(set.intersection(*[set(d) for d in ds])); v=np.array([np.mean([d[u] for d in ds]) for u in com])
+los=[]
+for s in range(200):
+    r=np.random.default_rng(s); los.append(np.exp(np.quantile(v[r.integers(0,len(v),(2000,len(v)))].mean(1),.025)))
+los=np.array(los); print('M4 lo over 200 bootstrap seeds: min %.4f max %.4f share>=0.95 %.2f'%(los.min(),los.max(),(los>=0.95).mean()))
+print('M4 normal-approx lo', np.exp(v.mean()-1.96*v.std(ddof=1)/np.sqrt(len(v))))
+for k in (1,2,3):
+    d=ds[k-1]; x=np.array(list(d.values())); print('M4 seed',k,np.exp(x.mean()))

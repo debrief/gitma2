@@ -6,7 +6,7 @@ description: >-
   principle I). Frame: local flat-earth Cartesian, x east, y north, metres, origin at ownship's
   window-start position. Bearings and courses are true, clockwise from north, radians in [0, 2π).
   Speeds in m/s. Times in seconds since window start. All stored floats are float32-rounded.
-version: 0.40.0
+version: 0.41.0
 license: Apache-2.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -712,6 +712,33 @@ classes:
       outlier_spread:
         range: float
         description: Outlier sd in units of the true error sd.
+      white_t_df:
+        range: integer
+        description: >-
+          Spec 037: the white part is Student-t with this many degrees of freedom (at least 3),
+          scaled to the same sd. Drawn from a second stream; never in a training mix.
+      sigma_step_factor:
+        range: float
+        description: >-
+          Spec 037: from a sample drawn uniformly in the engagement, the white, correlated and
+          outlier parts are multiplied by this factor or its inverse (at least 1).
+      osc_amp:
+        range: float
+        description: "Spec 037: amplitude of a sinusoidal error, in units of the true error sd (with osc_period_s)."
+      osc_period_s:
+        range: float
+        unit: { ucum_code: s }
+        description: "Spec 037: period of the sinusoidal error; its phase is drawn once per engagement."
+      burst_rate:
+        range: float
+        description: "Spec 037: probability per sample that a burst starts (with burst_len_s and burst_spread)."
+      burst_len_s:
+        range: float
+        unit: { ucum_code: s }
+        description: "Spec 037: mean duration of a burst (geometric)."
+      burst_spread:
+        range: float
+        description: "Spec 037: sd, in units of the true error sd, of the one offset every bearing of a burst carries."
 
   NormalisationConstants:
     description: Fixed scaling constants computed from the train split's input channels only.

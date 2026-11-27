@@ -33,7 +33,7 @@ app = modal.App("gitma2-regress", image=image)
 volume = modal.Volume.from_name("gitma2-regress", create_if_missing=True)
 
 
-def _segment(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
+def _segment(plan_json: str, run_name: str, commit: str, init: bytes = b"") -> tuple[str, bytes]:
     import os
 
     import torch
@@ -47,7 +47,12 @@ def _segment(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
         raise RuntimeError("no GPU in the container")
     os.chdir("/root")  # the plan's ranges path is relative to the repository root
     work = Path("/vol") / run_name
-    rec = run_segment(plan, work, "cuda", commit)
+    init_path = None
+    if init:  # spec 037: the checkpoint a fine-tune starts from (checked by digest in train)
+        work.mkdir(parents=True, exist_ok=True)
+        init_path = work / "init.safetensors"
+        init_path.write_bytes(init)
+    rec = run_segment(plan, work, "cuda", commit, init_path)
     volume.commit()
     return json.dumps(rec), (work / "checkpoint.safetensors").read_bytes()
 
@@ -60,28 +65,32 @@ _OPTS = {"timeout": MAX_SEGMENT_SECONDS + STARTUP_SECONDS, "volumes": {"/vol": v
 
 
 @app.function(gpu="T4", **_OPTS)
-def segment_t4(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
-    return _segment(plan_json, run_name, commit)
+def segment_t4(plan_json: str, run_name: str, commit: str, init: bytes = b"") -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit, init)
 
 
 @app.function(gpu="L4", **_OPTS)
-def segment_l4(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
-    return _segment(plan_json, run_name, commit)
+def segment_l4(plan_json: str, run_name: str, commit: str, init: bytes = b"") -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit, init)
 
 
 @app.function(gpu="A10", **_OPTS)
-def segment_a10(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
-    return _segment(plan_json, run_name, commit)
+def segment_a10(plan_json: str, run_name: str, commit: str, init: bytes = b"") -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit, init)
 
 
 @app.function(gpu="L40S", **_OPTS)
-def segment_l40s(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
-    return _segment(plan_json, run_name, commit)
+def segment_l40s(
+    plan_json: str, run_name: str, commit: str, init: bytes = b""
+) -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit, init)
 
 
 @app.function(gpu="A100-40GB", **_OPTS)
-def segment_a100(plan_json: str, run_name: str, commit: str) -> tuple[str, bytes]:
-    return _segment(plan_json, run_name, commit)
+def segment_a100(
+    plan_json: str, run_name: str, commit: str, init: bytes = b""
+) -> tuple[str, bytes]:
+    return _segment(plan_json, run_name, commit, init)
 
 
 SEGMENTS = {
@@ -95,13 +104,14 @@ GPUS = tuple(SEGMENTS)  # a plan's "gpu" (default T4)
 
 
 @app.local_entrypoint()
-def main(plan: str, out: str, run_name: str = "", commit: str = "unknown") -> None:
+def main(plan: str, out: str, run_name: str = "", commit: str = "unknown", init: str = "") -> None:
     text = Path(plan).read_text()
     name = run_name or Path(plan).stem
     gpu = json.loads(text).get("gpu", "T4")
     if gpu not in SEGMENTS:
         raise SystemExit(f"plan gpu {gpu!r}: expected one of {', '.join(GPUS)}")
-    rec, ckpt = SEGMENTS[gpu].remote(text, name, commit)
+    init_bytes = Path(init).read_bytes() if init else b""
+    rec, ckpt = SEGMENTS[gpu].remote(text, name, commit, init_bytes)
     dest = Path(out)
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "run.json").write_text(json.dumps(json.loads(rec), indent=1, sort_keys=True) + "\n")

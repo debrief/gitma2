@@ -62,8 +62,13 @@ class RegressorConfig:
     data: str = "scenarios"  # "scenarios" (spec 012's stream) | "periods" (regress/period_data)
     mix: str = "configs/regress/tlm-mix.json"  # the period stream's mix
     monitor_start: int = 1 << 40  # first stream index of the period monitor
+    # Spec 037 (also omitted from ``to_json`` at their defaults): fine-tuning under mismatch.
+    error_mix: str = ""  # a mix file (regress/mixture): a bearing-error condition per scenario
+    init_sha256: str = ""  # start from the checkpoint with this digest instead of from nothing
 
     def __post_init__(self) -> None:
+        if self.error_mix and self.data != "scenarios":
+            raise ValueError("error_mix applies to the scenario stream")
         if self.data not in ("scenarios", "periods"):
             raise ValueError(f"data {self.data!r}")
         if self.n_features != N_FEATURES + (2 if self.data == "periods" else 0):
@@ -96,6 +101,8 @@ PERIOD_FIELDS = (
     "data",
     "mix",
     "monitor_start",
+    "error_mix",
+    "init_sha256",
 )
 """Spec 016's additions to the configuration (to enter ``schema/tma.yaml`` with that spec's
 schema change)."""

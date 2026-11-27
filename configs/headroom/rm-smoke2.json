@@ -1,0 +1,98 @@
+{
+  "description": "Spec 037 smoke test of the hybrid and extra-readings path in headroom.yml, on spent seed 321 with the PILOT checkpoint standing in for a fine-tuned seed: 6 engagements, off (with the hybrid and the static-prior comparator) and ho-both (without). Not a result; nothing here is read.",
+  "stage": "smoke",
+  "plan": "configs/gateh/gh-a.json",
+  "conditions_file": "configs/rmis/all-conditions.json",
+  "split": "tuning",
+  "seed": 321,
+  "count": 2600,
+  "data_split": "train",
+  "start": 0,
+  "ordinals": 6,
+  "shards": 2,
+  "shard_size": 3,
+  "conditions": [
+    "off",
+    "ho-both"
+  ],
+  "runs": [
+    {
+      "kind": "nominal",
+      "segmentation": "c2",
+      "name": "c2"
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2",
+      "name": "c2-robust"
+    },
+    {
+      "kind": "robust",
+      "name": "robust-true"
+    },
+    {
+      "kind": "nominal",
+      "name": "plain-true"
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "hyb-s1-w1",
+      "prior_from": "ft-s1",
+      "prior_weight": 1.0,
+      "conditions": [
+        "off"
+      ]
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "c2-prior",
+      "prior_static": "9.6,0.67",
+      "prior_weight": 1.0,
+      "conditions": [
+        "off"
+      ]
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "checkpoints": [
+    {
+      "name": "ft-s1",
+      "branch": "results/gputrain-ft-pilot-45101050454",
+      "dir": "experiments/gputrain-runs/ft-pilot-45101050454",
+      "sha256": "b036fb2a06dc8b7e2fb7794773cc90550c757a7eb91ee7a670e8e22686038c37"
+    },
+    {
+      "name": "reg-s1",
+      "branch": "results/gputrain-r-a-s1-42990055824",
+      "dir": "experiments/gputrain-runs/r-a-s1-42990055824",
+      "sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+    }
+  ],
+  "read_controls": [
+    "c2-robust",
+    "c2",
+    "robust-true",
+    "reg-s1",
+    "imm",
+    "one_leg"
+  ],
+  "read_extra": [
+    {
+      "systems": [
+        "hyb-s1-w1",
+        "c2-prior"
+      ],
+      "controls": [
+        "c2-robust",
+        "c2",
+        "ft-s1",
+        "robust-true"
+      ],
+      "out": "reading-hybrid.json"
+    }
+  ],
+  "interval_scale": "1,1,1"
+}

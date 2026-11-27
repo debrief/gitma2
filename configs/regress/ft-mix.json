@@ -1,0 +1,33 @@
+{
+ "description": "Spec 037 research R3: the fine-tuning mix. A quarter of scenarios are clean; otherwise each of spec 010's four kinds (correlated error, bias, an untold error level, outliers) is on with probability one half (so a further sixteenth are clean), severities log-uniform from the mild to the harsh grid value of configs/gateh/conditions.json (share and spread about the grid's single value). The grid's sixteen conditions are therefore inside the training ranges. The kinds of the overlay's second stream are never drawn.",
+ "clean_share": 0.25,
+ "p_on": 0.5,
+ "corr_tau_s": [
+  30,
+  180
+ ],
+ "corr_share": [
+  0.3,
+  0.7
+ ],
+ "bias_sd_deg": [
+  0.25,
+  1.0
+ ],
+ "bias_tau_s": [
+  1800,
+  1800
+ ],
+ "sigma_factor_max": [
+  1.25,
+  2.0
+ ],
+ "outlier_rate": [
+  0.005,
+  0.05
+ ],
+ "outlier_spread": [
+  5,
+  15
+ ]
+}
