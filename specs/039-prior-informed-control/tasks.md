@@ -13,7 +13,7 @@
 
 - [ ] T010 Development run, seed 370, in distribution, clean and primary.
 - [ ] T011 Moves-the-solve check; choose the variant by R4; record.
-- [ ] T012 The cut evidence search on a development subset (R6).
+- [x] T012 (as a scored system: `headroom/cut.py`, `--kind cut`, stage dev2) The cut evidence search on a development subset (R6).
 - [ ] T013 Tables script; thresholds over bootstrap seeds.
 
 ## Phase 3: registration and test

@@ -137,6 +137,16 @@ def _task(args: tuple[Any, ...]) -> Task:
         return []
     r_max = max(d.n for d in data)
     out = [[empty_row(d, k) for k in ks] for d, ks in zip(data, rows, strict=True)]
+    if prior is not None and prior.get("cut"):  # spec 039: the time-late control cut at row k
+        from tma2.headroom.cut import cut_state
+
+        for i, (d, ks) in enumerate(zip(data, rows, strict=True)):
+            for q, k in enumerate(ks):
+                got = cut_state(d, k)
+                if got is not None:
+                    out[i][q] = _row(d, k, got[0], got[1], True, None)
+                    out[i][q]["declared_manoeuvres"] = got[2]
+        return [(j, int(m["index"]), r, None) for j, m, r in zip(ords, metas, out, strict=True)]
     items: list[tuple[BearingData, int, LayerInputs]] = []
     where: list[tuple[int, int]] = []
     if seg in ("c2", "c2r"):
@@ -327,6 +337,11 @@ def main(argv: list[str] | None = None) -> int:
             bad.append("--kind hybrid needs exactly one of --prior-from and --prior-static")
         if a.prior_weight <= 0:
             bad.append("--prior-weight must be positive")
+    cut = a.kind == "cut"
+    if cut:  # spec 039: the time-late control on the prefix (headroom/cut.py); no layer settings
+        a.kind = "nominal"
+        if a.segmentation != "truth" or a.plan:
+            bad.append("--kind cut takes no segmentation and no plan")
     profile = a.kind == "profile"
     if profile:  # spec 039: the robust solve read out as a posterior median (headroom/profile.py)
         a.kind = "robust"
@@ -418,6 +433,8 @@ def main(argv: list[str] | None = None) -> int:
             "profile": pset,
             "profile_prior_sha256": hashlib.sha256(Path(pset["prior"]).read_bytes()).hexdigest(),
         }
+    if cut:
+        prior = {"cut": True}
     c2 = None
     code = None
     cr_json = None
@@ -497,8 +514,8 @@ def main(argv: list[str] | None = None) -> int:
         schema_version=SCHEMA_VERSION,
         estimator=name,
         mode="per_timestep",
-        kind="hybrid" if hybrid else "profile" if profile else a.kind,
-        segmentation=a.segmentation,
+        kind="hybrid" if hybrid else "profile" if profile else "cut" if cut else a.kind,
+        segmentation="none" if cut else a.segmentation,
         segments_from=seg_from,
         segmenter_settings=cr_json,
         robust_code_sha256=cr_code,

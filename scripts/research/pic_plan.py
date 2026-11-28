@@ -41,6 +41,21 @@ def runs_for(proto: dict[str, Any], stage: str) -> tuple[list[dict[str, Any]], d
         {"kind": "nominal", "name": "plain-true"},
         {"kind": "robust", "segmentation": "c2", "name": "c2-edit", "edit": EDIT},
     ]
+    if stage == "dev2":  # the cut time-late control beside the plain systems (part 3)
+        runs = [r for r in runs if r["name"] != "c2-edit"] + [{"kind": "cut", "name": "cut-ctl"}]
+        pairs = [
+            ["c2-robust", "fine_tuned"], ["robust-true", "fine_tuned"], ["cut-ctl", "fine_tuned"],
+            ["c2-robust", "cut-ctl"], ["cut-ctl", "robust-true"], ["c2-robust", "robust-true"],
+        ]  # fmt: skip
+        return runs, {
+            "comparator": "c2-robust",
+            "regressors": FT,
+            "unchanged": REG,
+            "hardened": ["cut-ctl"],
+            "true": "robust-true",
+            "segments": "c2",
+            "pairs": pairs,
+        }
     if stage == "dev":
         variants = {"": {}, "-t": {"temper": "effective"}}
         true_names, c2_names = [], []
@@ -90,7 +105,7 @@ def runs_for(proto: dict[str, Any], stage: str) -> tuple[list[dict[str, Any]], d
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("stage", choices=("dev", "test"))
+    ap.add_argument("stage", choices=("dev", "dev2", "test"))
     a = ap.parse_args()
     proto = json.loads((ROOT / "configs/pic/protocol.json").read_text())
     gd = json.loads((ROOT / "configs/gd/protocol.json").read_text())
