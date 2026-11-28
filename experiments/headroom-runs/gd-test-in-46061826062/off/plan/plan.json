@@ -1,0 +1,158 @@
+{
+  "description": "Spec 038 test, split 'in' (in distribution (MAN2)): seed 372, the first 500 sigma = 1 deg engagements per condition. Written by scripts/research/gd_plan.py from configs/gd/protocol.json.",
+  "stage": "test",
+  "plan": "configs/gateh/gh-a.json",
+  "conditions_file": "configs/rmis/all-conditions.json",
+  "ranges": "configs/man2-ranges.json",
+  "split": "tuning",
+  "seed": 372,
+  "count": 1500,
+  "data_split": "train",
+  "start": 0,
+  "ordinals": 500,
+  "shards": 10,
+  "shard_size": 50,
+  "segments_cache": true,
+  "conditions": [
+    "off",
+    "all-central",
+    "ho-both"
+  ],
+  "runs": [
+    {
+      "kind": "nominal",
+      "segmentation": "c2",
+      "name": "c2",
+      "dump": true
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2",
+      "name": "c2-robust"
+    },
+    {
+      "kind": "robust",
+      "name": "robust-true"
+    },
+    {
+      "kind": "nominal",
+      "name": "plain-true"
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "hyb-s1",
+      "prior_from": "ft-s1",
+      "prior_weight": 0.25
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2r",
+      "name": "c2-thr",
+      "robust_confirm": {
+        "robust": false,
+        "tau_factor": 4
+      }
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2",
+      "name": "c2-edit",
+      "edit": {
+        "wild": true
+      }
+    },
+    {
+      "kind": "robust",
+      "segmentation": "c2r",
+      "name": "c2-edit-thr",
+      "edit": {
+        "wild": true
+      },
+      "robust_confirm": {
+        "robust": false,
+        "tau_factor": 4
+      }
+    },
+    {
+      "kind": "hybrid",
+      "segmentation": "c2",
+      "name": "own-hyb",
+      "prior_from": "own",
+      "prior_weight": 2
+    }
+  ],
+  "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+  "ekf": "ekf-sa0.00003-p4-r0.5",
+  "checkpoints": [
+    {
+      "name": "ft-s1",
+      "branch": "results/gputrain-ft-s1-45108906382",
+      "dir": "experiments/gputrain-runs/ft-s1-45108906382",
+      "sha256": "5ecb77e93b52b08def521c4fdce4c8574cc0228ab279d12a11b039be2639f6f5"
+    },
+    {
+      "name": "ft-s2",
+      "branch": "results/gputrain-ft-s2-45109019065",
+      "dir": "experiments/gputrain-runs/ft-s2-45109019065",
+      "sha256": "9695333fb1a3a265487d8f813fb247e81ef51ea02537648cd705d330ec71c8ab"
+    },
+    {
+      "name": "ft-s3",
+      "branch": "results/gputrain-ft-s3-45109133362",
+      "dir": "experiments/gputrain-runs/ft-s3-45109133362",
+      "sha256": "e151ac91bfc86903ff61c296d43eb70024ff94f437f7b809fcba49163e96de86"
+    },
+    {
+      "name": "reg-s1",
+      "branch": "results/gputrain-r-a-s1-42990055824",
+      "dir": "experiments/gputrain-runs/r-a-s1-42990055824",
+      "sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+    },
+    {
+      "name": "reg-s2",
+      "branch": "results/gputrain-r-a-s2-42990055730",
+      "dir": "experiments/gputrain-runs/r-a-s2-42990055730",
+      "sha256": "d88c944bcbe2b70f98bd272ed4fd330b92f1fdd9cf3833ed96bcce39eabf33e5"
+    },
+    {
+      "name": "reg-s3",
+      "branch": "results/gputrain-r-a-s3-42990059695",
+      "dir": "experiments/gputrain-runs/r-a-s3-42990059695",
+      "sha256": "3f75d81d2dc266df99d192a317be4ae58ea15b0f1489d79c28e3ed34ec400d05"
+    },
+    {
+      "name": "own",
+      "branch": "results/gputrain-r-a-own-42990062999",
+      "dir": "experiments/gputrain-runs/r-a-own-42990062999",
+      "sha256": "47e10c0ea5fc41a6d50abccc73224c009e5fb5d7ed58fc4b632a378777b4e841"
+    }
+  ],
+  "interval_scale": "experiments/20261126-rmis-val/interval-fit.json",
+  "decomp": {
+    "comparator": "c2-robust",
+    "regressors": [
+      "ft-s1",
+      "ft-s2",
+      "ft-s3"
+    ],
+    "unchanged": [
+      "reg-s1",
+      "reg-s2",
+      "reg-s3"
+    ],
+    "own": "own",
+    "own_hybrid": "own-hyb",
+    "hybrids": [
+      "hyb-s1"
+    ],
+    "hardened": [
+      "c2-thr",
+      "c2-edit",
+      "c2-edit-thr"
+    ],
+    "true": "robust-true",
+    "segments": "c2",
+    "split": "in"
+  }
+}
