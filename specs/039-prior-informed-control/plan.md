@@ -22,7 +22,7 @@ seed 373 on CI. Decisions: [research.md](research.md).
 
 ## Constitution Check
 
-- Types once in LinkML: the header's `kind` gains "profile" (description; schema 0.42.0). Pass.
+- Types once in LinkML: the header's `kind` gains "profile" (a description change; schema stays 0.41.0). Pass.
 - Seeded randomness only: none new; the prior table is built from a spent seed. Pass.
 - Reported estimate from a declared physics layer: every profile point is a layer solve; the
   read-out interpolates between two of them, which is stated in the header and the record. The
