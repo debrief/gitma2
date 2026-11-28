@@ -200,6 +200,11 @@ def _task(args: tuple[Any, ...]) -> Task:
 
         hlayer = hy.HybridLayer(knots=KNOTS)
         layer = hlayer
+        if prior.get("profile"):  # spec 039: the read-out told the generator's priors
+            from tma2.headroom import profile as pf
+
+            pcfg = pf.ProfileSettings(**prior["profile"])
+            ptable = pf.Prior.load(pcfg.prior)
         if prior.get("from"):
             prior_by = hy.load_prior_rows(prior["from"], set(ords))
     rs = RobustSettings(**settings) if settings is not None else None
@@ -217,7 +222,11 @@ def _task(args: tuple[Any, ...]) -> Task:
                 for i, _q in where[s : s + batch]:
                     pos = int(metas[i]["index"]) - index_start
                     tr.append(Truth(eng[pos], outlier[pos, : data[i].n].astype(bool)))
-            if prior is not None:
+            reads: list[dict[str, Any] | None] | None = None
+            if prior is not None and prior.get("profile"):
+                assert rs is not None
+                o, reads = pf.profile_estimate(hlayer, part, r_max, rs, pcfg, ptable)
+            elif prior is not None:
                 pr = [
                     hy.prior_rows(
                         d,
@@ -231,14 +240,21 @@ def _task(args: tuple[Any, ...]) -> Task:
                 hy.set_prior(hlayer, part, pr)
                 for (i, q), (_a, _m, u) in zip(where[s : s + batch], pr, strict=True):
                     used_prior[(i, q)] = u
-            o, _info = estimate(layer, part, kind, r_max, tr, rs)
+            if reads is None:
+                o, _info = estimate(layer, part, kind, r_max, tr, rs)
         for b, (i, q) in enumerate(where[s : s + batch]):
             d, k, _ = part[b]
             st = o.state[b].numpy()
             if np.isfinite(st).all():
                 rcs = (float(o.range[b]), float(o.course[b]), float(o.speed[b]))
                 out[i][q] = _row(d, k, st, rcs, bool(o.plausible[b]), o.cov[b].numpy())
-                if prior is not None:
+                if reads is not None:
+                    rd = reads[b]
+                    out[i][q]["profile_used"] = rd is not None
+                    if rd is not None:  # the posterior median replaces the mode; no covariance
+                        keep = ("timestamp_s", "converged", "iterations", "profile_used")
+                        out[i][q] = {**{c: out[i][q][c] for c in keep}, **rd}
+                elif prior is not None:
                     out[i][q]["prior_used"] = bool(used_prior.get((i, q), False))
     dump = None
     if seg != "truth" and c2 is not None and c2.get("dump"):
@@ -275,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--set", action="append", default=[], help="robust: key=value over the plan")
     ap.add_argument("--prior-from", help="hybrid: the regressor's prediction rows on this split")
     ap.add_argument("--prior-weight", type=float, default=1.0, help="multiplies the prior's sds")
+    ap.add_argument("--profile", help="profile: headroom.profile.ProfileSettings as JSON")
     ap.add_argument("--prior-static", help="hybrid: instead, 'mean,sd' of a fixed ln range prior")
     ap.add_argument("--edit", help="c2/c2r: the bearings C sees (headroom.edit.Edit as JSON)")
     ap.add_argument(
@@ -310,6 +327,15 @@ def main(argv: list[str] | None = None) -> int:
             bad.append("--kind hybrid needs exactly one of --prior-from and --prior-static")
         if a.prior_weight <= 0:
             bad.append("--prior-weight must be positive")
+    profile = a.kind == "profile"
+    if profile:  # spec 039: the robust solve read out as a posterior median (headroom/profile.py)
+        a.kind = "robust"
+        if not a.profile:
+            bad.append("--kind profile needs --profile")
+    elif a.profile:
+        bad.append("--profile is for --kind profile")
+    if hybrid:
+        pass
     elif a.prior_from or a.prior_static:
         bad.append("--prior-from and --prior-static are for --kind hybrid")
     if a.kind not in KINDS:
@@ -322,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
         bad.append(f"{a.kind} must not read the mismatch truth")
     if a.mismatch_truth and hdr.mismatch is None:
         bad.append("the split carries no mismatch; a ceiling there is the plain oracle")
-    if (a.kind == "robust" or a.segmentation != "truth") and not a.plan:
+    if (a.kind == "robust" or a.segmentation != "truth") and not a.plan:  # profile is robust
         bad.append("--plan is needed for robust and for C's segmentations")
     if a.segments_from and a.segmentation not in ("c2", "c2r"):
         bad.append("--segments-from applies to --segmentation c2 or c2r")
@@ -375,6 +401,22 @@ def main(argv: list[str] | None = None) -> int:
             "prior_static": prior["static"],
             # the prior file differs by shard, so the header names it and does not digest it
             "prior_from": Path(a.prior_from).stem if a.prior_from else None,
+        }
+    if profile:
+        from tma2.headroom.profile import Prior, ProfileSettings
+
+        try:
+            pset = asdict(ProfileSettings(**json.loads(a.profile)))
+            Prior.load(pset["prior"])
+        except (TypeError, ValueError, OSError, KeyError) as e:
+            print(f"--profile: {e}", file=sys.stderr)
+            return 2
+        prior = {"profile": pset}
+        assert settings is not None
+        settings_hdr = {
+            **settings,
+            "profile": pset,
+            "profile_prior_sha256": hashlib.sha256(Path(pset["prior"]).read_bytes()).hexdigest(),
         }
     c2 = None
     code = None
@@ -455,7 +497,7 @@ def main(argv: list[str] | None = None) -> int:
         schema_version=SCHEMA_VERSION,
         estimator=name,
         mode="per_timestep",
-        kind="hybrid" if hybrid else a.kind,
+        kind="hybrid" if hybrid else "profile" if profile else a.kind,
         segmentation=a.segmentation,
         segments_from=seg_from,
         segmenter_settings=cr_json,

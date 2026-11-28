@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tma2-rdecomp", description=__doc__)
     ap.add_argument("--errors", required=True)
     ap.add_argument("--truth", required=True, help="the scored split's f32pack")
-    ap.add_argument("--names", required=True, help="JSON: comparator, regressors, own, ...")
+    ap.add_argument("--names", required=True, help="JSON: comparator, regressors, own, pairs, ...")
     ap.add_argument("--condition", default="")
     ap.add_argument("--split", default="")
     ap.add_argument("--mismatch-truth", help="the split's truth side file (first-bearing slice)")
@@ -143,6 +143,33 @@ def main(argv: list[str] | None = None) -> int:
                     if (known & later & (ok == v)).any()
                 },
             }
+    pairs = [(c, y) for c, y in names.get("pairs", []) if c in errs]
+    if pairs:  # spec 039: control ÷ system for named pairs, overall and by thirds of the bound
+        ft = list(names["regressors"])
+
+        def pair_block(rows: np.ndarray | None) -> dict[str, Any]:
+            blk: dict[str, Any] = {}
+            for c, y in pairs:
+                sy = ft if y == "fine_tuned" else [y]
+                if not all(v in errs for v in sy):
+                    continue
+                blk[f"{c}/{y}"] = {
+                    col: dc.ratio(dc.pooled_logs(errs, c, sy, ordinal, i, rows), a.resamples)
+                    for i, col in enumerate(COLS)
+                }
+            return blk
+
+        res["pairs"] = {"all": pair_block(None)}
+        if bound is not None:
+            b0 = bound[:, 0]
+            fin0 = np.isfinite(b0) & (b0 > 0)
+            cuts0 = np.quantile(b0[fin0], [1 / 3, 2 / 3])
+            th = np.searchsorted(cuts0, b0, side="right")
+            res["pairs"]["range_bound_cuts"] = [float(v) for v in cuts0]
+            res["pairs"]["by_range_bound_third"] = [
+                {"rows": int((fin0 & (th == q)).sum()), **pair_block(fin0 & (th == q))}
+                for q in range(3)
+            ]
     res["systems"] = {n: system_summary(errs[n], ordinal, bound) for n in sorted(errs)}
     res["systems_common_rows"] = {
         n: system_summary(errs[n], ordinal, bound, rows_common) for n in named

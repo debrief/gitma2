@@ -2000,7 +2000,7 @@ classes:
       schema_version: { range: string, required: true }
       estimator: { range: string, required: true, description: "Kind and segmentation, for example robust@truth." }
       mode: { range: string, required: true, description: Always per_timestep. }
-      kind: { range: string, required: true, description: "nominal, realisation, attainable or robust." }
+      kind: { range: string, required: true, description: "nominal, realisation, attainable, robust, hybrid (spec 037) or profile (spec 039: the robust solve read out as a posterior median over range)." }
       segmentation: { range: string, required: true, description: "truth, c2 (the classical C'' hand-over) or c2r (C'' with C-r's robust confirmation, spec 011)." }
       segments_from: { range: string, description: "The condition of the split the segmentation was computed on, when not this one (spec 011 FR-003, a diagnostic)." }
       segmenter_settings: { range: string, description: "C-r's confirmation settings as canonical JSON (c2r; spec 011), or {edit, confirm} when the segmenter was given edited bearings (spec 038)." }

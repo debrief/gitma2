@@ -3356,7 +3356,7 @@ class HeadroomPredictionHeader(ConfiguredBaseModel):
                        'SegmentParameters',
                        'RegressorPredictionHeader',
                        'HeadroomPredictionHeader']} })
-    kind: str = Field(default=..., description="""nominal, realisation, attainable or robust.""", json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
+    kind: str = Field(default=..., description="""nominal, realisation, attainable, robust, hybrid (spec 037) or profile (spec 039: the robust solve read out as a posterior median over range).""", json_schema_extra = { "linkml_meta": {'domain_of': ['OwnshipWander',
                        'TargetManoeuvre',
                        'ManoeuvreSpan',
                        'ControlSettings',

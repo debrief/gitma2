@@ -9,6 +9,7 @@ name: Headroom (Gate H)
 #   ranges, heldout   (optional) ranges files in place of the Gate H plan's (spec 038's splits)
 #   segments_cache    true: runs of one shard that share a segmenter's settings compute it once
 #   runs[].edit       c2/c2r: the bearings C sees (headroom.edit.Edit); decomp: tma2-rdecomp's names
+#   runs[].profile    kind profile: headroom.profile.ProfileSettings (spec 039)
 #   start, ordinals   sigma = 1 deg ordinals scored (ordinals beyond the split's end: all of it)
 #   shards, shard_size   optional: predictions in `shards` jobs of `shard_size` ordinals, the last
 #                 taking the rest (default one shard)
@@ -131,7 +132,8 @@ jobs:
               a = ['--in', '$TRUTH', '--kind', kind, '--segmentation', seg,
                    '--start', '${{ matrix.start }}', '--count', '${{ matrix.count }}',
                    '--out', f'$RUNNER_TEMP/pred/{i}.${{ matrix.shard }}.ndjson']
-              if kind in ('robust', 'hybrid') or seg in ('c2', 'c2r'): a += ['--plan', '$GH']
+              if kind in ('robust', 'hybrid', 'profile') or seg in ('c2', 'c2r'): a += ['--plan', '$GH']
+              if kind == 'profile': a += ['--profile', json.dumps(r['profile'])]
               if 'edit' in r: a += ['--edit', json.dumps(r['edit'])]
               if p.get('segments_cache') and seg in ('c2', 'c2r') and 'segments_from' not in r:
                   a += ['--segments-cache', '$RUNNER_TEMP/segcache']

@@ -1,0 +1,39 @@
+{
+ "description": "Spec 039: a classical control given the generator's priors. scripts/research/pic_plan.py writes the scoring plans from this file and configs/gd/protocol.json (splits, checkpoints).",
+ "prior": "configs/pic/prior-man2.json",
+ "grid": 20,
+ "shard_size": 50,
+ "stages": {
+  "dev": {
+   "seed": 370,
+   "count": 900,
+   "ordinals": 300,
+   "splits": {
+    "in": [
+     "off",
+     "all-central"
+    ]
+   }
+  },
+  "test": {
+   "seed": 373,
+   "count": 1500,
+   "ordinals": 500,
+   "splits": {
+    "in": [
+     "off",
+     "all-central"
+    ],
+    "shift": [
+     "off",
+     "all-central"
+    ],
+    "far": [
+     "off",
+     "all-central"
+    ]
+   }
+  }
+ },
+ "chosen": null
+}
