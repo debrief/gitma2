@@ -1,0 +1,140 @@
+import numpy as np, math
+S='/tmp/claude-0/-home-user-gitma2/ff663f47-91bc-55ce-b843-745389e675e2/scratchpad/test'
+FT=['ft-s1','ft-s2','ft-s3']
+def load(sp,c):
+    z=np.load(f'{S}/{sp}/{c}/errors.npz'); return {k:z[k] for k in z.files}
+D={(sp,c):load(sp,c) for sp in('in','shift','far') for c in('off','all-central')}
+D[('in','ho-both')]=load('in','ho-both')
+def englog(d,ctl,sys,col=0,rows=None,cap=None,stat=np.median):
+    a=d['err_'+ctl][:,col].copy(); b=d['err_'+sys][:,col].copy()
+    if cap is not None:
+        a[~np.isfinite(a)]=cap; b[~np.isfinite(b)]=cap
+    ok=np.isfinite(a)&np.isfinite(b)
+    if rows is not None: ok&=rows
+    o=d['ordinal']; out={}
+    for u in np.unique(o[ok]):
+        m=ok&(o==u); x,y=stat(a[m]),stat(b[m])
+        if x>0 and y>0: out[int(u)]=math.log(x/y)
+    return out
+def pooled(d,ctl,syss,**kw):
+    per=[englog(d,ctl,s,**kw) for s in syss]
+    com=sorted(set.intersection(*(set(p) for p in per)))
+    return {u:float(np.mean([p[u] for p in per])) for u in com}
+def boot(x,f=np.mean,n=2000,seed=1,level=.95):
+    r=np.random.default_rng(seed); idx=r.integers(0,len(x),(n,len(x)))
+    v=np.array([f(x[i]) for i in idx]) if f is not np.mean else x[idx].mean(1)
+    return np.quantile(v,[(1-level)/2,(1+level)/2])
+def tmean(x,p):
+    x=np.sort(x); k=int(len(x)*p); return x[k:len(x)-k].mean()
+def share(num,den,f=np.mean,seed=41,n=2000,level=.95):
+    com=sorted(set(num)&set(den)); a=np.array([num[u] for u in com]); b=np.array([den[u] for u in com])
+    r=np.random.default_rng(seed); idx=r.integers(0,len(a),(n,len(a)))
+    if f is np.mean: v=a[idx].mean(1)/b[idx].mean(1)
+    else: v=np.array([f(a[i])/f(b[i]) for i in idx])
+    lo,hi=np.quantile(v,[(1-level)/2,(1+level)/2]); return f(a)/f(b),lo,hi,len(a)
+def fmt(t): return '%.3f [%.3f, %.3f] n=%d'%t
+def dist(x): return 'gm %.3f med %.3f better %.2f 2xgood %.2f 2xbad %.2f t5 %.3f t10 %.3f t25 %.3f'%(math.exp(x.mean()),math.exp(np.median(x)),(x>0).mean(),(x>math.log(2)).mean(),(x<-math.log(2)).mean(),math.exp(tmean(x,.05)),math.exp(tmean(x,.1)),math.exp(tmean(x,.25)))
+arr=lambda dd:np.array(list(dd.values()))
+print('=== 1. G and P alternatives')
+for name,key,num in (('G in/primary',('in','all-central'),'c2-edit-thr'),('P in/clean',('in','off'),'own-hyb'),('P in/primary',('in','all-central'),'own-hyb')):
+    d=D[key]; print(name)
+    N=pooled(d,'c2-robust',[num]); Dn=pooled(d,'c2-robust',FT)
+    print(' registered',fmt(share(N,Dn)))
+    los=[];his=[]
+    for s in range(30):
+        _,lo,hi,_=share(N,Dn,seed=s); los.append(lo);his.append(hi)
+    print('  boot-seed noise lo %.3f..%.3f (sd %.4f) hi %.3f..%.3f (sd %.4f)'%(min(los),max(los),np.std(los),min(his),max(his),np.std(his)))
+    print('  99.3%% (Bonferroni 7) interval', fmt(share(N,Dn,level=1-.05/7,n=10000)))
+    print(' median-of-logs',fmt(share(N,Dn,f=np.median)))
+    for p in(.05,.1,.25): print(' trimmed %.2f'%p,fmt(share(N,Dn,f=lambda x,p=p:tmean(x,p))))
+    # per-engagement mean instead of median error
+    print(' eng mean err',fmt(share(pooled(d,'c2-robust',[num],stat=np.mean),pooled(d,'c2-robust',FT,stat=np.mean))))
+    # all answer
+    names=['c2-robust',num,'c2-edit-thr','robust-true','own-hyb']+FT
+    allr=np.ones(len(d['k']),bool)
+    for nme in names: allr&=np.isfinite(d['err_'+nme]).all(1)
+    print(' rows all answer (%d of %d)'%(allr.sum(),len(allr)),fmt(share(pooled(d,'c2-robust',[num],rows=allr),pooled(d,'c2-robust',FT,rows=allr))))
+    for cap in (1.0,10.0):
+        print(' unanswered=err %g'%cap,fmt(share(pooled(d,'c2-robust',[num],cap=cap),pooled(d,'c2-robust',FT,cap=cap))))
+    # per-row
+    a=d['err_c2-robust'][:,0]; b=d['err_'+num][:,0]; f=np.mean([np.log(d['err_'+s][:,0]) for s in FT],0)
+    ok=np.isfinite(a)&np.isfinite(b)&(a>0)&(b>0)
+    o=d['ordinal'][ok]; ln=np.log(a[ok]/b[ok]); ld=np.log(a[ok])-f[ok]
+    us=np.unique(o); sn=np.array([ln[o==u].sum() for u in us]); sd=np.array([ld[o==u].sum() for u in us])
+    r=np.random.default_rng(5); idx=r.integers(0,len(us),(2000,len(us))); v=sn[idx].sum(1)/sd[idx].sum(1)
+    print(' per-row logs, cluster boot %.3f [%.3f, %.3f]; row gm ctl/ft %.3f ctl/num %.3f'%(sn.sum()/sd.sum(),*np.quantile(v,[.025,.975]),math.exp(ld.mean()),math.exp(ln.mean())))
+    # absolute
+    def absmed(sys,rows=None):
+        e=d['err_'+sys][:,0]; return np.median([np.median(e[(d['ordinal']==u)&np.isfinite(e)]) for u in np.unique(d['ordinal']) if (np.isfinite(e)&(d['ordinal']==u)).any()])
+    c,h,ft=absmed('c2-robust'),absmed(num),np.mean([absmed(s) for s in FT])
+    print(' absolute medians c %.3f num %.3f ft %.3f -> share of abs gap %.3f ; log of medians share %.3f'%(c,h,ft,(c-h)/(c-ft),math.log(c/h)/math.log(c/ft)))
+    for col,cn in((1,'course'),(2,'speed')):
+        print('  ',cn,fmt(share(pooled(d,'c2-robust',[num],col=col),pooled(d,'c2-robust',FT,col=col))), 'median-based',fmt(share(pooled(d,'c2-robust',[num],col=col),pooled(d,'c2-robust',FT,col=col),f=np.median)))
+print('=== 2. tails')
+for key in D:
+    d=D[key]
+    for nm,ctl,sy in(('c2r/ft','c2-robust',FT),('c2r/edit-thr','c2-robust',['c2-edit-thr']),('true/ft','robust-true',FT)):
+        x=arr(pooled(d,ctl,sy)); print(key,nm,len(x),dist(x))
+d=D[('in','all-central')]
+N=pooled(d,'c2-robust',['c2-edit-thr']); Dn=pooled(d,'c2-robust',FT); com=sorted(set(N)&set(Dn)); a=np.array([N[u] for u in com]); b=np.array([Dn[u] for u in com])
+print('concentration G primary: corr(a,b) %.2f'%np.corrcoef(a,b)[0,1])
+o=np.argsort(a)
+for k in (10,25,50):
+    keep=o[k:-k]; print(' drop %d both ends by control log: G=%.3f  (num gm %.3f den gm %.3f)'%(k,a[keep].mean()/b[keep].mean(),math.exp(a[keep].mean()),math.exp(b[keep].mean())))
+print(' control: better %.2f, |log|<0.05 (unchanged) %.2f, 2xgood %.2f 2xbad %.2f'%((a>0).mean(),(abs(a)<.05).mean(),(a>math.log(2)).mean(),(a<-math.log(2)).mean()))
+top=np.sort(a)[::-1]; print(' sum logs %.1f; top 50 pos sum %.1f; bottom 50 sum %.1f'%(a.sum(),top[:50].sum(),top[-50:].sum()))
+# G by whether den is big
+for lab,m in(('ft lead<1.5',b<math.log(1.5)),('1.5-3',(b>=math.log(1.5))&(b<math.log(3))),('>3',b>=math.log(3))):
+    print('  ',lab,m.sum(),'num gm %.3f den gm %.3f'%(math.exp(a[m].mean()),math.exp(b[m].mean())))
+print('=== 3. S')
+def engcov(d):
+    o=d['ordinal']; us=np.unique(o)
+    return {int(u):(np.median(d['bound'][o==u,0]),np.median(d['true_range_m'][o==u])) for u in us}
+for c in('off','all-central'):
+    base=D[('in',c)]; Lb=pooled(base,'c2-robust',FT); cb=engcov(base)
+    xb=arr(Lb); bb=np.array([cb[u][0] for u in Lb]); rb=np.array([cb[u][1] for u in Lb])
+    print(c,'in: n %d bound med %.3f q %s range med km %.1f q %s'%(len(xb),np.median(bb),np.round(np.quantile(bb,[.1,.33,.67,.9]),3),np.median(rb)/1e3,np.round(np.quantile(rb,[.33,.67])/1e3,1)))
+    for vn,vb in(('bound',bb),('range',rb)):
+        ed=np.quantile(vb,[1/3,2/3]); g=np.searchsorted(ed,vb)
+        print('  in by',vn,'thirds:',' '.join('%.3f(%d)'%(math.exp(xb[g==i].mean()),(g==i).sum()) for i in range(3)))
+    for sp in('shift','far'):
+        d=D[(sp,c)]; L=pooled(d,'c2-robust',FT); cv=engcov(d); x=arr(L); bo=np.array([cv[u][0] for u in L]); ra=np.array([cv[u][1] for u in L])
+        r=np.random.default_rng(43); dd=x[r.integers(0,len(x),(4000,len(x)))].mean(1)-xb[r.integers(0,len(xb),(4000,len(xb)))].mean(1)
+        se=math.sqrt(x.var(ddof=1)/len(x)+xb.var(ddof=1)/len(xb)); dm=x.mean()-xb.mean()
+        print(' ',sp,'n %d bound med %.3f range med %.1f | S %.3f boot[%.3f,%.3f] welch[%.3f,%.3f] bonf7[%.3f,%.3f] | median-diff ratio %.3f t10 %.3f'%(len(x),np.median(bo),np.median(ra)/1e3,math.exp(dm),*np.exp(np.quantile(dd,[.025,.975])),math.exp(dm-1.96*se),math.exp(dm+1.96*se),math.exp(dm-2.69*se),math.exp(dm+2.69*se),math.exp(np.median(x)-np.median(xb)),math.exp(tmean(x,.1)-tmean(xb,.1))))
+        # same ordinal correlation?
+        com=sorted(set(L)&set(Lb)); print('    corr of logs across splits on same ordinal: %.2f (n %d)'%(np.corrcoef([L[u] for u in com],[Lb[u] for u in com])[0,1],len(com)))
+        for vn,vb,vs in(('bound',bb,bo),('range',rb,ra)):
+            ed=np.quantile(vs,[1/3,2/3]); g=np.searchsorted(ed,vs)
+            print('    %s own thirds by %s:'%(sp,vn),' '.join('%.3f(%d)'%(math.exp(x[g==i].mean()),(g==i).sum()) for i in range(3)))
+            ed=np.quantile(np.concatenate([vb,vs]),[.2,.4,.6,.8]); gs=np.searchsorted(ed,vs); gb=np.searchsorted(ed,vb)
+            w=[];dif=[]
+            s=''
+            for i in range(5):
+                if (gs==i).sum()>=10 and (gb==i).sum()>=10:
+                    di=x[gs==i].mean()-xb[gb==i].mean(); dif.append(di); w.append(((gs==i).sum()+(gb==i).sum()))
+                    s+=' %.2f(%d/%d)'%(math.exp(di),(gs==i).sum(),(gb==i).sum())
+                else: s+=' -(%d/%d)'%((gs==i).sum(),(gb==i).sum())
+            # bootstrap standardized
+            def std(xs,gs_,xb_,gb_):
+                dif=[];w=[]
+                for i in range(5):
+                    if (gs_==i).sum()>=5 and (gb_==i).sum()>=5: dif.append(xs[gs_==i].mean()-xb_[gb_==i].mean()); w.append((gs_==i).sum()+(gb_==i).sum())
+                return np.average(dif,weights=w)
+            r=np.random.default_rng(7); bs=[]
+            for _ in range(1000):
+                i1=r.integers(0,len(x),len(x)); i2=r.integers(0,len(xb),len(xb)); bs.append(std(x[i1],gs[i1],xb[i2],gb[i2]))
+            print('    matched pooled quintiles of %s: per-bin S%s | standardised S %.3f [%.3f, %.3f]'%(vn,s,math.exp(std(x,gs,xb,gb)),*np.exp(np.quantile(bs,[.025,.975]))))
+print('=== 4. efficiency by thirds of bound (row level), range/course/speed')
+for key in D:
+    d=D[key]
+    for col in range(3):
+        bd=d['bound'][:,col]; ed=np.quantile(bd[np.isfinite(bd)],[1/3,2/3]); g=np.searchsorted(ed,bd)
+        s='%s col%d edges %s:'%(key,col,np.round(ed,3))
+        for sy in ['ft','robust-true','c2-robust']:
+            s+=' %s'%sy
+            for i in range(3):
+                if sy=='ft': e=np.concatenate([d['err_'+f][g==i,col]/bd[g==i] for f in FT])
+                else: e=d['err_'+sy][g==i,col]/bd[g==i]
+                e=e[np.isfinite(e)]; s+=' %.2f'%(np.median(np.abs(e))/.6745)
+        print(s)

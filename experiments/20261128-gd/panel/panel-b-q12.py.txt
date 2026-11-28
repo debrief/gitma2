@@ -1,0 +1,76 @@
+import numpy as np, sys, math
+S=sys.argv[1]
+FT=['ft-s1','ft-s2','ft-s3']
+def load(c):
+    z=np.load(f'{S}/data/{c}/errors.npz'); return z
+def eng(z,num,den,col=0,rows=None,stat=np.median):
+    o=z['ordinal']; a=z['err_'+num][:,col]; b=z['err_'+den][:,col]
+    ok=np.isfinite(a)&np.isfinite(b)
+    if rows is not None: ok&=rows
+    d={}
+    for u in np.unique(o[ok]):
+        m=ok&(o==u); x,y=stat(a[m]),stat(b[m])
+        if x>0 and y>0: d[int(u)]=math.log(x/y)
+    return d
+def pooled(z,num,dens,**kw):
+    ds=[eng(z,num,d,**kw) if isinstance(num,str) else eng(z,num[i],d,**kw) for i,d in enumerate(dens)]
+    com=sorted(set.intersection(*(set(d) for d in ds)))
+    return np.array(com),np.array([np.mean([d[u] for d in ds]) for u in com])
+def desc(lr,seed=37,B=2000):
+    n=lr.size
+    if n<5: return f'n={n}'
+    rng=np.random.default_rng(seed); m=lr[rng.integers(0,n,(B,n))].mean(1)
+    lo,hi=np.exp(np.quantile(m,[.025,.975]))
+    s=np.sort(lr); t=int(0.05*n); tr=s[t:n-t].mean()
+    return f'n={n} gm={math.exp(lr.mean()):.3f} [{lo:.3f},{hi:.3f}] med={math.exp(np.median(lr)):.3f} trim={math.exp(tr):.3f} better={np.mean(lr>0):.2f} x2good={np.mean(lr>math.log(2)):.2f} x2bad={np.mean(lr<-math.log(2)):.2f}'
+for c,name in (('all-central','M1'),('ho-both','M2'),('off','clean')):
+    z=load(c); o=z['ordinal']
+    print('=====',name,c,'rows',o.size,'eng',np.unique(o).size,'minutes',np.unique(z['minute'],return_counts=True))
+    for col,cn in enumerate(('range','course','speed')):
+        ids,lr=pooled(z,'c2-robust',FT,col=col); print(cn,'eng-median',desc(lr))
+    ids,lrm=pooled(z,'c2-robust',FT,stat=np.mean); print('range eng-MEAN abs err',desc(lrm))
+    # row level
+    a=z['err_c2-robust'][:,0]
+    rl=[];
+    for f in FT:
+        b=z['err_'+f][:,0]; rl.append(np.log(a/b))
+    rl=np.mean(rl,0); ok=np.isfinite(rl)
+    print('row-level (iid desc)',desc(rl[ok]))
+    # cluster bootstrap for row-level gm
+    for f in FT:
+        b=z['err_'+f][:,0]; ok2=np.isfinite(a)&np.isfinite(b)
+        print('  pooled row medians',f, f'c2r {np.median(a[ok2]):.4f} ft {np.median(b[ok2]):.4f} ratio {np.median(a[ok2])/np.median(b[ok2]):.3f}; row means ratio {a[ok2].mean()/b[ok2].mean():.3f}; p90 ratio {np.quantile(a[ok2],.9)/np.quantile(b[ok2],.9):.3f}; rms ratio {np.sqrt((a[ok2]**2).mean()/(b[ok2]**2).mean()):.3f}')
+    print(' answered c2r',np.isfinite(a).mean(),'ft',np.isfinite(z['err_ft-s1'][:,0]).mean())
+    # by range third
+    tr=z['true_range_m']; cuts=np.quantile(tr,[1/3,2/3]); band=np.searchsorted(cuts,tr)
+    for b in range(3):
+        ids,lr=pooled(z,'c2-robust',FT,rows=band==b); print(' range third',b,f'<{cuts[b]:.0f}' if b<2 else '',desc(lr))
+    for mnt in np.unique(z['minute']):
+        ids,lr=pooled(z,'c2-robust',FT,rows=z['minute']==mnt); print(' minute',mnt,desc(lr))
+    for s in (0,1):
+        ids,lr=pooled(z,'c2-robust',FT,rows=z['settled']==s); print(' settled',s,desc(lr))
+    # by c2-robust own error
+    ids,lr=pooled(z,'c2-robust',FT)
+    ce={}
+    for u in ids:
+        m=(o==u)&np.isfinite(a); ce[u]=np.median(a[m])
+    cev=np.array([ce[u] for u in ids]); med=np.median(cev)
+    print(' c2r eng-median err quartiles',np.quantile(cev,[.25,.5,.75,.9]).round(4))
+    qs=np.quantile(cev,[.25,.5,.75])
+    q=np.searchsorted(qs,cev)
+    for k in range(4): print('  c2r-err quartile',k,desc(lr[q==k]))
+    print('  c2r best half',desc(lr[cev<=med])); print('  c2r worst half',desc(lr[cev>med]))
+    # regression-to-mean-free split: split by robust-true error? use c2 vs robust-true ratio as "segmentation wrong" indicator
+    rt=z['err_robust-true'][:,0]
+    seg={}
+    for u in ids:
+        m=(o==u)&np.isfinite(a)&np.isfinite(rt)
+        if m.any(): seg[u]=np.median(a[m])/max(np.median(rt[m]),1e-12)
+    sv=np.array([seg.get(u,np.nan) for u in ids])
+    for lab,m in (('c2r<=1.25x robust-true',sv<=1.25),('1.25-3x',(sv>1.25)&(sv<=3)),('>3x',sv>3)):
+        print('  seg-quality',lab,desc(lr[m]))
+    # independent split: by c2r error at OTHER rows? split by ft error half (symmetry check)
+    ids2,lrt=pooled(z,'robust-true',FT); print(' robust-true/ft range',desc(lrt))
+    for col in (1,2):
+        ids2,lrt=pooled(z,'robust-true',FT,col=col); print(' robust-true/ft col',col,desc(lrt))
+    ids2,l2=pooled(z,'c2-robust',['robust-true']); print(' c2r/robust-true',desc(l2))

@@ -1,0 +1,70 @@
+import numpy as np, math, sys
+sys.argv=['x']; src=open('/tmp/claude-0/-home-user-gitma2/ff663f47-91bc-55ce-b843-745389e675e2/scratchpad/panel-b/a.py').read().split("print('=== 1.")[0]; exec(src)
+print('=== 6. alt classification')
+def firstmask(d):
+    o=d['ordinal']; k=d['k']; first=np.zeros(len(o),bool)
+    for u in np.unique(o):
+        i=np.where(o==u)[0]; first[i[np.argmin(k[i])]]=True
+    return first
+for key in D:
+    d=D[key]; o=d['ordinal']; first=firstmask(d)
+    c=d['err_c2-robust']; t=d['err_robust-true']
+    lr=np.log(c[first]/t[first]); us=o[first]
+    for lab,sel in(('range within 1.5x (sym)',np.abs(lr[:,0])<math.log(1.5)),('c2r<=1.5x true (range)',lr[:,0]<math.log(1.5)),('all 3 cols within 1.05x (same solve)',(np.abs(lr)<math.log(1.05)).all(1)),('NOT within 1.5x',~(np.abs(lr[:,0])<math.log(1.5)))):
+        sel=sel&np.isfinite(lr).all(1) if 'NOT' not in lab else sel
+        eng=set(us[sel].tolist()); rows=np.isin(o,list(eng))&~first
+        s='%s %s n=%d:'%(key,lab,len(eng))
+        for nm,ctl,sy in(('c2r/ft','c2-robust',FT),('true/ft','robust-true',FT),('c2r/true','c2-robust',['robust-true'])):
+            for col in range(3):
+                x=arr(pooled(d,ctl,sy,col=col,rows=rows))
+                if col==0:
+                    lo,hi=boot(x); s+=' %s %.2f[%.2f,%.2f] med %.2f'%(nm,math.exp(x.mean()),math.exp(lo),math.exp(hi),math.exp(np.median(x)))
+                else: s+='/%.2f'%math.exp(x.mean())
+        print(s)
+    # stricter: also same at later rows -> lead where c2r ~ true on the later rows themselves (same rows, selection bias noted)
+print('=== 7 clean cost')
+for sp in('in','shift','far'):
+    d=D[(sp,'off')]
+    for h in('c2-edit-thr','c2-thr','c2-edit'):
+        x=arr(pooled(d,'c2-robust',[h])); 
+        print(sp,h,dist(x),'unchanged(|log|<.02) %.2f worse>10%% %.2f better>10%% %.2f'%((abs(x)<.02).mean(),(x<-math.log(1.1)).mean(),(x>math.log(1.1)).mean()), 'sum neg tail(2xbad) share of total log %.2f'%(x[x<-math.log(2)].sum()/x.sum()))
+        o=np.sort(x); print('    drop 2xbad and 2xgood: gm %.3f ; answered ctl %.3f h %.3f'%(math.exp(x[(abs(x)<math.log(2))].mean()),np.isfinite(d['err_c2-robust'][:,0]).mean(),np.isfinite(d['err_'+h][:,0]).mean()))
+    # unanswered as failures
+    x=arr(pooled(d,'c2-robust',['c2-edit-thr'],cap=10.0)); lo,hi=boot(x); print('  cap10: %.3f [%.3f,%.3f]'%(math.exp(x.mean()),math.exp(lo),math.exp(hi)))
+print('=== 5. seed noise & multiplicity of S, cost; ft seeds separately')
+for c in('off','all-central'):
+    xb=arr(pooled(D[('in',c)],'c2-robust',FT))
+    for sp in('shift','far'):
+        x=arr(pooled(D[(sp,c)],'c2-robust',FT)); his=[]
+        for s in range(30):
+            r=np.random.default_rng(s); dd=x[r.integers(0,len(x),(2000,len(x)))].mean(1)-xb[r.integers(0,len(xb),(2000,len(xb)))].mean(1); his.append(math.exp(np.quantile(dd,.975)))
+        se=math.sqrt(x.var(ddof=1)/len(x)+xb.var(ddof=1)/len(xb)); z=(x.mean()-xb.mean())/se
+        per=[math.exp(arr(pooled(D[(sp,c)],'c2-robust',[f])).mean()-arr(pooled(D[('in',c)],'c2-robust',[f])).mean()) for f in FT]
+        # unchanged regressors too
+        un=math.exp(arr(pooled(D[(sp,c)],'c2-robust',['reg-s1','reg-s2','reg-s3'])).mean()-arr(pooled(D[('in',c)],'c2-robust',['reg-s1','reg-s2','reg-s3'])).mean())
+        tr=math.exp(arr(pooled(D[(sp,c)],'c2-robust',['robust-true'])).mean()-arr(pooled(D[('in',c)],'c2-robust',['robust-true'])).mean())
+        tf=math.exp(arr(pooled(D[(sp,c)],'robust-true',FT)).mean()-arr(pooled(D[('in',c)],'robust-true',FT)).mean())
+        print(sp,c,'upper limit over 30 boot seeds %.3f..%.3f; z=%.2f; per ft seed %s; unchanged-regressor S %.3f; S for robust-true (c2r/true) %.3f; S of true/ft %.3f'%(min(his),max(his),z,np.round(per,3),un,tr,tf))
+# bound comparisons in/shift with nan handling
+for c in('off','all-central'):
+    for sp in('in','shift','far'):
+        d=D[(sp,c)]; b=d['bound'][:,0]; print(sp,c,'bound finite %.3f q33/50/67 %s; range km q %s; c2r abs med %.3f ft %.3f true %.3f'%(np.isfinite(b).mean(),np.round(np.nanquantile(np.where(np.isfinite(b),b,np.nan),[.33,.5,.67]),3),np.round(np.quantile(d['true_range_m'],[.33,.5,.67])/1e3,1),np.nanmedian(np.where(np.isfinite(d['err_c2-robust'][:,0]),d['err_c2-robust'][:,0],np.nan)),np.median(d['err_ft-s1'][:,0]),np.nanmedian(np.where(np.isfinite(d['err_robust-true'][:,0]),d['err_robust-true'][:,0],np.nan))))
+# shift S standardized by bound with nan handling
+def engb(d):
+    o=d['ordinal']; return {int(u):np.nanmedian(np.where(np.isfinite(d['bound'][o==u,0]),d['bound'][o==u,0],np.nan)) for u in np.unique(o)}
+import warnings; warnings.simplefilter('ignore')
+for c in('off','all-central'):
+    Lb=pooled(D[('in',c)],'c2-robust',FT); cb=engb(D[('in',c)]); L=pooled(D[('shift',c)],'c2-robust',FT); cs=engb(D[('shift',c)])
+    xb=arr(Lb); vb=np.array([cb[u] for u in Lb]); x=arr(L); vs=np.array([cs[u] for u in L]); ok=np.isfinite(vs); print('shift',c,'eng with nan bound',(~ok).sum(),'lead there %.2f'%math.exp(x[~ok].mean()) if (~ok).any() else '')
+    x,vs=x[ok],vs[ok]
+    ed=np.quantile(np.concatenate([vb,vs]),[.2,.4,.6,.8]); gs=np.searchsorted(ed,vs); gb=np.searchsorted(ed,vb)
+    def std(xs,g1,x2,g2):
+        dif=[];w=[]
+        for i in range(5):
+            if (g1==i).sum()>=5 and (g2==i).sum()>=5: dif.append(xs[g1==i].mean()-x2[g2==i].mean()); w.append((g1==i).sum()+(g2==i).sum())
+        return np.average(dif,weights=w)
+    r=np.random.default_rng(7); bs=[]
+    for _ in range(1000):
+        i1=r.integers(0,len(x),len(x)); i2=r.integers(0,len(xb),len(xb)); bs.append(std(x[i1],gs[i1],xb[i2],gb[i2]))
+    print('  per-bin',' '.join('%.2f(%d/%d)'%(math.exp(x[gs==i].mean()-xb[gb==i].mean()),(gs==i).sum(),(gb==i).sum()) for i in range(5)),'standardised %.3f [%.3f, %.3f]'%(math.exp(std(x,gs,xb,gb)),*np.exp(np.quantile(bs,[.025,.975]))))
+    ed=np.quantile(vs,[1/3,2/3]); g=np.searchsorted(ed,vs); print('  shift own bound thirds',' '.join('%.3f'%math.exp(x[g==i].mean()) for i in range(3)))

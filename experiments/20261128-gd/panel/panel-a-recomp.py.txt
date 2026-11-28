@@ -1,0 +1,49 @@
+import numpy as np, math, json, sys
+B='/tmp/claude-0/-home-user-gitma2/ff663f47-91bc-55ce-b843-745389e675e2/scratchpad/test/'
+FT=['ft-s1','ft-s2','ft-s3']
+def load(s,c):
+    z=np.load(B+f'{s}/{c}/errors.npz'); return z
+def eng_logs(z,ctl,sysn,col=0,rows=None):
+    o=z['ordinal']; a=z['err_'+ctl][:,col]; b=z['err_'+sysn][:,col]
+    ok=np.isfinite(a)&np.isfinite(b)
+    if rows is not None: ok&=rows
+    d={}
+    for u in np.unique(o[ok]):
+        m=ok&(o==u); x=np.median(a[m]); y=np.median(b[m])
+        if x>0 and y>0: d[int(u)]=math.log(x/y)
+    return d
+def pooled(z,ctl,systems,col=0,rows=None):
+    per=[eng_logs(z,ctl,s,col,rows) for s in systems]
+    com=sorted(set.intersection(*[set(p) for p in per]))
+    return {u:np.mean([p[u] for p in per]) for u in com}
+def boot_ratio(d,seed=1,R=4000):
+    x=np.array(list(d.values())); r=np.random.default_rng(seed)
+    m=x[r.integers(0,x.size,(R,x.size))].mean(1)
+    return math.exp(x.mean()),math.exp(np.quantile(m,.025)),math.exp(np.quantile(m,.975)),x.size
+def boot_share(n,d,seed=2,R=4000):
+    com=sorted(set(n)&set(d)); a=np.array([n[u] for u in com]); b=np.array([d[u] for u in com])
+    r=np.random.default_rng(seed); p=r.integers(0,a.size,(R,a.size))
+    s=a[p].mean(1)/b[p].mean(1)
+    return a.mean()/b.mean(),np.quantile(s,.025),np.quantile(s,.975),a.size
+if __name__=='__main__':
+    for s,c in [('in','off'),('in','all-central'),('in','ho-both'),('shift','off'),('shift','all-central'),('far','off'),('far','all-central')]:
+        z=load(s,c)
+        den=pooled(z,'c2-robust',FT)
+        print(s,c,'rows',z['ordinal'].size,'eng',np.unique(z['ordinal']).size)
+        print('  ft',[round(v,3) for v in boot_ratio(den)])
+        for h in ['c2-edit-thr','c2-edit','c2-thr']:
+            n=eng_logs(z,'c2-robust',h)
+            print('  G',h,[round(v,3) for v in boot_share(n,den)], 'ratio',[round(v,3) for v in boot_ratio(n)])
+        for h in ['own-hyb','own']:
+            n=eng_logs(z,'c2-robust',h)
+            print('  P',h,[round(v,3) for v in boot_share(n,den)], 'ratio',[round(v,3) for v in boot_ratio(n)])
+        t=pooled(z,'robust-true',FT)
+        print('  T',[[round(v,3) for v in boot_ratio(pooled(z,'robust-true',FT,col))] for col in range(3)])
+    r=np.random.default_rng(5)
+    for c in ['off','all-central']:
+        x=np.array(list(pooled(load('in',c),'c2-robust',FT).values()))
+        for s in ['shift','far']:
+            y=np.array(list(pooled(load(s,c),'c2-robust',FT).values()))
+            dx=x[r.integers(0,x.size,(4000,x.size))].mean(1); dy=y[r.integers(0,y.size,(4000,y.size))].mean(1)
+            q=np.quantile(dy-dx,[.025,.975])
+            print('S',s,c,round(math.exp(y.mean()-x.mean()),3),[round(math.exp(v),3) for v in q])

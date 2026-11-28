@@ -58,8 +58,8 @@ denominator's interval, and not at all where the denominator's interval contains
   scored rows is recorded.
 - **Far ranges**: `configs/man2-heldout.json` (initial range 20–30 km), the `heldout` split of
   the same generation. Spec 012's panel: it moves one scalar. It is named "far initial ranges",
-  not "unseen geometry"; the fine-tuned models met those ranges in a fifth of their stream
-  (the held-course ranges file), which is stated.
+  not "unseen geometry". (Corrected after the test: this note first said the fine-tuned models
+  met those ranges in training; they did not. The held-course ranges are 2 to 20 km.)
 - Each clean and under `all-central`. The kinds outside the mix (`ho-both`) on the
   in-distribution split only.
 - `headroom.yml` takes `ranges` and `heldout` from the plan when given.

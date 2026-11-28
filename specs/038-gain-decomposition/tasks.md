@@ -21,25 +21,25 @@ Order matters where a task names an earlier one. `[P]` can run beside its neighb
 
 ## Phase 2: development on spent seeds
 
-- [ ] T010 Run A (seed 321, in distribution, 300 engagements, clean and primary): threshold
+- [x] T010 Run A (seed 321, in distribution, 300 engagements, clean and primary): threshold
   grid, edit variants, own-prior weight grid. Record `experiments/<date>-gd-dev-a/`.
-- [ ] T011 Choose by the rules of research R1 to R3; write `chosen` into the protocol; extend a
+- [x] T011 Choose by the rules of research R1 to R3; write `chosen` into the protocol; extend a
   grid whose best value is at its edge.
-- [ ] T012 Run B (seed 370, three splits): the chosen settings and their neighbours; every
+- [x] T012 Run B (seed 370, three splits): the chosen settings and their neighbours; every
   reading end to end; the stop rule (FR-042) read here. Record `experiments/<date>-gd-dev-b/`.
-- [ ] T013 `scripts/research/gd_tables.py` (tables from `decomp.json`; split differences from
+- [x] T013 `scripts/research/gd_tables.py` (tables from `decomp.json`; split differences from
   `decomp-logs.npz`), tested on run B.
-- [ ] T014 Thresholds checked over bootstrap seeds on run B (R7).
+- [x] T014 Thresholds checked over bootstrap seeds on run B (R7).
 
 ## Phase 3: registration and test
 
-- [ ] T020 Decision record `experiments/<date>-gd-decision/`: protocol digest, code digest,
+- [x] T020 Decision record `experiments/<date>-gd-decision/`: protocol digest, code digest,
   estimands, thresholds, forecasts with their basis, what is reported beside.
-- [ ] T021 Test: seed 372, three plans, scored once. Record `experiments/<date>-gd/`.
-- [ ] T022 Three reviewers (fidelity, statistics, critical); `review.md`; corrections.
+- [x] T021 Test: seed 372, three plans, scored once. Record `experiments/<date>-gd/`.
+- [x] T022 Three reviewers (fidelity, statistics, critical); `review.md`; corrections.
 
 ## Phase 4: reporting
 
-- [ ] T030 `scripts/research/gd_charts.py`; figures under `site/static/img/<date>-gain-decomposition/`.
-- [ ] T031 Write-up and slides post; deck.
-- [ ] T032 AGENTS.md; what was promised and not run; PR.
+- [x] T030 `scripts/research/gd_charts.py`; figures under `site/static/img/<date>-gain-decomposition/`.
+- [x] T031 Write-up and slides post; deck.
+- [x] T032 AGENTS.md; what was promised and not run; PR.

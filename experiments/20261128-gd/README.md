@@ -43,7 +43,8 @@ C″-robust ÷ system, range (course; speed):
   [0.874, 1.033], course 0.724, speed 0.665. Primary: range 1.117 [1.030, 1.211], course 0.786,
   speed 0.848. Shifted, clean: 0.847 [0.780, 0.925]; far, clean: 0.793 [0.731, 0.858]. The
   regressor is ahead of that solve in range under mismatch only, and behind it in course and
-  speed everywhere, as forecast.
+  speed in distribution and on every clean split (not separated in course on the shifted
+  and far splits under mismatch, nor in speed on the shifted split).
 - **Absolute median range errors**, in distribution: clean C″-robust 0.104, hardened 0.133, told
   true times 0.065, fine-tuned 0.068, own alone 0.332 (IMM 0.418); primary 0.263, 0.180, 0.122,
   0.106, 0.335.
@@ -57,39 +58,55 @@ C″-robust ÷ system, range (course; speed):
 |---|---|---|
 | under 5 min since the last target change | 1.66, 1.27, 0.76 | 2.27, 1.43, 1.12 |
 | 5 to 15 min | 1.96, 1.39, 1.25 | 2.70, 2.07, 1.60 |
-| over 15 min | 1.31, 0.81, 0.90 | 2.15, 1.55, 1.31 |
-| first bearing an outlier (14 engagements) | — | 2.80, 2.04, 1.37 |
+| over 15 min, or no target change yet | 1.31, 0.81, 0.90 | 2.15, 1.55, 1.31 |
+| first bearing an outlier (14 engagements; not separated) | — | 2.80 [1.93, 4.14], 2.04, 1.37 |
 | first bearing not an outlier (486) | — | 2.26, 1.74, 1.36 |
 | C″'s structure right at the first scored row (later rows) | 1.48, 1.02, 0.87 (215) | 2.25, 1.39, 1.24 (59) |
 | structure wrong at the first scored row | 1.65, 1.14, 1.03 (285) | 2.28, 1.65, 1.29 (441) |
 
 Efficiency by thirds of the bound, and every split, are in `tables.md`.
 
-## What the record supports
+## What the record supports (as narrowed by the panel, `review.md`)
 
-- Classical hardening of this kind closes a little under half of the gap to the regressor under
-  bearing errors, and its threshold part costs about a fifth in accuracy on clean data. No
-  setting of it is a free replacement for C″.
-- The unconditional prior (what the ownship track alone says) is not where the regressor's gain
-  comes from: inside C″'s solve it obtains 1 to 3% of the gain in distribution, and alone it is
-  at the IMM's level.
-- A robust solve told the true manoeuvre times is level with the regressor in range on clean
-  data, behind it by about 12% under mismatch, and ahead of it in course and speed everywhere.
-  On busier targets and far ranges with clean bearings it is ahead in range too.
-- The lead shrinks where the simulator's statistics are moved: by 17 to 25% on far initial
-  ranges, by 14% on busier targets under mismatch, not separated on busier targets with clean
-  bearings. It does not vanish: 1.29 to 1.95.
+Three reviewers approved with findings; every registered number reproduced and no label flips.
+The first version of this section said more than the data do; this is the corrected one.
 
-## What it does not support, and surprises
+- **Hardening.** Under the primary condition the combined control closes 0.44 [0.35, 0.53] of the
+  mean log gap to the regressor in distribution, 0.33 outside the mix and 0.26 on busier targets.
+  That is a tail: the typical engagement closes about a quarter, and the control's median ratio
+  to C″-robust is 1.22 (twice as good in 28%, twice as bad in 11%). On clean data its geometric
+  mean cost is 0.82, with no change for the median engagement, twice as bad in about one in
+  five and twice as good in one in ten. Pooled over clean and primary it closes about 12%, and
+  by the registered choice rule editing alone (0.21 under primary, no clean cost) is the
+  preferred control. This describes one threshold multiplier and one running-median edit, not
+  classical segmentation.
+- **The prior.** The marginal prior given the ownship track is worth nothing inside C″'s solve
+  (0 to 3% in distribution, nil for the typical engagement; 6 to 14% on the other splits). The
+  control was too weak to move the solve, as spec 037's static prior was, so "prior or bearings"
+  is not answered by it. What bears on it: against the solve told the true manoeuvre times the
+  regressor wins in range where the bound is loose (1.15 clean, 1.34 primary) and loses where it
+  is tight (0.77, 0.93; course 0.51, 0.71), and its range efficiency in the loose third is under
+  1 under mismatch (0.61). That is what prior knowledge used with the bearings would look like;
+  it was not tested.
+- **The solve told the true manoeuvre times.** Sufficient to match the regressor in range in
+  distribution (0.95 clean; the regressor 12% ahead under mismatch) and to beat it in course and
+  speed there and on every clean split. Under mismatch on the shifted and far splits course is
+  not separated, nor speed on the shifted split. This shows sufficiency, not that the regressor
+  gains by segmenting; the source of its gain is not established.
+- **The splits.** The registered S readings are mostly C″-robust moving. Against the solve told
+  the true times the regressor holds its ground under mismatch (1.00 shifted, 0.94 far) and
+  loses on clean data (0.84 far; 0.89 [0.79, 1.01] shifted). Its absolute range error rises 23
+  to 43% on busier targets. No training stream drew initial ranges of 20 to 30 km (the first
+  version of this record and the decision record said otherwise); 46% of in-distribution scored
+  rows are beyond 20 km all the same. Shifted/primary "shrinks" holds at the nominal level only.
 
-- The strict structure slice did not reproduce spec 037's panel finding: where C″'s declared
-  transitions match the truth at the first scored row, the regressor is still 1.48 (clean) and
-  2.25 (primary) ahead on the later rows. Either the first-row classification says little about
-  the later rows, or having the right transitions is not having the right solve; not established.
-- "Between" does not rule out a better classical segmenter: the family was two tools and one
-  grid, chosen on two seeds.
-- P says nothing about prior knowledge used together with the bearings.
-- The far split moves initial range only; the fine-tuned models met those ranges in training.
+## What it does not support
+
+- "Not the prior", "it is segmentation", "classical methods cannot".
+- The structure slice neither reproduces nor refutes spec 037's panel finding: where C″'s
+  transitions are right at the first scored row, C″-robust is still 1.50 [1.30, 1.72] × the solve
+  told the true times on the later rows, so the slice does not pick engagements where C″ has the
+  right solve. Right against wrong is not separated.
 - One simulator, bearing sd 1°, scored 5 to 20 min after the ownship's zig.
 
 ## Not run (promised in the spec)
@@ -97,4 +114,12 @@ Efficiency by thirds of the bound, and every split, are in `tables.md`.
 - The hybrid with the fine-tuned prior for training seeds 2 and 3 (seed 1 only, registered so).
 - An effective bearing sd as part of the test's hardened control (tried on run A; added nothing).
 - Readings of C″-robust ÷ hybrid by slice (the slices are given for the fine-tuned regressor).
-- Track plots are in the slides post, from regenerated data, not from the scoring jobs.
+- A prior control tight enough to move the solve (user story 2); the ownship-only model by range
+  third; the statement of how every system degrades on the shifted and far splits is in
+  `review.md`, not in the tables.
+- The fine-tuned-prior hybrid is in `tables.md` only (C″-robust ÷ hybrid 1.57 clean, 2.19
+  primary: level with the regressor).
+- The slices above are in distribution only; a check of the segmentation cache against
+  recomputation on a real shard; thresholds 6 and 8 with the edit; track plots.
+- Weight digests are in the plans and checked in the scoring job, not in the scored record. The
+  runs used three CPU families.
