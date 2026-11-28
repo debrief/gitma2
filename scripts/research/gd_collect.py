@@ -30,12 +30,13 @@ def main() -> None:
     ap.add_argument("record")
     ap.add_argument("--errors-dir")
     ap.add_argument("--protocol", default="configs/gd/protocol.json")
+    ap.add_argument("--name", default="gd", help="the plans' prefix: <name>-<stage>-<split>")
     a = ap.parse_args()
     proto = json.loads((ROOT / a.protocol).read_text())
     missing = []
     for split, conds in proto["stages"][a.stage]["splits"].items():
         for cond in conds:
-            name = f"gd-{a.stage}-{split}"
+            name = f"{a.name}-{a.stage}-{split}"
             pat = f"refs/heads/results/headroom-{name}-{cond}-plan-*"
             refs = [ln.split()[1] for ln in git("ls-remote", "origin", pat).stdout.splitlines()]
             if not refs:
