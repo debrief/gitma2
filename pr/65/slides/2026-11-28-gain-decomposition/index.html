@@ -1,0 +1,117 @@
+<!doctype html>
+<!-- Spec 038 slides deck (site/docs/process/reporting.md). Figures: site/static/img/2026-11-28-gain-decomposition/. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Where the regressor's gain comes from</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.7em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">Where the regressor's gain comes from</h1>
+          <p>Classical hardening closes part of the gap; the rest is still unexplained</p>
+          <p class="small">2026-11-28 · spec 038 · gitma2 · a registered study, not a gate · nothing trained</p>
+        </section>
+
+        <section>
+          <h2>Overview: the question</h2>
+          <ul>
+            <li>Spec 037: a learned regressor is twice as good in range as C″ under bearing errors.</li>
+            <li>Its panel: the comparison cannot say why.</li>
+            <li>Two explanations were left: the classical segmenter was never hardened; the regressor knows the simulator's statistics.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Overview: three probes, nothing trained</h2>
+          <ul>
+            <li><b>Harden C</b>: edit wild bearings out of what it sees; raise its confirmation threshold.</li>
+            <li><b>The prior alone</b>: a regressor that reads the ownship's track only, alone and inside C″'s solve.</li>
+            <li><b>Move the statistics</b>: busier targets; far initial ranges.</li>
+          </ul>
+          <p class="small">Settings chosen on spent seeds 321 and 370; readings registered; seed 372 scored once.</p>
+        </section>
+
+        <section>
+          <h2>The systems on the test seed</h2>
+          <img src="../../img/2026-11-28-gain-decomposition/systems.svg" alt="C″-robust against each system in range" />
+          <p class="small">500 engagements, in distribution. A solve told the true manoeuvre times sits beside the regressor.</p>
+        </section>
+
+        <section>
+          <h2>How much hardening closes</h2>
+          <img src="../../img/2026-11-28-gain-decomposition/gap-closed.svg" alt="Share of the gap closed by each control" />
+          <p class="small">Registered reading G: 0.44 [0.35, 0.53], "between". The panel: a tail; about a quarter for the typical engagement.</p>
+        </section>
+
+        <section>
+          <h2>The cost</h2>
+          <ul>
+            <li>Raising the threshold costs on clean data: 0.82 in geometric mean.</li>
+            <li>Median engagement unchanged; twice as bad in one in five.</li>
+            <li>Editing wild bearings alone costs nothing and closes about a fifth under mismatch.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>The prior alone explains nothing, and tests little</h2>
+          <ul>
+            <li>Ownship-only regressor alone: 0.33 median range error.</li>
+            <li>Inside C″'s solve: 1 to 3% of the regressor's gain.</li>
+            <li>The panel: too weak to move the solve, so "prior or bearings" is not answered.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Where the regressor beats a solve told the truth</h2>
+          <table>
+            <tr><th>told true times ÷ regressor, range</th><th>tight bound</th><th>loose bound</th></tr>
+            <tr><td>clean</td><td>0.77</td><td>1.15</td></tr>
+            <tr><td>primary mismatch</td><td>0.93</td><td>1.34</td></tr>
+          </table>
+          <p class="small">Above 1 the regressor is better. It wins where the bearings determine little: what prior knowledge would look like. Not tested.</p>
+        </section>
+
+        <section>
+          <h2>Where the statistics are moved</h2>
+          <img src="../../img/2026-11-28-gain-decomposition/lead-by-split.svg" alt="The regressor's lead by split" />
+          <p class="small">The lead is smaller on far ranges and on busier targets under mismatch. The panel: mostly C″-robust moving.</p>
+        </section>
+
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>A prior control tight enough to move the classical solve.</li>
+            <li>A classical segmenter that closes the gap at no clean-data cost.</li>
+            <li>A test of whether the lead goes where C″'s segmentation holds.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Next (the owner's choice)</h2>
+          <ul>
+            <li>Recommended: a causal classical estimator given the generator's own priors, on CPU.</li>
+            <li>Then a better real-time segmenter, against the solve told the true times.</li>
+            <li>No GPU spending; nothing carried.</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

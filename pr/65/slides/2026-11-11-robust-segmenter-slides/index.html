@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The robust segmenter study (spec 011)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal .two { display: flex; gap: 1.5em; align-items: center; text-align: left; }
+      .reveal .two > * { flex: 1; }
+      .reveal ul { font-size: 0.9em; }
+      .reveal table { font-size: 0.7em; margin: 0 auto; }
+      .reveal .big { font-size: 1.5em; font-weight: 600; margin: 0.4em 0; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.8em">The robust segmenter: what broke C, and why the fix was a threshold</h1>
+          <p>Spec 011, stopped on the tuning seed; nothing trained, no gate</p>
+          <p class="small">11 November 2026 · spec 011 · gitma2</p>
+        </section>
+
+        <section>
+          <h2>Why this study</h2>
+          <ul>
+            <li>Gate H: under bearing-error mismatch the cost is in the <em>segmentation</em>.</li>
+            <li>The standing classical system went from 0.102 to 0.280 in median range error.</li>
+            <li>Plan: find what breaks the segmenter C, make its tests robust, measure the share of the gap closed.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What breaks C</h2>
+          <img src="../../img/2026-11-11-robust-segmenter-slides/diagnosis.svg" alt="False transitions and misses of the frozen segmenter under each mismatch kind" />
+          <p class="small">Outliers and correlated error make C declare transitions that are not there. Misses do not rise. Bias and an untold σ do nothing.</p>
+        </section>
+
+        <section>
+          <h2>How confirmation is fooled</h2>
+          <div class="two">
+            <ul>
+              <li>C accepts a transition when the fit improves by more than a χ² threshold (13.8).</li>
+              <li>One bearing 10 σ out adds about 100 to the sum of squares.</li>
+              <li>Any extra knot that absorbs part of it "buys" a transition.</li>
+              <li>The robust test: Huber-weighted fits, Huber cost, same threshold rule.</li>
+            </ul>
+            <svg viewBox="0 0 320 200" role="img" aria-label="A bearing series with one wild point pulling a two-leg fit away from a one-leg fit">
+              <line x1="20" y1="170" x2="300" y2="170" stroke="#888" />
+              <line x1="20" y1="20" x2="20" y2="170" stroke="#888" />
+              <g fill="#6b7280"><circle cx="40" cy="140" r="3"/><circle cx="65" cy="133" r="3"/><circle cx="90" cy="127" r="3"/><circle cx="115" cy="118" r="3"/><circle cx="140" cy="113" r="3"/><circle cx="190" cy="99" r="3"/><circle cx="215" cy="93" r="3"/><circle cx="240" cy="84" r="3"/><circle cx="265" cy="79" r="3"/><circle cx="290" cy="71" r="3"/></g>
+              <circle cx="165" cy="40" r="4" fill="#e8a23a"/>
+              <line x1="30" y1="143" x2="295" y2="70" stroke="#2a9d8f" stroke-width="2"/>
+              <polyline points="30,146 150,92 165,84 295,74" fill="none" stroke="#e8a23a" stroke-width="2" stroke-dasharray="5 3"/>
+              <text x="170" y="34" font-size="11" fill="#e8a23a">one wild bearing</text>
+              <text x="200" y="120" font-size="11" fill="#2a9d8f">one leg (true)</text>
+              <text x="40" y="80" font-size="11" fill="#e8a23a">extra knot: lower cost</text>
+            </svg>
+          </div>
+        </section>
+
+        <section>
+          <h2>The most a better segmenter could yield</h2>
+          <img src="../../img/2026-11-11-robust-segmenter-slides/yield.svg" alt="Median range error of the reference, the clean-data segmentation and the baseline" />
+          <p class="small">C″'s clean-data segmentation would close 0.63 [0.46, 0.81] of the gap, and still sit 43% above the reference. Clean, C″ is already twice the reference.</p>
+        </section>
+
+        <section>
+          <h2>What the robust test did</h2>
+          <img src="../../img/2026-11-11-robust-segmenter-slides/choice.svg" alt="Share of the gap closed and false transitions against misses for each confirmation test" />
+          <p class="small">Huber removes 28% of false transitions; so does doubling the threshold. No pair of variants is separated.</p>
+        </section>
+
+        <section>
+          <h2>By the rule declared beforehand</h2>
+          <table>
+            <thead><tr><th>Confirmation test</th><th>Range error</th><th>Share closed</th><th>False</th><th>Misses</th></tr></thead>
+            <tbody>
+              <tr><td>C″ as frozen</td><td>0.254</td><td>0</td><td>1,137</td><td>361</td></tr>
+              <tr><td>Huber 2.0</td><td>0.236</td><td>0.13 [−0.11, +0.38]</td><td>815</td><td>380</td></tr>
+              <tr><td>Threshold × 2</td><td>0.223</td><td>0.22 [−0.02, +0.41]</td><td>807</td><td>383</td></tr>
+              <tr><td>Threshold × 3</td><td>0.213</td><td>0.29 [+0.05, +0.50]</td><td>600</td><td>442</td></tr>
+              <tr><td>Huber 2.0, × 2</td><td>0.217</td><td>0.27 [+0.01, +0.52]</td><td>464</td><td>439</td></tr>
+            </tbody>
+          </table>
+          <p class="big">The robust test is not carried.</p>
+          <p class="small">A robust variant had to beat the best plain threshold with an interval excluding zero. None did.</p>
+        </section>
+
+        <section>
+          <h2>What was not achieved</h2>
+          <ul>
+            <li>No robust design that beats a threshold change.</li>
+            <li>No gate: every figure is from tuning seed 323, 150 engagements.</li>
+            <li>Most of the gap stands. Misses, about 30% of true changes even on clean data, were not addressed.</li>
+            <li>The design followed what <em>changed</em> under mismatch, not what the gap is made of.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>What comes next</h2>
+          <ul>
+            <li>C stays frozen; C″ stays the standing classical system.</li>
+            <li>Spec 012, the scaled end-to-end regressor, is also reported beside C with a raised threshold.</li>
+            <li>Open: changes that leave too little trace to confirm. A limit of information before a limit of method.</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/11/robust-segmenter · records: experiments/20261110-gr-diagnosis, 20261110-gr-pilot, 20261111-gr-choice</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>

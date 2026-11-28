@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A carried prior across gaps</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css" />
+    <style>
+      .reveal { font-size: 28px; }
+      .reveal h2 { font-size: 1.4em; text-transform: none; }
+      .reveal img { max-height: 56vh; }
+      .reveal .small { font-size: 0.6em; color: #555; margin: 0.3em 0; }
+      .reveal ul { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1 style="font-size: 1.6em">A carried prior across gaps</h1>
+          <p class="small">2026-11-20 · spec 030 · gitma2 · nothing trained</p>
+        </section>
+        <section>
+          <h2>The question</h2>
+          <ul>
+            <li>Spec 027: a carried <em>start</em> did not substitute for joining periods through their gaps</li>
+            <li>Spec 030 carries <em>information</em>: the previous period's declared state and its Laplace covariance, run through the gap with Annex B's manoeuvre noise, as a Gaussian prior on the next period's starting state</li>
+            <li>Uninflated, it was overconfident (truth inside its 95% region in about half of periods) and harmed some periods on one development seed</li>
+            <li>Chosen on spent seeds by a rule written first: k4, the covariance 4× in sd</li>
+          </ul>
+        </section>
+        <section>
+          <h2>By the rule, a carried prior helps; joining still stands</h2>
+          <img src="../../img/2026-11-20-carried-prior-slides/verdict.svg" alt="alone ÷ k4 and k4 ÷ joint by split" />
+          <p class="small">Annex B (decides): alone ÷ k4 1.59 [1.21, 2.13]; no harm on any split (the rule could see only a loss over about a third). k4 ÷ joint 1.40 [0.98, 2.01], on the line. Other splits reported, not decided; wild bearings is a tail.</p>
+        </section>
+        <section>
+          <h2>Where it helps: periods without their own ownship turn</h2>
+          <img src="../../img/2026-11-20-carried-prior-slides/kinds.svg" alt="alone ÷ carried prior by own turn, uninflated and k4" />
+          <p class="small">On rows the period determines alone: 1.04 [0.77, 1.48], level. The uninflated prior does as well as k4 (0.99 [0.78, 1.25]): the inflation is not shown to matter.</p>
+        </section>
+        <section>
+          <h2>Coverage: from too narrow to too wide</h2>
+          <img src="../../img/2026-11-20-carried-prior-slides/coverage.svg" alt="CDF of truth's squared distance from the carried prior" />
+          <p class="small">Annex B test: uninflated median d² 7.6, k4 0.51, calibrated 3.36. k4 covers because it is about 2.6× too wide; after inflation it is mostly a position band.</p>
+        </section>
+        <section>
+          <h2>Not achieved</h2>
+          <ul>
+            <li>A calibrated carried uncertainty: the process noise is mis-shaped and one history's covariance is too narrow in the tail</li>
+            <li>Evidence that the inflation matters, or a comparison with the carried start registered (unregistered: 1.60 [1.05, 2.74])</li>
+            <li>A real hand-over: another estimator's track, uncertain association, longer gaps</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Next (owner's choice)</h2>
+          <ul>
+            <li>A consistency flag on the carried prior's d², tested on the twice-as-bad periods</li>
+            <li>A calibrated carried prior on spent seeds: scale near 1.5, shaped noise, mixture, candidate histories</li>
+            <li>A stress split with longer gaps and more periods</li>
+          </ul>
+          <p class="small">Write-up: /blog/2026/11/20/carried-prior · Record: experiments/20261120-tl10 · Figures: scripts/research/tl10_charts.py</p>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({ hash: true, slideNumber: "c/t", embedded: window.self !== window.top });
+    </script>
+  </body>
+</html>
