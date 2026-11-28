@@ -1,0 +1,27 @@
+import json,gzip,glob,numpy as np
+B='/tmp/claude-0/-home-user-gitma2/ff663f47-91bc-55ce-b843-745389e675e2/scratchpad/test/'
+for s,c in [('in','off'),('in','all-central'),('shift','all-central')]:
+    d=json.load(open(f'experiments/20261128-gd/runs/{s}/{c}/decomp.json'))
+    st=d['slices']['structure_at_first_row']
+    print(s,c,st['classified'],st['right_share'])
+    for lab in ('right','wrong'):
+        r=st[lab]
+        for col in ('range','course_deg','speed_kt'):
+            print('  ',lab,col,{g:(round(v['ratio'],3),round(v['lo'],3),round(v['hi'],3),v['scenarios']) for g,v in r['ratios'][col].items() if g in('fine_tuned','true','c2-edit-thr')}, 'versus true/ft',[round(r['versus'][col]['true'][x],3) for x in('ratio','lo','hi')])
+    z=np.load(B+f'{s}/{c}/errors.npz')
+    o,k=z['ordinal'],z['k']
+    gaps=[np.diff(np.sort(k[o==u])).min() for u in np.unique(o) if (o==u).sum()>1]
+    print('  min k gap',min(gaps),'rows/eng',np.bincount(np.bincount(o-o.min()))[:8], 'keys',[x for x in z.files if not x.startswith('err_')])
+    fs=glob.glob(B+f'{s}/{c}/segmentations/*'); print(fs)
+    n=0;L=[];openn=0;nt=0;hdr=None
+    with gzip.open(fs[0],'rt') as fh:
+        for line in fh:
+            r=json.loads(line)
+            if 'intervals' not in r: hdr=r; continue
+            if n==0: print('  ',str(r)[:500])
+            n+=1
+            for i in r['intervals']:
+                if i['kind']=='transition':
+                    nt+=1; L.append(i['end_index']-i['start_index']); openn+=bool(i.get('open'))
+    print('  recs',n,'transitions',nt,'open',openn,'len q',np.quantile(L,[.5,.9,.99,1]) if L else None)
+    if hdr: print('  hdr',str(hdr)[:600])

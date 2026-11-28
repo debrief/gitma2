@@ -1,0 +1,37 @@
+import numpy as np
+B='/tmp/claude-0/-home-user-gitma2/ff663f47-91bc-55ce-b843-745389e675e2/scratchpad/test/'
+rng=np.random.default_rng(0)
+def eng(d,sys,q,mask):
+    o=d['ordinal']; out={}
+    for u in np.unique(o):
+        m=(o==u)&mask
+        if m.sum(): out[u]=np.median(np.abs(d['err_'+sys][m,q]))
+    return out
+def ratio(d,a,b,q=0,mask=None,ft=False):
+    n=len(d['ordinal']); mask=np.ones(n,bool) if mask is None else mask
+    bs=[b] if not ft else ['ft-s1','ft-s2','ft-s3']
+    lr=[]
+    fin=mask&np.isfinite(d['err_'+a][:,q])
+    for s in bs: fin&=np.isfinite(d['err_'+s][:,q])
+    ea=eng(d,a,q,fin); 
+    L=np.mean([[np.log(ea[u]/eng(d,s,q,fin)[u]) for u in ea] for s in bs],axis=0)
+    L=L[np.isfinite(L)]
+    bt=[np.mean(rng.choice(L,len(L))) for _ in range(500)]
+    return "%.3f [%.3f,%.3f] med %.2f n%d b%.2f 2g%.2f 2b%.2f"%(np.exp(L.mean()),*np.exp(np.percentile(bt,[2.5,97.5])),np.exp(np.median(L)),len(L),(L>0).mean(),(L>np.log(2)).mean(),(L<-np.log(2)).mean())
+for sp,cs in [('in',['off','all-central','ho-both']),('shift',['off','all-central']),('far',['off','all-central'])]:
+  for c in cs:
+    d=dict(np.load(B+sp+'/'+c+'/errors.npz'))
+    print('==',sp,c,'rows',len(d['k']))
+    for q,nm in enumerate(['range','course','speed']):
+        print(' robust-true/ft',nm,ratio(d,'robust-true','x',q,ft=True))
+    # by thirds of range bound
+    b=d['bound'][:,0]; t=np.nanquantile(b,[1/3,2/3])
+    for i,(lo,hi) in enumerate([(-1,t[0]),(t[0],t[1]),(t[1],9e9)]):
+        m=(b>lo)&(b<=hi)
+        print('  bound third',i,'%.3f-%.3f'%(max(lo,0),min(hi,99)),'rt/ft R',ratio(d,'robust-true','x',0,m,ft=True)[:22],'C',ratio(d,'robust-true','x',1,m,ft=True)[:22],'| c2r/ft R',ratio(d,'c2-robust','x',0,m,ft=True)[:22], '| c2r/rt',ratio(d,'c2-robust','robust-true',0,m)[:22])
+        # efficiency
+        for s in ['ft-s1','robust-true','c2-robust']:
+            e=np.abs(d['err_'+s][m,0])/b[m]; print('     eff',s,'%.2f'%(np.nanmedian(e)/0.6745),end='')
+        print()
+    print(' abs med range: ', {s:round(float(np.nanmedian(list(eng(d,s,0,np.isfinite(d['err_'+s][:,0])).values()))),3) for s in ['c2-robust','c2','robust-true','plain-true','ft-s1','reg-s1','own','c2-edit-thr','c2-edit','oracle']})
+    print(' c2r/ft', ratio(d,'c2-robust','x',0,ft=True)); print(' c2r/reg(unchanged)', ratio(d,'c2-robust','reg-s1',0)); print(' c2r/edit',ratio(d,'c2-robust','c2-edit',0)); print(' c2r/edit-thr',ratio(d,'c2-robust','c2-edit-thr',0)); print(' c2/c2r',ratio(d,'c2','c2-robust',0))

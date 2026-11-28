@@ -1,0 +1,29 @@
+import numpy as np
+def gmed(x,o):
+    i=np.argsort(o,kind='stable'); o=o[i]; x=x[i]; u,st=np.unique(o,return_index=True)
+    return np.array([np.median(c) for c in np.split(x,st[1:])])
+
+B='/tmp/claude-0/-home-user-gitma2/ff663f47-91bc-55ce-b843-745389e675e2/scratchpad/test/'
+rng=np.random.default_rng(0)
+FT=['ft-s1','ft-s2','ft-s3']
+def L(d,a,bs,q=0,mask=None):
+    m=np.ones(len(d['k']),bool) if mask is None else mask.copy()
+    for s in [a]+bs: m&=np.isfinite(d['err_'+s][:,q])
+    g={s:gmed(np.abs(d['err_'+s][m,q]),d['ordinal'][m]) for s in [a]+bs}
+    l=np.mean([np.log(g[a]/g[s]) for s in bs],axis=0); return l[np.isfinite(l)]
+def R(d,a,bs,q=0,mask=None):
+    l=L(d,a,bs,q,mask); bt=np.exp([rng.choice(l,len(l)).mean() for _ in range(1000)])
+    return "%.2f[%.2f,%.2f] med%.2f n%d 2g%.2f 2b%.2f"%(np.exp(l.mean()),*np.percentile(bt,[2.5,97.5]),np.exp(np.median(l)),len(l),(l>np.log(2)).mean(),(l<-np.log(2)).mean())
+for sp,cs in [('in',['off','all-central','ho-both']),('shift',['off','all-central']),('far',['off','all-central'])]:
+  for c in cs:
+    d=dict(np.load(B+sp+'/'+c+'/errors.npz'))
+    print('==',sp,c)
+    for q,nm in enumerate(['R','C','S']): print(' rt/ft',nm,R(d,'robust-true',FT,q))
+    b=d['bound'][:,0]; t=np.nanquantile(b,[1/3,2/3])
+    for i,(lo,hi) in enumerate([(-1,t[0]),(t[0],t[1]),(t[1],9e9)]):
+        m=(b>lo)&(b<=hi)
+        eff=' '.join('%s %.2f'%(s,np.nanmedian(np.abs(d['err_'+s][m,0])/b[m])/0.6745) for s in ['ft-s1','robust-true','c2-robust','own'])
+        print('  third',i,'<=%.3f'%min(hi,99),'rt/ft R',R(d,'robust-true',FT,0,m)[:27],'C',R(d,'robust-true',FT,1,m)[:15],'| c2r/ft',R(d,'c2-robust',FT,0,m)[:15],'| eff',eff)
+    med=lambda s: np.nanmedian(gmed(np.abs(d['err_'+s][:,0]),d['ordinal']))
+    print(' abs',{s:round(float(med(s)),3) for s in ['c2-robust','c2','robust-true','plain-true','ft-s1','reg-s1','own','c2-edit-thr','c2-edit','oracle']})
+    print(' c2r/reg-unchanged',R(d,'c2-robust',['reg-s1','reg-s2','reg-s3'])); print(' c2r/ft',R(d,'c2-robust',FT)); print(' c2r/edit',R(d,'c2-robust',['c2-edit'])); print(' c2r/editthr',R(d,'c2-robust',['c2-edit-thr'])); print(' editthr/rt',R(d,'c2-edit-thr',['robust-true']))

@@ -1,0 +1,173 @@
+{
+ "description": "Spec 038: where the regressor's gain comes from. Stages dev-a and dev-b use spent seeds; the test stage is bound by the decision record before it runs. scripts/research/gd_plan.py writes the scoring plans from this file.",
+ "gate_h_plan": "configs/gateh/gh-a.json",
+ "conditions_file": "configs/rmis/all-conditions.json",
+ "splits": {
+  "in": {
+   "ranges": "configs/man2-ranges.json",
+   "what": "in distribution (MAN2)"
+  },
+  "shift": {
+   "ranges": "configs/gd/shift-ranges.json",
+   "what": "a shifted manoeuvre prior: busier targets"
+  },
+  "far": {
+   "ranges": "configs/man2-heldout.json",
+   "what": "far initial ranges (20 to 30 km)"
+  }
+ },
+ "stages": {
+  "dev-a": {
+   "seed": 321,
+   "count": 900,
+   "ordinals": 300,
+   "splits": {
+    "in": [
+     "off",
+     "all-central"
+    ]
+   }
+  },
+  "dev-b": {
+   "seed": 370,
+   "count": 900,
+   "ordinals": 300,
+   "splits": {
+    "in": [
+     "off",
+     "all-central",
+     "ho-both"
+    ],
+    "shift": [
+     "off",
+     "all-central"
+    ],
+    "far": [
+     "off",
+     "all-central"
+    ]
+   }
+  },
+  "test": {
+   "seed": 372,
+   "count": 1500,
+   "ordinals": 500,
+   "splits": {
+    "in": [
+     "off",
+     "all-central",
+     "ho-both"
+    ],
+    "shift": [
+     "off",
+     "all-central"
+    ],
+    "far": [
+     "off",
+     "all-central"
+    ]
+   }
+  }
+ },
+ "shard_size": 50,
+ "imm": "imm-cv0.03-ct1-w0.01-s0.0003-p4-r2",
+ "ekf": "ekf-sa0.00003-p4-r0.5",
+ "interval_scale": "experiments/20261126-rmis-val/interval-fit.json",
+ "checkpoints": [
+  {
+   "name": "ft-s1",
+   "branch": "results/gputrain-ft-s1-45108906382",
+   "dir": "experiments/gputrain-runs/ft-s1-45108906382",
+   "sha256": "5ecb77e93b52b08def521c4fdce4c8574cc0228ab279d12a11b039be2639f6f5"
+  },
+  {
+   "name": "ft-s2",
+   "branch": "results/gputrain-ft-s2-45109019065",
+   "dir": "experiments/gputrain-runs/ft-s2-45109019065",
+   "sha256": "9695333fb1a3a265487d8f813fb247e81ef51ea02537648cd705d330ec71c8ab"
+  },
+  {
+   "name": "ft-s3",
+   "branch": "results/gputrain-ft-s3-45109133362",
+   "dir": "experiments/gputrain-runs/ft-s3-45109133362",
+   "sha256": "e151ac91bfc86903ff61c296d43eb70024ff94f437f7b809fcba49163e96de86"
+  },
+  {
+   "name": "reg-s1",
+   "branch": "results/gputrain-r-a-s1-42990055824",
+   "dir": "experiments/gputrain-runs/r-a-s1-42990055824",
+   "sha256": "dbf6488de1651d8befb186d1f35f7ff43a4b29bcdccb24d05f12de428fb88281"
+  },
+  {
+   "name": "reg-s2",
+   "branch": "results/gputrain-r-a-s2-42990055730",
+   "dir": "experiments/gputrain-runs/r-a-s2-42990055730",
+   "sha256": "d88c944bcbe2b70f98bd272ed4fd330b92f1fdd9cf3833ed96bcce39eabf33e5"
+  },
+  {
+   "name": "reg-s3",
+   "branch": "results/gputrain-r-a-s3-42990059695",
+   "dir": "experiments/gputrain-runs/r-a-s3-42990059695",
+   "sha256": "3f75d81d2dc266df99d192a317be4ae58ea15b0f1489d79c28e3ed34ec400d05"
+  },
+  {
+   "name": "own",
+   "branch": "results/gputrain-r-a-own-42990062999",
+   "dir": "experiments/gputrain-runs/r-a-own-42990062999",
+   "sha256": "47e10c0ea5fc41a6d50abccc73224c009e5fb5d7ed58fc4b632a378777b4e841"
+  }
+ ],
+ "grid": {
+  "threshold": [
+   1.5,
+   2,
+   3,
+   4
+  ],
+  "edit": {
+   "wild": {
+    "wild": true
+   },
+   "eff": {
+    "effective_sd": true
+   },
+   "both": {
+    "wild": true,
+    "effective_sd": true
+   }
+  },
+  "own_prior_weight": [
+   0.25,
+   0.5,
+   1,
+   2,
+   4
+  ]
+ },
+ "hybrid_prior_weight": 0.25,
+ "chosen": {
+  "threshold": 4,
+  "edit": "wild",
+  "own_prior_weight": 2,
+  "combined": true,
+  "threshold_neighbours": [
+   6,
+   8
+  ],
+  "own_prior_weight_neighbours": [
+   1,
+   4
+  ],
+  "basis": "experiments/20261127-gd-dev-a (seed 321): the pooled log range ratio against c2-robust over clean and primary. Threshold: every value is below 0 pooled (1.5: -0.068, 2: -0.073, 3: -0.090, 4: -0.065); 4 is best and at the grid's edge, so 6 and 8 are run on dev-b. Edit: wild +0.170, both +0.134, eff +0.047. Own-prior weight: 2 (+0.023), bracketed by 1 and 4."
+ },
+ "statistic": {
+  "resamples": 2000,
+  "since_bands_s": [
+   300,
+   900
+  ],
+  "match_tolerance_s": 120,
+  "share_most": 0.5,
+  "share_little": 0.2
+ }
+}

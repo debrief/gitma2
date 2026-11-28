@@ -1,0 +1,7 @@
+import numpy as np, math
+src=open('/tmp/claude-0/-home-user-gitma2/ff663f47-91bc-55ce-b843-745389e675e2/scratchpad/panel-b/a.py').read().split("print('=== 1.")[0]; exec(src)
+for c in('off','all-central'):
+  for sp in('shift','far'):
+    for nm,ctl,sy in(('c2r/true','c2-robust',['robust-true']),('true/ft','robust-true',FT),('c2r/edit-thr','c2-robust',['c2-edit-thr'])):
+      x=arr(pooled(D[(sp,c)],ctl,sy)); xb=arr(pooled(D[('in',c)],ctl,sy)); se=math.sqrt(x.var(ddof=1)/len(x)+xb.var(ddof=1)/len(xb)); d=x.mean()-xb.mean()
+      print(sp,c,nm,'S %.3f [%.3f, %.3f] median-based %.3f'%(math.exp(d),math.exp(d-1.96*se),math.exp(d+1.96*se),math.exp(np.median(x)-np.median(xb))))

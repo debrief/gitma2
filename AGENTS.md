@@ -1016,6 +1016,47 @@ readings pin `turn_loss_s: null`.
   The ledger undercounts interrupted runs by about $3.50 (`gpu_seconds` counts the last call's
   segments only). Seeds 369 stream, 370 validation, 371 test used; the next fresh seed is 372.
 
+038 (where the regressor's gain comes from, `specs/038-gain-decomposition/`; owner 2026-11-27
+"follow on with option A", spec 037's panel's first recommendation; a registered study, not a
+gate; nothing trained, no GPU; done).
+- **Code:** `headroom/edit.py` (the bearings C sees: wild ones out by `timelate.thin.edit_wild`,
+  optionally an effective sd; causal at the scored rows; C frozen, the final solve reads the
+  original bearings); `tma2-hpredict --edit`, `--segments-cache` (runs of one shard sharing a
+  segmenter's settings compute it once); a raised threshold is `--segmentation c2r
+  --robust-confirm '{"robust": false, "tau_factor": X}'`; `regress/decomp.py` and `tma2-rdecomp`
+  (share of a log gain, slices, per-engagement logs); `headroom.yml` plan keys `ranges`,
+  `heldout`, `segments_cache`, `runs[].edit`, `decomp` (`scripts/gd_read.sh`).
+- **Scripts:** `scripts/research/gd_{plan,collect,tables,bootcheck,charts}.py`; protocol
+  `configs/gd/protocol.json`; splits `configs/gd/shift-ranges.json` (busier targets) and
+  `configs/man2-heldout.json` (initial range 20 to 30 km, which no training stream drew).
+- **Records:** run A `experiments/20261127-gd-dev-a/` (seed 321), run B `20261127-gd-dev-b/`
+  (seed 370), decision `20261127-gd-decision/` (one correcting addendum).
+- **Test record `experiments/20261128-gd/` (seed 372, 500 engagements × 7, scored once):** G, the
+  share of the log gap C″-robust → fine-tuned closed by C with edited bearings and threshold × 4
+  under the primary condition, 0.439 [0.347, 0.526], between; P, the ownship-only prior inside
+  C″'s solve, 0.013 clean and 0.032 primary, little; S, the lead on busier targets ÷ in
+  distribution 1.055 clean (not separated) and 0.860 primary (shrinks), on far ranges 0.834 and
+  0.747 (shrinks). C″-robust ÷ fine-tuned 1.55 clean, 2.27 primary; the robust solve told the
+  true manoeuvre times 1.63, 2.03.
+- **Panel round 1** (`review.md`, three approve with findings; every number reproduced).
+  Narrowed: G is a tail (the typical engagement closes about a quarter; 0.26 to 0.44 by split;
+  about 12% pooled over clean and primary) and the threshold costs 0.82 on clean data (median
+  unchanged, twice as bad in a fifth); by the registered choice rule editing alone is preferred
+  (0.21 under mismatch, no clean cost). P was a foreseeable null: the ownship-only model (0.33
+  median range error) could not move the solve, so prior or bearings is still open; against the
+  solve told the true times the regressor wins where the bound is loose (1.15, 1.34) and loses
+  where tight (0.77, 0.93), with efficiency under 1 there. T shows sufficiency, not cause. S is
+  mostly C″-robust moving (told-truth ÷ fine-tuned 1.00 and 0.94 under mismatch, 0.89 and 0.84
+  clean). The structure slice tests nothing (C″-robust is 1.5 × the told-truth solve where its
+  transitions are right at the first row).
+- Write-up `site/blog/2026-11-28-gain-decomposition.md`, slides
+  `2026-11-28-gain-decomposition-slides.md` (figures `scripts/research/gd_charts.py`). Nothing is
+  carried; C″ stands. Panel's order (owner's choice): a causal classical MAP control given the
+  generator's manoeuvre, speed and range priors (CPU, spent seeds first), read by thirds of the
+  bound; a better real-time segmenter against the solve told the true times; no GPU. Wild-bearing
+  editing in front of C is a candidate for a small follow-up, not adopted.
+- Seeds 372 used; the next fresh seed is 373. No money spent.
+
 ## Stack (owner decisions, 2026-10-31)
 
 Python 3.12 throughout: PyTorch models (from spec 003), NumPy/numba generator and reference
@@ -1531,3 +1572,13 @@ seeds per carried configuration; nothing above OFFICIAL, mock data only.
   from its `rsync --delete`. A preview built with another `SITE_BASE_URL` reads the preview index
   from the root (`/gitma2/pr/index.json`), not from its own base. Deleting a preview is deleting
   published material: owner-only.
+- Spec 038 panel: a "share of the gap" as a ratio of mean logs is a tail statistic: report the
+  ratio of medians and both-end trims beside it, and the share pooled over the conditions the
+  choice rule pooled. Do not put forward as the headline control one the registered choice rule
+  would not pick. A prior control must be shown to move the solve on development data before it
+  is registered, or its null is foreseeable (the second time: spec 037's static prior, this
+  spec's ownship-only prior). When a ratio against a yardstick changes between splits, take the
+  same difference for yardstick ÷ reference and reference ÷ system before saying which side
+  moved. A structure classification at one row says little about later rows: check the
+  classified class against the reference on the rows read. Check a claim about what a model met
+  in training against the ranges files, not from memory.
