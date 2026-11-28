@@ -1,0 +1,127 @@
+"""Stand-alone simulator and joined-leg model for the steady-leg detector brief.
+Flat frame, x east, y north, bearing clockwise from north. Metres, seconds, radians.
+NOT the repository generator: a re-implementation of brief section 4, with assumptions noted."""
+import numpy as np
+from scipy.optimize import least_squares
+
+KN = 0.514444
+DT = 10.0
+SIG = np.radians(1.0)
+
+
+def wrap(a):
+    return (a + np.pi) % (2 * np.pi) - np.pi
+
+
+def integrate(T, pos0, course0, speed0, events):
+    """events: list of (t_start, dcourse, turn_rate, dspeed, accel). 1 s steps, sampled at DT.
+    Returns t, pos(n,2), vel(n,2), transition mask, list of (t_start, t_end)."""
+    n1 = int(T) + 1
+    course = np.full(n1, course0)
+    speed = np.full(n1, speed0)
+    spans = []
+    tt = np.arange(n1, dtype=float)
+    for (ts, dc, rate, ds, acc) in events:
+        dur_c = abs(dc) / rate if dc != 0 else 0.0
+        dur_s = abs(ds) / acc if ds != 0 else 0.0
+        dur = max(dur_c, dur_s)
+        if dc != 0:
+            course += dc * np.clip((tt - ts) / dur_c, 0, 1)
+        if ds != 0:
+            speed += ds * np.clip((tt - ts) / dur_s, 0, 1)
+        spans.append((ts, ts + dur))
+    vel = np.stack([speed * np.sin(course), speed * np.cos(course)], 1)
+    pos = pos0 + np.concatenate([[[0, 0]], np.cumsum(0.5 * (vel[1:] + vel[:-1]), 0)])
+    idx = np.arange(0, n1, int(DT))
+    t = tt[idx]
+    trans = np.zeros(len(t), bool)
+    for (a, b) in spans:
+        trans |= (t >= a) & (t <= b)
+    return t, pos[idx], vel[idx], trans, spans
+
+
+def draw_engagement(rng, held=False):
+    T = rng.uniform(40, 120) * 60
+    # ownship: one or two zigs, 60-120 deg at 1 deg/s (assumption; brief gives no zig size)
+    nz = rng.integers(1, 3)
+    zt = [rng.uniform(0.2, 0.45) * T] if nz == 1 else [rng.uniform(0.15, 0.35) * T, rng.uniform(0.55, 0.8) * T]
+    oev = [(z, rng.choice([-1, 1]) * np.radians(rng.uniform(60, 120)), np.radians(1.0), 0.0, 1.0) for z in zt]
+    ot, opos, ovel, otrans, ospans = integrate(T, np.zeros(2), rng.uniform(0, 2 * np.pi), rng.uniform(5, 15) * KN, oev)
+    # target
+    R0 = rng.uniform(2000, 20000)
+    b0 = rng.uniform(0, 2 * np.pi)
+    sp = rng.uniform(3, 20) * KN
+    ev, kinds = [], []
+    if not held:
+        leg = lambda: max(5.0, rng.normal(25, 9)) * 60
+        t = -rng.uniform(0, 1) * leg()
+        cur = sp
+        while True:
+            t += leg()
+            if t > T - 300:
+                break
+            if t < 120:
+                continue
+            u = rng.uniform()
+            dc = ds = 0.0
+            if u < 0.8 or u >= 0.9:
+                dc = rng.choice([-1, 1]) * np.radians(rng.uniform(30, 120))
+            if u >= 0.8:
+                ds = rng.choice([-1, 1]) * rng.uniform(2, 6) * KN
+                if not (3 * KN <= cur + ds <= 20 * KN):
+                    ds = -ds
+                if not (3 * KN <= cur + ds <= 20 * KN):
+                    ds = 0.0
+                    if dc == 0:
+                        continue
+                cur += ds
+            rate = np.radians(rng.uniform(0.25, 1.0))
+            acc = rng.uniform(0.01, 0.05)
+            ev.append((t, dc, rate, ds, acc))
+            kinds.append('course' if ds == 0 else ('speed' if dc == 0 else 'both'))
+            t += max(abs(dc) / rate, abs(ds) / acc)
+    tt, tpos, tvel, ttrans, tspans = integrate(T, R0 * np.array([np.sin(b0), np.cos(b0)]), rng.uniform(0, 2 * np.pi), sp, ev)
+    d = tpos - opos
+    return dict(t=tt, opos=opos, tpos=tpos, tvel=tvel, trans=ttrans, spans=tspans, kinds=kinds,
+                otrans=otrans, ospans=ospans, b=np.arctan2(d[:, 0], d[:, 1]), R=np.hypot(d[:, 0], d[:, 1]), T=T)
+
+
+# ---- joined-leg model: p(t) = p0 + v0 t + sum_j dv_j * max(t - k_j, 0) ----
+def basis(t, knots):
+    cols = [np.ones_like(t), t] + [np.maximum(t - k, 0.0) for k in knots]
+    return np.stack(cols, 1)  # (n, 2+K)
+
+
+def model_bearing(theta, B, opos):
+    P = B @ theta.reshape(-1, 2) - opos
+    return np.arctan2(P[:, 0], P[:, 1]), P
+
+
+def jac(theta, B, opos):
+    b, P = model_bearing(theta, B, opos)
+    R2 = (P ** 2).sum(1)
+    gx, gy = P[:, 1] / R2, -P[:, 0] / R2
+    J = np.empty((len(B), B.shape[1] * 2))
+    J[:, 0::2] = B * gx[:, None]
+    J[:, 1::2] = B * gy[:, None]
+    return J
+
+
+def fit(theta0, B, opos, bobs):
+    xs = np.tile([1.0, 1.0], B.shape[1])
+    xs[:2] = 1e3
+    f = lambda th: wrap(model_bearing(th, B, opos)[0] - bobs)
+    r = least_squares(f, theta0, jac=lambda th: jac(th, B, opos), method='lm', x_scale=xs, max_nfev=200)
+    return 2 * r.cost, r.x
+
+
+def truth_theta(e, knots_idx):
+    """True p0, v0 and velocity steps for the listed manoeuvres (knot at transition midpoint)."""
+    t, tv = e['t'], e['tvel']
+    th = [e['tpos'][0], tv[0]]
+    for j in knots_idx:
+        a, b = e['spans'][j]
+        ia = max(np.searchsorted(t, a) - 1, 0)
+        ib = min(np.searchsorted(t, b) + 1, len(t) - 1)
+        th.append(tv[ib] - tv[ia])
+    return np.concatenate(th)

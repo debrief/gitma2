@@ -1,0 +1,32 @@
+import numpy as np, json
+from sim import *
+# thresholds
+d=json.load(open('detect.json')); late=np.array([x['lam_late'] for x in d]); leg=np.array([x['lam_leg'] for x in d])
+for thr in [11,15,25,130,170]: print('thr',thr,'late<',np.mean(late<thr).round(3),'leg<',np.mean(leg<thr).round(3))
+# cross-ratio identity on a steady leg
+t=np.array([0,400,900,2000.]); P=np.array([3000,8000.])+np.outer(t,[4,-3.]); b=np.arctan2(P[:,0],P[:,1])
+s=lambda i,j:np.sin(b[i]-b[j])
+print('cross-ratio bearings',s(0,1)*s(2,3)/(s(0,2)*s(1,3)),'times',(t[0]-t[1])*(t[2]-t[3])/((t[0]-t[2])*(t[1]-t[3])))
+# Q2: cost profile vs misplaced knot, noise-free. target turn 60 deg at 30 min, 60 min window, R0 10 km
+def scen(zigs):
+    T=3600
+    ot,op,ov,_,_=integrate(T,np.zeros(2),np.radians(90),8*KN,[(z,np.radians(90),np.radians(1),0,1) for z in zigs])
+    tt,tp,tv,tr,sp=integrate(T,np.array([0,10000.]),np.radians(200),10*KN,[(1770,np.radians(60),np.radians(1),0,1)])
+    d=tp-op; return dict(t=tt,opos=op,tpos=tp,tvel=tv,trans=tr,spans=sp,b=np.arctan2(d[:,0],d[:,1]),R=np.hypot(d[:,0],d[:,1]),T=T)
+for name,z in [('ownship steady',[]),('zig at 15 min (before)',[900]),('zig at 45 min (after)',[2700]),('zigs at 15 and 45',[900,2700])]:
+    e=scen(z); t=e['t']; th0=truth_theta(e,[0]); prof=[]
+    ks=np.arange(600,3060,60.)
+    for k in ks:
+        B=basis(t,[k]); c=min(fit(th0,B,e['opos'],e['b'])[0], fit(th0*np.r_[1.5,1.5,1.5,1.5,1.5,1.5]+0, B,e['opos']*1.0,e['b'])[0])
+        prof.append(c/SIG**2)
+    prof=np.array(prof); okk=ks[prof<25]
+    # independent slices: separate CV fit each side (2 min buffer), no continuity
+    ind=[]
+    for k in ks:
+        c=0
+        for m,th in [(t<k-60,th0[:4]),(t>k+60,np.r_[e['tpos'][0]-th0[4:6]*1800,th0[2:4]+th0[4:6]])]:
+            c+=fit(th,basis(t[m],[]),e['opos'][m],e['b'][m])[0]
+        ind.append(c/SIG**2)
+    ind=np.array(ind); oki=ks[ind<25]
+    J=jac(th0,basis(t,[1800]),e['opos']); sv=np.linalg.svd(J/np.linalg.norm(J,axis=0),compute_uv=False)
+    print(f'{name:24s} joined: knot times with cost<25: {okk.min()/60:.0f}-{okk.max()/60:.0f} min (width {len(okk)} min); independent: {oki.min()/60 if len(oki) else 0:.0f}-{oki.max()/60 if len(oki) else 0:.0f} (width {len(oki)}); Jacobian rank {np.sum(sv>1e-8)} of 6')

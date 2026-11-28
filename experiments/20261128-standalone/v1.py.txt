@@ -1,0 +1,115 @@
+"""Detector v1: a causal, truth-free segmenter, scored through a solve.
+detect() receives only time, ownship track, noisy bearings (and the stated sd via SIG).
+Truth is used only in score()/run() after detection, for references and scoring."""
+import sys, json
+import numpy as np
+from multiprocessing import Pool
+from sim import *
+from experiments import noise
+from solve import solve, edit_raw
+
+W, STEP, MINLEN, BUF = 1500.0, 120.0, 480.0, 60.0
+
+
+def scan_window(t, opos, b, L=18):
+    best = None
+    B = basis(t - t[0], [])
+    for R in [3e3, 8e3, 1.6e4]:
+        th0 = np.r_[opos[0] + R * np.array([np.sin(b[0]), np.cos(b[0])]), 0.0, 0.0]
+        c, th = fit(th0, B, opos, b)
+        if best is None or c < best[0]:
+            best = (c, th)
+    th = best[1]
+    bm, P = model_bearing(th, B, opos)
+    r = wrap(b - bm)
+    R2 = (P ** 2).sum(1)
+    gx, gy = P[:, 1] / R2, -P[:, 0] / R2
+    Q0, _ = np.linalg.qr(jac(th, B, opos))
+    cands = np.arange(t[0] + 180, t[-1] - 120 + 1, 30.0)
+    Qs, T = [], []
+    for k in cands:
+        h = np.maximum(t - k, 0)
+        A = np.stack([h * gx, h * gy], 1)
+        A -= Q0 @ (Q0.T @ A)
+        Qa, _ = np.linalg.qr(A)
+        Qs.append(Qa); T.append(((Qa.T @ r) ** 2).sum())
+    T = np.array(T); ib = int(np.argmax(T))
+    r1 = r - Qs[ib] @ (Qs[ib].T @ r)
+    n = len(r1); Lm = min(L, n // 4)
+    c = np.array([np.dot(r1[:n - l], r1[l:]) / n for l in range(Lm + 1)]) * (1 - np.arange(Lm + 1) / (Lm + 1))
+    lag = np.abs(np.subtract.outer(np.arange(n), np.arange(n)))
+    S = np.where(lag <= Lm, c[np.minimum(lag, Lm)], 0.0)
+    d = max(np.trace(Qs[ib].T @ S @ Qs[ib]) / 2, 1e-12)
+    return T[ib] / SIG ** 2, T[ib] / d, cands[ib]
+
+
+def detect(t, opos, bobs, thr, corrected):
+    """Returns declared knots [(knot time, declaration time)] and the largest statistic seen."""
+    keep = edit_raw(bobs)
+    knots, leg_start, mx = [], t[0], 0.0
+    for now in np.arange(t[0] + MINLEN, t[-1] + 1, STEP):
+        lo = max(leg_start, now - W)
+        if now - lo < MINLEN:
+            continue
+        m = keep & (t >= lo) & (t <= now)
+        raw, cor, k = scan_window(t[m], opos[m], bobs[m])
+        s = cor if corrected else raw
+        mx = max(mx, s)
+        if s > thr:
+            knots.append((float(k), float(now)))
+            leg_start = k + BUF
+    return knots, mx
+
+
+def match(knots, truth_mid, tol=120.0):
+    used, hit = set(), 0
+    for m in truth_mid:
+        c = [(abs(k - m), i) for i, (k, _) in enumerate(knots) if i not in used and abs(k - m) <= tol]
+        if c:
+            used.add(min(c)[1]); hit += 1
+    return hit, len(truth_mid) - hit, len(knots) - hit
+
+
+def calib(seed):
+    rng = np.random.default_rng(seed); e = draw_engagement(rng, held=True)
+    b = e['b'] + noise(rng, len(e['t']), 'white')
+    return [detect(e['t'], e['opos'], b, np.inf, c)[1] for c in (False, True)]
+
+
+def run(args):
+    seed, held, thrA, thrB = args
+    rng = np.random.default_rng(seed); e = draw_engagement(rng, held=held)
+    if not held and not e['spans']:
+        return None
+    t = e['t']; true_spans = [(a, min(b, e['T'])) for a, b in e['spans']]
+    mids = [0.5 * (a + b) for a, b in true_spans]
+    out = dict(held=held, nman=len(mids))
+    for kind in ['white', 'primary']:
+        bobs = e['b'] + noise(rng, len(t), kind)
+        keep = edit_raw(bobs)
+        o = {}
+        for name, thr, cor in [('A', thrA, False), ('B', thrB, True)]:
+            knots, _ = detect(t, e['opos'], bobs, thr, cor)          # truth-free
+            hit, miss, false = match(knots, mids)
+            delays = [d - min(true_spans, key=lambda s: abs(0.5 * (s[0] + s[1]) - k))[1] for k, d in knots] if mids else []
+            spans = [(k - BUF, k + BUF) for k, _ in knots if k + BUF < t[-1] - 60]
+            o[name] = dict(n=len(knots), hit=hit, miss=miss, false=false, delays=delays,
+                           err=solve(e, bobs, keep, spans, True, False), err_p=solve(e, bobs, keep, spans, True, True))
+        o['one'] = solve(e, bobs, keep, [], False, False); o['one_p'] = solve(e, bobs, keep, [], False, True)
+        o['told'] = solve(e, bobs, keep, true_spans, True, False); o['told_p'] = solve(e, bobs, keep, true_spans, True, True)
+        out[kind] = o
+    return out
+
+
+if __name__ == '__main__':
+    mode = sys.argv[1]
+    with Pool(2) as p:
+        if mode == 'calib':
+            r = np.array(p.map(calib, range(20000, 20200), chunksize=4))
+            thr = np.percentile(r, 95, axis=0).tolist()
+            json.dump(thr, open('v1_thr.json', 'w')); print('thresholds (5% false-split per held-course engagement, white, dev seeds):', thr)
+        else:
+            thr = json.load(open('v1_thr.json'))
+            jobs = [(s, False, *thr) for s in range(30000, 30000 + int(sys.argv[2]))] + [(s, True, *thr) for s in range(40000, 40000 + int(sys.argv[3]))]
+            r = [x for x in p.map(run, jobs, chunksize=2) if x]
+            json.dump(r, open('v1_test.json', 'w')); print(len(r))

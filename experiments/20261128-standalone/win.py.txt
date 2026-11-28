@@ -1,0 +1,14 @@
+import numpy as np
+from multiprocessing import Pool
+from sim import *; from experiments import noise; from detector import scan
+def f(seed):
+    rng=np.random.default_rng(seed); e=draw_engagement(rng,held=True); o={}
+    for kind in ['white','bias','corr']:
+        x=e['b']+noise(rng,len(e['t']),kind)
+        o[kind]=[scan(e,x,False,30,window=w)[0] for w in (None,2400,1200,720)]
+    return o
+if __name__=='__main__':
+    with Pool(4) as p: r=p.map(f,range(3000,3300))
+    for i,w in enumerate(['whole','40 min','20 min','12 min']):
+        q={k:np.percentile([x[k][i] for x in r],95) for k in ['white','bias','corr']}
+        print(f'{w:7s} 95th pct: white {q["white"]:.1f} bias {q["bias"]:.1f} (x{q["bias"]/q["white"]:.1f}) corr {q["corr"]:.1f} (x{q["corr"]/q["white"]:.1f})')

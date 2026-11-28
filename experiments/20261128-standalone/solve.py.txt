@@ -1,0 +1,122 @@
+"""Round 3: what limits the estimate once the leg structure is given?
+Solves at the end of the window with different knowledge of the structure; scores relative range error
+at the last steady row. Stand-alone simulator; not the repository's physics solve."""
+import sys, json
+import numpy as np
+from multiprocessing import Pool
+from scipy.optimize import least_squares
+from sim import *
+from experiments import noise, lam_omit
+
+VMIN, VMAX, RMIN, RMAX = 3 * KN, 20 * KN, 2000.0, 20000.0
+
+
+def kappa(vb, va, arc):
+    if not arc:
+        return 1.0
+    x = 0.5 * abs(np.arctan2(vb[0] * va[1] - vb[1] * va[0], vb @ va))
+    x = min(x, 1.3)
+    return np.tan(x) / x if x > 1e-3 else 1.0
+
+
+def positions(theta, t, spans, arc):
+    """Legs joined by position continuity; each transition (a,b) carries the target by
+    D * kappa * mean(v_before, v_after). kappa=1 is an instantaneous knot at the midpoint."""
+    v = theta[2:].reshape(-1, 2)
+    A, s = theta[:2].copy(), 0.0
+    P = np.empty((len(t), 2))
+    lo = 0.0
+    for l in range(len(v)):
+        hi = spans[l][0] if l < len(spans) else np.inf
+        m = (t >= lo) & (t <= hi) if l == 0 else (t > lo) & (t <= hi)
+        P[m] = A + np.outer(t[m] - s, v[l])
+        if l < len(spans):
+            a, b = spans[l]
+            A = A + v[l] * (a - s) + (b - a) * kappa(v[l], v[l + 1], arc) * 0.5 * (v[l] + v[l + 1])
+            s, lo = b, b
+    return P
+
+
+def solve(e, bobs, keep, spans, arc, prior):
+    t = e['t']
+    rows = keep.copy()
+    for a, b in spans:
+        rows &= ~((t > a) & (t < b))
+    tt, op, bo = t[rows], e['opos'][rows], bobs[rows]
+    nl = len(spans) + 1
+
+    def res(th):
+        P = positions(th, tt, spans, arc) - op
+        r = wrap(np.arctan2(P[:, 0], P[:, 1]) - bo) / SIG
+        if prior:
+            sp = np.hypot(th[2::2], th[3::2])
+            R0 = np.hypot(*(th[:2] - e['opos'][0]))
+            pen = np.r_[np.maximum(sp - VMAX, 0) / 0.25, np.maximum(VMIN - sp, 0) / 0.25,
+                        max(R0 - RMAX, 0) / 250, max(RMIN - R0, 0) / 250]
+            r = np.r_[r, pen]
+        return r
+
+    best = None
+    xs = np.r_[1e3, 1e3, np.ones(2 * nl)]
+    for R in [3e3, 8e3, 1.6e4]:
+        los = np.array([np.sin(bo[0]), np.cos(bo[0])])
+        th0 = np.r_[e['opos'][0] + R * los, np.tile(5.0 * np.array([los[1], -los[0]]), nl)]
+        try:
+            r = least_squares(res, th0, method='lm', x_scale=xs, max_nfev=400 * (len(th0) + 1))
+        except Exception:
+            continue
+        if best is None or r.cost < best.cost:
+            best = r
+    # score at the last steady row
+    i = np.where(~e['trans'])[0][-1]
+    P = positions(best.x, t[i:i + 1], spans, arc)[0] - e['opos'][i]
+    return float(abs(np.hypot(*P) - e['R'][i]) / e['R'][i])
+
+
+def edit_raw(b):
+    pad = np.pad(np.unwrap(b), 4, mode='edge')
+    med = np.median(np.lib.stride_tricks.sliding_window_view(pad, 9), axis=1)
+    return np.abs(np.unwrap(b) - med) <= 4 * SIG
+
+
+def run(seed):
+    rng = np.random.default_rng(seed)
+    e = draw_engagement(rng)
+    if not e['spans']:
+        return None
+    n = len(e['t'])
+    spans = [(a, min(b, e['T'])) for a, b in e['spans']]
+    lam = [lam_omit(e, j, e['T']) for j in range(len(spans))]
+    out = dict(nman=len(spans), lam=lam)
+    allk = np.ones(n, bool)
+    # model error with no noise
+    out['nf_knot'] = solve(e, e['b'], allk, spans, False, False)
+    out['nf_arc'] = solve(e, e['b'], allk, spans, True, False)
+    for kind in ['white', 'primary']:
+        bobs = e['b'] + noise(rng, n, kind)
+        keep = edit_raw(bobs)
+        o = {}
+        o['one'] = solve(e, bobs, keep, [], False, False)
+        o['knot'] = solve(e, bobs, keep, spans, False, False)
+        o['arc'] = solve(e, bobs, keep, spans, True, False)
+        o['arc_prior'] = solve(e, bobs, keep, spans, True, True)
+        for thr in (25, 170):
+            det = [s for s, l in zip(spans, lam) if l >= thr]
+            o[f'det{thr}'] = solve(e, bobs, keep, det, True, False)
+            o[f'det{thr}_prior'] = solve(e, bobs, keep, det, True, True)
+        for sh in (120,):
+            late = [(a + sh, b + sh) for a, b in spans if b + sh < e['T'] - 60]
+            o[f'late{sh}'] = solve(e, bobs, keep, late, True, False)
+        # known transition midpoint but a fixed 2-minute buffer instead of the true length
+        fixed = [(0.5 * (a + b) - 60, 0.5 * (a + b) + 60) for a, b in spans]
+        o['fixedbuf'] = solve(e, bobs, keep, fixed, False, False)
+        out[kind] = o
+    return out
+
+
+if __name__ == '__main__':
+    lo, hi = int(sys.argv[1]), int(sys.argv[2])
+    with Pool(4) as p:
+        r = [x for x in p.map(run, range(lo, hi), chunksize=2) if x]
+    json.dump(r, open('/home/claude/sld/solve.json', 'w'))
+    print(len(r))

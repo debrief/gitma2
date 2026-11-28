@@ -1,0 +1,152 @@
+import sys, json
+import numpy as np
+from multiprocessing import Pool
+from sim import *
+
+THR = 25.0
+TAUS = np.array([1, 2, 3, 4, 6, 8, 12, 16, 24, 32]) * 60.0
+
+
+# ---------- E4/E2: detectability and delay of each true manoeuvre ----------
+def lam_omit(e, j, tmax):
+    """Noise-free cost (in sigma^2 units) of omitting manoeuvre j, other knots at true times,
+    transition rows excluded, using rows with t <= tmax."""
+    t = e['t']
+    ks = [i for i, (a, b) in enumerate(e['spans']) if 0.5 * (a + b) < tmax]
+    rows = (~e['trans']) & (t <= tmax)
+    mid = lambda i: 0.5 * sum(e['spans'][i])
+    Bf = basis(t[rows], [mid(i) for i in ks])
+    thf = truth_theta(e, ks)
+    cf, _ = fit(thf, Bf, e['opos'][rows], e['b'][rows])
+    ko = [i for i in ks if i != j]
+    Bo = basis(t[rows], [mid(i) for i in ko])
+    pos = ks.index(j)
+    dv = thf[4 + 2 * pos: 6 + 2 * pos]
+    tha = np.delete(thf, [4 + 2 * pos, 5 + 2 * pos])          # keep the velocity before
+    thb = tha.copy(); thb[2:4] += dv; thb[0:2] -= dv * mid(j)  # keep the velocity after
+    co = min(fit(tha, Bo, e['opos'][rows], e['b'][rows])[0], fit(thb, Bo, e['opos'][rows], e['b'][rows])[0])
+    return max(co - cf, 0.0) / SIG ** 2
+
+
+def one_engagement(seed):
+    rng = np.random.default_rng(seed)
+    e = draw_engagement(rng)
+    out = []
+    t = e['t']
+    for j, (a, b) in enumerate(e['spans']):
+        nxt = e['spans'][j + 1][0] if j + 1 < len(e['spans']) else e['T']
+        ia = max(np.searchsorted(t, a) - 1, 0); ib = min(np.searchsorted(t, b) + 1, len(t) - 1)
+        dv = e['tvel'][ib] - e['tvel'][ia]
+        bb, R = e['b'][ib], e['R'][ib]
+        dv_cross = abs(dv[0] * np.cos(bb) - dv[1] * np.sin(bb))
+        dbdot = dv_cross / R
+        taus = [x for x in TAUS if b + x <= nxt] + [nxt - b]
+        lams = [lam_omit(e, j, b + x) for x in taus]
+        delay = None
+        for k, (x, l) in enumerate(zip(taus, lams)):
+            if l >= THR:
+                if k == 0:
+                    delay = x
+                else:
+                    l0 = max(lams[k - 1], 1e-9)
+                    delay = taus[k - 1] + (x - taus[k - 1]) * (np.log(THR / l0) / np.log(l / l0))
+                break
+        own_zig_after = any((oa >= b) and (oa < nxt) for oa, ob in e['ospans'])
+        out.append(dict(kind=e['kinds'][j], dur=b - a, dvn=float(np.hypot(*dv)), dv_cross=float(dv_cross), R=float(R),
+                        dbdot=float(dbdot), lam_late=float(lam_omit(e, j, e['T'])), lam_leg=float(lams[-1]),
+                        leg_after=float(nxt - b), delay=None if delay is None else float(delay),
+                        pred=float((3 * THR * SIG ** 2 * DT / max(dbdot, 1e-12) ** 2) ** (1 / 3)),
+                        own_zig_after=bool(own_zig_after)))
+    return out
+
+
+# ---------- E3: null distribution of a linearised GLR scan on held-course targets ----------
+def ar1(rng, n, tau, sd):
+    rho = np.exp(-DT / tau)
+    x = np.empty(n); x[0] = rng.normal()
+    w = rng.normal(size=n) * np.sqrt(1 - rho ** 2)
+    for i in range(1, n):
+        x[i] = rho * x[i - 1] + w[i]
+    return sd * x
+
+
+def noise(rng, n, kind):
+    if kind == 'white':
+        return rng.normal(size=n) * SIG
+    if kind == 'corr':   # half the variance correlated, 60 s
+        return np.sqrt(.5) * SIG * rng.normal(size=n) + ar1(rng, n, 60, np.sqrt(.5) * SIG)
+    if kind == 'bias':
+        return rng.normal(size=n) * SIG + ar1(rng, n, 1800, np.radians(0.5))
+    if kind == 'wild':
+        x = rng.normal(size=n) * SIG
+        w = rng.uniform(size=n) < 0.02
+        x[w] = rng.normal(size=w.sum()) * 10 * SIG
+        return x
+    if kind == 'primary':
+        s = SIG * rng.uniform(1.0, 1.5)
+        x = np.sqrt(.5) * s * rng.normal(size=n) + ar1(rng, n, 60, np.sqrt(.5) * s) + ar1(rng, n, 1800, np.radians(0.5))
+        w = rng.uniform(size=n) < 0.02
+        x[w] = rng.normal(size=w.sum()) * 10 * s
+        return x
+
+
+def edit_wild(x):
+    """Brief's editing rule: drop values over 4 sd from a running median of nine (here: zero weight)."""
+    pad = np.pad(x, 4, mode='edge')
+    med = np.median(np.lib.stride_tricks.sliding_window_view(pad, 9), axis=1)
+    return np.abs(x - med) <= 4 * SIG
+
+
+def scan_null(seed, ndraw=200):
+    rng = np.random.default_rng(10_000 + seed)
+    e = draw_engagement(rng, held=True)
+    t, n = e['t'], len(e['t'])
+    th = truth_theta(e, [])
+    J0 = jac(th, basis(t, []), e['opos'])
+    gx, gy = np.cos(e['b']) / e['R'], -np.sin(e['b']) / e['R']
+    cands = np.arange(300, e['T'] - 300, 60.0)
+    res = {}
+    rho = np.exp(-DT / 60)
+    lag = np.abs(np.subtract.outer(np.arange(n), np.arange(n)))
+    Sig_c = 0.5 * np.eye(n) + 0.5 * rho ** lag     # in sigma^2 units
+    infl = []
+    for kind in ['white', 'corr', 'bias', 'wild', 'wild_edited', 'primary', 'primary_edited']:
+        E = np.stack([noise(rng, n, kind.replace('_edited', '')) for _ in range(ndraw)])
+        W = np.stack([edit_wild(x) for x in E]) if kind.endswith('edited') else np.ones_like(E, bool)
+        best = np.zeros(ndraw)
+        if kind.endswith('edited'):
+            for d in range(ndraw):  # per-draw weights: redo projections on kept rows
+                m = W[d]
+                Q0, _ = np.linalg.qr(J0[m])
+                for k in cands[::3]:
+                    h = np.maximum(t[m] - k, 0)
+                    A = np.stack([h * gx[m], h * gy[m]], 1)
+                    A = A - Q0 @ (Q0.T @ A)
+                    Qa, _ = np.linalg.qr(A)
+                    r = E[d, m]
+                    best[d] = max(best[d], ((Qa.T @ r) ** 2).sum() / SIG ** 2)
+        else:
+            Q0, _ = np.linalg.qr(J0)
+            for k in cands:
+                h = np.maximum(t - k, 0)
+                A = np.stack([h * gx, h * gy], 1)
+                A = A - Q0 @ (Q0.T @ A)
+                Qa, _ = np.linalg.qr(A)
+                best = np.maximum(best, ((E @ Qa) ** 2).sum(1) / SIG ** 2)
+                if kind == 'corr':
+                    infl.append(np.trace(Qa.T @ Sig_c @ Qa) / 2)
+        res[kind] = best.tolist()
+    res['infl'] = float(np.mean(infl))
+    return res
+
+
+if __name__ == '__main__':
+    which = sys.argv[1]
+    N = int(sys.argv[2])
+    with Pool(4) as p:
+        if which == 'detect':
+            r = [x for eng in p.map(one_engagement, range(N), chunksize=2) for x in eng]
+        else:
+            r = p.map(scan_null, range(N), chunksize=1)
+    json.dump(r, open(f'/home/claude/sld/{which}.json', 'w'))
+    print(which, len(r))

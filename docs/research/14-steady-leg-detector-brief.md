@@ -6,6 +6,10 @@ well it did, and what a better algorithm would have to deliver. It is written to
 the rest of the repository. Every figure is from simulation and is quoted with its source; none
 is from real data.
 
+Updated 28 November 2026 with the first findings of that investigation (section 11, and notes
+marked "Investigation:" elsewhere). Those findings come from a stand-alone re-implementation of
+section 4, not from this repository, and are hypotheses until re-run here.
+
 ## 1. The problem in one paragraph
 
 A submarine (ownship) listens to a surface or sub-surface contact (the target) with passive
@@ -121,6 +125,10 @@ ownship. A target manoeuvre breaks the law; nothing else does, apart from noise 
 - **What it cannot see.** The three parameters do not contain range. Two slices fitted
   independently have six free parameters and nothing ties them together, although the target's
   position must be continuous across the manoeuvre. That freedom matters (5.5).
+  Investigation: within one steady ownship leg, position continuity is exactly bearing
+  continuity at the knot (b₀′ = b(t_k)), one constraint, leaving five parameters of the six.
+  The rest of the joined model's benefit comes from sharing one range scale across ownship's
+  turns (section 11).
 
 ### 5.3 The general form through ownship's turns
 
@@ -177,6 +185,18 @@ draws each (`experiments/20261121-demo-splitters/`; anecdotes, not statistics):
 - No splitter won everywhere, and none produced a false split on a held-course target in these
   scenarios. This variant has not been scored on the simulator at scale. That is an obvious
   first experiment.
+
+### 5.6 Two tests from the investigation
+
+- **Cross-ratio invariant.** For any four bearings on a steady leg against a steady ownship,
+  sin(b₁−b₂) sin(b₃−b₄) / (sin(b₁−b₃) sin(b₂−b₄)) = (t₁−t₂)(t₃−t₄) / ((t₁−t₃)(t₂−t₄)).
+  No parameters and no fit, but noisy on single bearings and valid only inside a steady
+  ownship leg. A screening tool.
+- **Linearised likelihood-ratio scan.** Linearise the four-parameter fit; a knot at time k adds
+  two columns, the hinge max(t − k, 0) times (cos b, −sin b)/R. The statistic is the residual
+  energy in those columns after projecting out the fit: χ² with 2 degrees of freedom under
+  white noise, a known quadratic form under any stated error covariance. A full scan of a
+  window costs milliseconds, so the maximum over k can be calibrated per geometry.
 
 ## 6. What has been tried, and what happened
 
@@ -249,6 +269,11 @@ the answer.
 8. **Classical first.** A learned component is welcome only against the classical rule it might
    be reproducing; twice our learned parts turned out to be a simple rule in disguise.
 
+Investigation: the stand-alone evidence (section 11) suggests priority 1 has little headroom,
+because most of C's misses may be undetectable, and that priorities 2 and 3 are where the gap
+is. The order above is left as the owner set it until the cross-tabulation in section 11 has
+been run in this repository.
+
 ### 7.4 Directions we think are promising
 
 - **The joined-leg arctan model at scale** (5.5): never scored on the simulator, and the best of
@@ -314,6 +339,21 @@ targets.
 6. Does a prior on leg length and turn size help a causal detector, as it helped the
    whole-period search, without inventing manoeuvres on quiet targets?
 
+Investigation, status of each question (detail in section 11):
+
+1. Partly answered: the cross-ratio invariant and the linearised scan (5.6). The null is known
+   if the error covariance is known; estimating it online is only a partial fix.
+2. Answered, negatively: bearing continuity is the whole constraint within an ownship leg.
+3. Answered as a floor: delay ≈ (3 λ* σ² Δt / Δḃ²)^(1/3), with Δḃ the change in cross-range
+   speed over range and λ* the threshold. C appears to be near it.
+4. Negative so far: freeing transition start and end inside a crude stand-alone solve did not
+   recover a two-minute timing error and made the estimate worse. Not a proof.
+5. Answered in outline: the omission cost is computable for a hypothesised manoeuvre in the
+   current geometry, which gives a real-time "would not be visible" statement.
+6. Answered in outline: as a detection aid the leg-length prior moves the threshold by about
+   −5 to +2 σ² units, which is small. Prior knowledge pays in the estimate, through bounds on
+   speed and range.
+
 ## 10. Where things are in the repository
 
 | What | Where |
@@ -336,3 +376,57 @@ Generate a data set to work on (a spent seed; fresh seeds are kept for registere
 uv run tma2-generate --seed 321 --count 900 --ranges configs/man2-ranges.json \
   --heldout-ranges configs/man2-heldout.json --format f32pack --out data/brief-321
 ```
+
+## 11. Investigation findings so far (stand-alone, 28 November 2026)
+
+Source: `docs/research/15-steady-leg-theory-note.md` and its scripts
+(`experiments/20261128-standalone/`). The
+simulator is a re-implementation of section 4 (ownship zigs assumed 60° to 120° at 1°/s; no
+helm wander, no dropouts). None of this has been run against generator 0.6.0, segmenter C or
+the physics solve.
+
+| Finding | Figure | What it bears on |
+|---|---|---|
+| Manoeuvres costing under 25 σ² to omit, times told, whole window | 28% (speed changes 67%, course changes 23%) | C's 30% misses may be mostly undetectable |
+| Same, at a threshold honest under the primary condition (about 170) | 56% | Under bearing errors about half of manoeuvres are beyond a goodness-of-fit test |
+| Scan maximum on held course, 95th percentile: white / correlated only / primary | 10.6 / 58 / 171 | 25 σ² is conservative on white noise and far too low under mismatch |
+| Held-course windows split at 25 σ² under the primary condition | 90% (84% after wild-bearing editing) | Explains the false transitions in section 6 |
+| Wild-bearing editing, wild bearings only | false splits 21% to 2% | Agrees with the one cheap gain in section 6 |
+| Online noise correction, primary condition, threshold set on white | false splits 98% to 25–35% | Partial; not a stated rate |
+| Same correction against a higher fixed threshold, matched false rate | flags 69–78% of manoeuvring windows against 89% | The correction costs power; a higher threshold does as well |
+| Bias wander inflation of the null: whole window / 20 min / 12 min | ×4.8 / ×1.2 / ×1.0 | Why bias does nothing to C; a time-late test needs a short window or a bias term |
+| Expected detection delay from the end of a change, 25 σ² | median 209 s | C's 235 s is near the bound |
+| Joined-model Jacobian rank, ownship steady / with a zig | 5 of 6 / 6 of 6 | Open question 2 |
+| Told-truth solve with bounds on speed and initial range, against without (stand-alone solve, paired) | clean 0.109 against 0.166; primary 0.251 against 0.455 | Told-truth may not be the ceiling; may explain the learned regressor |
+| Solve given only manoeuvres over 25 σ², against told-truth | clean 0.152 against 0.166; primary 0.365 against 0.455 | Undetectable manoeuvres need not be found |
+| True structure declared 120 s late, against told-truth | 3.5 times the error, equal to one leg | Timing may be the main lever |
+| Instantaneous knot against constant-rate arc, no noise | 6% median range error against zero | Transitions should be modelled as arcs |
+| Position error of a mid-point knot after a turn | median 92 m, 90th percentile 386 m | Same |
+
+The stand-alone solve behind the last five rows is cruder than `src/tma2/physics/layer.py`
+(its clean told-truth error is 0.166 against 0.065 in section 2), so only the paired
+comparisons carry over, and they need repeating here.
+
+Question for the owner: does the told-truth solve bound target speed and initial range to the
+simulator's limits? The answer changes what the numbers to beat in section 8 mean.
+Answered from the code (`specs/040-steady-leg-headroom/e0.md`): no. The solve is unbounded; its
+range and speed limits only set a flag on a finished solve. It fits a chord between knots at a
+change's start and end and does not exclude or arc-model the bearings inside.
+
+Cautions:
+
+- The undetectable shares are expected noise-free costs with true transition rows excluded, so
+  they are on the optimistic side.
+- "Manoeuvring windows flagged" counts a window as found if any one of its changes is seen.
+- The agreement between 28% and C's 30% could be a coincidence of the stand-in ownship model.
+
+First experiments proposed for this repository, in order:
+
+1. On seed 321, compute the omission cost of every true manoeuvre through the physics solve and
+   cross-tabulate it against C″'s hit, miss and delay. This decides whether priority 1 has
+   headroom.
+2. Measure the null of the linearised scan on held-course engagements under each condition in
+   `configs/gateh/conditions.json`, by window length.
+3. Timing sensitivity of the physics solve: true structure with times shifted by 60, 120 and
+   240 s, and a "told detectable" reference given only manoeuvres above the threshold.
+4. Then the joined-leg model at scale (5.5), scored on detectable manoeuvres separately.

@@ -1,0 +1,57 @@
+"""Q4: can transition start and end be re-estimated inside the solve when declared 120 s late?"""
+import sys, json
+import numpy as np
+from multiprocessing import Pool
+from scipy.optimize import least_squares
+from sim import *
+from experiments import noise
+from solve import positions, solve, edit_raw
+
+def solve_free(e, bobs, keep, spans0, pad=180.0):
+    t = e['t']; rows = keep.copy(); K = len(spans0)
+    for a, b in spans0: rows &= ~((t > a - pad) & (t < b + pad))
+    tt, op, bo = t[rows], e['opos'][rows], bobs[rows]
+    def unpack(th):
+        s = []
+        for l in range(K):
+            a = spans0[l][0] + pad * np.tanh(th[-2 * K + 2 * l]); b = spans0[l][1] + pad * np.tanh(th[-2 * K + 2 * l + 1])
+            s.append((a, max(b, a + 10.0)))
+        return th[:len(th) - 2 * K], s
+    def res(th):
+        x, s = unpack(th)
+        P = positions(x, tt, s, True) - op
+        return wrap(np.arctan2(P[:, 0], P[:, 1]) - bo) / SIG
+    best = None
+    for R in [3e3, 8e3, 1.6e4]:
+        los = np.array([np.sin(bo[0]), np.cos(bo[0])])
+        th0 = np.r_[e['opos'][0] + R * los, np.tile(5.0 * np.array([los[1], -los[0]]), K + 1), np.zeros(2 * K)]
+        xs = np.r_[1e3, 1e3, np.ones(2 * K + 2), np.full(2 * K, 0.2)]
+        r = least_squares(res, th0, method='lm', x_scale=xs, max_nfev=300 * (len(th0) + 1))
+        if best is None or r.cost < best.cost: best = r
+    x, s = unpack(best.x)
+    i = np.where(~e['trans'])[0][-1]
+    P = positions(x, t[i:i + 1], s, True)[0] - e['opos'][i]
+    return float(abs(np.hypot(*P) - e['R'][i]) / e['R'][i]), s
+
+def run(seed):
+    rng = np.random.default_rng(seed); e = draw_engagement(rng)
+    if not e['spans']: return None
+    spans = [(a, min(b, e['T'])) for a, b in e['spans']]
+    late = [(a + 120, b + 120) for a, b in spans if b + 120 < e['T'] - 240]
+    if len(late) != len(spans): return None
+    bobs = e['b'] + noise(rng, len(e['t']), 'white'); keep = edit_raw(bobs)
+    o = dict(arc=solve(e, bobs, keep, spans, True, False), late=solve(e, bobs, keep, late, True, False))
+    o['free'], s = solve_free(e, bobs, keep, late)
+    o['free_true'], _ = solve_free(e, bobs, keep, spans)
+    o['mid_err'] = [0.5 * (a + b) - 0.5 * (a0 + b0) for (a, b), (a0, b0) in zip(s, spans)]
+    o['dur_err'] = [(b - a) - (b0 - a0) for (a, b), (a0, b0) in zip(s, spans)]
+    return o
+
+if __name__ == '__main__':
+    with Pool(4) as p: r = [x for x in p.map(run, range(7000, 7160), chunksize=2) if x]
+    json.dump(r, open('refine.json', 'w'))
+    for v in ['arc', 'late', 'free', 'free_true']:
+        a = np.array([x[v] for x in r]); print(v, 'median', np.median(a).round(3), 'share>50%', np.mean(a > .5).round(2), 'ratio to arc median', np.median(a / np.maximum([x['arc'] for x in r], 1e-6)).round(2))
+    m = np.concatenate([x['mid_err'] for x in r]); d = np.concatenate([x['dur_err'] for x in r])
+    print('n', len(r), 'midpoint error after refit: median abs', np.median(abs(m)).round(0), 'within 60 s', np.mean(abs(m) <= 60).round(2), '(started 120 late)')
+    print('duration error: median abs', np.median(abs(d)).round(0))

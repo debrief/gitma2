@@ -1,0 +1,92 @@
+"""Prototype v0: whole-window 'is there a split?' test on noisy bearings, with wild-bearing editing
+and a noise-estimated inflation correction. Linearised at the FITTED one-leg solution (no truth used)."""
+import sys, json
+import numpy as np
+from multiprocessing import Pool
+from sim import *
+from experiments import noise
+
+KINDS = ['white', 'corr', 'bias', 'wild', 'primary']
+
+
+def cv_fit(t, opos, bobs):
+    best = None
+    B = basis(t, [])
+    for R in [2e3, 5e3, 1e4, 2e4]:
+        th0 = np.r_[opos[0] + R * np.array([np.sin(bobs[0]), np.cos(bobs[0])]), 0.0, 0.0]
+        c, th = fit(th0, B, opos, bobs)
+        if best is None or c < best[0]:
+            best = (c, th)
+    return best[1], B
+
+
+def runmed_keep(r, k=4.0):
+    pad = np.pad(r, 4, mode='edge')
+    med = np.median(np.lib.stride_tricks.sliding_window_view(pad, 9), axis=1)
+    return np.abs(r - med) <= k * SIG
+
+
+def scan(e, bobs, edit, L, window=None):
+    """Returns (raw max stat in stated-sigma^2 units, corrected max stat, best knot time)."""
+    t, opos = e['t'], e['opos']
+    if window is not None:
+        m0 = t >= t[-1] - window
+        t, opos, bobs = t[m0], opos[m0], bobs[m0]
+    th, B = cv_fit(t, opos, bobs)
+    if edit:
+        r = wrap(bobs - model_bearing(th, B, opos)[0])
+        m = runmed_keep(r)
+        t, opos, bobs = t[m], opos[m], bobs[m]
+        th, B = cv_fit(t, opos, bobs)
+    bm, P = model_bearing(th, B, opos)
+    r = wrap(bobs - bm)
+    R2 = (P ** 2).sum(1)
+    gx, gy = P[:, 1] / R2, -P[:, 0] / R2
+    Q0, _ = np.linalg.qr(jac(th, B, opos))
+    cands = np.arange(t[0] + 300, t[-1] - 300, 60.0)
+    Qs, T = [], []
+    for k in cands:
+        h = np.maximum(t - k, 0)
+        A = np.stack([h * gx, h * gy], 1)
+        A -= Q0 @ (Q0.T @ A)
+        Qa, _ = np.linalg.qr(A)
+        Qs.append(Qa); T.append(((Qa.T @ r) ** 2).sum())
+    T = np.array(T)
+    ib = int(np.argmax(T))
+    raw = T[ib] / SIG ** 2
+    r1 = r - Qs[ib] @ (Qs[ib].T @ r)
+    n = len(r1)
+    Lm = min(L, n // 4)
+    c = np.array([np.dot(r1[:n - l], r1[l:]) / n for l in range(Lm + 1)]) * (1 - np.arange(Lm + 1) / (Lm + 1))
+    lag = np.abs(np.subtract.outer(np.arange(n), np.arange(n)))
+    S = np.where(lag <= Lm, c[np.minimum(lag, Lm)], 0.0)
+    d = np.array([np.trace(Q.T @ S @ Q) / 2 for Q in Qs])
+    d = np.maximum(d, 1e-12)
+    ic = int(np.argmax(T / d))
+    return float(raw), float((T / d)[ic]), float(cands[ic])
+
+
+def run(args):
+    seed, held = args
+    rng = np.random.default_rng(seed)
+    e = draw_engagement(rng, held=held)
+    if not held and len(e['spans']) == 0:
+        return None
+    out = dict(mids=[0.5 * (a + b) for a, b in e['spans']])
+    for kind in KINDS:
+        bobs = e['b'] + noise(rng, len(e['t']), kind)
+        o = {}
+        o['naive'] = scan(e, bobs, False, 30)[0]
+        raw, c30, k30 = scan(e, bobs, True, 30)
+        o['edit'] = raw; o['c30'] = c30; o['k30'] = k30
+        _, o['c90'], o['k90'] = scan(e, bobs, True, 90)
+        out[kind] = o
+    return out
+
+
+if __name__ == '__main__':
+    tag, lo, hi, held = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4] == 'held'
+    with Pool(4) as p:
+        r = [x for x in p.map(run, [(s, held) for s in range(lo, hi)], chunksize=2) if x]
+    json.dump(r, open(f'/home/claude/sld/det_{tag}.json', 'w'))
+    print(tag, len(r))

@@ -1,0 +1,107 @@
+"""Detector v2: v1's scan nominates; a joined-leg fit on the whole history confirms and re-places.
+detect2() receives only time, ownship track and noisy bearings. Truth is used only afterwards."""
+import sys, json
+import numpy as np
+from multiprocessing import Pool
+from sim import *
+from experiments import noise
+from solve import solve, edit_raw
+from v1 import scan_window, detect, match, W, STEP, MINLEN, BUF
+
+THR_N = 12.0
+
+
+def fit_joined(t, opos, b, knots, warm):
+    B = basis(t, knots)
+    npar = 4 + 2 * len(knots)
+    starts = []
+    if warm is not None:
+        starts.append(np.r_[warm, np.zeros(npar - len(warm))][:npar])
+    else:
+        for R in [3e3, 8e3, 1.6e4]:
+            starts.append(np.r_[opos[0] + R * np.array([np.sin(b[0]), np.cos(b[0])]), np.zeros(npar - 2)])
+    best = None
+    for th0 in starts:
+        c, th = fit(th0, B, opos, b)
+        if best is None or c < best[0]:
+            best = (c, th)
+    return best
+
+
+def detect2(t, opos, bobs, thr_c, replace=True):
+    keep = edit_raw(bobs)
+    knots, decl, theta, leg_start, mx = [], [], None, t[0], 0.0
+    for now in np.arange(t[0] + MINLEN, t[-1] + 1, STEP):
+        ma = keep & (t <= now)
+        ta, oa, ba = t[ma], opos[ma], bobs[ma]
+        if replace and knots and (now - decl[-1]) in (240.0, 480.0):      # stated revision rule
+            prev = knots[-2] if len(knots) > 1 else t[0]
+            cands = [k for k in knots[-1] + np.array([-120, -60, 0, 60, 120.0]) if prev + 180 < k < now - 120]
+            fits = [(fit_joined(ta, oa, ba, knots[:-1] + [k], theta), k) for k in cands]
+            if fits:
+                (c, th), k = min(fits, key=lambda f: f[0][0])
+                knots[-1], theta, leg_start = float(k), th, k + BUF
+        lo = max(leg_start, now - W)
+        if now - lo < MINLEN:
+            continue
+        m = keep & (t >= lo) & (t <= now)
+        raw, _, k0 = scan_window(t[m], opos[m], bobs[m])
+        if raw <= THR_N:
+            continue
+        J0, th0 = fit_joined(ta, oa, ba, knots, theta)
+        theta = th0
+        prev = knots[-1] if knots else t[0]
+        cands = [k for k in k0 + np.array([-120, -60, 0, 60, 120.0]) if prev + 180 < k < now - 120]
+        if not cands:
+            continue
+        fits = [(fit_joined(ta, oa, ba, knots + [k], th0), k) for k in cands]
+        (J1, th1), k1 = min(fits, key=lambda f: f[0][0])
+        dJ = (J0 - J1) / SIG ** 2
+        mx = max(mx, dJ)
+        if dJ > thr_c:
+            knots.append(float(k1)); decl.append(float(now)); theta = th1; leg_start = k1 + BUF
+    return list(zip(knots, decl)), mx
+
+
+def calib(seed):
+    rng = np.random.default_rng(seed); e = draw_engagement(rng, held=True)
+    b = e['b'] + noise(rng, len(e['t']), 'white')
+    return detect2(e['t'], e['opos'], b, np.inf)[1]
+
+
+def run(args):
+    seed, held, thr_c, thrA = args
+    rng = np.random.default_rng(seed); e = draw_engagement(rng, held=held)
+    if not held and not e['spans']:
+        return None
+    t = e['t']; true_spans = [(a, min(b, e['T'])) for a, b in e['spans']]
+    mids = [0.5 * (a + b) for a, b in true_spans]
+    out = dict(seed=seed, held=held, nman=len(mids))
+    for kind in ['white', 'primary']:
+        bobs = e['b'] + noise(rng, len(t), kind)       # same draws as v1.run
+        keep = edit_raw(bobs)
+        o = {}
+        k1, _ = detect(t, e['opos'], bobs, thrA, False)   # v1-A knots again, to record placement
+        o['v1_knots'] = [k for k, _ in k1]
+        knots, _ = detect2(t, e['opos'], bobs, thr_c)
+        hit, miss, false = match(knots, mids)
+        spans = [(k - BUF, k + BUF) for k, _ in knots if k + BUF < t[-1] - 60]
+        o.update(knots=[k for k, _ in knots], decl=[d for _, d in knots], hit=hit, miss=miss, false=false,
+                 err=solve(e, bobs, keep, spans, True, False), err_p=solve(e, bobs, keep, spans, True, True))
+        out[kind] = o
+    out['mids'] = mids; out['ends'] = [b for _, b in true_spans]
+    return out
+
+
+if __name__ == '__main__':
+    mode = sys.argv[1]
+    with Pool(2) as p:
+        if mode == 'calib':
+            r = np.array(p.map(calib, range(21000, 21150), chunksize=4))
+            thr = float(np.percentile(r, 95)); json.dump(thr, open('v2_thr.json', 'w'))
+            print('confirm threshold:', thr, ' share of held-course runs with any nomination:', np.mean(r > 0))
+        else:
+            thr = json.load(open('v2_thr.json')); thrA = json.load(open('v1_thr.json'))[0]
+            jobs = [(s, False, thr, thrA) for s in range(30000, 30160)] + [(s, True, thr, thrA) for s in range(40000, 40080)]
+            r = [x for x in p.map(run, jobs, chunksize=2) if x]
+            json.dump(r, open('v2_test.json', 'w')); print(len(r))
