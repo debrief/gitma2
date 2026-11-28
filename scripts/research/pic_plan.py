@@ -76,9 +76,9 @@ def runs_for(proto: dict[str, Any], stage: str) -> tuple[list[dict[str, Any]], d
         runs += [
             prof("true-prior", p),
             prof("c2-prior", p, "c2"),
-            prof("c2-edit-prior", p, "c2", True),
+            {"kind": "cut", "name": "cut-ctl"},
         ]
-        true_names, c2_names = ["true-prior"], ["c2-prior", "c2-edit-prior"]
+        true_names, c2_names = ["true-prior"], ["c2-prior", "cut-ctl"]
     pairs = [
         ["robust-true", "fine_tuned"],
         ["c2-robust", "fine_tuned"],
@@ -89,7 +89,21 @@ def runs_for(proto: dict[str, Any], stage: str) -> tuple[list[dict[str, Any]], d
     for n in c2_names:
         pairs += [[n, "fine_tuned"], ["c2-robust", n], [n, "robust-true"]]
     names = {r["name"] for r in runs}
+    shares = [
+        {"name": f"{n} removes of robust-true to fine-tuned", "num": ["robust-true", n],
+         "den": ["robust-true", "fine_tuned"]}
+        for n in true_names
+    ] + [
+        {"name": f"{n} closes of c2-robust to fine-tuned", "num": ["c2-robust", n],
+         "den": ["c2-robust", "fine_tuned"]}
+        for n in c2_names
+    ] + [
+        {"name": f"{n} closes of c2-robust to robust-true", "num": ["c2-robust", n],
+         "den": ["c2-robust", "robust-true"]}
+        for n in c2_names
+    ]  # fmt: skip
     decomp = {
+        "shares": shares,
         "comparator": "c2-robust",
         "regressors": FT,
         "unchanged": REG,

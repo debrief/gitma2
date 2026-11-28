@@ -72,6 +72,14 @@ def share(
     }
     if out["defined"]:
         lo, hi = (float(v) for v in np.quantile(am / bm, [0.025, 0.975]))
+        k = n // 10  # beside the mean (spec 038's panel): medians, and 10% trimmed at both ends
+        sa, sb = np.sort(a), np.sort(b)
+        out |= {
+            "share_of_medians": float(np.median(a) / np.median(b)) if np.median(b) != 0 else None,
+            "share_trimmed": float(sa[k : n - k].mean() / sb[k : n - k].mean())
+            if n - 2 * k > 0 and sb[k : n - k].mean() != 0
+            else None,
+        }
         out |= {
             "share": float(a.mean() / b.mean()),
             "lo": lo,

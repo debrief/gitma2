@@ -159,7 +159,27 @@ def main(argv: list[str] | None = None) -> int:
                 }
             return blk
 
-        res["pairs"] = {"all": pair_block(None)}
+        def share_block(rows: np.ndarray | None) -> dict[str, Any]:
+            blk: dict[str, Any] = {}
+            for sh in names.get("shares", []):
+                (nc, ny), (dn, dy) = sh["num"], sh["den"]
+
+                def sys_of(y: str) -> list[str]:
+                    return ft if y == "fine_tuned" else [y]
+
+                if not all(v in errs for v in [nc, dn, *sys_of(ny), *sys_of(dy)]):
+                    continue
+                blk[sh["name"]] = {
+                    col: dc.share(
+                        dc.pooled_logs(errs, nc, sys_of(ny), ordinal, i, rows),
+                        dc.pooled_logs(errs, dn, sys_of(dy), ordinal, i, rows),
+                        a.resamples,
+                    )
+                    for i, col in enumerate(COLS)
+                }
+            return blk
+
+        res["pairs"] = {"all": pair_block(None), "shares": share_block(None)}
         if bound is not None:
             b0 = bound[:, 0]
             fin0 = np.isfinite(b0) & (b0 > 0)
@@ -169,6 +189,9 @@ def main(argv: list[str] | None = None) -> int:
             res["pairs"]["by_range_bound_third"] = [
                 {"rows": int((fin0 & (th == q)).sum()), **pair_block(fin0 & (th == q))}
                 for q in range(3)
+            ]
+            res["pairs"]["shares_by_range_bound_third"] = [
+                share_block(fin0 & (th == q)) for q in range(3)
             ]
     res["systems"] = {n: system_summary(errs[n], ordinal, bound) for n in sorted(errs)}
     res["systems_common_rows"] = {
