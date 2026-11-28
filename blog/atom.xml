@@ -2,10 +2,217 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://debrief.github.io/gitma2/blog</id>
     <title>TMA via ML, second attempt Blog</title>
-    <updated>2026-11-26T21:00:00.000Z</updated>
+    <updated>2026-11-28T11:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://debrief.github.io/gitma2/blog"/>
     <subtitle>TMA via ML, second attempt Blog</subtitle>
+    <entry>
+        <title type="html"><![CDATA[Slides: where the regressor's gain comes from]]></title>
+        <id>https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition-slides</id>
+        <link href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition-slides"/>
+        <updated>2026-11-28T11:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Spec 038 asked why a learned regressor beats our classical real-time system under bearing]]></summary>
+        <content type="html"><![CDATA[<p>Spec 038 asked why a learned regressor beats our classical real-time system under bearing
+errors, with nothing trained. The deck shows the test record and what the review panel made of
+it. The critical account is the <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition">write-up</a>; this post is
+its illustrated companion.</p>
+<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-28-gain-decomposition/index.html" title="Slides: 2026-11-28-gain-decomposition" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-28-gain-decomposition/index.html">open it full screen</a>.</figcaption></figure>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Systems</strong>: C″-robust ÷ each system in range over 500 test engagements, in distribution, with
+clean bearings and under the primary mismatch. Above 1 the system is better than C″-robust.</li>
+<li class=""><strong>Gap closed</strong>: the share of the log gap to the regressor that each classical control closes,
+on four split and condition pairs. Dashed is the registered "most" line, dotted "little". The
+panel found these shares are carried by about a quarter of the engagements.</li>
+<li class=""><strong>Lead by split</strong>: C″-robust ÷ the fine-tuned regressor in distribution, on busier targets and
+on far ranges. The panel found the differences are mostly C″-robust moving.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/gd_charts.py --out-dir site/static/img/2026-11-28-gain-decomposition</span><br></div></code></pre></div></div>
+<p>The charts are built from the committed <code>decomp.json</code> files of <code>experiments/20261128-gd/</code>;
+sidecars beside each SVG name the inputs' digests and the commit.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="not-achieved">Not achieved<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition-slides#not-achieved" class="hash-link" aria-label="Direct link to Not achieved" title="Direct link to Not achieved" translate="no">​</a></h2>
+<ul>
+<li class="">A prior control tight enough to move the classical solve, so "prior or bearings" stays open.</li>
+<li class="">A classical segmenter that closes the gap without a cost on clean data.</li>
+<li class="">Track plots of a test engagement: not made for this task.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="next">Next<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition-slides#next" class="hash-link" aria-label="Direct link to Next" title="Direct link to Next" translate="no">​</a></h2>
+<ul>
+<li class="">Recommended, the owner's choice: a causal classical estimator given the generator's own
+priors, on CPU. No GPU spending.</li>
+</ul>]]></content>
+        <category label="slides" term="slides"/>
+        <category label="spec-038" term="spec-038"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Where the regressor's gain comes from: classical hardening closes part of the gap, and the rest is still unexplained]]></title>
+        <id>https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition</id>
+        <link href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition"/>
+        <updated>2026-11-28T10:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Spec 037 found a learned regressor twice as good as our classical real-time system under bearing]]></summary>
+        <content type="html"><![CDATA[<p>Spec 037 found a learned regressor twice as good as our classical real-time system under bearing
+errors, and could not say why. Spec 038 tried to say why with nothing trained: it hardened the
+classical segmenter by classical means, tested the simulator's prior on its own, and moved the
+simulator's statistics. On a fresh test seed the hardening closes part of the gap at a cost on
+clean data, the prior we could build explains nothing, and the review panel found that the
+question of prior or bearings is still open. This post reports the readings and what the panel
+made of them.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-done">What was done<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition#what-was-done" class="hash-link" aria-label="Direct link to What was done" title="Direct link to What was done" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Two classical controls around the frozen segmenter C.</strong> Wild bearings edited out of what C
+sees, and C's confirmation threshold multiplied by four; each followed by the robust final
+solve. Settings were chosen on two spent seeds. C itself was not touched.</li>
+<li class=""><strong>The prior on its own.</strong> Spec 012's ownship-only regressor reads the ownship's track and no
+bearing feature. It was scored alone, and as a prior inside C″'s solve.</li>
+<li class=""><strong>Splits where the simulator's statistics are moved.</strong> Busier targets (shorter legs, smaller
+and faster turns) and far initial ranges (20 to 30 km), each with clean bearings and under
+spec 037's primary mismatch condition.</li>
+<li class=""><strong>The test</strong>: seed 372, 500 engagements on each of seven split and condition pairs, scored
+once, after the readings and their lines were registered
+(<code>experiments/20261127-gd-decision/</code>). No GPU time and no money.</li>
+</ul>
+<p>"C″-robust" is C″ with Gate H's robust final solve. Ratios are paired per engagement, C″-robust
+÷ the system, so above 1 the system is better.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-registered-readings">The registered readings<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition#the-registered-readings" class="hash-link" aria-label="Direct link to The registered readings" title="Direct link to The registered readings" translate="no">​</a></h2>
+<table><thead><tr><th></th><th>Reading</th><th>Test</th><th>Outcome</th></tr></thead><tbody><tr><td>G</td><td>share of the gap to the regressor closed by the hardened control, primary mismatch</td><td>0.44 [0.35, 0.53]</td><td>between</td></tr><tr><td>P</td><td>share of the regressor's gain obtained by the ownship-only prior in C″'s solve, clean</td><td>0.01 [−0.02, 0.05]</td><td>little</td></tr><tr><td>P</td><td>the same, primary mismatch</td><td>0.03 [0.01, 0.05]</td><td>little</td></tr><tr><td>S</td><td>the regressor's lead on busier targets ÷ in distribution, clean</td><td>1.06 [0.94, 1.19]</td><td>not separated</td></tr><tr><td>S</td><td>the same, primary mismatch</td><td>0.86 [0.76, 0.97]</td><td>shrinks</td></tr><tr><td>S</td><td>lead on far ranges ÷ in distribution, clean</td><td>0.83 [0.75, 0.94]</td><td>shrinks</td></tr><tr><td>S</td><td>the same, primary mismatch</td><td>0.75 [0.67, 0.84]</td><td>shrinks</td></tr></tbody></table>
+<p>Beside them, in distribution:</p>
+<table><thead><tr><th>C″-robust ÷ system, range</th><th>clean</th><th>primary mismatch</th></tr></thead><tbody><tr><td>fine-tuned regressor</td><td>1.55 [1.43, 1.69]</td><td>2.27 [2.08, 2.46]</td></tr><tr><td>robust solve told the true manoeuvre times</td><td>1.63</td><td>2.03</td></tr><tr><td>C with edited bearings and threshold × 4</td><td>0.82 [0.76, 0.88]</td><td>1.43 [1.32, 1.56]</td></tr><tr><td>C with edited bearings</td><td>1.00</td><td>1.19</td></tr><tr><td>ownship-only prior inside C″'s solve</td><td>1.01</td><td>1.03</td></tr><tr><td>ownship-only regressor alone</td><td>0.32</td><td>0.72</td></tr></tbody></table>
+<p><img decoding="async" loading="lazy" alt="C″-robust against each system in range, clean and under the primary mismatch" src="https://debrief.github.io/gitma2/assets/images/systems-e166b6b023889bd3e38c75a3af11ae7b.svg" width="960" height="403" class="img_ev3q"></p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-panel-made-of-it">What the panel made of it<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition#what-the-panel-made-of-it" class="hash-link" aria-label="Direct link to What the panel made of it" title="Direct link to What the panel made of it" translate="no">​</a></h2>
+<p>Three reviewers recomputed the readings from the per-row errors and all three approved with
+findings (<code>experiments/20261128-gd/review.md</code>). Every number reproduced. The first version of
+the record said more than the data do, and was corrected.</p>
+<p><strong>The 0.44 is a tail and a best case.</strong> It is a share of the mean log gap, carried by about a
+quarter of the engagements. The typical engagement closes about a quarter. The control gains a
+great deal where C″ fails badly and loses a little elsewhere. By split the share is 0.26 to 0.44.
+Pooled over clean and mismatched data it closes about 12%, and by the choice rule we registered
+editing alone is the better control: 0.21 under mismatch at no clean-data cost. The clean-data
+cost of the threshold is also a tail: no change for the median engagement, twice as bad in one
+in five.</p>
+<p><strong>The prior control was too weak to answer the question.</strong> The ownship-only model has a median
+range error of 0.33, and as a prior it barely moved C″'s solve at any weight. That is the same
+fault spec 037's static prior had, and the spec had promised a control tight enough to move the
+solve. So P says that the marginal prior given the ownship's track is worth nothing in a
+classical solve. It does not say the regressor's gain is not prior knowledge.</p>
+<p><strong>The data point the other way.</strong> Against a robust solve that is told the true manoeuvre times,
+the regressor wins in range where the bearings determine little (1.15 clean, 1.34 under
+mismatch, in the loosest third of the bound) and loses where they determine much (0.77 and 0.93
+in the tightest third; in course 0.51 and 0.71). Where it wins, its error is below the bound,
+which only prior knowledge or the ceiling on a relative error can produce. That is what a prior
+used together with the bearings would look like. It was not tested.</p>
+<p><strong>Knowing the manoeuvre times is sufficient, which is not the same as the cause.</strong> The solve
+told the true times matches the regressor in range in distribution and beats it in course and
+speed there and on every clean split. That does not show the regressor gets its gain by
+segmenting.</p>
+<p><strong>The split readings are mostly the yardstick moving.</strong> Under mismatch the regressor holds its
+ground against the solve told the true times on busier targets and far ranges (1.00, 0.94); what
+shrinks is C″-robust's handicap. On clean data the regressor does lose ground to that solve
+(0.84 on far ranges, 0.89 on busier targets). Its own range error rises 23 to 43% on busier
+targets. We also wrote that the models had met the far ranges in training; they had not.</p>
+<p><strong>The structure slice tests nothing.</strong> Where C″'s declared manoeuvres match the truth at the
+first scored row, C″-robust is still 1.5 times the solve told the true times on the later rows.
+Spec 037's finding that the lead goes where C″'s segmentation holds is neither reproduced nor
+refuted.</p>
+<p><img decoding="async" loading="lazy" alt="The share of the gap each classical control closes" src="https://debrief.github.io/gitma2/assets/images/gap-closed-87052dc47bb204208777bcabdde63451.svg" width="768" height="346" class="img_ev3q"></p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-may-be-said">What may be said<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition#what-may-be-said" class="hash-link" aria-label="Direct link to What may be said" title="Direct link to What may be said" translate="no">​</a></h2>
+<ul>
+<li class="">Classical hardening of this small kind closes part of the gap under bearing errors: 0.44 of
+the mean log gap in distribution, about a quarter for the typical engagement, at a clean-data
+cost when the threshold is raised. Editing wild bearings alone is free and closes about a
+fifth.</li>
+<li class="">The marginal prior given the ownship's track is worth nothing inside C″'s solve.</li>
+<li class="">A solve told the true manoeuvre times is sufficient to match the regressor in range in
+distribution and to beat it in course and speed.</li>
+</ul>
+<p>What may not be said: that the gain is not the prior, that the gain is segmentation, or that
+classical methods cannot close the gap.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-done">What was not done<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition#what-was-not-done" class="hash-link" aria-label="Direct link to What was not done" title="Direct link to What was not done" translate="no">​</a></h2>
+<p>A prior control tight enough to move the solve; the ownship-only model by range; the slices on
+the shifted and far splits in the record's own tables; the hybrid with the fine-tuned prior for
+training seeds 2 and 3; thresholds above four with the edit; track plots.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-follows">What follows<a href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition#what-follows" class="hash-link" aria-label="Direct link to What follows" title="Direct link to What follows" translate="no">​</a></h2>
+<p>The panel's order, for the owner to choose from:</p>
+<ol>
+<li class=""><strong>Recommended: a causal classical estimator given the generator's own manoeuvre, speed and
+range priors</strong>, on CPU and spent seeds first, read by how tight the bound is. This is the
+test the prior control was meant to be.</li>
+<li class="">A better real-time segmenter, registered against the solve told the true times, which is 1.4
+to 2.0 ahead of the hardened control.</li>
+<li class="">Only after the first: any further use of the regressor. Nothing is carried and no GPU run is
+made.</li>
+</ol>
+<p>Wild-bearing editing in front of C is a candidate for a small follow-up on its own: it cost
+nothing on clean data here. It is not adopted by this study.</p>
+<p>The illustrated companion is the <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/28/gain-decomposition-slides">slides post</a>.</p>]]></content>
+        <category label="write-up" term="write-up"/>
+        <category label="spec-038" term="spec-038"/>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Kickoff: where the regressor's gain comes from]]></title>
+        <id>https://debrief.github.io/gitma2/blog/2026/11/27/gain-decomposition-kickoff</id>
+        <link href="https://debrief.github.io/gitma2/blog/2026/11/27/gain-decomposition-kickoff"/>
+        <updated>2026-11-27T10:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Spec 037 found a learned regressor twice as good as the classical real-time system under]]></summary>
+        <content type="html"><![CDATA[<p>Spec 037 found a learned regressor twice as good as the classical real-time system under
+bearing errors, and its review panel found the comparison could not say why. This task measures
+the two explanations left standing: that the classical segmenter was never hardened against
+those errors, and that the regressor knows the simulator's manoeuvre statistics while the
+classical system is told nothing. Nothing is trained and no GPU time is used. Spec:
+<code>specs/038-gain-decomposition/</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/27/gain-decomposition-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
+<ul>
+<li class=""><a class="" href="https://debrief.github.io/gitma2/blog/2026/11/26/regressor-mismatch">Spec 037</a>: under the primary mismatch condition C″ with
+the robust final solve is 1.95 times the fine-tuned regressor's range error, and 2.29 times
+on error kinds outside its training mix. Three reviewers approved with findings.</li>
+<li class="">The panel's narrowing: a classical robust solve told the true manoeuvre times equals the
+regressor in range and beats it in course and speed, so the factor of two is C's segmenter
+failing; and whether the regressor's gain is prior knowledge or reading the bearings is open.
+The comparator meant to test that was too loose to move the solve.</li>
+<li class="">Standing: C″ for real-time estimates, C frozen since Gate 2. Nothing was carried from spec
+037. About $46.75 of the owner's $50 GPU budget is spent; none is needed here.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/27/gain-decomposition-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
+<ul>
+<li class="">SRD §5 and §7; a registered study, not a gate. Nothing is carried by it.</li>
+<li class="">Plan:<!-- -->
+<ol>
+<li class="">Two classical controls around the frozen C: a raised confirmation threshold; and wild
+bearings edited out with an effective bearing sd. Each with the robust final solve,
+settings chosen on spent seeds.</li>
+<li class="">The pure prior: spec 012's ownship-only regressor, which reads no bearings, scored alone
+and as the prior inside C″'s solve.</li>
+<li class="">The existing weights and the controls where the simulator's prior is wrong: busier
+targets, and geometry outside the training ranges.</li>
+<li class="">The readings spec 037 owed: by time since the last target change, by a wild first
+bearing, by whether C″'s segmentation was right, efficiency by how tight the bound is.</li>
+<li class="">Register estimands and forecasts, then score fresh seed 372 once; three reviewers.</li>
+</ol>
+</li>
+<li class="">Judged by: the share of the gap to the regressor that a hardened classical control closes;
+the share of the regressor's gain that the prior inside a classical solve obtains; whether
+the lead holds, shrinks or reverses where the prior is wrong.</li>
+<li class="">Risks: the ownship-only regressor was trained on clean data only, which is harmless because
+bearing errors cannot reach it, and is tested; the shifted and held-out ranges may leave no
+rows at the scored prefixes; each classical segmenter run costs most of an hour per hundred
+engagements, which caps the test at about 500 engagements a split.</li>
+<li class="">Stop rule: if a hardened control closes at least half the gap on development data, it
+becomes the headline comparator before the test, and the record says the earlier headline
+was a property of an unhardened segmenter.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/27/gain-decomposition-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
+<ul>
+<li class="">A stacked chart of the regressor's gain over C″: prior alone, prior inside C″'s solve, what
+is left for the bearings; clean and under mismatch, on test seed 372.</li>
+<li class="">Range error by condition for C″, each hardened control, the regressors and the solve told
+the true manoeuvre times.</li>
+<li class="">The regressor's lead on the in-distribution, shifted-prior and held-out-geometry splits.</li>
+<li class="">Track plots of one test engagement under the primary condition: C″, the best hardened
+control, the regressor.</li>
+</ul>]]></content>
+        <category label="kickoff" term="kickoff"/>
+        <category label="spec-038" term="spec-038"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Slides: the regressor under bearing-error mismatch]]></title>
         <id>https://debrief.github.io/gitma2/blog/2026/11/26/regressor-mismatch-slides</id>
@@ -1513,233 +1720,5 @@ association.</li>
 <p>Slides: <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/20/held-comparators-slides">the slides post</a>.</p>]]></content>
         <category label="write-up" term="write-up"/>
         <category label="spec-031" term="spec-031"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Slides: a carried prior across gaps]]></title>
-        <id>https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides</id>
-        <link href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides"/>
-        <updated>2026-11-20T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[The illustrated companion to the spec 030 write-up: the]]></summary>
-        <content type="html"><![CDATA[<p>The illustrated companion to <a class="" href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior">the spec 030 write-up</a>: the
-registered comparison, where the carried prior helps, and how well its stated uncertainty covers
-the truth.</p>
-<figure style="margin:1.5rem 0"><div style="position:relative;width:100%;padding-bottom:56.25%"><iframe src="/gitma2/slides/2026-11-20-carried-prior-slides/index.html" title="Slides: 2026-11-20-carried-prior-slides" loading="lazy" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:1px solid var(--ifm-color-emphasis-300);border-radius:6px"></iframe></div><figcaption style="font-size:0.85rem;margin-top:0.4rem">Use the arrow keys inside the deck, or <a href="https://debrief.github.io/gitma2/slides/2026-11-20-carried-prior-slides/index.html">open it full screen</a>.</figcaption></figure>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-the-figures-show">What the figures show<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides#what-the-figures-show" class="hash-link" aria-label="Direct link to What the figures show" title="Direct link to What the figures show" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>Verdict</strong>: alone ÷ k4 and k4 ÷ joint in range on every split, periods after an engagement's
-first, with 95% engagement intervals.</li>
-<li class=""><strong>Kinds</strong>: alone ÷ the carried prior, uninflated and k4, for periods with and without an
-ownship turn of their own (Annex B and busier).</li>
-<li class=""><strong>Coverage</strong>: the truth's squared distance from the carried prior at a period's first row, as a
-cumulative distribution against a calibrated one (Annex B).</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="reproducing-the-figures">Reproducing the figures<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides#reproducing-the-figures" class="hash-link" aria-label="Direct link to Reproducing the figures" title="Direct link to Reproducing the figures" translate="no">​</a></h2>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#bfc7d5"><span class="token plain">uv run python scripts/research/tl10_charts.py --record experiments/20261120-tl10 --out-dir site/static/img/2026-11-20-carried-prior-slides</span><br></div></code></pre></div></div>
-<p>The script reads only the committed record (results branch
-<code>results/timelate-tl-o-test-44618826527</code>, seed 363); each figure's <code>.json</code> sidecar names the
-inputs' digests and the commit.</p>]]></content>
-        <category label="slides" term="slides"/>
-        <category label="spec-030" term="spec-030"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[A carried prior across gaps: it helps where a period cannot answer alone]]></title>
-        <id>https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior</id>
-        <link href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior"/>
-        <updated>2026-11-20T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Spec 027 showed that carrying a start from one period to the next does not substitute for one]]></summary>
-        <content type="html"><![CDATA[<p>Spec 027 showed that carrying a <em>start</em> from one period to the next does not substitute for one
-solve through the gaps. This registered study carried <em>information</em> instead. The previous
-period's declared state and its uncertainty become a prior on the next period's starting state.
-By the rule registered beforehand, the carried prior helps against solving each period alone on
-Annex B targets, and no harm was shown. The review panel approved and narrowed the result:</p>
-<ul>
-<li class="">the gain is in periods the bearings leave undetermined;</li>
-<li class="">the 4× inflation chosen in development is not shown to matter;</li>
-<li class="">the carried uncertainty covers the truth because it is too wide.</li>
-</ul>
-<p>The joint solve stays the standing system. Nothing was trained. The illustrated companion is
-<a class="" href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior-slides">the slides post</a>.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-built">What was built<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-was-built" class="hash-link" aria-label="Direct link to What was built" title="Direct link to What was built" translate="no">​</a></h2>
-<p>For each period after an engagement's first, the evidence of the standing control <code>ctl</code> gains a
-Gaussian prior on the period's starting state (position, course, speed). That prior is built in
-three steps:</p>
-<ol>
-<li class="">Take the previous period's declared track at its last row.</li>
-<li class="">Take that state's Laplace covariance from the previous period's posterior fit.</li>
-<li class="">Run both through the gap at constant velocity. Annex B's manoeuvre rate and sizes are added
-as process noise.</li>
-</ol>
-<p>The prior replaces the standing prior's terms for those four parameters (range log-uniform,
-bearing and course uniform, a soft speed band), and the period's search starts from the carried
-state. Everything else in <code>ctl</code> is unchanged.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-k4-was-chosen">How k4 was chosen<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#how-k4-was-chosen" class="hash-link" aria-label="Direct link to How k4 was chosen" title="Direct link to How k4 was chosen" translate="no">​</a></h2>
-<p>Development used spent seeds only.</p>
-<ul>
-<li class=""><strong>Seed 361.</strong> The uninflated prior was overconfident: the truth sat inside its 95% region in
-about half of periods. On this seed it harmed Annex B periods that had an ownship turn of
-their own (0.51).</li>
-<li class=""><strong>The choice.</strong> Five variants were run: inflation by 2 or 4 in sd, and mixtures with the
-standing prior. A rule written before the results kept only variants with no own-turn harm and
-coverage of at least 0.80. It chose <strong>k4</strong>, the covariance 4 times wider in sd.</li>
-<li class=""><strong>Seed 360.</strong> A declared check passed here.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-it-was-decided">How it was decided<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#how-it-was-decided" class="hash-link" aria-label="Direct link to How it was decided" title="Direct link to How it was decided" translate="no">​</a></h2>
-<p>All comparisons use periods after an engagement's first, on spec 025's rows. Each is a ratio of
-period median range error, with a 95% interval from resampling engagements.</p>
-<ul>
-<li class=""><strong>Helps</strong>: <code>ctl</code> alone ÷ k4 in range is wholly above 1 on Annex B, the split that decides.</li>
-<li class=""><strong>Harms</strong>: wholly below 1 in range, course or speed on any split, or in range on Annex B
-periods with their own ownship turn.</li>
-</ul>
-<p>Validation used seed 362, where soundness passed. The test used seed 363, scored once.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-result">The result<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#the-result" class="hash-link" aria-label="Direct link to The result" title="Direct link to The result" translate="no">​</a></h2>
-<table><thead><tr><th>split</th><th>alone ÷ k4, range (median per period)</th><th>k4 ÷ joint, range</th></tr></thead><tbody><tr><td>Annex B (decides)</td><td><strong>1.59 [1.21, 2.13]</strong> (1.09): helps</td><td>1.40 [0.98, 2.01]</td></tr><tr><td>busier targets</td><td>1.60 [1.28, 1.99] (1.16)</td><td>1.25 [0.94, 1.66]</td></tr><tr><td>2% wild bearings</td><td>1.35 [1.01, 1.87] (1.01)</td><td>1.74 [1.23, 2.43]</td></tr><tr><td>held course</td><td>2.32 [1.49, 3.62] (1.27)</td><td>5.20 [2.93, 9.00]</td></tr></tbody></table>
-<p>No harm on any split in any quantity. On Annex B periods with their own turn the ratio is 1.22
-[0.84, 1.85]. On Annex B, k4 is better in 57% of periods and worse in 32%. It is twice as good
-in 32% and twice as bad in 11%.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-it-means-as-the-panel-narrowed-it">What it means, as the panel narrowed it<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-it-means-as-the-panel-narrowed-it" class="hash-link" aria-label="Direct link to What it means, as the panel narrowed it" title="Direct link to What it means, as the panel narrowed it" translate="no">​</a></h2>
-<ul>
-<li class=""><strong>The gain is where the bearings leave a period undetermined.</strong>
-<ul>
-<li class="">Annex B periods without their own ownship turn: 1.97. With one: 1.22.</li>
-<li class="">On rows a period determines by itself: 1.04 [0.77, 1.48], level.</li>
-<li class="">So a carried prior makes undetermined periods answerable. It does not improve a period's own
-estimate. This is the same pattern as spec 025's joint solve.</li>
-</ul>
-</li>
-<li class=""><strong>The inflation is not shown to matter.</strong>
-<ul>
-<li class="">The uninflated prior does as well on the test seed: uninflated ÷ k4 is 0.99 [0.78, 1.25].</li>
-<li class="">The uninflated prior would also have passed the rule.</li>
-<li class="">The own-turn harm that motivated k4 appeared on one development seed only.</li>
-<li class="">What is supported is "a carried prior helps", not "inflate by 4".</li>
-</ul>
-</li>
-<li class=""><strong>k4's uncertainty is too wide, not calibrated.</strong>
-<ul>
-<li class="">It covers the truth (0.92 to 0.98) because its spread is about 2.6 times too wide: median
-squared distance 0.51 against 3.36 for a calibrated prior.</li>
-<li class="">The process noise is mis-shaped. It puts half of a turn's change into speed, and constant
-velocity runs the mean ahead of a turning target.</li>
-<li class="">A single history's covariance is too narrow in the tail even with no manoeuvre in the gap.</li>
-<li class="">After inflation the prior carries little beyond a band on position.</li>
-</ul>
-</li>
-<li class=""><strong>Against the alternatives.</strong>
-<ul>
-<li class="">Against spec 027's carried start (not registered): 1.60 [1.05, 2.74] on Annex B.</li>
-<li class="">Against joining: on the line on Annex B (lower limit 0.97 to 1.02 by bootstrap seed).
-Separated with wild bearings and on held course.</li>
-<li class="">Joining is not shown unnecessary anywhere.</li>
-</ul>
-</li>
-<li class=""><strong>Across seeds.</strong> Annex B alone ÷ k4 was 1.59, 1.22, 1.51 and 1.59 on seeds 360 to 363. The
-one that would not pass (361) is the seed k4 was chosen on.</li>
-<li class=""><strong>When it applies.</strong>
-<ul>
-<li class="">Within this simulator, when only the previous declared state and its covariance are kept, a
-period solved under them is better than one solved from nothing.</li>
-<li class="">Time-late, the earlier bearings are normally kept, and then the joint solve is the answer.</li>
-<li class="">A real hand-over was not tested: a track from another estimator, with uncertain association.</li>
-</ul>
-</li>
-<li class=""><strong>Secondary splits are reported, not decided.</strong>
-<ul>
-<li class="">Wild bearings is on the line and carried by a tail (median 1.01).</li>
-<li class="">Held course's 2.32 is measured against a baseline that is very poor there.</li>
-</ul>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="forecasts">Forecasts<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#forecasts" class="hash-link" aria-label="Direct link to Forecasts" title="Direct link to Forecasts" translate="no">​</a></h2>
-<p>Right:</p>
-<ul>
-<li class="">helps on Annex B (1.59, against a forecast of 1.2 to 1.6), with one development seed in two
-failing;</li>
-<li class="">busier about 1.55 (1.60), held course larger, no harm.</li>
-</ul>
-<p>Wrong:</p>
-<ul>
-<li class="">k4 ÷ joint on Annex B (forecast about 2.1; 1.40, on the line).</li>
-<li class="">Coverage was "right" (0.92 to 0.98), but by being too wide.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-was-not-done">What was not done<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-was-not-done" class="hash-link" aria-label="Direct link to What was not done" title="Direct link to What was not done" translate="no">​</a></h2>
-<ul>
-<li class="">A calibrated carried uncertainty: a scale near 1.5, noise shaped to turns and speed changes,
-or a prior over the previous period's candidate histories.</li>
-<li class="">A registered comparison of k4 with the uninflated prior and with the carried start.</li>
-<li class="">Code that applies the rule: the verdict was applied by hand.</li>
-<li class="">IMM and EKF tracks.</li>
-</ul>
-<p>Recorded, not repaired (the code is registered):</p>
-<ul>
-<li class="">the wrapped course Gaussian is normalised on the line, not the circle;</li>
-<li class="">a speed shoulder is left in the fit;</li>
-<li class="">three small fragilities.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-next-the-owners-choice">What next (the owner's choice)<a href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior#what-next-the-owners-choice" class="hash-link" aria-label="Direct link to What next (the owner's choice)" title="Direct link to What next (the owner's choice)" translate="no">​</a></h2>
-<p>The panel's order:</p>
-<ol>
-<li class=""><strong>A consistency flag.</strong> Compare the carried prior's distance with the period's own fit, and
-test whether it finds the twice-as-bad periods.</li>
-<li class=""><strong>A calibrated carried prior on spent seeds.</strong> Scale, shaped noise, the manoeuvre mixture and
-candidate histories.</li>
-<li class=""><strong>A stress split</strong> with longer gaps and more periods, where a carried state is the realistic
-option.</li>
-<li class=""><strong>A real hand-over.</strong> Only if that case matters: a carried state from another estimator, with
-uncertain association.</li>
-</ol>
-<p>This study was developed and registered as spec 028 and renumbered 030 after another session's
-specs 028 and 029 merged first; its registered seeds 362 and 363 had also been claimed by spec 029
-in the long-engagement simulator (different engagements; recorded in the decision record).</p>
-<p>Records:</p>
-<ul>
-<li class="">spec <code>specs/030-carried-prior/</code>;</li>
-<li class="">development <code>experiments/20261119-tl10-dev/</code> and refinement <code>20261119-tl10-refine/</code>;</li>
-<li class="">decision <code>20261119-tl10-decision/</code>;</li>
-<li class="">validation <code>20261119-tl10-val/</code>;</li>
-<li class="">test <code>20261120-tl10/</code>, with the panel's <code>review.md</code> and <code>supplement.json</code>.</li>
-</ul>]]></content>
-        <category label="write-up" term="write-up"/>
-        <category label="spec-030" term="spec-030"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Kickoff: several periods of one target across long gaps]]></title>
-        <id>https://debrief.github.io/gitma2/blog/2026/11/20/long-gaps-kickoff</id>
-        <link href="https://debrief.github.io/gitma2/blog/2026/11/20/long-gaps-kickoff"/>
-        <updated>2026-11-20T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Spec 030 found that a carried prior helps a period that cannot answer alone, while one solve]]></summary>
-        <content type="html"><![CDATA[<p>Spec 030 found that a carried prior helps a period that cannot answer alone, while one solve
-through the gaps stays the better choice. Both findings come from gaps of 5 to 30 minutes. This
-task stretches the gaps to 30–90 minutes, with up to four periods, where joining has to bridge
-hours of unseen manoeuvres. Nothing is trained.</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-we-are">Where we are<a href="https://debrief.github.io/gitma2/blog/2026/11/20/long-gaps-kickoff#where-we-are" class="hash-link" aria-label="Direct link to Where we are" title="Direct link to Where we are" translate="no">​</a></h2>
-<ul>
-<li class=""><a class="" href="https://debrief.github.io/gitma2/blog/2026/11/20/carried-prior">Spec 030</a>: the carried prior helps against solving each
-period alone (1.59 on Annex B), but is not shown equal to the joint solve.</li>
-<li class="">A per-period consistency flag was judged not worth registering: the periods it would need
-to catch are mostly ones where <code>ctl</code> alone happened to land close.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="where-this-task-moves-to">Where this task moves to<a href="https://debrief.github.io/gitma2/blog/2026/11/20/long-gaps-kickoff#where-this-task-moves-to" class="hash-link" aria-label="Direct link to Where this task moves to" title="Direct link to Where this task moves to" translate="no">​</a></h2>
-<ul>
-<li class="">Spec <code>specs/033-long-gaps/</code>: 6-hour engagements from the long simulator (ownship legs of
-20–40 minutes, Annex B targets), laid out as 2–4 periods with gaps of 30–90 minutes.</li>
-<li class="">Spec 030's systems run unchanged: <code>ctl</code> alone, the joint solve, the carried start, and the
-carried prior both uninflated and as k4.</li>
-<li class="">Development first, on a spent seed. Then a proposal: register on fresh seeds, or stop.</li>
-<li class="">Risks:<!-- -->
-<ul>
-<li class="">the joint solve over 3–4 hours may hit <code>ctl</code>'s cap of ten manoeuvres, and it costs more;</li>
-<li class="">the long simulator's ownship steers on the true target.</li>
-</ul>
-</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-progress-will-be-shown">How progress will be shown<a href="https://debrief.github.io/gitma2/blog/2026/11/20/long-gaps-kickoff#how-progress-will-be-shown" class="hash-link" aria-label="Direct link to How progress will be shown" title="Direct link to How progress will be shown" translate="no">​</a></h2>
-<ul>
-<li class="">The ratios by gap length and by whether a period has its own ownship turn.</li>
-<li class="">The joint solve's cost and how often it meets the cap.</li>
-<li class="">How often the truth falls inside the carried prior's stated uncertainty.</li>
-</ul>]]></content>
-        <category label="kickoff" term="kickoff"/>
-        <category label="spec-033" term="spec-033"/>
     </entry>
 </feed>
